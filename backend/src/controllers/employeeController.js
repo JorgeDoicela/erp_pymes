@@ -1,4 +1,5 @@
 import employeeService from '../services/employeeService.js';
+import bcrypt from 'bcryptjs';
 
 /**
  * EmployeeController
@@ -11,7 +12,9 @@ export class EmployeeController {
    */
   async create(req, res) {
     try {
-      const { firstName, lastName, email, department, position, salary } = req.body;
+      const { firstName, lastName, email, department, position, salary, password, role } = req.body;
+
+      const hashedPassword = await bcrypt.hash(password || 'defaultPassword123', 10);
 
       const employee = await employeeService.createEmployee({
         firstName,
@@ -20,6 +23,8 @@ export class EmployeeController {
         department,
         position,
         salary,
+        password: hashedPassword,
+        role: role || 'employee',
       });
 
       res.status(201).json({

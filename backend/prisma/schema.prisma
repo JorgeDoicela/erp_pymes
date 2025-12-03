@@ -20,6 +20,9 @@ model Employee {
   // Se almacena como: salt:iv:authTag:encryptedData
   salary            String   // Valor encriptado
   
+  password          String   // Contraseña hasheada
+  role              String   @default("employee") // Rol: 'admin' | 'employee'
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

@@ -1,34 +1,56 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import Home from './pages/Home.jsx'
+import Login from './pages/Login.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
+import EmployeeDashboard from './pages/EmployeeDashboard.jsx'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [auth, setAuth] = useState({ user: null, token: null })
+
+  const handleLogin = ({ user, token }) => {
+    setAuth({ user, token })
+  }
+
+  const handleLogout = () => {
+    setAuth({ user: null, token: null })
+  }
+
+  const RequireAuth = ({ children, role }) => {
+    if (!auth.user) {
+      return <Navigate to="/login" replace />
+    }
+
+    if (role && auth.user.role !== role) {
+      if (auth.user.role === 'admin') return <Navigate to="/admin" replace />
+      if (auth.user.role === 'employee') return <Navigate to="/empleado" replace />
+    }
+
+    return children
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login onLogin={handleLogin} />} />
+      <Route
+        path="/admin"
+        element={
+          <RequireAuth role="admin">
+            <AdminDashboard user={auth.user} onLogout={handleLogout} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/empleado"
+        element={
+          <RequireAuth role="employee">
+            <EmployeeDashboard user={auth.user} onLogout={handleLogout} />
+          </RequireAuth>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 
