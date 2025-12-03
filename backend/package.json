@@ -2,7 +2,8 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Backend del sistema de recursos humanos con PERN",
-  "main": "index.js",
+  "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
     "prisma:dev": "npx prisma migrate dev",
@@ -13,14 +14,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^7.0.0",
+    "@prisma/client": "^5.22.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
-    "helmet": "^8.1.0"
+    "helmet": "^8.1.0",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11",
-    "prisma": "^7.0.0"
+    "dotenv-cli": "^11.0.0",
+    "nodemon": "^3.1.11"
   }
 }

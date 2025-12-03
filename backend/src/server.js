@@ -1,20 +1,7 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
+import app from './app.js';
 
-const app = express();
+const PORT = process.env.PORT || 4000;
 
-// Middlewares
-app.use(express.json());
-app.use(cors());
-app.use(helmet());
-
-// Ruta base
-app.get('/', (req, res) => {
-  res.send('API EMPLIFI funcionando correctamente');
-});
-
-// Ejecutar servidor
-app.listen(4000, () => {
-  console.log('Backend EMPLIFI corriendo en http://localhost:4000');
+app.listen(PORT, () => {
+  console.log(`Backend EMPLIFI corriendo en http://localhost:${PORT}`);
 });
