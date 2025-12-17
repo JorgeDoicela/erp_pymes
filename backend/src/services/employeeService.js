@@ -20,6 +20,21 @@ export class EmployeeService {
       throw new Error('El email ya está registrado');
     }
 
+    // Verificar que la cédula sea única
+    const existingIdentityCard = await employeeRepository.findByIdentityCard(employeeData.identityCard);
+    if (existingIdentityCard) {
+      throw new Error('La cédula ya está registrada');
+    }
+
+    // Verificar que la cédula sea única (si repository soporta findByIdentityCard o lo implementamos)
+    // Asumiremos que findByIdentityCard no existe aún en el repo, pero podemos usar prisma directamente en el repo o añadirlo.
+    // Dado que no puedo ver el repo ahora, voy a asumir que debo añadirlo o usar findUnique si tuviera acceso.
+    // Wait, I should check repository first. But I'll modify service assuming repository needs update too if needed.
+    // Let's postpone repository call for identityCard uniqueness until I check/update repository.
+    // For now, I'll rely on Prisma unique constraint or better, add the check.
+
+    // I will look at Validation first.
+
     return await employeeRepository.create(employeeData);
   }
 
@@ -42,6 +57,7 @@ export class EmployeeService {
    * @returns {Promise<Array>} Lista de empleados
    */
   async getAllEmployees(options = {}) {
+    // Aquí se podrían añadir más validaciones o lógica de filtrado si fuera necesario
     return await employeeRepository.findAll(options);
   }
 
@@ -136,6 +152,38 @@ export class EmployeeService {
       }
       if (salary === undefined || typeof salary !== 'number' || salary <= 0) {
         throw new Error('Salario debe ser un número positivo');
+      }
+
+      // Nuevos campos
+      if (!data.identityCard || typeof data.identityCard !== 'string' || data.identityCard.trim().length === 0) {
+        throw new Error('Cédula requerida');
+      }
+      if (!data.birthDate) {
+        throw new Error('Fecha de nacimiento requerida');
+      }
+      if (!data.address || typeof data.address !== 'string' || data.address.trim().length === 0) {
+        throw new Error('Dirección requerida');
+      }
+      if (!data.phone || typeof data.phone !== 'string' || data.phone.trim().length === 0) {
+        throw new Error('Teléfono requerido');
+      }
+      if (!data.hireDate) {
+        throw new Error('Fecha de ingreso requerida');
+      }
+      if (new Date(data.hireDate) > new Date()) {
+        throw new Error('La fecha de ingreso no puede ser futura');
+      }
+
+      // Validar formato de cédula (solo números, longitud mínima 10)
+      const identityCardRegex = /^\d+$/;
+      if (!identityCardRegex.test(data.identityCard) || data.identityCard.length < 10) {
+        throw new Error('La cédula debe contener solo números y tener al menos 10 dígitos');
+      }
+      if (!data.contractType || typeof data.contractType !== 'string' || data.contractType.trim().length === 0) {
+        throw new Error('Tipo de contrato requerido');
+      }
+      if (!data.civilStatus || typeof data.civilStatus !== 'string' || data.civilStatus.trim().length === 0) {
+        throw new Error('Estado civil requerido');
       }
     } else {
       // Validaciones parciales para actualizar

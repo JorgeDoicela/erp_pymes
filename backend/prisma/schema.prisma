@@ -16,6 +16,14 @@ model Employee {
   department        String
   position          String
   
+  identityCard      String   @unique
+  birthDate         DateTime
+  address           String
+  phone             String
+  hireDate          DateTime
+  contractType      String
+  civilStatus       String
+  
   // Salario encriptado en la base de datos
   // Se almacena como: salt:iv:authTag:encryptedData
   salary            String   // Valor encriptado
@@ -26,7 +34,53 @@ model Employee {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  // Relaciones
+  documents         Document[]
+  skills            Skill[]
+  workHistory       WorkHistory[]
+
   @@index([email])
   @@index([department])
   @@map("employees")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // PDF, DOCX, etc.
+  url         String
+  uploadDate  DateTime @default(now())
+  
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("documents")
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  name        String
+  level       String   // Beginner, Intermediate, Advanced, Expert
+  
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("skills")
+}
+
+model WorkHistory {
+  id          String   @id @default(cuid())
+  company     String
+  position    String
+  startDate   DateTime
+  endDate     DateTime?
+  description String?  @db.Text
+  
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("work_history")
 }

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { login } from '../controllers/authController.js';
+import employeeRoutes from './employee.routes.js';
 
 const router = Router();
 
@@ -10,5 +11,8 @@ router.get('/', (req, res) => {
 
 // Login real
 router.post('/auth/login', login);
+
+// Rutas de empleados
+router.use('/employees', employeeRoutes);
 
 export default router;

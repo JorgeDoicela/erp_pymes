@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { encryptSalary } from '../src/utils/encryption.js';
 
 const prisma = new PrismaClient();
 
@@ -22,7 +23,14 @@ async function main() {
             role: 'admin',
             department: 'Dirección',
             position: 'Administrador del Sistema',
-            salary: 'ENCRYPTED_SALARY_PLACEHOLDER', // En un caso real usaríamos el helper de encriptación
+            salary: encryptSalary(5000),
+            identityCard: '0000000000',
+            birthDate: new Date('1980-01-01'),
+            address: 'Oficina Central',
+            phone: '0999999999',
+            hireDate: new Date('2020-01-01'),
+            contractType: 'permanent',
+            civilStatus: 'single',
         },
     });
 
@@ -38,7 +46,14 @@ async function main() {
             role: 'employee',
             department: 'Ventas',
             position: 'Vendedor Senior',
-            salary: 'ENCRYPTED_SALARY_PLACEHOLDER',
+            salary: encryptSalary(2500),
+            identityCard: '1111111111',
+            birthDate: new Date('1990-01-01'),
+            address: 'Calle Falsa 123',
+            phone: '0988888888',
+            hireDate: new Date('2021-01-01'),
+            contractType: 'permanent',
+            civilStatus: 'married',
         },
     });
 

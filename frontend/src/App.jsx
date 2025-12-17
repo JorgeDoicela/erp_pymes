@@ -4,6 +4,9 @@ import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import EmployeeDashboard from './pages/EmployeeDashboard.jsx'
+import RegisterEmployee from './pages/RegisterEmployee.jsx'
+import EmployeeList from './pages/EmployeeList.jsx'
+import EmployeeProfile from './pages/EmployeeProfile.jsx'
 
 function App() {
   const [auth, setAuth] = useState({ user: null, token: null })
@@ -46,6 +49,40 @@ function App() {
         element={
           <RequireAuth role="employee">
             <EmployeeDashboard user={auth.user} onLogout={handleLogout} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/register-employee"
+        element={
+          <RequireAuth role="admin">
+            <RegisterEmployee token={auth.token} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/employees"
+        element={
+          <RequireAuth role="admin">
+            <EmployeeList token={auth.token} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/employees/:id"
+        element={
+          <RequireAuth role="admin">
+            <EmployeeProfile token={auth.token} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <RequireAuth>
+            {/* Si es admin o empleado, puede ver su propio perfil (usando su ID del token/estado) */}
+            <div className="p-4 text-center">Redireccionando a tu perfil...</div>
+            {/* Nota: Idealmente redirigir a /admin/employees/:myId o mostrar el componente directo */}
           </RequireAuth>
         }
       />

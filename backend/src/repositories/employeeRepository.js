@@ -51,6 +51,13 @@ export class EmployeeRepository {
     try {
       const employee = await prisma.employee.findUnique({
         where: { id },
+        include: {
+          documents: true,
+          skills: true,
+          workHistory: {
+            orderBy: { startDate: 'desc' }
+          }
+        }
       });
 
       if (!employee) return null;
@@ -74,9 +81,21 @@ export class EmployeeRepository {
    */
   async findAll(options = {}) {
     try {
-      const { skip = 0, take = 10 } = options;
+      const { skip = 0, take = 10, q } = options;
+
+      const where = {};
+
+      if (q) {
+        where.OR = [
+          { firstName: { contains: q, mode: 'insensitive' } },
+          { lastName: { contains: q, mode: 'insensitive' } },
+          { identityCard: { contains: q } },
+          { email: { contains: q, mode: 'insensitive' } },
+        ];
+      }
 
       const employees = await prisma.employee.findMany({
+        where,
         skip,
         take,
         orderBy: { createdAt: 'desc' },
@@ -111,6 +130,28 @@ export class EmployeeRepository {
       };
     } catch (error) {
       throw new Error(`Error al buscar empleado: ${error.message}`);
+    }
+  }
+
+  /**
+   * Buscar empleados por cédula
+   * @param {string} identityCard - Cédula del empleado
+   * @returns {Promise<Object>} Empleado
+   */
+  async findByIdentityCard(identityCard) {
+    try {
+      const employee = await prisma.employee.findUnique({
+        where: { identityCard },
+      });
+
+      if (!employee) return null;
+
+      return {
+        ...employee,
+        salary: decryptSalary(employee.salary),
+      };
+    } catch (error) {
+      throw new Error(`Error al buscar empleado por cédula: ${error.message}`);
     }
   }
 

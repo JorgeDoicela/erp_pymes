@@ -1,8 +1,11 @@
 
 
+import { useNavigate } from 'react-router-dom';
+
 function AdminDashboard({ user, onLogout }) {
+    const navigate = useNavigate();
     const modules = [
-        { title: 'Empleados', icon: '', color: 'bg-blue-500', path: '/employees' },
+        { title: 'Empleados', icon: '', color: 'bg-blue-500', path: '/admin/employees' },
         { title: 'Asistencia', icon: '', color: 'bg-purple-500', path: '/attendance' },
         { title: 'Nómina', icon: '', color: 'bg-green-500', path: '/payroll' },
         { title: 'Evaluaciones', icon: '', color: 'bg-orange-500', path: '/performance' },
@@ -64,9 +67,17 @@ function AdminDashboard({ user, onLogout }) {
             <main className="flex-1 overflow-y-auto">
                 <header className="h-16 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-8 sticky top-0 z-10">
                     <h2 className="text-xl font-semibold">Panel de Control</h2>
-                    <div className="md:hidden">
-                        {/* Mobile menu button placeholder */}
-                        <button className="text-slate-400">☰</button>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/admin/register-employee')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition text-sm font-medium hidden md:block"
+                        >
+                            + Nuevo Empleado
+                        </button>
+                        <div className="md:hidden">
+                            {/* Mobile menu button placeholder */}
+                            <button className="text-slate-400">☰</button>
+                        </div>
                     </div>
                 </header>
 
@@ -102,6 +113,7 @@ function AdminDashboard({ user, onLogout }) {
                             {modules.map((mod, idx) => (
                                 <button
                                     key={idx}
+                                    onClick={() => navigate(mod.path)}
                                     className="group relative overflow-hidden rounded-2xl bg-slate-800/50 border border-white/5 p-6 hover:bg-slate-800 transition-all hover:-translate-y-1 text-left"
                                 >
                                     <div className={`absolute top-0 right-0 w-24 h-24 ${mod.color} opacity-10 rounded-bl-full group-hover:scale-110 transition-transform`}></div>
