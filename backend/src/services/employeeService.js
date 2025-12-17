@@ -5,6 +5,9 @@ import auditRepository from '../repositories/auditRepository.js';
  * EmployeeService
  * Contiene la lógica de negocio para gestión de empleados
  */
+const VALID_CIVIL_STATUSES = ['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Union Libre'];
+const VALID_CONTRACT_TYPES = ['Indefinido', 'Temporal', 'Por Obra', 'Prácticas'];
+
 export class EmployeeService {
   /**
    * Crear un nuevo empleado con validaciones
@@ -26,15 +29,6 @@ export class EmployeeService {
     if (existingIdentityCard) {
       throw new Error('La cédula ya está registrada');
     }
-
-    // Verificar que la cédula sea única (si repository soporta findByIdentityCard o lo implementamos)
-    // Asumiremos que findByIdentityCard no existe aún en el repo, pero podemos usar prisma directamente en el repo o añadirlo.
-    // Dado que no puedo ver el repo ahora, voy a asumir que debo añadirlo o usar findUnique si tuviera acceso.
-    // Wait, I should check repository first. But I'll modify service assuming repository needs update too if needed.
-    // Let's postpone repository call for identityCard uniqueness until I check/update repository.
-    // For now, I'll rely on Prisma unique constraint or better, add the check.
-
-    // I will look at Validation first.
 
     return await employeeRepository.create(employeeData);
   }
@@ -169,91 +163,84 @@ export class EmployeeService {
   validateEmployeeData(data, isPartial = false) {
     const { firstName, lastName, email, department, position, salary } = data;
 
+    // --- INICIO REGLAS DE NEGOCIO ---
+
+    // 1. Reglas de contratación
     if (!isPartial) {
-      // Validaciones para crear
-      if (!firstName || typeof firstName !== 'string' || firstName.trim().length === 0) {
-        throw new Error('Nombre requerido y debe ser texto');
+      if (!firstName || typeof firstName !== 'string' || firstName.trim().length === 0) throw new Error('Nombre requerido y debe ser texto');
+      if (!lastName || typeof lastName !== 'string' || lastName.trim().length === 0) throw new Error('Apellido requerido y debe ser texto');
+      if (!email || typeof email !== 'string' || !this.isValidEmail(email)) throw new Error('Email inválido');
+
+      // Validaciones de fechas
+      if (!data.birthDate) throw new Error('Fecha de nacimiento requerida');
+      if (!data.hireDate) throw new Error('Fecha de ingreso requerida');
+
+      const birthDate = new Date(data.birthDate);
+      const hireDate = new Date(data.hireDate);
+      const today = new Date();
+
+      if (birthDate > today) throw new Error('La fecha de nacimiento no puede ser futura');
+      if (hireDate <= birthDate) throw new Error('La fecha de ingreso debe ser posterior a la fecha de nacimiento');
+      if (hireDate > today) throw new Error('La fecha de ingreso no puede ser futura');
+
+      const age = this.calculateAge(birthDate);
+
+      // "El empleado debe ser mayor de 18 años para poder ser contratado."
+      if (age < 18) {
+        throw new Error(`El empleado debe ser mayor de edad. Edad actual: ${age} años.`);
       }
-      if (!lastName || typeof lastName !== 'string' || lastName.trim().length === 0) {
-        throw new Error('Apellido requerido y debe ser texto');
-      }
-      if (!email || typeof email !== 'string' || !this.isValidEmail(email)) {
-        throw new Error('Email inválido');
-      }
-      if (!department || typeof department !== 'string' || department.trim().length === 0) {
-        throw new Error('Departamento requerido');
-      }
-      if (!position || typeof position !== 'string' || position.trim().length === 0) {
-        throw new Error('Puesto requerido');
-      }
-      if (salary === undefined || typeof salary !== 'number' || salary <= 0) {
-        throw new Error('Salario debe ser un número positivo');
+      // "La edad máxima para contratación será de 65 años..."
+      if (age > 65) {
+        throw new Error(`El empleado supera la edad máxima de contratación (65 años). Edad actual: ${age} años.`);
       }
 
-      // Nuevos campos
-      if (!data.identityCard || typeof data.identityCard !== 'string' || data.identityCard.trim().length === 0) {
-        throw new Error('Cédula requerida');
-      }
-      if (!data.birthDate) {
-        throw new Error('Fecha de nacimiento requerida');
-      }
-      if (!data.address || typeof data.address !== 'string' || data.address.trim().length === 0) {
-        throw new Error('Dirección requerida');
-      }
-      if (!data.phone || typeof data.phone !== 'string' || data.phone.trim().length === 0) {
-        throw new Error('Teléfono requerido');
-      }
-      if (!data.hireDate) {
-        throw new Error('Fecha de ingreso requerida');
-      }
-      if (new Date(data.hireDate) > new Date()) {
-        throw new Error('La fecha de ingreso no puede ser futura');
+      // "Todo empleado debe contar con documentación de identidad válida..."
+      if (!data.identityCard || !/^\d{10,}$/.test(data.identityCard)) {
+        throw new Error('Cédula requerida y debe tener al menos 10 dígitos numéricos');
       }
 
-      // Validar formato de cédula (solo números, longitud mínima 10)
-      const identityCardRegex = /^\d+$/;
-      if (!identityCardRegex.test(data.identityCard) || data.identityCard.length < 10) {
-        throw new Error('La cédula debe contener solo números y tener al menos 10 dígitos');
+      // 2. Reglas de cargos y puestos
+      if (!department || typeof department !== 'string' || department.trim().length === 0) throw new Error('Departamento requerido');
+      if (!position || typeof position !== 'string' || position.trim().length === 0) throw new Error('Puesto requerido');
+
+      // "Para cargos de jefatura o supervisión..."
+      if (position.toLowerCase().includes('jefe') || position.toLowerCase().includes('supervisor')) {
+        // TODO: Validar experiencia laboral previa (WorkHistory) > X años
       }
-      if (!data.contractType || typeof data.contractType !== 'string' || data.contractType.trim().length === 0) {
-        throw new Error('Tipo de contrato requerido');
+
+      // "Un cargo debe pertenecer obligatoriamente a un área o departamento."
+      // (Validado implícitamente al requerir ambos)    
+
+      // 3. Reglas salariales
+      if (salary === undefined || typeof salary !== 'number' || salary <= 0) throw new Error('Salario debe ser un número positivo');
+
+      // "El salario del empleado no puede ser menor al salario básico legal vigente."
+      if (salary < 450) {
+        throw new Error('El salario no puede ser inferior al salario básico unificado ($450)');
       }
-      if (!data.civilStatus || typeof data.civilStatus !== 'string' || data.civilStatus.trim().length === 0) {
-        throw new Error('Estado civil requerido');
-      }
+
+      // Otras Validaciones (Address, Phone, Enums)
+      if (!data.address || typeof data.address !== 'string' || data.address.trim().length < 10) throw new Error('La dirección debe ser detallada (mínimo 10 caracteres)');
+      if (!data.phone || !/^\d{10}$/.test(data.phone)) throw new Error('El teléfono debe tener exactamente 10 dígitos numéricos');
+
+      if (!data.contractType || !VALID_CONTRACT_TYPES.includes(data.contractType)) throw new Error(`Tipo de contrato inválido. Valores permitidos: ${VALID_CONTRACT_TYPES.join(', ')}`);
+      if (!data.civilStatus || !VALID_CIVIL_STATUSES.includes(data.civilStatus)) throw new Error(`Estado civil inválido. Valores permitidos: ${VALID_CIVIL_STATUSES.join(', ')}`);
+
     } else {
       // Validaciones parciales para actualizar
-      if (firstName !== undefined) {
-        if (typeof firstName !== 'string' || firstName.trim().length === 0) {
-          throw new Error('Nombre debe ser texto válido');
-        }
-      }
-      if (lastName !== undefined) {
-        if (typeof lastName !== 'string' || lastName.trim().length === 0) {
-          throw new Error('Apellido debe ser texto válido');
-        }
-      }
-      if (email !== undefined) {
-        if (typeof email !== 'string' || !this.isValidEmail(email)) {
-          throw new Error('Email inválido');
-        }
-      }
-      if (department !== undefined) {
-        if (typeof department !== 'string' || department.trim().length === 0) {
-          throw new Error('Departamento debe ser texto válido');
-        }
-      }
-      if (position !== undefined) {
-        if (typeof position !== 'string' || position.trim().length === 0) {
-          throw new Error('Puesto debe ser texto válido');
-        }
-      }
+      if (firstName !== undefined && (typeof firstName !== 'string' || firstName.trim().length === 0)) throw new Error('Nombre debe ser texto válido');
+      if (lastName !== undefined && (typeof lastName !== 'string' || lastName.trim().length === 0)) throw new Error('Apellido debe ser texto válido');
+      if (email !== undefined && (typeof email !== 'string' || !this.isValidEmail(email))) throw new Error('Email inválido');
+      if (department !== undefined && (typeof department !== 'string' || department.trim().length === 0)) throw new Error('Departamento debe ser texto válido');
+      if (position !== undefined && (typeof position !== 'string' || position.trim().length === 0)) throw new Error('Puesto debe ser texto válido');
+
       if (salary !== undefined) {
-        if (typeof salary !== 'number' || salary <= 0) {
-          throw new Error('Salario debe ser un número positivo');
-        }
+        if (typeof salary !== 'number' || salary <= 0) throw new Error('Salario debe ser un número positivo');
+        if (salary < 450) throw new Error('El salario no puede ser inferior al salario básico unificado ($450)');
       }
     }
+
+    // --- FIN REGLAS DE NEGOCIO ---
   }
 
   /**
@@ -273,6 +260,23 @@ export class EmployeeService {
    */
   async getEmployeeHistory(id) {
     return await auditRepository.getLogsByEntityId(id);
+  }
+
+  /**
+   * Calcular edad basada en fecha de nacimiento
+   * @param {Date} birthDate 
+   * @returns {number} Edad en años
+   */
+  calculateAge(birthDate) {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
   }
 }
 

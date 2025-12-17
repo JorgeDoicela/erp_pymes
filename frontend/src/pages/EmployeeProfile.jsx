@@ -506,7 +506,7 @@ const EmployeeProfile = ({ token }) => {
                         <form onSubmit={handleSaveEdit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="col-span-1 md:col-span-2 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                                    <p className="text-yellow-200 text-sm">⚠️ La Cédula ({employee.identityCard}) no se puede modificar.</p>
+                                    <p className="text-yellow-200 text-sm">La Cédula ({employee.identityCard}) no se puede modificar.</p>
                                 </div>
 
                                 <InputField label="Nombre" name="firstName" value={editForm.firstName} onChange={handleEditChange} />
@@ -535,7 +535,7 @@ const EmployeeProfile = ({ token }) => {
                     </div>
                 </div>
             )}
-            )}
+
 
             {/* Create Contract Modal */}
             {isCreatingContract && (
