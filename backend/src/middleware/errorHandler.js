@@ -6,9 +6,9 @@ export function errorHandler(err, req, res, next) {
   console.error('Error:', err);
 
   // Errores de validación
-  if (err.message.includes('Nombre') || err.message.includes('Apellido') || 
-      err.message.includes('Email') || err.message.includes('Departamento') ||
-      err.message.includes('Puesto') || err.message.includes('Salario')) {
+  if (err.message.includes('Nombre') || err.message.includes('Apellido') ||
+    err.message.includes('Email') || err.message.includes('Departamento') ||
+    err.message.includes('Puesto') || err.message.includes('Salario')) {
     return res.status(400).json({
       success: false,
       message: err.message,
@@ -37,8 +37,8 @@ export function errorHandler(err, req, res, next) {
   // Error genérico
   res.status(500).json({
     success: false,
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Error interno del servidor' 
+    message: process.env.NODE_ENV === 'production'
+      ? 'Error interno del servidor'
       : err.message,
     type: 'InternalServerError',
   });
@@ -49,12 +49,12 @@ export function errorHandler(err, req, res, next) {
  */
 export function requestLogger(req, res, next) {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
   });
-  
+
   next();
 }
 
@@ -63,6 +63,11 @@ export function requestLogger(req, res, next) {
  */
 export function validateBodyNotEmpty(req, res, next) {
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    // Skip validation for multipart/form-data (file uploads)
+    if (req.headers['content-type']?.includes('multipart/form-data')) {
+      return next();
+    }
+
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({
         success: false,

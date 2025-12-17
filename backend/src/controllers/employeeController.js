@@ -139,8 +139,9 @@ export class EmployeeController {
     try {
       const { id } = req.params;
       const updateData = req.body;
+      const userId = req.user?.id;
 
-      const employee = await employeeService.updateEmployee(id, updateData);
+      const employee = await employeeService.updateEmployee(id, updateData, userId);
 
       res.status(200).json({
         success: true,
@@ -197,6 +198,28 @@ export class EmployeeController {
       res.status(500).json({
         success: false,
         message: error.message || 'Error al obtener estadísticas',
+      });
+    }
+  }
+
+  /**
+   * GET /employees/:id/history
+   * Obtener historial de cambios
+   */
+  async getHistory(req, res) {
+    try {
+      const { id } = req.params;
+      const history = await employeeService.getEmployeeHistory(id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Historial obtenido exitosamente',
+        data: history,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Error al obtener historial',
       });
     }
   }

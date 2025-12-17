@@ -43,8 +43,8 @@ const RegisterEmployee = ({ token }) => {
             };
 
             await createEmployee(dataToSend, token);
-            setSuccess('Empleado registrado exitosamente');
-            setTimeout(() => navigate('/admin'), 2000);
+            // setSuccess('Empleado registrado exitosamente'); // No longer needed locally if navigating immediately
+            navigate('/admin/employees', { state: { successMessage: 'Empleado registrado exitosamente' } });
         } catch (err) {
             setError(err.message || 'Error al registrar empleado');
         } finally {

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "cmj0787hj000014ezf12kfy6j",
+    "firstName": "Admin",
+    "lastName": "Principal",
+    "email": "admin@emplifi.com",
+    "identityCard": "0000000000"
+  },
+  {
+    "id": "cmj0787mg000114ezinbgqjdd",
+    "firstName": "Juan",
+    "lastName": "Pérez",
+    "email": "empleado@emplifi.com",
+    "identityCard": "1111111111"
+  },
+  {
+    "id": "cmj07uduv00007ao8r90st03n",
+    "firstName": "Alexander",
+    "lastName": "Díaz",
+    "email": "almud@gmail.com",
+    "identityCard": "1750138495"
+  },
+  {
+    "id": "cmj08s8tz00017ao8mi3ie2iq",
+    "firstName": "Prueba",
+    "lastName": "Prueba",
+    "email": "prueba@gmail.com",
+    "identityCard": "1750138494"
+  },
+  {
+    "id": "cmj9bfayj0000blu6cw9urye1",
+    "firstName": "Alexander",
+    "lastName": "Prueba",
+    "email": "est2@inst.edu",
+    "identityCard": "1750138422"
+  },
+  {
+    "id": "cmj9bfn6l0001blu6nykz7ug7",
+    "firstName": "Alexander",
+    "lastName": "Prueba",
+    "email": "estu1@inst.edu",
+    "identityCard": "1750138111"
+  },
+  {
+    "id": "cmj9bg0zs0002blu6hw86j2b6",
+    "firstName": "Alexander",
+    "lastName": "Prueba",
+    "email": "estud1@t.edu",
+    "identityCard": "175122332434"
+  },
+  {
+    "id": "cmj9bgc8w0003blu6nrpl5t30",
+    "firstName": "Alexander",
+    "lastName": "Prueba",
+    "email": "estudrf41@t.edu",
+    "identityCard": "1751223324"
+  },
+  {
+    "id": "cmj9bgsn20004blu6ca2z8brb",
+    "firstName": "Alexander",
+    "lastName": "Prueba",
+    "email": "hola@gmail.com",
+    "identityCard": "1234567890"
+  },
+  {
+    "id": "cmj9biyzm000052y6r3ty6hs6",
+    "firstName": "Alexanders",
+    "lastName": "Pruebas",
+    "email": "hol11@gmail.com",
+    "identityCard": "12345678900"
+  }
+]

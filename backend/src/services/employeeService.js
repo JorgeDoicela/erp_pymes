@@ -1,4 +1,5 @@
 import employeeRepository from '../repositories/employeeRepository.js';
+import auditRepository from '../repositories/auditRepository.js';
 
 /**
  * EmployeeService
@@ -77,9 +78,10 @@ export class EmployeeService {
    * Actualizar un empleado
    * @param {string} id - ID del empleado
    * @param {Object} updateData - Datos a actualizar
+   * @param {string} userId - ID del usuario que realiza la acción
    * @returns {Promise<Object>} Empleado actualizado
    */
-  async updateEmployee(id, updateData) {
+  async updateEmployee(id, updateData, userId) {
     // Validar que el ID sea válido
     if (!id || typeof id !== 'string') {
       throw new Error('ID de empleado inválido');
@@ -88,6 +90,14 @@ export class EmployeeService {
     // Validar datos a actualizar
     if (Object.keys(updateData).length === 0) {
       throw new Error('No hay datos para actualizar');
+    }
+
+    // IDENTITY CARD IMMUTABILITY CHECK
+    if (updateData.identityCard) {
+      delete updateData.identityCard; // Silently ignore or throw error?
+      // Let's throw to be explicit if the frontend sends it
+      // throw new Error('La cédula no se puede modificar');
+      // Or safer: just remove it to enforce immutability
     }
 
     // Si se actualiza el email, verificar que sea único
@@ -101,7 +111,33 @@ export class EmployeeService {
     // Validar datos parciales
     this.validateEmployeeData(updateData, true);
 
-    return await employeeRepository.update(id, updateData);
+    // Obtener datos anteriores para el log
+    const oldData = await this.getEmployee(id);
+
+    // Realizar actualización
+    const updatedEmployee = await employeeRepository.update(id, updateData);
+
+    // Calcular cambios para auditoría
+    const changes = {};
+    Object.keys(updateData).forEach(key => {
+      if (JSON.stringify(updateData[key]) !== JSON.stringify(oldData[key])) {
+        // Don't log sensitive salary if not needed, or log encrypted/masked?
+        // Requirement says "Cambios de salario registrados en historial"
+        changes[key] = { from: oldData[key], to: updateData[key] };
+      }
+    });
+
+    if (userId && Object.keys(changes).length > 0) {
+      await auditRepository.createLog({
+        entity: 'Employee',
+        entityId: id,
+        action: 'UPDATE',
+        performedBy: userId,
+        details: changes
+      });
+    }
+
+    return updatedEmployee;
   }
 
   /**
@@ -228,6 +264,15 @@ export class EmployeeService {
   isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  /**
+   * Obtener historial de cambios de un empleado
+   * @param {string} id - ID del empleado
+   * @returns {Promise<Array>} Historial de cambios
+   */
+  async getEmployeeHistory(id) {
+    return await auditRepository.getLogsByEntityId(id);
   }
 }
 

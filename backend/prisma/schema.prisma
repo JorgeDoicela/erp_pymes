@@ -35,28 +35,16 @@ model Employee {
   updatedAt         DateTime @updatedAt
 
   // Relaciones
-  documents         Document[]
   skills            Skill[]
   workHistory       WorkHistory[]
+  contracts         Contract[]
+  documents         Document[]
 
   @@index([email])
   @@index([department])
   @@map("employees")
 }
 
-model Document {
-  id          String   @id @default(cuid())
-  name        String
-  type        String   // PDF, DOCX, etc.
-  url         String
-  uploadDate  DateTime @default(now())
-  
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-
-  @@index([employeeId])
-  @@map("documents")
-}
 
 model Skill {
   id          String   @id @default(cuid())
@@ -83,4 +71,54 @@ model WorkHistory {
 
   @@index([employeeId])
   @@map("work_history")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  entity      String   // "Employee"
+  entityId    String
+  action      String   // "UPDATE", "CREATE"
+  performedBy String   // User name or ID
+  details     String   @db.Text // JSON string of changes
+  timestamp   DateTime @default(now())
+  
+  @@index([entityId])
+  @@map("audit_logs")
+}
+
+model Contract {
+  id          String   @id @default(cuid())
+  type        String   // "Indefinido", "Temporal", "Por Obra", etc.
+  startDate   DateTime
+  endDate     DateTime?
+  salary      Float
+  clauses     String?  @db.Text
+  documentUrl String?  // Path to PDF
+  status      String   @default("Active") // Active, Expired, Terminated
+  
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([employeeId])
+  @@map("contracts")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  type        String   // "DNI", "Licencia", "Certificado", "Otro"
+  documentUrl String   // Filename
+  originalName String?
+  mimeType    String?
+  expiryDate  DateTime?
+  
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([employeeId])
+  @@map("documents")
 }

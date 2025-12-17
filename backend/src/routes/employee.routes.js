@@ -10,6 +10,7 @@ router.get('/stats/salary', employeeController.getSalaryStats); // Colocar antes
 router.get('/:id', employeeController.getById);
 router.get('/department/:department', employeeController.getByDepartment);
 router.put('/:id', employeeController.update);
+router.get('/:id/history', employeeController.getHistory);
 router.delete('/:id', employeeController.delete);
 
 export default router;

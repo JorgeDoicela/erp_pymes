@@ -1,13 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getEmployees } from '../services/employee.service';
 
 const EmployeeList = ({ token }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+
+    useEffect(() => {
+        if (location.state?.successMessage) {
+            setSuccessMsg(location.state.successMessage);
+            window.history.replaceState({}, document.title);
+            const timer = setTimeout(() => setSuccessMsg(''), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [location]);
 
     useEffect(() => {
         fetchEmployees();
@@ -56,6 +67,13 @@ const EmployeeList = ({ token }) => {
                         className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                     />
                 </div>
+
+                {successMsg && (
+                    <div className="mb-6 p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-lg text-emerald-200 flex justify-between items-center animate-fade-in-down">
+                        <span>{successMsg}</span>
+                        <button onClick={() => setSuccessMsg('')} className="text-emerald-200/80 hover:text-white">✕</button>
+                    </div>
+                )}
 
                 {error && (
                     <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
