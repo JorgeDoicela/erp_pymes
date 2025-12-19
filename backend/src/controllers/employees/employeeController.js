@@ -1,4 +1,4 @@
-import employeeService from '../services/employeeService.js';
+import employeeService from '../../services/employees/employeeService.js';
 import bcrypt from 'bcryptjs';
 
 /**

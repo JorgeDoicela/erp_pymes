@@ -1,4 +1,4 @@
-import contractService from '../services/contractService.js';
+import contractService from '../../services/contracts/contractService.js';
 import path from 'path';
 
 class ContractController {

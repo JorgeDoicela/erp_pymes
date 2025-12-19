@@ -1,4 +1,4 @@
-import documentRepository from '../repositories/documentRepository.js';
+import documentRepository from '../../repositories/documents/documentRepository.js';
 import fs from 'fs';
 import path from 'path';
 

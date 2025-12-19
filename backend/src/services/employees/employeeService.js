@@ -1,5 +1,5 @@
-import employeeRepository from '../repositories/employeeRepository.js';
-import auditRepository from '../repositories/auditRepository.js';
+import employeeRepository from '../../repositories/employees/employeeRepository.js';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 
 /**
  * EmployeeService

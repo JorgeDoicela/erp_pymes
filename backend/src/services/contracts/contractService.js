@@ -1,5 +1,5 @@
-import contractRepository from '../repositories/contractRepository.js';
-import employeeRepository from '../repositories/employeeRepository.js';
+import contractRepository from '../../repositories/contracts/contractRepository.js';
+import employeeRepository from '../../repositories/employees/employeeRepository.js';
 
 class ContractService {
     async createContract(data) {

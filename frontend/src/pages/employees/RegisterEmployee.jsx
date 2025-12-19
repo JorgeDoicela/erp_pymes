@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createEmployee } from '../services/employee.service';
+import { useEmployees } from '../../hooks/employees/useEmployees';
+import InputField from '../../components/common/InputField';
+import SelectField from '../../components/common/SelectField';
 
 const RegisterEmployee = ({ token }) => {
     const navigate = useNavigate();
+    const { registerEmployee, loading } = useEmployees(token);
+
+    // UI Local state for form
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -20,8 +25,6 @@ const RegisterEmployee = ({ token }) => {
         contractType: ''
     });
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,25 +33,18 @@ const RegisterEmployee = ({ token }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError('');
-        setSuccess('');
 
         try {
-            // Basic validation handled by 'required' attributes, more advanced here if needed
-            // Convert salary to number
             const dataToSend = {
                 ...formData,
                 salary: Number(formData.salary)
             };
 
-            await createEmployee(dataToSend, token);
-            // setSuccess('Empleado registrado exitosamente'); // No longer needed locally if navigating immediately
+            await registerEmployee(dataToSend);
             navigate('/admin/employees', { state: { successMessage: 'Empleado registrado exitosamente' } });
         } catch (err) {
             setError(err.message || 'Error al registrar empleado');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -64,11 +60,6 @@ const RegisterEmployee = ({ token }) => {
                     {error && (
                         <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
                             {error}
-                        </div>
-                    )}
-                    {success && (
-                        <div className="mb-6 p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-lg text-emerald-200">
-                            {success}
                         </div>
                     )}
 
@@ -143,38 +134,5 @@ const RegisterEmployee = ({ token }) => {
         </div>
     );
 };
-
-const InputField = ({ label, name, type = "text", value, onChange, ...props }) => (
-    <div className="flex flex-col">
-        <label className="text-sm font-medium text-slate-400 mb-1">{label}</label>
-        <input
-            type={type}
-            name={name}
-            value={value}
-            onChange={onChange}
-            required
-            className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all placeholder-slate-600"
-            {...props}
-        />
-    </div>
-);
-
-const SelectField = ({ label, name, value, onChange, options }) => (
-    <div className="flex flex-col">
-        <label className="text-sm font-medium text-slate-400 mb-1">{label}</label>
-        <select
-            name={name}
-            value={value}
-            onChange={onChange}
-            required
-            className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-        >
-            <option value="" disabled className="bg-slate-900">Seleccionar...</option>
-            {options.map(opt => (
-                <option key={opt.value} value={opt.value} className="bg-slate-900">{opt.label}</option>
-            ))}
-        </select>
-    </div>
-);
 
 export default RegisterEmployee;

@@ -1,4 +1,4 @@
-import documentService from '../services/documentService.js';
+import documentService from '../../services/documents/documentService.js';
 import path from 'path';
 
 class DocumentController {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getEmployeeById, updateEmployee, getEmployeeHistory, createContract, getContracts, uploadDocument, getDocuments, deleteDocument } from '../services/employee.service';
+import { getEmployeeById, updateEmployee, getEmployeeHistory, createContract, getContracts, uploadDocument, getDocuments, deleteDocument } from '../../services/employees/employee.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 

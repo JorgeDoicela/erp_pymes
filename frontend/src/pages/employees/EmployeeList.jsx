@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getEmployees } from '../services/employee.service';
+import { useEmployees } from '../../hooks/employees/useEmployees';
 
 const EmployeeList = ({ token }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [employees, setEmployees] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+
+    // Use the hook for data fetching
+    const { employees, loading, error, fetchEmployees } = useEmployees(token);
+
     const [searchTerm, setSearchTerm] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
@@ -21,19 +22,8 @@ const EmployeeList = ({ token }) => {
     }, [location]);
 
     useEffect(() => {
-        fetchEmployees();
-    }, [searchTerm]); // Re-fetch when search changes (debounce could be added for better performance)
-
-    const fetchEmployees = async () => {
-        try {
-            const data = await getEmployees(token, searchTerm);
-            setEmployees(data.data || []);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchEmployees(searchTerm);
+    }, [searchTerm, fetchEmployees]);
 
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);

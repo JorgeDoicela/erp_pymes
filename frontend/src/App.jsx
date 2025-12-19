@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Home from './pages/Home.jsx'
-import Login from './pages/Login.jsx'
-import AdminDashboard from './pages/AdminDashboard.jsx'
-import EmployeeDashboard from './pages/EmployeeDashboard.jsx'
-import RegisterEmployee from './pages/RegisterEmployee.jsx'
-import EmployeeList from './pages/EmployeeList.jsx'
-import EmployeeProfile from './pages/EmployeeProfile.jsx'
+import Home from './pages/landing/Home.jsx'
+import Login from './pages/auth/Login.jsx'
+import AdminDashboard from './pages/dashboard/AdminDashboard.jsx'
+import EmployeeDashboard from './pages/dashboard/EmployeeDashboard.jsx'
+import RegisterEmployee from './pages/employees/RegisterEmployee.jsx'
+import EmployeeList from './pages/employees/EmployeeList.jsx'
+import EmployeeProfile from './pages/employees/EmployeeProfile.jsx'
 
 function App() {
   const [auth, setAuth] = useState({ user: null, token: null })
