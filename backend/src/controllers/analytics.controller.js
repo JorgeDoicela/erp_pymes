@@ -510,3 +510,65 @@ export const getSatisfactionReport = async (req, res) => {
         res.status(500).json({ message: "Error al generar reporte de satisfacción" });
     }
 };
+
+export const getCustomReport = async (req, res) => {
+    try {
+        const { module, fields, filters } = req.body;
+        console.log("Analytics: Custom Report Request", { module, fields, filters });
+
+        // Map safe module names to prisma delegates
+        const modelMap = {
+            'employees': prisma.employee,
+            'payrolls': prisma.payroll,
+            'job_applications': prisma.jobApplication,
+            'evaluations': prisma.employeeEvaluation
+        };
+
+        const delegate = modelMap[module];
+        if (!delegate) {
+            return res.status(400).json({ message: "Módulo no válido" });
+        }
+
+        // Construct Select
+        let select = undefined;
+        if (fields && fields.length > 0) {
+            select = {};
+            fields.forEach(f => select[f] = true);
+            // Always ensure ID is selected to be safe? Or stick to user request.
+            // If fields are nested (e.g. employee.department), Prisma handles it differently.
+            // For MVP, we assume flat fields or handle specific relations manually if needed.
+            // Let's assume fields are top-level for now.
+
+            // Check for relation fields request
+            // e.g. if module is 'evaluations', user wants 'employee.firstName'
+            // This simple builder might struggle with deep relations without sophisticated parsing.
+            // We will stick to flat fields of the main model for V1.
+        }
+
+        // Construct Where
+        const where = {};
+        if (filters) {
+            if (filters.department) where.department = filters.department;
+            if (filters.status) where.status = filters.status;
+            // Date handling generic path
+            if (filters.dateRange && filters.dateField) {
+                where[filters.dateField] = {
+                    gte: new Date(filters.dateRange.start),
+                    lte: new Date(filters.dateRange.end)
+                };
+            }
+        }
+
+        // Execute
+        const data = await delegate.findMany({
+            where,
+            select: select // undefined means all fields
+        });
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Error generating custom report:", error);
+        res.status(500).json({ message: "Error al generar reporte personalizado" });
+    }
+};

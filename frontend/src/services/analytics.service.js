@@ -34,3 +34,8 @@ export const getSatisfactionReport = async () => {
     const response = await api.get('/analytics/satisfaction');
     return response.data;
 };
+
+export const generateCustomReport = async (config) => {
+    const response = await api.post('/analytics/custom-report', config);
+    return response.data;
+};

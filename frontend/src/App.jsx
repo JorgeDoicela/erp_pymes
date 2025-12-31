@@ -35,6 +35,7 @@ import TurnoverReport from './pages/reports/TurnoverReport.jsx'
 import PerformanceReport from './pages/reports/PerformanceReport.jsx'
 import PayrollCostReport from './pages/reports/PayrollCostReport.jsx'
 import SatisfactionReport from './pages/reports/SatisfactionReport.jsx'
+import CustomReport from './pages/reports/CustomReport.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -309,6 +310,14 @@ function App() {
         element={
           <RequireAuth role="admin">
             <SatisfactionReport />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/analytics/custom"
+        element={
+          <RequireAuth role="admin">
+            <CustomReport />
           </RequireAuth>
         }
       />
