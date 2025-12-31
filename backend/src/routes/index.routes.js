@@ -8,6 +8,7 @@ import shiftRoutes from './attendance/shift.routes.js';
 import absenceRoutes from './attendance/absence.routes.js';
 import reportRoutes from './reports/report.routes.js';
 import payrollConfigRoutes from './payroll/payrollConfig.routes.js';
+import benefitsRoutes from './payroll/benefits.routes.js';
 
 
 const router = Router();
@@ -31,5 +32,6 @@ router.use('/reports', reportRoutes);
 
 // Payroll Routes
 router.use('/payroll', payrollConfigRoutes);
+router.use('/benefits', benefitsRoutes);
 
 export default router;

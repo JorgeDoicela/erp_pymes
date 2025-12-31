@@ -45,6 +45,7 @@ model Employee {
   schedules     EmployeeSchedule[]
   absences      AbsenceRequest[]
   PayrollDetail PayrollDetail[]
+  benefits      EmployeeBenefit[]
 
   @@index([email])
   @@index([department])
@@ -294,4 +295,24 @@ model PayrollDetail {
   @@index([payrollId])
   @@index([employeeId])
   @@map("payroll_details")
+}
+
+model EmployeeBenefit {
+  id        String @id @default(cuid())
+  name      String
+  amount    Float
+  
+  type      String // "BONUS", "INCENTIVE", "ALLOWANCE"
+  frequency String // "ONE_TIME", "RECURRING"
+  
+  status    String @default("ACTIVE") // ACTIVE, PROCESSED, CANCELLED
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@map("employee_benefits")
 }

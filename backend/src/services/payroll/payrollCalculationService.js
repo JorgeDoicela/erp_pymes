@@ -108,6 +108,7 @@ class PayrollCalculationService {
             const employeeBonuses = [];
             const employeeDeductions = [];
 
+            // 1. Global Config Items
             config.items.forEach(item => {
                 let amount = 0;
                 if (item.fixedValue) {
@@ -121,6 +122,23 @@ class PayrollCalculationService {
                 } else {
                     employeeDeductions.push({ name: item.name, amount });
                 }
+            });
+
+            // 2. Individual Benefits (RF-NOM-004)
+            const benefits = await prisma.employeeBenefit.findMany({
+                where: {
+                    employeeId: emp.id,
+                    status: 'ACTIVE'
+                }
+            });
+
+            benefits.forEach(benefit => {
+                employeeBonuses.push({
+                    name: benefit.name,
+                    amount: benefit.amount,
+                    benefitId: benefit.id, // Track ID for processing later
+                    frequency: benefit.frequency
+                });
             });
 
             const totalBonuses = employeeBonuses.reduce((acc, curr) => acc + curr.amount, 0);
@@ -198,6 +216,27 @@ class PayrollCalculationService {
     }
 
     async confirmPayroll(id) {
+        const payroll = await prisma.payroll.findUnique({
+            where: { id },
+            include: { details: true }
+        });
+
+        if (!payroll) throw new Error('Nómina no encontrada');
+        if (payroll.status === 'APPROVED') throw new Error('Nómina ya está aprobada');
+
+        // Process One-Time Benefits
+        for (const detail of payroll.details) {
+            const bonuses = JSON.parse(detail.bonuses || '[]');
+            for (const bonus of bonuses) {
+                if (bonus.benefitId && bonus.frequency === 'ONE_TIME') {
+                    await prisma.employeeBenefit.update({
+                        where: { id: bonus.benefitId },
+                        data: { status: 'PROCESSED' }
+                    });
+                }
+            }
+        }
+
         return await prisma.payroll.update({
             where: { id },
             data: { status: 'APPROVED' }

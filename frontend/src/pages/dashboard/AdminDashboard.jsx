@@ -25,6 +25,7 @@ function AdminDashboard({ user, onLogout }) {
         { title: 'Turnos', icon: '📅', color: 'bg-purple-500', path: '/admin/shifts' },
         { title: 'Ausencias', icon: '🤕', color: 'bg-rose-500', path: '/admin/absences' }, // Nueva
         { title: 'Nómina', icon: '💰', color: 'bg-green-500', path: '/admin/payroll/generate' },
+        { title: 'Beneficios', icon: '🎁', color: 'bg-yellow-500', path: '/admin/payroll/benefits' }, // Nueva
         { title: 'Evaluaciones', icon: '📊', color: 'bg-orange-500', path: '/performance' },
         { title: 'Reclutamiento', icon: '🤝', color: 'bg-pink-500', path: '/recruitment' },
         { title: 'Reportes', icon: '📈', color: 'bg-cyan-500', path: '/admin/reports' },
