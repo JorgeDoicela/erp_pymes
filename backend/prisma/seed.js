@@ -1,264 +1,120 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import { encryptSalary } from '../src/utils/encryption.js';
+import { seedCleanup } from './seeds/cleanup.js';
+import { seedUsers } from './seeds/users.js';
+import { seedEmployees } from './seeds/employees.js';
+import { seedRecruitment } from './seeds/recruitment.js';
+import { seedPerformance } from './seeds/performance.js';
+import { seedPayroll } from './seeds/payroll.js';
+import { seedClimate } from './seeds/climate.js';
+import { seedCoreRecords } from './seeds/core_records.js';
+import { seedGoals } from './seeds/goals.js';
+import { seedBenefits } from './seeds/benefits.js';
+import { seedAttendance } from './seeds/attendance.js';
+import { seedAbsences } from './seeds/absences.js';
+import { seedDocuments } from './seeds/documents.js';
+import { seedAudit } from './seeds/audit.js';
+import { seedPayrollConfig } from './seeds/payroll_config.js';
 
 const prisma = new PrismaClient();
 
 async function main() {
-    console.log('🌱 Iniciando Seed Completo del Sistema...');
+    const args = process.argv.slice(2);
+    const onlyArg = args.find(arg => arg.startsWith('--only='));
+    const moduleToRun = onlyArg ? onlyArg.split('=')[1] : 'all';
 
-    // 1. Limpieza de tablas (Orden específico por claves foráneas)
-    const models = [
-        'payrollDetail', 'payroll', 'payrollItem', 'payrollConfig',
-        'attendance', 'absenceRequest', 'employeeSchedule', 'shift',
-        'contract', 'document', 'skill', 'workHistory', 'auditLog', 'employee'
-    ];
+    console.log(`🚀 Starting Seed (Module: ${moduleToRun})`);
 
-    // Deleting in order
-    // Note: We use deleteMany() which allows cascading if configured in DB, but prisma schema has onDelete: Cascade so it should work.
-    // However, clean delete is safer.
-    await prisma.payrollDetail.deleteMany();
-    await prisma.payroll.deleteMany();
-    await prisma.payrollItem.deleteMany();
-    await prisma.payrollConfig.deleteMany();
-    await prisma.attendance.deleteMany();
-    await prisma.absenceRequest.deleteMany();
-    await prisma.employeeSchedule.deleteMany();
-    await prisma.shift.deleteMany();
-    await prisma.contract.deleteMany();
-    await prisma.document.deleteMany();
-    await prisma.skill.deleteMany();
-    await prisma.workHistory.deleteMany();
-    await prisma.auditLog.deleteMany();
-    await prisma.employee.deleteMany();
+    // 1. Cleanup
+    if (moduleToRun === 'all' || moduleToRun === 'cleanup') {
+        await seedCleanup(prisma);
+    }
 
-    console.log('🧹 Base de datos limpia.');
+    // 2. Users - Ensure they exist regardless of previous step
+    let admin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
+    let testUser = await prisma.employee.findUnique({ where: { email: 'empleado@test.com' } });
 
-    // 2. Turnos
-    const shiftMorning = await prisma.shift.create({
-        data: { name: 'Matutino', startTime: '08:00', endTime: '17:00' }
-    });
-    const shiftEvening = await prisma.shift.create({
-        data: { name: 'Vespertino', startTime: '14:00', endTime: '22:00' }
-    });
+    if ((!admin || !testUser) && (moduleToRun === 'all' || moduleToRun === 'users')) {
+        const users = await seedUsers(prisma);
+        if (!admin) admin = users.admin;
+        if (!testUser) testUser = users.testUser;
+    }
 
-    console.log('🕒 Turnos creados');
+    // Double check to ensure we have them for dependencies
+    if (!admin) admin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
+    if (!testUser) testUser = await prisma.employee.findUnique({ where: { email: 'empleado@test.com' } });
 
-    // 3. Empleados y sus datos relacionados
-    const password = await bcrypt.hash('123456', 10);
+    console.log(`👤 Admin ID: ${admin?.id || 'NOT FOUND'}`);
+    console.log(`👤 Test User ID: ${testUser?.id || 'NOT FOUND'}`);
 
-    const employeesData = [
-        {
-            firstName: 'Admin', lastName: 'Sistema', email: 'admin@emplifi.com', role: 'admin',
-            department: 'Dirección', position: 'Administrador', salary: 5000,
-            idCard: '0101010101', birth: '1985-05-05', shift: shiftMorning.id,
-            bankName: 'Banco Pichincha', accountNumber: '2100123456', accountType: 'Corriente'
-        },
-        {
-            firstName: 'Ana', lastName: 'García', email: 'ana.garcia@emplifi.com', role: 'employee',
-            department: 'Recursos Humanos', position: 'Gerente RRHH', salary: 3500,
-            idCard: '0202020202', birth: '1990-08-15', shift: shiftMorning.id,
-            bankName: 'Banco Guayaquil', accountNumber: '0123456789', accountType: 'Ahorros'
-        },
-        {
-            firstName: 'Carlos', lastName: 'Vera', email: 'carlos.vera@emplifi.com', role: 'employee',
-            department: 'Desarrollo', position: 'Senior Backend Dev', salary: 2800,
-            idCard: '0303030303', birth: '1993-02-20', shift: shiftMorning.id,
-            bankName: 'Banco del Pacífico', accountNumber: '9876543210', accountType: 'Ahorros'
-        },
-        {
-            firstName: 'Diana', lastName: 'Torres', email: 'diana.torres@emplifi.com', role: 'employee',
-            department: 'Desarrollo', position: 'Frontend Dev', salary: 2200,
-            idCard: '0404040404', birth: '1996-11-10', shift: shiftMorning.id,
-            bankName: 'Banco Pichincha', accountNumber: '1111222233', accountType: 'Ahorros'
-        },
-        {
-            firstName: 'Eduardo', lastName: 'Ruiz', email: 'eduardo.ruiz@emplifi.com', role: 'employee',
-            department: 'Soporte', position: 'Técnico Soporte', salary: 1200,
-            idCard: '0505050505', birth: '1998-07-25', shift: shiftEvening.id,
-            bankName: 'Banco Internacional', accountNumber: '5555666677', accountType: 'Ahorros'
-        },
-        {
-            firstName: 'Fernanda', lastName: 'Lopez', email: 'fernanda.lopez@emplifi.com', role: 'employee',
-            department: 'Ventas', position: 'Ejecutiva Comercial', salary: 1500,
-            idCard: '0606060606', birth: '1995-01-30', shift: shiftMorning.id,
-            bankName: 'Produbanco', accountNumber: '7788990011', accountType: 'Corriente'
-        }
-    ];
+    // 3. Employees
+    let bulkEmployees = [];
+    if (moduleToRun === 'all' || moduleToRun === 'employees') {
+        bulkEmployees = await seedEmployees(prisma);
+    }
 
-    const createdEmployees = [];
-
-    for (const emp of employeesData) {
-        const newEmp = await prisma.employee.create({
-            data: {
-                firstName: emp.firstName,
-                lastName: emp.lastName,
-                email: emp.email,
-                password: password,
-                role: emp.role,
-                department: emp.department,
-                position: emp.position,
-                salary: encryptSalary(emp.salary),
-                identityCard: emp.idCard,
-                birthDate: new Date(emp.birth),
-                address: 'Quito, Ecuador',
-                phone: '0900000000',
-                hireDate: new Date('2023-01-01'),
-                contractType: 'Indefinido',
-                civilStatus: 'Soltero',
-                bankName: emp.bankName,
-                accountNumber: emp.accountNumber,
-                accountType: emp.accountType
-            }
-        });
-        createdEmployees.push(newEmp);
-
-        // Contrato
-        await prisma.contract.create({
-            data: {
-                employeeId: newEmp.id,
-                type: 'Indefinido',
-                startDate: new Date('2023-01-01'),
-                salary: emp.salary,
-                status: 'Active'
-            }
-        });
-
-        // Horario
-        await prisma.employeeSchedule.create({
-            data: {
-                employeeId: newEmp.id,
-                shiftId: emp.shift,
-                startDate: new Date(),
-                daysOfWeek: JSON.stringify(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"])
-            }
-        });
-
-        // Skills (Aleatorio)
-        await prisma.skill.createMany({
-            data: [
-                { employeeId: newEmp.id, name: 'Trabajo en Equipo', level: 'Advanced' },
-                { employeeId: newEmp.id, name: 'Comunicación', level: 'Intermediate' }
-            ]
+    // Always fetch bulk if list is empty (for partial runs)
+    if (bulkEmployees.length === 0) {
+        bulkEmployees = await prisma.employee.findMany({
+            where: { role: 'employee', email: { not: 'empleado@test.com' } }
         });
     }
 
-    console.log(`👥 ${createdEmployees.length} empleados creados con Contratos, Horarios y Skills.`);
+    const allEmployees = [];
+    if (admin) allEmployees.push(admin);
+    if (testUser) allEmployees.push(testUser);
+    allEmployees.push(...bulkEmployees);
 
-    // 4. Asistencia (Último mes)
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    console.log(`👥 Total Employees for Seeding: ${allEmployees.length}`);
 
-    console.log('⏳ Generando asistencia...');
-
-    for (const emp of createdEmployees) {
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day);
-            const dayOfWeek = date.getDay();
-
-            if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Fin de semana
-
-            // Simulación realista
-            const rand = Math.random();
-            let status = 'Presente';
-            let checkIn = new Date(year, month, day, 8, 0, 0);
-            let checkOut = new Date(year, month, day, 17, 0, 0);
-            let workedHours = 8;
-
-            if (emp.role === 'admin') continue; // Admin a veces no marca o es perfecto, saltamos para variar.
-
-            // 5% Falta
-            if (rand < 0.05) {
-                status = 'Falta';
-                // Crear Absence Request si es falta
-                if (Math.random() > 0.5) { // 50% justificada
-                    await prisma.attendance.create({
-                        data: {
-                            employeeId: emp.id,
-                            date: date,
-                            checkIn: new Date(year, month, day, 0, 0, 0), // Dummy required
-                            checkOut: null,
-                            status: 'Falta',
-                            workedHours: 0
-                        }
-                    });
-
-                    await prisma.absenceRequest.create({
-                        data: {
-                            employeeId: emp.id,
-                            type: 'Enfermedad',
-                            startDate: date,
-                            endDate: date,
-                            reason: 'Gripe estacional',
-                            status: 'APPROVED'
-                        }
-                    });
-                } else {
-                    await prisma.attendance.create({
-                        data: {
-                            employeeId: emp.id,
-                            date: date,
-                            checkIn: new Date(year, month, day, 0, 0, 0),
-                            checkOut: null,
-                            status: 'Falta',
-                            workedHours: 0
-                        }
-                    });
-                }
-                continue;
-            }
-
-            // 15% Atraso
-            if (rand < 0.20 && rand >= 0.05) {
-                status = 'Atraso';
-                const delayMinutes = Math.floor(Math.random() * 60);
-                checkIn = new Date(year, month, day, 8, delayMinutes, 0);
-                workedHours = 8 - (delayMinutes / 60);
-            }
-
-            // 10% Horas Extra
-            if (rand > 0.90) {
-                const extraHours = Math.floor(Math.random() * 3) + 1;
-                checkOut = new Date(year, month, day, 17 + extraHours, 0, 0);
-                workedHours = 8 + extraHours;
-            }
-
-            await prisma.attendance.create({
-                data: {
-                    employeeId: emp.id,
-                    date: date,
-                    checkIn: checkIn,
-                    checkOut: checkOut,
-                    status: status,
-                    workedHours: workedHours
-                }
-            });
+    // 4. Core Records (Contracts, Skills, Schedules, Documents)
+    if (moduleToRun === 'all' || moduleToRun === 'core') {
+        if (allEmployees.length > 0) {
+            await seedCoreRecords(prisma, allEmployees);
+            await seedDocuments(prisma, allEmployees);
         }
     }
 
-    console.log('✅ Asistencia Generada.');
-
-    // 5. Configuración Nómina
-    await prisma.payrollConfig.create({
-        data: {
-            workingDays: 30,
-            currency: 'USD',
-            isActive: true,
-            items: {
-                create: [
-                    { name: 'Aporte IESS', type: 'DEDUCTION', isMandatory: true, percentage: 9.45 },
-                    { name: 'Impuesto Renta', type: 'DEDUCTION', isMandatory: false, fixedValue: 0 }, // Placeholder
-                    { name: 'Bono Transporte', type: 'EARNING', isMandatory: false, fixedValue: 25.00 }
-                ]
-            }
+    // 5. Modules
+    if (moduleToRun === 'all' || moduleToRun === 'recruitment') {
+        if (admin) {
+            await seedRecruitment(prisma, admin.id);
+        } else {
+            console.error("❌ Skipping Recruitment: Admin not found");
         }
-    });
+    }
 
-    console.log('✅ Configuración de Nómina lista.');
-    console.log('🚀 SEED COMPLETADO EXITOSAMENTE');
-    console.log('Usuarios para login: admin@emplifi.com / 123456');
+    if (moduleToRun === 'all' || moduleToRun === 'goals') {
+        await seedGoals(prisma, allEmployees);
+    }
+
+    if (moduleToRun === 'all' || moduleToRun === 'benefits') {
+        await seedBenefits(prisma, allEmployees);
+    }
+
+    if (moduleToRun === 'all' || moduleToRun === 'attendance') {
+        await seedAttendance(prisma, allEmployees);
+        await seedAbsences(prisma, allEmployees);
+    }
+
+    if (moduleToRun === 'all' || moduleToRun === 'performance') {
+        await seedPerformance(prisma, allEmployees);
+    }
+
+    if (moduleToRun === 'all' || moduleToRun === 'payroll') {
+        await seedPayrollConfig(prisma);
+        await seedPayroll(prisma, allEmployees);
+    }
+
+    if (moduleToRun === 'all' || moduleToRun === 'climate') {
+        await seedClimate(prisma);
+    }
+
+    if (moduleToRun === 'all' || moduleToRun === 'audit') {
+        await seedAudit(prisma, allEmployees);
+    }
+
+    console.log('✅ SEED FINISHED.');
 }
 
 main()
