@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import absenceService from '../../../services/attendance/absenceService';
+import * as employeeService from '../../../services/employees/employee.service'; // Named
 import { motion } from 'framer-motion';
 
 const EmployeeAbsences = () => {
     const [requests, setRequests] = useState([]);
     const [isCreating, setIsCreating] = useState(false);
+    const [balance, setBalance] = useState(0); // Vacation Balance
 
     const [formData, setFormData] = useState({
-        type: 'Enfermedad',
+        type: 'Vacaciones', // Default to Vacaciones as it's most common/important
         startDate: '',
         endDate: '',
         reason: '',
@@ -18,13 +20,17 @@ const EmployeeAbsences = () => {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
-        loadRequests();
+        loadData();
     }, []);
 
-    const loadRequests = async () => {
+    const loadData = async () => {
         try {
             const res = await absenceService.getMyRequests();
             if (res.success) setRequests(res.data);
+
+            // Perfil
+            const userRes = await employeeService.getProfile();
+            if (userRes.success) setBalance(userRes.data.vacationDays);
         } catch (error) {
             console.error(error);
         }
@@ -49,8 +55,8 @@ const EmployeeAbsences = () => {
             if (res.success) {
                 setMessage('Solicitud enviada exitosamente.');
                 setIsCreating(false);
-                setFormData({ type: 'Enfermedad', startDate: '', endDate: '', reason: '', file: null });
-                loadRequests();
+                setFormData({ type: 'Vacaciones', startDate: '', endDate: '', reason: '', file: null });
+                loadData();
             }
         } catch (error) {
             setMessage('Error al enviar solicitud.');
@@ -79,6 +85,15 @@ const EmployeeAbsences = () => {
                 </button>
             </h2>
 
+            {/* Balance Card */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-xl shadow-lg border border-blue-400/30 mb-8 max-w-sm">
+                <p className="text-blue-100 text-sm font-medium">Días de Vacaciones Disponibles</p>
+                <div className="flex items-end gap-2 mt-2">
+                    <span className="text-4xl font-bold text-white">{balance}</span>
+                    <span className="text-blue-200 mb-1">días</span>
+                </div>
+            </div>
+
             {/* Create Form */}
             {isCreating && (
                 <motion.div
@@ -95,10 +110,10 @@ const EmployeeAbsences = () => {
                                     value={formData.type}
                                     onChange={e => setFormData({ ...formData, type: e.target.value })}
                                 >
-                                    <option>Enfermedad</option>
-                                    <option>Vacaciones</option>
-                                    <option>Asuntos Personales</option>
-                                    <option>Otro</option>
+                                    <option value="Enfermedad">Enfermedad</option>
+                                    <option value="Vacaciones">Vacaciones</option>
+                                    <option value="Asuntos Personales">Asuntos Personales</option>
+                                    <option value="Otro">Otro</option>
                                 </select>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
@@ -124,6 +139,49 @@ const EmployeeAbsences = () => {
                                 </div>
                             </div>
                         </div>
+
+
+                        {/* Vacation Impact Feedback */}
+                        {formData.startDate && formData.endDate && (
+                            <div className={`p-4 rounded-lg border ${formData.type === 'Vacaciones'
+                                ? (Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1) > balance
+                                    ? 'bg-red-500/10 border-red-500/30 text-red-200'
+                                    : 'bg-blue-500/10 border-blue-500/30 text-blue-200'
+                                : 'bg-slate-700/50 border-slate-600 text-slate-300'
+                                }`}>
+                                <div className="flex justify-between items-center">
+                                    <span className="font-medium">Duración estimada:</span>
+                                    <span className="font-bold text-lg">
+                                        {Math.max(0, Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1)} días
+                                    </span>
+                                </div>
+
+                                {formData.type === 'Vacaciones' && (
+                                    <div className="mt-2 text-sm border-t border-white/10 pt-2">
+                                        <div className="flex justify-between">
+                                            <span>Tu saldo actual:</span>
+                                            <span>{balance} días</span>
+                                        </div>
+                                        <div className="flex justify-between font-bold mt-1">
+                                            <span>Saldo final estimado:</span>
+                                            <span className={balance - (Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1) < 0 ? 'text-red-400' : 'text-green-400'}>
+                                                {balance - (Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1)} días
+                                            </span>
+                                        </div>
+                                        {(Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1) > balance && (
+                                            <p className="text-red-400 mt-2 text-xs flex items-center gap-1">
+                                                ⚠️ Saldo insuficiente para esta solicitud.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                                {formData.type !== 'Vacaciones' && (
+                                    <p className="text-xs mt-2 opacity-70">
+                                        ℹ️ Este tipo de ausencia NO descuenta días de tu saldo de vacaciones.
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         <div>
                             <label className="block text-sm text-gray-400 mb-1">Motivo / Descripción</label>
@@ -163,7 +221,8 @@ const EmployeeAbsences = () => {
                         </div>
                     </form>
                 </motion.div>
-            )}
+            )
+            }
 
             {/* List */}
             <div className="space-y-4">
@@ -202,7 +261,7 @@ const EmployeeAbsences = () => {
                     ))
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

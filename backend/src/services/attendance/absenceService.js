@@ -1,15 +1,35 @@
 import { absenceRepository } from '../../repositories/attendance/absenceRepository.js';
+import prisma from '../../database/db.js';
 
 export const absenceService = {
     async createRequest({ employeeId, type, startDate, endDate, reason, file }) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const daysRequested = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+        // Validación de Vacaciones (Robust comparison)
+        const cleanType = type.trim();
+        console.log(`[DEBUG] createRequest: Type='${type}', Clean='${cleanType}'`);
+
+        if (cleanType === 'Vacaciones') {
+            const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
+            if (!employee) throw new Error('Empleado no encontrado');
+
+            console.log(`[DEBUG] Solicito Vacaciones. Balance actual: ${employee.vacationDays}. Días pedidos: ${daysRequested}`);
+
+            if (employee.vacationDays < daysRequested) {
+                throw new Error(`Saldo insuficiente. Tienes ${employee.vacationDays} días, solicitaste ${daysRequested}.`);
+            }
+        }
+
         const data = {
             employeeId,
             type,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
+            startDate: start,
+            endDate: end,
             reason,
             status: 'PENDING',
-            evidenceUrl: file ? file.filename : null // Guardamos solo el nombre del archivo
+            evidenceUrl: file ? file.filename : null
         };
 
         return absenceRepository.createRequest(data);
@@ -28,13 +48,45 @@ export const absenceService = {
         const request = await absenceRepository.getRequestById(id);
         if (!request) throw new Error('Solicitud no encontrada');
 
-        // 2. Actualizar estado
-        const updated = await absenceRepository.updateStatus(id, status, adminComment);
+        // Si ya estaba aprobado no hacemos nada (o podríamos manejar reversión si rechazamos)
+        if (request.status === 'APPROVED' && status === 'APPROVED') {
+            return request;
+        }
 
-        // TODO: Si es APPROVED, aquí podríamos generar automáticamente los registros 
-        // de Attendance con status 'JUSTIFIED' para ese rango de fechas.
-        // Por ahora lo dejaremos solo como actualización de estado.
+        // Transacción para aprobar vacaciones
+        const requestType = request.type.trim();
+        console.log(`[DEBUG] updateRequestStatus: Status=${status}, Type='${request.type}', Clean='${requestType}'`);
 
-        return updated;
+        if (status === 'APPROVED' && requestType === 'Vacaciones') {
+            return prisma.$transaction(async (tx) => {
+                const start = new Date(request.startDate);
+                const end = new Date(request.endDate);
+                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+                // Verificar saldo nuevamente por seguridad
+                const employee = await tx.employee.findUnique({ where: { id: request.employeeId } });
+
+                console.log(`[DEBUG] Aprobando Vacaciones. Balance: ${employee.vacationDays}. Descontando: ${days}`);
+
+                if (employee.vacationDays < days) {
+                    throw new Error(`No se puede aprobar: Saldo insuficiente (${employee.vacationDays} días).`);
+                }
+
+                // Restar días
+                await tx.employee.update({
+                    where: { id: request.employeeId },
+                    data: { vacationDays: { decrement: days } }
+                });
+
+                // Actualizar solicitud
+                return tx.absenceRequest.update({
+                    where: { id },
+                    data: { status, adminComment }
+                });
+            });
+        }
+
+        // Flujo normal (sin transacción compleja)
+        return absenceRepository.updateStatus(id, status, adminComment);
     }
 };

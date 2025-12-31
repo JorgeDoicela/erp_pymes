@@ -109,3 +109,12 @@ export const deleteDocument = async (id, token) => {
     }
 };
 
+export const getProfile = async () => {
+    try {
+        const response = await api.get('/employees/me/profile');
+        return response.data;
+    } catch (error) {
+        throw new Error('Error al obtener perfil');
+    }
+};
+

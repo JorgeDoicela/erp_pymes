@@ -223,6 +223,20 @@ export class EmployeeController {
       });
     }
   }
+
+  /**
+   * GET /employees/me/profile
+   * Obtener perfil del usuario autenticado
+   */
+  async getProfile(req, res) {
+    try {
+      const id = req.user.id;
+      const employee = await employeeService.getEmployee(id);
+      res.status(200).json({ success: true, data: employee });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error al obtener perfil' });
+    }
+  }
 }
 
 export default new EmployeeController();

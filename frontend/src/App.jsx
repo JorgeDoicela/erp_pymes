@@ -14,13 +14,30 @@ import EmployeeAbsences from './pages/dashboard/views/EmployeeAbsences.jsx'
 import AdminAbsences from './pages/attendance/AdminAbsences.jsx'
 
 function App() {
-  const [auth, setAuth] = useState({ user: null, token: null })
+  const [auth, setAuth] = useState(() => {
+    // Intentar recuperar sesión al cargar
+    const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('token');
+    if (savedUser && savedToken) {
+      try {
+        return { user: JSON.parse(savedUser), token: savedToken };
+      } catch (e) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
+    }
+    return { user: null, token: null };
+  });
 
   const handleLogin = ({ user, token }) => {
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('token', token);
     setAuth({ user, token })
   }
 
   const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setAuth({ user: null, token: null })
   }
 
