@@ -14,3 +14,13 @@ export const assignEvaluation = async (data) => {
     const response = await api.post('/performance/assignments', data);
     return response.data;
 };
+
+export const getMyPendingEvaluations = async () => {
+    const response = await api.get('/performance/my-pending');
+    return response.data;
+};
+
+export const submitAssessment = async (data) => {
+    const response = await api.post('/performance/submit', data);
+    return response.data;
+};

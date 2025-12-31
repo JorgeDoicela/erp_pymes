@@ -100,3 +100,96 @@ export const assignEvaluation = async (req, res) => {
         res.status(500).json({ message: "Error al asignar evaluaciones" });
     }
 };
+
+export const getMyEvaluations = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const reviews = await prisma.evaluationReviewer.findMany({
+            where: {
+                reviewerId: userId,
+                evaluation: {
+                    status: { in: ['PENDING', 'IN_PROGRESS'] }
+                }
+            },
+            include: {
+                evaluation: {
+                    include: {
+                        template: true,
+                        employee: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        const parsedReviews = reviews.map(r => {
+            try {
+                return {
+                    ...r,
+                    evaluation: {
+                        ...r.evaluation,
+                        template: {
+                            ...r.evaluation.template,
+                            criteria: JSON.parse(r.evaluation.template.criteria),
+                            scale: JSON.parse(r.evaluation.template.scale)
+                        }
+                    }
+                };
+            } catch (e) { return r; }
+        });
+
+        res.json(parsedReviews);
+
+    } catch (error) {
+        console.error("Error fetching my evaluations:", error);
+        res.status(500).json({ message: "Error al obtener mis evaluaciones" });
+    }
+};
+
+export const submitAssessment = async (req, res) => {
+    try {
+        const { reviewerId, responses, comments, status } = req.body;
+        const userId = req.user.id;
+
+        const review = await prisma.evaluationReviewer.findUnique({
+            where: { id: reviewerId },
+            include: { evaluation: true }
+        });
+
+        if (!review) {
+            return res.status(404).json({ message: "Evaluación no encontrada" });
+        }
+
+        if (review.reviewerId !== userId) {
+            return res.status(403).json({ message: "No tienes permiso para realizar esta evaluación" });
+        }
+
+        let calculatedScore = null;
+        try {
+            const values = Object.values(responses).map(v => parseFloat(v)).filter(v => !isNaN(v));
+            if (values.length > 0) {
+                calculatedScore = values.reduce((a, b) => a + b, 0) / values.length;
+            }
+        } catch (e) { }
+
+        const updatedReview = await prisma.evaluationReviewer.update({
+            where: { id: reviewerId },
+            data: {
+                responses: JSON.stringify(responses),
+                comments: comments,
+                status: status || 'COMPLETED',
+                score: calculatedScore,
+                completedAt: status === 'COMPLETED' ? new Date() : undefined
+            }
+        });
+
+        res.json(updatedReview);
+
+    } catch (error) {
+        console.error("Error submitting assessment:", error);
+        res.status(500).json({ message: "Error al enviar la evaluación" });
+    }
+};

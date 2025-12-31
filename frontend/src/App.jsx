@@ -20,6 +20,8 @@ import BenefitsManagement from './pages/payroll/BenefitsManagement.jsx'
 import EvaluationDashboard from './pages/performance/EvaluationDashboard.jsx'
 import CreateEvaluation from './pages/performance/CreateEvaluation.jsx'
 import AssignEvaluation from './pages/performance/AssignEvaluation.jsx'
+import MyEvaluations from './pages/performance/MyEvaluations.jsx'
+import TakeEvaluation from './pages/performance/TakeEvaluation.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -216,12 +218,18 @@ function App() {
         }
       />
       <Route
-        path="/profile"
+        path="/performance/my-evaluations"
         element={
           <RequireAuth>
-            {/* Si es admin o empleado, puede ver su propio perfil (usando su ID del token/estado) */}
-            <div className="p-4 text-center">Redireccionando a tu perfil...</div>
-            {/* Nota: Idealmente redirigir a /admin/employees/:myId o mostrar el componente directo */}
+            <MyEvaluations />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/performance/take/:id"
+        element={
+          <RequireAuth>
+            <TakeEvaluation />
           </RequireAuth>
         }
       />
