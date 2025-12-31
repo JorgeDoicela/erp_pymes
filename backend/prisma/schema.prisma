@@ -57,6 +57,7 @@ model Employee {
   goals         EmployeeGoal[]
   postedVacancies JobVacancy[]
   interviews    Interview[]
+  candidateEvaluations CandidateEvaluation[]
 
   @@index([email])
   @@index([department])
@@ -456,6 +457,8 @@ model JobVacancy {
   postedBy    Employee @relation(fields: [postedById], references: [id])
   
   applications JobApplication[]
+  
+  evaluationCriteria Json? // ["Technical", "Communication", "Experience"]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -482,6 +485,7 @@ model JobApplication {
   
   notes       ApplicationNote[] // HR Notes
   interviews  Interview[]
+  evaluations CandidateEvaluation[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -524,4 +528,23 @@ model Interview {
   @@index([applicationId])
   @@index([interviewerId])
   @@map("interviews")
+}
+
+model CandidateEvaluation {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  evaluatorId   String
+  evaluator     Employee @relation(fields: [evaluatorId], references: [id])
+  
+  ratings       Json     // { "Technique": 5, "Soft Skills": 4 }
+  comments      String   @db.Text
+  recommendation String  // "HIRE", "NO_HIRE", "MAYBE"
+  overallScore  Float
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([applicationId])
+  @@map("candidate_evaluations")
 }

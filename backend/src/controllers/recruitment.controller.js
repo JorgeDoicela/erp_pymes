@@ -141,7 +141,8 @@ export const getApplicationDetails = async (req, res) => {
             include: {
                 vacancy: true,
                 notes: { orderBy: { createdAt: 'desc' } },
-                interviews: { orderBy: { date: 'asc' } }
+                interviews: { orderBy: { date: 'asc' } },
+                evaluations: { include: { evaluator: { select: { firstName: true, lastName: true } } } }
             }
         });
         if (!application) return res.status(404).json({ message: "Postulación no encontrada" });
@@ -215,5 +216,29 @@ export const scheduleInterview = async (req, res) => {
     } catch (error) {
         console.error("Error scheduling interview:", error);
         res.status(500).json({ message: "Error al programar entrevista" });
+    }
+};
+
+export const evaluateCandidate = async (req, res) => {
+    try {
+        const { id } = req.params; // Application ID
+        const { ratings, comments, recommendation, overallScore } = req.body;
+        const evaluatorId = req.user.id;
+
+        const evaluation = await prisma.candidateEvaluation.create({
+            data: {
+                applicationId: id,
+                evaluatorId,
+                ratings, // JSON
+                comments,
+                recommendation,
+                overallScore
+            }
+        });
+
+        res.json(evaluation);
+    } catch (error) {
+        console.error("Error evaluating candidate:", error);
+        res.status(500).json({ message: "Error al registrar evaluación" });
     }
 };

@@ -47,3 +47,8 @@ export const scheduleInterview = async (id, data) => {
     const response = await api.post(`/recruitment/applications/${id}/interviews`, data);
     return response.data;
 };
+
+export const evaluateCandidate = async (id, data) => {
+    const response = await api.post(`/recruitment/applications/${id}/evaluations`, data);
+    return response.data;
+};
