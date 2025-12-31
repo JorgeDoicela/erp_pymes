@@ -142,6 +142,14 @@ function App() {
         }
       />
       <Route
+        path="/profile"
+        element={
+          <RequireAuth>
+            <EmployeeProfile token={auth.token} />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/admin/register-employee"
         element={
           <RequireAuth role="admin">

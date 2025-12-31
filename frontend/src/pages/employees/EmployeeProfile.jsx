@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getEmployeeById, updateEmployee, getEmployeeHistory, createContract, getContracts, uploadDocument, getDocuments, deleteDocument } from '../../services/employees/employee.service';
+import { getEmployeeById, updateEmployee, getEmployeeHistory, createContract, getContracts, uploadDocument, getDocuments, deleteDocument, getProfile } from '../../services/employees/employee.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -12,6 +12,7 @@ const EmployeeProfile = ({ token }) => {
     const [contracts, setContracts] = useState([]);
     const [documents, setDocuments] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
+
     const [documentForm, setDocumentForm] = useState({
         type: 'DNI',
         file: null,
@@ -38,18 +39,29 @@ const EmployeeProfile = ({ token }) => {
 
     const fetchEmployee = async () => {
         try {
-            const data = await getEmployeeById(id, token);
-            setEmployee(data.data);
+            let data;
+            if (id) {
+                data = await getEmployeeById(id, token);
+            } else {
+                data = await getProfile(token);
+            }
+            if (data.data) {
+                setEmployee(data.data);
+            } else {
+                console.error("No employee data received", data);
+            }
         } catch (err) {
-            console.error(err);
+            console.error("Profile Error:", err);
         } finally {
             setLoading(false);
         }
     };
 
     const fetchHistory = async () => {
+        const targetId = id || employee?.id;
+        if (!targetId) return;
         try {
-            const data = await getEmployeeHistory(id, token);
+            const data = await getEmployeeHistory(targetId, token);
             setHistory(data.data || []);
         } catch (err) {
             console.error(err);
@@ -67,8 +79,10 @@ const EmployeeProfile = ({ token }) => {
     }, [activeTab]);
 
     const fetchDocuments = async () => {
+        const targetId = id || employee?.id;
+        if (!targetId) return;
         try {
-            const data = await getDocuments(id, token);
+            const data = await getDocuments(targetId, token);
             setDocuments(data.data || []);
         } catch (err) {
             console.error(err);
@@ -88,8 +102,9 @@ const EmployeeProfile = ({ token }) => {
         e.preventDefault();
         if (!documentForm.file) return alert('Seleccione un archivo');
 
+        const targetId = id || employee?.id;
         const formData = new FormData();
-        formData.append('employeeId', id);
+        formData.append('employeeId', targetId);
         formData.append('type', documentForm.type);
         formData.append('document', documentForm.file);
         if (documentForm.expiryDate) formData.append('expiryDate', documentForm.expiryDate);
@@ -116,8 +131,10 @@ const EmployeeProfile = ({ token }) => {
     };
 
     const fetchContracts = async () => {
+        const targetId = id || employee?.id;
+        if (!targetId) return;
         try {
-            const data = await getContracts(id, token);
+            const data = await getContracts(targetId, token);
             setContracts(data.data || []);
         } catch (err) {
             console.error(err);
@@ -136,8 +153,9 @@ const EmployeeProfile = ({ token }) => {
     const handleCreateContract = async (e) => {
         e.preventDefault();
         try {
+            const targetId = id || employee?.id;
             const formData = new FormData();
-            formData.append('employeeId', id);
+            formData.append('employeeId', targetId);
             formData.append('type', contractForm.type);
             formData.append('startDate', contractForm.startDate);
             if (contractForm.endDate) formData.append('endDate', contractForm.endDate);
@@ -187,7 +205,8 @@ const EmployeeProfile = ({ token }) => {
     const handleSaveEdit = async (e) => {
         e.preventDefault();
         try {
-            await updateEmployee(id, {
+            const targetId = id || employee?.id;
+            await updateEmployee(targetId, {
                 ...editForm,
                 salary: Number(editForm.salary)
             }, token);
@@ -218,7 +237,7 @@ const EmployeeProfile = ({ token }) => {
                 {/* Header */}
                 <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/5 flex items-center gap-6">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-4xl font-bold shadow-lg shadow-blue-500/20">
-                        {employee.firstName[0]}
+                        {employee.firstName?.charAt(0) || 'U'}
                     </div>
                     <div className="flex-1">
                         <h1 className="text-3xl font-bold mb-1">{employee.firstName} {employee.lastName}</h1>
@@ -260,7 +279,7 @@ const EmployeeProfile = ({ token }) => {
                     {activeTab === 'personal' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <InfoItem label="Cédula" value={employee.identityCard} />
-                            <InfoItem label="Fecha de Nacimiento" value={new Date(employee.birthDate).toLocaleDateString()} />
+                            <InfoItem label="Fecha de Nacimiento" value={employee.birthDate ? new Date(employee.birthDate).toLocaleDateString() : 'N/A'} />
                             <InfoItem label="Estado Civil" value={employee.civilStatus} />
                             <InfoItem label="Dirección" value={employee.address} />
                             <InfoItem label="Teléfono" value={employee.phone} />
@@ -272,7 +291,7 @@ const EmployeeProfile = ({ token }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <InfoItem label="Departamento" value={employee.department} />
                             <InfoItem label="Cargo Actual" value={employee.position} />
-                            <InfoItem label="Fecha de Ingreso" value={new Date(employee.hireDate).toLocaleDateString()} />
+                            <InfoItem label="Fecha de Ingreso" value={employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : 'N/A'} />
                             <InfoItem label="Tipo de Contrato" value={employee.contractType} />
                             <InfoItem label="Salario Base" value={`$${employee.salary}`} isPrivate />
                             <InfoItem label="Rol de Sistema" value={employee.role} />
@@ -463,23 +482,7 @@ const EmployeeProfile = ({ token }) => {
                         </div>
                     )}
 
-                    {activeTab === 'documents' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {employee.documents && employee.documents.length > 0 ? (
-                                employee.documents.map((doc) => (
-                                    <div key={doc.id} className="bg-slate-900 p-4 rounded-xl border border-slate-700 flex items-center gap-3 hover:border-blue-500/50 transition-colors cursor-pointer group">
-                                        <span className="text-2xl">📄</span>
-                                        <div className="overflow-hidden">
-                                            <p className="font-medium truncate group-hover:text-blue-400 transition-colors">{doc.name}</p>
-                                            <p className="text-xs text-slate-500 uppercase">{doc.type}</p>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <EmptyState message="No hay documentos adjuntos." />
-                            )}
-                        </div>
-                    )}
+
 
                     {activeTab === 'skills' && (
                         <div className="flex flex-wrap gap-3">
