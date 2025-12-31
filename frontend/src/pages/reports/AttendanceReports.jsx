@@ -194,13 +194,13 @@ const AttendanceReports = () => {
                             onClick={handleExportCSV}
                             className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold h-10 transition-colors flex items-center gap-2 text-sm"
                         >
-                            📊 Excel
+                            Excel
                         </button>
                         <button
                             onClick={handleExportPDF}
                             className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold h-10 transition-colors flex items-center gap-2 text-sm"
                         >
-                            📄 PDF
+                            PDF
                         </button>
                     </div>
                 )}

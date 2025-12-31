@@ -3,7 +3,7 @@ import { encryptSalary } from '../../src/utils/encryption.js';
 import { firstNames, lastNames, departments, positions, banks, getRandomElement, getRandomDate } from './utils.js';
 
 export async function seedEmployees(prisma) {
-    console.log('👥 Creando Empleados Masivos...');
+    console.log('[EMPLOYEES] Creando Empleados Masivos...');
     const password = await bcrypt.hash('123456', 10);
     const employees = [];
 

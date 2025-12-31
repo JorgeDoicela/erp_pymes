@@ -1,124 +1,144 @@
-# Emplifi - Sistema de Gestión de Recursos Humanos
+# EMPLIFI - Sistema de Recursos Humanos
 
-Plataforma moderna de gestión de recursos humanos diseñada para optimizar la administración del talento en pequeñas empresas.
+Sistema integral de gestión de recursos humanos desarrollado con React + Vite (Frontend) y Express + Prisma + PostgreSQL (Backend).
 
-## Descripción
+## Características Principales
 
-**Emplifi** es un sistema integral de RRHH que permite gestionar empleados, asistencia, nómina, evaluaciones y reportes desde un solo lugar. A diferencia de soluciones empresariales complejas, Emplifi se enfoca en pequeños negocios con una interfaz simple, funcional y accesible.
-
-### Características principales
-
-- Gestión de empleados y contratos
-- Control de asistencia y horarios
-- Gestión de nómina automatizada
-- Evaluación de desempeño
-- Reportes e indicadores
-- Notificaciones y recordatorios
-- Asistente inteligente de gestión (AIG)
-
-## Stack Tecnológico
-
-### Backend
-
-- **Node.js** con **Express** (v5.1.0)
-- **PostgreSQL** como base de datos
-- **Prisma ORM** (v7.0.0)
-- **ES Modules** habilitado
-- Seguridad: **Helmet**, **CORS**
-- Desarrollo: **Nodemon**, **dotenv**
-
-### Frontend
-
-- **React** 19.2.0
-- **Vite** como build tool
-- **TailwindCSS** para estilos
-- **ESLint** para calidad de código
-
-### Arquitectura
-
-- **3 capas** (Presentación, Lógica de Negocio, Acceso a Datos)
-- Estructura modular y escalable
+- **Gestión de Empleados**: Registro, actualización y seguimiento completo del personal
+- **Control de Asistencia**: Registro de entrada/salida, gestión de turnos y ausencias
+- **Nómina**: Configuración, generación y consulta de pagos
+- **Evaluaciones de Desempeño**: Creación y asignación de evaluaciones
+- **Reclutamiento**: Gestión de vacantes y aplicaciones
+- **Reportes y Analytics**: Dashboard con métricas clave y reportes personalizados
+- **Gestión Documental**: Almacenamiento de contratos y documentos de empleados
 
 ## Requisitos Previos
 
 Antes de comenzar, asegúrate de tener instalado:
 
-- **Node.js** v20.x o superior ([Descargar](https://nodejs.org/))
-- **PostgreSQL** v14 o superior ([Descargar](https://www.postgresql.org/download/))
-- **Git** ([Descargar](https://git-scm.com/))
-- **npm** (incluido con Node.js)
+- **Node.js** (v18 o superior) - [Descargar aquí](https://nodejs.org/)
+- **PostgreSQL** (v14 o superior) - [Descargar aquí](https://www.postgresql.org/download/)
+- **Git** - [Descargar aquí](https://git-scm.com/)
+- **npm** o **yarn** (viene con Node.js)
 
-## Instalación y Configuración
+## Instalación
 
-### 1. Clonar el repositorio
+### 1. Clonar el Repositorio
 
 ```bash
-git clone <URL-del-repositorio>
+git clone <url-del-repositorio>
 cd recursos_humanos
 ```
 
 ### 2. Configurar la Base de Datos
 
-Crea una base de datos en PostgreSQL:
+#### Opción A: Usando pgAdmin o psql
 
 ```sql
 CREATE DATABASE db_recursos_humanos;
+```
+
+#### Opción B: Desde la línea de comandos
+
+```bash
+psql -U postgres
+CREATE DATABASE db_recursos_humanos;
+\q
 ```
 
 ### 3. Configurar el Backend
 
 ```bash
 cd backend
-
-# Instalar dependencias
 npm install
-
-# Crear archivo .env (copia del ejemplo)
-copy .env.example .env
 ```
 
-Edita el archivo `.env` con tus credenciales de PostgreSQL:
+Crea un archivo `.env` en la carpeta `backend/` basándote en `.env.example`:
 
 ```env
 PORT=4000
-DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/db_recursos_humanos?schema=public
+DATABASE_URL="postgresql://usuario:password@localhost:5432/db_recursos_humanos?schema=public"
+ENCRYPTION_KEY="tu-clave-de-encriptacion-de-64-caracteres-hex"
+JWT_SECRET="tu-secret-jwt-super-seguro"
+FRONTEND_URL="http://localhost:5173"
 ```
 
-> **Nota importante para Prisma 7**: Si tu PostgreSQL no tiene contraseña, usa:
->
-> ```
-> DATABASE_URL=postgresql://postgres@localhost:5432/db_recursos_humanos?schema=public
+> **Importante**: Genera una clave de encriptación segura ejecutando:
+> ```bash
+> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 > ```
 
-Genera el cliente de Prisma:
+### 4. Ejecutar Migraciones de Base de Datos
 
 ```bash
-npx prisma generate
+cd backend
+npx prisma migrate dev
 ```
 
-Inicia el servidor de desarrollo:
+### 5. Poblar la Base de Datos con Datos de Prueba
+
+El proyecto incluye seeders completos para generar datos de demostración:
 
 ```bash
-npm run dev
+cd backend
+node -r dotenv/config prisma/seed.js
 ```
 
-El backend estará corriendo en `http://localhost:4000`
+Esto creará:
+- Usuario administrador: `admin@emplifi.com` / `123456`
+- Usuario empleado de prueba: `empleado@test.com` / `123456`
+- 25+ empleados adicionales con datos completos
+- Vacantes de trabajo, aplicaciones, entrevistas
+- Evaluaciones de desempeño, objetivos
+- Contratos, documentos, horarios
+- Historial de nómina
+- Encuestas de clima laboral
 
-### 4. Configurar el Frontend
-
-Abre una nueva terminal:
+### 6. Configurar el Frontend
 
 ```bash
 cd frontend
-
-# Instalar dependencias
 npm install
-
-# Iniciar servidor de desarrollo
-npm run dev
 ```
 
-El frontend estará corriendo en `http://localhost:5173`
+Crea un archivo `.env` en la carpeta `frontend/` (opcional):
+
+```env
+VITE_API_URL=http://localhost:4000
+```
+
+## Ejecutar el Proyecto
+
+### Opción 1: Ejecutar Backend y Frontend por Separado
+
+**Terminal 1 - Backend:**
+```bash
+cd backend
+npm run dev
+```
+El servidor estará disponible en `http://localhost:4000`
+
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+La aplicación estará disponible en `http://localhost:5173`
+
+### Opción 2: Usando Docker (Si está configurado)
+
+```bash
+docker-compose up
+```
+
+## Usuarios de Prueba
+
+Después de ejecutar el seeder, puedes iniciar sesión con:
+
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| Administrador | admin@emplifi.com | 123456 |
+| Empleado | empleado@test.com | 123456 |
 
 ## Estructura del Proyecto
 
@@ -126,155 +146,125 @@ El frontend estará corriendo en `http://localhost:5173`
 recursos_humanos/
 ├── backend/
 │   ├── prisma/
-│   │   └── schema.prisma          # Esquema de base de datos
+│   │   ├── schema.prisma          # Esquema de base de datos
+│   │   ├── seed.js                # Orquestador de seeders
+│   │   └── seeds/                 # Módulos de seeding
 │   ├── src/
-│   │   ├── controllers/           # Controladores (Capa de Presentación)
+│   │   ├── controllers/           # Controladores de rutas
+│   │   ├── middleware/            # Middlewares (auth, etc.)
+│   │   ├── routes/                # Definición de rutas
 │   │   ├── services/              # Lógica de negocio
 │   │   ├── repositories/          # Acceso a datos
-│   │   ├── routes/                # Definición de rutas
-│   │   ├── middleware/            # Middlewares personalizados
-│   │   ├── database/              # Configuración de DB
-│   │   ├── app.js                 # Configuración de Express
+│   │   ├── utils/                 # Utilidades (encriptación, etc.)
 │   │   └── server.js              # Punto de entrada
-│   ├── prisma.config.ts           # Configuración de Prisma 7
-│   ├── .env                       # Variables de entorno (no versionado)
-│   ├── .env.example               # Ejemplo de variables de entorno
 │   └── package.json
+│
 ├── frontend/
 │   ├── src/
+│   │   ├── api/                   # Configuración de Axios
 │   │   ├── components/            # Componentes reutilizables
-│   │   ├── pages/                 # Vistas/páginas
-│   │   ├── services/              # Llamadas a API
-│   │   ├── hooks/                 # Custom hooks
-│   │   ├── context/               # Estado global
-│   │   ├── utils/                 # Utilidades
-│   │   └── assets/                # Recursos estáticos
-│   ├── index.html
-│   ├── vite.config.js
+│   │   ├── pages/                 # Páginas/Vistas
+│   │   ├── services/              # Servicios de API
+│   │   └── App.jsx                # Componente principal
 │   └── package.json
+│
 └── README.md
 ```
 
-## Scripts Disponibles
+## Scripts Útiles
 
 ### Backend
 
 ```bash
-npm run dev              # Inicia servidor con nodemon
-npm run prisma:dev       # Ejecuta migraciones de Prisma
-npm run prisma:studio    # Abre Prisma Studio (GUI para DB)
+# Desarrollo
+npm run dev
+
+# Reiniciar base de datos (¡CUIDADO: Borra todos los datos!)
+npx prisma migrate reset
+
+# Generar cliente de Prisma
+npx prisma generate
+
+# Abrir Prisma Studio (interfaz visual de DB)
+npm run prisma:studio
+
+# Ejecutar seeder solo para un módulo
+node -r dotenv/config prisma/seed.js --only=users
+node -r dotenv/config prisma/seed.js --only=recruitment
 ```
 
 ### Frontend
 
 ```bash
-npm run dev              # Inicia servidor de desarrollo
-npm run build            # Genera build de producción
-npm run preview          # Preview del build de producción
-npm run lint             # Ejecuta ESLint
+# Desarrollo
+npm run dev
+
+# Build para producción
+npm run build
+
+# Preview de build
+npm run preview
 ```
-
-## Configuración de Prisma 7
-
-Este proyecto usa **Prisma 7**, que tiene una configuración diferente a versiones anteriores:
-
-1. **No usar `url` en `schema.prisma`**: La URL de conexión se configura en `prisma.config.ts`
-2. **Archivo `prisma.config.ts`**: Contiene la configuración de la base de datos
-3. **Generar cliente**: Siempre ejecutar `npx prisma generate` después de cambios en el schema
-
-## Seguridad
-
-### Encriptación de Salarios
-
-Los salarios se encriptan automáticamente en la base de datos usando **AES-256-GCM**:
-
-- Salt único de 64 bytes por cada valor
-- IV único de 16 bytes por encriptación
-- Auth Tag de 16 bytes para validar integridad
-- PBKDF2 con 100,000 iteraciones para derivación de claves
-- Se desencriptan automáticamente en la API
-
-Para usar: simplemente envía `salary` como número en las requests y se encriptará automáticamente.
-
-### Configuración HTTP
-
-- **Helmet**: Headers de seguridad (CSP, HSTS, X-Frame-Options, etc.)
-- **CORS**: Whitelist de orígenes permitidos
-- **Validación**: En 3 niveles (Controller, Service, Repository)
-- **ENCRYPTION_KEY**: Variable de entorno requerida (64 caracteres hex)
-
-### ENCRYPTION_KEY
-
-Genera una clave segura:
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-Colócala en `.env`:
-
-```
-ENCRYPTION_KEY=<64-caracteres-hexadecimales>
-```
-
-### Documentación de Seguridad
-
-- `backend/ENCRYPTION_SETUP.md` - Guía completa de encriptación
-- `backend/ARQUITECTURA.md` - Diagramas de arquitectura
-- `VERIFICACION_FINAL.md` - Reporte de verificación
-
-## Verificación
-
-Para verificar que la implementación de seguridad funciona correctamente:
-
-```bash
-cd backend
-node validate-implementation.js
-```
-
-Este script ejecuta 11 tests automatizados verificando:
-
-- Encriptación y desencriptación
-- Salt y IV únicos
-- Componentes de encriptación
-- Algoritmo AES-256-GCM
-- PBKDF2 key derivation
-- Archivos de implementación
 
 ## Solución de Problemas
 
-### Error: "Cannot find module"
+### Error: "Cannot find module '@prisma/client'"
+```bash
+cd backend
+npx prisma generate
+```
 
-Asegúrate de haber ejecutado `npm install` en ambas carpetas (backend y frontend).
+### Error: "Port 4000 is already in use"
+Cambia el puerto en `backend/.env` o detén el proceso que usa el puerto 4000.
 
-### Error de conexión a PostgreSQL
+### Error al conectar con PostgreSQL
+Verifica que:
+1. PostgreSQL esté corriendo
+2. La URL de conexión en `.env` sea correcta
+3. El usuario tenga permisos en la base de datos
 
-- Verifica que PostgreSQL esté corriendo
-- Confirma que las credenciales en `.env` sean correctas
-- Verifica que la base de datos `db_recursos_humanos` exista
+### Pantalla en blanco en el frontend
+1. Verifica que el backend esté corriendo
+2. Revisa la consola del navegador para errores
+3. Asegúrate de que `VITE_API_URL` sea correcto
 
-### Prisma generate falla
+## Tecnologías Utilizadas
 
-- Verifica que `DATABASE_URL` esté correctamente configurado en `.env`
-- Para Prisma 7, asegúrate de que `prisma.config.ts` exista
-- Ejecuta `npm install` para asegurar que todas las dependencias estén instaladas
+### Backend
+- **Express.js** - Framework web
+- **Prisma** - ORM para PostgreSQL
+- **PostgreSQL** - Base de datos
+- **JWT** - Autenticación
+- **bcryptjs** - Hash de contraseñas
+- **Multer** - Upload de archivos
 
-### Puerto ya en uso
+### Frontend
+- **React 19** - Librería UI
+- **Vite** - Build tool
+- **React Router** - Navegación
+- **Axios** - Cliente HTTP
+- **Recharts** - Gráficos
+- **Framer Motion** - Animaciones
+- **Tailwind CSS** - Estilos
 
-Si el puerto 4000 o 5173 ya está en uso, puedes cambiarlos:
+## Licencia
 
-- Backend: Modifica `PORT` en `.env`
-- Frontend: Modifica el puerto en `vite.config.js`
+Este proyecto es privado y de uso educativo.
 
-## Autores
+## Contribución
 
-Desarrollado por Karen Mendoza y Jorge Doicela.
+Para contribuir al proyecto:
+
+1. Crea un fork del repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## Soporte
+
+Para reportar problemas o solicitar nuevas características, abre un issue en el repositorio.
 
 ---
 
-**¿Necesitas ayuda?** Abre un issue en el repositorio o consulta la documentación de las tecnologías utilizadas:
-
-- [Express](https://expressjs.com/)
-- [Prisma](https://www.prisma.io/docs)
-- [React](https://react.dev/)
-- [Vite](https://vitejs.dev/)
+Desarrollado con dedicación para la gestión eficiente de recursos humanos

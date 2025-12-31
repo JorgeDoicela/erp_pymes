@@ -1,5 +1,5 @@
 export async function seedAudit(prisma, employees) {
-    console.log('🕵️ Generando Audit Logs...');
+    console.log('[AUDIT] Generando Audit Logs...');
     // Create some fake logs
     if (employees.length === 0) return;
 

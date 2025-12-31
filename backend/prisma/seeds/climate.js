@@ -1,7 +1,7 @@
 import { getRandomElement, departments } from './utils.js';
 
 export async function seedClimate(prisma) {
-    console.log('🌡️ Generando Encuesta de Clima...');
+    console.log('[CLIMATE] Generando Encuesta de Clima...');
     try {
         let survey = await prisma.climateSurvey.findFirst({ where: { title: 'Clima Q4 2024' } });
 

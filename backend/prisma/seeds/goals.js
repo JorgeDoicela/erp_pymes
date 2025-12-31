@@ -1,5 +1,5 @@
 export async function seedGoals(prisma, employees) {
-    console.log('🎯 Generando Objetivos (Goals)...');
+    console.log('[GOALS] Generando Objetivos (Goals)...');
 
     for (const emp of employees) {
         if (!emp.isActive) continue;

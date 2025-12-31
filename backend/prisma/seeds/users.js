@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { encryptSalary } from '../../src/utils/encryption.js';
 
 export async function seedUsers(prisma) {
-    console.log('👤 Creando/Verificando Usuarios Principales...');
+    console.log('[USERS] Creando/Verificando Usuarios Principales...');
     const password = await bcrypt.hash('123456', 10);
 
     let admin;

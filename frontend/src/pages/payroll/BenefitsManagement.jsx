@@ -70,7 +70,7 @@ const BenefitsManagement = () => {
     return (
         <div className="min-h-screen bg-slate-900 text-white p-8">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 mb-8">
-                Gestión de Beneficios e Incentivos 🎁
+                Gestión de Beneficios e Incentivos
             </h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

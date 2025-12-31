@@ -1,5 +1,5 @@
 export async function seedPerformance(prisma, employees) {
-    console.log('📊 Generando Evaluaciones...');
+    console.log('[PERFORMANCE] Generando Evaluaciones...');
     let template;
     try {
         const existing = await prisma.evaluationTemplate.findFirst({ where: { period: '2024' } });

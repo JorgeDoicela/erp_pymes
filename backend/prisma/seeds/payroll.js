@@ -1,5 +1,5 @@
 export async function seedPayroll(prisma, employees) {
-    console.log('💰 Generando Historial de Nómina...');
+    console.log('[PAYROLL] Generando Historial de Nómina...');
     const today = new Date();
     for (let i = 5; i >= 0; i--) {
         const date = new Date(today.getFullYear(), today.getMonth() - i, 15);

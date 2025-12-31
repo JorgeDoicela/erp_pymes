@@ -20,16 +20,16 @@ function AdminDashboard({ user, onLogout }) {
         }
     }, [location]);
     const modules = [
-        { title: 'Empleados', icon: '👥', color: 'bg-blue-500', path: '/admin/employees' },
-        { title: 'Asistencia', icon: '🕒', color: 'bg-indigo-500', path: '/attendance' },
-        { title: 'Turnos', icon: '📅', color: 'bg-purple-500', path: '/admin/shifts' },
-        { title: 'Ausencias', icon: '🤕', color: 'bg-rose-500', path: '/admin/absences' }, // Nueva
-        { title: 'Nómina', icon: '💰', color: 'bg-green-500', path: '/admin/payroll/generator' },
-        { title: 'Beneficios', icon: '🎁', color: 'bg-yellow-500', path: '/admin/payroll/benefits' }, // Nueva
-        { title: 'Evaluaciones', icon: '📊', color: 'bg-orange-500', path: '/performance' },
-        { title: 'Reclutamiento', icon: '🤝', color: 'bg-pink-500', path: '/recruitment' },
-        { title: 'Reportes', icon: '📈', color: 'bg-cyan-500', path: '/admin/reports' },
-        { title: 'Analíticas', icon: '📊', color: 'bg-indigo-600', path: '/analytics' },
+        { title: 'Empleados', icon: '', color: 'bg-blue-500', path: '/admin/employees' },
+        { title: 'Asistencia', icon: '', color: 'bg-indigo-500', path: '/attendance' },
+        { title: 'Turnos', icon: '', color: 'bg-purple-500', path: '/admin/shifts' },
+        { title: 'Ausencias', icon: '', color: 'bg-rose-500', path: '/admin/absences' },
+        { title: 'Nómina', icon: '', color: 'bg-green-500', path: '/admin/payroll/generator' },
+        { title: 'Beneficios', icon: '', color: 'bg-yellow-500', path: '/admin/payroll/benefits' },
+        { title: 'Evaluaciones', icon: '', color: 'bg-orange-500', path: '/performance' },
+        { title: 'Reclutamiento', icon: '', color: 'bg-pink-500', path: '/recruitment' },
+        { title: 'Reportes', icon: '', color: 'bg-cyan-500', path: '/admin/reports' },
+        { title: 'Analíticas', icon: '', color: 'bg-indigo-600', path: '/analytics' },
     ]
 
     const insights = [

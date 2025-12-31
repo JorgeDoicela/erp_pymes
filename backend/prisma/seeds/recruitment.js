@@ -5,7 +5,7 @@ export async function seedRecruitment(prisma, adminId) {
         console.log("⚠️ No admin ID provided for recruitment seed. Skipping.");
         return;
     }
-    console.log('📢 Creando Vacantes y Candidatos...');
+    console.log('[RECRUITMENT] Creando Vacantes y Candidatos...');
     const vacancies = [];
     const titles = ['Senior React Developer', 'HR Assistant', 'Sales Manager'];
 

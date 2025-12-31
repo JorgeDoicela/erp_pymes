@@ -23,7 +23,7 @@ async function main() {
     const onlyArg = args.find(arg => arg.startsWith('--only='));
     const moduleToRun = onlyArg ? onlyArg.split('=')[1] : 'all';
 
-    console.log(`🚀 Starting Seed (Module: ${moduleToRun})`);
+    console.log(`[SEED] Starting Seed (Module: ${moduleToRun})`);
 
     // 1. Cleanup
     if (moduleToRun === 'all' || moduleToRun === 'cleanup') {
@@ -44,8 +44,8 @@ async function main() {
     if (!admin) admin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
     if (!testUser) testUser = await prisma.employee.findUnique({ where: { email: 'empleado@test.com' } });
 
-    console.log(`👤 Admin ID: ${admin?.id || 'NOT FOUND'}`);
-    console.log(`👤 Test User ID: ${testUser?.id || 'NOT FOUND'}`);
+    console.log(`[ADMIN] Admin ID: ${admin?.id || 'NOT FOUND'}`);
+    console.log(`[USER] Test User ID: ${testUser?.id || 'NOT FOUND'}`);
 
     // 3. Employees
     let bulkEmployees = [];
@@ -65,7 +65,7 @@ async function main() {
     if (testUser) allEmployees.push(testUser);
     allEmployees.push(...bulkEmployees);
 
-    console.log(`👥 Total Employees for Seeding: ${allEmployees.length}`);
+    console.log(`[EMPLOYEES] Total Employees for Seeding: ${allEmployees.length}`);
 
     // 4. Core Records (Contracts, Skills, Schedules, Documents)
     if (moduleToRun === 'all' || moduleToRun === 'core') {

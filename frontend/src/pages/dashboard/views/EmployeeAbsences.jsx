@@ -254,7 +254,7 @@ const EmployeeAbsences = () => {
                                     rel="noreferrer"
                                     className="text-blue-400 text-sm hover:underline flex items-center gap-1"
                                 >
-                                    📎 Ver Evidencia
+                                    Ver Evidencia
                                 </a>
                             )}
                         </div>

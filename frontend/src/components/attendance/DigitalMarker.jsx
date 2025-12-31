@@ -92,7 +92,7 @@ const DigitalMarker = ({ user }) => {
                             className="bg-slate-700 hover:bg-slate-600 text-white px-4 rounded-lg transition-colors"
                             title="Verificar Estado"
                         >
-                            🔍
+                            Buscar
                         </button>
                     </div>
                 </div>
@@ -135,7 +135,7 @@ const DigitalMarker = ({ user }) => {
                             : 'bg-gradient-to-br from-amber-500/80 to-amber-600/80 hover:from-amber-400 hover:to-amber-500 text-white hover:shadow-amber-500/20'}
           `}
                 >
-                    <span className="text-2xl">🌙</span>
+                    <span className="text-2xl">Noche</span>
                     SALIDA
                 </button>
             </div>
@@ -143,8 +143,8 @@ const DigitalMarker = ({ user }) => {
             {/* Status Footer */}
             <div className="mt-8 text-center">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${status === 'WORKING' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/20' :
-                        status === 'COMPLETED' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/20' :
-                            'bg-slate-700 text-slate-400 border border-white/5'
+                    status === 'COMPLETED' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/20' :
+                        'bg-slate-700 text-slate-400 border border-white/5'
                     }`}>
                     {status === 'WORKING' ? 'Actualmente Trabajando' :
                         status === 'COMPLETED' ? 'Jornada Completada' :

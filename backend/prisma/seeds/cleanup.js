@@ -1,5 +1,5 @@
 export async function seedCleanup(prisma) {
-    console.log('🧹 Limpiando base de datos (con manejo de errores)...');
+    console.log('[CLEANUP] Limpiando base de datos (con manejo de errores)...');
     const tables = [
         'climateResponse', 'climateSurvey',
         'payrollDetail', 'payrollItem', 'payrollConfig', 'payroll',

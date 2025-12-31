@@ -42,7 +42,7 @@ const MyPayments = ({ user }) => {
     return (
         <div className="min-h-screen bg-slate-900 text-white p-8">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-500 mb-8">
-                Mis Roles de Pago 💰
+                Mis Roles de Pago
             </h1>
 
             {loading ? <p>Cargando...</p> : (
@@ -82,7 +82,7 @@ const MyPayments = ({ user }) => {
                                 disabled={detail.payroll.status !== 'APPROVED' && detail.payroll.status !== 'PAID'}
                                 className={`w-full py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${(detail.payroll.status === 'APPROVED' || detail.payroll.status === 'PAID') ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
                             >
-                                📄 Descargar PDF
+                                Descargar PDF
                             </button>
                         </div>
                     ))}

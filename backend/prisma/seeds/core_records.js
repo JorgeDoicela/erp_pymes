@@ -2,7 +2,7 @@ import { getRandomElement } from './utils.js';
 import { encryptSalary, decryptSalary } from '../../src/utils/encryption.js';
 
 export async function seedCoreRecords(prisma, employees) {
-    console.log('📂 Generando Registros Core (Contratos, Skills, Horarios)...');
+    console.log('[CORE] Generando Registros Core (Contratos, Skills, Horarios)...');
 
     // Create Shifts
     let shiftMorning = await prisma.shift.findFirst({ where: { name: 'Matutino' } });

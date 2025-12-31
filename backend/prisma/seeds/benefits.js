@@ -1,5 +1,5 @@
 export async function seedBenefits(prisma, employees) {
-    console.log('🎁 Generando Beneficios...');
+    console.log('[BENEFITS] Generando Beneficios...');
 
     for (const emp of employees) {
         if (!emp.isActive) continue;

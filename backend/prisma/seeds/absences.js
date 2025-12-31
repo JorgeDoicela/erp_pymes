@@ -1,7 +1,7 @@
 import { getRandomElement, getRandomDate } from './utils.js';
 
 export async function seedAbsences(prisma, employees) {
-    console.log('🏖️ Generando Solicitudes de Ausencia...');
+    console.log('[ABSENCES] Generando Solicitudes de Ausencia...');
 
     for (const emp of employees) {
         if (!emp.isActive) continue;

@@ -1,5 +1,5 @@
 export async function seedDocuments(prisma, employees) {
-    console.log('📄 Generando Metadatos de Documentos...');
+    console.log('[DOCUMENTS] Generando Metadatos de Documentos...');
 
     for (const emp of employees) {
         if (!emp.isActive) continue;

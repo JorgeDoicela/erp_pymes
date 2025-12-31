@@ -415,7 +415,7 @@ const EmployeeProfile = ({ token }) => {
                                             <div className="flex justify-between items-start mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-2xl">
-                                                        {doc.mimeType?.includes('pdf') ? '📄' : '🖼️'}
+                                                        {doc.mimeType?.includes('pdf') ? 'PDF' : 'IMG'}
                                                     </span>
                                                     <div>
                                                         <h4 className="font-bold text-white text-sm">{doc.type}</h4>
@@ -426,7 +426,7 @@ const EmployeeProfile = ({ token }) => {
                                                     onClick={() => handleDeleteDocument(doc.id)}
                                                     className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 >
-                                                    🗑️
+                                                    X
                                                 </button>
                                             </div>
                                             {doc.expiryDate && (
@@ -595,7 +595,7 @@ const EmployeeProfile = ({ token }) => {
 const InfoItem = ({ label, value, isPrivate }) => (
     <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
         <label className="text-xs text-slate-500 uppercase font-semibold tracking-wider block mb-1">
-            {label} {isPrivate && '🔒'}
+            {label} {isPrivate && '[Privado]'}
         </label>
         <p className="text-lg font-medium text-slate-200">{value || 'N/A'}</p>
     </div>
