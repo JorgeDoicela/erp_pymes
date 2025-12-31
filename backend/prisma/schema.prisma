@@ -24,6 +24,10 @@ model Employee {
   contractType String
   civilStatus  String
 
+  bankName      String?
+  accountNumber String?
+  accountType   String? // "Ahorros", "Corriente"
+
   // Salario encriptado en la base de datos
   // Se almacena como: salt:iv:authTag:encryptedData
   salary String // Valor encriptado
@@ -259,6 +263,8 @@ model Payroll {
   totalAmount Float
 
   details PayrollDetail[]
+  
+  paymentDate DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

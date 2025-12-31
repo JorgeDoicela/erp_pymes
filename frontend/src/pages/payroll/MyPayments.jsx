@@ -56,8 +56,10 @@ const MyPayments = ({ user }) => {
                                         {new Date(detail.payroll.period).toLocaleDateString('es-EC', { month: 'long', year: 'numeric' })}
                                     </h3>
                                 </div>
-                                {detail.payroll.status === 'APPROVED' ? (
-                                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-bold">DISPONIBLE</span>
+                                {detail.payroll.status === 'APPROVED' || detail.payroll.status === 'PAID' ? (
+                                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-bold">
+                                        {detail.payroll.status === 'PAID' ? 'PAGADO' : 'DISPONIBLE'}
+                                    </span>
                                 ) : (
                                     <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-xs font-bold">PROCESANDO</span>
                                 )}
@@ -77,8 +79,8 @@ const MyPayments = ({ user }) => {
 
                             <button
                                 onClick={() => handleDownload(detail)}
-                                disabled={detail.payroll.status !== 'APPROVED'}
-                                className={`w-full py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${detail.payroll.status === 'APPROVED' ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
+                                disabled={detail.payroll.status !== 'APPROVED' && detail.payroll.status !== 'PAID'}
+                                className={`w-full py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${(detail.payroll.status === 'APPROVED' || detail.payroll.status === 'PAID') ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
                             >
                                 📄 Descargar PDF
                             </button>

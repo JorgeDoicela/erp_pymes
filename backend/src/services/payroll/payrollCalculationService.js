@@ -242,6 +242,46 @@ class PayrollCalculationService {
             data: { status: 'APPROVED' }
         });
     }
+
+    async generateBankFile(id) {
+        const payroll = await prisma.payroll.findUnique({
+            where: { id },
+            include: {
+                details: {
+                    include: { employee: true }
+                }
+            }
+        });
+
+        if (!payroll) throw new Error('Nómina no encontrada');
+
+        // CSV Header
+        let csv = 'Identificacion,Beneficiario,Banco,TipoCuenta,NumeroCuenta,Monto,Detalle\n';
+
+        payroll.details.forEach(det => {
+            const emp = det.employee;
+            if (emp.bankName && emp.accountNumber) {
+                // Sanitize
+                const name = `${emp.firstName} ${emp.lastName}`.replace(/,/g, '');
+                const bank = emp.bankName.replace(/,/g, '');
+                const amount = det.netSalary.toFixed(2);
+
+                csv += `${emp.identityCard},${name},${bank},${emp.accountType || 'AHORROS'},${emp.accountNumber},${amount},Nómina ${new Date(payroll.period).toLocaleDateString()}\n`;
+            }
+        });
+
+        return csv;
+    }
+
+    async markAsPaid(id) {
+        return await prisma.payroll.update({
+            where: { id },
+            data: {
+                status: 'PAID',
+                paymentDate: new Date()
+            }
+        });
+    }
 }
 
 export default new PayrollCalculationService();

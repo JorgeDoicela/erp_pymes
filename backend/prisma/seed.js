@@ -51,32 +51,38 @@ async function main() {
         {
             firstName: 'Admin', lastName: 'Sistema', email: 'admin@emplifi.com', role: 'admin',
             department: 'Dirección', position: 'Administrador', salary: 5000,
-            idCard: '0101010101', birth: '1985-05-05', shift: shiftMorning.id
+            idCard: '0101010101', birth: '1985-05-05', shift: shiftMorning.id,
+            bankName: 'Banco Pichincha', accountNumber: '2100123456', accountType: 'Corriente'
         },
         {
             firstName: 'Ana', lastName: 'García', email: 'ana.garcia@emplifi.com', role: 'employee',
             department: 'Recursos Humanos', position: 'Gerente RRHH', salary: 3500,
-            idCard: '0202020202', birth: '1990-08-15', shift: shiftMorning.id
+            idCard: '0202020202', birth: '1990-08-15', shift: shiftMorning.id,
+            bankName: 'Banco Guayaquil', accountNumber: '0123456789', accountType: 'Ahorros'
         },
         {
             firstName: 'Carlos', lastName: 'Vera', email: 'carlos.vera@emplifi.com', role: 'employee',
             department: 'Desarrollo', position: 'Senior Backend Dev', salary: 2800,
-            idCard: '0303030303', birth: '1993-02-20', shift: shiftMorning.id
+            idCard: '0303030303', birth: '1993-02-20', shift: shiftMorning.id,
+            bankName: 'Banco del Pacífico', accountNumber: '9876543210', accountType: 'Ahorros'
         },
         {
             firstName: 'Diana', lastName: 'Torres', email: 'diana.torres@emplifi.com', role: 'employee',
             department: 'Desarrollo', position: 'Frontend Dev', salary: 2200,
-            idCard: '0404040404', birth: '1996-11-10', shift: shiftMorning.id
+            idCard: '0404040404', birth: '1996-11-10', shift: shiftMorning.id,
+            bankName: 'Banco Pichincha', accountNumber: '1111222233', accountType: 'Ahorros'
         },
         {
             firstName: 'Eduardo', lastName: 'Ruiz', email: 'eduardo.ruiz@emplifi.com', role: 'employee',
             department: 'Soporte', position: 'Técnico Soporte', salary: 1200,
-            idCard: '0505050505', birth: '1998-07-25', shift: shiftEvening.id
+            idCard: '0505050505', birth: '1998-07-25', shift: shiftEvening.id,
+            bankName: 'Banco Internacional', accountNumber: '5555666677', accountType: 'Ahorros'
         },
         {
             firstName: 'Fernanda', lastName: 'Lopez', email: 'fernanda.lopez@emplifi.com', role: 'employee',
             department: 'Ventas', position: 'Ejecutiva Comercial', salary: 1500,
-            idCard: '0606060606', birth: '1995-01-30', shift: shiftMorning.id
+            idCard: '0606060606', birth: '1995-01-30', shift: shiftMorning.id,
+            bankName: 'Produbanco', accountNumber: '7788990011', accountType: 'Corriente'
         }
     ];
 
@@ -99,7 +105,10 @@ async function main() {
                 phone: '0900000000',
                 hireDate: new Date('2023-01-01'),
                 contractType: 'Indefinido',
-                civilStatus: 'Soltero'
+                civilStatus: 'Soltero',
+                bankName: emp.bankName,
+                accountNumber: emp.accountNumber,
+                accountType: emp.accountType
             }
         });
         createdEmployees.push(newEmp);

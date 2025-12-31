@@ -59,6 +59,33 @@ export const confirmPayroll = async (id) => {
         const response = await api.put(`/payroll/${id}/confirm`, { confirmed: true });
         return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Error al confirmar');
+        throw new Error(error.response?.data?.message || 'Error al confirmar nómina');
+    }
+};
+
+export const downloadBankFile = async (id) => {
+    try {
+        const response = await api.get(`/payroll/${id}/bank-file`, {
+            responseType: 'blob'
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'transferencias_bancarias.csv');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return { success: true };
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al generar archivo');
+    }
+};
+
+export const markPayrollAsPaid = async (id) => {
+    try {
+        const response = await api.put(`/payroll/${id}/mark-paid`, { paid: true });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al marcar como pagado');
     }
 };

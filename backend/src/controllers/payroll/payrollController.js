@@ -51,6 +51,26 @@ class PayrollController {
             res.status(500).json({ success: false, message: 'Error al confirmar nómina' });
         }
     }
+
+    async generateBankFile(req, res) {
+        try {
+            const fileContent = await payrollCalculationService.generateBankFile(req.params.id);
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename=transferencias.csv');
+            res.send(fileContent);
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    async markAsPaid(req, res) {
+        try {
+            const payroll = await payrollCalculationService.markAsPaid(req.params.id);
+            res.status(200).json({ success: true, data: payroll, message: 'Pago registrado exitosamente' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }
 
 export default new PayrollController();
