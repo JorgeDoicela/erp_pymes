@@ -54,6 +54,7 @@ function AdminDashboard({ user, onLogout }) {
                     {modules.map((mod, idx) => (
                         <button
                             key={idx}
+                            onClick={() => navigate(mod.path)}
                             className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors text-left"
                         >
                             <span>{mod.icon}</span>

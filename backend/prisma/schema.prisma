@@ -55,6 +55,7 @@ model Employee {
   evaluations   EmployeeEvaluation[] // Evaluaciones que recibe el empleado
   reviewedEvaluations EvaluationReviewer[] // Evaluaciones que realiza el empleado (como revisor)
   goals         EmployeeGoal[]
+  postedVacancies JobVacancy[]
 
   @@index([email])
   @@index([department])
@@ -429,4 +430,58 @@ model EvaluationReviewer {
   @@index([evaluationId])
   @@index([reviewerId])
   @@map("evaluation_reviewers")
+}
+
+model JobVacancy {
+  id          String   @id @default(cuid())
+  title       String
+  department  String
+  
+  description String   @db.Text
+  requirements String  @db.Text // Can be a rich text or bullet points
+  benefits    String?  @db.Text
+  
+  salaryMin   Float?
+  salaryMax   Float?
+  currency    String   @default("USD")
+  
+  location    String
+  employmentType String // Full-time, Part-time, Contract
+  
+  deadline    DateTime
+  status      String   @default("OPEN") // OPEN, CLOSED
+  
+  postedById  String
+  postedBy    Employee @relation(fields: [postedById], references: [id])
+  
+  applications JobApplication[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([postedById])
+  @@map("job_vacancies")
+}
+
+model JobApplication {
+  id          String   @id @default(cuid())
+  
+  vacancyId   String
+  vacancy     JobVacancy @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+  
+  firstName   String
+  lastName    String
+  email       String
+  phone       String
+  
+  resumeUrl   String   // Path to CV
+  coverLetter String?  @db.Text
+  
+  status      String   @default("PENDING") // PENDING, REVIEWING, INTERVIEW, REJECTED, HIRED
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([vacancyId])
+  @@map("job_applications")
 }

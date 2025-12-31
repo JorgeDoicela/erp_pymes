@@ -24,6 +24,8 @@ import MyEvaluations from './pages/performance/MyEvaluations.jsx'
 import TakeEvaluation from './pages/performance/TakeEvaluation.jsx'
 import EvaluationResults from './pages/performance/EvaluationResults.jsx'
 import MyGoals from './pages/performance/MyGoals.jsx'
+import RecruitmentDashboard from './pages/recruitment/RecruitmentDashboard.jsx'
+import CreateJobVacancy from './pages/recruitment/CreateJobVacancy.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -231,7 +233,15 @@ function App() {
         path="/recruitment"
         element={
           <RequireAuth role="admin">
-            <div className="p-8 text-white"><h1>Módulo de Reclutamiento - Próximamente</h1></div>
+            <RecruitmentDashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/recruitment/create"
+        element={
+          <RequireAuth role="admin">
+            <CreateJobVacancy />
           </RequireAuth>
         }
       />
