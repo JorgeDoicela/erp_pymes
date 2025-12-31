@@ -118,3 +118,71 @@ export const applyToVacancy = async (req, res) => {
         res.status(500).json({ message: "Error al enviar postulación" });
     }
 };
+
+export const getApplicationsByVacancy = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const applications = await prisma.jobApplication.findMany({
+            where: { vacancyId: id },
+            orderBy: { createdAt: 'desc' },
+            include: { notes: true } // Include notes count or preview if needed
+        });
+        res.json(applications);
+    } catch (error) {
+        res.status(500).json({ message: "Error al obtener postulaciones" });
+    }
+};
+
+export const getApplicationDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const application = await prisma.jobApplication.findUnique({
+            where: { id },
+            include: {
+                vacancy: true,
+                notes: { orderBy: { createdAt: 'desc' } }
+            }
+        });
+        if (!application) return res.status(404).json({ message: "Postulación no encontrada" });
+        res.json(application);
+    } catch (error) {
+        res.status(500).json({ message: "Error al obtener detalles" });
+    }
+};
+
+export const updateApplicationStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const application = await prisma.jobApplication.update({
+            where: { id },
+            data: { status }
+        });
+        res.json(application);
+    } catch (error) {
+        res.status(500).json({ message: "Error al actualizar estado" });
+    }
+};
+
+export const addApplicationNote = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { content } = req.body;
+        const userId = req.user.id;
+        const userName = `${req.user.firstName} ${req.user.lastName}`;
+
+        const note = await prisma.applicationNote.create({
+            data: {
+                applicationId: id,
+                content,
+                createdById: userId,
+                createdBy: userName
+            }
+        });
+        res.json(note);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error al agregar nota" });
+    }
+};

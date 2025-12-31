@@ -78,8 +78,8 @@ const RecruitmentDashboard = () => {
                                         <td className="p-6 font-bold text-white">{v.title}</td>
                                         <td className="p-6 text-gray-300">{v.department}</td>
                                         <td className="p-6 text-gray-300">{v.location}</td>
-                                        <td className="p-6">
-                                            <span className="flex items-center text-gray-300"><FiUsers className="mr-2" /> 0</span>
+                                        <td className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => navigate(`/recruitment/${v.id}`)}>
+                                            <span className="flex items-center text-blue-400 font-bold"><FiUsers className="mr-2" /> Ver Candidatos</span>
                                         </td>
                                         <td className="p-6">
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${v.status === 'OPEN' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>

@@ -479,9 +479,26 @@ model JobApplication {
   
   status      String   @default("PENDING") // PENDING, REVIEWING, INTERVIEW, REJECTED, HIRED
   
+  notes       ApplicationNote[] // HR Notes
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   @@index([vacancyId])
   @@map("job_applications")
+}
+
+model ApplicationNote {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  content       String   @db.Text
+  createdBy     String   // Name of HR user
+  createdById   String
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([applicationId])
+  @@map("application_notes")
 }

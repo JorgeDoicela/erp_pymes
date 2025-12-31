@@ -28,6 +28,8 @@ import RecruitmentDashboard from './pages/recruitment/RecruitmentDashboard.jsx'
 import CreateJobVacancy from './pages/recruitment/CreateJobVacancy.jsx'
 import CareersPage from './pages/recruitment/CareersPage.jsx'
 import JobApplication from './pages/recruitment/JobApplication.jsx'
+import VacancyDetails from './pages/recruitment/VacancyDetails.jsx'
+import ApplicationDetails from './pages/recruitment/ApplicationDetails.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -246,6 +248,22 @@ function App() {
         element={
           <RequireAuth role="admin">
             <CreateJobVacancy />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/recruitment/:id"
+        element={
+          <RequireAuth role="admin">
+            <VacancyDetails />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/recruitment/applications/:id"
+        element={
+          <RequireAuth role="admin">
+            <ApplicationDetails />
           </RequireAuth>
         }
       />

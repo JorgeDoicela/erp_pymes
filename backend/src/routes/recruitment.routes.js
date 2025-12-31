@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createVacancy, getVacancies, getPublicVacancies, getVacancyById, updateVacancyStatus, applyToVacancy } from '../controllers/recruitment.controller.js';
+import { createVacancy, getVacancies, getPublicVacancies, getVacancyById, updateVacancyStatus, applyToVacancy, getApplicationsByVacancy, getApplicationDetails, updateApplicationStatus, addApplicationNote } from '../controllers/recruitment.controller.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { uploadResume } from '../middleware/upload.middleware.js';
 
@@ -14,5 +14,11 @@ router.post('/public/:id/apply', uploadResume.single('resume'), applyToVacancy);
 router.post('/', authenticate, authorize(['admin', 'hr']), createVacancy);
 router.get('/', authenticate, authorize(['admin', 'hr']), getVacancies);
 router.put('/:id/status', authenticate, authorize(['admin', 'hr']), updateVacancyStatus);
+
+// Application Management
+router.get('/:id/applications', authenticate, authorize(['admin', 'hr']), getApplicationsByVacancy);
+router.get('/applications/:id', authenticate, authorize(['admin', 'hr']), getApplicationDetails);
+router.put('/applications/:id/status', authenticate, authorize(['admin', 'hr']), updateApplicationStatus);
+router.post('/applications/:id/notes', authenticate, authorize(['admin', 'hr']), addApplicationNote);
 
 export default router;
