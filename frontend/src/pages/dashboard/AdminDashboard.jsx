@@ -29,6 +29,7 @@ function AdminDashboard({ user, onLogout }) {
         { title: 'Evaluaciones', icon: '📊', color: 'bg-orange-500', path: '/performance' },
         { title: 'Reclutamiento', icon: '🤝', color: 'bg-pink-500', path: '/recruitment' },
         { title: 'Reportes', icon: '📈', color: 'bg-cyan-500', path: '/admin/reports' },
+        { title: 'Analíticas', icon: '📊', color: 'bg-indigo-600', path: '/analytics' },
     ]
 
     const insights = [

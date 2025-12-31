@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createVacancy, getVacancies, getPublicVacancies, getVacancyById, updateVacancyStatus, applyToVacancy, getApplicationsByVacancy, getApplicationDetails, updateApplicationStatus, addApplicationNote, scheduleInterview, evaluateCandidate, hireCandidate } from '../controllers/recruitment.controller.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
-import { authenticate, authorize } from '../middleware/auth.middleware.js';
+
 import { uploadResume } from '../middleware/upload.middleware.js';
 
 const router = Router();
