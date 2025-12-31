@@ -26,6 +26,8 @@ import EvaluationResults from './pages/performance/EvaluationResults.jsx'
 import MyGoals from './pages/performance/MyGoals.jsx'
 import RecruitmentDashboard from './pages/recruitment/RecruitmentDashboard.jsx'
 import CreateJobVacancy from './pages/recruitment/CreateJobVacancy.jsx'
+import CareersPage from './pages/recruitment/CareersPage.jsx'
+import JobApplication from './pages/recruitment/JobApplication.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -71,6 +73,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/careers" element={<CareersPage />} />
+      <Route path="/careers/:id" element={<JobApplication />} />
       <Route path="/attendance" element={<AttendancePage />} />
       <Route path="/login" element={<Login onLogin={handleLogin} />} />
       <Route

@@ -88,3 +88,33 @@ export const updateVacancyStatus = async (req, res) => {
         res.status(500).json({ message: "Error al actualizar estado" });
     }
 };
+
+export const applyToVacancy = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { firstName, lastName, email, phone, coverLetter } = req.body;
+        const resumeUrl = req.file ? req.file.path : null;
+
+        if (!resumeUrl) {
+            return res.status(400).json({ message: "El CV es obligatorio (PDF)" });
+        }
+
+        const application = await prisma.jobApplication.create({
+            data: {
+                vacancyId: id,
+                firstName,
+                lastName,
+                email,
+                phone,
+                coverLetter,
+                resumeUrl,
+                status: 'PENDING'
+            }
+        });
+
+        res.status(201).json({ message: "Postulación enviada exitosamente", applicationId: application.id });
+    } catch (error) {
+        console.error("Error submitting application:", error);
+        res.status(500).json({ message: "Error al enviar postulación" });
+    }
+};
