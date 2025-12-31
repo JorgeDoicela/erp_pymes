@@ -1,4 +1,4 @@
-import prisma from '../database/db.js';
+import prisma from '../../database/db.js';
 
 /**
  * AuditRepository

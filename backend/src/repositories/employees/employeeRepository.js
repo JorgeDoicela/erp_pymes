@@ -1,5 +1,5 @@
-import prisma from '../database/db.js';
-import { encrypt, decrypt, encryptSalary, decryptSalary } from '../utils/encryption.js';
+import prisma from '../../database/db.js';
+import { encrypt, decrypt, encryptSalary, decryptSalary } from '../../utils/encryption.js';
 
 /**
  * EmployeeRepository
