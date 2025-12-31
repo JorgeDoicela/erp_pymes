@@ -14,6 +14,7 @@ router.post('/config', authenticate, authorize(['admin', 'hr']), payrollConfigCo
 // Payroll Generation & Management
 router.post('/generate', authenticate, authorize(['admin', 'hr']), payrollController.generate);
 router.get('/', authenticate, authorize(['admin', 'hr']), payrollController.getAll);
+router.get('/my-payrolls', authenticate, payrollController.getMyPayrolls); // Open to all authenticated
 router.get('/:id', authenticate, authorize(['admin', 'hr']), payrollController.getById);
 router.put('/:id/confirm', authenticate, authorize(['admin', 'hr']), payrollController.confirm);
 

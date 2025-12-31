@@ -170,6 +170,22 @@ class PayrollCalculationService {
         });
     }
 
+    async getPayrollsByEmployee(employeeId) {
+        // Find payrolls where this employee has a detail
+        // Returning the Payroll object but ideally we want the Detail + Payroll header info
+        // We can query PayrollDetail directly
+        return await prisma.payrollDetail.findMany({
+            where: { employeeId },
+            include: {
+                payroll: true,
+                employee: true
+            },
+            orderBy: {
+                payroll: { period: 'desc' }
+            }
+        });
+    }
+
     async getPayrollById(id) {
         return await prisma.payroll.findUnique({
             where: { id },

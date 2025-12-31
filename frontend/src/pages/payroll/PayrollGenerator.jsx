@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { generatePayroll, getPayrolls, getPayrollById, confirmPayroll } from '../../services/payroll/payrollConfig.service';
+import { generatePayslipPDF } from '../../utils/generatePayslipPDF';
 
 const PayrollGenerator = () => {
     const navigate = useNavigate();
@@ -156,6 +157,7 @@ const PayrollGenerator = () => {
                                         <th className="p-4 text-right">Hrs Extra ($)</th>
                                         <th className="p-4 text-right">Egresos (Deduc.)</th>
                                         <th className="p-4 text-right text-white">Neto a Pagar</th>
+                                        <th className="p-4 text-center">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
@@ -183,6 +185,15 @@ const PayrollGenerator = () => {
                                                 </td>
                                                 <td className="p-4 text-right text-emerald-400 font-bold font-mono text-lg">
                                                     ${det.netSalary.toFixed(2)}
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <button
+                                                        onClick={() => generatePayslipPDF(det, det.employee, selectedPayroll.period)}
+                                                        className="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded text-xs"
+                                                        title="Descargar Rol Individual"
+                                                    >
+                                                        📄 PDF
+                                                    </button>
                                                 </td>
                                             </tr>
                                         );

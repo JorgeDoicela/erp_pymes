@@ -36,6 +36,15 @@ export const getPayrolls = async () => {
     }
 };
 
+export const getMyPayrolls = async () => {
+    try {
+        const response = await api.get('/payroll/my-payrolls');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al obtener mis roles de pago');
+    }
+};
+
 export const getPayrollById = async (id) => {
     try {
         const response = await api.get(`/payroll/${id}`);

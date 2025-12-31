@@ -23,6 +23,16 @@ class PayrollController {
         }
     }
 
+    async getMyPayrolls(req, res) {
+        try {
+            const payrolls = await payrollCalculationService.getPayrollsByEmployee(req.user.id);
+            res.status(200).json({ success: true, data: payrolls });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ success: false, message: 'Error al obtener mis pagos' });
+        }
+    }
+
     async getById(req, res) {
         try {
             const payroll = await payrollCalculationService.getPayrollById(req.params.id);

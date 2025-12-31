@@ -9,7 +9,7 @@ function EmployeeDashboard({ user, onLogout }) {
         { title: 'Mi Perfil', icon: '👤', color: 'bg-blue-500', desc: 'Ver y editar información personal', path: '/profile' },
         { title: 'Asistencia', icon: '🕒', color: 'bg-purple-500', desc: 'Registrar entrada/salida y ver historial', path: '/empleado/asistencia' },
         { title: 'Permisos', icon: '📝', color: 'bg-pink-500', desc: 'Solicitar ausencias y ver estado', path: '/empleado/ausencias' },
-        { title: 'Mis Pagos', icon: '💰', color: 'bg-green-500', desc: 'Descargar recibos de nómina', path: '#' },
+        { title: 'Mis Pagos', icon: '💰', color: 'bg-green-500', desc: 'Descargar recibos de nómina', path: '/my-payments' },
         { title: 'Evaluaciones', icon: '📊', color: 'bg-orange-500', desc: 'Ver resultados y objetivos', path: '#' },
     ]
 

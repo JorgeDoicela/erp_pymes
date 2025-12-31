@@ -15,6 +15,7 @@ import AdminAbsences from './pages/attendance/AdminAbsences.jsx'
 import AttendanceReports from './pages/reports/AttendanceReports.jsx'
 import PayrollConfiguration from './pages/payroll/PayrollConfiguration.jsx'
 import PayrollGenerator from './pages/payroll/PayrollGenerator.jsx'
+import MyPayments from './pages/payroll/MyPayments.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -158,6 +159,15 @@ function App() {
           </RequireAuth>
         }
       />
+      <Route
+        path="/my-payments"
+        element={
+          <RequireAuth allowedRoles={['admin', 'hr', 'employee']}>
+            <MyPayments user={auth.user} />
+          </RequireAuth>
+        }
+      />
+
       <Route
         path="/performance"
         element={
