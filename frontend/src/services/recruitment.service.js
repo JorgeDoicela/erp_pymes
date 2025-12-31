@@ -52,3 +52,8 @@ export const evaluateCandidate = async (id, data) => {
     const response = await api.post(`/recruitment/applications/${id}/evaluations`, data);
     return response.data;
 };
+
+export const hireCandidate = async (id, data) => {
+    const response = await api.post(`/recruitment/applications/${id}/hire`, data);
+    return response.data;
+};
