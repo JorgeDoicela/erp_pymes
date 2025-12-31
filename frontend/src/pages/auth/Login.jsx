@@ -42,6 +42,9 @@ function Login({ onLogin }) {
                 token: data.token,
             })
 
+            // Save token to localStorage for axios interceptor
+            localStorage.setItem('token', data.token);
+
             // Redirección automática basada en el rol
             if (data.data.role === 'admin') {
                 navigate('/admin')

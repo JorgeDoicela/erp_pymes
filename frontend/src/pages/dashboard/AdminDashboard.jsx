@@ -20,12 +20,14 @@ function AdminDashboard({ user, onLogout }) {
         }
     }, [location]);
     const modules = [
-        { title: 'Empleados', icon: '', color: 'bg-blue-500', path: '/admin/employees' },
-        { title: 'Asistencia', icon: '', color: 'bg-purple-500', path: '/attendance' },
-        { title: 'Nómina', icon: '', color: 'bg-green-500', path: '/payroll' },
-        { title: 'Evaluaciones', icon: '', color: 'bg-orange-500', path: '/performance' },
-        { title: 'Reclutamiento', icon: '', color: 'bg-pink-500', path: '/recruitment' },
-        { title: 'Reportes', icon: '', color: 'bg-cyan-500', path: '/reports' },
+        { title: 'Empleados', icon: '👥', color: 'bg-blue-500', path: '/admin/employees' },
+        { title: 'Asistencia', icon: '🕒', color: 'bg-indigo-500', path: '/attendance' },
+        { title: 'Turnos', icon: '📅', color: 'bg-purple-500', path: '/admin/shifts' },
+        { title: 'Ausencias', icon: '🤕', color: 'bg-rose-500', path: '/admin/absences' }, // Nueva
+        { title: 'Nómina', icon: '💰', color: 'bg-green-500', path: '/payroll' },
+        { title: 'Evaluaciones', icon: '📊', color: 'bg-orange-500', path: '/performance' },
+        { title: 'Reclutamiento', icon: '🤝', color: 'bg-pink-500', path: '/recruitment' },
+        { title: 'Reportes', icon: '📈', color: 'bg-cyan-500', path: '/reports' },
     ]
 
     const insights = [

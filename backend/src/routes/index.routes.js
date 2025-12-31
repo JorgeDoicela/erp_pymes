@@ -3,6 +3,9 @@ import { login } from '../controllers/auth/authController.js';
 import employeeRoutes from './employees/employee.routes.js';
 import contractRoutes from './contracts/contract.routes.js';
 import documentRoutes from './documents/document.routes.js';
+import attendanceRoutes from './attendance/attendance.routes.js';
+import shiftRoutes from './attendance/shift.routes.js';
+import absenceRoutes from './attendance/absence.routes.js';
 
 
 const router = Router();
@@ -19,5 +22,8 @@ router.post('/auth/login', login);
 router.use('/employees', employeeRoutes);
 router.use('/contracts', contractRoutes);
 router.use('/documents', documentRoutes);
+router.use('/attendance', attendanceRoutes);
+router.use('/shifts', shiftRoutes);
+router.use('/absences', absenceRoutes);
 
 export default router;

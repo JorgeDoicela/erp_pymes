@@ -39,12 +39,94 @@ model Employee {
   workHistory       WorkHistory[]
   contracts         Contract[]
   documents         Document[]
+  attendance        Attendance[]
+  schedules         EmployeeSchedule[]
+  absences          AbsenceRequest[]
 
   @@index([email])
   @@index([department])
   @@map("employees")
 }
 
+model AbsenceRequest {
+  id          String    @id @default(cuid())
+  type        String    // "Enfermedad", "Vacaciones", "Personal", "Otro"
+  startDate   DateTime
+  endDate     DateTime
+  reason      String    @db.Text
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  evidenceUrl String?   // Path to uploaded file
+  
+  adminComment String?  // Comentario del admin al aprobar/rechazar
+
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([employeeId])
+  @@map("absence_requests")
+}
+
+model Attendance {
+  id          String    @id @default(cuid())
+  date        DateTime
+  checkIn     DateTime
+  checkOut    DateTime?
+  workedHours Float?
+  status      String
+
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@index([date])
+  @@map("attendance")
+}
+
+model Shift {
+  id          String    @id @default(cuid())
+  name        String    // "Mañana", "Tarde", "Noche"
+  startTime   String    // "08:00"
+  endTime     String    // "17:00"
+  
+  schedules   EmployeeSchedule[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("shifts")
+}
+
+model EmployeeSchedule {
+  id          String    @id @default(cuid())
+  
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  shiftId     String
+  shift       Shift     @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  
+  startDate   DateTime
+  endDate     DateTime? // Null significa indefinido
+  
+  daysOfWeek  String    // JSON ["Lunes", "Martes", ...] stored as string for simplicity in SQLite/Postgres compatibility if needed, or better Prisma String[]
+  
+  isActive    Boolean   @default(true)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([employeeId])
+  @@index([shiftId])
+  @@map("employee_schedules")
+}
 
 model Skill {
   id          String   @id @default(cuid())

@@ -1,11 +1,16 @@
 
 
+import { useNavigate } from 'react-router-dom';
+
 function EmployeeDashboard({ user, onLogout }) {
+    const navigate = useNavigate();
+
     const actions = [
-        { title: 'Mi Perfil', icon: '', color: 'bg-blue-500', desc: 'Ver y editar información personal' },
-        { title: 'Asistencia', icon: '', color: 'bg-purple-500', desc: 'Registrar entrada/salida y ver historial' },
-        { title: 'Mis Pagos', icon: '', color: 'bg-green-500', desc: 'Descargar recibos de nómina' },
-        { title: 'Evaluaciones', icon: '', color: 'bg-orange-500', desc: 'Ver resultados y objetivos' },
+        { title: 'Mi Perfil', icon: '👤', color: 'bg-blue-500', desc: 'Ver y editar información personal', path: '/profile' },
+        { title: 'Asistencia', icon: '🕒', color: 'bg-purple-500', desc: 'Registrar entrada/salida y ver historial', path: '/empleado/asistencia' },
+        { title: 'Permisos', icon: '📝', color: 'bg-pink-500', desc: 'Solicitar ausencias y ver estado', path: '/empleado/ausencias' },
+        { title: 'Mis Pagos', icon: '💰', color: 'bg-green-500', desc: 'Descargar recibos de nómina', path: '#' },
+        { title: 'Evaluaciones', icon: '📊', color: 'bg-orange-500', desc: 'Ver resultados y objetivos', path: '#' },
     ]
 
     return (
@@ -54,6 +59,7 @@ function EmployeeDashboard({ user, onLogout }) {
                     {actions.map((action, idx) => (
                         <button
                             key={idx}
+                            onClick={() => action.path !== '#' && navigate(action.path)}
                             className="group relative overflow-hidden rounded-2xl bg-slate-800/50 border border-white/5 p-6 hover:bg-slate-800 transition-all hover:-translate-y-1 text-left"
                         >
                             <div className={`absolute top-0 right-0 w-24 h-24 ${action.color} opacity-10 rounded-bl-full group-hover:scale-110 transition-transform`}></div>

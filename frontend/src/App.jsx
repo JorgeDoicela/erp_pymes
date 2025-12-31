@@ -7,6 +7,11 @@ import EmployeeDashboard from './pages/dashboard/EmployeeDashboard.jsx'
 import RegisterEmployee from './pages/employees/RegisterEmployee.jsx'
 import EmployeeList from './pages/employees/EmployeeList.jsx'
 import EmployeeProfile from './pages/employees/EmployeeProfile.jsx'
+import AttendancePage from './pages/attendance/AttendancePage.jsx'
+import EmployeeAttendance from './pages/dashboard/views/EmployeeAttendance.jsx'
+import ShiftManagement from './pages/attendance/ShiftManagement.jsx'
+import EmployeeAbsences from './pages/dashboard/views/EmployeeAbsences.jsx'
+import AdminAbsences from './pages/attendance/AdminAbsences.jsx'
 
 function App() {
   const [auth, setAuth] = useState({ user: null, token: null })
@@ -35,6 +40,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/attendance" element={<AttendancePage />} />
       <Route path="/login" element={<Login onLogin={handleLogin} />} />
       <Route
         path="/admin"
@@ -45,10 +51,42 @@ function App() {
         }
       />
       <Route
+        path="/admin/shifts"
+        element={
+          <RequireAuth role="admin">
+            <ShiftManagement />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/absences"
+        element={
+          <RequireAuth role="admin">
+            <AdminAbsences />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/empleado"
         element={
           <RequireAuth role="employee">
             <EmployeeDashboard user={auth.user} onLogout={handleLogout} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/empleado/asistencia"
+        element={
+          <RequireAuth role="employee">
+            <EmployeeAttendance user={auth.user} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/empleado/ausencias"
+        element={
+          <RequireAuth role="employee">
+            <EmployeeAbsences />
           </RequireAuth>
         }
       />
