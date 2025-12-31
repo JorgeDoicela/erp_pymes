@@ -24,3 +24,13 @@ export const submitAssessment = async (data) => {
     const response = await api.post('/performance/submit', data);
     return response.data;
 };
+
+export const getEvaluationResults = async (id) => {
+    const response = await api.get(`/performance/results/${id}`);
+    return response.data;
+};
+
+export const getMyResultsList = async () => {
+    const response = await api.get('/performance/my-results');
+    return response.data;
+};

@@ -196,7 +196,114 @@ export const submitAssessment = async (req, res) => {
         res.json(updatedReview);
 
     } catch (error) {
-        console.error("Error submitting assessment:", error);
         res.status(500).json({ message: "Error al enviar la evaluación" });
+    }
+};
+
+export const getEvaluationResults = async (req, res) => {
+    try {
+        const { id } = req.params; // EmployeeEvaluation ID
+        const userId = req.user.id;
+        const userRole = req.user.role;
+
+        const evaluation = await prisma.employeeEvaluation.findUnique({
+            where: { id },
+            include: {
+                template: true,
+                employee: true,
+                reviewers: {
+                    include: {
+                        reviewer: true
+                    }
+                }
+            }
+        });
+
+        if (!evaluation) {
+            return res.status(404).json({ message: "Evaluación no encontrada" });
+        }
+
+        if (userRole !== 'admin' && userRole !== 'hr' && evaluation.employeeId !== userId) {
+            return res.status(403).json({ message: "No tienes permiso para ver estos resultados" });
+        }
+
+        const criteriaList = JSON.parse(evaluation.template.criteria);
+
+        const criteriaStats = {};
+
+        criteriaList.forEach(c => {
+            criteriaStats[c.name] = { sum: 0, count: 0, fullData: c };
+        });
+
+        const completedReviewers = evaluation.reviewers.filter(r => r.status === 'COMPLETED');
+
+        completedReviewers.forEach(r => {
+            if (!r.responses) return;
+            const responses = JSON.parse(r.responses);
+
+            Object.keys(responses).forEach(key => {
+                if (criteriaStats[key]) {
+                    const val = parseFloat(responses[key]);
+                    if (!isNaN(val)) {
+                        criteriaStats[key].sum += val;
+                        criteriaStats[key].count += 1;
+                    }
+                }
+            });
+        });
+
+        const results = criteriaList.map(c => {
+            const stats = criteriaStats[c.name];
+            const average = stats.count > 0 ? (stats.sum / stats.count).toFixed(2) : 0;
+            return {
+                criteria: c.name,
+                type: c.type,
+                weight: c.weight,
+                description: c.description,
+                score: parseFloat(average),
+                maxScore: evaluation.template.scale ? JSON.parse(evaluation.template.scale).max || 5 : 5
+            };
+        });
+
+        const validResults = results.filter(r => r.score > 0);
+        const overallScore = validResults.length > 0
+            ? (validResults.reduce((acc, curr) => acc + curr.score, 0) / validResults.length).toFixed(2)
+            : 0;
+
+        const feedback = completedReviewers.map(r => ({
+            reviewerName: r.reviewerId === evaluation.employeeId ? 'Autoevaluación' : (userRole === 'admin' ? `${r.reviewer.firstName} ${r.reviewer.lastName}` : 'Evaluador'),
+            comments: r.comments,
+            score: r.score
+        })).filter(f => f.comments);
+
+        res.json({
+            evaluation: {
+                ...evaluation,
+                template: { ...evaluation.template, criteria: criteriaList }
+            },
+            results,
+            overallScore,
+            feedback
+        });
+
+    } catch (error) {
+        console.error("Error calculating results:", error);
+        res.status(500).json({ message: "Error al calcular resultados" });
+    }
+};
+
+// List evaluations where I am the evaluatee
+export const getMyResultsList = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const results = await prisma.employeeEvaluation.findMany({
+            where: { employeeId: userId },
+            include: { template: true },
+            orderBy: { endDate: 'desc' }
+        });
+        res.json(results);
+    } catch (error) {
+        console.error("Error fetching my results:", error);
+        res.status(500).json({ message: "Error al obtener mis resultados" });
     }
 };
