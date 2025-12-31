@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getDashboardData } from '../../services/analytics.service';
-import { FiUsers, FiUserPlus, FiBriefcase, FiDollarSign, FiPieChart, FiBarChart2, FiUserMinus, FiActivity } from 'react-icons/fi';
+import { FiUsers, FiUserPlus, FiBriefcase, FiDollarSign, FiPieChart, FiBarChart2, FiUserMinus, FiActivity, FiHeart } from 'react-icons/fi';
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 const AnalyticsDashboard = () => {
@@ -45,6 +45,9 @@ const AnalyticsDashboard = () => {
                 </a>
                 <a href="/analytics/payroll-costs" className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-white font-bold flex items-center">
                     <FiDollarSign className="mr-2" /> Reporte de Nómina
+                </a>
+                <a href="/analytics/satisfaction" className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded text-white font-bold flex items-center">
+                    <FiHeart className="mr-2" /> Clima Laboral
                 </a>
             </div>
 

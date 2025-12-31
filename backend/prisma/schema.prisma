@@ -554,3 +554,41 @@ model CandidateEvaluation {
   @@index([applicationId])
   @@map("candidate_evaluations")
 }
+
+model ClimateSurvey {
+  id        String   @id @default(cuid())
+  title     String
+  startDate DateTime
+  endDate   DateTime?
+  isActive  Boolean  @default(true)
+  
+  description String?
+
+  responses ClimateResponse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("climate_surveys")
+}
+
+model ClimateResponse {
+  id        String   @id @default(cuid())
+  
+  surveyId  String
+  survey    ClimateSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  
+  // Anonymous responses, so no employee relation ideally, or optional if we want to track completion but report anonymously
+  // For true anonymity in this MVP, we won't link to Employee, just department optional
+  department String? 
+  
+  ratings   String   @db.Text // JSON: { "Liderazgo": 5, "Ambiente": 4, "Salario": 3, "Comunicación": 5 }
+  comments  String?  @db.Text
+  
+  npsScore  Int?     // 0-10 Net Promoter Score for "Recommendation"
+
+  createdAt DateTime @default(now())
+
+  @@index([surveyId])
+  @@map("climate_responses")
+}

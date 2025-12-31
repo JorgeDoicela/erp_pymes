@@ -404,3 +404,109 @@ export const getPayrollCostReport = async (req, res) => {
         res.status(500).json({ message: "Error al generar reporte de costos" });
     }
 };
+
+export const getSatisfactionReport = async (req, res) => {
+    try {
+        console.log("Analytics: Generating Satisfaction Report");
+        // For MVP, we fetch the latest active or most recent survey
+        const survey = await prisma.climateSurvey.findFirst({
+            orderBy: { createdAt: 'desc' },
+            include: { responses: true }
+        });
+
+        if (!survey) {
+            // Need to Seed Data if empty?
+            // Let's check count. If 0 surveys, maybe we return empty structure or auto-seed here heavily discouraged but...
+            // Let's just return empty structure. Frontend will handle "No active survey".
+            return res.json({
+                index: 0,
+                nps: 0,
+                dimensions: [],
+                participation: 0,
+                comments: []
+            });
+        }
+
+        const responses = survey.responses;
+        if (responses.length === 0) {
+            return res.json({
+                index: 0,
+                nps: 0,
+                dimensions: [],
+                participation: 0,
+                comments: []
+            });
+        }
+
+        // 1. Dimensions Analysis
+        const dimensionSums = {};
+        const dimensionCounts = {};
+        let totalScoreSum = 0;
+        let totalScoreCount = 0;
+
+        // 2. NPS Calculation
+        let promoters = 0;
+        let detractors = 0;
+        let npsCount = 0;
+
+        // 3. Comments
+        const comments = [];
+
+        responses.forEach(resp => {
+            // Ratings JSON
+            try {
+                const ratings = JSON.parse(resp.ratings || '{}');
+                Object.keys(ratings).forEach(dim => {
+                    const score = ratings[dim];
+                    dimensionSums[dim] = (dimensionSums[dim] || 0) + score;
+                    dimensionCounts[dim] = (dimensionCounts[dim] || 0) + 1;
+
+                    totalScoreSum += score;
+                    totalScoreCount++;
+                });
+            } catch (e) { }
+
+            // NPS
+            if (resp.npsScore !== null) {
+                if (resp.npsScore >= 9) promoters++;
+                else if (resp.npsScore <= 6) detractors++;
+                npsCount++;
+            }
+
+            // Comments
+            if (resp.comments) {
+                comments.push({
+                    text: resp.comments,
+                    dept: resp.department || 'General'
+                });
+            }
+        });
+
+        // Calculate Averages
+        const dimensions = Object.keys(dimensionSums).map(dim => ({
+            subject: dim,
+            A: parseFloat((dimensionSums[dim] / dimensionCounts[dim]).toFixed(1)), // Radar chart expects value often as A or value
+            fullMark: 5
+        }));
+
+        // Overall Index (0-100%) based on 5-point scale
+        const avgScore = totalScoreCount > 0 ? (totalScoreSum / totalScoreCount) : 0;
+        const index = Math.round((avgScore / 5) * 100);
+
+        // NPS
+        const nps = npsCount > 0 ? Math.round(((promoters - detractors) / npsCount) * 100) : 0;
+
+        res.json({
+            surveyTitle: survey.title,
+            index,
+            nps,
+            dimensions,
+            participation: responses.length,
+            comments: comments.slice(0, 10) // Top 10 recent
+        });
+
+    } catch (error) {
+        console.error("Error generating satisfaction report:", error);
+        res.status(500).json({ message: "Error al generar reporte de satisfacción" });
+    }
+};

@@ -29,3 +29,8 @@ export const getPayrollCostReport = async (startDate, endDate) => {
     const response = await api.get(`/analytics/payroll-costs?${params.toString()}`);
     return response.data;
 };
+
+export const getSatisfactionReport = async () => {
+    const response = await api.get('/analytics/satisfaction');
+    return response.data;
+};
