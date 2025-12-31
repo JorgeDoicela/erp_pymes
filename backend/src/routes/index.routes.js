@@ -10,6 +10,7 @@ import reportRoutes from './reports/report.routes.js';
 import payrollConfigRoutes from './payroll/payrollConfig.routes.js';
 import benefitsRoutes from './payroll/benefits.routes.js';
 import evaluationRoutes from './performance/evaluation.routes.js';
+import goalsRoutes from './performance/goals.routes.js';
 
 
 const router = Router();
@@ -35,5 +36,6 @@ router.use('/reports', reportRoutes);
 router.use('/payroll', payrollConfigRoutes);
 router.use('/benefits', benefitsRoutes);
 router.use('/performance', evaluationRoutes);
+router.use('/goals', goalsRoutes);
 
 export default router;

@@ -23,6 +23,7 @@ import AssignEvaluation from './pages/performance/AssignEvaluation.jsx'
 import MyEvaluations from './pages/performance/MyEvaluations.jsx'
 import TakeEvaluation from './pages/performance/TakeEvaluation.jsx'
 import EvaluationResults from './pages/performance/EvaluationResults.jsx'
+import MyGoals from './pages/performance/MyGoals.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -215,6 +216,14 @@ function App() {
         element={
           <RequireAuth>
             <EvaluationResults />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/performance/goals"
+        element={
+          <RequireAuth>
+            <MyGoals />
           </RequireAuth>
         }
       />

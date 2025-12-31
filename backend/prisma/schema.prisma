@@ -54,10 +54,38 @@ model Employee {
   // Evauluations
   evaluations   EmployeeEvaluation[] // Evaluaciones que recibe el empleado
   reviewedEvaluations EvaluationReviewer[] // Evaluaciones que realiza el empleado (como revisor)
+  goals         EmployeeGoal[]
 
   @@index([email])
   @@index([department])
   @@map("employees")
+}
+
+model EmployeeGoal {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String?
+  
+  // SMART Checks
+  metric      String   @default("Manual") // How it is measured
+  targetValue Float    // The 'M' in SMART (Measurable)
+  currentValue Float   @default(0)
+  unit        String   @default("%") // %, USD, Units
+  
+  deadline    DateTime // The 'T' in SMART (Time-bound)
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  progress    Float    @default(0) // 0-100 percentage calculated
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([employeeId])
+  @@map("employee_goals")
 }
 
 model AbsenceRequest {

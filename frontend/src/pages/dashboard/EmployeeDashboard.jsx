@@ -11,6 +11,7 @@ function EmployeeDashboard({ user, onLogout }) {
         { title: 'Permisos', icon: '📝', color: 'bg-pink-500', desc: 'Solicitar ausencias y ver estado', path: '/empleado/ausencias' },
         { title: 'Mis Pagos', icon: '💰', color: 'bg-green-500', desc: 'Descargar recibos de nómina', path: '/my-payments' },
         { title: 'Evaluaciones', icon: '📊', color: 'bg-orange-500', desc: 'Realizar autoevaluaciones y ver resultados', path: '/performance/my-evaluations' },
+        { title: 'Mis Objetivos', icon: '🎯', color: 'bg-cyan-500', desc: 'Definir y seguir objetivos SMART', path: '/performance/goals' },
     ]
 
     return (
