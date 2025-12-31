@@ -153,3 +153,133 @@ export const getTurnoverReport = async (req, res) => {
         res.status(500).json({ message: "Error al generar reporte de rotación" });
     }
 };
+
+export const getPerformanceReport = async (req, res) => {
+    try {
+        const { startDate, endDate, department } = req.query;
+
+        console.log("Analytics: Generating Performance Report", { startDate, endDate, department });
+
+        // Filters
+        const whereClause = {
+            status: 'COMPLETED',
+            // If date range provided, filter by evaluation end date (completion)
+            ...(startDate && endDate ? {
+                endDate: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate)
+                }
+            } : {})
+        };
+
+        // If department filtered, we need to filter employees first or use nested check
+        // Prisma doesn't support deep filtering easily in aggregations, so we might fetch and process or use includes
+        if (department) {
+            whereClause.employee = {
+                department: department
+            };
+        }
+
+        const evaluations = await prisma.employeeEvaluation.findMany({
+            where: whereClause,
+            include: {
+                employee: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        department: true,
+                        position: true
+                    }
+                }
+            }
+        });
+
+        // 1. Avg Score by Department
+        const deptScores = {};
+        const deptCounts = {};
+
+        evaluations.forEach(ev => {
+            const dept = ev.employee.department || 'Sin Dept';
+            const score = ev.finalScore || 0;
+
+            deptScores[dept] = (deptScores[dept] || 0) + score;
+            deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+        });
+
+        const avgScoreByDept = Object.keys(deptScores).map(dept => ({
+            department: dept,
+            average: parseFloat((deptScores[dept] / deptCounts[dept]).toFixed(2))
+        }));
+
+        // 2. Rankings (Top & Bottom)
+        // Sort by finalScore
+        const sortedEvaluations = [...evaluations].sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
+
+        const topPerformers = sortedEvaluations.slice(0, 5).map(ev => ({
+            id: ev.employee.id,
+            name: `${ev.employee.firstName} ${ev.employee.lastName}`,
+            department: ev.employee.department,
+            score: ev.finalScore
+        }));
+
+        const lowPerformers = [...sortedEvaluations].reverse().slice(0, 5).map(ev => ({
+            id: ev.employee.id,
+            name: `${ev.employee.firstName} ${ev.employee.lastName}`,
+            department: ev.employee.department,
+            score: ev.finalScore
+        }));
+
+        // 3. Distribution (Bell Curve)
+        const distribution = {
+            '0-2 (Bajo)': 0,
+            '2-3 (Regular)': 0,
+            '3-4 (Bueno)': 0,
+            '4-5 (Excelente)': 0
+        };
+
+        evaluations.forEach(ev => {
+            const score = ev.finalScore || 0;
+            if (score < 2) distribution['0-2 (Bajo)']++;
+            else if (score < 3) distribution['2-3 (Regular)']++;
+            else if (score < 4) distribution['3-4 (Bueno)']++;
+            else distribution['4-5 (Excelente)']++;
+        });
+
+        const distributionChartData = Object.keys(distribution).map(key => ({
+            range: key,
+            count: distribution[key]
+        }));
+
+
+        // 4. Recommendations for List
+        const formatRecommendation = (score) => {
+            if (score >= 4.5) return 'Promoción / Bono';
+            if (score >= 3.5) return 'Felicitar / Mantener';
+            if (score >= 2.5) return 'Capacitación';
+            return 'Plan de Mejora (PIP)';
+        };
+
+        const detailedList = evaluations.map(ev => ({
+            id: ev.id,
+            employeeName: `${ev.employee.firstName} ${ev.employee.lastName}`,
+            department: ev.employee.department,
+            position: ev.employee.position,
+            score: ev.finalScore,
+            recommendation: formatRecommendation(ev.finalScore || 0),
+            date: ev.endDate
+        }));
+
+        res.json({
+            avgScoreByDept,
+            topPerformers,
+            lowPerformers,
+            distributionChartData,
+            detailedList
+        });
+
+    } catch (error) {
+        console.error("Error generating performance report:", error);
+        res.status(500).json({ message: "Error al generar reporte de desempeño" });
+    }
+};

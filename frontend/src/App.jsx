@@ -32,6 +32,7 @@ import VacancyDetails from './pages/recruitment/VacancyDetails.jsx'
 import ApplicationDetails from './pages/recruitment/ApplicationDetails.jsx'
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard.jsx'
 import TurnoverReport from './pages/reports/TurnoverReport.jsx'
+import PerformanceReport from './pages/reports/PerformanceReport.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -282,6 +283,14 @@ function App() {
         element={
           <RequireAuth role="admin">
             <TurnoverReport />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/analytics/performance"
+        element={
+          <RequireAuth role="admin">
+            <PerformanceReport />
           </RequireAuth>
         }
       />
