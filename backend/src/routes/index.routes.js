@@ -6,6 +6,7 @@ import documentRoutes from './documents/document.routes.js';
 import attendanceRoutes from './attendance/attendance.routes.js';
 import shiftRoutes from './attendance/shift.routes.js';
 import absenceRoutes from './attendance/absence.routes.js';
+import reportRoutes from './reports/report.routes.js';
 
 
 const router = Router();
@@ -25,5 +26,6 @@ router.use('/documents', documentRoutes);
 router.use('/attendance', attendanceRoutes);
 router.use('/shifts', shiftRoutes);
 router.use('/absences', absenceRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;

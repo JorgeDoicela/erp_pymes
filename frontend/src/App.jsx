@@ -12,6 +12,7 @@ import EmployeeAttendance from './pages/dashboard/views/EmployeeAttendance.jsx'
 import ShiftManagement from './pages/attendance/ShiftManagement.jsx'
 import EmployeeAbsences from './pages/dashboard/views/EmployeeAbsences.jsx'
 import AdminAbsences from './pages/attendance/AdminAbsences.jsx'
+import AttendanceReports from './pages/reports/AttendanceReports.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -76,6 +77,14 @@ function App() {
         }
       />
       <Route
+        path="/admin/reports"
+        element={
+          <RequireAuth role="admin">
+            <AttendanceReports />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/admin/absences"
         element={
           <RequireAuth role="admin">
@@ -128,6 +137,30 @@ function App() {
         element={
           <RequireAuth role="admin">
             <EmployeeProfile token={auth.token} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/payroll"
+        element={
+          <RequireAuth role="admin">
+            <div className="p-8 text-white"><h1>Módulo de Nómina - Próximamente</h1></div>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/performance"
+        element={
+          <RequireAuth role="admin">
+            <div className="p-8 text-white"><h1>Módulo de Evaluaciones - Próximamente</h1></div>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/recruitment"
+        element={
+          <RequireAuth role="admin">
+            <div className="p-8 text-white"><h1>Módulo de Reclutamiento - Próximamente</h1></div>
           </RequireAuth>
         }
       />
