@@ -33,6 +33,7 @@ import ApplicationDetails from './pages/recruitment/ApplicationDetails.jsx'
 import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard.jsx'
 import TurnoverReport from './pages/reports/TurnoverReport.jsx'
 import PerformanceReport from './pages/reports/PerformanceReport.jsx'
+import PayrollCostReport from './pages/reports/PayrollCostReport.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -291,6 +292,14 @@ function App() {
         element={
           <RequireAuth role="admin">
             <PerformanceReport />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/analytics/payroll-costs"
+        element={
+          <RequireAuth role="admin">
+            <PayrollCostReport />
           </RequireAuth>
         }
       />

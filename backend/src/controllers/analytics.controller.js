@@ -283,3 +283,124 @@ export const getPerformanceReport = async (req, res) => {
         res.status(500).json({ message: "Error al generar reporte de desempeño" });
     }
 };
+
+export const getPayrollCostReport = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        console.log("Analytics: Generating Payroll Cost Report", { startDate, endDate });
+
+        // Filter by Payroll Payment Date (or CreatedAt if not paid yet, but usually we report on Paid)
+        // Adjust status filter as needed (e.g., 'PAID' or 'ISSUED')
+        const whereClause = {
+            // status: 'PAID', // Optional: Check if we only want paid
+            ...(startDate && endDate ? {
+                createdAt: { // Using createdAt or paymentDate
+                    gte: new Date(startDate),
+                    lte: new Date(endDate)
+                }
+            } : {})
+        };
+
+        const payrolls = await prisma.payroll.findMany({
+            where: whereClause,
+            include: {
+                details: {
+                    include: {
+                        employee: {
+                            select: { department: true }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'asc' }
+        });
+
+        // 1. Cost Breakdown (Total)
+        let totalBaseSalary = 0;
+        let totalOvertime = 0;
+        let totalBonuses = 0;
+        let totalDeductions = 0; // If tracked separately for company cost? Usually internal cost is Gross.
+        // Gross Cost = Base + Overtime + Bonuses + Benefits(if any)
+
+        // 2. Costs by Department
+        const deptCosts = {};
+
+        // 3. Trend Data (Monthly)
+        const trendMap = {};
+
+        payrolls.forEach(payroll => {
+            const date = new Date(payroll.createdAt);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+            if (!trendMap[monthKey]) {
+                trendMap[monthKey] = { name: monthKey, total: 0, salary: 0, overtime: 0, extras: 0 };
+            }
+
+            payroll.details.forEach(detail => {
+                const base = detail.baseSalary || 0;
+                // Parse Overtime
+                const ot = detail.overtimeAmount || 0;
+
+                // Parse Bonuses JSON
+                let bonuses = 0;
+                try {
+                    const bonusList = JSON.parse(detail.bonuses || '[]');
+                    if (Array.isArray(bonusList)) {
+                        bonuses = bonusList.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+                    }
+                } catch (e) { console.error("Error parsing bonuses JSON", e); }
+
+                const totalDetailCost = base + ot + bonuses;
+
+                // Aggregates
+                totalBaseSalary += base;
+                totalOvertime += ot;
+                totalBonuses += bonuses;
+
+                // Dept
+                const dept = detail.employee?.department || 'Sin Dept';
+                deptCosts[dept] = (deptCosts[dept] || 0) + totalDetailCost;
+
+                // Trend
+                trendMap[monthKey].total += totalDetailCost;
+                trendMap[monthKey].salary += base;
+                trendMap[monthKey].overtime += ot;
+                trendMap[monthKey].extras += bonuses;
+            });
+        });
+
+        // Format Charts
+        const totalCost = totalBaseSalary + totalOvertime + totalBonuses;
+
+        const breakdownChartData = [
+            { name: 'Salario Base', value: totalBaseSalary },
+            { name: 'Horas Extras', value: totalOvertime },
+            { name: 'Bonificaciones', value: totalBonuses }
+        ];
+
+        const deptChartData = Object.keys(deptCosts).map(dept => ({
+            name: dept,
+            value: deptCosts[dept]
+        }));
+
+        const trendChartData = Object.values(trendMap).sort((a, b) => a.name.localeCompare(b.name));
+
+        res.json({
+            metrics: {
+                totalCost,
+                avgMonthlyCost: trendChartData.length ? (totalCost / trendChartData.length) : totalCost,
+                headcount: payrolls.reduce((acc, p) => acc + p.details.length, 0) // Naive headcount sum (sum of payroll records)
+            },
+            charts: {
+                breakdown: breakdownChartData,
+                byDepartment: deptChartData,
+                trend: trendChartData
+            },
+            raw: trendChartData // Or monthly list
+        });
+
+    } catch (error) {
+        console.error("Error generating payroll cost report:", error);
+        res.status(500).json({ message: "Error al generar reporte de costos" });
+    }
+};

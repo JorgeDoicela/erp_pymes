@@ -21,3 +21,11 @@ export const getPerformanceReport = async (startDate, endDate, department) => {
     const response = await api.get(`/analytics/performance?${params.toString()}`);
     return response.data;
 };
+
+export const getPayrollCostReport = async (startDate, endDate) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const response = await api.get(`/analytics/payroll-costs?${params.toString()}`);
+    return response.data;
+};

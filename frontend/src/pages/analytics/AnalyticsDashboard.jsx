@@ -43,6 +43,9 @@ const AnalyticsDashboard = () => {
                 <a href="/analytics/performance" className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white font-bold flex items-center">
                     <FiActivity className="mr-2" /> Reporte de Desempeño
                 </a>
+                <a href="/analytics/payroll-costs" className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-white font-bold flex items-center">
+                    <FiDollarSign className="mr-2" /> Reporte de Nómina
+                </a>
             </div>
 
             {/* KPIs */}
