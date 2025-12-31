@@ -17,6 +17,9 @@ import PayrollConfiguration from './pages/payroll/PayrollConfiguration.jsx'
 import PayrollGenerator from './pages/payroll/PayrollGenerator.jsx'
 import MyPayments from './pages/payroll/MyPayments.jsx'
 import BenefitsManagement from './pages/payroll/BenefitsManagement.jsx'
+import EvaluationDashboard from './pages/performance/EvaluationDashboard.jsx'
+import CreateEvaluation from './pages/performance/CreateEvaluation.jsx'
+import AssignEvaluation from './pages/performance/AssignEvaluation.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -178,11 +181,29 @@ function App() {
         }
       />
 
+
+
       <Route
         path="/performance"
         element={
           <RequireAuth role="admin">
-            <div className="p-8 text-white"><h1>Módulo de Evaluaciones - Próximamente</h1></div>
+            <EvaluationDashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/performance/create"
+        element={
+          <RequireAuth role="admin">
+            <CreateEvaluation />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/performance/assign"
+        element={
+          <RequireAuth role="admin">
+            <AssignEvaluation />
           </RequireAuth>
         }
       />

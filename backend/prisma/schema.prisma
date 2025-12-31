@@ -51,6 +51,10 @@ model Employee {
   PayrollDetail PayrollDetail[]
   benefits      EmployeeBenefit[]
 
+  // Evauluations
+  evaluations   EmployeeEvaluation[] // Evaluaciones que recibe el empleado
+  reviewedEvaluations EvaluationReviewer[] // Evaluaciones que realiza el empleado (como revisor)
+
   @@index([email])
   @@index([department])
   @@map("employees")
@@ -321,4 +325,80 @@ model EmployeeBenefit {
 
   @@index([employeeId])
   @@map("employee_benefits")
+}
+
+model EvaluationTemplate {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  period       String
+  instructions String?  @db.Text
+  
+  // JSON strings for flexibility
+  criteria     String   @db.Text // JSON: [{ name, description, weight, type }]
+  scale        String   @db.Text // JSON: { type: "numeric", min: 1, max: 5, labels: {} }
+  
+  isActive     Boolean  @default(true)
+  
+  evaluations  EmployeeEvaluation[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("evaluation_templates")
+}
+
+model EmployeeEvaluation {
+  id           String   @id @default(cuid())
+  
+  templateId   String
+  template     EvaluationTemplate @relation(fields: [templateId], references: [id])
+  
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  startDate    DateTime
+  endDate      DateTime
+  
+  status       String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, REVIEWED
+  
+  // Results
+  finalScore   Float?
+  feedback     String?  @db.Text
+  
+  reviewers    EvaluationReviewer[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([templateId])
+  @@index([employeeId])
+  @@map("employee_evaluations")
+}
+
+model EvaluationReviewer {
+  id           String   @id @default(cuid())
+  
+  evaluationId String
+  evaluation   EmployeeEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  
+  reviewerId   String
+  reviewer     Employee @relation(fields: [reviewerId], references: [id])
+  
+  status       String   @default("PENDING") // PENDING, COMPLETED
+  
+  // The actual responses
+  responses    String?  @db.Text // JSON: { criteriaId: score, comment: string }
+  comments     String?  @db.Text
+  
+  score        Float?
+  
+  completedAt  DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([evaluationId])
+  @@index([reviewerId])
+  @@map("evaluation_reviewers")
 }
