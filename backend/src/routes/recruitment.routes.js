@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createVacancy, getVacancies, getPublicVacancies, getVacancyById, updateVacancyStatus, applyToVacancy, getApplicationsByVacancy, getApplicationDetails, updateApplicationStatus, addApplicationNote } from '../controllers/recruitment.controller.js';
+import { createVacancy, getVacancies, getPublicVacancies, getVacancyById, updateVacancyStatus, applyToVacancy, getApplicationsByVacancy, getApplicationDetails, updateApplicationStatus, addApplicationNote, scheduleInterview } from '../controllers/recruitment.controller.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { uploadResume } from '../middleware/upload.middleware.js';
 
@@ -20,5 +20,6 @@ router.get('/:id/applications', authenticate, authorize(['admin', 'hr']), getApp
 router.get('/applications/:id', authenticate, authorize(['admin', 'hr']), getApplicationDetails);
 router.put('/applications/:id/status', authenticate, authorize(['admin', 'hr']), updateApplicationStatus);
 router.post('/applications/:id/notes', authenticate, authorize(['admin', 'hr']), addApplicationNote);
+router.post('/applications/:id/interviews', authenticate, authorize(['admin', 'hr']), scheduleInterview);
 
 export default router;

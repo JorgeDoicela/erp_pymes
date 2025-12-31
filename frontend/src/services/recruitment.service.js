@@ -42,3 +42,8 @@ export const addApplicationNote = async (id, content) => {
     const response = await api.post(`/recruitment/applications/${id}/notes`, { content });
     return response.data;
 };
+
+export const scheduleInterview = async (id, data) => {
+    const response = await api.post(`/recruitment/applications/${id}/interviews`, data);
+    return response.data;
+};

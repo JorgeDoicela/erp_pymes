@@ -140,7 +140,8 @@ export const getApplicationDetails = async (req, res) => {
             where: { id },
             include: {
                 vacancy: true,
-                notes: { orderBy: { createdAt: 'desc' } }
+                notes: { orderBy: { createdAt: 'desc' } },
+                interviews: { orderBy: { date: 'asc' } }
             }
         });
         if (!application) return res.status(404).json({ message: "Postulación no encontrada" });
@@ -184,5 +185,35 @@ export const addApplicationNote = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error al agregar nota" });
+    }
+};
+
+export const scheduleInterview = async (req, res) => {
+    try {
+        const { id } = req.params; // Application ID
+        const { date, type, location, notes } = req.body;
+        const interviewerId = req.user.id; // Assign to current user for simplified flow
+
+        const interview = await prisma.interview.create({
+            data: {
+                applicationId: id,
+                date: new Date(date),
+                type,
+                location,
+                notes,
+                interviewerId
+            }
+        });
+
+        // Optionally update application status to 'INTERVIEW'
+        await prisma.jobApplication.update({
+            where: { id },
+            data: { status: 'INTERVIEW' }
+        });
+
+        res.json(interview);
+    } catch (error) {
+        console.error("Error scheduling interview:", error);
+        res.status(500).json({ message: "Error al programar entrevista" });
     }
 };
