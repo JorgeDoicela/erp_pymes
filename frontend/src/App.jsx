@@ -13,6 +13,8 @@ import ShiftManagement from './pages/attendance/ShiftManagement.jsx'
 import EmployeeAbsences from './pages/dashboard/views/EmployeeAbsences.jsx'
 import AdminAbsences from './pages/attendance/AdminAbsences.jsx'
 import AttendanceReports from './pages/reports/AttendanceReports.jsx'
+import PayrollConfiguration from './pages/payroll/PayrollConfiguration.jsx'
+import PayrollGenerator from './pages/payroll/PayrollGenerator.jsx'
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -141,10 +143,18 @@ function App() {
         }
       />
       <Route
-        path="/payroll"
+        path="/admin/payroll/config"
         element={
           <RequireAuth role="admin">
-            <div className="p-8 text-white"><h1>Módulo de Nómina - Próximamente</h1></div>
+            <PayrollConfiguration />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/payroll/generate"
+        element={
+          <RequireAuth role="admin">
+            <PayrollGenerator />
           </RequireAuth>
         }
       />

@@ -9,41 +9,42 @@ datasource db {
 
 // Modelo de Empleado
 model Employee {
-  id                String   @id @default(cuid())
-  firstName         String
-  lastName          String
-  email             String   @unique
-  department        String
-  position          String
-  
-  identityCard      String   @unique
-  birthDate         DateTime
-  address           String
-  phone             String
-  hireDate          DateTime
-  contractType      String
-  civilStatus       String
-  
+  id         String @id @default(cuid())
+  firstName  String
+  lastName   String
+  email      String @unique
+  department String
+  position   String
+
+  identityCard String   @unique
+  birthDate    DateTime
+  address      String
+  phone        String
+  hireDate     DateTime
+  contractType String
+  civilStatus  String
+
   // Salario encriptado en la base de datos
   // Se almacena como: salt:iv:authTag:encryptedData
-  salary            String   // Valor encriptado
-  
-  password          String   // Contraseña hasheada
-  role              String   @default("employee") // Rol: 'admin' | 'employee'
+  salary String // Valor encriptado
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  password String // Contraseña hasheada
+  role     String @default("employee") // Rol: 'admin' | 'employee'
 
-  vacationDays      Int      @default(15)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vacationDays Int @default(15)
 
   // Relaciones
-  skills            Skill[]
-  workHistory       WorkHistory[]
-  contracts         Contract[]
-  documents         Document[]
-  attendance        Attendance[]
-  schedules         EmployeeSchedule[]
-  absences          AbsenceRequest[]
+  skills        Skill[]
+  workHistory   WorkHistory[]
+  contracts     Contract[]
+  documents     Document[]
+  attendance    Attendance[]
+  schedules     EmployeeSchedule[]
+  absences      AbsenceRequest[]
+  PayrollDetail PayrollDetail[]
 
   @@index([email])
   @@index([department])
@@ -51,22 +52,22 @@ model Employee {
 }
 
 model AbsenceRequest {
-  id          String    @id @default(cuid())
-  type        String    // "Enfermedad", "Vacaciones", "Personal", "Otro"
-  startDate   DateTime
-  endDate     DateTime
-  reason      String    @db.Text
-  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
-  
-  evidenceUrl String?   // Path to uploaded file
-  
-  adminComment String?  // Comentario del admin al aprobar/rechazar
+  id        String   @id @default(cuid())
+  type      String // "Enfermedad", "Vacaciones", "Personal", "Otro"
+  startDate DateTime
+  endDate   DateTime
+  reason    String   @db.Text
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
 
-  employeeId  String
-  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  evidenceUrl String? // Path to uploaded file
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  adminComment String? // Comentario del admin al aprobar/rechazar
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([employeeId])
   @@map("absence_requests")
@@ -80,11 +81,11 @@ model Attendance {
   workedHours Float?
   status      String
 
-  employeeId  String
-  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([employeeId, date])
   @@index([employeeId])
@@ -93,37 +94,37 @@ model Attendance {
 }
 
 model Shift {
-  id          String    @id @default(cuid())
-  name        String    // "Mañana", "Tarde", "Noche"
-  startTime   String    // "08:00"
-  endTime     String    // "17:00"
-  
-  schedules   EmployeeSchedule[]
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id        String @id @default(cuid())
+  name      String // "Mañana", "Tarde", "Noche"
+  startTime String // "08:00"
+  endTime   String // "17:00"
+
+  schedules EmployeeSchedule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("shifts")
 }
 
 model EmployeeSchedule {
-  id          String    @id @default(cuid())
-  
-  employeeId  String
-  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  shiftId     String
-  shift       Shift     @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  
-  startDate   DateTime
-  endDate     DateTime? // Null significa indefinido
-  
-  daysOfWeek  String    // JSON ["Lunes", "Martes", ...] stored as string for simplicity in SQLite/Postgres compatibility if needed, or better Prisma String[]
-  
-  isActive    Boolean   @default(true)
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  shiftId String
+  shift   Shift  @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  startDate DateTime
+  endDate   DateTime? // Null significa indefinido
+
+  daysOfWeek String // JSON ["Lunes", "Martes", ...] stored as string for simplicity in SQLite/Postgres compatibility if needed, or better Prisma String[]
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([employeeId])
   @@index([shiftId])
@@ -131,27 +132,27 @@ model EmployeeSchedule {
 }
 
 model Skill {
-  id          String   @id @default(cuid())
-  name        String
-  level       String   // Beginner, Intermediate, Advanced, Expert
-  
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id    String @id @default(cuid())
+  name  String
+  level String // Beginner, Intermediate, Advanced, Expert
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@map("skills")
 }
 
 model WorkHistory {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   company     String
   position    String
   startDate   DateTime
   endDate     DateTime?
-  description String?  @db.Text
-  
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  description String?   @db.Text
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@map("work_history")
@@ -159,50 +160,138 @@ model WorkHistory {
 
 model AuditLog {
   id          String   @id @default(cuid())
-  entity      String   // "Employee"
+  entity      String // "Employee"
   entityId    String
-  action      String   // "UPDATE", "CREATE"
-  performedBy String   // User name or ID
+  action      String // "UPDATE", "CREATE"
+  performedBy String // User name or ID
   details     String   @db.Text // JSON string of changes
   timestamp   DateTime @default(now())
-  
+
   @@index([entityId])
   @@map("audit_logs")
 }
 
 model Contract {
-  id          String   @id @default(cuid())
-  type        String   // "Indefinido", "Temporal", "Por Obra", etc.
+  id          String    @id @default(cuid())
+  type        String // "Indefinido", "Temporal", "Por Obra", etc.
   startDate   DateTime
   endDate     DateTime?
   salary      Float
-  clauses     String?  @db.Text
-  documentUrl String?  // Path to PDF
-  status      String   @default("Active") // Active, Expired, Terminated
-  
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  clauses     String?   @db.Text
+  documentUrl String? // Path to PDF
+  status      String    @default("Active") // Active, Expired, Terminated
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([employeeId])
   @@map("contracts")
 }
 
 model Document {
-  id          String   @id @default(cuid())
-  type        String   // "DNI", "Licencia", "Certificado", "Otro"
-  documentUrl String   // Filename
+  id           String    @id @default(cuid())
+  type         String // "DNI", "Licencia", "Certificado", "Otro"
+  documentUrl  String // Filename
   originalName String?
-  mimeType    String?
-  expiryDate  DateTime?
-  
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  
+  mimeType     String?
+  expiryDate   DateTime?
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@index([employeeId])
   @@map("documents")
+}
+
+model PayrollConfig {
+  id          String @id @default(cuid())
+  workingDays Int    @default(30)
+  currency    String @default("USD")
+
+  validFrom DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  items PayrollItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payroll_configs")
+}
+
+model PayrollItem {
+  id   String @id @default(cuid())
+  name String
+  type String // "EARNING" (Ingreso), "DEDUCTION" (Egreso)
+
+  isMandatory Boolean @default(false)
+
+  // Si es porcentaje, ej: 9.45 para 9.45%
+  percentage Float?
+
+  // Si es valor fijo, ej: 20.00
+  fixedValue Float?
+
+  configId String
+  config   PayrollConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([configId])
+  @@map("payroll_items")
+}
+
+model Payroll {
+  id String @id @default(cuid())
+
+  period  DateTime // Start of month usually
+  endDate DateTime // End of period
+
+  status String @default("DRAFT") // DRAFT, ISSUED, PAID
+
+  totalAmount Float
+
+  details PayrollDetail[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payrolls")
+}
+
+model PayrollDetail {
+  id String @id @default(cuid())
+
+  payrollId String
+  payroll   Payroll @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Base Data
+  baseSalary Float
+  workedDays Int
+
+  // Overtime
+  overtimeHours  Float
+  overtimeAmount Float
+
+  // Variable JSONs using simple String (JSON.stringify)
+  bonuses    String // JSON string: [{name, amount}, ...]
+  deductions String // JSON string: [{name, amount}, ...]
+
+  netSalary Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([payrollId])
+  @@index([employeeId])
+  @@map("payroll_details")
 }
