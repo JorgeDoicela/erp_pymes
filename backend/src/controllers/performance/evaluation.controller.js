@@ -186,6 +186,13 @@ export const submitAssessment = async (req, res) => {
             }
         });
 
+        // RF-EVA-004: Notification to HR
+        if (status === 'COMPLETED') {
+            const evaluator = await prisma.employee.findUnique({ where: { id: userId } });
+            console.log(`[NOTIFICATION] HR Notified: Evaluation ${review.evaluationId} completed by ${evaluator?.firstName} ${evaluator?.lastName}`);
+            // In future: sendEmail(hrEmail, "Evaluation Completed", ...)
+        }
+
         res.json(updatedReview);
 
     } catch (error) {

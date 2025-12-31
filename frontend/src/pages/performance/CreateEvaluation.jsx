@@ -172,8 +172,14 @@ const CreateEvaluation = () => {
                                         placeholder="Nombre del criterio (Ej: Trabajo en equipo)"
                                         value={newCriteria.name}
                                         onChange={(e) => setNewCriteria(prev => ({ ...prev, name: e.target.value }))}
-                                        className="w-full bg-gray-700 border-gray-600 rounded-lg p-2 text-white text-sm"
+                                        className="w-full bg-gray-700 border-gray-600 rounded-lg p-2 text-white text-sm mb-2"
                                     />
+                                    <textarea
+                                        placeholder="Descripción detallada del criterio (Opcional)"
+                                        value={newCriteria.description}
+                                        onChange={(e) => setNewCriteria(prev => ({ ...prev, description: e.target.value }))}
+                                        className="w-full bg-gray-700 border-gray-600 rounded-lg p-2 text-white text-sm h-16"
+                                    ></textarea>
                                 </div>
                                 <div>
                                     <select
@@ -210,10 +216,11 @@ const CreateEvaluation = () => {
                                 <p className="text-center text-gray-500 py-4 italic">No se han agregado criterios aún.</p>
                             ) : (
                                 formData.criteria.map((item) => (
-                                    <div key={item.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-lg border-l-4 border-green-500">
+                                    <div key={item.id} className="flex justify-between items-start bg-gray-700 p-3 rounded-lg border-l-4 border-green-500">
                                         <div>
                                             <p className="font-semibold text-white">{item.name}</p>
-                                            <p className="text-xs text-gray-400">{item.type} {item.weight && `• Peso: ${item.weight}%`}</p>
+                                            <p className="text-xs text-gray-300 mb-1">{item.description}</p>
+                                            <p className="text-xs text-gray-400 italic">{item.type} {item.weight && `• Peso: ${item.weight}%`}</p>
                                         </div>
                                         <button
                                             type="button"

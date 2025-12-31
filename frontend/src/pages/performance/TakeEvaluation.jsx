@@ -61,6 +61,11 @@ const TakeEvaluation = () => {
             }
         }
 
+        if (!comments.trim()) {
+            alert("Los comentarios generales son obligatorios para completar la evaluación.");
+            return;
+        }
+
         setSubmitting(true);
         try {
             await submitAssessment({
@@ -149,19 +154,20 @@ const TakeEvaluation = () => {
                         <div key={idx} className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
                             <div className="mb-3">
                                 <h3 className="text-lg font-bold text-white mb-1">{c.name}</h3>
-                                <p className="text-sm text-gray-400">{c.type} {c.weight ? `(Peso: ${c.weight}%)` : ''}</p>
+                                {c.description && <p className="text-sm text-gray-300 mb-2 italic">{c.description}</p>}
+                                <p className="text-xs text-gray-400 uppercase tracking-widest">{c.type} {c.weight ? `(Peso: ${c.weight}%)` : ''}</p>
                             </div>
                             {renderInput(c)}
                         </div>
                     ))}
 
                     <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
-                        <h3 className="text-lg font-bold text-white mb-3">Comentarios Generales</h3>
+                        <h3 className="text-lg font-bold text-white mb-3">Comentarios Generales <span className="text-red-500">*</span></h3>
                         <textarea
                             value={comments}
                             onChange={(e) => setComments(e.target.value)}
                             className="w-full bg-gray-900 border-gray-600 rounded-lg p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none h-32"
-                            placeholder="Escribe tus observaciones finales aquí..."
+                            placeholder="Escribe tus observaciones finales aquí (Obligatorio)..."
                         ></textarea>
                     </div>
 
