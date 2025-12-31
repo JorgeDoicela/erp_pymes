@@ -237,6 +237,37 @@ export class EmployeeController {
       res.status(500).json({ success: false, message: 'Error al obtener perfil' });
     }
   }
+
+
+  /**
+   * POST /employees/:id/terminate
+   * Dar de baja a un empleado
+   */
+  async terminate(req, res) {
+    try {
+      const { id } = req.params;
+      const { exitDate, exitReason, exitType } = req.body;
+
+      const result = await employeeService.updateEmployee(id, {
+        isActive: false,
+        exitDate: new Date(exitDate),
+        exitReason,
+        exitType
+      }, req.user?.id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Empleado dado de baja exitosamente',
+        data: result
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Error al dar de baja empleado',
+      });
+    }
+  }
 }
 
 export default new EmployeeController();

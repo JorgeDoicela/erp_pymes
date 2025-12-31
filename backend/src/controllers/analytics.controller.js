@@ -89,3 +89,67 @@ export const getDashboardData = async (req, res) => {
         res.status(500).json({ message: "Error al obtener datos del dashboard", error: error.message });
     }
 };
+
+export const getTurnoverReport = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+
+        const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
+        const end = endDate ? new Date(endDate) : new Date();
+
+        // 1. Turnover Rate Calculation
+        // Formula: (Exits / Avg Employees) * 100
+
+        const exits = await prisma.employee.findMany({
+            where: {
+                isActive: false,
+                exitDate: {
+                    gte: start,
+                    lte: end
+                }
+            }
+        });
+
+        const activeEmployees = await prisma.employee.count({
+            where: { isActive: true }
+        });
+
+        // Simplified Avg: Existing + Exits (Roughly)
+        const totalExits = exits.length;
+        const avgEmployees = activeEmployees + totalExits; // Approximation for period
+        const turnoverRate = avgEmployees > 0 ? ((totalExits / avgEmployees) * 100).toFixed(2) : 0;
+
+        // 2. Exits by Type
+        const exitsByType = exits.reduce((acc, curr) => {
+            const type = curr.exitType || 'N/A';
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+        }, {});
+
+        // 3. Exits by Reason
+        const exitsByReason = exits.reduce((acc, curr) => {
+            const reason = curr.exitReason || 'N/S';
+            acc[reason] = (acc[reason] || 0) + 1;
+            return acc;
+        }, {});
+
+        res.json({
+            turnoverRate,
+            totalExits,
+            exitsByType: Object.keys(exitsByType).map(key => ({ name: key, value: exitsByType[key] })),
+            exitsByReason: Object.keys(exitsByReason).map(key => ({ name: key, value: exitsByReason[key] })),
+            exitsList: exits.map(e => ({
+                id: e.id,
+                name: `${e.firstName} ${e.lastName}`,
+                department: e.department,
+                exitDate: e.exitDate,
+                type: e.exitType,
+                reason: e.exitReason
+            }))
+        });
+
+    } catch (error) {
+        console.error("Error generating turnover report:", error);
+        res.status(500).json({ message: "Error al generar reporte de rotación" });
+    }
+};

@@ -40,6 +40,12 @@ model Employee {
 
   vacationDays Int @default(15)
 
+  // Terminación (RF-REP-002)
+  isActive    Boolean   @default(true)
+  exitDate    DateTime?
+  exitReason  String?
+  exitType    String?   // "VOLUNTARY", "INVOLUNTARY"
+
   // Relaciones
   skills        Skill[]
   workHistory   WorkHistory[]

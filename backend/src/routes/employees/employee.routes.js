@@ -12,6 +12,8 @@ router.get('/stats/salary', employeeController.getSalaryStats);
 router.get('/:id', employeeController.getById);
 router.get('/department/:department', employeeController.getByDepartment);
 router.put('/:id', employeeController.update);
+router.post('/:id/terminate', authenticate, employeeController.terminate);
+
 router.get('/:id/history', employeeController.getHistory);
 router.delete('/:id', employeeController.delete);
 
