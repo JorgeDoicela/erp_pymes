@@ -14,7 +14,8 @@ export class EmployeeController {
     try {
       const {
         firstName, lastName, email, department, position, salary, password, role,
-        identityCard, birthDate, address, phone, hireDate, contractType, civilStatus
+        identityCard, birthDate, address, phone, hireDate, contractType, civilStatus,
+        bankName, accountNumber, accountType
       } = req.body;
 
       const hashedPassword = await bcrypt.hash(password || 'defaultPassword123', 10);
@@ -33,8 +34,12 @@ export class EmployeeController {
         address,
         phone,
         hireDate: new Date(hireDate),
+        hireDate: new Date(hireDate),
         contractType,
         civilStatus,
+        bankName,
+        accountNumber,
+        accountType,
       });
 
       res.status(201).json({

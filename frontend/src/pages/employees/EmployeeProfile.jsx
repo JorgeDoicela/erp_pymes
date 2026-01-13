@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getEmployeeById, updateEmployee, getEmployeeHistory, createContract, getContracts, uploadDocument, getDocuments, deleteDocument, getProfile } from '../../services/employees/employee.service';
+import { getEmployeeById, updateEmployee, getEmployeeHistory, getContracts, uploadDocument, getDocuments, deleteDocument, getProfile } from '../../services/employees/employee.service';
+import EditEmployeeModal from './components/EditEmployeeModal';
+import SkillsTab from './components/SkillsTab';
+import ContractsTab from './components/ContractsTab';
+import { InfoItem, EmptyState } from './components/EmployeeHelpers';
+import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES } from '../../constants/employeeOptions';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-const EmployeeProfile = ({ token }) => {
+const EmployeeProfile = ({ token, user }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [employee, setEmployee] = useState(null);
@@ -22,16 +28,7 @@ const EmployeeProfile = ({ token }) => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('personal');
     const [isEditing, setIsEditing] = useState(false);
-    const [isCreatingContract, setIsCreatingContract] = useState(false);
     const [editForm, setEditForm] = useState({});
-    const [contractForm, setContractForm] = useState({
-        type: 'Indefinido',
-        startDate: '',
-        endDate: '',
-        salary: '',
-        clauses: '',
-        document: null
-    });
 
     useEffect(() => {
         fetchEmployee();
@@ -100,7 +97,7 @@ const EmployeeProfile = ({ token }) => {
 
     const handleUploadDocument = async (e) => {
         e.preventDefault();
-        if (!documentForm.file) return alert('Seleccione un archivo');
+        if (!documentForm.file) return toast.error('Seleccione un archivo');
 
         const targetId = id || employee?.id;
         const formData = new FormData();
@@ -114,9 +111,9 @@ const EmployeeProfile = ({ token }) => {
             await fetchDocuments();
             setIsUploading(false);
             setDocumentForm({ type: 'DNI', file: null, expiryDate: '' });
-            alert('Documento subido correctamente');
+            toast.success('Documento subido correctamente');
         } catch (err) {
-            alert(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -125,8 +122,9 @@ const EmployeeProfile = ({ token }) => {
         try {
             await deleteDocument(docId, token);
             await fetchDocuments();
+            toast.success('Documento eliminado');
         } catch (err) {
-            alert(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -141,45 +139,25 @@ const EmployeeProfile = ({ token }) => {
         }
     };
 
-    const handleContractChange = (e) => {
-        const { name, value, files } = e.target;
-        if (name === 'document') {
-            setContractForm(prev => ({ ...prev, [name]: files[0] }));
-        } else {
-            setContractForm(prev => ({ ...prev, [name]: value }));
-        }
+
+
+
+
+
+
+    const handleAddSkillLocal = (newSkill) => {
+        setEmployee(prev => ({
+            ...prev,
+            skills: [...(prev.skills || []), newSkill]
+        }));
     };
 
-    const handleCreateContract = async (e) => {
-        e.preventDefault();
-        try {
-            const targetId = id || employee?.id;
-            const formData = new FormData();
-            formData.append('employeeId', targetId);
-            formData.append('type', contractForm.type);
-            formData.append('startDate', contractForm.startDate);
-            if (contractForm.endDate) formData.append('endDate', contractForm.endDate);
-            formData.append('salary', contractForm.salary);
-            if (contractForm.clauses) formData.append('clauses', contractForm.clauses);
-            if (contractForm.document) formData.append('document', contractForm.document);
-
-            await createContract(formData, token);
-            await fetchContracts();
-            setIsCreatingContract(false);
-            setContractForm({
-                type: 'Indefinido',
-                startDate: '',
-                endDate: '',
-                salary: '',
-                clauses: '',
-                document: null
-            });
-            alert('Contrato creado exitosamente');
-        } catch (err) {
-            alert(err.message);
-        }
+    const handleDeleteSkillLocal = (skillId) => {
+        setEmployee(prev => ({
+            ...prev,
+            skills: prev.skills.filter(s => s.id !== skillId)
+        }));
     };
-
 
     const handleEditClick = () => {
         setEditForm({
@@ -191,7 +169,15 @@ const EmployeeProfile = ({ token }) => {
             department: employee.department,
             position: employee.position,
             salary: employee.salary,
-            civilStatus: employee.civilStatus
+            position: employee.position,
+            salary: employee.salary,
+            civilStatus: employee.civilStatus,
+            birthDate: employee.birthDate ? new Date(employee.birthDate).toISOString().split('T')[0] : '',
+            hireDate: employee.hireDate ? new Date(employee.hireDate).toISOString().split('T')[0] : '',
+            contractType: employee.contractType,
+            bankName: employee.bankName || '',
+            accountNumber: employee.accountNumber || '',
+            accountType: employee.accountType || 'Ahorros'
             // Identity Card not included -> Immutable
         });
         setIsEditing(true);
@@ -208,14 +194,17 @@ const EmployeeProfile = ({ token }) => {
             const targetId = id || employee?.id;
             await updateEmployee(targetId, {
                 ...editForm,
-                salary: Number(editForm.salary)
+                salary: Number(editForm.salary),
+                birthDate: new Date(editForm.birthDate),
+                hireDate: new Date(editForm.hireDate)
             }, token);
             await fetchEmployee();
             setIsEditing(false);
             // Optionally fetch history if we are on that tab
             if (activeTab === 'history') fetchHistory();
+            toast.success('Perfil actualizado correctamente');
         } catch (err) {
-            alert(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -280,7 +269,7 @@ const EmployeeProfile = ({ token }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <InfoItem label="Cédula" value={employee.identityCard} />
                             <InfoItem label="Fecha de Nacimiento" value={employee.birthDate ? new Date(employee.birthDate).toLocaleDateString() : 'N/A'} />
-                            <InfoItem label="Estado Civil" value={employee.civilStatus} />
+                            <InfoItem label="Estado Civil" value={CIVIL_STATUS_OPTIONS.find(c => c.value === employee.civilStatus)?.label || employee.civilStatus} />
                             <InfoItem label="Dirección" value={employee.address} />
                             <InfoItem label="Teléfono" value={employee.phone} />
                             <InfoItem label="Email" value={employee.email} />
@@ -292,69 +281,28 @@ const EmployeeProfile = ({ token }) => {
                             <InfoItem label="Departamento" value={employee.department} />
                             <InfoItem label="Cargo Actual" value={employee.position} />
                             <InfoItem label="Fecha de Ingreso" value={employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : 'N/A'} />
-                            <InfoItem label="Tipo de Contrato" value={employee.contractType} />
+                            <InfoItem label="Tipo de Contrato" value={CONTRACT_TYPES.find(c => c.value === employee.contractType)?.label || employee.contractType} />
                             <InfoItem label="Salario Base" value={`$${employee.salary}`} isPrivate />
                             <InfoItem label="Rol de Sistema" value={employee.role} />
+                            <div className="col-span-1 md:col-span-2 mt-4 border-t border-slate-700 pt-4">
+                                <h4 className="text-lg font-semibold text-emerald-400 mb-4">Datos Bancarios</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <InfoItem label="Banco" value={employee.bankName} isPrivate />
+                                    <InfoItem label="N° Cuenta" value={employee.accountNumber} isPrivate />
+                                    <InfoItem label="Tipo Cuenta" value={employee.accountType} isPrivate />
+                                </div>
+                            </div>
                         </div>
                     )}
 
                     {activeTab === 'contracts' && (
-                        <div>
-                            <div className="flex justify-end mb-4">
-                                <button
-                                    onClick={() => setIsCreatingContract(true)}
-                                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    + Nuevo Contrato
-                                </button>
-                            </div>
-                            <div className="space-y-4">
-                                {contracts && contracts.length > 0 ? (
-                                    contracts.map((contract) => (
-                                        <div key={contract.id} className="bg-slate-900/50 p-6 rounded-xl border border-slate-700">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-white">{contract.type}</h3>
-                                                    <p className="text-sm text-slate-400">Inicio: {new Date(contract.startDate).toLocaleDateString()}</p>
-                                                    {contract.endDate && <p className="text-sm text-slate-400">Fin: {new Date(contract.endDate).toLocaleDateString()}</p>}
-                                                </div>
-                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${contract.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                                                    }`}>
-                                                    {contract.status === 'Active' ? 'ACTIVO' : contract.status}
-                                                </span>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                                                <div>
-                                                    <span className="text-slate-500 block">Salario</span>
-                                                    <span className="text-slate-200">${contract.salary}</span>
-                                                </div>
-                                                {contract.documentUrl && (
-                                                    <div>
-                                                        <span className="text-slate-500 block">Documento</span>
-                                                        <a
-                                                            href={`${import.meta.env.VITE_API_URL}/contracts/download/${contract.documentUrl}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-blue-400 hover:underline"
-                                                        >
-                                                            Ver PDF
-                                                        </a>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {contract.clauses && (
-                                                <div className="bg-slate-950/50 p-3 rounded-lg text-xs text-slate-400">
-                                                    <span className="font-semibold block mb-1">Cláusulas:</span>
-                                                    {contract.clauses}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <EmptyState message="No hay contratos registrados." />
-                                )}
-                            </div>
-                        </div>
+                        <ContractsTab
+                            contracts={contracts}
+                            user={user}
+                            employeeId={employee.id}
+                            token={token}
+                            onUpdate={fetchContracts}
+                        />
                     )}
 
                     {activeTab === 'documents' && (
@@ -370,7 +318,7 @@ const EmployeeProfile = ({ token }) => {
                                             onChange={handleDocumentChange}
                                             className="w-full bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white"
                                         >
-                                            <option value="DNI">DNI / Pasaporte</option>
+                                            <option value="DNI">Cédula / Pasaporte</option>
                                             <option value="Licencia">Licencia</option>
                                             <option value="Certificado">Certificado</option>
                                             <option value="Contrato_Firmado">Contrato Firmado</option>
@@ -485,148 +433,37 @@ const EmployeeProfile = ({ token }) => {
 
 
                     {activeTab === 'skills' && (
-                        <div className="flex flex-wrap gap-3">
-                            {employee.skills && employee.skills.length > 0 ? (
-                                employee.skills.map((skill) => (
-                                    <div key={skill.id} className="bg-slate-900 px-4 py-2 rounded-full border border-slate-700 text-sm flex items-center gap-2">
-                                        <span className="text-slate-200">{skill.name}</span>
-                                        <span className={`text-xs px-1.5 py-0.5 rounded ${getLevelColor(skill.level)}`}>{skill.level}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <EmptyState message="No hay habilidades registradas." />
-                            )}
-                        </div>
+                        <SkillsTab
+                            skills={employee.skills}
+                            user={user}
+                            employeeId={employee.id}
+                            token={token}
+                            onUpdate={fetchEmployee}
+                            onAddSkill={handleAddSkillLocal}
+                            onDeleteSkill={handleDeleteSkillLocal}
+                        />
                     )}
                 </div>
             </div>
 
-            {/* Edit Modal */}
-            {isEditing && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-800 rounded-2xl p-8 w-full max-w-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-2xl font-bold mb-6">Editar Empleado</h2>
-                        <form onSubmit={handleSaveEdit} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="col-span-1 md:col-span-2 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                                    <p className="text-yellow-200 text-sm">La Cédula ({employee.identityCard}) no se puede modificar.</p>
-                                </div>
-
-                                <InputField label="Nombre" name="firstName" value={editForm.firstName} onChange={handleEditChange} />
-                                <InputField label="Apellido" name="lastName" value={editForm.lastName} onChange={handleEditChange} />
-                                <InputField label="Email" name="email" value={editForm.email} onChange={handleEditChange} />
-                                <InputField label="Teléfono" name="phone" value={editForm.phone} onChange={handleEditChange} />
-                                <InputField label="Dirección" name="address" value={editForm.address} onChange={handleEditChange} />
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium text-slate-400">Estado Civil</label>
-                                    <select name="civilStatus" value={editForm.civilStatus} onChange={handleEditChange} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
-                                        <option value="single">Soltero/a</option>
-                                        <option value="married">Casado/a</option>
-                                        <option value="divorced">Divorciado/a</option>
-                                        <option value="widowed">Viudo/a</option>
-                                    </select>
-                                </div>
-                                <InputField label="Departamento" name="department" value={editForm.department} onChange={handleEditChange} />
-                                <InputField label="Cargo" name="position" value={editForm.position} onChange={handleEditChange} />
-                                <InputField label="Salario" name="salary" type="number" value={editForm.salary} onChange={handleEditChange} />
-                            </div>
-                            <div className="flex justify-end gap-4 pt-4 border-t border-white/10">
-                                <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 rounded-lg text-slate-300 hover:bg-white/5">Cancelar</button>
-                                <button type="submit" className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium">Guardar Cambios</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <EditEmployeeModal
+                isOpen={isEditing}
+                onClose={() => setIsEditing(false)}
+                onSave={handleSaveEdit}
+                editForm={editForm}
+                onChange={handleEditChange}
+                user={user}
+                employeeIdentityCard={employee.identityCard}
+            />
 
 
-            {/* Create Contract Modal */}
-            {isCreatingContract && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-800 rounded-2xl p-8 w-full max-w-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-2xl font-bold mb-6">Registrar Nuevo Contrato</h2>
-                        <form onSubmit={handleCreateContract} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium text-slate-400">Tipo de Contrato</label>
-                                    <select name="type" value={contractForm.type} onChange={handleContractChange} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
-                                        <option value="Indefinido">Indefinido</option>
-                                        <option value="Temporal">Temporal</option>
-                                        <option value="Por Obra">Por Obra</option>
-                                        <option value="Prácticas">Prácticas</option>
-                                    </select>
-                                </div>
-                                <InputField label="Salario Mensual" name="salary" type="number" value={contractForm.salary} onChange={handleContractChange} />
-                                <InputField label="Fecha Inicio" name="startDate" type="date" value={contractForm.startDate} onChange={handleContractChange} />
-                                <InputField label="Fecha Fin (Opcional)" name="endDate" type="date" value={contractForm.endDate} onChange={handleContractChange} />
-                                <div className="col-span-1 md:col-span-2">
-                                    <label className="text-sm font-medium text-slate-400 mb-1 block">Cláusulas Especiales</label>
-                                    <textarea
-                                        name="clauses"
-                                        value={contractForm.clauses}
-                                        onChange={handleContractChange}
-                                        rows="3"
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                                    ></textarea>
-                                </div>
-                                <div className="col-span-1 md:col-span-2">
-                                    <label className="text-sm font-medium text-slate-400 mb-1 block">Documento PDF</label>
-                                    <input
-                                        type="file"
-                                        name="document"
-                                        accept="application/pdf"
-                                        onChange={handleContractChange}
-                                        className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-4 pt-4 border-t border-white/10">
-                                <button type="button" onClick={() => setIsCreatingContract(false)} className="px-4 py-2 rounded-lg text-slate-300 hover:bg-white/5">Cancelar</button>
-                                <button type="submit" className="px-6 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium">Crear Contrato</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div>
+
+
+
+        </div >
     );
 };
 
-const InfoItem = ({ label, value, isPrivate }) => (
-    <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-        <label className="text-xs text-slate-500 uppercase font-semibold tracking-wider block mb-1">
-            {label} {isPrivate && '[Privado]'}
-        </label>
-        <p className="text-lg font-medium text-slate-200">{value || 'N/A'}</p>
-    </div>
-);
 
-const EmptyState = ({ message }) => (
-    <div className="col-span-full py-12 text-center text-slate-500 italic border-2 border-dashed border-slate-800 rounded-xl">
-        {message}
-    </div>
-);
-
-const getLevelColor = (level) => {
-    switch (level?.toLowerCase()) {
-        case 'expert': return 'bg-emerald-500/20 text-emerald-300';
-        case 'advanced': return 'bg-blue-500/20 text-blue-300';
-        case 'intermediate': return 'bg-yellow-500/20 text-yellow-300';
-        default: return 'bg-slate-500/20 text-slate-300';
-    }
-};
-
-const InputField = ({ label, name, type = "text", value, onChange }) => (
-    <div className="flex flex-col">
-        <label className="text-sm font-medium text-slate-400 mb-1">{label}</label>
-        <input
-            type={type}
-            name={name}
-            value={value}
-            onChange={onChange}
-            className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-        />
-    </div>
-);
 
 export default EmployeeProfile;

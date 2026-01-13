@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useEmployees } from '../../hooks/employees/useEmployees';
 import InputField from '../../components/common/InputField';
 import SelectField from '../../components/common/SelectField';
+import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS } from '../../constants/employeeOptions';
 
 const RegisterEmployee = ({ token }) => {
     const navigate = useNavigate();
@@ -22,7 +24,10 @@ const RegisterEmployee = ({ token }) => {
         position: '',
         salary: '',
         hireDate: '',
-        contractType: ''
+        contractType: '',
+        bankName: '',
+        accountNumber: '',
+        accountType: 'Ahorros'
     });
     const [error, setError] = useState('');
 
@@ -42,9 +47,11 @@ const RegisterEmployee = ({ token }) => {
             };
 
             await registerEmployee(dataToSend);
-            navigate('/admin/employees', { state: { successMessage: 'Empleado registrado exitosamente' } });
+            toast.success('Empleado registrado exitosamente');
+            navigate('/admin/employees');
         } catch (err) {
             setError(err.message || 'Error al registrar empleado');
+            toast.error(err.message || 'Error al registrar empleado');
         }
     };
 
@@ -73,12 +80,7 @@ const RegisterEmployee = ({ token }) => {
                                 <InputField label="Cédula" name="identityCard" value={formData.identityCard} onChange={handleChange} />
                                 <InputField label="Fecha de Nacimiento" name="birthDate" type="date" value={formData.birthDate} onChange={handleChange} />
                                 <SelectField label="Estado Civil" name="civilStatus" value={formData.civilStatus} onChange={handleChange}
-                                    options={[
-                                        { value: 'single', label: 'Soltero/a' },
-                                        { value: 'married', label: 'Casado/a' },
-                                        { value: 'divorced', label: 'Divorciado/a' },
-                                        { value: 'widowed', label: 'Viudo/a' }
-                                    ]}
+                                    options={CIVIL_STATUS_OPTIONS}
                                 />
                                 <InputField label="Dirección" name="address" value={formData.address} onChange={handleChange} />
                                 <InputField label="Teléfono" name="phone" value={formData.phone} onChange={handleChange} />
@@ -91,24 +93,28 @@ const RegisterEmployee = ({ token }) => {
                             <h3 className="text-xl font-semibold text-emerald-300 mb-4 border-b border-white/10 pb-2">Información Laboral</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <SelectField label="Departamento" name="department" value={formData.department} onChange={handleChange}
-                                    options={[
-                                        { value: 'IT', label: 'IT' },
-                                        { value: 'HR', label: 'Recursos Humanos' },
-                                        { value: 'Sales', label: 'Ventas' },
-                                        { value: 'Marketing', label: 'Marketing' },
-                                        { value: 'Admin', label: 'Administración' }
-                                    ]}
+                                    options={DEPARTMENTS}
                                 />
                                 <InputField label="Cargo" name="position" value={formData.position} onChange={handleChange} />
                                 <InputField label="Fecha de Ingreso" name="hireDate" type="date" value={formData.hireDate} onChange={handleChange} />
                                 <SelectField label="Tipo de Contrato" name="contractType" value={formData.contractType} onChange={handleChange}
-                                    options={[
-                                        { value: 'permanent', label: 'Indefinido' },
-                                        { value: 'fixed', label: 'Plazo Fijo' },
-                                        { value: 'contractor', label: 'Prestación de Servicios' }
-                                    ]}
+                                    options={CONTRACT_TYPES}
                                 />
                                 <InputField label="Salario Base ($)" name="salary" type="number" min="0" step="0.01" value={formData.salary} onChange={handleChange} />
+                            </div>
+                        </section>
+
+                        {/* Información Bancaria */}
+                        <section>
+                            <h3 className="text-xl font-semibold text-purple-300 mb-4 border-b border-white/10 pb-2">Información Bancaria</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <SelectField label="Banco" name="bankName" value={formData.bankName} onChange={handleChange}
+                                    options={BANK_OPTIONS}
+                                />
+                                <InputField label="Número de Cuenta" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
+                                <SelectField label="Tipo de Cuenta" name="accountType" value={formData.accountType} onChange={handleChange}
+                                    options={ACCOUNT_TYPES}
+                                />
                             </div>
                         </section>
 

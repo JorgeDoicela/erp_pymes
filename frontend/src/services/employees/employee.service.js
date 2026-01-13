@@ -119,3 +119,23 @@ export const getProfile = async (token) => {
     }
 };
 
+export const createSkill = async (skillData, token) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    try {
+        const response = await api.post('/skills', skillData, config);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al agregar habilidad');
+    }
+};
+
+export const deleteSkill = async (id, token) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    try {
+        const response = await api.delete(`/skills/${id}`, config);
+        return response.data;
+    } catch (error) {
+        throw new Error('Error al eliminar habilidad');
+    }
+};
+

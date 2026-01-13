@@ -6,12 +6,12 @@ const router = Router();
 
 // Rutas para gestión de empleados
 router.post('/', employeeController.create);
-router.get('/', employeeController.getAll);
+router.get('/', authenticate, employeeController.getAll);
 router.get('/me/profile', authenticate, employeeController.getProfile); // Nueva ruta protegida
-router.get('/stats/salary', employeeController.getSalaryStats);
-router.get('/:id', employeeController.getById);
-router.get('/department/:department', employeeController.getByDepartment);
-router.put('/:id', employeeController.update);
+router.get('/stats/salary', authenticate, employeeController.getSalaryStats);
+router.get('/:id', authenticate, employeeController.getById);
+router.get('/department/:department', authenticate, employeeController.getByDepartment);
+router.put('/:id', authenticate, employeeController.update);
 router.post('/:id/terminate', authenticate, employeeController.terminate);
 
 router.get('/:id/history', employeeController.getHistory);

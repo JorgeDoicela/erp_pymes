@@ -13,6 +13,7 @@ import evaluationRoutes from './performance/evaluation.routes.js';
 import goalsRoutes from './performance/goals.routes.js';
 import recruitmentRoutes from './recruitment.routes.js';
 import analyticsRoutes from './analytics.routes.js';
+import skillRoutes from './skills/skill.routes.js';
 
 
 const router = Router();
@@ -41,5 +42,6 @@ router.use('/performance', evaluationRoutes);
 router.use('/goals', goalsRoutes);
 router.use('/recruitment', recruitmentRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/skills', skillRoutes);
 
 export default router;
