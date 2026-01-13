@@ -75,7 +75,7 @@ function EmployeeDashboard({ user, onLogout }) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <section className="bg-slate-800/30 rounded-2xl p-6 border border-white/5">
                         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <span></span> Novedades
+                            <span></span> Novedades - En Proceso
                         </h3>
                         <div className="space-y-4">
                             <div className="p-4 rounded-xl bg-white/5 border border-white/5">
@@ -91,7 +91,7 @@ function EmployeeDashboard({ user, onLogout }) {
 
                     <section className="bg-slate-800/30 rounded-2xl p-6 border border-white/5">
                         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <span></span> Próximos Eventos
+                            <span></span> Próximos Eventos - En Proceso
                         </h3>
                         <div className="space-y-4">
                             <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors">

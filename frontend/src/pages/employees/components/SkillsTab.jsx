@@ -50,7 +50,7 @@ const SkillsTab = ({ skills, user, employeeId, token, onUpdate, onAddSkill, onDe
     return (
         <div>
             <div className="flex justify-end mb-4">
-                {(user?.id === employeeId || user?.role === 'admin') && (
+                {(user?.id === employeeId) && (
                     <button
                         onClick={() => setIsAddingSkill(true)}
                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition-colors"
@@ -65,7 +65,7 @@ const SkillsTab = ({ skills, user, employeeId, token, onUpdate, onAddSkill, onDe
                         <div key={skill.id} className="bg-slate-900 px-4 py-2 rounded-full border border-slate-700 text-sm flex items-center gap-2 group">
                             <span className="text-slate-200">{skill.name}</span>
                             <span className={`text-xs px-1.5 py-0.5 rounded ${getLevelColor(skill.level)}`}>{skill.level}</span>
-                            {(user?.id === employeeId || user?.role === 'admin') && (
+                            {(user?.id === employeeId) && (
                                 <button
                                     onClick={() => handleDeleteSkill(skill.id)}
                                     className="ml-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
