@@ -62,11 +62,11 @@ const PayrollCostReport = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                     <p className="text-gray-400 text-sm">Costo Total (Periodo)</p>
-                    <p className="text-4xl font-bold text-green-400">${data.metrics.totalCost.toLocaleString()}</p>
+                    <p className="text-4xl font-bold text-green-400">${data.metrics?.totalCost?.toLocaleString() || '0'}</p>
                 </div>
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                     <p className="text-gray-400 text-sm">Promedio Mensual</p>
-                    <p className="text-4xl font-bold text-yellow-400">${data.metrics.avgMonthlyCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                    <p className="text-4xl font-bold text-yellow-400">${data.metrics?.avgMonthlyCost?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '0'}</p>
                 </div>
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                     <p className="text-gray-400 text-sm">Registros Procesados</p>

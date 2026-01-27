@@ -1,10 +1,18 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import DigitalMarker from '../../components/Attendance/DigitalMarker';
 import { motion } from 'framer-motion';
 
 const AttendancePage = () => {
+    const navigate = useNavigate();
     return (
         <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+            <button
+                onClick={() => navigate(-1)}
+                className="self-start mb-4 ml-4 flex items-center text-gray-400 hover:text-white transition-colors"
+            >
+                ← Volver
+            </button>
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -25,10 +33,6 @@ const AttendancePage = () => {
             >
                 <DigitalMarker />
             </motion.div>
-
-            <footer className="mt-12 text-gray-600 text-sm">
-                &copy; {new Date().getFullYear()} Sistema de Recursos Humanos
-            </footer>
         </div>
     );
 };

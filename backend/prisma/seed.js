@@ -80,7 +80,7 @@ async function main() {
         if (admin) {
             await seedRecruitment(prisma, admin.id);
         } else {
-            console.error("❌ Skipping Recruitment: Admin not found");
+            console.error("Skipping Recruitment: Admin not found");
         }
     }
 
@@ -114,7 +114,7 @@ async function main() {
         await seedAudit(prisma, allEmployees);
     }
 
-    console.log('✅ SEED FINISHED.');
+    console.log('SEED FINISHED.');
 }
 
 main()

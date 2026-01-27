@@ -1,8 +1,8 @@
 import api from '../../api/axios';
 
-const markAttendance = async (employeeId, type) => {
+const markAttendance = async (employeeId, type, location = null) => {
     try {
-        const response = await api.post('/attendance/mark', { employeeId, type });
+        const response = await api.post('/attendance/mark', { employeeId, type, location });
         return response.data;
     } catch (error) {
         throw error.response?.data || error.message;

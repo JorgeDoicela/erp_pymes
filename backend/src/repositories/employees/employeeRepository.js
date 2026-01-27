@@ -20,15 +20,38 @@ export class EmployeeRepository {
    */
   async create(data) {
     try {
-      const { salary, ...rest } = data;
+      const {
+        salary,
+        hasNightSurcharge,
+        hasDoubleOvertime,
+        contractType,
+        hireDate,
+        ...rest
+      } = data;
 
-      // Encriptar el salario antes de guardarlo
+      // Encriptar el salario para el registro de Empleado (Legacy/Seguridad)
       const encryptedSalary = encryptSalary(salary);
+
+      // Preparar contrato inicial
+      // Se asume que el contrato inicia en la fecha de contratación
+      const initialContract = {
+        type: contractType || 'Indefinido',
+        startDate: new Date(hireDate),
+        salary: Number(salary), // Guardar como Float en Contrato para cálculos
+        hasNightSurcharge: hasNightSurcharge ?? true,
+        hasDoubleOvertime: hasDoubleOvertime ?? true,
+        status: 'Active'
+      };
 
       const employee = await prisma.employee.create({
         data: {
           ...rest,
+          contractType, // Mantener compatibilidad
+          hireDate: new Date(hireDate),
           salary: encryptedSalary,
+          contracts: {
+            create: initialContract
+          }
         },
       });
 
@@ -56,6 +79,10 @@ export class EmployeeRepository {
           skills: true,
           workHistory: {
             orderBy: { startDate: 'desc' }
+          },
+          contracts: {
+            where: { status: 'Active' },
+            take: 1
           }
         }
       });
@@ -94,18 +121,36 @@ export class EmployeeRepository {
         ];
       }
 
+      // Optimización: Seleccionar solo campos necesarios para el listado
+      // Excluyendo 'salary' para evitar la costosa desencriptación masiva
       const employees = await prisma.employee.findMany({
         where,
         skip,
         take,
         orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          department: true,
+          position: true,
+          role: true,
+          identityCard: true,
+          isActive: true,
+          birthDate: true,
+          hireDate: true,
+          phone: true,
+          address: true,
+          // salary: false, // NO SELECCIONAR
+          documents: { select: { id: true, type: true } }, // Si se necesita saber si tiene docs
+          contractType: true,
+          civilStatus: true,
+        }
       });
 
-      // Desencriptar los salarios
-      return employees.map((employee) => ({
-        ...employee,
-        salary: decryptSalary(employee.salary),
-      }));
+      // Ya no es necesario desencriptar nada porque no traemos el salario
+      return employees;
     } catch (error) {
       throw new Error(`Error al obtener empleados: ${error.message}`);
     }
@@ -184,25 +229,56 @@ export class EmployeeRepository {
    */
   async update(id, data) {
     try {
-      const { salary, ...rest } = data;
+      const {
+        salary,
+        hasNightSurcharge,
+        hasDoubleOvertime,
+        ...rest
+      } = data;
 
-      // Preparar datos a actualizar
+      // Preparar datos a actualizar del Empleado
       const updateData = { ...rest };
 
-      // Si se incluye salario, encriptarlo
+      // Si se incluye salario, encriptarlo para el Empleado
       if (salary !== undefined) {
         updateData.salary = encryptSalary(salary);
       }
 
-      const employee = await prisma.employee.update({
-        where: { id },
-        data: updateData,
+      // Transacción: Actualizar Empleado y, si es necesario, el Contrato Activo
+      const result = await prisma.$transaction(async (prisma) => {
+        // 1. Actualizar Empleado
+        const employee = await prisma.employee.update({
+          where: { id },
+          data: updateData,
+        });
+
+        // 2. Si hay datos de contrato/laborales, actualizar el Contrato Activo
+        if (hasNightSurcharge !== undefined || hasDoubleOvertime !== undefined || salary !== undefined) {
+          const activeContract = await prisma.contract.findFirst({
+            where: { employeeId: id, status: 'Active' },
+            orderBy: { createdAt: 'desc' }
+          });
+
+          if (activeContract) {
+            const contractUpdate = {};
+            if (hasNightSurcharge !== undefined) contractUpdate.hasNightSurcharge = hasNightSurcharge;
+            if (hasDoubleOvertime !== undefined) contractUpdate.hasDoubleOvertime = hasDoubleOvertime;
+            if (salary !== undefined) contractUpdate.salary = Number(salary);
+
+            await prisma.contract.update({
+              where: { id: activeContract.id },
+              data: contractUpdate
+            });
+          }
+        }
+
+        return employee;
       });
 
       // Desencriptar el salario en la respuesta
       return {
-        ...employee,
-        salary: decryptSalary(employee.salary),
+        ...result,
+        salary: decryptSalary(result.salary),
       };
     } catch (error) {
       if (error.code === 'P2025') {

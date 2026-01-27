@@ -15,6 +15,7 @@ const PayrollGenerator = () => {
     const [genParams, setGenParams] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear() });
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         loadHistory();
     }, []);
 
@@ -102,9 +103,19 @@ const PayrollGenerator = () => {
 
     return (
         <div className="min-h-screen bg-slate-900 text-white p-8">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 mb-8">
-                Generador de Roles de Pago
-            </h1>
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
+                    Generador de Roles de Pago
+                </h1>
+                {!selectedPayroll && (
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                        ← Volver
+                    </button>
+                )}
+            </div>
 
             {!selectedPayroll ? (
                 /* LIST VIEW */
@@ -116,7 +127,7 @@ const PayrollGenerator = () => {
                                 onClick={() => navigate('/admin/payroll/config')}
                                 className="text-slate-400 hover:text-white px-4 py-2 font-medium"
                             >
-                                ⚙️ Configuración
+                                Configuración
                             </button>
                             <button
                                 onClick={() => setModalOpen(true)}
@@ -148,7 +159,7 @@ const PayrollGenerator = () => {
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-white/5 flex justify-between">
                                         <span className="text-slate-400">Total a Pagar</span>
-                                        <span className="text-xl font-mono font-bold text-emerald-400">${pay.totalAmount.toFixed(2)}</span>
+                                        <span className="text-xl font-mono font-bold text-emerald-400">${(pay.totalAmount || 0).toFixed(2)}</span>
                                     </div>
                                 </div>
                             ))}
@@ -179,7 +190,7 @@ const PayrollGenerator = () => {
                                     onClick={handleConfirm}
                                     className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-emerald-500/20"
                                 >
-                                    ✅ Aprobar Nómina
+                                    Aprobar Nómina
                                 </button>
                             )}
                             {selectedPayroll.status === 'APPROVED' && (
@@ -194,7 +205,7 @@ const PayrollGenerator = () => {
                                         onClick={handleMarkAsPaid}
                                         className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2"
                                     >
-                                        ✓ Confirmar Pago
+                                        Confirmar Pago
                                     </button>
                                 </>
                             )}
@@ -228,7 +239,7 @@ const PayrollGenerator = () => {
                                                 <td className="p-4 font-medium text-white">
                                                     {det.employee.firstName} {det.employee.lastName}
                                                 </td>
-                                                <td className="p-4 text-right">${det.baseSalary.toFixed(2)}</td>
+                                                <td className="p-4 text-right">${(det.baseSalary || 0).toFixed(2)}</td>
                                                 <td className="p-4 text-center">{det.workedDays}</td>
                                                 <td className="p-4 text-right text-green-400 font-mono">
                                                     +${totalBonuses.toFixed(2)}
@@ -240,7 +251,7 @@ const PayrollGenerator = () => {
                                                     -${totalDeductions.toFixed(2)}
                                                 </td>
                                                 <td className="p-4 text-right text-emerald-400 font-bold font-mono text-lg">
-                                                    ${det.netSalary.toFixed(2)}
+                                                    ${(det.netSalary || 0).toFixed(2)}
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     <button

@@ -2,7 +2,7 @@ import { attendanceService } from '../../services/attendance/attendanceService.j
 
 const markAttendance = async (req, res, next) => {
     try {
-        const { employeeId, type } = req.body;
+        const { employeeId, type, location } = req.body;
 
         if (!employeeId || !type) {
             return res.status(400).json({
@@ -12,7 +12,7 @@ const markAttendance = async (req, res, next) => {
         }
 
         const start = Date.now();
-        const result = await attendanceService.registerAttendance(employeeId, type);
+        const result = await attendanceService.registerAttendance(employeeId, type, location);
         const duration = Date.now() - start;
 
         res.status(200).json({

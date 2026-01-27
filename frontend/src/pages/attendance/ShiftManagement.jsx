@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import shiftService from '../../services/attendance/shiftService';
 import * as employeeService from '../../services/employees/employee.service'; // Corrected named import
 import { motion } from 'framer-motion';
 
 const ShiftManagement = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('shifts'); // 'shifts' | 'assign'
     const [shifts, setShifts] = useState([]);
     const [employees, setEmployees] = useState([]);
 
     // Create Shift Form
-    const [newShift, setNewShift] = useState({ name: '', startTime: '', endTime: '' });
+    const [newShift, setNewShift] = useState({ name: '', startTime: '', endTime: '', toleranceMinutes: 15, breakMinutes: 60 });
 
     // Assign Form
     const [selectedEmployees, setSelectedEmployees] = useState([]);
@@ -22,6 +24,7 @@ const ShiftManagement = () => {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         loadData();
     }, []);
 
@@ -49,7 +52,7 @@ const ShiftManagement = () => {
             if (res.success) {
                 setMessage('Turno creado exitosamente');
                 loadData();
-                setNewShift({ name: '', startTime: '', endTime: '' });
+                setNewShift({ name: '', startTime: '', endTime: '', toleranceMinutes: 15, breakMinutes: 60 });
             }
         } catch (err) {
             setMessage('Error al crear turno');
@@ -95,9 +98,17 @@ const ShiftManagement = () => {
 
     return (
         <div className="min-h-screen bg-slate-900 text-white p-8">
-            <h1 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                Gestión de Turnos y Horarios
-            </h1>
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                    Gestión de Turnos y Horarios
+                </h1>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center text-gray-400 hover:text-white transition-colors"
+                >
+                    ← Volver
+                </button>
+            </div>
 
             {/* Tabs */}
             <div className="flex gap-4 mb-8 border-b border-gray-700 pb-2">
@@ -156,6 +167,27 @@ const ShiftManagement = () => {
                                     />
                                 </div>
                             </div>
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-1">Tolerancia (minutos)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"
+                                    value={newShift.toleranceMinutes}
+                                    onChange={(e) => setNewShift({ ...newShift, toleranceMinutes: parseInt(e.target.value) || 0 })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm text-gray-400 mb-1">Tiempo de Almuerzo (minutos)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"
+                                    value={newShift.breakMinutes}
+                                    onChange={(e) => setNewShift({ ...newShift, breakMinutes: parseInt(e.target.value) || 0 })}
+                                />
+                                <p className="text-xs text-slate-500 mt-1">Se descontará del total de horas del turno</p>
+                            </div>
                             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded text-white font-medium">
                                 Crear Turno
                             </button>
@@ -169,7 +201,7 @@ const ShiftManagement = () => {
                             <div key={shift.id} className="bg-slate-800 p-4 rounded-xl border border-white/5 flex justify-between items-center">
                                 <div>
                                     <p className="font-bold text-lg">{shift.name}</p>
-                                    <p className="text-gray-400 text-sm">{shift.startTime} - {shift.endTime}</p>
+                                    <p className="text-gray-400 text-sm">{shift.startTime} - {shift.endTime} <span className="text-xs text-slate-500">({shift.toleranceMinutes}m tol. | {shift.breakMinutes}m break)</span></p>
                                 </div>
                             </div>
                         ))}

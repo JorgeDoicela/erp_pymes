@@ -47,7 +47,19 @@ const AssignEvaluation = () => {
 
             // Handle different variations of response structures
             setTemplates(Array.isArray(templatesData) ? templatesData : (templatesData.data || []));
-            setEmployees(Array.isArray(employeesData) ? employeesData : (employeesData.data || []));
+
+            const loadedEmployees = Array.isArray(employeesData) ? employeesData : (employeesData.data || []);
+            setEmployees(loadedEmployees);
+
+            // Auto-select current user as evaluator
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                const currentUser = JSON.parse(storedUser);
+                // Verify current user exists in the loaded employees list to avoid ID mismatches
+                if (loadedEmployees.find(e => e.id === currentUser.id)) {
+                    setSelectedEvaluators([currentUser.id]);
+                }
+            }
         } catch (error) {
             console.error("Error loading data:", error);
             // If 401, maybe redirect?

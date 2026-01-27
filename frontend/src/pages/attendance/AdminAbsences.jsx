@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import absenceService from '../../services/attendance/absenceService';
 import { motion } from 'framer-motion';
 
 import TeamCalendar from './TeamCalendar';
 
 const AdminAbsences = () => {
+    const navigate = useNavigate();
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(false);
     const [comment, setComment] = useState('');
@@ -12,6 +14,7 @@ const AdminAbsences = () => {
     const [showCalendar, setShowCalendar] = useState(false);
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         loadData();
     }, []);
 
@@ -45,12 +48,20 @@ const AdminAbsences = () => {
                 <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
                     Aprobación de Ausencias
                 </h1>
-                <button
-                    onClick={() => setShowCalendar(!showCalendar)}
-                    className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-sm text-white"
-                >
-                    {showCalendar ? 'Ocultar Calendario' : 'Ver Calendario'}
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                        ← Volver
+                    </button>
+                    <button
+                        onClick={() => setShowCalendar(!showCalendar)}
+                        className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-sm text-white"
+                    >
+                        {showCalendar ? 'Ocultar Calendario' : 'Ver Calendario'}
+                    </button>
+                </div>
             </div>
 
             {showCalendar && <TeamCalendar />}

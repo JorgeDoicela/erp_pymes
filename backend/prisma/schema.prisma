@@ -125,10 +125,24 @@ model Attendance {
   checkIn     DateTime
   checkOut    DateTime?
   workedHours Float?
+  overtimeHours Float? @default(0)
   status      String
+  
+  isLate           Boolean @default(false)
+  isEarlyDeparture Boolean @default(false)
 
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  // Geolocation Data
+  entryLatitude  Float?
+  entryLongitude Float?
+  exitLatitude   Float?
+  exitLongitude  Float?
+
+  // Break Data
+  breakStart     DateTime?
+  breakEnd       DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -144,6 +158,9 @@ model Shift {
   name      String // "Mañana", "Tarde", "Noche"
   startTime String // "08:00"
   endTime   String // "17:00"
+  
+  toleranceMinutes Int @default(15)
+  breakMinutes     Int @default(60) // Tiempo de almuerzo descontable del turno (ej: 9h turno - 1h break = 8h trabajo)
 
   schedules EmployeeSchedule[]
 
@@ -226,6 +243,10 @@ model Contract {
   clauses     String?   @db.Text
   documentUrl String? // Path to PDF
   status      String    @default("Active") // Active, Expired, Terminated
+  
+  // Ecuadorian Labor Rules Config
+  hasNightSurcharge Boolean @default(true) // Recargo 25% (19:00-06:00)
+  hasDoubleOvertime Boolean @default(true) // Horas al 100% (Fines de semana/Feriados)
 
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)

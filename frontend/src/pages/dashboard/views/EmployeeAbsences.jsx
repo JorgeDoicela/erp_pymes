@@ -170,14 +170,14 @@ const EmployeeAbsences = () => {
                                         </div>
                                         {(Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1) > balance && (
                                             <p className="text-red-400 mt-2 text-xs flex items-center gap-1">
-                                                ⚠️ Saldo insuficiente para esta solicitud.
+                                                ADVERTENCIA: Saldo insuficiente para esta solicitud.
                                             </p>
                                         )}
                                     </div>
                                 )}
                                 {formData.type !== 'Vacaciones' && (
                                     <p className="text-xs mt-2 opacity-70">
-                                        ℹ️ Este tipo de ausencia NO descuenta días de tu saldo de vacaciones.
+                                        NOTA: Este tipo de ausencia NO descuenta días de tu saldo de vacaciones.
                                     </p>
                                 )}
                             </div>

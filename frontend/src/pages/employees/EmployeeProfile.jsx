@@ -31,6 +31,7 @@ const EmployeeProfile = ({ token, user }) => {
     const [editForm, setEditForm] = useState({});
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         fetchEmployee();
     }, [id]);
 
@@ -169,12 +170,12 @@ const EmployeeProfile = ({ token, user }) => {
             department: employee.department,
             position: employee.position,
             salary: employee.salary,
-            position: employee.position,
-            salary: employee.salary,
             civilStatus: employee.civilStatus,
             birthDate: employee.birthDate ? new Date(employee.birthDate).toISOString().split('T')[0] : '',
             hireDate: employee.hireDate ? new Date(employee.hireDate).toISOString().split('T')[0] : '',
             contractType: employee.contractType,
+            hasNightSurcharge: employee.contracts?.find(c => c.status === 'Active')?.hasNightSurcharge ?? true,
+            hasDoubleOvertime: employee.contracts?.find(c => c.status === 'Active')?.hasDoubleOvertime ?? true,
             bankName: employee.bankName || '',
             accountNumber: employee.accountNumber || '',
             accountType: employee.accountType || 'Ahorros'

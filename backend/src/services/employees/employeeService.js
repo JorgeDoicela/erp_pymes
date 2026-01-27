@@ -238,9 +238,11 @@ export class EmployeeService {
         if (typeof salary !== 'number' || salary <= 0) throw new Error('Salario debe ser un número positivo');
         if (salary < 450) throw new Error('El salario no puede ser inferior al salario básico unificado ($450)');
       }
-    }
 
-    // --- FIN REGLAS DE NEGOCIO ---
+      // Validate booleans if present
+      if (data.hasNightSurcharge !== undefined && typeof data.hasNightSurcharge !== 'boolean') throw new Error('Recargo nocturno debe ser booleano');
+      if (data.hasDoubleOvertime !== undefined && typeof data.hasDoubleOvertime !== 'boolean') throw new Error('Doble horas extras debe ser booleano');
+    }
   }
 
   /**

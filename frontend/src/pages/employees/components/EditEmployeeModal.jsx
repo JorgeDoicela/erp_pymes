@@ -94,6 +94,34 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                             </>
                         )}
 
+                        {user?.role === 'admin' && (
+                            <div className="col-span-1 md:col-span-2 mt-4 bg-slate-900/40 p-4 rounded-lg border border-white/5">
+                                <h4 className="text-sm font-semibold text-slate-300 mb-3">Configuración Legal</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <label className="flex items-center space-x-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            name="hasNightSurcharge"
+                                            checked={editForm.hasNightSurcharge ?? true}
+                                            onChange={(e) => onChange({ target: { name: 'hasNightSurcharge', value: e.target.checked } })}
+                                            className="w-4 h-4 rounded border-slate-600 text-blue-600 focus:ring-blue-500 bg-slate-700"
+                                        />
+                                        <span className="text-sm text-slate-300">Aplica Recargo Nocturno (25%)</span>
+                                    </label>
+                                    <label className="flex items-center space-x-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            name="hasDoubleOvertime"
+                                            checked={editForm.hasDoubleOvertime ?? true}
+                                            onChange={(e) => onChange({ target: { name: 'hasDoubleOvertime', value: e.target.checked } })}
+                                            className="w-4 h-4 rounded border-slate-600 text-blue-600 focus:ring-blue-500 bg-slate-700"
+                                        />
+                                        <span className="text-sm text-slate-300">Aplica Doble h.e. Fines de Semana</span>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-slate-400">Tipo de Contrato</label>
                             <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-2.5 text-slate-400 text-sm">

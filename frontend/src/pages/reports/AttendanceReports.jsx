@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as reportService from '../../services/reports/reportService';
 import { getEmployees } from '../../services/employees/employee.service'; // Need to import this
 import { motion } from 'framer-motion';
@@ -7,6 +8,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const AttendanceReports = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState([]); // List for dropdown
@@ -26,6 +28,7 @@ const AttendanceReports = () => {
     const departments = ['IT', 'RRHH', 'Ventas', 'Contabilidad', 'Operaciones'];
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         loadEmployees();
         loadReport();
     }, []);
@@ -131,9 +134,17 @@ const AttendanceReports = () => {
 
     return (
         <div className="min-h-screen bg-slate-900 text-white p-8">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-8">
-                Reportes de Asistencia
-            </h1>
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                    Reportes de Asistencia
+                </h1>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center text-gray-400 hover:text-white transition-colors"
+                >
+                    ← Volver
+                </button>
+            </div>
 
             {/* Filters */}
             <div className="bg-slate-800 p-6 rounded-xl border border-white/5 mb-8 flex flex-col lg:flex-row gap-4 items-end flex-wrap">
@@ -277,11 +288,11 @@ const AttendanceReports = () => {
                                                     row.attendanceRate >= 85 ? 'bg-yellow-500/20 text-yellow-400' :
                                                         'bg-red-500/20 text-red-400'
                                                     }`}>
-                                                    {row.attendanceRate.toFixed(0)}%
+                                                    {(row.attendanceRate || 0).toFixed(0)}%
                                                 </span>
                                             </td>
-                                            <td className="p-4 text-right font-mono text-slate-300">{row.workedHours.toFixed(1)}</td>
-                                            <td className="p-4 text-right font-mono text-purple-400 font-bold">{row.overtime > 0 ? row.overtime.toFixed(1) : '-'}</td>
+                                            <td className="p-4 text-right font-mono text-slate-300">{(row.workedHours || 0).toFixed(1)}</td>
+                                            <td className="p-4 text-right font-mono text-purple-400 font-bold">{row.overtime > 0 ? (row.overtime || 0).toFixed(1) : '-'}</td>
                                         </tr>
                                     ))}
                                 </tbody>

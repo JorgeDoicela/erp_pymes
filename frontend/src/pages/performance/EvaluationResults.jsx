@@ -63,7 +63,7 @@ const EvaluationResults = () => {
     return (
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <div className="max-w-6xl mx-auto">
-                <div className="flex justify-between items-center mb-6 no-print">
+                <div className="flex justify-between items-center mb-6 print:hidden">
                     <button onClick={() => navigate(-1)} className="flex items-center text-gray-400 hover:text-white">
                         <FiArrowLeft className="mr-2" /> Volver
                     </button>
@@ -114,36 +114,71 @@ const EvaluationResults = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                        <div className="bg-green-50 p-6 rounded-xl border border-green-100">
-                            <h3 className="flex items-center text-green-700 font-bold mb-4">
-                                <FiStar className="mr-2" /> Fortalezas
-                            </h3>
-                            {strengths.length > 0 ? (
-                                <ul className="space-y-2">
-                                    {strengths.map((s, idx) => (
-                                        <li key={idx} className="flex justify-between text-gray-700">
-                                            <span>{s.criteria}</span>
-                                            <span className="font-bold text-green-600">{s.score}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : <p className="text-gray-500 italic">No se identificaron fortalezas destacadas.</p>}
+                        <div className="bg-white rounded-xl border border-green-200 shadow-sm overflow-hidden">
+                            <div className="bg-green-50 p-4 border-b border-green-100 flex items-center justify-between">
+                                <h3 className="flex items-center text-green-800 font-bold">
+                                    <FiStar className="mr-2" /> Top Fortalezas
+                                </h3>
+                                <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full font-bold">Top 3</span>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                {strengths.length > 0 ? strengths.map((s, idx) => (
+                                    <div key={idx}>
+                                        <div className="flex justify-between text-sm font-medium mb-1">
+                                            <span className="text-gray-700">{s.criteria}</span>
+                                            <span className="text-green-600 font-bold">{s.score}/{s.maxScore}</span>
+                                        </div>
+                                        <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${(s.score / s.maxScore) * 100}%` }}></div>
+                                        </div>
+                                    </div>
+                                )) : <p className="text-gray-400 italic text-center py-4">No hay fortalezas destacadas.</p>}
+                            </div>
                         </div>
 
-                        <div className="bg-orange-50 p-6 rounded-xl border border-orange-100">
-                            <h3 className="flex items-center text-orange-700 font-bold mb-4">
-                                <FiTrendingUp className="mr-2" /> Áreas de Mejora
-                            </h3>
-                            {improvements.length > 0 ? (
-                                <ul className="space-y-2">
-                                    {improvements.map((s, idx) => (
-                                        <li key={idx} className="flex justify-between text-gray-700">
-                                            <span>{s.criteria}</span>
-                                            <span className="font-bold text-orange-600">{s.score}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : <p className="text-gray-500 italic">No se identificaron áreas críticas de mejora.</p>}
+                        <div className="bg-white rounded-xl border border-orange-200 shadow-sm overflow-hidden">
+                            <div className="bg-orange-50 p-4 border-b border-orange-100 flex items-center justify-between">
+                                <h3 className="flex items-center text-orange-800 font-bold">
+                                    <FiTrendingUp className="mr-2" /> Oportunidades de Mejora
+                                </h3>
+                                <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full font-bold">Bottom 3</span>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                {improvements.length > 0 ? improvements.map((s, idx) => (
+                                    <div key={idx}>
+                                        <div className="flex justify-between text-sm font-medium mb-1">
+                                            <span className="text-gray-700">{s.criteria}</span>
+                                            <span className="text-orange-600 font-bold">{s.score}/{s.maxScore}</span>
+                                        </div>
+                                        <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                            <div className="bg-orange-500 h-2.5 rounded-full" style={{ width: `${(s.score / s.maxScore) * 100}%` }}></div>
+                                        </div>
+                                    </div>
+                                )) : <p className="text-gray-400 italic text-center py-4">No hay áreas críticas.</p>}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Full Category Breakdown */}
+                    <div className="mb-8">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Desglose por Competencia</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {sortedResults.map((r, idx) => (
+                                <div key={idx} className="bg-white border rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+                                    <div className="flex-1 mr-4">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="font-semibold text-gray-700">{r.criteria}</span>
+                                            <span className="font-bold text-blue-600">{r.score}/{r.maxScore}</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div
+                                                className={`h-2 rounded-full ${r.score >= (r.maxScore * 0.8) ? 'bg-green-500' : (r.score >= (r.maxScore * 0.6) ? 'bg-blue-500' : 'bg-orange-500')}`}
+                                                style={{ width: `${(r.score / r.maxScore) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 

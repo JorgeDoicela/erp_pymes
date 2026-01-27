@@ -13,7 +13,11 @@ export async function seedAttendance(prisma, employees) {
             const stored = await prisma.attendance.findFirst({ where: { employeeId: emp.id } });
             if (stored) continue; // Skip if already populated to avoid duplication on re-seed
 
-            for (let day = 1; day <= daysInMonth; day++) {
+            // Seed until yesterday so we can test "today" manually
+            const yesterdayDate = today.getDate() - 1;
+            const limitDay = yesterdayDate < 1 ? 0 : yesterdayDate;
+
+            for (let day = 1; day <= limitDay; day++) {
                 const date = new Date(year, month, day);
                 const dayOfWeek = date.getDay();
 

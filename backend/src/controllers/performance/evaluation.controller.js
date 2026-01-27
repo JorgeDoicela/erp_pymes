@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import fs from 'fs';
 
 const prisma = new PrismaClient();
 
@@ -125,6 +126,7 @@ export const getMyEvaluations = async (req, res) => {
             }
         });
 
+
         const parsedReviews = reviews.map(r => {
             try {
                 return {
@@ -248,6 +250,9 @@ export const getEvaluationResults = async (req, res) => {
                         criteriaStats[key].sum += val;
                         criteriaStats[key].count += 1;
                     }
+                } else {
+                    console.log(`[DEBUG] Mismatch! Key in response: '${key}' not found in template criteria list.`);
+                    console.log(`[DEBUG] Available criteria keys:`, Object.keys(criteriaStats));
                 }
             });
         });
@@ -255,13 +260,22 @@ export const getEvaluationResults = async (req, res) => {
         const results = criteriaList.map(c => {
             const stats = criteriaStats[c.name];
             const average = stats.count > 0 ? (stats.sum / stats.count).toFixed(2) : 0;
+
+            let maxScore = 5;
+            if (evaluation.template.scale) {
+                const scaleObj = JSON.parse(evaluation.template.scale);
+                if (scaleObj.max) maxScore = scaleObj.max;
+                else if (scaleObj.type === '1-10') maxScore = 10;
+                else if (scaleObj.type === 'percentage') maxScore = 100;
+            }
+
             return {
                 criteria: c.name,
                 type: c.type,
                 weight: c.weight,
                 description: c.description,
                 score: parseFloat(average),
-                maxScore: evaluation.template.scale ? JSON.parse(evaluation.template.scale).max || 5 : 5
+                maxScore: maxScore
             };
         });
 

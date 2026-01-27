@@ -13,6 +13,7 @@ const EmployeeList = ({ token }) => {
     const [successMsg, setSuccessMsg] = useState('');
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         if (location.state?.successMessage) {
             setSuccessMsg(location.state.successMessage);
             window.history.replaceState({}, document.title);
@@ -36,12 +37,20 @@ const EmployeeList = ({ token }) => {
                     <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
                         Directorio de Empleados
                     </h2>
-                    <button
-                        onClick={() => navigate('/admin')}
-                        className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-slate-300"
-                    >
-                        Volver al Panel
-                    </button>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => navigate('/admin/register-employee')}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium flex items-center gap-2"
+                        >
+                            <span>+</span> Nuevo Empleado
+                        </button>
+                        <button
+                            onClick={() => navigate('/admin')}
+                            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-slate-300"
+                        >
+                            Volver al Panel
+                        </button>
+                    </div>
                 </header>
 
                 {/* Search Bar */}
@@ -61,7 +70,7 @@ const EmployeeList = ({ token }) => {
                 {successMsg && (
                     <div className="mb-6 p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-lg text-emerald-200 flex justify-between items-center animate-fade-in-down">
                         <span>{successMsg}</span>
-                        <button onClick={() => setSuccessMsg('')} className="text-emerald-200/80 hover:text-white">✕</button>
+                        <button onClick={() => setSuccessMsg('')} className="text-emerald-200/80 hover:text-white">×</button>
                     </div>
                 )}
 

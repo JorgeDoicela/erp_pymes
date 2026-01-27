@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -27,6 +25,7 @@ function AdminDashboard({ user, onLogout }) {
         { title: 'Nómina', icon: '', color: 'bg-green-500', path: '/admin/payroll/generator' },
         { title: 'Beneficios', icon: '', color: 'bg-yellow-500', path: '/admin/payroll/benefits' },
         { title: 'Evaluaciones', icon: '', color: 'bg-orange-500', path: '/performance' },
+        { title: 'Mis Evaluaciones', icon: '', color: 'bg-orange-600', path: '/performance/my-evaluations' },
         { title: 'Reclutamiento', icon: '', color: 'bg-pink-500', path: '/recruitment' },
         { title: 'Reportes', icon: '', color: 'bg-cyan-500', path: '/admin/reports' },
         { title: 'Analíticas', icon: '', color: 'bg-indigo-600', path: '/analytics' },
@@ -90,22 +89,17 @@ function AdminDashboard({ user, onLogout }) {
                     {successMsg && (
                         <div className="fixed top-20 right-8 z-50 animate-fade-in-down">
                             <div className="bg-emerald-500/90 backdrop-blur text-white px-6 py-3 rounded-lg shadow-lg border border-emerald-400/50 flex items-center gap-3">
-                                <span className="text-2xl">✓</span>
+                                <span className="text-2xl"></span>
                                 <p className="font-medium">{successMsg}</p>
-                                <button onClick={() => setSuccessMsg('')} className="ml-2 text-white/80 hover:text-white">✕</button>
+                                <button onClick={() => setSuccessMsg('')} className="ml-2 text-white/80 hover:text-white">×</button>
                             </div>
                         </div>
                     )}
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => navigate('/admin/register-employee')}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition text-sm font-medium hidden md:block"
-                        >
-                            + Nuevo Empleado
-                        </button>
+                        {/* Botón movido a Directorio de Empleados */}
                         <div className="md:hidden">
                             {/* Mobile menu button placeholder */}
-                            <button className="text-slate-400">☰</button>
+                            <button className="text-slate-400">Menu</button>
                         </div>
                     </div>
                 </header>

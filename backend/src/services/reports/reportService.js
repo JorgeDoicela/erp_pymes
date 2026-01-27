@@ -88,7 +88,12 @@ class ReportService {
                     present++;
                     const hours = dailyRecord.workedHours || 0;
                     workedHours += hours;
-                    if (hours > 8) overtime += (hours - 8); // Simple rule: > 8h is overtime
+                    // Use persisted overtime if available
+                    if (dailyRecord.overtimeHours) {
+                        overtime += dailyRecord.overtimeHours;
+                    } else if (hours > 8) {
+                        overtime += (hours - 8);
+                    }
                     if (dailyRecord.status === 'LATE') late++;
                 } else if (absence) {
                     excused++;

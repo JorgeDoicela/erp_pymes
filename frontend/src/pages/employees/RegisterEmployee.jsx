@@ -27,7 +27,9 @@ const RegisterEmployee = ({ token }) => {
         contractType: '',
         bankName: '',
         accountNumber: '',
-        accountType: 'Ahorros'
+        accountType: 'Ahorros',
+        hasNightSurcharge: true,
+        hasDoubleOvertime: true
     });
     const [error, setError] = useState('');
 
@@ -102,6 +104,37 @@ const RegisterEmployee = ({ token }) => {
                                 />
                                 <InputField label="Salario Base ($)" name="salary" type="number" min="0" step="0.01" value={formData.salary} onChange={handleChange} />
                             </div>
+
+                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                <h4 className="text-sm font-semibold text-slate-300 md:col-span-2 mb-2">Configuración Laboral (Ecuador)</h4>
+                                <label className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-slate-600 transition-all">
+                                    <input
+                                        type="checkbox"
+                                        name="hasNightSurcharge"
+                                        checked={formData.hasNightSurcharge}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, hasNightSurcharge: e.target.checked }))}
+                                        className="w-5 h-5 rounded border-slate-600 text-blue-600 focus:ring-blue-500 bg-slate-700"
+                                    />
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-medium text-white">Pago Nocturno (25%)</span>
+                                        <span className="text-xs text-slate-400">Recargo de 19:00 a 06:00</span>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-slate-600 transition-all">
+                                    <input
+                                        type="checkbox"
+                                        name="hasDoubleOvertime"
+                                        checked={formData.hasDoubleOvertime}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, hasDoubleOvertime: e.target.checked }))}
+                                        className="w-5 h-5 rounded border-slate-600 text-blue-600 focus:ring-blue-500 bg-slate-700"
+                                    />
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-medium text-white">Pago Fines de Semana (100%)</span>
+                                        <span className="text-xs text-slate-400">Doble sueldo Sáb/Dom/Feriados</span>
+                                    </div>
+                                </label>
+                            </div>
                         </section>
 
                         {/* Información Bancaria */}
@@ -121,10 +154,11 @@ const RegisterEmployee = ({ token }) => {
                         <div className="flex justify-end pt-4">
                             <button
                                 type="button"
-                                onClick={() => navigate('/admin')}
-                                className="mr-4 px-6 py-2 rounded-lg bg-transparent border border-white/20 hover:bg-white/5 transition-colors text-slate-300"
+                                onClick={() => navigate(-1)}
+                                className="mr-4 px-6 py-2 rounded-lg bg-transparent border border-white/20 hover:bg-white/5 transition-colors text-slate-300 flex items-center"
                             >
-                                Cancelar
+                                ← Volver
+
                             </button>
                             <button
                                 type="submit"

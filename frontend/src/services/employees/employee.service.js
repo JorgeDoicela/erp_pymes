@@ -15,9 +15,9 @@ export const createEmployee = async (employeeData, token) => {
 
 export const getEmployees = async (token, searchTerm = '') => {
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-    let url = '/employees';
+    let url = '/employees?limit=1000'; // Increase limit to fetch all for lists
     if (searchTerm) {
-        url += `?q=${encodeURIComponent(searchTerm)}`;
+        url += `&q=${encodeURIComponent(searchTerm)}`;
     }
 
     try {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMyPendingEvaluations, submitAssessment } from '../../services/evaluation.service';
-import { FiSave, FiAlertCircle } from 'react-icons/fi';
+import { FiSave, FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 
 const TakeEvaluation = () => {
     const { id } = useParams(); // This is the review ID (EvaluationReviewer ID)
@@ -95,7 +95,7 @@ const TakeEvaluation = () => {
     const renderInput = (criteria) => {
         const currentVal = responses[criteria.name] || '';
 
-        if (scale.type === 'numeric' || scale.type === '1-5' || scale.type === '1-10') {
+        if (scale.type === 'numeric' || scale.type === '1-5' || scale.type === '1-10' || (!scale.type && scale.min && scale.max)) {
             const max = scale.max || (scale.type === '1-5' ? 5 : 10);
             const min = scale.min || 1;
 
@@ -104,20 +104,32 @@ const TakeEvaluation = () => {
             for (let i = min; i <= max; i++) options.push(i);
 
             return (
-                <div className="flex gap-4 mt-2">
-                    {options.map(num => (
-                        <label key={num} className={`flex flex-col items-center cursor-pointer p-3 rounded-lg border ${currentVal == num ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'}`}>
-                            <input
-                                type="radio"
-                                name={criteria.name}
-                                value={num}
-                                checked={currentVal == num}
-                                onChange={() => handleValueChange(criteria.name, num)}
-                                className="hidden"
-                            />
-                            <span className="font-bold text-lg">{num}</span>
-                        </label>
-                    ))}
+                <div className="grid grid-cols-5 md:flex md:flex-wrap gap-2 md:gap-4 mt-2">
+                    {options.map(num => {
+                        const isSelected = currentVal == num;
+                        // Color scale from Red (low) to Green (high) logic could go here, simplified to blue for now but clearer UI
+                        return (
+                            <label key={num} className={`
+                                relative flex flex-col items-center justify-center cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 group
+                                ${isSelected
+                                    ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)] transform scale-105'
+                                    : 'bg-gray-700/50 border-gray-600 text-gray-400 hover:bg-gray-700 hover:border-gray-500'}
+                            `}>
+                                <input
+                                    type="radio"
+                                    name={criteria.name}
+                                    value={num}
+                                    checked={isSelected}
+                                    onChange={() => handleValueChange(criteria.name, num)}
+                                    className="hidden"
+                                />
+                                <span className={`text-2xl font-bold mb-1 ${isSelected ? 'text-white' : 'text-gray-300'}`}>{num}</span>
+                                <span className="text-[10px] uppercase font-bold tracking-wider opacity-60">
+                                    {num === min ? 'Bajo' : (num === max ? 'Exc.' : '-')}
+                                </span>
+                            </label>
+                        );
+                    })}
                 </div>
             );
         } else if (scale.type === 'percentage') {
@@ -141,23 +153,57 @@ const TakeEvaluation = () => {
     return (
         <div className="min-h-screen bg-gray-900 text-white p-6 pb-24">
             <div className="max-w-4xl mx-auto">
-                <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-white mb-2">{template.title}</h1>
-                    <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 text-blue-200 text-sm">
-                        <h3 className="font-bold mb-1 flex items-center"><FiAlertCircle className="mr-2" /> Instrucciones</h3>
-                        <p>{template.instructions || 'Completa esta evaluación con objetividad.'}</p>
+                <button
+                    onClick={() => navigate('/performance/my-evaluations')}
+                    className="mb-6 flex items-center text-gray-400 hover:text-white transition-colors"
+                >
+                    <FiArrowLeft className="mr-2" /> Volver a Mis Evaluaciones
+                </button>
+                <div className="mb-8 bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 rounded-2xl p-6 shadow-lg">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 border-b border-white/10 pb-4">
+                        <div>
+                            <h2 className="text-sm text-blue-300 uppercase tracking-wider font-bold mb-1">Evaluación de Desempeño</h2>
+                            <h1 className="text-3xl font-bold text-white">{template.title}</h1>
+                        </div>
+                        <div className="text-right">
+                            <span className="block text-xs text-gray-400 uppercase">Estás evaluando a:</span>
+                            <span className="text-xl font-bold text-yellow-400">
+                                {review.evaluation.employee.firstName} {review.evaluation.employee.lastName}
+                            </span>
+                            <span className="block text-sm text-gray-400">{review.evaluation.employee.position}</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-blue-900/20 rounded-xl p-4 text-blue-100 flex items-start gap-3">
+                        <FiAlertCircle className="mt-1 flex-shrink-0 text-blue-400" size={20} />
+                        <div>
+                            <p className="font-medium mb-1">Instrucciones:</p>
+                            <p className="text-sm opacity-90">{template.instructions || 'Por favor evalúa cada competencia objetivamente basándote en el desempeño observado durante el periodo.'}</p>
+                        </div>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {template.criteria.map((c, idx) => (
-                        <div key={idx} className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
-                            <div className="mb-3">
-                                <h3 className="text-lg font-bold text-white mb-1">{c.name}</h3>
-                                {c.description && <p className="text-sm text-gray-300 mb-2 italic">{c.description}</p>}
-                                <p className="text-xs text-gray-400 uppercase tracking-widest">{c.type} {c.weight ? `(Peso: ${c.weight}%)` : ''}</p>
+                        <div key={idx} className="bg-gray-800 rounded-xl border border-gray-700 shadow-lg overflow-hidden transition-all hover:border-gray-600">
+                            <div className="p-6 bg-gray-800/50 border-b border-gray-700/50 flex flex-col md:flex-row justify-between gap-4">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-700 text-sm font-bold text-gray-300">{idx + 1}</span>
+                                        <h3 className="text-xl font-bold text-white">{c.name}</h3>
+                                    </div>
+                                    {c.description && <p className="text-gray-400 text-sm pl-11">{c.description}</p>}
+                                </div>
+                                <div className="text-right min-w-[120px]">
+                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Peso</span>
+                                    <span className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">{c.weight ? `${c.weight}%` : 'N/A'}</span>
+                                </div>
                             </div>
-                            {renderInput(c)}
+
+                            <div className="p-6 bg-gray-800">
+                                <p className="text-sm text-gray-400 mb-3 uppercase tracking-wider font-semibold">Selecciona una calificación:</p>
+                                {renderInput(c)}
+                            </div>
                         </div>
                     ))}
 

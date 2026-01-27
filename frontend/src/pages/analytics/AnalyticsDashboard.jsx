@@ -83,7 +83,7 @@ const AnalyticsDashboard = () => {
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
                     <div>
                         <p className="text-gray-400 text-sm">Nómina Estimada</p>
-                        <p className="text-2xl font-bold text-green-400">${kpis.payrollTotal.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-green-400">${kpis.payrollTotal ? kpis.payrollTotal.toLocaleString() : '0'}</p>
                     </div>
                     <div className="bg-yellow-900/50 p-3 rounded-lg text-yellow-500"><FiDollarSign size={24} /></div>
                 </div>

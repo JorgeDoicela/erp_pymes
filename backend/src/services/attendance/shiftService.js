@@ -28,11 +28,26 @@ export const shiftService = {
                 const overlaps = await shiftRepository.findOverlappingSchedules(empId, start, end);
 
                 if (overlaps.length > 0) {
-                    // Si hay solapamiento, verificar si los días de la semana chocan
-                    // Por simplicidad, asumimos choque si hay solapamiento de fechas.
-                    // Una mejora sería parsear daysOfWeek y comparar.
-                    // RF dice: "Sistema valida no sobreposición de turnos"
-                    throw new Error(`El empleado ya tiene un turno asignado en ese rango de fechas (${overlaps[0].shift.name}).`);
+                    // Validacion granular: Verificar si los dias especificos chocan
+                    const newDays = Array.isArray(daysOfWeek) ? daysOfWeek : JSON.parse(daysOfWeek);
+
+                    const actualConflicts = overlaps.filter(existing => {
+                        try {
+                            const existingDays = typeof existing.daysOfWeek === 'string'
+                                ? JSON.parse(existing.daysOfWeek)
+                                : existing.daysOfWeek;
+
+                            // Verificar interseccion
+                            const hasCommonDay = newDays.some(day => existingDays.includes(day));
+                            return hasCommonDay;
+                        } catch (e) {
+                            return true; // Si falla el parseo, asumimos conflicto por seguridad
+                        }
+                    });
+
+                    if (actualConflicts.length > 0) {
+                        throw new Error(`El empleado ya tiene un turno asignado los mismos días (${actualConflicts[0].shift.name}).`);
+                    }
                 }
 
                 const assignment = await shiftRepository.createSchedule({
