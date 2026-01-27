@@ -1,0 +1,11 @@
+{
+    "name": "hr-system-root",
+    "version": "1.0.0",
+    "scripts": {
+        "vercel-build": "echo 'Building...' && cd frontend && npm install && npm run build && cd ../backend && npm install && npx prisma generate"
+    },
+    "workspaces": [
+        "frontend",
+        "backend"
+    ]
+}

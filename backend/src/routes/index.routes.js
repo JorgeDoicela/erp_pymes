@@ -17,6 +17,7 @@ import skillRoutes from './skills/skill.routes.js';
 import notificationRoutes from './notifications/notification.routes.js';
 import auditRoutes from './audit.routes.js';
 import exportRoutes from './export/export.routes.js';
+import { runSeed } from '../controllers/admin/seedController.js';
 
 
 const router = Router();
@@ -24,6 +25,13 @@ const router = Router();
 // Ruta de prueba
 router.get('/', (req, res) => {
     res.send('API EMPLIFI funcionando correctamente v1');
+});
+
+// Seed Remoto (Protegido)
+router.post('/seed', (req, res, next) => {
+    runSeed(req, res).catch(next);
+});
+res.send('API EMPLIFI funcionando correctamente v1');
 });
 
 // Login real
