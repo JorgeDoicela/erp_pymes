@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import DigitalMarker from '../../components/Attendance/DigitalMarker';
+import DigitalMarker from '../../components/attendance/DigitalMarker';
 import { motion } from 'framer-motion';
 
 const AttendancePage = () => {
