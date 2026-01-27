@@ -5,6 +5,7 @@ import { useEmployees } from '../../hooks/employees/useEmployees';
 import InputField from '../../components/common/InputField';
 import SelectField from '../../components/common/SelectField';
 import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS } from '../../constants/employeeOptions';
+import { validateCedula, validateEmail, validatePhone, validateSalary, validateDates } from '../../utils/validationUtils';
 
 const RegisterEmployee = ({ token }) => {
     const navigate = useNavigate();
@@ -32,15 +33,49 @@ const RegisterEmployee = ({ token }) => {
         hasDoubleOvertime: true
     });
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+
+        // Limpiar error de campo al escribir
+        if (fieldErrors[name]) {
+            setFieldErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Validaciones de front-end
+        const errors = {};
+        const cedulaErr = validateCedula(formData.identityCard);
+        if (cedulaErr) errors.identityCard = cedulaErr;
+
+        const emailErr = validateEmail(formData.email);
+        if (emailErr) errors.email = emailErr;
+
+        const phoneErr = validatePhone(formData.phone);
+        if (phoneErr) errors.phone = phoneErr;
+
+        const salaryErr = validateSalary(formData.salary);
+        if (salaryErr) errors.salary = salaryErr;
+
+        const dateErr = validateDates(formData.birthDate, formData.hireDate);
+        if (dateErr) errors.dates = dateErr; // Error general de coherencia
+
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            setError('Por favor corrija los errores en el formulario');
+            toast.error('Datos del formulario inválidos');
+            return;
+        }
 
         try {
             const dataToSend = {
@@ -79,15 +114,16 @@ const RegisterEmployee = ({ token }) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <InputField label="Nombre" name="firstName" value={formData.firstName} onChange={handleChange} />
                                 <InputField label="Apellido" name="lastName" value={formData.lastName} onChange={handleChange} />
-                                <InputField label="Cédula" name="identityCard" value={formData.identityCard} onChange={handleChange} />
+                                <InputField label="Cédula" name="identityCard" value={formData.identityCard} onChange={handleChange} error={fieldErrors.identityCard} />
                                 <InputField label="Fecha de Nacimiento" name="birthDate" type="date" value={formData.birthDate} onChange={handleChange} />
                                 <SelectField label="Estado Civil" name="civilStatus" value={formData.civilStatus} onChange={handleChange}
                                     options={CIVIL_STATUS_OPTIONS}
                                 />
                                 <InputField label="Dirección" name="address" value={formData.address} onChange={handleChange} />
-                                <InputField label="Teléfono" name="phone" value={formData.phone} onChange={handleChange} />
-                                <InputField label="Email Personal" name="email" type="email" value={formData.email} onChange={handleChange} />
+                                <InputField label="Teléfono" name="phone" value={formData.phone} onChange={handleChange} error={fieldErrors.phone} />
+                                <InputField label="Email Personal" name="email" type="email" value={formData.email} onChange={handleChange} error={fieldErrors.email} />
                             </div>
+                            {fieldErrors.dates && <p className="mt-4 text-xs text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">{fieldErrors.dates}</p>}
                         </section>
 
                         {/* Información Laboral */}
@@ -102,7 +138,7 @@ const RegisterEmployee = ({ token }) => {
                                 <SelectField label="Tipo de Contrato" name="contractType" value={formData.contractType} onChange={handleChange}
                                     options={CONTRACT_TYPES}
                                 />
-                                <InputField label="Salario Base ($)" name="salary" type="number" min="0" step="0.01" value={formData.salary} onChange={handleChange} />
+                                <InputField label="Salario Base ($)" name="salary" type="number" min="0" step="0.01" value={formData.salary} onChange={handleChange} error={fieldErrors.salary} />
                             </div>
 
                             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-800/50 p-4 rounded-lg border border-slate-700">

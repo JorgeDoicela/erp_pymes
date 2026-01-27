@@ -1,8 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import fs from 'fs';
-import notificationService from '../../services/notifications/notificationService.js';
-
-const prisma = new PrismaClient();
+import prisma from '../../database/db.js';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 
 export const createEvaluationTemplate = async (req, res) => {
     try {
@@ -131,6 +128,20 @@ export const assignEvaluation = async (req, res) => {
             }
         }
 
+        // Audit Log (Non-blocking)
+        if (req.user) {
+            const adminId = req.user.id;
+            const empNames = assignments.map(a => `${a.employee.firstName} ${a.employee.lastName}`).join(', ');
+
+            auditRepository.createLog({
+                entity: 'Evaluation',
+                entityId: templateId,
+                action: 'ASSIGN',
+                performedBy: adminId,
+                details: `Assigned evaluation template ${templateId} to ${assignments.length} employees: ${empNames}`
+            }).catch(err => console.error('Audit Log Error:', err));
+        }
+
         res.status(201).json({
             message: `Se asignaron ${assignments.length} evaluaciones correctamente`,
             assignments
@@ -235,14 +246,16 @@ export const submitAssessment = async (req, res) => {
             // In future: sendEmail(hrEmail, "Evaluation Completed", ...)
         }
 
-        // RNF-14: Audit Log (DISABLED - AuditLog model not in schema)
-        // await auditRepository.createLog({
-        //     entity: 'Evaluation',
-        //     entityId: review.evaluationId,
-        //     action: 'SUBMIT_ASSESSMENT',
-        //     performedBy: userId,
-        //     details: `Submitted assessment for evaluation ${review.evaluationId}. Status: ${status || 'COMPLETED'}`
-        // });
+        // RNF-14: Audit Log (Non-blocking)
+        if (userId) {
+            auditRepository.createLog({
+                entity: 'Evaluation',
+                entityId: review.evaluationId,
+                action: 'SUBMIT_ASSESSMENT',
+                performedBy: userId,
+                details: `Submitted assessment for evaluation ${review.evaluationId}. Status: ${status || 'COMPLETED'}`
+            }).catch(err => console.error('Audit Log Error:', err));
+        }
 
         res.json(updatedReview);
 

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 
 const prisma = new PrismaClient();
 
@@ -14,16 +15,13 @@ export const login = async (req, res) => {
         });
 
         if (!user) {
-            // Audit logging disabled
-            // await prisma.auditLog.create({
-            //     data: {
-            //         entity: 'Auth',
-            //         entityId: 'UNKNOWN',
-            //         action: 'FAILED_LOGIN',
-            //         performedBy: 'System',
-            //         details: JSON.stringify({ email, reason: 'User not found' }),
-            //     }
-            // });
+            auditRepository.createLog({
+                entity: 'Auth',
+                entityId: 'UNKNOWN',
+                action: 'FAILED_LOGIN',
+                performedBy: 'System',
+                details: { email, reason: 'User not found' }
+            }).catch(err => console.error('Audit Log Error:', err));
 
             return res.status(401).json({
                 success: false,
@@ -34,16 +32,13 @@ export const login = async (req, res) => {
         // Verificar contraseña
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            // Audit logging disabled
-            // await prisma.auditLog.create({
-            //     data: {
-            //         entity: 'Auth',
-            //         entityId: user.id,
-            //         action: 'FAILED_LOGIN',
-            //         performedBy: 'System',
-            //         details: JSON.stringify({ email, reason: 'Invalid password' }),
-            //     }
-            // });
+            auditRepository.createLog({
+                entity: 'Auth',
+                entityId: user.id,
+                action: 'FAILED_LOGIN',
+                performedBy: 'System',
+                details: { email, reason: 'Invalid password' }
+            }).catch(err => console.error('Audit Log Error:', err));
 
             return res.status(401).json({
                 success: false,
@@ -57,6 +52,15 @@ export const login = async (req, res) => {
             process.env.JWT_SECRET || 'secret_key_change_me',
             { expiresIn: '1d' }
         );
+
+        // Log successful login (Non-blocking)
+        auditRepository.createLog({
+            entity: 'Auth',
+            entityId: user.id,
+            action: 'LOGIN',
+            performedBy: user.id,
+            details: `Successful login for ${email}`
+        }).catch(err => console.error('Audit Log Error:', err));
 
         res.status(200).json({
             success: true,

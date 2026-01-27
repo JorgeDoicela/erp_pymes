@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { encryptSalary } from '../../src/utils/encryption.js';
+import { encrypt, encryptSalary } from '../../src/utils/encryption.js';
 import { firstNames, lastNames, departments, positions, banks, getRandomElement, getRandomDate } from './utils.js';
 
 export async function seedEmployees(prisma) {
@@ -36,8 +36,8 @@ export async function seedEmployees(prisma) {
                     address: 'Quito, Ecuador',
                     civilStatus: 'Soltero',
                     contractType: 'Indefinido',
-                    bankName: getRandomElement(banks),
-                    accountNumber: `${Math.floor(Math.random() * 1000000000)}`,
+                    bankName: encrypt(getRandomElement(banks)),
+                    accountNumber: encrypt(`${Math.floor(Math.random() * 1000000000)}`),
                     accountType: 'Ahorros',
                     vacationDays: 15
                 }

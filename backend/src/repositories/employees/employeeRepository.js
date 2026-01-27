@@ -1,5 +1,5 @@
 import prisma from '../../database/db.js';
-import { encrypt, decrypt, encryptSalary, decryptSalary } from '../../utils/encryption.js';
+import { encrypt, decrypt, encryptSalary, decryptSalary, safeDecrypt } from '../../utils/encryption.js';
 
 /**
  * EmployeeRepository
@@ -61,8 +61,8 @@ export class EmployeeRepository {
       return {
         ...employee,
         salary: decryptSalary(employee.salary),
-        bankName: employee.bankName ? decrypt(employee.bankName) : null,
-        accountNumber: employee.accountNumber ? decrypt(employee.accountNumber) : null,
+        bankName: employee.bankName ? safeDecrypt(employee.bankName) : null,
+        accountNumber: employee.accountNumber ? safeDecrypt(employee.accountNumber) : null,
       };
     } catch (error) {
       throw new Error(`Error al crear empleado: ${error.message}`);
@@ -97,8 +97,8 @@ export class EmployeeRepository {
       return {
         ...employee,
         salary: decryptSalary(employee.salary),
-        bankName: employee.bankName ? decrypt(employee.bankName) : null,
-        accountNumber: employee.accountNumber ? decrypt(employee.accountNumber) : null,
+        bankName: employee.bankName ? safeDecrypt(employee.bankName) : null,
+        accountNumber: employee.accountNumber ? safeDecrypt(employee.accountNumber) : null,
       };
     } catch (error) {
       throw new Error(`Error al obtener empleado: ${error.message}`);
@@ -290,8 +290,8 @@ export class EmployeeRepository {
       return {
         ...result,
         salary: decryptSalary(result.salary),
-        bankName: result.bankName ? decrypt(result.bankName) : null,
-        accountNumber: result.accountNumber ? decrypt(result.accountNumber) : null,
+        bankName: result.bankName ? safeDecrypt(result.bankName) : null,
+        accountNumber: result.accountNumber ? safeDecrypt(result.accountNumber) : null,
       };
     } catch (error) {
       if (error.code === 'P2025') {

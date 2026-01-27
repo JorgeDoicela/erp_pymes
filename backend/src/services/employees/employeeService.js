@@ -1,4 +1,5 @@
 import employeeRepository from '../../repositories/employees/employeeRepository.js';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 
 /**
  * EmployeeService
@@ -120,16 +121,16 @@ export class EmployeeService {
       }
     });
 
-    // Audit logging disabled
-    // if (userId && Object.keys(changes).length > 0) {
-    //   await auditRepository.createLog({
-    //     entity: 'Employee',
-    //     entityId: id,
-    //     action: 'UPDATE',
-    //     performedBy: userId,
-    //     details: changes
-    //   });
-    // }
+    // Audit logging (Non-blocking: No await)
+    if (userId && Object.keys(changes).length > 0) {
+      auditRepository.createLog({
+        entity: 'Employee',
+        entityId: id,
+        action: 'UPDATE',
+        performedBy: userId,
+        details: changes
+      }).catch(err => console.error('Error logging employee update:', err));
+    }
 
     return updatedEmployee;
   }

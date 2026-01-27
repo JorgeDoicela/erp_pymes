@@ -1,6 +1,7 @@
 import prisma from '../../database/db.js';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 
-import { decrypt } from '../../utils/encryption.js';
+import { decrypt, safeDecrypt } from '../../utils/encryption.js';
 
 class PayrollCalculationService {
     async generatePayroll(month, year, adminId) {
@@ -393,6 +394,17 @@ class PayrollCalculationService {
             }
         });
 
+        // Audit Log (Non-blocking)
+        if (adminId) {
+            auditRepository.createLog({
+                entity: 'Payroll',
+                entityId: payroll.id,
+                action: 'GENERATE',
+                performedBy: adminId,
+                details: `Generated payroll for ${month}/${year}. Total: ${payroll.totalAmount}`
+            }).catch(err => console.error('Audit Log Error:', err));
+        }
+
         return payroll;
     }
 
@@ -456,6 +468,17 @@ class PayrollCalculationService {
             data: { status: 'APPROVED' }
         });
 
+        // Audit Log (Non-blocking)
+        if (adminId) {
+            auditRepository.createLog({
+                entity: 'Payroll',
+                entityId: id,
+                action: 'CONFIRM',
+                performedBy: adminId,
+                details: `Confirmed payroll ${id}`
+            }).catch(err => console.error('Audit Log Error:', err));
+        }
+
         return updated;
     }
 
@@ -486,8 +509,8 @@ class PayrollCalculationService {
                 let account = '';
 
                 try {
-                    bank = decrypt(emp.bankName).replace(/,/g, '');
-                    account = decrypt(emp.accountNumber);
+                    bank = safeDecrypt(emp.bankName).replace(/,/g, '');
+                    account = safeDecrypt(emp.accountNumber);
                 } catch (e) {
                     console.error(`Error decrypting bank info for employee ${emp.id}`, e);
                     bank = 'ERROR_DECRYPT';
@@ -503,14 +526,27 @@ class PayrollCalculationService {
         return csv;
     }
 
-    async markAsPaid(id) {
-        return await prisma.payroll.update({
+    async markAsPaid(id, adminId) {
+        const updated = await prisma.payroll.update({
             where: { id },
             data: {
                 status: 'PAID',
                 paymentDate: new Date()
             }
         });
+
+        // Audit Log (Non-blocking)
+        if (adminId) {
+            auditRepository.createLog({
+                entity: 'Payroll',
+                entityId: id,
+                action: 'PAYMENT',
+                performedBy: adminId,
+                details: `Marked payroll ${id} as PAID`
+            }).catch(err => console.error('Audit Log Error:', err));
+        }
+
+        return updated;
     }
 }
 

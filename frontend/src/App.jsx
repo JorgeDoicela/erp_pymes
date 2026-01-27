@@ -4,12 +4,13 @@ import { Toaster } from 'react-hot-toast';
 import Loading from './components/Loading.jsx';
 
 // Lazy Load Pages
-const Home = lazy(() => import('./pages/landing/Home.jsx'));
-const Login = lazy(() => import('./pages/auth/Login.jsx'));
+// Eager Load Critical Pages
+import Home from './pages/landing/Home.jsx';
+import Login from './pages/auth/Login.jsx';
+import AdminDashboard from './pages/dashboard/AdminDashboard.jsx';
+import EmployeeDashboard from './pages/dashboard/EmployeeDashboard.jsx';
 
-// Dashboard
-const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard.jsx'));
-const EmployeeDashboard = lazy(() => import('./pages/dashboard/EmployeeDashboard.jsx'));
+// Lazy Load Rest of the Pages
 
 // Employees
 const RegisterEmployee = lazy(() => import('./pages/employees/RegisterEmployee.jsx'));
@@ -59,6 +60,7 @@ const CustomReport = lazy(() => import('./pages/reports/CustomReport.jsx'));
 const ExpiringContracts = lazy(() => import('./pages/contracts/ExpiringContracts.jsx'));
 const NotificationsPage = lazy(() => import('./pages/notifications/NotificationsPage.jsx'));
 const NotificationSettings = lazy(() => import('./pages/notifications/NotificationSettings.jsx'));
+const AuditLogsPage = lazy(() => import('./pages/audit/AuditLogsPage.jsx'));
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -211,6 +213,14 @@ function App() {
           element={
             <RequireAuth role="admin">
               <NotificationSettings />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/audit"
+          element={
+            <RequireAuth role="admin">
+              <AuditLogsPage />
             </RequireAuth>
           }
         />

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift, FiClipboard, FiBriefcase, FiFileText, FiBarChart2 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import NotificationBell from '../../components/common/NotificationBell';
-import { FiTrendingUp, FiAlertTriangle, FiCheckCircle, FiActivity, FiCpu } from 'react-icons/fi';
+import { FiTrendingUp, FiAlertTriangle, FiCheckCircle, FiActivity, FiCpu, FiShield } from 'react-icons/fi';
 
 function AdminDashboard({ user, onLogout }) {
     const navigate = useNavigate();
@@ -32,6 +32,7 @@ function AdminDashboard({ user, onLogout }) {
         { title: 'Reclutamiento', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
         { title: 'Reportes', icon: <FiFileText />, color: 'bg-cyan-500', path: '/admin/reports' },
         { title: 'Analíticas', icon: <FiBarChart2 />, color: 'bg-indigo-600', path: '/analytics' },
+        { title: 'Auditoría', icon: <FiShield />, color: 'bg-slate-700', path: '/admin/audit' },
     ]
 
     const insights = [

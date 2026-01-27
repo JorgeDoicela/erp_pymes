@@ -92,6 +92,26 @@ export function decrypt(encryptedValue) {
 }
 
 /**
+ * Desencripta de forma segura (si falla, retorna el valor original)
+ * Útil para migración de datos de texto plano a encriptado.
+ * @param {string} value - Valor posiblemente encriptado
+ * @returns {string} Valor desencriptado o el original
+ */
+export function safeDecrypt(value) {
+    if (!value) return value;
+    try {
+        // Si no tiene el formato de 3 separadores ':', probablemente no está encriptado
+        if (typeof value === 'string' && value.split(':').length === 4) {
+            return decrypt(value);
+        }
+        return value;
+    } catch (e) {
+        console.warn('Silent decryption failure, returning original value:', e.message);
+        return value;
+    }
+}
+
+/**
  * Encripta un salario (convierte a número después de desencriptar)
  * @param {number} salary - Salario a encriptar
  * @returns {string} Salario encriptado
@@ -109,7 +129,7 @@ export function encryptSalary(salary) {
  * @returns {number} Salario desencriptado como número
  */
 export function decryptSalary(encryptedSalary) {
-    const decrypted = decrypt(encryptedSalary);
+    const decrypted = safeDecrypt(encryptedSalary);
     const salary = parseFloat(decrypted);
 
     if (isNaN(salary)) {

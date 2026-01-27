@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { encryptSalary } from '../../src/utils/encryption.js';
+import { encrypt, encryptSalary } from '../../src/utils/encryption.js';
 
 export async function seedUsers(prisma) {
     console.log('[USERS] Creando/Verificando Usuarios Principales...');
@@ -18,7 +18,7 @@ export async function seedUsers(prisma) {
                 identityCard: '0101010101', birthDate: new Date('1980-01-01'),
                 hireDate: new Date('2020-01-01'), isActive: true,
                 address: 'HQ', phone: '0999999999', civilStatus: 'Casado', contractType: 'Indefinido',
-                bankName: 'Banco Pichincha', accountNumber: '111111', accountType: 'Corriente'
+                bankName: encrypt('Banco Pichincha'), accountNumber: encrypt('111111'), accountType: 'Corriente'
             }
         });
     } catch (e) {
@@ -40,7 +40,7 @@ export async function seedUsers(prisma) {
                 hireDate: new Date('2023-01-01'), isActive: true,
                 address: 'Test House', phone: '0999999999', civilStatus: 'Soltero', contractType: 'Indefinido',
                 password: testUserPass,
-                bankName: 'Banco Pichincha', accountNumber: '222222', accountType: 'Ahorros',
+                bankName: encrypt('Banco Pichincha'), accountNumber: encrypt('222222'), accountType: 'Ahorros',
                 vacationDays: 12
             }
         });

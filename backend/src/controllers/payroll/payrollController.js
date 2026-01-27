@@ -67,7 +67,9 @@ class PayrollController {
 
     async markAsPaid(req, res) {
         try {
-            const payroll = await payrollCalculationService.markAsPaid(req.params.id);
+            const { id } = req.params;
+            const userId = req.user?.id;
+            const payroll = await payrollCalculationService.markAsPaid(id, userId);
             res.status(200).json({ success: true, data: payroll, message: 'Pago registrado exitosamente' });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
