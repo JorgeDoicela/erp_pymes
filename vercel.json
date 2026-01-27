@@ -19,7 +19,11 @@
             "destination": "/backend/src/server.js"
         },
         {
-            "source": "/((?!assets/).*)",
+            "source": "/assets/(.*)",
+            "destination": "/frontend/assets/$1"
+        },
+        {
+            "source": "/(.*)",
             "destination": "/frontend/index.html"
         }
     ]
