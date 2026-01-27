@@ -98,7 +98,7 @@ export const runMigration = async (req, res) => {
         // Set HOME to /tmp to avoid 'mkdir' permission errors
         const env = { ...process.env, HOME: '/tmp' };
 
-        exec(`"${prismaPath}" db push --accept-data-loss --schema="${schemaPath}"`, { env }, (error, stdout, stderr) => {
+        exec(`"${prismaPath}" db push --accept-data-loss --skip-generate --schema="${schemaPath}"`, { env }, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Migration error (Primary): ${error.message}`);
                 console.error(`Stderr (Primary): ${stderr}`);

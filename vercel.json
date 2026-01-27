@@ -10,7 +10,9 @@
                     "node_modules/prisma/**",
                     "backend/node_modules/prisma/**",
                     "node_modules/@prisma/engines/**",
-                    "backend/node_modules/@prisma/engines/**"
+                    "backend/node_modules/@prisma/engines/**",
+                    "node_modules/@prisma/client/**",
+                    "backend/node_modules/@prisma/client/**"
                 ]
             }
         },
