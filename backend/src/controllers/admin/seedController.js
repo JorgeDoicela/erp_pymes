@@ -59,25 +59,64 @@ export const runMigration = async (req, res) => {
         }
 
         console.log('--- Iniciando Migración Remota ---');
+        console.log(`Current Working Directory: ${process.cwd()}`);
 
-        // Use local prisma binary to ensure availability and avoid npx fetching
-        const prismaPath = path.join(process.cwd(), 'node_modules', '.bin', 'prisma');
-        const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
+        try {
+            console.log('Root contents:', fs.readdirSync(process.cwd()));
+            if (fs.existsSync(path.join(process.cwd(), 'backend'))) {
+                console.log('Backend contents:', fs.readdirSync(path.join(process.cwd(), 'backend')));
+            }
+        } catch (e) {
+            console.log('Error listing directories:', e.message);
+        }
 
-        console.log(`Prisma executable path: ${prismaPath}`);
+        // Locate Schema
+        let schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
+        if (!fs.existsSync(schemaPath)) {
+            const altSchemaPath = path.join(process.cwd(), 'backend', 'prisma', 'schema.prisma');
+            if (fs.existsSync(altSchemaPath)) {
+                schemaPath = altSchemaPath;
+            } else {
+                console.warn('Schema not found in standard locations, trying default...');
+            }
+        }
+        console.log(`Using Schema Path: ${schemaPath}`);
 
-        // Set HOME to /tmp to avoid 'mkdir' permission errors in read-only environments (Vercel)
+        // Locate Prisma Binary
+        // Try to find the local node_modules binary
+        let prismaPath = path.join(process.cwd(), 'node_modules', '.bin', 'prisma');
+        if (!fs.existsSync(prismaPath)) {
+            // Try backend/node_modules if it exists
+            const altPrismaPath = path.join(process.cwd(), 'backend', 'node_modules', '.bin', 'prisma');
+            if (fs.existsSync(altPrismaPath)) {
+                prismaPath = altPrismaPath;
+            }
+        }
+        console.log(`Using Prisma Path: ${prismaPath}`);
+
+        // Set HOME to /tmp to avoid 'mkdir' permission errors
         const env = { ...process.env, HOME: '/tmp' };
 
         exec(`"${prismaPath}" db push --accept-data-loss --schema="${schemaPath}"`, { env }, (error, stdout, stderr) => {
             if (error) {
-                console.error(`Migration error: ${error.message}`);
-                // Fallback to npx if binary not found (unlikely if in dependencies)
+                console.error(`Migration error (Primary): ${error.message}`);
+                console.error(`Stderr (Primary): ${stderr}`);
+
+                // Fallback to npx
                 console.log('Falling back to npx...');
                 exec('npx prisma db push --accept-data-loss', { env }, (err2, out2, err2_stderr) => {
                     if (err2) {
                         console.error(`Fallback Migration error: ${err2.message}`);
-                        return res.status(500).json({ success: false, error: err2.message, stderr: err2_stderr });
+                        // Return BOTH errors for debugging
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Migration failed',
+                            primaryError: error.message,
+                            primaryStderr: stderr,
+                            fallbackError: err2.message,
+                            fallbackStderr: err2_stderr,
+                            cwd: process.cwd()
+                        });
                     }
                     res.status(200).json({ success: true, message: 'Migración completada (Fallback)', output: out2 });
                 });
@@ -93,6 +132,6 @@ export const runMigration = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Error interno en migración' });
+        res.status(500).json({ success: false, message: 'Error interno en migración', error: error.message });
     }
 };
