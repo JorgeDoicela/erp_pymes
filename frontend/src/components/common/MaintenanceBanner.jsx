@@ -8,7 +8,7 @@ const MaintenanceBanner = () => {
     useEffect(() => {
         const fetchSystemStatus = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/system/health`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/system/health`);
                 const data = await response.json();
 
                 // If there's a scheduled maintenance, check if it's within 24h
