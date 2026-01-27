@@ -226,7 +226,7 @@ const ApplicationDetails = () => {
                         <form onSubmit={handleAddNote} className="relative">
                             <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Escribe una nota..."
                                 className="w-full bg-gray-700 border-gray-600 rounded-lg pl-4 pr-10 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none" />
-                            <button type="submit" className="absolute right-2 top-2 p-2 text-blue-400 hover:text-white"><FiSend /></button>
+                            <button type="submit" className="absolute right-2 top-2 p-2 text-white hover:text-gray-300"><FiSend /></button>
                         </form>
                     </div>
                 </div>
@@ -264,7 +264,7 @@ const ApplicationDetails = () => {
                                         <label className="text-gray-400 w-1/3">{criterion}</label>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map(star => (
-                                                <button key={star} type="button" onClick={() => updateRating(criterion, star)} className={`p-2 rounded-full transition-colors ${evaData.ratings[criterion] >= star ? 'text-yellow-400' : 'text-gray-600'}`}><FiStar className="text-xl" fill={evaData.ratings[criterion] >= star ? "currentColor" : "none"} /></button>
+                                                <button key={star} type="button" onClick={() => updateRating(criterion, star)} className={`p-2 rounded-full transition-colors ${evaData.ratings[criterion] >= star ? 'text-white' : 'text-gray-600'}`}><FiStar className="text-xl" fill={evaData.ratings[criterion] >= star ? "currentColor" : "none"} /></button>
                                             ))}
                                         </div>
                                     </div>
@@ -275,9 +275,9 @@ const ApplicationDetails = () => {
                             <div>
                                 <label className="block text-sm text-gray-400 mb-2">Recomendación</label>
                                 <div className="grid grid-cols-3 gap-2">
-                                    <button type="button" onClick={() => setEvaData({ ...evaData, recommendation: 'HIRE' })} className={`p-3 rounded-lg border flex flex-col items-center gap-1 ${evaData.recommendation === 'HIRE' ? 'bg-green-600/20 border-green-500 text-green-400' : 'border-gray-600 text-gray-500'}`}><FiCheckCircle size={20} /> CONTRATAR</button>
-                                    <button type="button" onClick={() => setEvaData({ ...evaData, recommendation: 'MAYBE' })} className={`p-3 rounded-lg border flex flex-col items-center gap-1 ${evaData.recommendation === 'MAYBE' ? 'bg-yellow-600/20 border-yellow-500 text-yellow-400' : 'border-gray-600 text-gray-500'}`}><FiStar size={20} /> VER MÁS</button>
-                                    <button type="button" onClick={() => setEvaData({ ...evaData, recommendation: 'NO_HIRE' })} className={`p-3 rounded-lg border flex flex-col items-center gap-1 ${evaData.recommendation === 'NO_HIRE' ? 'bg-red-600/20 border-red-500 text-red-400' : 'border-gray-600 text-gray-500'}`}><FiXCircle size={20} /> RECHAZAR</button>
+                                    <button type="button" onClick={() => setEvaData({ ...evaData, recommendation: 'HIRE' })} className={`p-3 rounded-lg border flex flex-col items-center gap-1 ${evaData.recommendation === 'HIRE' ? 'bg-green-600/20 border-green-500 text-white' : 'border-gray-600 text-gray-500'}`}><FiCheckCircle size={20} /> CONTRATAR</button>
+                                    <button type="button" onClick={() => setEvaData({ ...evaData, recommendation: 'MAYBE' })} className={`p-3 rounded-lg border flex flex-col items-center gap-1 ${evaData.recommendation === 'MAYBE' ? 'bg-yellow-600/20 border-yellow-500 text-white' : 'border-gray-600 text-gray-500'}`}><FiStar size={20} /> VER MÁS</button>
+                                    <button type="button" onClick={() => setEvaData({ ...evaData, recommendation: 'NO_HIRE' })} className={`p-3 rounded-lg border flex flex-col items-center gap-1 ${evaData.recommendation === 'NO_HIRE' ? 'bg-red-600/20 border-red-500 text-white' : 'border-gray-600 text-gray-500'}`}><FiXCircle size={20} /> RECHAZAR</button>
                                 </div>
                             </div>
                             <div className="flex justify-end pt-4 gap-3"><button type="button" onClick={() => setShowEvaModal(false)} className="px-4 py-2 text-gray-400">Cancelar</button><button type="submit" className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-bold">Registrar Evaluación</button></div>
@@ -291,7 +291,7 @@ const ApplicationDetails = () => {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 p-8 rounded-xl max-w-lg w-full border border-gray-700 shadow-2xl overflow-y-auto max-h-[90vh]">
                         <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
-                            <FiBriefcase className="text-purple-400" /> Contratar {app.firstName}
+                            <FiBriefcase className="text-white" /> Contratar {app.firstName}
                         </h2>
                         <p className="text-gray-400 mb-6 text-sm">
                             Se creará una cuenta de empleado automáticamente. La contraseña por defecto será la Cédula/DNI.

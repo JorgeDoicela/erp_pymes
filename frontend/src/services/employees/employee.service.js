@@ -139,3 +139,13 @@ export const deleteSkill = async (id, token) => {
     }
 };
 
+// RNF-UI: Termination
+export const terminateEmployee = async (id, exitData, token) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    try {
+        const response = await api.post(`/employees/${id}/terminate`, exitData, config);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al dar de baja empleado');
+    }
+};

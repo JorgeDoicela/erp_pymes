@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
+import notificationService from '../../services/notifications/notificationService.js';
 
 const prisma = new PrismaClient();
 
@@ -87,9 +88,48 @@ export const assignEvaluation = async (req, res) => {
                         reviewers: true
                     }
                 });
-                assignments.push(evaluation);
+                // 3. Notify Employee (Self-Evaluation if applicable, or just general assignment info)
+                // Assuming employee is also a reviewer (Self-Review) or just notified of the process
+                const employee = await tx.employee.findUnique({ where: { id: empId } });
+
+                // 4. Notify Reviewers
+                for (const reviewerId of evaluatorIds) {
+                    const reviewer = await tx.employee.findUnique({ where: { id: reviewerId } });
+                    if (reviewer) {
+                        try {
+                            // Use tx-safe values, but notification service uses independent prisma call usually. 
+                            // Ideally we pass the transaction to notification service or run after transaction commit.
+                            // For simplicity/safety, we'll queue them or run them await, assuming failure here shouldn't rollback the whole assignment? 
+                            // Better: Run AFTER transaction to avoid side-effects inside tx if not fully integrated.
+                            // BUT, here we are inside a loop inside a tx. 
+                            // We will collect data to notify AFTER the transaction.
+                        } catch (e) { }
+                    }
+                }
+                assignments.push({ evaluation, employee, evaluatorIds });
             }
         });
+
+        // Send Notifications AFTER Transaction (Best Practice to avoid locking/delays)
+        for (const item of assignments) {
+            const { evaluation, employee, evaluatorIds } = item;
+
+            // Notify Reviewers
+            for (const reviewerId of evaluatorIds) {
+                const reviewer = await prisma.employee.findUnique({ where: { id: reviewerId } });
+                if (reviewer) {
+                    await notificationService.sendEvaluationAssigned({
+                        recipientId: reviewer.id,
+                        recipientEmail: reviewer.email,
+                        title: "Evaluación de Desempeño", // Or fetch template title if available in scope
+                        employeeName: `${employee.firstName} ${employee.lastName}`,
+                        endDate: evaluation.endDate,
+                        evaluationId: evaluation.id,
+                        role: reviewer.id === employee.id ? 'SELF' : 'REVIEWER'
+                    });
+                }
+            }
+        }
 
         res.status(201).json({
             message: `Se asignaron ${assignments.length} evaluaciones correctamente`,
@@ -194,6 +234,15 @@ export const submitAssessment = async (req, res) => {
             console.log(`[NOTIFICATION] HR Notified: Evaluation ${review.evaluationId} completed by ${evaluator?.firstName} ${evaluator?.lastName}`);
             // In future: sendEmail(hrEmail, "Evaluation Completed", ...)
         }
+
+        // RNF-14: Audit Log (DISABLED - AuditLog model not in schema)
+        // await auditRepository.createLog({
+        //     entity: 'Evaluation',
+        //     entityId: review.evaluationId,
+        //     action: 'SUBMIT_ASSESSMENT',
+        //     performedBy: userId,
+        //     details: `Submitted assessment for evaluation ${review.evaluationId}. Status: ${status || 'COMPLETED'}`
+        // });
 
         res.json(updatedReview);
 

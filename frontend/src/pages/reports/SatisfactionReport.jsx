@@ -39,7 +39,7 @@ const SatisfactionReport = () => {
     return (
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <h1 className="text-3xl font-bold mb-2 flex items-center">
-                <FiHeart className="mr-3 text-pink-500" /> Clima Laboral: {data.surveyTitle}
+                <FiHeart className="mr-3 text-white" /> Clima Laboral: {data.surveyTitle}
             </h1>
             <p className="text-gray-400 mb-8">Análisis de Satisfacción y Cultura Organizacional</p>
 

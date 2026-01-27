@@ -64,6 +64,8 @@ model Employee {
   postedVacancies JobVacancy[]
   interviews    Interview[]
   candidateEvaluations CandidateEvaluation[]
+  notifications Notification[]
+  preferences   NotificationPreference?
 
   @@index([email])
   @@index([department])
@@ -612,4 +614,36 @@ model ClimateResponse {
 
   @@index([surveyId])
   @@map("climate_responses")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  recipientId String
+  recipient   Employee @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  type        String   // "CONTRACT_EXPIRATION", etc.
+  isRead      Boolean  @default(false)
+  
+  relatedEntityId String? // e.g., Contract ID
+  relatedEntity   String? // e.g., "Contract"
+
+  createdAt   DateTime @default(now())
+
+  @@index([recipientId])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id          String   @id @default(cuid())
+  employeeId  String   @unique
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  // Storing as JSON: { "TYPE": { "email": boolean, "inApp": boolean } }
+  preferences Json
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("notification_preferences")
 }

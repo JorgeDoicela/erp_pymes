@@ -35,6 +35,7 @@ const upload = multer({
 
 // Rutas
 router.post('/', upload.single('document'), contractController.create);
+router.get('/expiring', contractController.getExpiring);
 router.get('/employee/:employeeId', contractController.getByEmployee);
 router.get('/download/:filename', contractController.downloadContract);
 

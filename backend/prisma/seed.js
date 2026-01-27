@@ -15,6 +15,7 @@ import { seedAbsences } from './seeds/absences.js';
 import { seedDocuments } from './seeds/documents.js';
 import { seedAudit } from './seeds/audit.js';
 import { seedPayrollConfig } from './seeds/payroll_config.js';
+import { seedNotifications } from './seeds/notifications.js';
 
 const prisma = new PrismaClient();
 
@@ -112,6 +113,11 @@ async function main() {
 
     if (moduleToRun === 'all' || moduleToRun === 'audit') {
         await seedAudit(prisma, allEmployees);
+    }
+
+    // 6. Notifications (Always run if admin exists, or if module is notifications)
+    if (moduleToRun === 'all' || moduleToRun === 'notifications') {
+        await seedNotifications(prisma, admin, allEmployees);
     }
 
     console.log('SEED FINISHED.');

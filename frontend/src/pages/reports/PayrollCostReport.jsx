@@ -38,7 +38,7 @@ const PayrollCostReport = () => {
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold flex items-center">
-                    <FiDollarSign className="mr-3 text-yellow-500" /> Costos de Nómina
+                    <FiDollarSign className="mr-3 text-white" /> Costos de Nómina
                 </h1>
 
                 <form onSubmit={handleFilter} className="flex gap-4 items-end bg-gray-800 p-4 rounded-xl border border-gray-700">
@@ -134,7 +134,23 @@ const PayrollCostReport = () => {
             </div>
 
             <div className="flex justify-end">
-                <button className="text-blue-400 hover:text-white flex items-center gap-2">
+                <button
+                    onClick={() => {
+                        if (!data) return;
+                        // Basic CSV Generation
+                        const headers = ["Periodo,CostoTotal,SalarioBase,HorasExtra\n"];
+                        const rows = data.charts.trend.map(d => `${d.name},${d.total},${d.salary},${d.overtime}`);
+                        const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
+                        const encodedUri = encodeURI(csvContent);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", encodedUri);
+                        link.setAttribute("download", "reporte_costos_nomina.csv");
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }}
+                    className="text-blue-400 hover:text-white flex items-center gap-2"
+                >
                     <FiDownload /> Descargar Reporte Completo (CSV)
                 </button>
             </div>

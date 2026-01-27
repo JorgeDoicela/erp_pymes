@@ -1,5 +1,4 @@
 import employeeRepository from '../../repositories/employees/employeeRepository.js';
-import auditRepository from '../../repositories/audit/auditRepository.js';
 
 /**
  * EmployeeService
@@ -121,15 +120,16 @@ export class EmployeeService {
       }
     });
 
-    if (userId && Object.keys(changes).length > 0) {
-      await auditRepository.createLog({
-        entity: 'Employee',
-        entityId: id,
-        action: 'UPDATE',
-        performedBy: userId,
-        details: changes
-      });
-    }
+    // Audit logging disabled
+    // if (userId && Object.keys(changes).length > 0) {
+    //   await auditRepository.createLog({
+    //     entity: 'Employee',
+    //     entityId: id,
+    //     action: 'UPDATE',
+    //     performedBy: userId,
+    //     details: changes
+    //   });
+    // }
 
     return updatedEmployee;
   }
@@ -261,7 +261,8 @@ export class EmployeeService {
    * @returns {Promise<Array>} Historial de cambios
    */
   async getEmployeeHistory(id) {
-    return await auditRepository.getLogsByEntityId(id);
+    // Audit logging disabled - return empty array
+    return [];
   }
 
   /**

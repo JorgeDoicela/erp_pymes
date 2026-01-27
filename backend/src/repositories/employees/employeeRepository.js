@@ -49,16 +49,20 @@ export class EmployeeRepository {
           contractType, // Mantener compatibilidad
           hireDate: new Date(hireDate),
           salary: encryptedSalary,
+          bankName: data.bankName ? encrypt(data.bankName) : null,
+          accountNumber: data.accountNumber ? encrypt(data.accountNumber) : null,
           contracts: {
             create: initialContract
           }
         },
       });
 
-      // Desencriptar el salario en la respuesta
+      // Desencriptar el salario y datos sensibles en la respuesta
       return {
         ...employee,
         salary: decryptSalary(employee.salary),
+        bankName: employee.bankName ? decrypt(employee.bankName) : null,
+        accountNumber: employee.accountNumber ? decrypt(employee.accountNumber) : null,
       };
     } catch (error) {
       throw new Error(`Error al crear empleado: ${error.message}`);
@@ -93,6 +97,8 @@ export class EmployeeRepository {
       return {
         ...employee,
         salary: decryptSalary(employee.salary),
+        bankName: employee.bankName ? decrypt(employee.bankName) : null,
+        accountNumber: employee.accountNumber ? decrypt(employee.accountNumber) : null,
       };
     } catch (error) {
       throw new Error(`Error al obtener empleado: ${error.message}`);
@@ -239,9 +245,14 @@ export class EmployeeRepository {
       // Preparar datos a actualizar del Empleado
       const updateData = { ...rest };
 
-      // Si se incluye salario, encriptarlo para el Empleado
       if (salary !== undefined) {
         updateData.salary = encryptSalary(salary);
+      }
+      if (updateData.bankName) {
+        updateData.bankName = encrypt(updateData.bankName);
+      }
+      if (updateData.accountNumber) {
+        updateData.accountNumber = encrypt(updateData.accountNumber);
       }
 
       // Transacción: Actualizar Empleado y, si es necesario, el Contrato Activo
@@ -279,6 +290,8 @@ export class EmployeeRepository {
       return {
         ...result,
         salary: decryptSalary(result.salary),
+        bankName: result.bankName ? decrypt(result.bankName) : null,
+        accountNumber: result.accountNumber ? decrypt(result.accountNumber) : null,
       };
     } catch (error) {
       if (error.code === 'P2025') {

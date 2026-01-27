@@ -1,17 +1,18 @@
 
 
 import { useNavigate } from 'react-router-dom';
+import { FiUser, FiClock, FiCalendar, FiDollarSign, FiClipboard, FiTarget } from 'react-icons/fi';
 
 function EmployeeDashboard({ user, onLogout }) {
     const navigate = useNavigate();
 
     const actions = [
-        { title: 'Mi Perfil', icon: '', color: 'bg-blue-500', desc: 'Ver y editar información personal', path: '/profile' },
-        { title: 'Asistencia', icon: '', color: 'bg-purple-500', desc: 'Registrar entrada/salida y ver historial', path: '/empleado/asistencia' },
-        { title: 'Permisos', icon: '', color: 'bg-pink-500', desc: 'Solicitar ausencias y ver estado', path: '/empleado/ausencias' },
-        { title: 'Mis Pagos', icon: '', color: 'bg-green-500', desc: 'Descargar recibos de nómina', path: '/my-payments' },
-        { title: 'Evaluaciones', icon: '', color: 'bg-orange-500', desc: 'Realizar autoevaluaciones y ver resultados', path: '/performance/my-evaluations' },
-        { title: 'Mis Objetivos', icon: '', color: 'bg-cyan-500', desc: 'Definir y seguir objetivos SMART', path: '/performance/goals' },
+        { title: 'Mi Perfil', icon: <FiUser />, color: 'bg-blue-500', desc: 'Ver y editar información personal', path: '/profile' },
+        { title: 'Asistencia', icon: <FiClock />, color: 'bg-purple-500', desc: 'Registrar entrada/salida y ver historial', path: '/empleado/asistencia' },
+        { title: 'Permisos', icon: <FiCalendar />, color: 'bg-pink-500', desc: 'Solicitar ausencias y ver estado', path: '/empleado/ausencias' },
+        { title: 'Mis Pagos', icon: <FiDollarSign />, color: 'bg-green-500', desc: 'Descargar recibos de nómina', path: '/my-payments' },
+        { title: 'Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-500', desc: 'Realizar autoevaluaciones y ver resultados', path: '/performance/my-evaluations' },
+        { title: 'Mis Objetivos', icon: <FiTarget />, color: 'bg-cyan-500', desc: 'Definir y seguir objetivos SMART', path: '/performance/goals' },
     ]
 
     return (
@@ -78,11 +79,17 @@ function EmployeeDashboard({ user, onLogout }) {
                             <span></span> Novedades - En Proceso
                         </h3>
                         <div className="space-y-4">
-                            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                            <div
+                                onClick={() => navigate('/performance/my-evaluations')}
+                                className="p-4 rounded-xl bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                            >
                                 <p className="text-sm font-medium text-blue-300 mb-1">Nueva Evaluación</p>
                                 <p className="text-sm text-slate-300">Tienes una evaluación de desempeño pendiente por completar.</p>
                             </div>
-                            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                            <div
+                                onClick={() => navigate('/my-payments')}
+                                className="p-4 rounded-xl bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                            >
                                 <p className="text-sm font-medium text-green-300 mb-1">Pago Procesado</p>
                                 <p className="text-sm text-slate-300">Tu nómina del mes ha sido depositada exitosamente.</p>
                             </div>

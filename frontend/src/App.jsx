@@ -1,42 +1,64 @@
-import { useState } from 'react'
+import { useState, Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast';
-import Home from './pages/landing/Home.jsx'
-import Login from './pages/auth/Login.jsx'
-import AdminDashboard from './pages/dashboard/AdminDashboard.jsx'
-import EmployeeDashboard from './pages/dashboard/EmployeeDashboard.jsx'
-import RegisterEmployee from './pages/employees/RegisterEmployee.jsx'
-import EmployeeList from './pages/employees/EmployeeList.jsx'
-import EmployeeProfile from './pages/employees/EmployeeProfile.jsx'
-import AttendancePage from './pages/attendance/AttendancePage.jsx'
-import EmployeeAttendance from './pages/dashboard/views/EmployeeAttendance.jsx'
-import ShiftManagement from './pages/attendance/ShiftManagement.jsx'
-import EmployeeAbsences from './pages/dashboard/views/EmployeeAbsences.jsx'
-import AdminAbsences from './pages/attendance/AdminAbsences.jsx'
-import AttendanceReports from './pages/reports/AttendanceReports.jsx'
-import PayrollConfiguration from './pages/payroll/PayrollConfiguration.jsx'
-import PayrollGenerator from './pages/payroll/PayrollGenerator.jsx'
-import MyPayments from './pages/payroll/MyPayments.jsx'
-import BenefitsManagement from './pages/payroll/BenefitsManagement.jsx'
-import EvaluationDashboard from './pages/performance/EvaluationDashboard.jsx'
-import CreateEvaluation from './pages/performance/CreateEvaluation.jsx'
-import AssignEvaluation from './pages/performance/AssignEvaluation.jsx'
-import MyEvaluations from './pages/performance/MyEvaluations.jsx'
-import TakeEvaluation from './pages/performance/TakeEvaluation.jsx'
-import EvaluationResults from './pages/performance/EvaluationResults.jsx'
-import MyGoals from './pages/performance/MyGoals.jsx'
-import RecruitmentDashboard from './pages/recruitment/RecruitmentDashboard.jsx'
-import CreateJobVacancy from './pages/recruitment/CreateJobVacancy.jsx'
-import CareersPage from './pages/recruitment/CareersPage.jsx'
-import JobApplication from './pages/recruitment/JobApplication.jsx'
-import VacancyDetails from './pages/recruitment/VacancyDetails.jsx'
-import ApplicationDetails from './pages/recruitment/ApplicationDetails.jsx'
-import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard.jsx'
-import TurnoverReport from './pages/reports/TurnoverReport.jsx'
-import PerformanceReport from './pages/reports/PerformanceReport.jsx'
-import PayrollCostReport from './pages/reports/PayrollCostReport.jsx'
-import SatisfactionReport from './pages/reports/SatisfactionReport.jsx'
-import CustomReport from './pages/reports/CustomReport.jsx'
+import Loading from './components/Loading.jsx';
+
+// Lazy Load Pages
+const Home = lazy(() => import('./pages/landing/Home.jsx'));
+const Login = lazy(() => import('./pages/auth/Login.jsx'));
+
+// Dashboard
+const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard.jsx'));
+const EmployeeDashboard = lazy(() => import('./pages/dashboard/EmployeeDashboard.jsx'));
+
+// Employees
+const RegisterEmployee = lazy(() => import('./pages/employees/RegisterEmployee.jsx'));
+const EmployeeList = lazy(() => import('./pages/employees/EmployeeList.jsx'));
+const EmployeeProfile = lazy(() => import('./pages/employees/EmployeeProfile.jsx'));
+
+// Attendance
+const AttendancePage = lazy(() => import('./pages/attendance/AttendancePage.jsx'));
+const EmployeeAttendance = lazy(() => import('./pages/dashboard/views/EmployeeAttendance.jsx'));
+const ShiftManagement = lazy(() => import('./pages/attendance/ShiftManagement.jsx'));
+const EmployeeAbsences = lazy(() => import('./pages/dashboard/views/EmployeeAbsences.jsx'));
+const AdminAbsences = lazy(() => import('./pages/attendance/AdminAbsences.jsx'));
+const AttendanceReports = lazy(() => import('./pages/reports/AttendanceReports.jsx'));
+
+// Payroll
+const PayrollConfiguration = lazy(() => import('./pages/payroll/PayrollConfiguration.jsx'));
+const PayrollGenerator = lazy(() => import('./pages/payroll/PayrollGenerator.jsx'));
+const MyPayments = lazy(() => import('./pages/payroll/MyPayments.jsx'));
+const BenefitsManagement = lazy(() => import('./pages/payroll/BenefitsManagement.jsx'));
+
+// Performance
+const EvaluationDashboard = lazy(() => import('./pages/performance/EvaluationDashboard.jsx'));
+const CreateEvaluation = lazy(() => import('./pages/performance/CreateEvaluation.jsx'));
+const AssignEvaluation = lazy(() => import('./pages/performance/AssignEvaluation.jsx'));
+const MyEvaluations = lazy(() => import('./pages/performance/MyEvaluations.jsx'));
+const TakeEvaluation = lazy(() => import('./pages/performance/TakeEvaluation.jsx'));
+const EvaluationResults = lazy(() => import('./pages/performance/EvaluationResults.jsx'));
+const MyGoals = lazy(() => import('./pages/performance/MyGoals.jsx'));
+
+// Recruitment
+const RecruitmentDashboard = lazy(() => import('./pages/recruitment/RecruitmentDashboard.jsx'));
+const CreateJobVacancy = lazy(() => import('./pages/recruitment/CreateJobVacancy.jsx'));
+const CareersPage = lazy(() => import('./pages/recruitment/CareersPage.jsx'));
+const JobApplication = lazy(() => import('./pages/recruitment/JobApplication.jsx'));
+const VacancyDetails = lazy(() => import('./pages/recruitment/VacancyDetails.jsx'));
+const ApplicationDetails = lazy(() => import('./pages/recruitment/ApplicationDetails.jsx'));
+
+// Analytics
+const AnalyticsDashboard = lazy(() => import('./pages/analytics/AnalyticsDashboard.jsx'));
+const TurnoverReport = lazy(() => import('./pages/reports/TurnoverReport.jsx'));
+const PerformanceReport = lazy(() => import('./pages/reports/PerformanceReport.jsx'));
+const PayrollCostReport = lazy(() => import('./pages/reports/PayrollCostReport.jsx'));
+const SatisfactionReport = lazy(() => import('./pages/reports/SatisfactionReport.jsx'));
+const CustomReport = lazy(() => import('./pages/reports/CustomReport.jsx'));
+
+// Others
+const ExpiringContracts = lazy(() => import('./pages/contracts/ExpiringContracts.jsx'));
+const NotificationsPage = lazy(() => import('./pages/notifications/NotificationsPage.jsx'));
+const NotificationSettings = lazy(() => import('./pages/notifications/NotificationSettings.jsx'));
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -80,7 +102,7 @@ function App() {
   }
 
   return (
-    <>
+    <Suspense fallback={<Loading />}>
       <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -173,6 +195,30 @@ function App() {
           element={
             <RequireAuth role="admin">
               <EmployeeProfile token={auth.token} user={auth.user} />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/notifications"
+          element={
+            <RequireAuth role="admin">
+              <NotificationsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/notifications/settings"
+          element={
+            <RequireAuth role="admin">
+              <NotificationSettings />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/contracts/expiring"
+          element={
+            <RequireAuth role="admin">
+              <ExpiringContracts />
             </RequireAuth>
           }
         />
@@ -351,7 +397,7 @@ function App() {
       <footer className="mt-12 text-gray-600 text-sm text-center w-full pb-6">
         &copy; {new Date().getFullYear()} - Sistema de Recursos Humanos - Mendoza y Doicela
       </footer>
-    </>
+    </Suspense>
   )
 }
 

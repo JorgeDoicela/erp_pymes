@@ -70,14 +70,36 @@ import fs from 'fs';
 const uploadsPath = path.resolve(__dirname, '../uploads');
 if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 
-app.use('/uploads', express.static(uploadsPath));
-console.log('Serving static files from:', uploadsPath); // DEBUG
+// Static files served protected below
 
-// Middleware de logging
+// Middleware de logging (Request Logger original)
 app.use(requestLogger);
+
+// RNF-13: Performance Logging
+import { performanceMiddleware } from './middleware/performance.middleware.js';
+app.use(performanceMiddleware);
 
 // Middleware de validación
 app.use(validateBodyNotEmpty);
+
+// Seguridad: HSTS (Strict-Transport-Security)
+app.use((req, res, next) => {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    // Prevención básica de XSS y Sniffing
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    next();
+});
+
+// RNF-12: Proteger Uploads
+import { authenticate } from './middleware/auth.middleware.js';
+import { protectStaticFiles } from './middleware/security.middleware.js';
+
+// Servir archivos estáticos de forma protegida
+// Antes: app.use('/uploads', express.static(uploadsPath));
+// Ahora:
+app.use('/uploads', authenticate, protectStaticFiles, express.static(uploadsPath));
+console.log('Serving protected static files from:', uploadsPath);
 
 // Rutas
 app.use(indexRoutes);

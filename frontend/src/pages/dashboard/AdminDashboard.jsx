@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+import { FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift, FiClipboard, FiBriefcase, FiFileText, FiBarChart2 } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
+import NotificationBell from '../../components/common/NotificationBell';
+import { FiTrendingUp, FiAlertTriangle, FiCheckCircle, FiActivity, FiCpu } from 'react-icons/fi';
 
 function AdminDashboard({ user, onLogout }) {
     const navigate = useNavigate();
@@ -18,23 +21,23 @@ function AdminDashboard({ user, onLogout }) {
         }
     }, [location]);
     const modules = [
-        { title: 'Empleados', icon: '', color: 'bg-blue-500', path: '/admin/employees' },
-        { title: 'Asistencia', icon: '', color: 'bg-indigo-500', path: '/attendance' },
-        { title: 'Turnos', icon: '', color: 'bg-purple-500', path: '/admin/shifts' },
-        { title: 'Ausencias', icon: '', color: 'bg-rose-500', path: '/admin/absences' },
-        { title: 'Nómina', icon: '', color: 'bg-green-500', path: '/admin/payroll/generator' },
-        { title: 'Beneficios', icon: '', color: 'bg-yellow-500', path: '/admin/payroll/benefits' },
-        { title: 'Evaluaciones', icon: '', color: 'bg-orange-500', path: '/performance' },
-        { title: 'Mis Evaluaciones', icon: '', color: 'bg-orange-600', path: '/performance/my-evaluations' },
-        { title: 'Reclutamiento', icon: '', color: 'bg-pink-500', path: '/recruitment' },
-        { title: 'Reportes', icon: '', color: 'bg-cyan-500', path: '/admin/reports' },
-        { title: 'Analíticas', icon: '', color: 'bg-indigo-600', path: '/analytics' },
+        { title: 'Empleados', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
+        { title: 'Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
+        { title: 'Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },
+        { title: 'Ausencias', icon: <FiUserX />, color: 'bg-rose-500', path: '/admin/absences' },
+        { title: 'Nómina', icon: <FiDollarSign />, color: 'bg-green-500', path: '/admin/payroll/generator' },
+        { title: 'Beneficios', icon: <FiGift />, color: 'bg-yellow-500', path: '/admin/payroll/benefits' },
+        { title: 'Evaluaciones', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
+        { title: 'Mis Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-600', path: '/performance/my-evaluations' },
+        { title: 'Reclutamiento', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
+        { title: 'Reportes', icon: <FiFileText />, color: 'bg-cyan-500', path: '/admin/reports' },
+        { title: 'Analíticas', icon: <FiBarChart2 />, color: 'bg-indigo-600', path: '/analytics' },
     ]
 
     const insights = [
-        { type: 'warning', message: '3 contratos vencen esta semana', icon: '' },
-        { type: 'info', message: 'Ausentismo aumentó un 5% este mes', icon: '' },
-        { type: 'success', message: 'Nómina procesada correctamente', icon: '' },
+        { type: 'warning', message: '3 contratos vencen esta semana', icon: <FiAlertTriangle className="text-white" />, path: '/admin/contracts/expiring' },
+        { type: 'info', message: 'Ausentismo aumentó un 5% este mes', icon: <FiTrendingUp className="text-white" />, path: '/admin/absences' },
+        { type: 'success', message: 'Nómina procesada correctamente', icon: <FiCheckCircle className="text-white" />, path: '/admin/payroll/generator' },
     ]
 
     return (
@@ -57,7 +60,7 @@ function AdminDashboard({ user, onLogout }) {
                             onClick={() => navigate(mod.path)}
                             className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors text-left"
                         >
-                            <span>{mod.icon}</span>
+                            <span className="text-xl">{mod.icon}</span>
                             <span>{mod.title}</span>
                         </button>
                     ))}
@@ -84,7 +87,7 @@ function AdminDashboard({ user, onLogout }) {
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto">
-                <header className="h-16 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-8 sticky top-0 z-10">
+                <header className="h-16 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-8 sticky top-0 z-50">
                     <h2 className="text-xl font-semibold">Panel de Control</h2>
                     {successMsg && (
                         <div className="fixed top-20 right-8 z-50 animate-fade-in-down">
@@ -96,6 +99,7 @@ function AdminDashboard({ user, onLogout }) {
                         </div>
                     )}
                     <div className="flex items-center gap-4">
+                        <NotificationBell />
                         {/* Botón movido a Directorio de Empleados */}
                         <div className="md:hidden">
                             {/* Mobile menu button placeholder */}
@@ -111,7 +115,7 @@ function AdminDashboard({ user, onLogout }) {
 
                         <div className="relative z-10">
                             <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                                <span className="text-yellow-400"></span> Asistente Inteligente - En Proceso
+                                <span className="text-white"><FiCpu /></span> Asistente Inteligente
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {insights.map((insight, idx) => (
@@ -119,7 +123,10 @@ function AdminDashboard({ user, onLogout }) {
                                         <span className="text-2xl">{insight.icon}</span>
                                         <div>
                                             <p className="text-sm font-medium text-slate-200">{insight.message}</p>
-                                            <button className="text-xs text-blue-400 mt-2 hover:text-blue-300">
+                                            <button
+                                                onClick={() => navigate(insight.path)}
+                                                className="text-xs text-blue-400 mt-2 hover:text-blue-300 flex items-center gap-1"
+                                            >
                                                 Ver detalles →
                                             </button>
                                         </div>

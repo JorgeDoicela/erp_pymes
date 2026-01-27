@@ -5,8 +5,8 @@ class PayrollController {
         try {
             const { month, year } = req.body;
             if (!month || !year) return res.status(400).json({ message: 'Mes y año requeridos' });
-
-            const payroll = await payrollCalculationService.generatePayroll(month, year);
+            const userId = req.user?.id; // RNF-14 Audit
+            const payroll = await payrollCalculationService.generatePayroll(month, year, userId);
             res.status(201).json({ success: true, data: payroll, message: 'Nómina generada correctamente (Borrador)' });
         } catch (error) {
             console.error(error);
@@ -45,7 +45,9 @@ class PayrollController {
 
     async confirm(req, res) {
         try {
-            const payroll = await payrollCalculationService.confirmPayroll(req.params.id);
+            const { id } = req.params;
+            const userId = req.user?.id; // RNF-14 Audit
+            const payroll = await payrollCalculationService.confirmPayroll(id, userId);
             res.status(200).json({ success: true, data: payroll, message: 'Nómina aprobada' });
         } catch (error) {
             res.status(500).json({ success: false, message: 'Error al confirmar nómina' });

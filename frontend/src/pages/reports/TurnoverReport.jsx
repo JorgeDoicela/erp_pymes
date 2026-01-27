@@ -38,7 +38,7 @@ const TurnoverReport = () => {
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold flex items-center">
-                    <FiUserMinus className="mr-3 text-red-500" /> Reporte de Rotación
+                    <FiUserMinus className="mr-3 text-white" /> Reporte de Rotación
                 </h1>
 
                 <form onSubmit={handleFilter} className="flex gap-4 items-end bg-gray-800 p-4 rounded-xl border border-gray-700">
@@ -107,7 +107,24 @@ const TurnoverReport = () => {
             <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
                 <div className="p-6 border-b border-gray-700 flex justify-between">
                     <h3 className="font-bold text-lg">Detalle de Bajas</h3>
-                    <button className="text-sm text-blue-400 flex items-center hover:text-white"><FiDownload className="mr-1" /> Exportar Excel</button>
+                    <button
+                        onClick={() => {
+                            if (!data || !data.exitsList) return;
+                            const headers = ["Empleado,Departamento,FechaBaja,Tipo,Motivo\n"];
+                            const rows = data.exitsList.map(emp => `${emp.name},${emp.department},${new Date(emp.exitDate).toISOString().split('T')[0]},${emp.type},"${emp.reason}"`);
+                            const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
+                            const encodedUri = encodeURI(csvContent);
+                            const link = document.createElement("a");
+                            link.setAttribute("href", encodedUri);
+                            link.setAttribute("download", "reporte_rotacion.csv");
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }}
+                        className="text-sm text-blue-400 flex items-center hover:text-white"
+                    >
+                        <FiDownload className="mr-1" /> Exportar Excel
+                    </button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">

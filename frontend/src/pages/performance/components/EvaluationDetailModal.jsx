@@ -63,7 +63,7 @@ const EvaluationDetailModal = ({ isOpen, onClose, template }) => {
                     {template.instructions && (
                         <div className="bg-slate-800/30 rounded-xl p-5 border border-slate-700/50">
                             <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                <FiInfo className="text-blue-500" /> Instrucciones
+                                <FiInfo className="text-white" /> Instrucciones
                             </h3>
                             <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">
                                 {template.instructions}
@@ -74,7 +74,7 @@ const EvaluationDetailModal = ({ isOpen, onClose, template }) => {
                     {/* Scale Configuration */}
                     <div className="bg-slate-800/30 rounded-xl p-5 border border-slate-700/50">
                         <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <FiLayers className="text-purple-500" /> Escala de Evaluación
+                            <FiLayers className="text-white" /> Escala de Evaluación
                         </h3>
                         <div className="flex items-center gap-4 flex-wrap">
                             <div className="bg-slate-900 px-4 py-2 rounded-lg border border-slate-700">

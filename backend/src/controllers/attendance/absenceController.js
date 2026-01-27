@@ -1,4 +1,6 @@
 import { absenceService } from '../../services/attendance/absenceService.js';
+import notificationService from '../../services/notifications/notificationService.js';
+import prisma from '../../database/db.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -49,6 +51,21 @@ const createRequest = async (req, res, next) => {
             reason,
             file: req.file
         });
+
+        // NOTIFICATION: Notify Admins (Approvers)
+        const admins = await prisma.employee.findMany({ where: { role: 'admin', isActive: true } });
+        const employee = await prisma.employee.findUnique({ where: { id: targetEmployeeId } });
+
+        for (const admin of admins) {
+            await notificationService.sendAbsenceRequested({
+                recipientId: admin.id,
+                employeeName: `${employee.firstName} ${employee.lastName}`,
+                type: type,
+                startDate: startDate,
+                endDate: endDate,
+                requestId: request.id
+            });
+        }
 
         res.status(201).json({ success: true, data: request });
     } catch (error) {

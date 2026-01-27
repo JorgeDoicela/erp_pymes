@@ -175,7 +175,7 @@ const TakeEvaluation = () => {
                     </div>
 
                     <div className="bg-blue-900/20 rounded-xl p-4 text-blue-100 flex items-start gap-3">
-                        <FiAlertCircle className="mt-1 flex-shrink-0 text-blue-400" size={20} />
+                        <FiAlertCircle className="mt-1 flex-shrink-0 text-white" size={20} />
                         <div>
                             <p className="font-medium mb-1">Instrucciones:</p>
                             <p className="text-sm opacity-90">{template.instructions || 'Por favor evalúa cada competencia objetivamente basándote en el desempeño observado durante el periodo.'}</p>

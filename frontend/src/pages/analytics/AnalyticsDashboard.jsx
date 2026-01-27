@@ -32,7 +32,7 @@ const AnalyticsDashboard = () => {
     return (
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <h1 className="text-3xl font-bold mb-8 flex items-center">
-                <FiBarChart2 className="mr-3 text-blue-500" />
+                <FiBarChart2 className="mr-3 text-white" />
                 Dashboard de Indicadores RRHH
             </h1>
 
@@ -61,7 +61,7 @@ const AnalyticsDashboard = () => {
                         <p className="text-gray-400 text-sm">Total Empleados</p>
                         <p className="text-3xl font-bold">{kpis.totalEmployees}</p>
                     </div>
-                    <div className="bg-blue-900/50 p-3 rounded-lg text-blue-400"><FiUsers size={24} /></div>
+                    <div className="bg-blue-900/50 p-3 rounded-lg text-white"><FiUsers size={24} /></div>
                 </div>
 
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
@@ -69,7 +69,7 @@ const AnalyticsDashboard = () => {
                         <p className="text-gray-400 text-sm">Nuevos (Mes)</p>
                         <p className="text-3xl font-bold">{kpis.newHires}</p>
                     </div>
-                    <div className="bg-green-900/50 p-3 rounded-lg text-green-400"><FiUserPlus size={24} /></div>
+                    <div className="bg-green-900/50 p-3 rounded-lg text-white"><FiUserPlus size={24} /></div>
                 </div>
 
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
@@ -77,7 +77,7 @@ const AnalyticsDashboard = () => {
                         <p className="text-gray-400 text-sm">Vacantes Abiertas</p>
                         <p className="text-3xl font-bold">{kpis.openVacancies}</p>
                     </div>
-                    <div className="bg-purple-900/50 p-3 rounded-lg text-purple-400"><FiBriefcase size={24} /></div>
+                    <div className="bg-purple-900/50 p-3 rounded-lg text-white"><FiBriefcase size={24} /></div>
                 </div>
 
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
@@ -85,7 +85,7 @@ const AnalyticsDashboard = () => {
                         <p className="text-gray-400 text-sm">Nómina Estimada</p>
                         <p className="text-2xl font-bold text-green-400">${kpis.payrollTotal ? kpis.payrollTotal.toLocaleString() : '0'}</p>
                     </div>
-                    <div className="bg-yellow-900/50 p-3 rounded-lg text-yellow-500"><FiDollarSign size={24} /></div>
+                    <div className="bg-yellow-900/50 p-3 rounded-lg text-white"><FiDollarSign size={24} /></div>
                 </div>
             </div>
 

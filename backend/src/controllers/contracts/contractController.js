@@ -42,6 +42,16 @@ class ContractController {
         }
     }
 
+    async getExpiring(req, res) {
+        try {
+            const days = parseInt(req.query.days) || 30;
+            const contracts = await contractService.getExpiringContracts(days);
+            res.json({ success: true, data: contracts });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
     async downloadContract(req, res) {
         try {
             const { filename } = req.params;

@@ -1,7 +1,9 @@
 import prisma from '../../database/db.js';
 
+import { decrypt } from '../../utils/encryption.js';
+
 class PayrollCalculationService {
-    async generatePayroll(month, year) {
+    async generatePayroll(month, year, adminId) {
         // 1. Check if payroll already exists for this period
         // Period is 1st day of the month
         const periodDate = new Date(year, month - 1, 1);
@@ -44,6 +46,65 @@ class PayrollCalculationService {
             }
         });
 
+        // OPTIMIZATION (RNF-13): Batch Fetching to avoid N+1 queries
+        // -------------------------------------------------------------
+        const employeeIds = employees.map(e => e.id);
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0);
+
+        // a. Batch Fetch Attendance (Used for Absences count AND Records)
+        const allAttendance = await prisma.attendance.findMany({
+            where: {
+                employeeId: { in: employeeIds },
+                date: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            }
+        });
+
+        // Group by Employee
+        const attendanceMap = new Map(); // employeeId -> [records]
+        allAttendance.forEach(rec => {
+            if (!attendanceMap.has(rec.employeeId)) attendanceMap.set(rec.employeeId, []);
+            attendanceMap.get(rec.employeeId).push(rec);
+        });
+
+        // b. Batch Fetch Schedules
+        const allSchedules = await prisma.employeeSchedule.findMany({
+            where: {
+                employeeId: { in: employeeIds },
+                isActive: true,
+                OR: [
+                    { endDate: null },
+                    { endDate: { gte: startDate } }
+                ],
+                startDate: { lte: endDate }
+            },
+            include: { shift: true }
+        });
+
+        const scheduleMap = new Map();
+        allSchedules.forEach(sched => {
+            if (!scheduleMap.has(sched.employeeId)) scheduleMap.set(sched.employeeId, []);
+            scheduleMap.get(sched.employeeId).push(sched);
+        });
+
+        // c. Batch Fetch Benefits
+        const allBenefits = await prisma.employeeBenefit.findMany({
+            where: {
+                employeeId: { in: employeeIds },
+                status: 'ACTIVE'
+            }
+        });
+
+        const benefitMap = new Map();
+        allBenefits.forEach(ben => {
+            if (!benefitMap.has(ben.employeeId)) benefitMap.set(ben.employeeId, []);
+            benefitMap.get(ben.employeeId).push(ben);
+        });
+        // -------------------------------------------------------------
+
         const payrollDetails = [];
         let totalPayrollAmount = 0;
 
@@ -54,36 +115,12 @@ class PayrollCalculationService {
 
             const baseSalary = contract.salary;
 
-            // A. Attendance Data (Mocked or Real)
-            // Ideally we query Attendance model for count of 'Late', 'Absent', 'WorkedHours'
-            // For now, we assume 30 days unless absent
-            // Logic: Get 'Absent' count in the date range
-            const startDate = new Date(year, month - 1, 1);
-            const endDate = new Date(year, month, 0); // Last day of month
+            // A. Attendance Data (Optimized)
+            // Retrieve from Map
+            const records = attendanceMap.get(emp.id) || [];
 
-            const absences = await prisma.attendance.count({
-                where: {
-                    employeeId: emp.id,
-                    status: 'Falta',
-                    date: {
-                        gte: startDate,
-                        lte: endDate
-                    }
-                }
-            });
-
-            // Fetch attendance records for overtime calc
-
-            // Fetch attendance records for overtime calc
-            const records = await prisma.attendance.findMany({
-                where: {
-                    employeeId: emp.id,
-                    date: {
-                        gte: startDate,
-                        lte: endDate
-                    }
-                }
-            });
+            // Calculate absences in memory
+            const absences = records.filter(r => r.status === 'Falta').length;
 
             let workedDays = config.workingDays - absences; // Default 30 - absences
             if (workedDays < 0) workedDays = 0;
@@ -91,20 +128,8 @@ class PayrollCalculationService {
             let totalOvertimeHours = 0;
             let totalUndertimeHours = 0; // Hours not worked (e.g. worked 6 out of 8)
 
-            // Fetch schedules for this employee in this period
-            // Note: This is an approximation. Ideally we fetch all schedules overlapping the month.
-            const schedules = await prisma.employeeSchedule.findMany({
-                where: {
-                    employeeId: emp.id,
-                    isActive: true,
-                    OR: [
-                        { endDate: null },
-                        { endDate: { gte: startDate } }
-                    ],
-                    startDate: { lte: endDate }
-                },
-                include: { shift: true }
-            });
+            // Get Schedules from Map
+            const schedules = scheduleMap.get(emp.id) || [];
 
             records.forEach(rec => {
                 const hours = rec.workedHours || 0;
@@ -314,13 +339,8 @@ class PayrollCalculationService {
                 }
             });
 
-            // 2. Individual Benefits (RF-NOM-004)
-            const benefits = await prisma.employeeBenefit.findMany({
-                where: {
-                    employeeId: emp.id,
-                    status: 'ACTIVE'
-                }
-            });
+            // 2. Individual Benefits (RF-NOM-004) - Optimized
+            const benefits = benefitMap.get(emp.id) || [];
 
             benefits.forEach(benefit => {
                 employeeBonuses.push({
@@ -352,7 +372,6 @@ class PayrollCalculationService {
                 deductions: JSON.stringify(employeeDeductions),
                 netSalary: parseFloat(netSalary.toFixed(2))
             });
-
             totalPayrollAmount += netSalary;
         }
 
@@ -410,7 +429,7 @@ class PayrollCalculationService {
         });
     }
 
-    async confirmPayroll(id) {
+    async confirmPayroll(id, adminId) {
         const payroll = await prisma.payroll.findUnique({
             where: { id },
             include: { details: true }
@@ -432,10 +451,12 @@ class PayrollCalculationService {
             }
         }
 
-        return await prisma.payroll.update({
+        const updated = await prisma.payroll.update({
             where: { id },
             data: { status: 'APPROVED' }
         });
+
+        return updated;
     }
 
     async generateBankFile(id) {
@@ -456,12 +477,26 @@ class PayrollCalculationService {
         payroll.details.forEach(det => {
             const emp = det.employee;
             if (emp.bankName && emp.accountNumber) {
-                // Sanitize
-                const name = `${emp.firstName} ${emp.lastName}`.replace(/,/g, '');
-                const bank = emp.bankName.replace(/,/g, '');
+                // Sanitize and Decrypt
+                const firstName = emp.firstName || '';
+                const lastName = emp.lastName || '';
+                const name = `${firstName} ${lastName}`.replace(/,/g, '');
+
+                let bank = '';
+                let account = '';
+
+                try {
+                    bank = decrypt(emp.bankName).replace(/,/g, '');
+                    account = decrypt(emp.accountNumber);
+                } catch (e) {
+                    console.error(`Error decrypting bank info for employee ${emp.id}`, e);
+                    bank = 'ERROR_DECRYPT';
+                    account = 'ERROR_DECRYPT';
+                }
+
                 const amount = det.netSalary.toFixed(2);
 
-                csv += `${emp.identityCard},${name},${bank},${emp.accountType || 'AHORROS'},${emp.accountNumber},${amount},Nómina ${new Date(payroll.period).toLocaleDateString()}\n`;
+                csv += `${emp.identityCard},${name},${bank},${emp.accountType || 'AHORROS'},${account},${amount},Nómina ${new Date(payroll.period).toLocaleDateString()}\n`;
             }
         });
 

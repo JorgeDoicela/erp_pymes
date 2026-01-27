@@ -80,7 +80,7 @@ const RecruitmentDashboard = () => {
                                         <td className="p-6 text-gray-300">{v.department}</td>
                                         <td className="p-6 text-gray-300">{v.location}</td>
                                         <td className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => navigate(`/recruitment/${v.id}`)}>
-                                            <span className="flex items-center text-blue-400 font-bold"><FiUsers className="mr-2" /> Ver Candidatos</span>
+                                            <span className="flex items-center text-white font-bold"><FiUsers className="mr-2" /> Ver Candidatos</span>
                                         </td>
                                         <td className="p-6">
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${v.status === 'OPEN' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
@@ -88,10 +88,10 @@ const RecruitmentDashboard = () => {
                                             </span>
                                         </td>
                                         <td className="p-6 text-right space-x-2">
-                                            <button onClick={() => copyLink(v.id)} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-blue-400" title="Copiar Enlace">
+                                            <button onClick={() => copyLink(v.id)} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white" title="Copiar Enlace">
                                                 <FiGlobe />
                                             </button>
-                                            <button onClick={() => toggleStatus(v.id, v.status)} className={`p-2 rounded-lg ${v.status === 'OPEN' ? 'bg-red-900/30 text-red-400 hover:bg-red-900/50' : 'bg-green-900/30 text-green-400 hover:bg-green-900/50'}`} title={v.status === 'OPEN' ? 'Cerrar Vacante' : 'Reabrir Vacante'}>
+                                            <button onClick={() => toggleStatus(v.id, v.status)} className={`p-2 rounded-lg ${v.status === 'OPEN' ? 'bg-red-900/30 text-white hover:bg-red-900/50' : 'bg-green-900/30 text-white hover:bg-green-900/50'}`} title={v.status === 'OPEN' ? 'Cerrar Vacante' : 'Reabrir Vacante'}>
                                                 {v.status === 'OPEN' ? <FiSlash /> : <FiCheckCircle />}
                                             </button>
                                         </td>

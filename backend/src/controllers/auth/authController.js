@@ -14,6 +14,17 @@ export const login = async (req, res) => {
         });
 
         if (!user) {
+            // Audit logging disabled
+            // await prisma.auditLog.create({
+            //     data: {
+            //         entity: 'Auth',
+            //         entityId: 'UNKNOWN',
+            //         action: 'FAILED_LOGIN',
+            //         performedBy: 'System',
+            //         details: JSON.stringify({ email, reason: 'User not found' }),
+            //     }
+            // });
+
             return res.status(401).json({
                 success: false,
                 message: 'Credenciales inválidas',
@@ -23,6 +34,17 @@ export const login = async (req, res) => {
         // Verificar contraseña
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            // Audit logging disabled
+            // await prisma.auditLog.create({
+            //     data: {
+            //         entity: 'Auth',
+            //         entityId: user.id,
+            //         action: 'FAILED_LOGIN',
+            //         performedBy: 'System',
+            //         details: JSON.stringify({ email, reason: 'Invalid password' }),
+            //     }
+            // });
+
             return res.status(401).json({
                 success: false,
                 message: 'Credenciales inválidas',

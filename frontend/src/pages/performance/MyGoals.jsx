@@ -102,7 +102,7 @@ const MyGoals = () => {
                                     {goal.priority === 'HIGH' ? 'ALTA' : goal.priority === 'MEDIUM' ? 'MEDIA' : 'BAJA'}
                                 </span>
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => handleDelete(goal.id)} className="text-gray-500 hover:text-red-400"><FiTrash2 /></button>
+                                    <button onClick={() => handleDelete(goal.id)} className="text-gray-500 hover:text-white"><FiTrash2 /></button>
                                 </div>
                             </div>
 
@@ -135,7 +135,7 @@ const MyGoals = () => {
 
                             <div className="flex justify-between items-center border-t border-gray-700 pt-4 mt-2">
                                 <span className={`text-xs flex items-center ${new Date(goal.deadline) < new Date() && goal.progress < 100 ? 'text-red-400' : 'text-gray-500'}`}>
-                                    <FiClock className="mr-1" /> vence: {new Date(goal.deadline).toLocaleDateString()}
+                                    <FiClock className="mr-1 text-gray-400" /> vence: {new Date(goal.deadline).toLocaleDateString()}
                                 </span>
 
                                 <button

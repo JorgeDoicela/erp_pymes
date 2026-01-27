@@ -36,7 +36,7 @@ const PerformanceReport = () => {
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold flex items-center">
-                    <FiActivity className="mr-3 text-purple-500" /> Desempeño Organizacional
+                    <FiActivity className="mr-3 text-white" /> Desempeño Organizacional
                 </h1>
 
                 <form onSubmit={handleFilter} className="flex gap-4 items-end bg-gray-800 p-4 rounded-xl border border-gray-700">
@@ -72,7 +72,7 @@ const PerformanceReport = () => {
                 {/* Top Performers */}
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold flex items-center text-green-400"><FiAward className="mr-2" /> Top Performers</h3>
+                        <h3 className="font-bold flex items-center text-white"><FiAward className="mr-2" /> Top Performers</h3>
                         <span className="text-xs text-gray-400">Mejores Puntuaciones</span>
                     </div>
                     <div className="space-y-3">
@@ -92,7 +92,7 @@ const PerformanceReport = () => {
                 {/* Training Needs */}
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold flex items-center text-red-400"><FiTrendingDown className="mr-2" /> Requieren Atención</h3>
+                        <h3 className="font-bold flex items-center text-white"><FiTrendingDown className="mr-2" /> Requieren Atención</h3>
                         <span className="text-xs text-gray-400">Puntuaciones Bajas</span>
                     </div>
                     <div className="space-y-3">
@@ -150,7 +150,24 @@ const PerformanceReport = () => {
             <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
                 <div className="p-6 border-b border-gray-700 flex justify-between items-center">
                     <h3 className="font-bold text-lg">Resultados Detallados</h3>
-                    <button className="text-sm text-blue-400 flex items-center hover:text-white"><FiDownload className="mr-1" /> Exportar</button>
+                    <button
+                        onClick={() => {
+                            if (!data || !data.detailedList) return;
+                            const headers = ["Empleado,Departamento,Cargo,Score,Recomendacion\n"];
+                            const rows = data.detailedList.map(item => `${item.employeeName},${item.department},${item.position},${item.score},"${item.recommendation}"`);
+                            const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
+                            const encodedUri = encodeURI(csvContent);
+                            const link = document.createElement("a");
+                            link.setAttribute("href", encodedUri);
+                            link.setAttribute("download", "reporte_desempeno.csv");
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }}
+                        className="text-sm text-blue-400 flex items-center hover:text-white"
+                    >
+                        <FiDownload className="mr-1" /> Exportar
+                    </button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -176,8 +193,8 @@ const PerformanceReport = () => {
                                     </td>
                                     <td className="p-4">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.score >= 4 ? 'bg-green-900 text-green-200' :
-                                                item.score >= 3 ? 'bg-yellow-900 text-yellow-200' :
-                                                    'bg-red-900 text-red-200'
+                                            item.score >= 3 ? 'bg-yellow-900 text-yellow-200' :
+                                                'bg-red-900 text-red-200'
                                             }`}>
                                             {item.recommendation}
                                         </span>
