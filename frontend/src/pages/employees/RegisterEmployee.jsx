@@ -10,6 +10,7 @@ import { validateCedula, validateEmail, validatePhone, validateSalary, validateD
 const RegisterEmployee = ({ token }) => {
     const navigate = useNavigate();
     const { registerEmployee, loading } = useEmployees(token);
+    const [hasSavedData, setHasSavedData] = useState(!!localStorage.getItem('employee_form_autosave'));
 
     // UI Local state for form
     const [formData, setFormData] = useState({
@@ -37,7 +38,11 @@ const RegisterEmployee = ({ token }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const updatedData = { ...formData, [name]: value };
+        setFormData(updatedData);
+
+        // Autosave a localStorage
+        localStorage.setItem('employee_form_autosave', JSON.stringify(updatedData));
 
         // Limpiar error de campo al escribir
         if (fieldErrors[name]) {
@@ -46,6 +51,20 @@ const RegisterEmployee = ({ token }) => {
                 delete newErrors[name];
                 return newErrors;
             });
+        }
+    };
+
+    // Función para recuperar datos manualmente si se desea (aunque se podría hacer en un useEffect)
+    const recoverData = () => {
+        const saved = localStorage.getItem('employee_form_autosave');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setFormData(parsed);
+                toast.success('Datos recuperados de la sesión anterior');
+            } catch (e) {
+                console.error('Error al recuperar autosave', e);
+            }
         }
     };
 
@@ -84,6 +103,7 @@ const RegisterEmployee = ({ token }) => {
             };
 
             await registerEmployee(dataToSend);
+            localStorage.removeItem('employee_form_autosave'); // Limpiar autosave al éxito
             toast.success('Empleado registrado exitosamente');
             navigate('/admin/employees');
         } catch (err) {
@@ -104,6 +124,18 @@ const RegisterEmployee = ({ token }) => {
                     {error && (
                         <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
                             {error}
+                        </div>
+                    )}
+
+                    {hasSavedData && (
+                        <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-100 flex justify-between items-center">
+                            <span>Tienes un borrador guardado automáticamente. ¿Deseas recuperarlo?</span>
+                            <button
+                                onClick={() => { recoverData(); setHasSavedData(false); }}
+                                className="bg-blue-600 hover:bg-blue-500 px-4 py-1 rounded text-sm font-bold transition-colors"
+                            >
+                                Recuperar Datos
+                            </button>
                         </div>
                     )}
 

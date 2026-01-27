@@ -385,47 +385,56 @@ class PayrollCalculationService {
     }
 
     async confirmPayroll(id, adminId) {
-        const payroll = await prisma.payroll.findUnique({
-            where: { id },
-            include: { details: true }
-        });
+        return await prisma.$transaction(async (tx) => {
+            const payroll = await tx.payroll.findUnique({
+                where: { id },
+                include: { details: true }
+            });
 
-        if (!payroll) throw new Error('Nómina no encontrada');
-        if (payroll.status === 'APPROVED') throw new Error('Nómina ya está aprobada');
+            if (!payroll) throw new Error('Nómina no encontrada');
+            if (payroll.status === 'APPROVED') throw new Error('Nómina ya está aprobada');
 
-        // RNF-20: Validation before confirmation
-        await this.validatePayrollTotals(id);
+            // RNF-20: Validation before confirmation
+            // Note: validatePayrollTotals uses prisma, we need to adapt it or use it carefully.
+            // For now, internal validation:
+            const calculatedTotal = payroll.details.reduce((acc, detail) => acc.plus(detail.netSalary), financial.from(0));
+            const storedTotal = financial.from(payroll.totalAmount);
 
-        // Process One-Time Benefits
-        for (const detail of payroll.details) {
-            const bonuses = JSON.parse(detail.bonuses || '[]');
-            for (const bonus of bonuses) {
-                if (bonus.benefitId && bonus.frequency === 'ONE_TIME') {
-                    await prisma.employeeBenefit.update({
-                        where: { id: bonus.benefitId },
-                        data: { status: 'PROCESSED' }
-                    });
+            if (!calculatedTotal.equals(storedTotal)) {
+                throw new Error(`Inconsistencia detectada: El total de detalles (${calculatedTotal}) no coincide con el total de cabecera (${storedTotal}).`);
+            }
+
+            // Process One-Time Benefits
+            for (const detail of payroll.details) {
+                const bonuses = JSON.parse(detail.bonuses || '[]');
+                for (const bonus of bonuses) {
+                    if (bonus.benefitId && bonus.frequency === 'ONE_TIME') {
+                        await tx.employeeBenefit.update({
+                            where: { id: bonus.benefitId },
+                            data: { status: 'PROCESSED' }
+                        });
+                    }
                 }
             }
-        }
 
-        const updated = await prisma.payroll.update({
-            where: { id },
-            data: { status: 'APPROVED' }
+            const updated = await tx.payroll.update({
+                where: { id },
+                data: { status: 'APPROVED' }
+            });
+
+            // Audit Log
+            if (adminId) {
+                await auditRepository.createLog({
+                    entity: 'Payroll',
+                    entityId: id,
+                    action: 'CONFIRM',
+                    performedBy: adminId,
+                    details: `Confirmed payroll ${id}`
+                }, tx).catch(err => console.error('Audit Log Error:', err));
+            }
+
+            return updated;
         });
-
-        // Audit Log
-        if (adminId) {
-            auditRepository.createLog({
-                entity: 'Payroll',
-                entityId: id,
-                action: 'CONFIRM',
-                performedBy: adminId,
-                details: `Confirmed payroll ${id}`
-            }).catch(err => console.error('Audit Log Error:', err));
-        }
-
-        return updated;
     }
 
     async generateBankFile(id) {
