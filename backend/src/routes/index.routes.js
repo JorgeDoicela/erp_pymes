@@ -31,8 +31,6 @@ router.get('/', (req, res) => {
 router.post('/seed', (req, res, next) => {
     runSeed(req, res).catch(next);
 });
-res.send('API EMPLIFI funcionando correctamente v1');
-});
 
 // Login real
 router.post('/auth/login', login);
