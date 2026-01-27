@@ -354,10 +354,26 @@ class PayrollCalculationService {
         return true;
     }
 
-    async getPayrolls() {
-        return await prisma.payroll.findMany({
-            orderBy: { period: 'desc' }
-        });
+    async getPayrolls(page = 1, limit = 10) {
+        const skip = (page - 1) * limit;
+        const [payrolls, total] = await Promise.all([
+            prisma.payroll.findMany({
+                skip,
+                take: limit,
+                orderBy: { period: 'desc' }
+            }),
+            prisma.payroll.count()
+        ]);
+
+        return {
+            data: payrolls,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     }
 
     async getPayrollsByEmployee(employeeId) {

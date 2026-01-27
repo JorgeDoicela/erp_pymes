@@ -190,6 +190,7 @@ model AuditLog {
   timestamp   DateTime @default(now())
 
   @@index([entityId])
+  @@index([timestamp])
   @@map("audit_logs")
 }
 
@@ -268,6 +269,7 @@ model Payroll {
   paymentDate DateTime?
   details     PayrollDetail[]
 
+  @@index([period])
   @@map("payrolls")
 }
 

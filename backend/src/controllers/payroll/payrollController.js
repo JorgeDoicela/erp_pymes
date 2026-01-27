@@ -16,8 +16,16 @@ class PayrollController {
 
     async getAll(req, res) {
         try {
-            const payrolls = await payrollCalculationService.getPayrolls();
-            res.status(200).json({ success: true, data: payrolls });
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+
+            const result = await payrollCalculationService.getPayrolls(page, limit);
+
+            res.status(200).json({
+                success: true,
+                data: result.data,
+                pagination: result.pagination
+            });
         } catch (error) {
             res.status(500).json({ success: false, message: 'Error al obtener nóminas' });
         }
