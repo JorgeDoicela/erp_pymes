@@ -3,7 +3,14 @@
     "builds": [
         {
             "src": "backend/src/server.js",
-            "use": "@vercel/node"
+            "use": "@vercel/node",
+            "config": {
+                "includeFiles": [
+                    "backend/prisma/**",
+                    "node_modules/prisma/build/**",
+                    "backend/node_modules/prisma/build/**"
+                ]
+            }
         },
         {
             "src": "frontend/package.json",
