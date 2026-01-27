@@ -112,7 +112,7 @@ export const deleteDocument = async (id, token) => {
 export const getProfile = async (token) => {
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
     try {
-        const response = await api.get('/employees/me/profile', config);
+        const response = await api.get('/employees/profile', config);
         return response.data;
     } catch (error) {
         throw new Error('Error al obtener perfil');
