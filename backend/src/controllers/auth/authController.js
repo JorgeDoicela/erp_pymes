@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../database/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import auditRepository from '../../repositories/audit/auditRepository.js';
-
-const prisma = new PrismaClient();
 
 export const login = async (req, res) => {
     try {
@@ -15,6 +13,7 @@ export const login = async (req, res) => {
         });
 
         if (!user) {
+            console.log(`[AUTH] Login failed: User not found (${email})`);
             auditRepository.createLog({
                 entity: 'Auth',
                 entityId: 'UNKNOWN',
@@ -32,6 +31,7 @@ export const login = async (req, res) => {
         // Verificar contraseña
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.log(`[AUTH] Login failed: Invalid password for ${email}`);
             auditRepository.createLog({
                 entity: 'Auth',
                 entityId: user.id,
@@ -54,6 +54,7 @@ export const login = async (req, res) => {
         );
 
         // Log successful login (Non-blocking)
+        console.log(`[AUTH] Login successful: ${email}`);
         auditRepository.createLog({
             entity: 'Auth',
             entityId: user.id,
@@ -75,10 +76,10 @@ export const login = async (req, res) => {
             token,
         });
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('[AUTH ERROR] Login Exception:', error);
         res.status(500).json({
             success: false,
-            message: 'Error en el servidor',
+            message: 'Error en el servidor: ' + error.message, // Temporarily expose for debugging, or keep generic if preferred. User asked for help, so exposing is better for now.
         });
     }
 };
