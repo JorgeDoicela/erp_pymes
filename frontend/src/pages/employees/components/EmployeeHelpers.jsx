@@ -24,7 +24,7 @@ export const getLevelColor = (level) => {
     }
 };
 
-export const InputField = ({ label, name, type = "text", value, onChange }) => (
+export const InputField = ({ label, name, type = "text", value, onChange, error }) => (
     <div className="flex flex-col">
         <label className="text-sm font-medium text-slate-400 mb-1">{label}</label>
         <input
@@ -32,7 +32,8 @@ export const InputField = ({ label, name, type = "text", value, onChange }) => (
             name={name}
             value={value}
             onChange={onChange}
-            className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className={`bg-slate-900 border ${error ? 'border-red-500' : 'border-slate-700'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500/50' : 'focus:ring-blue-500/50'}`}
         />
+        {error && <span className="text-xs text-red-400 mt-1">{error}</span>}
     </div>
 );

@@ -7,6 +7,7 @@ import SkillsTab from './components/SkillsTab';
 import ContractsTab from './components/ContractsTab';
 import { InfoItem, EmptyState } from './components/EmployeeHelpers';
 import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES } from '../../constants/employeeOptions';
+import { validateEmail, validatePhone, validateSalary, validateDates } from '../../utils/validationUtils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -29,6 +30,7 @@ const EmployeeProfile = ({ token, user }) => {
     const [activeTab, setActiveTab] = useState('personal');
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({});
+    const [fieldErrors, setFieldErrors] = useState({});
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -181,16 +183,48 @@ const EmployeeProfile = ({ token, user }) => {
             accountType: employee.accountType || 'Ahorros'
             // Identity Card not included -> Immutable
         });
+        setFieldErrors({});
         setIsEditing(true);
     };
 
     const handleEditChange = (e) => {
         const { name, value } = e.target;
         setEditForm(prev => ({ ...prev, [name]: value }));
+
+        if (fieldErrors[name]) {
+            setFieldErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
 
     const handleSaveEdit = async (e) => {
         e.preventDefault();
+
+        // Front-end Validation
+        const errors = {};
+        if (user?.role === 'admin') {
+            const emailErr = validateEmail(editForm.email);
+            if (emailErr) errors.email = emailErr;
+
+            const salaryErr = validateSalary(editForm.salary);
+            if (salaryErr) errors.salary = salaryErr;
+
+            const dateErr = validateDates(editForm.birthDate, editForm.hireDate);
+            if (dateErr) errors.dates = dateErr;
+        }
+
+        const phoneErr = validatePhone(editForm.phone);
+        if (phoneErr) errors.phone = phoneErr;
+
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            toast.error('Por favor corrija los errores en el formulario');
+            return;
+        }
+
         try {
             const targetId = id || employee?.id;
             await updateEmployee(targetId, {
@@ -480,6 +514,7 @@ const EmployeeProfile = ({ token, user }) => {
                 onChange={handleEditChange}
                 user={user}
                 employeeIdentityCard={employee.identityCard}
+                fieldErrors={fieldErrors}
             />
 
 

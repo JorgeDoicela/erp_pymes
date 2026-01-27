@@ -2,7 +2,7 @@ import React from 'react';
 import { InputField } from './EmployeeHelpers';
 import { CIVIL_STATUS_OPTIONS, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS } from '../../../constants/employeeOptions';
 
-const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, employeeIdentityCard }) => {
+const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, employeeIdentityCard, fieldErrors = {} }) => {
     if (!isOpen) return null;
 
     return (
@@ -20,18 +20,18 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                             <label className="text-xs text-slate-500 uppercase font-semibold block mb-1">Cédula</label>
                             <p className="text-slate-300">{employeeIdentityCard}</p>
                         </div>
-                        <InputField label="Nombre" name="firstName" value={editForm.firstName} onChange={onChange} />
-                        <InputField label="Apellido" name="lastName" value={editForm.lastName} onChange={onChange} />
+                        <InputField label="Nombre" name="firstName" value={editForm.firstName} onChange={onChange} error={fieldErrors.firstName} />
+                        <InputField label="Apellido" name="lastName" value={editForm.lastName} onChange={onChange} error={fieldErrors.lastName} />
                         {user?.role === 'admin' ? (
-                            <InputField label="Email" name="email" value={editForm.email} onChange={onChange} />
+                            <InputField label="Email" name="email" value={editForm.email} onChange={onChange} error={fieldErrors.email} />
                         ) : (
                             <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 opacity-70">
                                 <label className="text-xs text-slate-500 uppercase font-semibold block mb-1">Email</label>
                                 <p className="text-slate-300">{editForm.email}</p>
                             </div>
                         )}
-                        <InputField label="Teléfono" name="phone" value={editForm.phone} onChange={onChange} />
-                        <InputField label="Dirección" name="address" value={editForm.address} onChange={onChange} />
+                        <InputField label="Teléfono" name="phone" value={editForm.phone} onChange={onChange} error={fieldErrors.phone} />
+                        <InputField label="Dirección" name="address" value={editForm.address} onChange={onChange} error={fieldErrors.address} />
 
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-slate-400">Estado Civil</label>
@@ -44,7 +44,7 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                         </div>
 
                         {user?.role === 'admin' ? (
-                            <InputField label="Fecha de Nacimiento" name="birthDate" type="date" value={editForm.birthDate} onChange={onChange} />
+                            <InputField label="Fecha de Nacimiento" name="birthDate" type="date" value={editForm.birthDate} onChange={onChange} error={fieldErrors.birthDate} />
                         ) : (
                             <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 opacity-70">
                                 <label className="text-xs text-slate-500 uppercase font-semibold block mb-1">Fecha de Nacimiento</label>
@@ -69,9 +69,9 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                                         ))}
                                     </select>
                                 </div>
-                                <InputField label="Cargo" name="position" value={editForm.position} onChange={onChange} />
-                                <InputField label="Salario" name="salary" type="number" value={editForm.salary} onChange={onChange} />
-                                <InputField label="Fecha de Ingreso" name="hireDate" type="date" value={editForm.hireDate} onChange={onChange} />
+                                <InputField label="Cargo" name="position" value={editForm.position} onChange={onChange} error={fieldErrors.position} />
+                                <InputField label="Salario" name="salary" type="number" value={editForm.salary} onChange={onChange} error={fieldErrors.salary} />
+                                <InputField label="Fecha de Ingreso" name="hireDate" type="date" value={editForm.hireDate} onChange={onChange} error={fieldErrors.hireDate} />
                             </>
                         ) : (
                             <>
@@ -150,7 +150,7 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                                         ))}
                                     </select>
                                 </div>
-                                <InputField label="Número de Cuenta" name="accountNumber" value={editForm.accountNumber} onChange={onChange} />
+                                <InputField label="Número de Cuenta" name="accountNumber" value={editForm.accountNumber} onChange={onChange} error={fieldErrors.accountNumber} />
 
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-slate-400">Tipo de Cuenta</label>
@@ -164,6 +164,12 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                         ) : (
                             <div className="col-span-1 md:col-span-2 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                                 <p className="text-blue-200 text-sm">Para actualizar datos bancarios, contacte a Recursos Humanos.</p>
+                            </div>
+                        )}
+
+                        {fieldErrors.dates && (
+                            <div className="col-span-1 md:col-span-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-200 text-xs">
+                                {fieldErrors.dates}
                             </div>
                         )}
 
