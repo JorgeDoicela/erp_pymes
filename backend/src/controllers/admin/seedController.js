@@ -1,5 +1,6 @@
 import { exec } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 
 export const runSeed = async (req, res) => {
     try {
