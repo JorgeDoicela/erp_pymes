@@ -4,8 +4,17 @@ import { decrypt, safeDecrypt } from '../../utils/encryption.js';
 import { financial } from '../../utils/financialUtils.js';
 
 class PayrollCalculationService {
+    /**
+     * Genera la nómina para todos los empleados activos en un período específico.
+     * Realiza un proceso batch para optimizar consultas a la base de datos.
+     * 
+     * @param {number} month - Mes de la nómina (1-12)
+     * @param {number} year - Año de la nómina (ej. 2026)
+     * @param {string} adminId - ID del administrador que ejecuta la acción
+     * @returns {Promise<Object>} Resumen del proceso de nómina
+     */
     async generatePayroll(month, year, adminId) {
-        // 1. Check if payroll already exists for this period
+        // 1. Verificación de duplicados: Evitar generar nómina dos veces para el mismo mes/año
         const periodDate = new Date(year, month - 1, 1);
         const existingPayroll = await prisma.payroll.findFirst({
             where: {
@@ -17,7 +26,7 @@ class PayrollCalculationService {
             throw new Error(`Ya existe una nómina para el período ${month}/${year}`);
         }
 
-        // 2. Get Configuration
+        // 2. Obtención de Parámetros Globales: IESS, Impuesto a la Renta, etc.
         const config = await prisma.payrollConfig.findFirst({
             where: { isActive: true },
             include: { items: true }
@@ -27,7 +36,7 @@ class PayrollCalculationService {
             throw new Error("No hay configuración de nómina activa. Configure los parámetros primero.");
         }
 
-        // 3. Get Active Employees with Contracts
+        // 3. Selección de Empleados con Contrato Activo
         const employees = await prisma.employee.findMany({
             where: {
                 contracts: {
@@ -49,7 +58,7 @@ class PayrollCalculationService {
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month, 0);
 
-        // a. Batch Fetch Attendance
+        // a. Carga Batch de Asistencias: Minimiza el impacto en BD comparado con consultas individuales
         const allAttendance = await prisma.attendance.findMany({
             where: {
                 employeeId: { in: employeeIds },
@@ -66,7 +75,7 @@ class PayrollCalculationService {
             attendanceMap.get(rec.employeeId).push(rec);
         });
 
-        // b. Batch Fetch Schedules
+        // b. Carga Batch de Horarios: Identifica turnos y recargos nocturnos
         const allSchedules = await prisma.employeeSchedule.findMany({
             where: {
                 employeeId: { in: employeeIds },
@@ -86,7 +95,7 @@ class PayrollCalculationService {
             scheduleMap.get(sched.employeeId).push(sched);
         });
 
-        // c. Batch Fetch Benefits
+        // c. Carga Batch de Beneficios Adicionales: Comisiones, Bonos, etc.
         const allBenefits = await prisma.employeeBenefit.findMany({
             where: {
                 employeeId: { in: employeeIds },

@@ -160,10 +160,10 @@ const DigitalMarker = ({ user }) => {
             {/* Clock */}
             <div className="mb-8 text-center">
                 <h2 className="text-xl text-slate-400 font-light tracking-widest uppercase mb-2">Marcador Digital</h2>
-                <div className="text-6xl font-bold tracking-tighter text-blue-400 tabular-nums">
+                <div className="text-5xl md:text-6xl font-bold tracking-tighter text-blue-400 tabular-nums">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </div>
-                <div className="text-slate-500 mt-2 text-lg">
+                <div className="text-slate-500 mt-2 text-base md:text-lg">
                     {currentTime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
             </div>

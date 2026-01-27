@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift, FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle } from 'react-icons/fi';
+import { FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift, FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle, FiMenu, FiX } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import NotificationBell from '../../components/common/NotificationBell';
 import { FiTrendingUp, FiAlertTriangle, FiCheckCircle, FiActivity, FiCpu, FiShield } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function AdminDashboard({ user, onLogout }) {
     const navigate = useNavigate();
     const location = useLocation();
     const [successMsg, setSuccessMsg] = useState('');
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
         if (location.state?.successMessage) {
@@ -89,26 +91,100 @@ function AdminDashboard({ user, onLogout }) {
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto">
-                <header className="h-16 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-8 sticky top-0 z-50">
-                    <h2 className="text-xl font-semibold">Panel de Control</h2>
+                <header className="h-16 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setIsMenuOpen(true)}
+                            className="p-2 -ml-2 text-slate-400 hover:text-white md:hidden"
+                        >
+                            <FiMenu size={24} />
+                        </button>
+                        <h2 className="text-xl font-semibold">Panel de Control</h2>
+                    </div>
                     {successMsg && (
-                        <div className="fixed top-20 right-8 z-50 animate-fade-in-down">
-                            <div className="bg-emerald-500/90 backdrop-blur text-white px-6 py-3 rounded-lg shadow-lg border border-emerald-400/50 flex items-center gap-3">
+                        <div className="fixed top-20 right-4 md:right-8 z-50 animate-fade-in-down">
+                            <div className="bg-emerald-500/90 backdrop-blur text-white px-4 md:px-6 py-3 rounded-lg shadow-lg border border-emerald-400/50 flex items-center gap-3">
                                 <span className="text-2xl"></span>
-                                <p className="font-medium">{successMsg}</p>
+                                <p className="font-medium text-sm md:base">{successMsg}</p>
                                 <button onClick={() => setSuccessMsg('')} className="ml-2 text-white/80 hover:text-white">×</button>
                             </div>
                         </div>
                     )}
                     <div className="flex items-center gap-4">
                         <NotificationBell />
-                        {/* Botón movido a Directorio de Empleados */}
-                        <div className="md:hidden">
-                            {/* Mobile menu button placeholder */}
-                            <button className="text-slate-400">Menu</button>
+                        <div className="hidden sm:flex items-center gap-3 text-right">
+                            <div className="text-right">
+                                <p className="text-sm font-medium text-white">{user?.firstName || 'Admin'}</p>
+                                <p className="text-[10px] text-slate-400">Admin</p>
+                            </div>
                         </div>
                     </div>
                 </header>
+
+                {/* Mobile Sidebar Overlay */}
+                <AnimatePresence>
+                    {isMenuOpen && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsMenuOpen(false)}
+                                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden"
+                            />
+                            <motion.aside
+                                initial={{ x: '-100%' }}
+                                animate={{ x: 0 }}
+                                exit={{ x: '-100%' }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                className="fixed inset-y-0 left-0 w-72 bg-slate-900 border-r border-white/10 z-[70] md:hidden flex flex-col"
+                            >
+                                <div className="p-6 flex items-center justify-between">
+                                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                                        EMPLIFI
+                                    </h1>
+                                    <button onClick={() => setIsMenuOpen(false)} className="text-slate-400 hover:text-white">
+                                        <FiX size={24} />
+                                    </button>
+                                </div>
+
+                                <nav className="flex-1 px-4 py-2 overflow-y-auto space-y-1">
+                                    {modules.map((mod, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                navigate(mod.path);
+                                                setIsMenuOpen(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors text-left"
+                                        >
+                                            <span className="text-xl">{mod.icon}</span>
+                                            <span className="font-medium">{mod.title}</span>
+                                        </button>
+                                    ))}
+                                </nav>
+
+                                <div className="p-4 border-t border-white/10">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center font-bold">
+                                            {user?.firstName?.[0] || 'A'}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-white">{user?.firstName || 'Admin'}</p>
+                                            <p className="text-xs text-slate-400">Administrador</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={onLogout}
+                                        className="w-full py-2 px-4 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
+                                    >
+                                        Cerrar Sesión
+                                    </button>
+                                </div>
+                            </motion.aside>
+                        </>
+                    )}
+                </AnimatePresence>
 
                 <div className="p-8 max-w-7xl mx-auto space-y-8">
                     {/* Intelligent Assistant Section */}

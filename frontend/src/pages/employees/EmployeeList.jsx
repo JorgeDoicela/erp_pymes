@@ -34,23 +34,23 @@ const EmployeeList = ({ token }) => {
     return (
         <div className="min-h-screen bg-slate-900 text-white p-6">
             <div className="max-w-7xl mx-auto">
-                <header className="flex justify-between items-center mb-8">
-                    <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+                <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
                         Directorio de Empleados
                     </h2>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap items-center gap-3">
                         <ExportButtons type="employees" fileName="lista_empleados" />
                         <button
                             onClick={() => navigate('/admin/register-employee')}
                             className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium flex items-center gap-2"
                         >
-                            <span>+</span> Nuevo Empleado
+                            <span>+</span> <span className="hidden sm:inline">Nuevo Empleado</span><span className="sm:hidden">Nuevo</span>
                         </button>
                         <button
                             onClick={() => navigate('/admin')}
-                            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-slate-300"
+                            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-slate-300 text-sm font-medium"
                         >
-                            Volver al Panel
+                            Volver
                         </button>
                     </div>
                 </header>

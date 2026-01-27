@@ -3,7 +3,10 @@ import auditRepository from '../../repositories/audit/auditRepository.js';
 
 /**
  * EmployeeService
- * Contiene la lógica de negocio para gestión de empleados
+ * Gestiona la lógica de negocio para los empleados del sistema.
+ * 
+ * NOTA DE SEGURIDAD: Los campos bancarios (bankName, accountNumber) son encriptados 
+ * automáticamente por el repositorio antes de guardarse en la base de datos (AES-256-CBC).
  */
 const VALID_CIVIL_STATUSES = ['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Union Libre'];
 const VALID_CONTRACT_TYPES = ['Indefinido', 'Temporal', 'Por Obra', 'Prácticas'];
