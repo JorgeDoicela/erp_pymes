@@ -59,14 +59,29 @@ export const runMigration = async (req, res) => {
         }
 
         console.log('--- Iniciando Migración Remota ---');
-        // npx prisma db push --accept-data-loss
-        // We need to run this from backend folder? process.cwd() is usually root in Vercel function?
-        // Actually Vercel function cwd is usually the project root or the function root.
-        // We will try running it.
-        exec('npx prisma db push --accept-data-loss', (error, stdout, stderr) => {
+
+        // Use local prisma binary to ensure availability and avoid npx fetching
+        const prismaPath = path.join(process.cwd(), 'node_modules', '.bin', 'prisma');
+        const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
+
+        console.log(`Prisma executable path: ${prismaPath}`);
+
+        // Set HOME to /tmp to avoid 'mkdir' permission errors in read-only environments (Vercel)
+        const env = { ...process.env, HOME: '/tmp' };
+
+        exec(`"${prismaPath}" db push --accept-data-loss --schema="${schemaPath}"`, { env }, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Migration error: ${error.message}`);
-                return res.status(500).json({ success: false, error: error.message });
+                // Fallback to npx if binary not found (unlikely if in dependencies)
+                console.log('Falling back to npx...');
+                exec('npx prisma db push --accept-data-loss', { env }, (err2, out2, err2_stderr) => {
+                    if (err2) {
+                        console.error(`Fallback Migration error: ${err2.message}`);
+                        return res.status(500).json({ success: false, error: err2.message, stderr: err2_stderr });
+                    }
+                    res.status(200).json({ success: true, message: 'Migración completada (Fallback)', output: out2 });
+                });
+                return;
             }
             console.log(`Migration output: ${stdout}`);
             res.status(200).json({

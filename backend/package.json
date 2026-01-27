@@ -32,12 +32,12 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.12",
     "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
     "dotenv-cli": "^11.0.0",
-    "nodemon": "^3.1.11",
-    "prisma": "^5.22.0"
+    "nodemon": "^3.1.11"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
