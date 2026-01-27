@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
 import { getMyPayrolls } from '../../services/payroll/payrollConfig.service';
-import { generatePayslipPDF } from '../../utils/generatePayslipPDF';
+import ExportButtons from '../../components/common/ExportButtons';
 
 const MyPayments = ({ user }) => {
     // const { user } = useAuth(); // Removed
@@ -20,23 +19,6 @@ const MyPayments = ({ user }) => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleDownload = (detail) => {
-        // detail has .payroll (header) and other fields
-        // We construct the "employee" object from current user context or what's available
-        // But better is if `getMyPayrolls` returned full objects.
-        // `getMyPayrolls` returns PayrollDetails which includes everything we need EXCEPT full employee data?
-        // Wait, `req.user.id` gets `getPayrollsByEmployee`. 
-        // The endpoint returns `PayrollDetail` + `Payroll`.
-        // We need explicit employee info (department, position) which might NOT be in detail?
-        // Ah, `PayrollDetail` only has FK. We need to include `employee` in the query in Backend or use Context.
-        // Context `user` has name/role/dept if we stored it?
-        // Let's rely on Context `user` for now, assuming it has basics. 
-        // Actually best is to update Backend query to include Employee info just in case.
-
-        // Assuming Backend update is done or we use User context:
-        generatePayslipPDF(detail, detail.employee, detail.payroll.period);
     };
 
     return (
@@ -77,13 +59,13 @@ const MyPayments = ({ user }) => {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => handleDownload(detail)}
-                                disabled={detail.payroll.status !== 'APPROVED' && detail.payroll.status !== 'PAID'}
-                                className={`w-full py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${(detail.payroll.status === 'APPROVED' || detail.payroll.status === 'PAID') ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}
-                            >
-                                Descargar PDF
-                            </button>
+                            <div className="mt-auto">
+                                <ExportButtons
+                                    type="paystub"
+                                    id={detail.id}
+                                    fileName={`rol_pago_${detail.employee.lastName}_${new Date(detail.payroll.period).getMonth() + 1}`}
+                                />
+                            </div>
                         </div>
                     ))}
                     {payrolls.length === 0 && (

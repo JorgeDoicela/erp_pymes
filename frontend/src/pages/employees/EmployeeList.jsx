@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEmployees } from '../../hooks/employees/useEmployees';
+import ExportButtons from '../../components/common/ExportButtons';
 
 const EmployeeList = ({ token }) => {
     const navigate = useNavigate();
@@ -38,6 +39,7 @@ const EmployeeList = ({ token }) => {
                         Directorio de Empleados
                     </h2>
                     <div className="flex gap-4">
+                        <ExportButtons type="employees" fileName="lista_empleados" />
                         <button
                             onClick={() => navigate('/admin/register-employee')}
                             className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm font-medium flex items-center gap-2"

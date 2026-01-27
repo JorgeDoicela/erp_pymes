@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { generatePayroll, getPayrolls, getPayrollById, confirmPayroll, downloadBankFile, markPayrollAsPaid } from '../../services/payroll/payrollConfig.service';
 import { generatePayslipPDF } from '../../utils/generatePayslipPDF';
+import ExportButtons from '../../components/common/ExportButtons';
 
 const PayrollGenerator = () => {
     const navigate = useNavigate();
@@ -86,6 +87,8 @@ const PayrollGenerator = () => {
             alert(error.message);
         }
     };
+
+    // Note: ExportButtons component handles the CSV download via its own internal logic calling the new /export route
 
     const handleMarkAsPaid = async () => {
         if (!confirm("¿Confirmar que los pagos fueron realizados?")) return;
@@ -195,6 +198,11 @@ const PayrollGenerator = () => {
                             )}
                             {selectedPayroll.status === 'APPROVED' && (
                                 <>
+                                    <ExportButtons
+                                        type="payroll_csv"
+                                        id={selectedPayroll.id}
+                                        fileName={`nomina_${selectedPayroll.period.split('T')[0]}`}
+                                    />
                                     <button
                                         onClick={handleDownloadBankFile}
                                         className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2"

@@ -16,6 +16,7 @@ import analyticsRoutes from './analytics.routes.js';
 import skillRoutes from './skills/skill.routes.js';
 import notificationRoutes from './notifications/notification.routes.js';
 import auditRoutes from './audit.routes.js';
+import exportRoutes from './export/export.routes.js';
 
 
 const router = Router();
@@ -47,5 +48,6 @@ router.use('/analytics', analyticsRoutes);
 router.use('/skills', skillRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/audit', auditRoutes);
+router.use('/export', exportRoutes);
 
 export default router;
