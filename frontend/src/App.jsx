@@ -62,6 +62,7 @@ const ExpiringContracts = lazy(() => import('./pages/contracts/ExpiringContracts
 const NotificationsPage = lazy(() => import('./pages/notifications/NotificationsPage.jsx'));
 const NotificationSettings = lazy(() => import('./pages/notifications/NotificationSettings.jsx'));
 const AuditLogsPage = lazy(() => import('./pages/audit/AuditLogsPage.jsx'));
+const HelpCenter = lazy(() => import('./pages/help/HelpCenter.jsx'));
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -401,6 +402,14 @@ function App() {
           element={
             <RequireAuth>
               <TakeEvaluation />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/help"
+          element={
+            <RequireAuth>
+              <HelpCenter />
             </RequireAuth>
           }
         />

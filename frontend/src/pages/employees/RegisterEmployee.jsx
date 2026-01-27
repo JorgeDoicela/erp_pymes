@@ -180,7 +180,13 @@ const RegisterEmployee = ({ token }) => {
                                 <SelectField label="Banco" name="bankName" value={formData.bankName} onChange={handleChange}
                                     options={BANK_OPTIONS}
                                 />
-                                <InputField label="Número de Cuenta" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
+                                <InputField
+                                    label="Número de Cuenta"
+                                    name="accountNumber"
+                                    value={formData.accountNumber}
+                                    onChange={handleChange}
+                                    help="Número de cuenta bancaria para el depósito de nómina."
+                                />
                                 <SelectField label="Tipo de Cuenta" name="accountType" value={formData.accountType} onChange={handleChange}
                                     options={ACCOUNT_TYPES}
                                 />

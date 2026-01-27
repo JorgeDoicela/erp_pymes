@@ -1,5 +1,5 @@
 import React from 'react';
-import { InputField } from './EmployeeHelpers';
+import { InputField, SelectField } from './EmployeeHelpers';
 import { CIVIL_STATUS_OPTIONS, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS } from '../../../constants/employeeOptions';
 
 const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, employeeIdentityCard, fieldErrors = {} }) => {
@@ -20,28 +20,26 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                             <label className="text-xs text-slate-500 uppercase font-semibold block mb-1">Cédula</label>
                             <p className="text-slate-300">{employeeIdentityCard}</p>
                         </div>
-                        <InputField label="Nombre" name="firstName" value={editForm.firstName} onChange={onChange} error={fieldErrors.firstName} />
-                        <InputField label="Apellido" name="lastName" value={editForm.lastName} onChange={onChange} error={fieldErrors.lastName} />
+                        <InputField label="Nombre" name="firstName" value={editForm.firstName} onChange={onChange} error={fieldErrors.firstName} help="Nombre legal del empleado." />
+                        <InputField label="Apellido" name="lastName" value={editForm.lastName} onChange={onChange} error={fieldErrors.lastName} help="Apellidos completos." />
                         {user?.role === 'admin' ? (
-                            <InputField label="Email" name="email" value={editForm.email} onChange={onChange} error={fieldErrors.email} />
+                            <InputField label="Email" name="email" value={editForm.email} onChange={onChange} error={fieldErrors.email} help="Correo corporativo principal." />
                         ) : (
                             <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 opacity-70">
                                 <label className="text-xs text-slate-500 uppercase font-semibold block mb-1">Email</label>
                                 <p className="text-slate-300">{editForm.email}</p>
                             </div>
                         )}
-                        <InputField label="Teléfono" name="phone" value={editForm.phone} onChange={onChange} error={fieldErrors.phone} />
-                        <InputField label="Dirección" name="address" value={editForm.address} onChange={onChange} error={fieldErrors.address} />
+                        <InputField label="Teléfono" name="phone" value={editForm.phone} onChange={onChange} error={fieldErrors.phone} help="Número de contacto (Ej: 0991234567)." />
+                        <InputField label="Dirección" name="address" value={editForm.address} onChange={onChange} error={fieldErrors.address} help="Dirección domiciliaria actual." />
 
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-400">Estado Civil</label>
-                            <select name="civilStatus" value={editForm.civilStatus} onChange={onChange} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
-                                <option value="">Seleccione</option>
-                                {CIVIL_STATUS_OPTIONS.map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <SelectField
+                            label="Estado Civil"
+                            name="civilStatus"
+                            value={editForm.civilStatus}
+                            onChange={onChange}
+                            options={CIVIL_STATUS_OPTIONS}
+                        />
 
                         {user?.role === 'admin' ? (
                             <InputField label="Fecha de Nacimiento" name="birthDate" type="date" value={editForm.birthDate} onChange={onChange} error={fieldErrors.birthDate} />
@@ -60,18 +58,16 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                         {user?.role === 'admin' ? (
                             <>
                                 {/* Department as Select or Input? Was InputField, switching to Select for consistency with Register but using standard select for this modal structure */}
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium text-slate-400">Departamento</label>
-                                    <select name="department" value={editForm.department} onChange={onChange} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
-                                        <option value="">Seleccione</option>
-                                        {DEPARTMENTS.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <InputField label="Cargo" name="position" value={editForm.position} onChange={onChange} error={fieldErrors.position} />
-                                <InputField label="Salario" name="salary" type="number" value={editForm.salary} onChange={onChange} error={fieldErrors.salary} />
-                                <InputField label="Fecha de Ingreso" name="hireDate" type="date" value={editForm.hireDate} onChange={onChange} error={fieldErrors.hireDate} />
+                                <SelectField
+                                    label="Departamento"
+                                    name="department"
+                                    value={editForm.department}
+                                    onChange={onChange}
+                                    options={DEPARTMENTS}
+                                />
+                                <InputField label="Cargo" name="position" value={editForm.position} onChange={onChange} error={fieldErrors.position} help="Cargo u ocupación oficial." />
+                                <InputField label="Salario" name="salary" type="number" value={editForm.salary} onChange={onChange} error={fieldErrors.salary} help="Sueldo base mensual." />
+                                <InputField label="Fecha de Ingreso" name="hireDate" type="date" value={editForm.hireDate} onChange={onChange} error={fieldErrors.hireDate} help="Fecha de inicio de labores." />
                             </>
                         ) : (
                             <>
@@ -141,25 +137,22 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
 
                         {user?.role === 'admin' ? (
                             <>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium text-slate-400">Banco</label>
-                                    <select name="bankName" value={editForm.bankName} onChange={onChange} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
-                                        <option value="">Seleccione</option>
-                                        {BANK_OPTIONS.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <InputField label="Número de Cuenta" name="accountNumber" value={editForm.accountNumber} onChange={onChange} error={fieldErrors.accountNumber} />
+                                <SelectField
+                                    label="Banco"
+                                    name="bankName"
+                                    value={editForm.bankName}
+                                    onChange={onChange}
+                                    options={BANK_OPTIONS}
+                                />
+                                <InputField label="Número de Cuenta" name="accountNumber" value={editForm.accountNumber} onChange={onChange} error={fieldErrors.accountNumber} help="Cuenta para depósito de nómina." />
 
-                                <div className="space-y-1">
-                                    <label className="text-sm font-medium text-slate-400">Tipo de Cuenta</label>
-                                    <select name="accountType" value={editForm.accountType} onChange={onChange} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
-                                        {ACCOUNT_TYPES.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <SelectField
+                                    label="Tipo de Cuenta"
+                                    name="accountType"
+                                    value={editForm.accountType}
+                                    onChange={onChange}
+                                    options={ACCOUNT_TYPES}
+                                />
                             </>
                         ) : (
                             <div className="col-span-1 md:col-span-2 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">

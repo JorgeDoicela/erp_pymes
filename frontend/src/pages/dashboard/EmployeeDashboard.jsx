@@ -1,7 +1,7 @@
 
 
 import { useNavigate } from 'react-router-dom';
-import { FiUser, FiClock, FiCalendar, FiDollarSign, FiClipboard, FiTarget } from 'react-icons/fi';
+import { FiUser, FiClock, FiCalendar, FiDollarSign, FiClipboard, FiTarget, FiHelpCircle } from 'react-icons/fi';
 
 function EmployeeDashboard({ user, onLogout }) {
     const navigate = useNavigate();
@@ -13,6 +13,7 @@ function EmployeeDashboard({ user, onLogout }) {
         { title: 'Mis Pagos', icon: <FiDollarSign />, color: 'bg-green-500', desc: 'Descargar recibos de nómina', path: '/my-payments' },
         { title: 'Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-500', desc: 'Realizar autoevaluaciones y ver resultados', path: '/performance/my-evaluations' },
         { title: 'Mis Objetivos', icon: <FiTarget />, color: 'bg-cyan-500', desc: 'Definir y seguir objetivos SMART', path: '/performance/goals' },
+        { title: 'Ayuda / Manual', icon: <FiHelpCircle />, color: 'bg-amber-500', desc: 'Guías de uso y soporte técnico', path: '/help' },
     ]
 
     return (
@@ -30,6 +31,13 @@ function EmployeeDashboard({ user, onLogout }) {
                             </span>
                         </div>
                         <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => navigate('/help')}
+                                className="p-2 rounded-full hover:bg-white/10 text-slate-300 transition-colors"
+                                title="Centro de Ayuda"
+                            >
+                                <FiHelpCircle size={20} />
+                            </button>
                             <div className="text-right hidden sm:block">
                                 <p className="text-sm font-medium text-white">{user?.firstName || 'Empleado'}</p>
                                 <p className="text-xs text-slate-400">{user?.position || 'Colaborador'}</p>
