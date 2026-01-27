@@ -9,7 +9,7 @@ import { STORAGE_CONFIG } from '../../config/storage.config.js';
 // --- Configuración de Multer ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadPath = path.join(process.cwd(), STORAGE_CONFIG.PATHS.EVIDENCE);
+        const uploadPath = path.resolve(process.cwd(), STORAGE_CONFIG.PATHS.EVIDENCE);
         // Crear directorio si no existe
         if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });

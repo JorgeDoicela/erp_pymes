@@ -69,7 +69,7 @@ const __dirname = path.dirname(__filename);
 
 // Ensure uploads directory exists on startup
 import fs from 'fs';
-const uploadsPath = path.resolve(__dirname, '../uploads');
+const uploadsPath = process.env.VERCEL ? '/tmp/uploads' : path.resolve(__dirname, '../uploads');
 if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 
 // Static files served protected below

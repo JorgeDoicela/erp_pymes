@@ -12,8 +12,8 @@ export const STORAGE_CONFIG = {
 
     // Rutas de almacenamiento
     PATHS: {
-        DOCUMENTS: 'uploads/documents',
-        RESUMES: 'uploads/resumes',
-        EVIDENCE: 'uploads/evidence'
+        DOCUMENTS: process.env.VERCEL ? '/tmp/uploads/documents' : 'uploads/documents',
+        RESUMES: process.env.VERCEL ? '/tmp/uploads/resumes' : 'uploads/resumes',
+        EVIDENCE: process.env.VERCEL ? '/tmp/uploads/evidence' : 'uploads/evidence'
     }
 };
