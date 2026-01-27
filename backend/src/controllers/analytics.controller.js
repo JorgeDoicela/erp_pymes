@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+import { financial } from '../utils/financialUtils.js';
 
 export const getDashboardData = async (req, res) => {
     console.log("Analytics: Request received for dashboard data");
@@ -30,7 +31,7 @@ export const getDashboardData = async (req, res) => {
             select: { id: true, salary: true, department: true }
         });
 
-        let payrollTotal = 0;
+        let payrollTotal = financial.from(0);
         employees.forEach(emp => {
             try {
                 if (!emp.salary) return;
@@ -38,13 +39,13 @@ export const getDashboardData = async (req, res) => {
                 const rawSalary = emp.salary.replace('ENC:', '');
                 const val = parseFloat(rawSalary);
                 if (!isNaN(val)) {
-                    payrollTotal += val;
+                    payrollTotal = payrollTotal.plus(val);
                 }
             } catch (err) {
                 console.error(`Analytics: Error parsing salary for emp ${emp.id}`, err);
             }
         });
-        console.log("Analytics: Payroll Total:", payrollTotal);
+        console.log("Analytics: Payroll Total:", payrollTotal.toString());
 
 
         // --- CHARTS ---
@@ -76,7 +77,7 @@ export const getDashboardData = async (req, res) => {
                 totalEmployees,
                 newHires,
                 openVacancies,
-                payrollTotal
+                payrollTotal: financial.round(payrollTotal)
             },
             charts: {
                 deptChartData,
@@ -316,10 +317,9 @@ export const getPayrollCostReport = async (req, res) => {
         });
 
         // 1. Cost Breakdown (Total)
-        let totalBaseSalary = 0;
-        let totalOvertime = 0;
-        let totalBonuses = 0;
-        let totalDeductions = 0; // If tracked separately for company cost? Usually internal cost is Gross.
+        let totalBaseSalary = financial.from(0);
+        let totalOvertime = financial.from(0);
+        let totalBonuses = financial.from(0);
         // Gross Cost = Base + Overtime + Bonuses + Benefits(if any)
 
         // 2. Costs by Department
@@ -337,58 +337,64 @@ export const getPayrollCostReport = async (req, res) => {
             }
 
             payroll.details.forEach(detail => {
-                const base = detail.baseSalary || 0;
+                const base = financial.from(detail.baseSalary || 0);
                 // Parse Overtime
-                const ot = detail.overtimeAmount || 0;
+                const ot = financial.from(detail.overtimeAmount || 0);
 
                 // Parse Bonuses JSON
-                let bonuses = 0;
+                let bonuses = financial.from(0);
                 try {
                     const bonusList = JSON.parse(detail.bonuses || '[]');
                     if (Array.isArray(bonusList)) {
-                        bonuses = bonusList.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+                        bonuses = bonusList.reduce((sum, b) => sum.plus(parseFloat(b.amount) || 0), financial.from(0));
                     }
                 } catch (e) { console.error("Error parsing bonuses JSON", e); }
 
-                const totalDetailCost = base + ot + bonuses;
+                const totalDetailCost = base.plus(ot).plus(bonuses);
 
                 // Aggregates
-                totalBaseSalary += base;
-                totalOvertime += ot;
-                totalBonuses += bonuses;
+                totalBaseSalary = totalBaseSalary.plus(base);
+                totalOvertime = totalOvertime.plus(ot);
+                totalBonuses = totalBonuses.plus(bonuses);
 
                 // Dept
                 const dept = detail.employee?.department || 'Sin Dept';
-                deptCosts[dept] = (deptCosts[dept] || 0) + totalDetailCost;
+                deptCosts[dept] = financial.from(deptCosts[dept] || 0).plus(totalDetailCost);
 
                 // Trend
-                trendMap[monthKey].total += totalDetailCost;
-                trendMap[monthKey].salary += base;
-                trendMap[monthKey].overtime += ot;
-                trendMap[monthKey].extras += bonuses;
+                trendMap[monthKey].total = financial.from(trendMap[monthKey].total).plus(totalDetailCost);
+                trendMap[monthKey].salary = financial.from(trendMap[monthKey].salary).plus(base);
+                trendMap[monthKey].overtime = financial.from(trendMap[monthKey].overtime).plus(ot);
+                trendMap[monthKey].extras = financial.from(trendMap[monthKey].extras).plus(bonuses);
             });
         });
 
         // Format Charts
-        const totalCost = totalBaseSalary + totalOvertime + totalBonuses;
+        const totalCost = totalBaseSalary.plus(totalOvertime).plus(totalBonuses);
 
         const breakdownChartData = [
-            { name: 'Salario Base', value: totalBaseSalary },
-            { name: 'Horas Extras', value: totalOvertime },
-            { name: 'Bonificaciones', value: totalBonuses }
+            { name: 'Salario Base', value: financial.round(totalBaseSalary) },
+            { name: 'Horas Extras', value: financial.round(totalOvertime) },
+            { name: 'Bonificaciones', value: financial.round(totalBonuses) }
         ];
 
         const deptChartData = Object.keys(deptCosts).map(dept => ({
             name: dept,
-            value: deptCosts[dept]
+            value: financial.round(deptCosts[dept])
         }));
 
-        const trendChartData = Object.values(trendMap).sort((a, b) => a.name.localeCompare(b.name));
+        const trendChartData = Object.values(trendMap).map(m => ({
+            ...m,
+            total: financial.round(m.total),
+            salary: financial.round(m.salary),
+            overtime: financial.round(m.overtime),
+            extras: financial.round(m.extras)
+        })).sort((a, b) => a.name.localeCompare(b.name));
 
         res.json({
             metrics: {
-                totalCost,
-                avgMonthlyCost: trendChartData.length ? (totalCost / trendChartData.length) : totalCost,
+                totalCost: financial.round(totalCost),
+                avgMonthlyCost: trendChartData.length ? financial.round(financial.divide(totalCost, trendChartData.length)) : financial.round(totalCost),
                 headcount: payrolls.reduce((acc, p) => acc + p.details.length, 0) // Naive headcount sum (sum of payroll records)
             },
             charts: {

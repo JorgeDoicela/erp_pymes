@@ -1,10 +1,11 @@
 import prisma from '../../database/db.js';
 import emailService from './emailService.js';
+import socketService from './socketService.js';
 import employeeRepository from '../../repositories/employees/employeeRepository.js'; // Assuming repository exists
 
 class NotificationService {
     async createNotification(data) {
-        return await prisma.notification.create({
+        const notification = await prisma.notification.create({
             data: {
                 recipientId: data.recipientId,
                 title: data.title,
@@ -14,6 +15,11 @@ class NotificationService {
                 relatedEntityId: data.relatedEntityId
             }
         });
+
+        // Enviar vía Socket.io para tiempo real
+        socketService.sendToUser(data.recipientId, 'new_notification', notification);
+
+        return notification;
     }
 
     async checkPreferences(employeeId, type, channel) {
