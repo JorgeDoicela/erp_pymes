@@ -50,5 +50,22 @@ export async function seedUsers(prisma) {
         testUser = await prisma.employee.findUnique({ where: { email: 'empleado@test.com' } });
     }
 
+    // 3. System Settings
+    try {
+        await prisma.systemSetting.upsert({
+            where: { id: 'default' },
+            update: {},
+            create: {
+                id: 'default',
+                maintenanceMode: false,
+                maintenanceScheduled: null,
+                maintenanceMessage: 'El sistema estará en mantenimiento brevemente.'
+            }
+        });
+        console.log("✅ Default System Settings ensured");
+    } catch (e) {
+        console.log("⚠️ System Settings seeding failed: " + e.message);
+    }
+
     return { admin, testUser };
 }

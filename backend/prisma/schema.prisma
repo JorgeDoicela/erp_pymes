@@ -510,3 +510,13 @@ model NotificationPreference {
 
   @@map("notification_preferences")
 }
+
+model SystemSetting {
+  id                   String    @id @default(cuid())
+  maintenanceMode      Boolean   @default(false)
+  maintenanceScheduled DateTime?
+  maintenanceMessage   String?
+  updatedAt            DateTime  @updatedAt
+
+  @@map("system_settings")
+}

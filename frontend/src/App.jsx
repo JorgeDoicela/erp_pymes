@@ -2,6 +2,7 @@ import { useState, Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast';
 import Loading from './components/Loading.jsx';
+import MaintenanceBanner from './components/common/MaintenanceBanner.jsx';
 
 // Lazy Load Pages
 // Eager Load Critical Pages
@@ -106,6 +107,7 @@ function App() {
   return (
     <Suspense fallback={<Loading />}>
       <Toaster position="top-right" />
+      <MaintenanceBanner />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/careers" element={<CareersPage />} />

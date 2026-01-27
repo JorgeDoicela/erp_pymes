@@ -3,13 +3,14 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import documentController from '../../controllers/documents/documentController.js';
+import { STORAGE_CONFIG } from '../../config/storage.config.js';
 
 const router = Router();
 
 // Configure Multer storage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = 'uploads/documents';
+        const uploadDir = STORAGE_CONFIG.PATHS.DOCUMENTS;
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -24,14 +25,13 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-        if (allowedTypes.includes(file.mimetype)) {
+        if (STORAGE_CONFIG.ALLOWED_DOCUMENT_TYPES.includes(file.mimetype)) {
             cb(null, true);
         } else {
             cb(new Error('Formato no permitido. Solo PDF, JPG, PNG.'));
         }
     },
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    limits: { fileSize: STORAGE_CONFIG.MAX_FILE_SIZE } // 5MB limit consolidated
 });
 
 // Rutas

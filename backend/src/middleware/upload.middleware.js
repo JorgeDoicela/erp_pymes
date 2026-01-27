@@ -1,9 +1,10 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { STORAGE_CONFIG } from '../config/storage.config.js';
 
 // Ensure uploads directory exists
-const uploadDir = 'uploads/resumes';
+const uploadDir = STORAGE_CONFIG.PATHS.RESUMES;
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -19,7 +20,7 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+    if (STORAGE_CONFIG.ALLOWED_RESUME_TYPES.includes(file.mimetype)) {
         cb(null, true);
     } else {
         cb(new Error('Solo se permiten archivos PDF'), false);
@@ -29,5 +30,5 @@ const fileFilter = (req, file, cb) => {
 export const uploadResume = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    limits: { fileSize: STORAGE_CONFIG.MAX_FILE_SIZE } // 5MB limit consolidated
 });

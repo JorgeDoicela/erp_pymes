@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import indexRoutes from './routes/index.routes.js';
+import systemRoutes from './routes/system/system.routes.js';
+import { maintenanceMiddleware } from './middleware/maintenance.middleware.js';
 import { errorHandler, requestLogger, validateBodyNotEmpty } from './middleware/errorHandler.js';
 
 const app = express();
@@ -101,7 +103,11 @@ import { protectStaticFiles } from './middleware/security.middleware.js';
 app.use('/uploads', authenticate, protectStaticFiles, express.static(uploadsPath));
 console.log('Serving protected static files from:', uploadsPath);
 
+// Maintenance Middleware (Applied before main routes)
+app.use(maintenanceMiddleware);
+
 // Rutas
+app.use('/system', systemRoutes);
 app.use(indexRoutes);
 
 // Middleware de manejo de errores (debe estar al final)

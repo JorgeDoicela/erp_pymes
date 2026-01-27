@@ -4,11 +4,12 @@ import prisma from '../../database/db.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { STORAGE_CONFIG } from '../../config/storage.config.js';
 
 // --- Configuración de Multer ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadPath = path.join(process.cwd(), 'uploads', 'evidence');
+        const uploadPath = path.join(process.cwd(), STORAGE_CONFIG.PATHS.EVIDENCE);
         // Crear directorio si no existe
         if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
@@ -23,7 +24,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    limits: { fileSize: STORAGE_CONFIG.MAX_FILE_SIZE } // 5MB limit consolidated
 });
 
 // --- Controller Methods ---
