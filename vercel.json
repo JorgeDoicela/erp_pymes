@@ -19,7 +19,7 @@
             "destination": "/backend/src/server.js"
         },
         {
-            "source": "/(.*)",
+            "source": "/((?!assets/).*)",
             "destination": "/frontend/index.html"
         }
     ]
