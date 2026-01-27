@@ -104,7 +104,7 @@ const AdminAbsences = () => {
                                     {req.evidenceUrl && (
                                         <div className="mt-4">
                                             <a
-                                                href={`http://localhost:4000/uploads/evidence/${req.evidenceUrl}`}
+                                                href={`${import.meta.env.VITE_API_URL || ''}/uploads/evidence/${req.evidenceUrl}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="text-blue-400 text-sm hover:underline flex items-center gap-2"

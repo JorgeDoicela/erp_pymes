@@ -9,7 +9,7 @@ import { InfoItem, EmptyState } from './components/EmployeeHelpers';
 import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES } from '../../constants/employeeOptions';
 import { validateEmail, validatePhone, validateSalary, validateDates } from '../../utils/validationUtils';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const EmployeeProfile = ({ token, user }) => {
     const { id } = useParams();

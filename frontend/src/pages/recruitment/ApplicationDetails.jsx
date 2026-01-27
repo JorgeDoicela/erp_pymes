@@ -110,7 +110,7 @@ const ApplicationDetails = () => {
     if (loading) return <div className="p-8 text-white">Cargando...</div>;
     if (!app) return <div className="p-8 text-white">No encontrado</div>;
 
-    const SERVER_URL = 'http://localhost:4000/';
+    const SERVER_URL = import.meta.env.VITE_API_URL || '/';
 
     const updateRating = (criteria, value) => {
         const newRatings = { ...evaData.ratings, [criteria]: parseInt(value) };
