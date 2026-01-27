@@ -40,13 +40,15 @@ const corsOptions = {
         const allowedOrigins = [
             'http://localhost:5173',  // Vite dev server
             'http://localhost:3000',  // Alternativa
+            'https://recursoshumanos-phi.vercel.app', // Vercel Frontend
             process.env.FRONTEND_URL, // Producción
         ].filter(Boolean); // Eliminar undefined
 
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            callback(new Error('No permitido por CORS'));
+            console.error(`[CORS] Blogged origin: ${origin}`);
+            callback(new Error(`No permitido por CORS: ${origin}`));
         }
     },
     credentials: true, // Permitir cookies
