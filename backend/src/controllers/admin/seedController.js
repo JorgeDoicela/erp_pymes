@@ -19,7 +19,17 @@ export const runSeed = async (req, res) => {
 
         // Execute the seed script directly via node
         // We assume we are in backend/src/controllers/admin... so we go up
-        const scriptPath = path.resolve('prisma/seed.js');
+        // Locate seed.js
+        let scriptPath = path.resolve('prisma/seed.js');
+        if (!fs.existsSync(scriptPath)) {
+            const altScriptPath = path.resolve('backend/prisma/seed.js');
+            if (fs.existsSync(altScriptPath)) {
+                scriptPath = altScriptPath;
+            } else {
+                console.warn('seed.js not found in standard locations');
+            }
+        }
+        console.log(`Using Seed Script Path: ${scriptPath}`);
 
         // Execute using child_process for isolation
         exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
