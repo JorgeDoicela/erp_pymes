@@ -107,8 +107,8 @@ console.log('Serving protected static files from:', uploadsPath);
 app.use(maintenanceMiddleware);
 
 // Rutas
-app.use('/system', systemRoutes);
-app.use(indexRoutes);
+app.use('/api/system', systemRoutes);
+app.use('/api', indexRoutes);
 
 // Middleware de manejo de errores (debe estar al final)
 app.use(errorHandler);

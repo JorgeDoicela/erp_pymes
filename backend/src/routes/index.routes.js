@@ -32,6 +32,16 @@ router.post('/seed', (req, res, next) => {
     runSeed(req, res).catch(next);
 });
 
+// Migración Remota (Fallback)
+router.post('/migrate', (req, res, next) => {
+    // Import dynamically to avoid circular dep if any? No, imported above.
+    // Wait, I need to import runMigration from controller.
+    // I'll update the import first.
+    import('../controllers/admin/seedController.js').then(ctrl => {
+        ctrl.runMigration(req, res).catch(next);
+    });
+});
+
 // Login real
 router.post('/auth/login', login);
 
