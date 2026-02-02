@@ -13,7 +13,7 @@ export const checkPerformanceReminders = async () => {
         const evaluations = await prisma.employeeEvaluation.findMany({
             where: {
                 status: { in: ['PENDING', 'IN_PROGRESS'] },
-                endDate: { not: null }
+                NOT: { endDate: null }
             },
             include: {
                 employee: true,

@@ -17,6 +17,13 @@ export default defineConfig({
     ]
   },
   server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     watch: {
       usePolling: true, // Sometimes needed on Windows for faster detection
     }
