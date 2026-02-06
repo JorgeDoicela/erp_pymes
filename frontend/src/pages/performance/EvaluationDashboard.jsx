@@ -33,7 +33,7 @@ const EvaluationDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 p-8 text-white">
+        <div className="bg-slate-900 text-white rounded-2xl shadow-xl min-h-[calc(100vh-8rem)] p-8">
             <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-10">
                     <div>

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast';
 import Loading from './components/Loading.jsx';
 import MaintenanceBanner from './components/common/MaintenanceBanner.jsx';
+import MainLayout from './components/layout/MainLayout.jsx';
 
 // Lazy Load Pages
 // Eager Load Critical Pages
@@ -116,304 +117,51 @@ function App() {
         <Route path="/careers/:id" element={<JobApplication />} />
         <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth role="admin">
-              <AdminDashboard user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/shifts"
-          element={
-            <RequireAuth role="admin">
-              <ShiftManagement />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/reports"
-          element={
-            <RequireAuth role="admin">
-              <AttendanceReports />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/absences"
-          element={
-            <RequireAuth role="admin">
-              <AdminAbsences />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/empleado"
-          element={
-            <RequireAuth role="employee">
-              <EmployeeDashboard user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/empleado/asistencia"
-          element={
-            <RequireAuth role="employee">
-              <EmployeeAttendance user={auth.user} />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/empleado/ausencias"
-          element={
-            <RequireAuth role="employee">
-              <EmployeeAbsences />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <RequireAuth>
-              <EmployeeProfile token={auth.token} user={auth.user} />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/register-employee"
-          element={
-            <RequireAuth role="admin">
-              <RegisterEmployee token={auth.token} />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/employees"
-          element={
-            <RequireAuth role="admin">
-              <EmployeeList token={auth.token} />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/employees/:id"
-          element={
-            <RequireAuth role="admin">
-              <EmployeeProfile token={auth.token} user={auth.user} />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/notifications"
-          element={
-            <RequireAuth role="admin">
-              <NotificationsPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/notifications/settings"
-          element={
-            <RequireAuth role="admin">
-              <NotificationSettings />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/audit"
-          element={
-            <RequireAuth role="admin">
-              <AuditLogsPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/contracts/expiring"
-          element={
-            <RequireAuth role="admin">
-              <ExpiringContracts />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/intelligence"
-          element={
-            <RequireAuth role="admin">
-              <IntelligentDashboard user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/payroll/config"
-          element={
-            <RequireAuth role="admin">
-              <PayrollConfiguration />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/payroll/benefits"
-          element={
-            <RequireAuth role="admin">
-              <BenefitsManagement />
-            </RequireAuth>
-          }
-        />
+        <Route element={<RequireAuth role="admin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+          <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
+          <Route path="/admin/shifts" element={<ShiftManagement />} />
+          <Route path="/admin/reports" element={<AttendanceReports />} />
+          <Route path="/admin/absences" element={<AdminAbsences />} />
+          <Route path="/admin/register-employee" element={<RegisterEmployee token={auth.token} />} />
+          <Route path="/admin/employees" element={<EmployeeList token={auth.token} />} />
+          <Route path="/admin/employees/:id" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
+          <Route path="/admin/notifications" element={<NotificationsPage />} />
+          <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
+          <Route path="/admin/audit" element={<AuditLogsPage />} />
+          <Route path="/admin/contracts/expiring" element={<ExpiringContracts />} />
+          <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
+          <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
+          <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
+          <Route path="/admin/payroll/generator" element={<PayrollGenerator />} />
+          <Route path="/performance" element={<EvaluationDashboard />} />
+          <Route path="/performance/create" element={<CreateEvaluation />} />
+          <Route path="/performance/assign" element={<AssignEvaluation />} />
+          <Route path="/recruitment" element={<RecruitmentDashboard />} />
+          <Route path="/recruitment/create" element={<CreateJobVacancy />} />
+          <Route path="/recruitment/:id" element={<VacancyDetails />} />
+          <Route path="/recruitment/applications/:id" element={<ApplicationDetails />} />
+          <Route path="/analytics" element={<AnalyticsDashboard />} />
+          <Route path="/analytics/turnover" element={<TurnoverReport />} />
+          <Route path="/analytics/performance" element={<PerformanceReport />} />
+          <Route path="/analytics/payroll-costs" element={<PayrollCostReport />} />
+          <Route path="/analytics/satisfaction" element={<SatisfactionReport />} />
+          <Route path="/analytics/custom" element={<CustomReport />} />
+        </Route>
 
-        <Route
-          path="/admin/payroll/generator"
-          element={
-            <RequireAuth role="admin">
-              <PayrollGenerator />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/my-payments"
-          element={
-            <RequireAuth allowedRoles={['admin', 'hr', 'employee']}>
-              <MyPayments user={auth.user} />
-            </RequireAuth>
-          }
-        />
-
-        <Route
-          path="/performance"
-          element={
-            <RequireAuth role="admin">
-              <EvaluationDashboard />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/performance/create"
-          element={
-            <RequireAuth role="admin">
-              <CreateEvaluation />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/performance/assign"
-          element={
-            <RequireAuth role="admin">
-              <AssignEvaluation />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/performance/results/:id"
-          element={
-            <RequireAuth>
-              <EvaluationResults />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/performance/goals"
-          element={
-            <RequireAuth>
-              <MyGoals />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/recruitment"
-          element={
-            <RequireAuth role="admin">
-              <RecruitmentDashboard />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/recruitment/create"
-          element={
-            <RequireAuth role="admin">
-              <CreateJobVacancy />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/recruitment/:id"
-          element={
-            <RequireAuth role="admin">
-              <VacancyDetails />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/recruitment/applications/:id"
-          element={
-            <RequireAuth role="admin">
-              <ApplicationDetails />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <RequireAuth role="admin">
-              <AnalyticsDashboard />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/analytics/turnover"
-          element={
-            <RequireAuth role="admin">
-              <TurnoverReport />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/analytics/performance"
-          element={
-            <RequireAuth role="admin">
-              <PerformanceReport />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/analytics/payroll-costs"
-          element={
-            <RequireAuth role="admin">
-              <PayrollCostReport />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/analytics/satisfaction"
-          element={
-            <RequireAuth role="admin">
-              <SatisfactionReport />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/analytics/custom"
-          element={
-            <RequireAuth role="admin">
-              <CustomReport />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/performance/my-evaluations"
-          element={
-            <RequireAuth>
-              <MyEvaluations />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/performance/take/:id"
-          element={
-            <RequireAuth>
-              <TakeEvaluation />
-            </RequireAuth>
-          }
-        />
+        <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+          <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
+          <Route path="/performance/results/:id" element={<EvaluationResults />} />
+          <Route path="/performance/goals" element={<MyGoals />} />
+          <Route path="/performance/my-evaluations" element={<MyEvaluations />} />
+          <Route path="/performance/take/:id" element={<TakeEvaluation />} />
+          <Route path="/profile" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
+          <Route path="/help" element={<HelpCenter />} />
+        </Route>
+        {/* Employee Routes - Keep specialized layout or wrap if needed */}
+        {/* For now keeping them separate as verified in requirement */}
+        <Route path="/empleado" element={<RequireAuth role="employee"><EmployeeDashboard user={auth.user} onLogout={handleLogout} /></RequireAuth>} />
+        <Route path="/empleado/asistencia" element={<RequireAuth role="employee"><EmployeeAttendance user={auth.user} /></RequireAuth>} />
+        <Route path="/empleado/ausencias" element={<RequireAuth role="employee"><EmployeeAbsences /></RequireAuth>} />
         <Route
           path="/help"
           element={

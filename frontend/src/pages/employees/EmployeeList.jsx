@@ -32,7 +32,7 @@ const EmployeeList = ({ token }) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white p-6">
+        <div className="bg-slate-900 text-white rounded-2xl shadow-xl min-h-[calc(100vh-8rem)] p-6">
             <div className="max-w-7xl mx-auto">
                 <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
                     <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">

@@ -18,7 +18,7 @@ import HealthMeter from '../../components/HealthMeter.jsx';
 import EmployeeScoreCard from '../../components/EmployeeScoreCard.jsx';
 import PredictiveTrendChart from '../../components/PredictiveTrendChart.jsx';
 import Loading from '../../components/Loading.jsx';
-import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
+
 
 /**
  * Dashboard Inteligente de Gestión
@@ -150,7 +150,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
     };
 
     return (
-        <DashboardLayout user={user} onLogout={onLogout} title="Agente Inteligente">
+        <>
             <motion.div
                 className="space-y-6"
                 variants={containerVariants}
@@ -405,6 +405,6 @@ export default function IntelligentDashboard({ user, onLogout }) {
                     )}
                 </motion.div>
             </motion.div>
-        </DashboardLayout>
+        </>
     );
 }

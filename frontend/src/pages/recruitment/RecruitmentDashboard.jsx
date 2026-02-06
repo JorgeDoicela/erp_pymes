@@ -41,7 +41,7 @@ const RecruitmentDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="bg-gray-900 text-white rounded-2xl shadow-xl min-h-[calc(100vh-8rem)] p-6">
             <div className="max-w-7xl mx-auto">
                 <header className="flex justify-between items-center mb-8">
                     <div>

@@ -7,7 +7,6 @@ import {
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import { adminModules } from '../../constants/modules';
 import * as intelligenceService from '../../services/intelligenceService';
 
@@ -93,7 +92,7 @@ function AdminDashboard({ user, onLogout }) {
     }, []);
 
     return (
-        <DashboardLayout user={user} onLogout={onLogout} title="Panel de Control">
+        <>
             {successMsg && (
                 <div className="mb-6 animate-fade-in-down">
                     <div className="bg-emerald-500/10 text-emerald-800 px-6 py-4 rounded-xl shadow-sm border border-emerald-500/20 flex items-center gap-3">
@@ -203,7 +202,7 @@ function AdminDashboard({ user, onLogout }) {
                     </motion.section>
                 </div>
             </motion.div>
-        </DashboardLayout>
+        </>
     );
 }
 
