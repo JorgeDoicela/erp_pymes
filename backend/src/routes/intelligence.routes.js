@@ -37,4 +37,20 @@ router.get('/recommendations', intelligenceController.getRecommendations);
 // Comparativa de departamentos
 router.get('/departments', intelligenceController.getDepartmentComparison);
 
+// Alertas proactivas
+router.get('/alerts', intelligenceController.getProactiveAlerts);
+
+// Análisis predictivo
+router.get('/predictions', intelligenceController.getPredictiveAnalytics);
+
+// Scoring de empleados
+router.get('/employee-scoring', intelligenceController.getEmployeeScoring);
+router.get('/employee-scoring/:employeeId', intelligenceController.getEmployeeScoring);
+
+// Salud organizacional
+router.get('/organizational-health', intelligenceController.getOrganizationalHealth);
+
+// Análisis de patrones
+router.get('/patterns', intelligenceController.getPatternAnalysis);
+
 export default router;

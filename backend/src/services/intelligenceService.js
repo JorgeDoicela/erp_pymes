@@ -807,3 +807,482 @@ export async function getDepartmentComparison() {
         },
     };
 }
+
+// ==================== ALERTAS PROACTIVAS ====================
+
+/**
+ * Obtiene alertas proactivas del sistema
+ */
+export async function getProactiveAlerts() {
+    const alerts = [];
+    const now = new Date();
+
+    // 1. Alertas de Retención Crítica
+    const retention = await getRetentionRiskAnalysis();
+    const criticalEmployees = retention.analysis.filter(e => e.level === 'Alto Riesgo' && e.score > 70);
+
+    criticalEmployees.forEach(emp => {
+        alerts.push({
+            id: `retention-${emp.employeeId}`,
+            type: 'RETENTION',
+            severity: 'CRITICAL',
+            title: `Riesgo Crítico de Rotación: ${emp.employeeName}`,
+            description: `${emp.employeeName} (${emp.department}) tiene un score de riesgo de ${emp.score}/100. Acción inmediata requerida.`,
+            employee: {
+                id: emp.employeeId,
+                name: emp.employeeName,
+                department: emp.department,
+                position: emp.position
+            },
+            factors: emp.factors.slice(0, 3),
+            recommendedActions: [
+                'Agendar reunión 1-on-1 esta semana',
+                'Revisar compensación vs mercado',
+                'Evaluar oportunidades de crecimiento'
+            ],
+            detectedAt: now,
+            priority: 1
+        });
+    });
+
+    // 2. Alertas de Evaluaciones Vencidas
+    const evaluations = await prisma.employeeEvaluation.findMany({
+        where: {
+            status: 'PENDING',
+            endDate: { lt: now }
+        },
+        include: {
+            employee: {
+                select: { id: true, firstName: true, lastName: true, department: true, position: true }
+            }
+        }
+    });
+
+    evaluations.forEach(evaluation => {
+        const daysOverdue = Math.floor((now - evaluation.endDate) / (1000 * 60 * 60 * 24));
+        const severity = daysOverdue > 14 ? 'HIGH' : daysOverdue > 7 ? 'MEDIUM' : 'LOW';
+
+        alerts.push({
+            id: `eval-${evaluation.id}`,
+            type: 'PERFORMANCE',
+            severity,
+            title: `Evaluación Vencida: ${evaluation.employee.firstName} ${evaluation.employee.lastName}`,
+            description: `Evaluación vencida hace ${daysOverdue} días. Completar urgentemente.`,
+            employee: {
+                id: evaluation.employee.id,
+                name: `${evaluation.employee.firstName} ${evaluation.employee.lastName}`,
+                department: evaluation.employee.department,
+                position: evaluation.employee.position
+            },
+            daysOverdue,
+            recommendedActions: [
+                'Completar evaluación inmediatamente',
+                'Notificar al evaluador asignado',
+                'Programar sesión de feedback'
+            ],
+            detectedAt: now,
+            priority: severity === 'HIGH' ? 2 : 3
+        });
+    });
+
+    // 3. Alertas de Patrones de Ausencia
+    const attendance = await getAttendancePatterns();
+    const suspiciousEmployees = attendance.suspiciousAbsences.slice(0, 5);
+
+    suspiciousEmployees.forEach(emp => {
+        alerts.push({
+            id: `absence-${emp.employeeId}`,
+            type: 'ATTENDANCE',
+            severity: emp.absenceCount > 5 ? 'HIGH' : 'MEDIUM',
+            title: `Patrón Sospechoso de Ausencias: ${emp.employeeName}`,
+            description: `${emp.absenceCount} ausencias en 30 días. Patrón: ${emp.pattern}`,
+            employee: {
+                id: emp.employeeId,
+                name: emp.employeeName,
+                department: emp.department
+            },
+            absenceCount: emp.absenceCount,
+            pattern: emp.pattern,
+            recommendedActions: [
+                'Reunión con el empleado para entender causas',
+                'Verificar si requiere apoyo médico o personal',
+                'Revisar políticas de asistencia'
+            ],
+            detectedAt: now,
+            priority: 3
+        });
+    });
+
+    // 4. Alertas de Departamentos Críticos
+    const departments = await getDepartmentComparison();
+    const criticalDepts = departments.departments.filter(d => d.health === 'Crítico');
+
+    criticalDepts.forEach(dept => {
+        alerts.push({
+            id: `dept-${dept.department}`,
+            type: 'DEPARTMENT',
+            severity: 'HIGH',
+            title: `Departamento en Estado Crítico: ${dept.department}`,
+            description: `Score general de ${dept.overallScore.toFixed(0)}/100. Requiere intervención urgente.`,
+            department: dept.department,
+            metrics: {
+                employeeCount: dept.employeeCount,
+                highRiskCount: dept.highRiskCount,
+                overallScore: dept.overallScore
+            },
+            recommendedActions: [
+                'Reunión con líder del departamento',
+                'Análisis profundo de causas raíz',
+                'Plan de acción inmediato'
+            ],
+            detectedAt: now,
+            priority: 2
+        });
+    });
+
+    // Ordenar por prioridad y severidad
+    const severityOrder = { 'CRITICAL': 1, 'HIGH': 2, 'MEDIUM': 3, 'LOW': 4 };
+    alerts.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return severityOrder[a.severity] - severityOrder[b.severity];
+    });
+
+    return {
+        alerts,
+        summary: {
+            total: alerts.length,
+            critical: alerts.filter(a => a.severity === 'CRITICAL').length,
+            high: alerts.filter(a => a.severity === 'HIGH').length,
+            medium: alerts.filter(a => a.severity === 'MEDIUM').length,
+            low: alerts.filter(a => a.severity === 'LOW').length,
+            byType: {
+                retention: alerts.filter(a => a.type === 'RETENTION').length,
+                performance: alerts.filter(a => a.type === 'PERFORMANCE').length,
+                attendance: alerts.filter(a => a.type === 'ATTENDANCE').length,
+                department: alerts.filter(a => a.type === 'DEPARTMENT').length,
+            }
+        }
+    };
+}
+
+// ==================== PREDICCIONES Y TENDENCIAS ====================
+
+/**
+ * Obtiene análisis predictivo basado en datos históricos
+ */
+export async function getPredictiveAnalytics() {
+    // Obtener datos históricos de rotación (últimos 6 meses)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const terminatedEmployees = await prisma.employee.findMany({
+        where: {
+            isActive: false,
+            exitDate: { gte: sixMonthsAgo }
+        },
+        orderBy: { exitDate: 'asc' }
+    });
+
+    // Agrupar por mes
+    const rotationByMonth = {};
+    terminatedEmployees.forEach(emp => {
+        const monthKey = `${emp.exitDate.getFullYear()}-${String(emp.exitDate.getMonth() + 1).padStart(2, '0')}`;
+        rotationByMonth[monthKey] = (rotationByMonth[monthKey] || 0) + 1;
+    });
+
+    // Crear serie temporal
+    const months = [];
+    const rotationData = [];
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        months.push(monthKey);
+        rotationData.push(rotationByMonth[monthKey] || 0);
+    }
+
+    // Convertir a array de valores numéricos para regresión
+    const yValues = rotationData; // [2, 3, 2, 4...]
+    const xValues = Array.from({ length: yValues.length }, (_, i) => i); // [0, 1, 2, 3...]
+
+    // Algoritmo de Regresión Lineal (Mínimos Cuadrados)
+    const n = yValues.length;
+    const sumX = xValues.reduce((a, b) => a + b, 0);
+    const sumY = yValues.reduce((a, b) => a + b, 0);
+    const sumXY = xValues.reduce((sum, x, i) => sum + x * yValues[i], 0);
+    const sumXX = xValues.reduce((sum, x) => sum + x * x, 0);
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    // Proyectar próximos 3 meses usando la ecuación de la recta: y = mx + b
+    const predictions = [];
+    for (let i = 1; i <= 3; i++) {
+        const nextX = (n - 1) + i;
+        const predictedVal = Math.max(0, slope * nextX + intercept); // Evitar negativos
+
+        const date = new Date();
+        date.setMonth(date.getMonth() + i);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+        predictions.push({
+            month: monthKey,
+            predicted: Number(predictedVal.toFixed(1)),
+            confidence: Math.min(0.9, 0.5 + (1 / i) * 0.2) // Confianza disminuye con el tiempo
+        });
+    }
+
+    const trend = slope > 0.1 ? 'increasing' : slope < -0.1 ? 'decreasing' : 'stable';
+    const avgRotation = sumY / n;
+
+    // Tendencia de asistencia
+
+
+    // Tendencia de asistencia
+    const attendanceData = await prisma.attendance.groupBy({
+        by: ['date'],
+        where: {
+            date: { gte: sixMonthsAgo },
+            status: 'Falta'
+        },
+        _count: { id: true }
+    });
+
+    const absencesByMonth = {};
+    attendanceData.forEach(record => {
+        const monthKey = `${record.date.getFullYear()}-${String(record.date.getMonth() + 1).padStart(2, '0')}`;
+        absencesByMonth[monthKey] = (absencesByMonth[monthKey] || 0) + record._count.id;
+    });
+
+    return {
+        rotation: {
+            historical: months.map((month, i) => ({ month, count: rotationData[i] })),
+            predictions,
+            trend,
+            avgMonthly: avgRotation
+        },
+        attendance: {
+            trend: Object.keys(absencesByMonth).length > 0 ? 'stable' : 'improving',
+            avgAbsencesPerMonth: Object.values(absencesByMonth).reduce((a, b) => a + b, 0) / Object.keys(absencesByMonth).length || 0
+        },
+        insights: [
+            {
+                type: 'rotation',
+                message: trend === 'increasing'
+                    ? `Tendencia de rotación al alza. Se proyectan ${Math.round(avgRotation)} salidas mensuales.`
+                    : `Tendencia de rotación estable. Promedio de ${Math.round(avgRotation)} salidas mensuales.`,
+                severity: trend === 'increasing' ? 'warning' : 'info'
+            }
+        ]
+    };
+}
+
+// ==================== SCORING INTELIGENTE DE EMPLEADOS ====================
+
+/**
+ * Obtiene scoring multidimensional de empleados
+ */
+export async function getEmployeeScoring(employeeId = null) {
+    const whereClause = employeeId ? { id: employeeId, isActive: true } : { isActive: true };
+
+    const employees = await prisma.employee.findMany({
+        where: whereClause,
+        include: {
+            absences: { orderBy: { createdAt: 'desc' }, take: 30 },
+            evaluations: { orderBy: { createdAt: 'desc' }, take: 5 },
+            attendance: {
+                where: {
+                    date: { gte: new Date(new Date().setDate(new Date().getDate() - 90)) }
+                }
+            }
+        }
+    });
+
+    const scoredEmployees = employees.map(emp => {
+        // Calcular scores por dimensión (0-100)
+        const retentionScore = 100 - calculateRetentionRiskScore(emp).score; // Invertir (mayor = mejor)
+
+        const performanceScore = emp.evaluations.length > 0
+            ? 75 // Placeholder - en producción calcular desde evaluaciones reales
+            : 50;
+
+        const attendanceScore = emp.attendance.length > 0
+            ? Math.max(0, 100 - (emp.absences.length * 5)) // -5 puntos por ausencia
+            : 50;
+
+        const engagementScore = 70; // Placeholder - calcular desde encuestas de clima
+
+        const growthScore = emp.evaluations.length > 0 ? 65 : 50; // Placeholder
+
+        // Score general (promedio ponderado)
+        const overallScore = (
+            retentionScore * 0.25 +
+            performanceScore * 0.30 +
+            attendanceScore * 0.20 +
+            engagementScore * 0.15 +
+            growthScore * 0.10
+        );
+
+        return {
+            employeeId: emp.id,
+            employeeName: `${emp.firstName} ${emp.lastName}`,
+            department: emp.department,
+            position: emp.position,
+            scores: {
+                retention: Math.round(retentionScore),
+                performance: Math.round(performanceScore),
+                attendance: Math.round(attendanceScore),
+                engagement: Math.round(engagementScore),
+                growth: Math.round(growthScore),
+                overall: Math.round(overallScore)
+            },
+            category: overallScore >= 80 ? 'Top Performer' :
+                overallScore >= 60 ? 'Good Performer' :
+                    overallScore >= 40 ? 'Needs Improvement' : 'At Risk'
+        };
+    });
+
+    // Ordenar por score general
+    scoredEmployees.sort((a, b) => b.scores.overall - a.scores.overall);
+
+    return {
+        employees: scoredEmployees,
+        summary: {
+            total: scoredEmployees.length,
+            topPerformers: scoredEmployees.filter(e => e.category === 'Top Performer').length,
+            goodPerformers: scoredEmployees.filter(e => e.category === 'Good Performer').length,
+            needsImprovement: scoredEmployees.filter(e => e.category === 'Needs Improvement').length,
+            atRisk: scoredEmployees.filter(e => e.category === 'At Risk').length,
+            avgOverallScore: scoredEmployees.reduce((sum, e) => sum + e.scores.overall, 0) / scoredEmployees.length
+        }
+    };
+}
+
+// ==================== SALUD ORGANIZACIONAL ====================
+
+/**
+ * Obtiene índice de salud organizacional
+ */
+export async function getOrganizationalHealth() {
+    const [retention, performance, attendance, departments, scoring] = await Promise.all([
+        getRetentionRiskAnalysis(),
+        getPerformanceInsights(),
+        getAttendancePatterns(),
+        getDepartmentComparison(),
+        getEmployeeScoring()
+    ]);
+
+    // Calcular índice de salud general (0-100)
+    const retentionHealth = 100 - (retention.stats.highRisk / retention.stats.total * 100);
+    const performanceHealth = 100 - (performance.declining.length / retention.stats.total * 100);
+    const attendanceHealth = 100 - (attendance.suspiciousAbsences.length / retention.stats.total * 100);
+    const departmentHealth = (departments.summary.excellent + departments.summary.good) / departments.summary.totalDepartments * 100;
+
+    const overallHealth = (
+        retentionHealth * 0.30 +
+        performanceHealth * 0.25 +
+        attendanceHealth * 0.20 +
+        departmentHealth * 0.25
+    );
+
+    // Matriz de cuadrantes (Desempeño vs Riesgo)
+    const matrix = {
+        highPerformanceLowRisk: [],
+        highPerformanceHighRisk: [],
+        lowPerformanceLowRisk: [],
+        lowPerformanceHighRisk: []
+    };
+
+    scoring.employees.forEach(emp => {
+        const highPerformance = emp.scores.performance >= 70;
+        const lowRisk = emp.scores.retention >= 70;
+
+        if (highPerformance && lowRisk) matrix.highPerformanceLowRisk.push(emp);
+        else if (highPerformance && !lowRisk) matrix.highPerformanceHighRisk.push(emp);
+        else if (!highPerformance && lowRisk) matrix.lowPerformanceLowRisk.push(emp);
+        else matrix.lowPerformanceHighRisk.push(emp);
+    });
+
+    return {
+        overallHealth: Math.round(overallHealth),
+        healthLevel: overallHealth >= 80 ? 'Excelente' :
+            overallHealth >= 60 ? 'Bueno' :
+                overallHealth >= 40 ? 'Regular' : 'Crítico',
+        components: {
+            retention: Math.round(retentionHealth),
+            performance: Math.round(performanceHealth),
+            attendance: Math.round(attendanceHealth),
+            departments: Math.round(departmentHealth)
+        },
+        matrix,
+        kpis: {
+            totalEmployees: retention.stats.total,
+            avgTenure: 2.5, // Placeholder - calcular desde hireDate
+            rotationRate: (retention.stats.highRisk / retention.stats.total * 100).toFixed(1),
+            satisfactionIndex: Math.round(overallHealth) // Placeholder
+        }
+    };
+}
+
+// ==================== ANÁLISIS DE PATRONES ====================
+
+/**
+ * Detecta patrones y anomalías en los datos
+ */
+export async function getPatternAnalysis() {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Patrón de ausencias por día de semana
+    const attendance = await prisma.attendance.findMany({
+        where: {
+            date: { gte: thirtyDaysAgo },
+            status: 'Falta'
+        },
+        include: {
+            employee: {
+                select: { department: true }
+            }
+        }
+    });
+
+    const absencesByDayOfWeek = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    const absencesByDepartment = {};
+
+    attendance.forEach(record => {
+        const dayOfWeek = record.date.getDay();
+        absencesByDayOfWeek[dayOfWeek]++;
+
+        const dept = record.employee.department;
+        absencesByDepartment[dept] = (absencesByDepartment[dept] || 0) + 1;
+    });
+
+    // Detectar días con más ausencias
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const peakDay = Object.entries(absencesByDayOfWeek)
+        .reduce((max, [day, count]) => count > max.count ? { day: parseInt(day), count } : max, { day: 0, count: 0 });
+
+    return {
+        absencePatterns: {
+            byDayOfWeek: Object.entries(absencesByDayOfWeek).map(([day, count]) => ({
+                day: dayNames[day],
+                count
+            })),
+            peakDay: dayNames[peakDay.day],
+            peakDayCount: peakDay.count
+        },
+        departmentPatterns: {
+            byDepartment: Object.entries(absencesByDepartment).map(([dept, count]) => ({
+                department: dept,
+                absences: count
+            })).sort((a, b) => b.absences - a.absences)
+        },
+        insights: [
+            {
+                type: 'absence_pattern',
+                message: `${dayNames[peakDay.day]} tiene el mayor número de ausencias (${peakDay.count})`,
+                severity: peakDay.count > 10 ? 'warning' : 'info'
+            }
+        ]
+    };
+}

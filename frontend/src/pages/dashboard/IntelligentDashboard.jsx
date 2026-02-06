@@ -13,6 +13,10 @@ import IntelligentInsightCard from '../../components/IntelligentInsightCard.jsx'
 import RecommendationsList from '../../components/RecommendationsList.jsx';
 import RiskScoreIndicator from '../../components/RiskScoreIndicator.jsx';
 import DepartmentComparison from '../../components/DepartmentComparison.jsx';
+import AlertsPanel from '../../components/AlertsPanel.jsx';
+import HealthMeter from '../../components/HealthMeter.jsx';
+import EmployeeScoreCard from '../../components/EmployeeScoreCard.jsx';
+import PredictiveTrendChart from '../../components/PredictiveTrendChart.jsx';
 import Loading from '../../components/Loading.jsx';
 
 /**
@@ -25,6 +29,10 @@ export default function IntelligentDashboard() {
     const [refreshing, setRefreshing] = useState(false);
     const [dashboard, setDashboard] = useState(null);
     const [departmentComparison, setDepartmentComparison] = useState(null);
+    const [alerts, setAlerts] = useState(null);
+    const [organizationalHealth, setOrganizationalHealth] = useState(null);
+    const [employeeScoring, setEmployeeScoring] = useState(null);
+    const [predictiveInsights, setPredictiveInsights] = useState(null);
 
     useEffect(() => {
         loadDashboard();
@@ -33,9 +41,20 @@ export default function IntelligentDashboard() {
     const loadDashboard = async () => {
         try {
             setLoading(true);
-            const [dashboardResponse, deptResponse] = await Promise.all([
+            const [
+                dashboardResponse,
+                deptResponse,
+                alertsResponse,
+                healthResponse,
+                scoringResponse,
+                predictionsResponse
+            ] = await Promise.all([
                 intelligenceService.getDashboard(),
                 intelligenceService.getDepartmentComparison(),
+                intelligenceService.getProactiveAlerts(),
+                intelligenceService.getOrganizationalHealth(),
+                intelligenceService.getEmployeeScoring(),
+                intelligenceService.getPredictiveAnalytics(),
             ]);
 
             if (dashboardResponse.success) {
@@ -46,6 +65,22 @@ export default function IntelligentDashboard() {
 
             if (deptResponse.success) {
                 setDepartmentComparison(deptResponse.data);
+            }
+
+            if (alertsResponse.success) {
+                setAlerts(alertsResponse.data);
+            }
+
+            if (healthResponse.success) {
+                setOrganizationalHealth(healthResponse.data);
+            }
+
+            if (scoringResponse.success) {
+                setEmployeeScoring(scoringResponse.data);
+            }
+
+            if (predictionsResponse.success) {
+                setPredictiveInsights(predictionsResponse.data);
             }
         } catch (error) {
             console.error('Error loading intelligence dashboard:', error);
@@ -390,6 +425,77 @@ export default function IntelligentDashboard() {
                             departments={departmentComparison.departments}
                             summary={departmentComparison.summary}
                         />
+                    </motion.div>
+                )}
+
+                {/* Predicciones y Tendencias */}
+                {predictiveInsights && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="mb-8"
+                    >
+                        <PredictiveTrendChart data={predictiveInsights} />
+                    </motion.div>
+                )}
+
+                {/* Alertas Proactivas */}
+                {alerts && alerts.alerts && alerts.alerts.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.16 }}
+                        className="mb-8"
+                    >
+                        <AlertsPanel
+                            alerts={alerts.alerts.slice(0, 5)}
+                            summary={alerts.summary}
+                        />
+                    </motion.div>
+                )}
+
+                {/* Salud Organizacional */}
+                {organizationalHealth && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.17 }}
+                        className="mb-8"
+                    >
+                        <HealthMeter health={organizationalHealth} />
+                    </motion.div>
+                )}
+
+                {/* Top Performers - Scoring de Empleados */}
+                {employeeScoring && employeeScoring.employees && employeeScoring.employees.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.18 }}
+                        className="mb-8"
+                    >
+                        <div className="bg-white rounded-xl shadow-lg p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-gray-900">Top Performers</h3>
+                                <div className="flex gap-2 text-xs">
+                                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
+                                        {employeeScoring.summary.topPerformers} Top
+                                    </span>
+                                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold">
+                                        {employeeScoring.summary.goodPerformers} Good
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {employeeScoring.employees
+                                    .filter(emp => emp.category === 'Top Performer' || emp.category === 'Good Performer')
+                                    .slice(0, 6)
+                                    .map((employee, idx) => (
+                                        <EmployeeScoreCard key={idx} employee={employee} />
+                                    ))}
+                            </div>
+                        </div>
                     </motion.div>
                 )}
 

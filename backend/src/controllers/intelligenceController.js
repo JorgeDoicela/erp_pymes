@@ -173,3 +173,110 @@ export async function getDepartmentComparison(req, res) {
         });
     }
 }
+
+/**
+ * GET /api/intelligence/alerts
+ * Obtiene alertas proactivas del sistema
+ */
+export async function getProactiveAlerts(req, res) {
+    try {
+        const alerts = await intelligenceService.getProactiveAlerts();
+        res.json({
+            success: true,
+            data: alerts,
+        });
+    } catch (error) {
+        console.error('Error getting proactive alerts:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener alertas proactivas',
+            error: error.message,
+        });
+    }
+}
+
+/**
+ * GET /api/intelligence/predictions
+ * Obtiene análisis predictivo
+ */
+export async function getPredictiveAnalytics(req, res) {
+    try {
+        const predictions = await intelligenceService.getPredictiveAnalytics();
+        res.json({
+            success: true,
+            data: predictions,
+        });
+    } catch (error) {
+        console.error('Error getting predictive analytics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener análisis predictivo',
+            error: error.message,
+        });
+    }
+}
+
+/**
+ * GET /api/intelligence/employee-scoring
+ * GET /api/intelligence/employee-scoring/:employeeId
+ * Obtiene scoring de empleados
+ */
+export async function getEmployeeScoring(req, res) {
+    try {
+        const { employeeId } = req.params;
+        const scoring = await intelligenceService.getEmployeeScoring(employeeId || null);
+        res.json({
+            success: true,
+            data: scoring,
+        });
+    } catch (error) {
+        console.error('Error getting employee scoring:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener scoring de empleados',
+            error: error.message,
+        });
+    }
+}
+
+/**
+ * GET /api/intelligence/organizational-health
+ * Obtiene índice de salud organizacional
+ */
+export async function getOrganizationalHealth(req, res) {
+    try {
+        const health = await intelligenceService.getOrganizationalHealth();
+        res.json({
+            success: true,
+            data: health,
+        });
+    } catch (error) {
+        console.error('Error getting organizational health:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener salud organizacional',
+            error: error.message,
+        });
+    }
+}
+
+/**
+ * GET /api/intelligence/patterns
+ * Obtiene análisis de patrones y anomalías
+ */
+export async function getPatternAnalysis(req, res) {
+    try {
+        const patterns = await intelligenceService.getPatternAnalysis();
+        res.json({
+            success: true,
+            data: patterns,
+        });
+    } catch (error) {
+        console.error('Error getting pattern analysis:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener análisis de patrones',
+            error: error.message,
+        });
+    }
+}

@@ -93,3 +93,61 @@ export async function getDepartmentComparison() {
     });
     return response.data;
 }
+
+/**
+ * Obtiene alertas proactivas del sistema
+ */
+export async function getProactiveAlerts() {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_URL}/intelligence/alerts`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+}
+
+/**
+ * Obtiene análisis predictivo
+ */
+export async function getPredictiveAnalytics() {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_URL}/intelligence/predictions`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+}
+
+/**
+ * Obtiene scoring de empleados
+ */
+export async function getEmployeeScoring(employeeId = null) {
+    const token = localStorage.getItem('token');
+    const url = employeeId
+        ? `${API_URL}/intelligence/employee-scoring/${employeeId}`
+        : `${API_URL}/intelligence/employee-scoring`;
+    const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+}
+
+/**
+ * Obtiene índice de salud organizacional
+ */
+export async function getOrganizationalHealth() {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_URL}/intelligence/organizational-health`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+}
+
+/**
+ * Obtiene análisis de patrones y anomalías
+ */
+export async function getPatternAnalysis() {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_URL}/intelligence/patterns`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+}
