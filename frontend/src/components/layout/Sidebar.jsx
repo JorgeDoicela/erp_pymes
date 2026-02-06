@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { adminModules } from '../../constants/modules';
+import logoEmplifi from '../../assets/images/logo_emplifi.png';
 
 const Sidebar = ({ user, onLogout, onClose }) => {
     const navigate = useNavigate();
@@ -8,9 +9,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
     return (
         <aside className="h-full w-full bg-blue-950 flex flex-col text-white">
             <div className="p-6 flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight">
-                    EMPLIFI
-                </h1>
+                <img src={logoEmplifi} alt="EMPLIFI" className="h-14 w-auto object-contain" />
                 {onClose && (
                     <button onClick={onClose} className="md:hidden text-white/70 hover:text-white">
                         ✕
