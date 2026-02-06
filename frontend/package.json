@@ -14,6 +14,7 @@
     "framer-motion": "^12.23.26",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
+    "prop-types": "^15.8.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",

@@ -192,17 +192,29 @@ function AdminDashboard({ user, onLogout }) {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-[100px]"></div>
 
                         <div className="relative z-10">
-                            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                                <span className="text-white"><FiCpu /></span> Asistente Inteligente
-                            </h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-2xl font-bold flex items-center gap-2">
+                                    <span className="text-white"><FiCpu /></span> Asistente Inteligente
+                                </h3>
+                                <button
+                                    onClick={() => navigate('/intelligence')}
+                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+                                >
+                                    <FiActivity className="w-4 h-4" />
+                                    Ver Dashboard Completo →
+                                </button>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {insights.map((insight, idx) => (
-                                    <div key={idx} className="bg-slate-900/60 backdrop-blur-sm p-4 rounded-xl border border-white/5 flex items-start gap-3">
+                                    <div key={idx} className="bg-slate-900/60 backdrop-blur-sm p-4 rounded-xl border border-white/5 flex items-start gap-3 hover:bg-slate-900/80 transition-colors cursor-pointer" onClick={() => navigate(insight.path)}>
                                         <span className="text-2xl">{insight.icon}</span>
                                         <div>
                                             <p className="text-sm font-medium text-slate-200">{insight.message}</p>
                                             <button
-                                                onClick={() => navigate(insight.path)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(insight.path);
+                                                }}
                                                 className="text-xs text-blue-400 mt-2 hover:text-blue-300 flex items-center gap-1"
                                             >
                                                 Ver detalles →
@@ -210,6 +222,14 @@ function AdminDashboard({ user, onLogout }) {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                            <div className="mt-4 p-4 bg-slate-900/40 rounded-lg border border-white/5">
+                                <p className="text-sm text-slate-300 mb-2">
+                                    💡 <strong>Insights Disponibles:</strong> Análisis de riesgo de rotación, patrones de asistencia, optimización de nómina, y más.
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                    El agente inteligente analiza datos en tiempo real para proporcionar recomendaciones accionables.
+                                </p>
                             </div>
                         </div>
                     </section>

@@ -63,6 +63,7 @@ const NotificationsPage = lazy(() => import('./pages/notifications/Notifications
 const NotificationSettings = lazy(() => import('./pages/notifications/NotificationSettings.jsx'));
 const AuditLogsPage = lazy(() => import('./pages/audit/AuditLogsPage.jsx'));
 const HelpCenter = lazy(() => import('./pages/help/HelpCenter.jsx'));
+const IntelligentDashboard = lazy(() => import('./pages/dashboard/IntelligentDashboard.jsx'));
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -232,6 +233,14 @@ function App() {
           element={
             <RequireAuth role="admin">
               <ExpiringContracts />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/intelligence"
+          element={
+            <RequireAuth role="admin">
+              <IntelligentDashboard />
             </RequireAuth>
           }
         />
