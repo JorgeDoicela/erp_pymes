@@ -240,7 +240,7 @@ function App() {
           path="/intelligence"
           element={
             <RequireAuth role="admin">
-              <IntelligentDashboard />
+              <IntelligentDashboard user={auth.user} onLogout={handleLogout} />
             </RequireAuth>
           }
         />

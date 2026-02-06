@@ -17,34 +17,34 @@ function EmployeeDashboard({ user, onLogout }) {
     ]
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white">
+        <div className="min-h-screen bg-slate-50 text-slate-900">
             {/* Navbar */}
-            <nav className="bg-slate-900/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+            <nav className="bg-blue-950 text-white border-b border-white/10 sticky top-0 z-50 shadow-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-2">
-                            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                            <span className="text-2xl font-bold tracking-tight">
                                 EMPLIFI
                             </span>
-                            <span className="px-2 py-1 rounded text-xs font-medium bg-white/10 text-slate-300">
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-white/10 text-white/80">
                                 Portal del Empleado
                             </span>
                         </div>
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => navigate('/help')}
-                                className="p-2 rounded-full hover:bg-white/10 text-slate-300 transition-colors"
+                                className="p-2 rounded-full hover:bg-white/10 text-white/80 transition-colors"
                                 title="Centro de Ayuda"
                             >
                                 <FiHelpCircle size={20} />
                             </button>
                             <div className="text-right hidden sm:block">
                                 <p className="text-sm font-medium text-white">{user?.firstName || 'Empleado'}</p>
-                                <p className="text-xs text-slate-400">{user?.position || 'Colaborador'}</p>
+                                <p className="text-xs text-emerald-400">{user?.position || 'Colaborador'}</p>
                             </div>
                             <button
                                 onClick={onLogout}
-                                className="px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
+                                className="px-4 py-2 rounded-lg bg-red-500/10 text-red-200 hover:bg-red-500/20 transition-colors text-sm font-medium"
                             >
                                 Salir
                             </button>
@@ -56,10 +56,10 @@ function EmployeeDashboard({ user, onLogout }) {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Welcome Section */}
                 <section className="mb-12 text-center sm:text-left">
-                    <h1 className="text-3xl font-bold mb-2">
-                        Hola, <span className="text-blue-400">{user?.firstName || 'Empleado'}</span>
+                    <h1 className="text-3xl font-bold mb-2 text-slate-800">
+                        Hola, <span className="text-blue-900">{user?.firstName || 'Empleado'}</span>
                     </h1>
-                    <p className="text-slate-400">
+                    <p className="text-slate-500">
                         Bienvenido a tu portal personal. ¿Qué deseas hacer hoy?
                     </p>
                 </section>
@@ -70,61 +70,61 @@ function EmployeeDashboard({ user, onLogout }) {
                         <button
                             key={idx}
                             onClick={() => action.path !== '#' && navigate(action.path)}
-                            className="group relative overflow-hidden rounded-2xl bg-slate-800/50 border border-white/5 p-6 hover:bg-slate-800 transition-all hover:-translate-y-1 text-left"
+                            className="group relative overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 hover:shadow-lg transition-all hover:-translate-y-1 text-left shadow-sm"
                         >
-                            <div className={`absolute top-0 right-0 w-24 h-24 ${action.color} opacity-10 rounded-bl-full group-hover:scale-110 transition-transform`}></div>
-                            <div className="text-4xl mb-4">{action.icon}</div>
-                            <h3 className="text-lg font-bold mb-1">{action.title}</h3>
-                            <p className="text-sm text-slate-400">{action.desc}</p>
+                            <div className={`absolute top-0 right-0 w-24 h-24 ${action.color.replace('bg-', 'text-').replace('500', '100')} opacity-20 rounded-bl-full group-hover:scale-110 transition-transform bg-current`}></div>
+                            <div className={`text-4xl mb-4 ${action.color.replace('bg-', 'text-').replace('500', '600')}`}>{action.icon}</div>
+                            <h3 className="text-lg font-bold mb-1 text-slate-800">{action.title}</h3>
+                            <p className="text-sm text-slate-500">{action.desc}</p>
                         </button>
                     ))}
                 </div>
 
                 {/* Recent Activity / Notifications */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <section className="bg-slate-800/30 rounded-2xl p-6 border border-white/5">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800">
                             <span></span> Novedades - En Proceso
                         </h3>
                         <div className="space-y-4">
                             <div
                                 onClick={() => navigate('/performance/my-evaluations')}
-                                className="p-4 rounded-xl bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                                className="p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors"
                             >
-                                <p className="text-sm font-medium text-blue-300 mb-1">Nueva Evaluación</p>
-                                <p className="text-sm text-slate-300">Tienes una evaluación de desempeño pendiente por completar.</p>
+                                <p className="text-sm font-medium text-blue-600 mb-1">Nueva Evaluación</p>
+                                <p className="text-sm text-slate-600">Tienes una evaluación de desempeño pendiente por completar.</p>
                             </div>
                             <div
                                 onClick={() => navigate('/my-payments')}
-                                className="p-4 rounded-xl bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                                className="p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors"
                             >
-                                <p className="text-sm font-medium text-green-300 mb-1">Pago Procesado</p>
-                                <p className="text-sm text-slate-300">Tu nómina del mes ha sido depositada exitosamente.</p>
+                                <p className="text-sm font-medium text-emerald-600 mb-1">Pago Procesado</p>
+                                <p className="text-sm text-slate-600">Tu nómina del mes ha sido depositada exitosamente.</p>
                             </div>
                         </div>
                     </section>
 
-                    <section className="bg-slate-800/30 rounded-2xl p-6 border border-white/5">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800">
                             <span></span> Próximos Eventos - En Proceso
                         </h3>
                         <div className="space-y-4">
-                            <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                                <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold">
+                            <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                                <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 font-bold border border-purple-100">
                                     15
                                 </div>
                                 <div>
-                                    <p className="font-medium text-white">Reunión de equipo</p>
-                                    <p className="text-sm text-slate-400">10:00 AM - Sala Virtual</p>
+                                    <p className="font-medium text-slate-800">Reunión de equipo</p>
+                                    <p className="text-sm text-slate-500">10:00 AM - Sala Virtual</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                                <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
+                            <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                                <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold border border-blue-100">
                                     20
                                 </div>
                                 <div>
-                                    <p className="font-medium text-white">Cierre de nómina</p>
-                                    <p className="text-sm text-slate-400">Recuerda registrar tus horas</p>
+                                    <p className="font-medium text-slate-800">Cierre de nómina</p>
+                                    <p className="text-sm text-slate-500">Recuerda registrar tus horas</p>
                                 </div>
                             </div>
                         </div>

@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
-import { FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift, FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle, FiMenu, FiX } from 'react-icons/fi';
+import {
+    FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift,
+    FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle,
+    FiTrendingUp, FiAlertTriangle, FiCheckCircle, FiActivity, FiCpu, FiShield,
+    FiArrowUp, FiArrowDown
+} from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import NotificationBell from '../../components/common/NotificationBell';
-import { FiTrendingUp, FiAlertTriangle, FiCheckCircle, FiActivity, FiCpu, FiShield } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import DashboardLayout from '../../components/layout/DashboardLayout';
+import { adminModules } from '../../constants/modules';
+import * as intelligenceService from '../../services/intelligenceService';
 
 function AdminDashboard({ user, onLogout }) {
     const navigate = useNavigate();
     const location = useLocation();
     const [successMsg, setSuccessMsg] = useState('');
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [insights, setInsights] = useState([]);
+    const [loadingInsights, setLoadingInsights] = useState(true);
 
     useEffect(() => {
         if (location.state?.successMessage) {
@@ -22,240 +28,161 @@ function AdminDashboard({ user, onLogout }) {
             return () => clearTimeout(timer);
         }
     }, [location]);
-    const modules = [
-        { title: 'Empleados', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
-        { title: 'Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
-        { title: 'Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },
-        { title: 'Ausencias', icon: <FiUserX />, color: 'bg-rose-500', path: '/admin/absences' },
-        { title: 'Nómina', icon: <FiDollarSign />, color: 'bg-green-500', path: '/admin/payroll/generator' },
-        { title: 'Beneficios', icon: <FiGift />, color: 'bg-yellow-500', path: '/admin/payroll/benefits' },
-        { title: 'Evaluaciones', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
-        { title: 'Mis Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-600', path: '/performance/my-evaluations' },
-        { title: 'Reclutamiento', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
-        { title: 'Reportes', icon: <FiFileText />, color: 'bg-cyan-500', path: '/admin/reports' },
-        { title: 'Analíticas', icon: <FiBarChart2 />, color: 'bg-indigo-600', path: '/analytics' },
-        { title: 'Auditoría', icon: <FiShield />, color: 'bg-slate-700', path: '/admin/audit' },
-        { title: 'Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-600', path: '/help' },
-    ]
 
-    const insights = [
-        { type: 'warning', message: '3 contratos vencen esta semana', icon: <FiAlertTriangle className="text-white" />, path: '/admin/contracts/expiring' },
-        { type: 'info', message: 'Ausentismo aumentó un 5% este mes', icon: <FiTrendingUp className="text-white" />, path: '/admin/absences' },
-        { type: 'success', message: 'Nómina procesada correctamente', icon: <FiCheckCircle className="text-white" />, path: '/admin/payroll/generator' },
-    ]
+    useEffect(() => {
+        const fetchInsights = async () => {
+            try {
+                // Fetch real intelligent alerts
+                const response = await intelligenceService.getProactiveAlerts();
+                if (response.success && response.data && response.data.alerts) {
+                    // Map API alerts to UI format
+                    const mappedInsights = response.data.alerts.slice(0, 3).map(alert => {
+                        let icon = <FiActivity className="text-blue-500" />;
+                        let path = '/intelligence'; // Default to intelligence dashboard
+
+                        // Customize based on alert type/category
+                        if (alert.priority === 'high' || alert.type === 'risk') {
+                            icon = <FiAlertTriangle className="text-amber-500" />;
+                        } else if (alert.type === 'performance') {
+                            icon = <FiTrendingUp className="text-blue-500" />;
+                        } else if (alert.type === 'success' || alert.category === 'Nomina') {
+                            icon = <FiCheckCircle className="text-emerald-500" />;
+                        }
+
+                        return {
+                            type: alert.priority === 'high' ? 'warning' : 'info',
+                            message: alert.message || alert.title,
+                            icon: icon,
+                            path: path
+                        };
+                    });
+                    setInsights(mappedInsights);
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard insights:', error);
+                // Fail silently and show empty/default state
+            } finally {
+                setLoadingInsights(false);
+            }
+        };
+
+        fetchInsights();
+    }, []);
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white flex">
-            {/* Sidebar */}
-            <aside className="w-64 bg-slate-900 border-r border-white/10 hidden md:flex flex-col">
-                <div className="p-6">
-                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                        EMPLIFI
-                    </h1>
-                </div>
-
-                <nav className="flex-1 px-4 space-y-2">
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
-                        Menu Principal
+        <DashboardLayout user={user} onLogout={onLogout} title="Panel de Control">
+            {successMsg && (
+                <div className="mb-6 animate-fade-in-down">
+                    <div className="bg-emerald-500/10 text-emerald-800 px-6 py-4 rounded-xl shadow-sm border border-emerald-500/20 flex items-center gap-3">
+                        <FiCheckCircle className="text-xl text-emerald-600" />
+                        <p className="font-medium">{successMsg}</p>
+                        <button onClick={() => setSuccessMsg('')} className="ml-auto text-emerald-600 hover:text-emerald-800">×</button>
                     </div>
-                    {modules.map((mod, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => navigate(mod.path)}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors text-left"
-                        >
-                            <span className="text-xl">{mod.icon}</span>
-                            <span>{mod.title}</span>
-                        </button>
-                    ))}
-                </nav>
+                </div>
+            )}
 
-                <div className="p-4 border-t border-white/10">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center font-bold">
-                            {user?.firstName?.[0] || 'A'}
-                        </div>
+            <div className="space-y-8">
+                {/* Welcome & Assistant Section - Combined for better flow */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Welcome Column */}
+                    <div className="lg:col-span-1 space-y-6">
                         <div>
-                            <p className="text-sm font-medium text-white">{user?.firstName || 'Admin'}</p>
-                            <p className="text-xs text-slate-400">Administrador</p>
+                            <h2 className="text-3xl font-bold text-slate-800">Bienvenido, {user?.firstName || 'Admin'}</h2>
+                            <p className="text-slate-500 mt-2">Aquí tienes un resumen de lo que está pasando hoy.</p>
                         </div>
-                    </div>
-                    <button
-                        onClick={onLogout}
-                        className="w-full py-2 px-4 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
-                    >
-                        Cerrar Sesión
-                    </button>
-                </div>
-            </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto">
-                <header className="h-16 bg-slate-900/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setIsMenuOpen(true)}
-                            className="p-2 -ml-2 text-slate-400 hover:text-white md:hidden"
-                        >
-                            <FiMenu size={24} />
-                        </button>
-                        <h2 className="text-xl font-semibold">Panel de Control</h2>
-                    </div>
-                    {successMsg && (
-                        <div className="fixed top-20 right-4 md:right-8 z-50 animate-fade-in-down">
-                            <div className="bg-emerald-500/90 backdrop-blur text-white px-4 md:px-6 py-3 rounded-lg shadow-lg border border-emerald-400/50 flex items-center gap-3">
-                                <span className="text-2xl"></span>
-                                <p className="font-medium text-sm md:base">{successMsg}</p>
-                                <button onClick={() => setSuccessMsg('')} className="ml-2 text-white/80 hover:text-white">×</button>
-                            </div>
-                        </div>
-                    )}
-                    <div className="flex items-center gap-4">
-                        <NotificationBell />
-                        <div className="hidden sm:flex items-center gap-3 text-right">
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-white">{user?.firstName || 'Admin'}</p>
-                                <p className="text-[10px] text-slate-400">Admin</p>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Mobile Sidebar Overlay */}
-                <AnimatePresence>
-                    {isMenuOpen && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setIsMenuOpen(false)}
-                                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden"
-                            />
-                            <motion.aside
-                                initial={{ x: '-100%' }}
-                                animate={{ x: 0 }}
-                                exit={{ x: '-100%' }}
-                                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                                className="fixed inset-y-0 left-0 w-72 bg-slate-900 border-r border-white/10 z-[70] md:hidden flex flex-col"
-                            >
-                                <div className="p-6 flex items-center justify-between">
-                                    <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                                        EMPLIFI
-                                    </h1>
-                                    <button onClick={() => setIsMenuOpen(false)} className="text-slate-400 hover:text-white">
-                                        <FiX size={24} />
-                                    </button>
-                                </div>
-
-                                <nav className="flex-1 px-4 py-2 overflow-y-auto space-y-1">
-                                    {modules.map((mod, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => {
-                                                navigate(mod.path);
-                                                setIsMenuOpen(false);
-                                            }}
-                                            className="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors text-left"
-                                        >
-                                            <span className="text-xl">{mod.icon}</span>
-                                            <span className="font-medium">{mod.title}</span>
-                                        </button>
-                                    ))}
-                                </nav>
-
-                                <div className="p-4 border-t border-white/10">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center font-bold">
-                                            {user?.firstName?.[0] || 'A'}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-white">{user?.firstName || 'Admin'}</p>
-                                            <p className="text-xs text-slate-400">Administrador</p>
-                                        </div>
+                        <div className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                                        <FiActivity className="text-emerald-400" size={24} />
                                     </div>
-                                    <button
-                                        onClick={onLogout}
-                                        className="w-full py-2 px-4 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
-                                    >
-                                        Cerrar Sesión
-                                    </button>
+                                    <h3 className="font-semibold text-lg">Actividad Reciente</h3>
                                 </div>
-                            </motion.aside>
-                        </>
-                    )}
-                </AnimatePresence>
-
-                <div className="p-8 max-w-7xl mx-auto space-y-8">
-                    {/* Intelligent Assistant Section */}
-                    <section className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50 rounded-2xl p-6 border border-white/10 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-[100px]"></div>
-
-                        <div className="relative z-10">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-2xl font-bold flex items-center gap-2">
-                                    <span className="text-white"><FiCpu /></span> Asistente Inteligente
-                                </h3>
+                                <p className="text-blue-100 text-sm mb-6">Monitoriza el rendimiento y las alertas de tu organización en tiempo real.</p>
                                 <button
                                     onClick={() => navigate('/intelligence')}
-                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+                                    className="w-full py-2.5 bg-white text-blue-900 rounded-xl font-medium hover:bg-blue-50 transition-colors shadow-sm"
                                 >
-                                    <FiActivity className="w-4 h-4" />
-                                    Ver Dashboard Completo →
+                                    Ir al Panel Inteligente
                                 </button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {insights.map((insight, idx) => (
-                                    <div key={idx} className="bg-slate-900/60 backdrop-blur-sm p-4 rounded-xl border border-white/5 flex items-start gap-3 hover:bg-slate-900/80 transition-colors cursor-pointer" onClick={() => navigate(insight.path)}>
-                                        <span className="text-2xl">{insight.icon}</span>
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-200">{insight.message}</p>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    navigate(insight.path);
-                                                }}
-                                                className="text-xs text-blue-400 mt-2 hover:text-blue-300 flex items-center gap-1"
-                                            >
-                                                Ver detalles →
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="mt-4 p-4 bg-slate-900/40 rounded-lg border border-white/5">
-                                <p className="text-sm text-slate-300 mb-2">
-                                    💡 <strong>Insights Disponibles:</strong> Análisis de riesgo de rotación, patrones de asistencia, optimización de nómina, y más.
-                                </p>
-                                <p className="text-xs text-slate-400">
-                                    El agente inteligente analiza datos en tiempo real para proporcionar recomendaciones accionables.
-                                </p>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
-                    {/* Modules Grid */}
-                    <section>
-                        <h3 className="text-lg font-semibold mb-4 text-slate-300">Accesos Directos</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {modules.map((mod, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => navigate(mod.path)}
-                                    className="group relative overflow-hidden rounded-2xl bg-slate-800/50 border border-white/5 p-6 hover:bg-slate-800 transition-all hover:-translate-y-1 text-left"
-                                >
-                                    <div className={`absolute top-0 right-0 w-24 h-24 ${mod.color} opacity-10 rounded-bl-full group-hover:scale-110 transition-transform`}></div>
-                                    <div className="text-4xl mb-4">{mod.icon}</div>
-                                    <h4 className="text-xl font-bold mb-1">{mod.title}</h4>
-                                    <p className="text-sm text-slate-400">Gestionar {mod.title.toLowerCase()}</p>
-                                </button>
-                            ))}
+                    {/* Insights Grid - Now takes up more space */}
+                    <section className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                <FiCpu size={20} />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800">Alertas del Asistente</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                            {loadingInsights ? (
+                                <div className="p-4 text-center text-slate-400 text-sm">Cargando insights...</div>
+                            ) : insights.length > 0 ? (
+                                insights.map((insight, idx) => (
+                                    <div
+                                        key={idx}
+                                        onClick={() => navigate(insight.path)}
+                                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer group"
+                                    >
+                                        <div className="p-3 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
+                                            {insight.icon}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-slate-700 group-hover:text-indigo-900 transition-colors">{insight.message}</p>
+                                        </div>
+                                        <div className="hidden sm:flex text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all">
+                                            <span className="text-sm font-medium">Ver</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                    <p className="text-slate-500">No hay alertas críticas por el momento.</p>
+                                </div>
+                            )}
                         </div>
                     </section>
                 </div>
-            </main>
-        </div>
-    )
+
+                {/* Modules Grid */}
+                <section>
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                            Accesos Directos
+                        </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        {adminModules.map((mod, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => navigate(mod.path)}
+                                className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-100 hover:border-indigo-100 transition-all duration-300 hover:-translate-y-1 text-left"
+                            >
+                                <div className={`absolute top-0 right-0 w-28 h-28 ${mod.color} opacity-[0.04] rounded-bl-full group-hover:scale-110 transition-transform duration-500`}></div>
+
+                                <div className="flex items-start justify-between mb-5">
+                                    <div className={`p-3.5 rounded-xl ${mod.color.replace('bg-', 'bg-').replace('500', '50')} ${mod.color.replace('bg-', 'text-').replace('500', '600')} group-hover:scale-110 transition-transform duration-300`}>
+                                        <span className="text-2xl">{mod.icon}</span>
+                                    </div>
+                                </div>
+
+                                <h4 className="text-lg font-bold text-slate-800 mb-1.5 group-hover:text-indigo-900 transition-colors">{mod.title}</h4>
+                                <p className="text-sm text-slate-500 group-hover:text-slate-600 line-clamp-2">Gestionar y supervisar {mod.title.toLowerCase()} del sistema.</p>
+                            </button>
+                        ))}
+                    </div>
+                </section>
+            </div>
+        </DashboardLayout>
+    );
 }
 
-export default AdminDashboard
+export default AdminDashboard;
