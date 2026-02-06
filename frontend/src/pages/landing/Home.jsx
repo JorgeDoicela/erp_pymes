@@ -140,7 +140,7 @@ function Home() {
                         {/* Subtitle */}
                         <p className="text-lg lg:text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
                             Plataforma completa para gestionar tu equipo. Automatiza procesos,
-                            analiza datos y toma mejores decisiones con inteligencia artificial.
+                            analiza datos y toma mejores decisiones con el asistente inteligente. 
                         </p>
 
                         {/* CTA */}
