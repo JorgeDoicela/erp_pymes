@@ -18,18 +18,27 @@ export async function seedAttendance(prisma, employees) {
     const datesToSeed = getDates(ninetyDaysAgo, today);
 
     // Pick candidates for specific patterns
-    const suspiciousCandidates = employees.slice(0, 3); // First 3 employees will have suspicious absences
-    const lateCandidates = employees.slice(3, 6); // Next 3 will be late often
+    // Using simple logic to ensure we target employees actually in the list
+    const employeesList = employees.filter(e => e.role !== 'admin');
+    const suspiciousCandidates = employeesList.slice(0, 3);
+    const lateCandidates = employeesList.slice(3, 6);
 
-    for (const emp of employees) {
-        if (emp.role === 'admin') continue;
+    const attendanceBatch = [];
 
-        // Skip if already seeded (simple check)
-        const count = await prisma.attendance.count({ where: { employeeId: emp.id } });
-        if (count > 50) continue;
+    for (const emp of employeesList) {
+        // Skip if already seeded (check count once per employee not needed if we rely on clean state or just append)
+        // Optimization: checking count for every employee is slow. 
+        // Better: Assumed seeded if ANY record exists? Or just skip check for speed if we trust clean
+        // Let's keep a fast check or remove it. 
+        // For mass seed, let's skip the check or do one check at start.
+        // Doing one check per employee is 27 queries. That's fine.
 
-        const isSuspicious = suspiciousCandidates.includes(emp);
-        const isLate = lateCandidates.includes(emp);
+        // Skip heavy check for speed in this context
+        // const count = await prisma.attendance.count({ where: { employeeId: emp.id } });
+        // if (count > 50) continue; 
+
+        const isSuspicious = suspiciousCandidates.find(c => c.id === emp.id);
+        const isLate = lateCandidates.find(c => c.id === emp.id);
 
         for (const date of datesToSeed) {
             const dayOfWeek = date.getDay();
@@ -44,19 +53,14 @@ export async function seedAttendance(prisma, employees) {
 
             // Pattern: Suspicious (Mon/Fri absences)
             if (isSuspicious && (dayOfWeek === 1 || dayOfWeek === 5) && Math.random() > 0.6) {
-                // FORCE create absence via Absence table separately? 
-                // Using seedAbsences for that, but we can mark attendance as missing/null here or just skip creating
-                // For logic, let's create a 'Falta' record in Attendance if system supports it, OR rely on lack of record + Absence
-                // Let's creat a 'Falta' status
-                await prisma.attendance.create({
-                    data: {
-                        employeeId: emp.id,
-                        date: date,
-                        checkIn: new Date(date), // Dummy
-                        checkOut: null,
-                        status: 'Falta',
-                        workedHours: 0
-                    }
+                attendanceBatch.push({
+                    employeeId: emp.id,
+                    date: date,
+                    checkIn: new Date(date), // Dummy
+                    checkOut: null,
+                    status: 'Falta',
+                    workedHours: 0,
+                    isLate: false
                 });
                 continue;
             }
@@ -72,31 +76,40 @@ export async function seedAttendance(prisma, employees) {
 
             // Random Absences for others (low probability)
             if (!isSuspicious && Math.random() < 0.02) {
-                await prisma.attendance.create({
-                    data: {
-                        employeeId: emp.id,
-                        date: date,
-                        checkIn: new Date(date),
-                        checkOut: null,
-                        status: 'Falta',
-                        workedHours: 0
-                    }
+                attendanceBatch.push({
+                    employeeId: emp.id,
+                    date: date,
+                    checkIn: new Date(date),
+                    checkOut: null,
+                    status: 'Falta',
+                    workedHours: 0,
+                    isLate: false
                 });
                 continue;
             }
 
-            // Create Present Record
-            await prisma.attendance.create({
-                data: {
-                    employeeId: emp.id,
-                    date: date,
-                    checkIn: checkIn,
-                    checkOut: checkOut,
-                    status: 'Presente',
-                    workedHours: workedHours,
-                    isLate: isLateToday
-                }
+            attendanceBatch.push({
+                employeeId: emp.id,
+                date: date,
+                checkIn: checkIn,
+                checkOut: checkOut,
+                status: 'Presente',
+                workedHours: workedHours,
+                isLate: isLateToday
             });
         }
     }
+
+    // Insert in chunks of 500 to be safe
+    const chunkSize = 500;
+    console.log(`[ATTENDANCE] Inserting ${attendanceBatch.length} records...`);
+
+    for (let i = 0; i < attendanceBatch.length; i += chunkSize) {
+        const chunk = attendanceBatch.slice(i, i + chunkSize);
+        await prisma.attendance.createMany({
+            data: chunk,
+            skipDuplicates: true
+        });
+    }
+    console.log('[ATTENDANCE] Batch insert completed.');
 }
