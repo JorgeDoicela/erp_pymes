@@ -136,32 +136,54 @@ export default function IntelligentDashboard({ user, onLogout }) {
         lateDays: dept.totalLateDays,
     })) || [];
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 10 },
+        visible: { opacity: 1, y: 0 }
+    };
+
     return (
         <DashboardLayout user={user} onLogout={onLogout} title="Agente Inteligente">
-            <div className="space-y-6">
+            <motion.div
+                className="space-y-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
                 {/* Page Controls & Tabs */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <motion.div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4" variants={itemVariants}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-4">
-                            <button
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => navigate('/admin')}
-                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
+                                className="p-2 hover:bg-slate-50 border border-transparent hover:border-slate-200 rounded-lg transition-all text-slate-500 hover:text-slate-700"
                             >
                                 <FiArrowLeft className="w-5 h-5" />
-                            </button>
+                            </motion.button>
                             <div>
-                                <h1 className="text-xl font-bold text-slate-800">Centro de Inteligencia</h1>
+                                <h1 className="text-xl font-bold text-slate-800 tracking-tight">Centro de Inteligencia</h1>
                                 <p className="text-sm text-slate-500">Análisis predictivo y recomendaciones</p>
                             </div>
                         </div>
-                        <button
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={handleRefresh}
                             disabled={refreshing}
-                            className={`px-4 py-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all text-sm font-medium flex items-center gap-2 ${refreshing ? 'animate-pulse' : ''}`}
+                            className={`px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all text-sm font-medium flex items-center gap-2 shadow-sm ${refreshing ? 'animate-pulse' : ''}`}
                         >
                             <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                             Actualizar Datos
-                        </button>
+                        </motion.button>
                     </div>
 
                     {/* Navegación por Pestañas */}
@@ -170,8 +192,9 @@ export default function IntelligentDashboard({ user, onLogout }) {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
                             return (
-                                <button
+                                <motion.button
                                     key={tab.id}
+                                    whileHover={{ y: -1 }}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`
                                         flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap
@@ -182,18 +205,19 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                 >
                                     <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
                                     {tab.label}
-                                </button>
+                                </motion.button>
                             );
                         })}
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Contenido de Pestañas */}
                 <motion.div
                     key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3 }}
+                    variants={itemVariants}
                 >
                     {/* TAB 1: RESUMEN ESTRATÉGICO */}
                     {activeTab === 'overview' && (
@@ -380,7 +404,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
                         </div>
                     )}
                 </motion.div>
-            </div>
+            </motion.div>
         </DashboardLayout>
     );
 }

@@ -5,6 +5,7 @@ import {
     FiTrendingUp, FiAlertTriangle, FiCheckCircle, FiActivity, FiCpu, FiShield,
     FiArrowUp, FiArrowDown
 } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { adminModules } from '../../constants/modules';
@@ -16,6 +17,28 @@ function AdminDashboard({ user, onLogout }) {
     const [successMsg, setSuccessMsg] = useState('');
     const [insights, setInsights] = useState([]);
     const [loadingInsights, setLoadingInsights] = useState(true);
+
+    const getTimeBasedGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Buenos días';
+        if (hour < 18) return 'Buenas tardes';
+        return 'Buenas noches';
+    };
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    };
 
     useEffect(() => {
         if (location.state?.successMessage) {
@@ -81,106 +104,105 @@ function AdminDashboard({ user, onLogout }) {
                 </div>
             )}
 
-            <div className="space-y-8">
-                {/* Welcome & Assistant Section - Combined for better flow */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Welcome Column */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div>
-                            <h2 className="text-3xl font-bold text-slate-800">Bienvenido, {user?.firstName || 'Admin'}</h2>
-                            <p className="text-slate-500 mt-2">Aquí tienes un resumen de lo que está pasando hoy.</p>
-                        </div>
-
-                        <div className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                            <div className="relative z-10">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                                        <FiActivity className="text-emerald-400" size={24} />
-                                    </div>
-                                    <h3 className="font-semibold text-lg">Actividad Reciente</h3>
-                                </div>
-                                <p className="text-blue-100 text-sm mb-6">Monitoriza el rendimiento y las alertas de tu organización en tiempo real.</p>
-                                <button
-                                    onClick={() => navigate('/intelligence')}
-                                    className="w-full py-2.5 bg-white text-blue-900 rounded-xl font-medium hover:bg-blue-50 transition-colors shadow-sm"
-                                >
-                                    Ir al Panel Inteligente
-                                </button>
-                            </div>
-                        </div>
+            <motion.div
+                className="space-y-8 max-w-[1600px] mx-auto"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {/* Header Section with Date */}
+                <motion.div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4" variants={itemVariants}>
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+                            {getTimeBasedGreeting()}, {user?.firstName || 'Admin'}
+                        </h2>
+                        <p className="text-slate-500">Resumen de actividad del {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                     </div>
+                    <div className="flex gap-3">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => navigate('/intelligence')}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200 flex items-center gap-2"
+                        >
+                            <FiActivity /> Panel Inteligente
+                        </motion.button>
+                    </div>
+                </motion.div>
 
-                    {/* Insights Grid - Now takes up more space */}
-                    <section className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                                <FiCpu size={20} />
+
+
+                <div className="grid grid-cols-1 gap-8">
+                    {/* Insights Section - Full Width */}
+                    <section className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row overflow-hidden">
+                        <div className="p-6 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50/50 flex flex-col justify-center">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                    <FiActivity size={24} />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-800">Centro de Alertas</h3>
                             </div>
-                            <h3 className="text-lg font-bold text-slate-800">Alertas del Asistente</h3>
+                            <p className="text-sm text-slate-500 mb-4">Novedades importantes que requieren tu atención.</p>
+                            <button onClick={() => navigate('/intelligence')} className="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors">
+                                Ver Panel Inteligente <span className="text-lg">→</span>
+                            </button>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4">
+                        <div className="p-6 md:w-2/3">
                             {loadingInsights ? (
-                                <div className="p-4 text-center text-slate-400 text-sm">Cargando insights...</div>
+                                <div className="text-center text-slate-400 text-sm py-4">Cargando alertas...</div>
                             ) : insights.length > 0 ? (
-                                insights.map((insight, idx) => (
-                                    <div
-                                        key={idx}
-                                        onClick={() => navigate(insight.path)}
-                                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer group"
-                                    >
-                                        <div className="p-3 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
-                                            {insight.icon}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {insights.slice(0, 4).map((insight, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => navigate(insight.path)}
+                                            className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-slate-50 hover:shadow-sm transition-all cursor-pointer group"
+                                        >
+                                            <div className="mt-1 text-slate-400 group-hover:text-blue-600 transition-colors">
+                                                {insight.icon}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 line-clamp-2">{insight.message}</p>
+                                                <span className="text-xs font-medium text-slate-400 group-hover:text-blue-500 mt-1 block">Ver detalle</span>
+                                            </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="font-medium text-slate-700 group-hover:text-indigo-900 transition-colors">{insight.message}</p>
-                                        </div>
-                                        <div className="hidden sm:flex text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all">
-                                            <span className="text-sm font-medium">Ver</span>
-                                        </div>
-                                    </div>
-                                ))
+                                    ))}
+                                </div>
                             ) : (
-                                <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                                    <p className="text-slate-500">No hay alertas críticas por el momento.</p>
+                                <div className="flex items-center justify-center gap-3 py-4 text-slate-400">
+                                    <FiCheckCircle size={24} className="text-emerald-400" />
+                                    <span className="text-sm font-medium">Todo al día. No hay nuevas alertas.</span>
                                 </div>
                             )}
                         </div>
                     </section>
-                </div>
 
-                {/* Modules Grid */}
-                <section>
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
-                            Accesos Directos
+                    <motion.section variants={itemVariants}>
+                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-5 flex items-center gap-2">
+                            <FiBriefcase className="text-slate-400" />
+                            Aplicaciones y Módulos
                         </h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                        {adminModules.map((mod, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => navigate(mod.path)}
-                                className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-100 hover:border-indigo-100 transition-all duration-300 hover:-translate-y-1 text-left"
-                            >
-                                <div className={`absolute top-0 right-0 w-28 h-28 ${mod.color} opacity-[0.04] rounded-bl-full group-hover:scale-110 transition-transform duration-500`}></div>
-
-                                <div className="flex items-start justify-between mb-5">
-                                    <div className={`p-3.5 rounded-xl ${mod.color.replace('bg-', 'bg-').replace('500', '50')} ${mod.color.replace('bg-', 'text-').replace('500', '600')} group-hover:scale-110 transition-transform duration-300`}>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                            {adminModules.map((mod, idx) => (
+                                <motion.button
+                                    key={idx}
+                                    variants={itemVariants}
+                                    whileHover={{ y: -5, shadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
+                                    onClick={() => navigate(mod.path)}
+                                    className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all duration-200 group h-40 text-center relative overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className={`p-3 rounded-xl bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors mb-3 relative z-10 duration-200`}>
                                         <span className="text-2xl">{mod.icon}</span>
                                     </div>
-                                </div>
-
-                                <h4 className="text-lg font-bold text-slate-800 mb-1.5 group-hover:text-indigo-900 transition-colors">{mod.title}</h4>
-                                <p className="text-sm text-slate-500 group-hover:text-slate-600 line-clamp-2">Gestionar y supervisar {mod.title.toLowerCase()} del sistema.</p>
-                            </button>
-                        ))}
-                    </div>
-                </section>
-            </div>
+                                    <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 relative z-10">{mod.title}</span>
+                                </motion.button>
+                            ))}
+                        </div>
+                    </motion.section>
+                </div>
+            </motion.div>
         </DashboardLayout>
     );
 }
