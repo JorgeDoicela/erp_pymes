@@ -57,14 +57,14 @@ const JobApplication = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6">
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div className="bg-blue-900 p-8 text-white">
-                    <h1 className="text-3xl font-bold mb-4">{vacancy.title}</h1>
+        <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6">
+            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-white p-8 border-b border-slate-100">
+                    <h1 className="text-3xl font-bold mb-4 text-slate-800">{vacancy.title}</h1>
                     <div className="flex flex-wrap gap-6 text-sm">
-                        <span className="flex items-center"><FiMapPin className="mr-2" /> {vacancy.location}</span>
-                        <span className="flex items-center"><FiBriefcase className="mr-2" /> {vacancy.department}</span>
-                        <span className="flex items-center"><FiClock className="mr-2" /> {vacancy.employmentType}</span>
+                        <span className="flex items-center text-slate-600"><FiMapPin className="mr-2 text-slate-400" /> {vacancy.location}</span>
+                        <span className="flex items-center text-slate-600"><FiBriefcase className="mr-2 text-slate-400" /> {vacancy.department}</span>
+                        <span className="flex items-center text-slate-600"><FiClock className="mr-2 text-slate-400" /> {vacancy.employmentType}</span>
                     </div>
                 </div>
 

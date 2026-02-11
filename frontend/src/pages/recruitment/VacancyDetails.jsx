@@ -26,45 +26,55 @@ const VacancyDetails = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'PENDING': return 'bg-yellow-500/20 text-yellow-400';
-            case 'REVIEWING': return 'bg-blue-500/20 text-blue-400';
-            case 'INTERVIEW': return 'bg-purple-500/20 text-purple-400';
-            case 'HIRED': return 'bg-green-500/20 text-green-400';
-            case 'REJECTED': return 'bg-red-500/20 text-red-400';
-            default: return 'bg-gray-500/20 text-gray-400';
+            case 'PENDING': return 'bg-yellow-50 text-yellow-700 border-yellow-100';
+            case 'REVIEWING': return 'bg-blue-50 text-blue-700 border-blue-100';
+            case 'INTERVIEW': return 'bg-purple-50 text-purple-700 border-purple-100';
+            case 'HIRED': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+            case 'REJECTED': return 'bg-red-50 text-red-700 border-red-100';
+            default: return 'bg-slate-50 text-slate-600 border-slate-200';
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="space-y-6">
             <div className="max-w-7xl mx-auto">
-                <button onClick={() => navigate('/recruitment')} className="flex items-center text-gray-400 hover:text-white mb-6">
+                <button onClick={() => navigate('/recruitment')} className="flex items-center text-slate-500 hover:text-slate-800 mb-6 transition-colors">
                     <FiArrowLeft className="mr-2" /> Volver al tablero
                 </button>
 
-                <h1 className="text-3xl font-bold mb-8">Candidatos para la Vacante</h1>
+                <h1 className="text-3xl font-bold text-slate-800 mb-8 tracking-tight">Candidatos para la Vacante</h1>
 
-                {loading ? <div>Cargando...</div> : (
+                {loading ? (
+                    <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-slate-500">Cargando...</p>
+                    </div>
+                ) : (
                     <div className="grid grid-cols-1 gap-4">
-                        {applications.length === 0 && <div className="text-gray-500">No hay postulaciones aún.</div>}
+                        {applications.length === 0 && (
+                            <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
+                                <FiUser className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                                <p className="text-slate-500 text-lg">No hay postulaciones aún para esta vacante.</p>
+                            </div>
+                        )}
 
                         {applications.map(app => (
                             <div key={app.id} onClick={() => navigate(`/recruitment/applications/${app.id}`)}
-                                className="bg-gray-800 p-6 rounded-xl border border-gray-700 hover:border-gray-500 cursor-pointer transition-colors flex justify-between items-center">
+                                className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all flex justify-between items-center group">
                                 <div>
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <h3 className="font-bold text-lg">{app.firstName} {app.lastName}</h3>
-                                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${getStatusColor(app.status)}`}>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <h3 className="font-bold text-lg text-slate-800 group-hover:text-blue-600 transition-colors">{app.firstName} {app.lastName}</h3>
+                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusColor(app.status)}`}>
                                             {app.status}
                                         </span>
                                     </div>
-                                    <div className="text-gray-400 text-sm flex gap-4">
-                                        <span className="flex items-center"><FiMail className="mr-1" /> {app.email}</span>
-                                        <span className="flex items-center"><FiPhone className="mr-1" /> {app.phone}</span>
-                                        <span className="flex items-center"><FiCalendar className="mr-1" /> {new Date(app.createdAt).toLocaleDateString()}</span>
+                                    <div className="text-slate-500 text-sm flex flex-wrap gap-4">
+                                        <span className="flex items-center"><FiMail className="mr-2 text-slate-400" /> {app.email}</span>
+                                        <span className="flex items-center"><FiPhone className="mr-2 text-slate-400" /> {app.phone}</span>
+                                        <span className="flex items-center"><FiCalendar className="mr-2 text-slate-400" /> {new Date(app.createdAt).toLocaleDateString()}</span>
                                     </div>
                                 </div>
-                                <div className="text-gray-500">
+                                <div className="text-slate-300 group-hover:text-blue-500 transition-colors">
                                     <FiFileText className="text-2xl" />
                                 </div>
                             </div>
