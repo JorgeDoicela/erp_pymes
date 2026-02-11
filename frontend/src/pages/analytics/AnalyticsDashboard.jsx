@@ -22,78 +22,78 @@ const AnalyticsDashboard = () => {
         }
     };
 
-    if (loading) return <div className="p-8 text-white">Cargando Analíticas...</div>;
-    if (!data) return <div className="p-8 text-white">Error al cargar datos.</div>;
+    if (loading) return <div className="min-h-screen bg-slate-50 text-slate-800 p-8 flex items-center justify-center font-bold">Cargando Analíticas...</div>;
+    if (!data) return <div className="min-h-screen bg-slate-50 text-slate-800 p-8 flex items-center justify-center font-bold">Error al cargar datos.</div>;
 
     const { kpis, charts } = data;
 
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+    const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#f97316', '#8b5cf6'];
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
-            <h1 className="text-3xl font-bold mb-8 flex items-center">
-                <FiBarChart2 className="mr-3 text-white" />
+        <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
+            <h1 className="text-3xl font-bold mb-8 flex items-center text-slate-800">
+                <FiBarChart2 className="mr-3 text-slate-800" />
                 Dashboard de Indicadores RRHH
             </h1>
 
-            <div className="flex gap-4 mb-6">
-                <a href="/analytics/turnover" className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white font-bold flex items-center">
+            <div className="flex flex-wrap gap-4 mb-8">
+                <a href="/analytics/turnover" className="bg-white hover:bg-slate-50 text-blue-600 px-4 py-2 rounded-lg font-bold flex items-center border border-slate-200 shadow-sm transition-all hover:shadow-md">
                     <FiUserMinus className="mr-2" /> Reporte de Rotación
                 </a>
-                <a href="/analytics/performance" className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white font-bold flex items-center">
+                <a href="/analytics/performance" className="bg-white hover:bg-slate-50 text-purple-600 px-4 py-2 rounded-lg font-bold flex items-center border border-slate-200 shadow-sm transition-all hover:shadow-md">
                     <FiActivity className="mr-2" /> Reporte de Desempeño
                 </a>
-                <a href="/analytics/payroll-costs" className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-white font-bold flex items-center">
+                <a href="/analytics/payroll-costs" className="bg-white hover:bg-slate-50 text-yellow-600 px-4 py-2 rounded-lg font-bold flex items-center border border-slate-200 shadow-sm transition-all hover:shadow-md">
                     <FiDollarSign className="mr-2" /> Reporte de Nómina
                 </a>
-                <a href="/analytics/satisfaction" className="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded text-white font-bold flex items-center">
+                <a href="/analytics/satisfaction" className="bg-white hover:bg-slate-50 text-pink-600 px-4 py-2 rounded-lg font-bold flex items-center border border-slate-200 shadow-sm transition-all hover:shadow-md">
                     <FiHeart className="mr-2" /> Clima Laboral
                 </a>
-                <a href="/analytics/custom" className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded text-white font-bold flex items-center">
+                <a href="/analytics/custom" className="bg-white hover:bg-slate-50 text-cyan-600 px-4 py-2 rounded-lg font-bold flex items-center border border-slate-200 shadow-sm transition-all hover:shadow-md">
                     <FiDatabase className="mr-2" /> Exportar Datos
                 </a>
             </div>
 
             {/* KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
                     <div>
-                        <p className="text-gray-400 text-sm">Total Empleados</p>
-                        <p className="text-3xl font-bold">{kpis.totalEmployees}</p>
+                        <p className="text-slate-500 text-sm font-medium">Total Empleados</p>
+                        <p className="text-3xl font-bold text-slate-800">{kpis.totalEmployees}</p>
                     </div>
-                    <div className="bg-blue-900/50 p-3 rounded-lg text-white"><FiUsers size={24} /></div>
+                    <div className="bg-blue-50 text-blue-600 p-3 rounded-xl"><FiUsers size={24} /></div>
                 </div>
 
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
                     <div>
-                        <p className="text-gray-400 text-sm">Nuevos (Mes)</p>
-                        <p className="text-3xl font-bold">{kpis.newHires}</p>
+                        <p className="text-slate-500 text-sm font-medium">Nuevos (Mes)</p>
+                        <p className="text-3xl font-bold text-slate-800">{kpis.newHires}</p>
                     </div>
-                    <div className="bg-green-900/50 p-3 rounded-lg text-white"><FiUserPlus size={24} /></div>
+                    <div className="bg-green-50 text-green-600 p-3 rounded-xl"><FiUserPlus size={24} /></div>
                 </div>
 
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
                     <div>
-                        <p className="text-gray-400 text-sm">Vacantes Abiertas</p>
-                        <p className="text-3xl font-bold">{kpis.openVacancies}</p>
+                        <p className="text-slate-500 text-sm font-medium">Vacantes Abiertas</p>
+                        <p className="text-3xl font-bold text-slate-800">{kpis.openVacancies}</p>
                     </div>
-                    <div className="bg-purple-900/50 p-3 rounded-lg text-white"><FiBriefcase size={24} /></div>
+                    <div className="bg-purple-50 text-purple-600 p-3 rounded-xl"><FiBriefcase size={24} /></div>
                 </div>
 
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
                     <div>
-                        <p className="text-gray-400 text-sm">Nómina Estimada</p>
-                        <p className="text-2xl font-bold text-green-400">${kpis.payrollTotal ? kpis.payrollTotal.toLocaleString() : '0'}</p>
+                        <p className="text-slate-500 text-sm font-medium">Nómina Estimada</p>
+                        <p className="text-2xl font-bold text-green-600">${kpis.payrollTotal ? kpis.payrollTotal.toLocaleString() : '0'}</p>
                     </div>
-                    <div className="bg-yellow-900/50 p-3 rounded-lg text-white"><FiDollarSign size={24} /></div>
+                    <div className="bg-yellow-50 text-yellow-600 p-3 rounded-xl"><FiDollarSign size={24} /></div>
                 </div>
             </div>
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Employees by Department */}
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <h3 className="text-xl font-bold mb-6 flex items-center"><FiPieChart className="mr-2" /> Empleados por Departamento</h3>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+                    <h3 className="text-xl font-bold mb-6 flex items-center text-slate-800"><FiPieChart className="mr-2" /> Empleados por Departamento</h3>
                     <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -111,7 +111,7 @@ const AnalyticsDashboard = () => {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} />
+                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', color: '#1e293b', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                                 <Legend />
                             </PieChart>
                         </ResponsiveContainer>
@@ -119,16 +119,16 @@ const AnalyticsDashboard = () => {
                 </div>
 
                 {/* Vacancies by Department */}
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <h3 className="text-xl font-bold mb-6 flex items-center"><FiBarChart2 className="mr-2" /> Vacantes Abiertas por Dept.</h3>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+                    <h3 className="text-xl font-bold mb-6 flex items-center text-slate-800"><FiBarChart2 className="mr-2" /> Vacantes Abiertas por Dept.</h3>
                     <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={charts.vacancyChartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                <XAxis dataKey="name" stroke="#9ca3af" />
-                                <YAxis stroke="#9ca3af" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }} cursor={{ fill: '#374151' }} />
-                                <Bar dataKey="value" fill="#8884d8">
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', color: '#1e293b', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} cursor={{ fill: '#f1f5f9' }} />
+                                <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]}>
                                     {charts.vacancyChartData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
