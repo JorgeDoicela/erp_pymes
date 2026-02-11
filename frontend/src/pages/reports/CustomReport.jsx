@@ -145,37 +145,39 @@ const CustomReport = () => {
                             ) : results.length === 0 ? (
                                 <div className="h-64 flex items-center justify-center text-slate-400 italic">No hay datos que coincidan con los filtros.</div>
                             ) : (
-                                    <thead className="bg-slate-50 text-slate-500 uppercase sticky top-0 font-semibold">
-                                        <tr>
-                                            {Object.keys(results[0]).map(header => (
-                                                <th key={header} className="p-4 border-b border-slate-100 whitespace-nowrap text-xs tracking-wider">{header}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {results.map((row, idx) => (
-                                            <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
-                                                {Object.values(row).map((val, i) => (
-                                                    <td key={i} className="p-4 whitespace-nowrap text-slate-600">
-                                                        {typeof val === 'object' ? JSON.stringify(val) : String(val)}
-                                                    </td>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm min-w-[600px]">
+                                        <thead className="bg-slate-50 text-slate-500 uppercase sticky top-0 font-semibold">
+                                            <tr>
+                                                {Object.keys(results[0]).map(header => (
+                                                    <th key={header} className="p-4 border-b border-slate-100 whitespace-nowrap text-xs tracking-wider">{header}</th>
                                                 ))}
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                    </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {results.map((row, idx) => (
+                                                <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                                                    {Object.values(row).map((val, i) => (
+                                                        <td key={i} className="p-4 whitespace-nowrap text-slate-600">
+                                                            {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
-                </div>
-                {results && (
-                    <div className="p-4 border-t border-slate-100 text-xs text-slate-400 text-right bg-slate-50/30">
-                        Mostrando {results.length} registros
+                        </div>
+                        {results && (
+                            <div className="p-4 border-t border-slate-100 text-xs text-slate-400 text-right bg-slate-50/30">
+                                Mostrando {results.length} registros
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
         </div>
-            </div >
-        </div >
     );
 };
 
