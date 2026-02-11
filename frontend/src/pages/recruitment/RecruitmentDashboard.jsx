@@ -41,29 +41,32 @@ const RecruitmentDashboard = () => {
     };
 
     return (
-        <div className="bg-gray-900 text-white rounded-2xl shadow-xl min-h-[calc(100vh-8rem)] p-6">
+        <div className="space-y-6">
             <div className="max-w-7xl mx-auto">
                 <header className="flex justify-between items-center mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent">
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
                             Reclutamiento y Selección
                         </h1>
-                        <p className="text-gray-400">Gestiona vacantes y candidatos</p>
+                        <p className="text-slate-500 mt-1">Gestiona vacantes y candidatos de manera eficiente.</p>
                     </div>
                     <button
                         onClick={() => navigate('/recruitment/create')}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold flex items-center shadow-lg transition-transform hover:scale-105"
+                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center shadow-sm hover:shadow-md transition-all"
                     >
                         <FiPlus className="mr-2" /> Nueva Vacante
                     </button>
                 </header>
 
                 {loading ? (
-                    <div className="text-center">Cargando...</div>
+                    <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-slate-500">Cargando...</p>
+                    </div>
                 ) : (
-                    <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-700/50 text-gray-400 uppercase text-xs">
+                            <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-semibold border-b border-slate-200">
                                 <tr>
                                     <th className="p-6">Título</th>
                                     <th className="p-6">Departamento</th>
@@ -73,25 +76,27 @@ const RecruitmentDashboard = () => {
                                     <th className="p-6 text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-700">
+                            <tbody className="divide-y divide-slate-100">
                                 {vacancies.map(v => (
-                                    <tr key={v.id} className="hover:bg-gray-700/30 transition-colors">
-                                        <td className="p-6 font-bold text-white">{v.title}</td>
-                                        <td className="p-6 text-gray-300">{v.department}</td>
-                                        <td className="p-6 text-gray-300">{v.location}</td>
-                                        <td className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => navigate(`/recruitment/${v.id}`)}>
-                                            <span className="flex items-center text-white font-bold"><FiUsers className="mr-2" /> Ver Candidatos</span>
+                                    <tr key={v.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="p-6 font-bold text-slate-800">{v.title}</td>
+                                        <td className="p-6 text-slate-600">{v.department}</td>
+                                        <td className="p-6 text-slate-600">{v.location}</td>
+                                        <td className="p-6 cursor-pointer group" onClick={() => navigate(`/recruitment/${v.id}`)}>
+                                            <span className="flex items-center text-blue-600 font-medium group-hover:text-blue-800 transition-colors">
+                                                <FiUsers className="mr-2" /> Ver Candidatos
+                                            </span>
                                         </td>
                                         <td className="p-6">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${v.status === 'OPEN' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${v.status === 'OPEN' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
                                                 {v.status === 'OPEN' ? 'PUBLICADA' : 'CERRADA'}
                                             </span>
                                         </td>
                                         <td className="p-6 text-right space-x-2">
-                                            <button onClick={() => copyLink(v.id)} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white" title="Copiar Enlace">
+                                            <button onClick={() => copyLink(v.id)} className="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-slate-500 hover:text-blue-600 transition-colors" title="Copiar Enlace">
                                                 <FiGlobe />
                                             </button>
-                                            <button onClick={() => toggleStatus(v.id, v.status)} className={`p-2 rounded-lg ${v.status === 'OPEN' ? 'bg-red-900/30 text-white hover:bg-red-900/50' : 'bg-green-900/30 text-white hover:bg-green-900/50'}`} title={v.status === 'OPEN' ? 'Cerrar Vacante' : 'Reabrir Vacante'}>
+                                            <button onClick={() => toggleStatus(v.id, v.status)} className={`p-2 rounded-lg border transition-colors ${v.status === 'OPEN' ? 'bg-white border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100' : 'bg-white border-slate-200 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100'}`} title={v.status === 'OPEN' ? 'Cerrar Vacante' : 'Reabrir Vacante'}>
                                                 {v.status === 'OPEN' ? <FiSlash /> : <FiCheckCircle />}
                                             </button>
                                         </td>
@@ -99,7 +104,7 @@ const RecruitmentDashboard = () => {
                                 ))}
                             </tbody>
                         </table>
-                        {vacancies.length === 0 && <div className="p-12 text-center text-gray-500">No hay vacantes registradas.</div>}
+                        {vacancies.length === 0 && <div className="p-12 text-center text-slate-500">No hay vacantes registradas.</div>}
                     </div>
                 )}
             </div>

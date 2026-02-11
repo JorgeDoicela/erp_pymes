@@ -77,21 +77,21 @@ const PayrollConfiguration = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white p-8">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-8">
+        <div className="space-y-6">
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight mb-8">
                 Configuración de Nómina
             </h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* General Settings */}
-                <div className="bg-slate-800 p-6 rounded-xl border border-white/5 space-y-6 h-fit">
-                    <h2 className="text-xl font-bold mb-4 border-b border-white/10 pb-2">Parámetros Generales</h2>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6 h-fit">
+                    <h2 className="text-xl font-bold mb-4 border-b border-slate-200 pb-2 text-slate-800">Parámetros Generales</h2>
 
                     <div>
-                        <label className="block text-slate-400 mb-2">Días Laborables (Mes)</label>
+                        <label className="block text-slate-600 font-medium mb-2">Días Laborables (Mes)</label>
                         <input
                             type="number"
-                            className="w-full bg-slate-900 border border-slate-700 rounded p-3 text-white"
+                            className="w-full bg-white border border-slate-200 rounded-lg p-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             value={config.workingDays}
                             onChange={e => setConfig({ ...config, workingDays: e.target.value })}
                         />
@@ -101,7 +101,7 @@ const PayrollConfiguration = () => {
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold transition-colors mt-8"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-bold transition-all shadow-sm hover:shadow-md"
                     >
                         {loading ? 'Guardando...' : 'Guardar Configuración'}
                     </button>
@@ -109,27 +109,27 @@ const PayrollConfiguration = () => {
                 </div>
 
                 {/* Payroll Items (Rubros) */}
-                <div className="lg:col-span-2 bg-slate-800 p-6 rounded-xl border border-white/5">
-                    <h2 className="text-xl font-bold mb-4 border-b border-white/10 pb-2">Rubros y Conceptos</h2>
+                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 className="text-xl font-bold mb-4 border-b border-slate-200 pb-2 text-slate-800">Rubros y Conceptos</h2>
 
                     {/* Add Item Form */}
-                    <div className="bg-slate-900/50 p-4 rounded-lg mb-6 border border-slate-700/50">
-                        <h3 className="font-bold text-sm text-slate-300 mb-4">Agregar Nuevo Rubro</h3>
+                    <div className="bg-slate-50 p-4 rounded-lg mb-6 border border-slate-200">
+                        <h3 className="font-bold text-sm text-slate-700 mb-4">Agregar Nuevo Rubro</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                             <div className="lg:col-span-2">
-                                <label className="block text-xs text-slate-400 mb-1">Nombre</label>
+                                <label className="block text-xs text-slate-500 font-medium mb-1">Nombre</label>
                                 <input
                                     type="text"
                                     placeholder="Ej. Aporte IESS"
-                                    className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm"
+                                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                     value={newItem.name}
                                     onChange={e => setNewItem({ ...newItem, name: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Tipo</label>
+                                <label className="block text-xs text-slate-500 font-medium mb-1">Tipo</label>
                                 <select
-                                    className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm"
+                                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                     value={newItem.type}
                                     onChange={e => setNewItem({ ...newItem, type: e.target.value })}
                                 >
@@ -138,19 +138,19 @@ const PayrollConfiguration = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs text-slate-400 mb-1">Valor</label>
+                                <label className="block text-xs text-slate-500 font-medium mb-1">Valor</label>
                                 <div className="flex gap-2">
                                     <input
                                         type="number"
                                         placeholder="%"
-                                        className="w-1/2 bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm"
+                                        className="w-1/2 bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                         value={newItem.percentage}
                                         onChange={e => setNewItem({ ...newItem, percentage: e.target.value, fixedValue: '' })}
                                     />
                                     <input
                                         type="number"
                                         placeholder="$"
-                                        className="w-1/2 bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm"
+                                        className="w-1/2 bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                         value={newItem.fixedValue}
                                         onChange={e => setNewItem({ ...newItem, fixedValue: e.target.value, percentage: '' })}
                                     />
@@ -158,7 +158,7 @@ const PayrollConfiguration = () => {
                             </div>
                             <button
                                 onClick={handleAddItem}
-                                className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg font-bold text-sm transition-colors"
+                                className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-lg font-bold text-sm transition-all shadow-sm hover:shadow-md"
                             >
                                 + Agregar
                             </button>
@@ -169,43 +169,44 @@ const PayrollConfiguration = () => {
                                 id="isMandatory"
                                 checked={newItem.isMandatory}
                                 onChange={e => setNewItem({ ...newItem, isMandatory: e.target.checked })}
+                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                             />
-                            <label htmlFor="isMandatory" className="text-sm text-slate-400">Es obligatorio (Aplica a todos)</label>
+                            <label htmlFor="isMandatory" className="text-sm text-slate-600 font-medium">Es obligatorio (Aplica a todos)</label>
                         </div>
                     </div>
 
                     {/* List */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left text-slate-400">
-                            <thead className="bg-slate-900 text-slate-200">
+                    <div className="overflow-x-auto rounded-lg border border-slate-200">
+                        <table className="w-full text-sm text-left text-slate-600">
+                            <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-bold border-b border-slate-200">
                                 <tr>
-                                    <th className="p-3">Nombre</th>
-                                    <th className="p-3">Tipo</th>
-                                    <th className="p-3">Valor</th>
-                                    <th className="p-3">Obligatorio</th>
-                                    <th className="p-3 text-right">Acción</th>
+                                    <th className="p-4">Nombre</th>
+                                    <th className="p-4">Tipo</th>
+                                    <th className="p-4">Valor</th>
+                                    <th className="p-4">Obligatorio</th>
+                                    <th className="p-4 text-right">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-700">
+                            <tbody className="divide-y divide-slate-100">
                                 {config.items.length === 0 && (
-                                    <tr><td colSpan="5" className="p-4 text-center text-slate-500">No hay rubros configurados.</td></tr>
+                                    <tr><td colSpan="5" className="p-6 text-center text-slate-500 bg-slate-50/50">No hay rubros configurados.</td></tr>
                                 )}
                                 {config.items.map((item, index) => (
-                                    <tr key={index}>
-                                        <td className="p-3 font-medium text-white">{item.name}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-1 rounded text-xs font-bold ${item.type === 'EARNING' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                    <tr key={index} className="hover:bg-slate-50 transition-colors">
+                                        <td className="p-4 font-medium text-slate-800">{item.name}</td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold border ${item.type === 'EARNING' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                                                 {item.type === 'EARNING' ? 'Ingreso' : 'Deducción'}
                                             </span>
                                         </td>
-                                        <td className="p-3">
+                                        <td className="p-4 font-mono font-medium">
                                             {item.percentage ? `${item.percentage}%` : `$${item.fixedValue}`}
                                         </td>
-                                        <td className="p-3">{item.isMandatory ? 'Sí' : 'No'}</td>
-                                        <td className="p-3 text-right">
+                                        <td className="p-4">{item.isMandatory ? 'Sí' : 'No'}</td>
+                                        <td className="p-4 text-right">
                                             <button
                                                 onClick={() => handleRemoveItem(index)}
-                                                className="text-red-400 hover:text-red-300"
+                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors text-xs font-semibold"
                                             >
                                                 Eliminar
                                             </button>

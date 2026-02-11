@@ -115,7 +115,6 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/careers/:id" element={<JobApplication />} />
-        <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route element={<RequireAuth role="admin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
@@ -125,6 +124,7 @@ function App() {
           <Route path="/admin/register-employee" element={<RegisterEmployee token={auth.token} />} />
           <Route path="/admin/employees" element={<EmployeeList token={auth.token} />} />
           <Route path="/admin/employees/:id" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
+          <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/admin/notifications" element={<NotificationsPage />} />
           <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
           <Route path="/admin/audit" element={<AuditLogsPage />} />

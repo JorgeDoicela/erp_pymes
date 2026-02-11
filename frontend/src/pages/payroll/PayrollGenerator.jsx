@@ -105,17 +105,18 @@ const PayrollGenerator = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white p-8">
-            <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
-                    Generador de Roles de Pago
-                </h1>
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Generador de Roles de Pago</h2>
+                    <p className="text-slate-500 text-sm">Gestiona y genera las nóminas mensuales</p>
+                </div>
                 {!selectedPayroll && (
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center text-gray-400 hover:text-white transition-colors"
+                        className="px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium"
                     >
-                        ← Volver
+                        Volver
                     </button>
                 )}
             </div>
@@ -123,18 +124,18 @@ const PayrollGenerator = () => {
             {!selectedPayroll ? (
                 /* LIST VIEW */
                 <div className="space-y-6">
-                    <div className="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-white/5">
-                        <h2 className="text-xl font-bold">Historial de Nóminas</h2>
+                    <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h2 className="text-xl font-bold text-slate-800">Historial de Nóminas</h2>
                         <div className="flex gap-4">
                             <button
                                 onClick={() => navigate('/admin/payroll/config')}
-                                className="text-slate-400 hover:text-white px-4 py-2 font-medium"
+                                className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors"
                             >
                                 Configuración
                             </button>
                             <button
                                 onClick={() => setModalOpen(true)}
-                                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold transition-colors"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm"
                             >
                                 + Nueva Nómina
                             </button>
@@ -146,52 +147,60 @@ const PayrollGenerator = () => {
                             <div className="text-slate-400">Cargando nóminas...</div>
                         </div>
                     ) : (
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {payrolls.map(pay => (
-                                <div key={pay.id} className="bg-slate-800 p-6 rounded-xl border border-white/5 hover:border-blue-500/50 transition-colors cursor-pointer" onClick={() => viewDetail(pay.id)}>
+                                <div key={pay.id} className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group" onClick={() => viewDetail(pay.id)}>
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <p className="text-sm text-slate-400">Periodo</p>
-                                            <p className="text-xl font-bold text-white">
+                                            <p className="text-sm text-slate-500">Periodo</p>
+                                            <p className="text-xl font-bold text-slate-800 group-hover:text-blue-700 transition-colors">
                                                 {new Date(pay.period).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
                                             </p>
                                         </div>
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${pay.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${pay.status === 'APPROVED' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
                                             {pay.status === 'APPROVED' ? 'APROBADO' : 'BORRADOR'}
                                         </span>
                                     </div>
-                                    <div className="mt-4 pt-4 border-t border-white/5 flex justify-between">
-                                        <span className="text-slate-400">Total a Pagar</span>
-                                        <span className="text-xl font-mono font-bold text-emerald-400">${(pay.totalAmount || 0).toFixed(2)}</span>
+                                    <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
+                                        <span className="text-slate-500">Total a Pagar</span>
+                                        <span className="text-xl font-mono font-bold text-emerald-600">${(pay.totalAmount || 0).toFixed(2)}</span>
                                     </div>
                                 </div>
                             ))}
-                            {payrolls.length === 0 && <p className="text-slate-500">No hay nóminas generadas.</p>}
+                            {payrolls.length === 0 && (
+                                <div className="col-span-full py-12 text-center bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                                    <p className="text-slate-500 font-medium">No hay nóminas generadas.</p>
+                                    <p className="text-sm text-slate-400 mt-1">Crea una nueva nómina para comenzar.</p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             ) : (
                 /* DETAIL VIEW */
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                    <button onClick={() => setSelectedPayroll(null)} className="text-slate-400 hover:text-white mb-4">← Volver al historial</button>
+                    <button onClick={() => setSelectedPayroll(null)} className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium transition-colors mb-2">
+                        <span>←</span> Volver al historial
+                    </button>
 
-                    <div className="flex justify-between items-end">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                         <div>
-                            <h2 className="text-2xl font-bold">Detalle de Nómina</h2>
-                            <p className="text-slate-400">
+                            <h2 className="text-2xl font-bold text-slate-800">Detalle de Nómina</h2>
+                            <p className="text-slate-500 text-lg">
                                 {new Date(selectedPayroll.period).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
                             </p>
-                            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${selectedPayroll.status === 'APPROVED' ? 'bg-green-500/20 text-green-400' :
-                                selectedPayroll.status === 'PAID' ? 'bg-blue-500/20 text-blue-400' : 'bg-yellow-500/20 text-yellow-400'
+                            <span className={`inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold border ${selectedPayroll.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
+                                selectedPayroll.status === 'PAID' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200'
                                 }`}>
                                 {selectedPayroll.status === 'APPROVED' ? 'APROBADO' : selectedPayroll.status === 'PAID' ? 'PAGADO' : 'BORRADOR'}
                             </span>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex flex-wrap gap-3">
                             {selectedPayroll.status === 'DRAFT' && (
                                 <button
                                     onClick={handleConfirm}
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-emerald-500/20"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-sm transition-all hover:shadow-md"
                                 >
                                     Aprobar Nómina
                                 </button>
@@ -205,13 +214,13 @@ const PayrollGenerator = () => {
                                     />
                                     <button
                                         onClick={handleDownloadBankFile}
-                                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2"
+                                        className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-colors"
                                     >
                                         Archivo Banco
                                     </button>
                                     <button
                                         onClick={handleMarkAsPaid}
-                                        className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2"
+                                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-all hover:shadow-md"
                                     >
                                         Confirmar Pago
                                     </button>
@@ -220,10 +229,10 @@ const PayrollGenerator = () => {
                         </div>
                     </div>
 
-                    <div className="bg-slate-800 rounded-xl overflow-hidden border border-white/5">
+                    <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left text-slate-300">
-                                <thead className="bg-slate-900 text-xs uppercase font-bold text-slate-500">
+                            <table className="w-full text-sm text-left text-slate-600">
+                                <thead className="bg-slate-50 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
                                     <tr>
                                         <th className="p-4">Empleado</th>
                                         <th className="p-4 text-right">Sueldo Base</th>
@@ -231,11 +240,11 @@ const PayrollGenerator = () => {
                                         <th className="p-4 text-right">Ingresos (Bonos)</th>
                                         <th className="p-4 text-right">Hrs Extra ($)</th>
                                         <th className="p-4 text-right">Egresos (Deduc.)</th>
-                                        <th className="p-4 text-right text-white">Neto a Pagar</th>
+                                        <th className="p-4 text-right text-slate-800">Neto a Pagar</th>
                                         <th className="p-4 text-center">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/5">
+                                <tbody className="divide-y divide-slate-100">
                                     {selectedPayroll.details.map(det => {
                                         const bonuses = JSON.parse(det.bonuses || '[]');
                                         const deductions = JSON.parse(det.deductions || '[]');
@@ -243,28 +252,28 @@ const PayrollGenerator = () => {
                                         const totalDeductions = deductions.reduce((a, b) => a + b.amount, 0);
 
                                         return (
-                                            <tr key={det.id} className="hover:bg-slate-700/30">
-                                                <td className="p-4 font-medium text-white">
+                                            <tr key={det.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="p-4 font-medium text-slate-900">
                                                     {det.employee.firstName} {det.employee.lastName}
                                                 </td>
                                                 <td className="p-4 text-right">${(det.baseSalary || 0).toFixed(2)}</td>
                                                 <td className="p-4 text-center">{det.workedDays}</td>
-                                                <td className="p-4 text-right text-green-400 font-mono">
+                                                <td className="p-4 text-right text-emerald-600 font-mono font-medium">
                                                     +${totalBonuses.toFixed(2)}
                                                 </td>
-                                                <td className="p-4 text-right text-purple-400 font-mono">
+                                                <td className="p-4 text-right text-purple-600 font-mono font-medium">
                                                     +${det.overtimeAmount.toFixed(2)}
                                                 </td>
-                                                <td className="p-4 text-right text-red-400 font-mono">
+                                                <td className="p-4 text-right text-red-500 font-mono font-medium">
                                                     -${totalDeductions.toFixed(2)}
                                                 </td>
-                                                <td className="p-4 text-right text-emerald-400 font-bold font-mono text-lg">
+                                                <td className="p-4 text-right text-emerald-700 font-bold font-mono text-lg">
                                                     ${(det.netSalary || 0).toFixed(2)}
                                                 </td>
                                                 <td className="p-4 text-center">
                                                     <button
                                                         onClick={() => generatePayslipPDF(det, det.employee, selectedPayroll.period)}
-                                                        className="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded text-xs"
+                                                        className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shadow-sm"
                                                         title="Descargar Rol Individual"
                                                     >
                                                         PDF
@@ -278,50 +287,53 @@ const PayrollGenerator = () => {
                         </div>
                     </div>
                 </motion.div>
-            )}
+            )
+            }
 
             {/* GENERATE MODAL */}
-            {modalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-slate-800 p-8 rounded-xl border border-white/10 w-96 shadow-2xl">
-                        <h3 className="text-xl font-bold mb-4">Generar Nueva Nómina</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-slate-400 mb-1">Mes</label>
-                                <select
-                                    className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"
-                                    value={genParams.month}
-                                    onChange={e => setGenParams({ ...genParams, month: parseInt(e.target.value) })}
+            {
+                modalOpen && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white p-8 rounded-xl border border-slate-200 w-96 shadow-2xl">
+                            <h3 className="text-xl font-bold text-slate-800 mb-4">Generar Nueva Nómina</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm text-slate-600 mb-1">Mes</label>
+                                    <select
+                                        className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                        value={genParams.month}
+                                        onChange={e => setGenParams({ ...genParams, month: parseInt(e.target.value) })}
+                                    >
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                                            <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('es', { month: 'long' })}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-slate-600 mb-1">Año</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                        value={genParams.year}
+                                        onChange={e => setGenParams({ ...genParams, year: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-8 flex justify-end gap-3">
+                                <button onClick={() => setModalOpen(false)} className="text-slate-500 hover:text-slate-800 px-4 py-2 font-medium transition-colors">Cancelar</button>
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={generating}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition-all hover:shadow-md disabled:opacity-50"
                                 >
-                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
-                                        <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('es', { month: 'long' })}</option>
-                                    ))}
-                                </select>
+                                    {generating ? 'Calculando...' : 'Generar'}
+                                </button>
                             </div>
-                            <div>
-                                <label className="block text-sm text-slate-400 mb-1">Año</label>
-                                <input
-                                    type="number"
-                                    className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"
-                                    value={genParams.year}
-                                    onChange={e => setGenParams({ ...genParams, year: parseInt(e.target.value) })}
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-8 flex justify-end gap-3">
-                            <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white px-4 py-2">Cancelar</button>
-                            <button
-                                onClick={handleGenerate}
-                                disabled={generating}
-                                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold"
-                            >
-                                {generating ? 'Calculando...' : 'Generar'}
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

@@ -156,11 +156,11 @@ const DigitalMarker = ({ user }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-slate-800/50 backdrop-blur-sm border border-white/10 text-white p-8 rounded-2xl shadow-xl">
+        <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-white backdrop-blur-sm border border-slate-200 text-slate-900 p-8 rounded-2xl shadow-sm">
             {/* Clock */}
             <div className="mb-8 text-center">
-                <h2 className="text-xl text-slate-400 font-light tracking-widest uppercase mb-2">Marcador Digital</h2>
-                <div className="text-5xl md:text-6xl font-bold tracking-tighter text-blue-400 tabular-nums">
+                <h2 className="text-xl text-slate-500 font-light tracking-widest uppercase mb-2">Marcador Digital</h2>
+                <div className="text-5xl md:text-6xl font-bold tracking-tighter text-blue-600 tabular-nums">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </div>
                 <div className="text-slate-500 mt-2 text-base md:text-lg">
@@ -174,14 +174,14 @@ const DigitalMarker = ({ user }) => {
                 <div className="w-full mb-8 relative max-w-md mx-auto">
                     {!foundEmployee ? (
                         <>
-                            <label className="block text-sm text-slate-400 mb-1 ml-1 text-center">Número de Cédula</label>
+                            <label className="block text-sm text-slate-600 mb-1 ml-1 text-center">Número de Cédula</label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
                                     value={employeeId}
                                     onChange={(e) => setEmployeeId(e.target.value)}
                                     placeholder="Ingrese su cédula..."
-                                    className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-slate-600 text-center text-lg tracking-widest"
+                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-slate-400 text-center text-lg tracking-widest"
                                 />
                                 <button
                                     onClick={() => checkStatus()}
@@ -195,20 +195,20 @@ const DigitalMarker = ({ user }) => {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-slate-700/50 rounded-xl p-4 border border-white/10 flex items-center justify-between"
+                            className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-between"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-xl">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white text-xl">
                                     {foundEmployee.firstName[0]}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg">{foundEmployee.firstName} {foundEmployee.lastName}</h3>
-                                    <p className="text-xs text-slate-300">{foundEmployee.position} • {foundEmployee.department}</p>
+                                    <h3 className="font-bold text-lg text-slate-800">{foundEmployee.firstName} {foundEmployee.lastName}</h3>
+                                    <p className="text-xs text-slate-500">{foundEmployee.position} • {foundEmployee.department}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => { setFoundEmployee(null); setEmployeeId(''); setStatus(null); setMessage({ type: '', text: '' }); }}
-                                className="text-slate-400 hover:text-white px-3 py-1 bg-white/5 rounded-lg text-xs"
+                                className="text-slate-500 hover:text-blue-600 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs transition-colors"
                             >
                                 Cambiar
                             </button>
@@ -234,24 +234,24 @@ const DigitalMarker = ({ user }) => {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-slate-800 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+                        className="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full shadow-xl"
                     >
-                        <h3 className="text-xl font-bold text-white mb-4">Confirmar {
+                        <h3 className="text-xl font-bold text-slate-800 mb-4">Confirmar {
                             pendingAction === 'ENTRY' ? 'Entrada' :
                                 pendingAction === 'EXIT' ? 'Salida' :
                                     pendingAction === 'BREAK_START' ? 'Inicio de Almuerzo' : 'Fin de Almuerzo'
                         }</h3>
-                        <p className="text-slate-300 mb-6">
+                        <p className="text-slate-600 mb-6">
                             ¿Confirmas registrar tu {
                                 pendingAction === 'ENTRY' ? 'entrada' :
                                     pendingAction === 'EXIT' ? 'salida' :
                                         pendingAction === 'BREAK_START' ? 'inicio de almuerzo' : 'fin de almuerzo'
-                            } a las <strong className="text-white">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>?
+                            } a las <strong className="text-slate-900">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>?
                         </p>
                         <div className="flex gap-3 justify-end">
                             <button
                                 onClick={() => { setShowConfirm(false); setPendingAction(null); }}
-                                className="px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                                className="px-4 py-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
                             >
                                 Cancelar
                             </button>
@@ -279,10 +279,10 @@ const DigitalMarker = ({ user }) => {
                         onClick={() => initiateMark('ENTRY')}
                         disabled={loading || status === 'COMPLETED'}
                         className={`
-                            col-span-2 py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 border border-white/5
+                            col-span-2 py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2
                             ${status === 'COMPLETED'
-                                ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
-                                : 'bg-gradient-to-br from-emerald-500/80 to-emerald-600/80 hover:from-emerald-400 hover:to-emerald-500 text-white hover:shadow-emerald-500/20'}
+                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                                : 'bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-emerald-500/20'}
                         `}
                     >
                         <span className="text-2xl"></span>
@@ -296,7 +296,7 @@ const DigitalMarker = ({ user }) => {
                         <button
                             onClick={() => initiateMark('BREAK_START')}
                             disabled={loading}
-                            className="py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 border border-white/5 bg-gradient-to-br from-blue-500/80 to-blue-600/80 hover:from-blue-400 hover:to-blue-500 text-white hover:shadow-blue-500/20"
+                            className="py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-blue-500/20"
                         >
                             <span className="text-2xl"></span>
                             ALMUERZO
@@ -304,7 +304,7 @@ const DigitalMarker = ({ user }) => {
                         <button
                             onClick={() => initiateMark('EXIT')}
                             disabled={loading}
-                            className="py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 border border-white/5 bg-gradient-to-br from-amber-500/80 to-amber-600/80 hover:from-amber-400 hover:to-amber-500 text-white hover:shadow-amber-500/20"
+                            className="py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-amber-500/20"
                         >
                             <span className="text-2xl"></span>
                             SALIDA
@@ -317,7 +317,7 @@ const DigitalMarker = ({ user }) => {
                     <button
                         onClick={() => initiateMark('BREAK_END')}
                         disabled={loading}
-                        className="col-span-2 py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 border border-white/5 bg-gradient-to-br from-indigo-500/80 to-indigo-600/80 hover:from-indigo-400 hover:to-indigo-500 text-white hover:shadow-indigo-500/20"
+                        className="col-span-2 py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white shadow-indigo-500/20"
                     >
                         <span className="text-2xl">🔙</span>
                         REGRESAR DEL ALMUERZO
@@ -327,10 +327,10 @@ const DigitalMarker = ({ user }) => {
 
             {/* Status Footer */}
             <div className="mt-8 text-center">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${status === 'WORKING' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/20' :
-                    status === 'COMPLETED' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/20' :
-                        status === 'ON_BREAK' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/20' :
-                            'bg-slate-700 text-slate-400 border border-white/5'
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${status === 'WORKING' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                    status === 'COMPLETED' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                        status === 'ON_BREAK' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
+                            'bg-slate-100 text-slate-500 border border-slate-200'
                     }`}>
                     {status === 'WORKING' ? 'Actualmente Trabajando' :
                         status === 'ON_BREAK' ? 'En Hora de Almuerzo' :
@@ -344,35 +344,35 @@ const DigitalMarker = ({ user }) => {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 w-full max-w-md bg-slate-700/30 rounded-lg p-4 text-sm border border-white/5"
+                    className="mt-6 w-full max-w-md bg-slate-50 rounded-lg p-4 text-sm border border-slate-200"
                 >
-                    <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold mb-3 border-b border-white/5 pb-2">
+                    <h4 className="text-slate-500 text-xs uppercase tracking-wider font-bold mb-3 border-b border-slate-200 pb-2">
                         Resumen de Hoy
                     </h4>
                     <div className="space-y-3">
                         {/* Entry Info */}
                         {recordData.checkIn && (
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-300">Entrada:</span>
+                                <span className="text-slate-500">Entrada:</span>
                                 <div className="flex flex-col items-end">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-mono font-bold text-white">
+                                        <span className="font-mono font-bold text-slate-800">
                                             {new Date(recordData.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                         {/* Lateness Badge */}
                                         {recordData.isLate ? (
-                                            <span className="bg-amber-500/20 text-amber-400 text-[10px] px-2 py-0.5 rounded border border-amber-500/30">
+                                            <span className="bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded border border-amber-200">
                                                 Tardío
                                             </span>
                                         ) : (
-                                            <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded border border-emerald-500/30">
+                                            <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded border border-emerald-200">
                                                 Puntual
                                             </span>
                                         )}
                                     </div>
                                     {/* Location Info */}
                                     {recordData.entryLocation && (
-                                        <div className="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5 text-right w-full justify-end" title={locationName || `${recordData.entryLocation.lat}, ${recordData.entryLocation.lng}`}>
+                                        <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end" title={locationName || `${recordData.entryLocation.lat}, ${recordData.entryLocation.lng}`}>
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0">
                                                 <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
                                             </svg>
@@ -387,10 +387,10 @@ const DigitalMarker = ({ user }) => {
 
                         {/* Exit Info if exists */}
                         {recordData.checkOut && (
-                            <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                                <span className="text-slate-300">Salida:</span>
+                            <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                                <span className="text-slate-500">Salida:</span>
                                 <div className="flex flex-col items-end">
-                                    <span className="font-mono font-bold text-white">
+                                    <span className="font-mono font-bold text-slate-800">
                                         {new Date(recordData.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
