@@ -133,83 +133,85 @@ const AttendanceReports = () => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 p-8">
-            <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-bold text-slate-800">
+        <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
                     Reportes de Asistencia
                 </h1>
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center text-slate-500 hover:text-slate-800 transition-colors bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm"
+                    className="flex items-center text-slate-500 hover:text-slate-800 transition-colors bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm text-sm"
                 >
                     ← Volver
                 </button>
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 flex flex-col lg:flex-row gap-4 items-end flex-wrap">
-                <div>
-                    <label className="block text-sm text-slate-500 mb-1 font-medium">Desde</label>
-                    <input
-                        type="date"
-                        className="bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        value={filters.startDate}
-                        onChange={e => setFilters({ ...filters, startDate: e.target.value })}
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm text-slate-500 mb-1 font-medium">Hasta</label>
-                    <input
-                        type="date"
-                        className="bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        value={filters.endDate}
-                        onChange={e => setFilters({ ...filters, endDate: e.target.value })}
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm text-slate-500 mb-1 font-medium">Departamento</label>
-                    <select
-                        className="bg-white border border-slate-200 rounded-lg p-2 text-slate-800 w-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        value={filters.department}
-                        onChange={e => setFilters({ ...filters, department: e.target.value })}
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                    <div>
+                        <label className="block text-sm text-slate-500 mb-1 font-medium">Desde</label>
+                        <input
+                            type="date"
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            value={filters.startDate}
+                            onChange={e => setFilters({ ...filters, startDate: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-slate-500 mb-1 font-medium">Hasta</label>
+                        <input
+                            type="date"
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            value={filters.endDate}
+                            onChange={e => setFilters({ ...filters, endDate: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-slate-500 mb-1 font-medium">Departamento</label>
+                        <select
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            value={filters.department}
+                            onChange={e => setFilters({ ...filters, department: e.target.value })}
+                        >
+                            <option value="">Todos</option>
+                            {departments.map(dept => (
+                                <option key={dept} value={dept}>{dept}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm text-slate-500 mb-1 font-medium">Empleado</label>
+                        <select
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            value={filters.employeeId}
+                            onChange={e => setFilters({ ...filters, employeeId: e.target.value })}
+                        >
+                            <option value="">Todos</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <button
+                        onClick={loadReport}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold h-10 transition-all shadow-md active:scale-95"
                     >
-                        <option value="">Todos</option>
-                        {departments.map(dept => (
-                            <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                    </select>
+                        {loading ? 'Generando...' : 'Generar'}
+                    </button>
                 </div>
-                <div>
-                    <label className="block text-sm text-slate-500 mb-1 font-medium">Empleado</label>
-                    <select
-                        className="bg-white border border-slate-200 rounded-lg p-2 text-slate-800 w-48 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        value={filters.employeeId}
-                        onChange={e => setFilters({ ...filters, employeeId: e.target.value })}
-                    >
-                        <option value="">Todos</option>
-                        {employees.map(emp => (
-                            <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-                        ))}
-                    </select>
-                </div>
-                <button
-                    onClick={loadReport}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold h-10 transition-all shadow-md active:scale-95"
-                >
-                    {loading ? 'Generando...' : 'Generar'}
-                </button>
 
                 {stats && (
-                    <div className="flex gap-2 ml-auto">
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
                         <button
                             onClick={handleExportCSV}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold h-10 transition-colors flex items-center gap-2 text-sm"
+                            className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold h-10 transition-colors flex items-center gap-2 text-sm"
                         >
                             Excel
                         </button>
                         <button
                             onClick={handleExportPDF}
-                            className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold h-10 transition-colors flex items-center gap-2 text-sm"
+                            className="flex-1 sm:flex-none justify-center bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold h-10 transition-colors flex items-center gap-2 text-sm"
                         >
                             PDF
                         </button>
@@ -260,7 +262,7 @@ const AttendanceReports = () => {
                             <h3 className="font-bold text-slate-800">Detalle por Empleado</h3>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-[800px]">
                                 <thead className="text-left text-slate-500 bg-slate-50">
                                     <tr>
                                         <th className="p-4 font-semibold">Empleado</th>

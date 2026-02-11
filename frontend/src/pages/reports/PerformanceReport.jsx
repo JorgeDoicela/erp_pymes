@@ -35,24 +35,24 @@ const PerformanceReport = () => {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-                <h1 className="text-3xl font-bold flex items-center text-slate-800">
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center text-slate-800">
                     <FiActivity className="mr-3 text-slate-800" /> Desempeño Organizacional
                 </h1>
 
-                <form onSubmit={handleFilter} className="flex flex-wrap gap-4 items-end bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                <form onSubmit={handleFilter} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full lg:w-auto">
                     <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Desde</label>
-                        <input type="date" className="bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        <input type="date" className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={filters.startDate} onChange={e => setFilters({ ...filters, startDate: e.target.value })} />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Hasta</label>
-                        <input type="date" className="bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        <input type="date" className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={filters.endDate} onChange={e => setFilters({ ...filters, endDate: e.target.value })} />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Departamento</label>
-                        <select className="bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        <select className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={filters.department} onChange={e => setFilters({ ...filters, department: e.target.value })}>
                             <option value="">Todos</option>
                             <option value="IT">IT</option>
@@ -61,7 +61,7 @@ const PerformanceReport = () => {
                             <option value="Marketing">Marketing</option>
                         </select>
                     </div>
-                    <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold flex items-center shadow-md transition-all active:scale-95">
+                    <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold flex items-center justify-center shadow-md transition-all active:scale-95 h-10 mt-auto">
                         <FiFilter className="mr-2" /> Filtrar
                     </button>
                 </form>
@@ -170,14 +170,14 @@ const PerformanceReport = () => {
                     </button>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left min-w-[700px]">
                         <thead className="bg-slate-50 text-slate-500 text-xs font-semibold uppercase">
                             <tr>
-                                <th className="p-4">Empleado</th>
-                                <th className="p-4">Departamento</th>
-                                <th className="p-4">Cargo</th>
-                                <th className="p-4 text-center">Score Final</th>
-                                <th className="p-4">Recomendación</th>
+                                <th className="p-4 whitespace-nowrap">Empleado</th>
+                                <th className="p-4 whitespace-nowrap">Departamento</th>
+                                <th className="p-4 whitespace-nowrap">Cargo</th>
+                                <th className="p-4 text-center whitespace-nowrap">Score Final</th>
+                                <th className="p-4 whitespace-nowrap">Recomendación</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">

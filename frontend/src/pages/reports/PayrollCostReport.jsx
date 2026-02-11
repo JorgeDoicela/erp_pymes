@@ -35,24 +35,24 @@ const PayrollCostReport = () => {
     const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#f97316'];
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
+        <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-                <h1 className="text-3xl font-bold flex items-center text-slate-800">
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center text-slate-800">
                     <FiDollarSign className="mr-3 text-slate-800" /> Costos de Nómina
                 </h1>
 
-                <form onSubmit={handleFilter} className="flex flex-wrap gap-4 items-end bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                <form onSubmit={handleFilter} className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full lg:w-auto">
                     <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Desde</label>
-                        <input type="date" className="bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        <input type="date" className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={dates.startDate} onChange={e => setDates({ ...dates, startDate: e.target.value })} />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Hasta</label>
-                        <input type="date" className="bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        <input type="date" className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={dates.endDate} onChange={e => setDates({ ...dates, endDate: e.target.value })} />
                     </div>
-                    <button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-bold flex items-center shadow-md transition-all active:scale-95">
+                    <button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-bold flex items-center justify-center shadow-md transition-all active:scale-95 h-10 mt-auto">
                         <FiFilter className="mr-2" /> Filtrar
                     </button>
                 </form>
@@ -149,7 +149,7 @@ const PayrollCostReport = () => {
                         link.click();
                         document.body.removeChild(link);
                     }}
-                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2 transition-colors"
+                    className="w-full sm:w-auto justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-colors border border-blue-100"
                 >
                     <FiDownload /> Descargar Reporte Completo (CSV)
                 </button>

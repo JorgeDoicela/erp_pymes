@@ -37,38 +37,38 @@ const SatisfactionReport = () => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
-            <h1 className="text-3xl font-bold mb-2 flex items-center text-slate-800">
+        <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6">
+            <h1 className="text-2xl md:text-3xl font-bold mb-2 flex flex-wrap items-center text-slate-800">
                 <FiHeart className="mr-3 text-slate-800" /> Clima Laboral: {data.surveyTitle}
             </h1>
-            <p className="text-slate-500 mb-8 font-medium">Análisis de Satisfacción y Cultura Organizacional</p>
+            <p className="text-slate-500 mb-8 font-medium text-sm md:text-base">Análisis de Satisfacción y Cultura Organizacional</p>
 
             {/* Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
-                    <p className="text-slate-500 text-sm uppercase tracking-wider font-semibold">Índice de Satisfacción</p>
+                    <p className="text-slate-500 text-xs md:text-sm uppercase tracking-wider font-semibold">Índice de Satisfacción</p>
                     <div className="mt-4 flex justify-center items-end gap-1">
-                        <span className="text-5xl font-bold text-slate-800">{data.index}</span>
-                        <span className="text-xl text-slate-400 mb-1 font-medium">/100</span>
+                        <span className="text-4xl md:text-5xl font-bold text-slate-800">{data.index}</span>
+                        <span className="text-lg md:text-xl text-slate-400 mb-1 font-medium">/100</span>
                     </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 left-0 w-2 h-full bg-purple-500"></div>
-                    <p className="text-slate-500 text-sm uppercase tracking-wider font-semibold">eNPS (Net Promoter Score)</p>
+                    <p className="text-slate-500 text-xs md:text-sm uppercase tracking-wider font-semibold">eNPS (Net Promoter Score)</p>
                     <div className="mt-4 flex justify-center items-end">
-                        <span className={`text-5xl font-bold ${data.nps > 0 ? 'text-green-600' : 'text-red-600'}`}>{data.nps}</span>
+                        <span className={`text-4xl md:text-5xl font-bold ${data.nps > 0 ? 'text-green-600' : 'text-red-600'}`}>{data.nps}</span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-2 font-medium">Promotores vs Detractores</p>
+                    <p className="text-[10px] md:text-xs text-slate-400 mt-2 font-medium">Promotores vs Detractores</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 left-0 w-2 h-full bg-green-500"></div>
-                    <p className="text-slate-500 text-sm uppercase tracking-wider font-semibold">Participación</p>
+                    <p className="text-slate-500 text-xs md:text-sm uppercase tracking-wider font-semibold">Participación</p>
                     <div className="mt-4 flex justify-center items-end gap-1">
-                        <span className="text-5xl font-bold text-slate-800">{data.participation}</span>
-                        <span className="text-xl text-slate-400 mb-1 font-medium">respuestas</span>
+                        <span className="text-4xl md:text-5xl font-bold text-slate-800">{data.participation}</span>
+                        <span className="text-lg md:text-xl text-slate-400 mb-1 font-medium">respuestas</span>
                     </div>
                 </div>
             </div>

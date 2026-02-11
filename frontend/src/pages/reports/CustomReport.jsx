@@ -67,8 +67,8 @@ const CustomReport = () => {
     const selectedModuleData = modules.find(m => m.id === config.module);
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 p-6">
-            <h1 className="text-3xl font-bold mb-6 flex items-center text-slate-800">
+        <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6">
+            <h1 className="text-2xl md:text-3xl font-bold mb-6 flex items-center text-slate-800">
                 <FiDatabase className="mr-3 text-cyan-600" /> Exportación Personalizada
             </h1>
 
@@ -145,7 +145,6 @@ const CustomReport = () => {
                             ) : results.length === 0 ? (
                                 <div className="h-64 flex items-center justify-center text-slate-400 italic">No hay datos que coincidan con los filtros.</div>
                             ) : (
-                                <table className="w-full text-left text-sm">
                                     <thead className="bg-slate-50 text-slate-500 uppercase sticky top-0 font-semibold">
                                         <tr>
                                             {Object.keys(results[0]).map(header => (
@@ -165,17 +164,18 @@ const CustomReport = () => {
                                         ))}
                                     </tbody>
                                 </table>
-                            )}
-                        </div>
-                        {results && (
-                            <div className="p-4 border-t border-slate-100 text-xs text-slate-400 text-right bg-slate-50/30">
-                                Mostrando {results.length} registros
-                            </div>
-                        )}
                     </div>
+                            )}
                 </div>
+                {results && (
+                    <div className="p-4 border-t border-slate-100 text-xs text-slate-400 text-right bg-slate-50/30">
+                        Mostrando {results.length} registros
+                    </div>
+                )}
             </div>
         </div>
+            </div >
+        </div >
     );
 };
 
