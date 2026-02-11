@@ -129,15 +129,15 @@ const ApplicationDetails = () => {
                         <FiArrowLeft className="mr-2" /> Volver
                     </button>
 
-                    <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-                        <div className="flex justify-between items-start mb-6 w-full">
+                    <div className="bg-white p-6 md:p-8 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6 w-full">
                             <div>
-                                <h1 className="text-3xl font-bold text-slate-800 mb-1">{app.firstName} {app.lastName}</h1>
-                                <p className="text-blue-600 text-lg font-medium">{app.vacancy?.title}</p>
+                                <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-1">{app.firstName} {app.lastName}</h1>
+                                <p className="text-blue-600 text-base md:text-lg font-medium">{app.vacancy?.title}</p>
                             </div>
 
-                            <div className="flex gap-2 flex-wrap justify-end">
-                                <select value={app.status} onChange={(e) => handleStatusChange(e.target.value)} className="bg-slate-50 border-slate-200 rounded-lg p-2 text-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-slate-100 transition-colors text-sm">
+                            <div className="flex gap-2 flex-wrap sm:justify-end w-full sm:w-auto">
+                                <select value={app.status} onChange={(e) => handleStatusChange(e.target.value)} className="flex-1 sm:flex-none bg-slate-50 border-slate-200 rounded-lg p-2 text-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-slate-100 transition-colors text-xs md:text-sm">
                                     <option value="PENDING">Pendiente</option>
                                     <option value="REVIEWING">En Revisión</option>
                                     <option value="INTERVIEW">Entrevista</option>
@@ -147,16 +147,16 @@ const ApplicationDetails = () => {
                                 </select>
 
                                 {app.status !== 'HIRED' && (
-                                    <button onClick={() => setShowHireModal(true)} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold flex items-center shadow-sm hover:shadow-md transition-all text-sm">
+                                    <button onClick={() => setShowHireModal(true)} className="flex-1 sm:flex-none px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold flex items-center justify-center shadow-sm hover:shadow-md transition-all text-xs md:text-sm">
                                         <FiBriefcase className="mr-2" /> Contratar
                                     </button>
                                 )}
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-600 mb-8">
-                            <div className="flex items-center"><FiMail className="mr-3 text-slate-400" /> {app.email}</div>
-                            <div className="flex items-center"><FiPhone className="mr-3 text-slate-400" /> {app.phone}</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-slate-600 mb-8 border-t border-slate-50 pt-6 text-sm md:text-base">
+                            <div className="flex items-center truncate"><FiMail className="mr-3 text-slate-400 shrink-0" /> <span className="truncate">{app.email}</span></div>
+                            <div className="flex items-center"><FiPhone className="mr-3 text-slate-400 shrink-0" /> {app.phone}</div>
                         </div>
 
                         <div className="bg-slate-50 p-6 rounded-xl mb-6 border border-slate-100">
@@ -165,7 +165,7 @@ const ApplicationDetails = () => {
                         </div>
 
                         {app.resumeUrl && (
-                            <a href={`${SERVER_URL}${app.resumeUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-6 py-3 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg font-bold transition-colors">
+                            <a href={`${SERVER_URL}${app.resumeUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg font-bold transition-colors text-sm md:text-base">
                                 <FiDownload className="mr-2" /> Ver Hoja de Vida (PDF)
                             </a>
                         )}
@@ -178,10 +178,10 @@ const ApplicationDetails = () => {
                             <button onClick={() => setShowModal(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm shadow-sm transition-all">+ Programar</button>
                         </div>
                         {app.interviews?.map(int => (
-                            <div key={int.id} className="bg-slate-50 p-4 rounded-lg flex justify-between items-center border border-slate-200 mb-2 hover:border-blue-300 transition-colors">
+                            <div key={int.id} className="bg-slate-50 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border border-slate-200 mb-2 hover:border-blue-300 transition-colors">
                                 <div>
-                                    <p className="font-bold text-slate-700 text-lg mb-1">{new Date(int.date).toLocaleDateString()} - {new Date(int.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                    <span className="text-sm text-slate-500 font-medium bg-white px-2 py-0.5 rounded border border-slate-200">{int.type} - {int.location}</span>
+                                    <p className="font-bold text-slate-700 text-base md:text-lg mb-1">{new Date(int.date).toLocaleDateString()} - {new Date(int.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                    <span className="text-[10px] md:text-xs text-slate-500 font-medium bg-white px-2 py-0.5 rounded border border-slate-200">{int.type} - {int.location}</span>
                                 </div>
                             </div>
                         ))}

@@ -57,18 +57,18 @@ const JobApplication = () => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6">
+        <div className="min-h-screen bg-slate-50 py-6 md:py-12 px-4 sm:px-6">
             <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="bg-white p-8 border-b border-slate-100">
-                    <h1 className="text-3xl font-bold mb-4 text-slate-800">{vacancy.title}</h1>
-                    <div className="flex flex-wrap gap-6 text-sm">
+                <div className="bg-white p-6 md:p-8 border-b border-slate-100 text-center sm:text-left">
+                    <h1 className="text-2xl md:text-3xl font-bold mb-4 text-slate-800">{vacancy.title}</h1>
+                    <div className="flex flex-wrap justify-center sm:justify-start gap-4 md:gap-6 text-sm">
                         <span className="flex items-center text-slate-600"><FiMapPin className="mr-2 text-slate-400" /> {vacancy.location}</span>
                         <span className="flex items-center text-slate-600"><FiBriefcase className="mr-2 text-slate-400" /> {vacancy.department}</span>
                         <span className="flex items-center text-slate-600"><FiClock className="mr-2 text-slate-400" /> {vacancy.employmentType}</span>
                     </div>
                 </div>
 
-                <div className="p-8">
+                <div className="p-6 md:p-8">
                     <div className="mb-8 space-y-6">
                         <section>
                             <h3 className="font-bold text-lg text-gray-900 mb-2">Descripción</h3>
@@ -88,7 +88,7 @@ const JobApplication = () => {
 
                     <hr className="my-8" />
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Aplica a esta vacante</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center sm:text-left">Aplica a esta vacante</h2>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>

@@ -89,7 +89,7 @@ const CreateJobVacancy = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-lg border border-slate-200">
                         <div>
                             <label className="block text-slate-700 font-medium mb-2 text-sm">Salario Mínimo (USD)</label>
                             <input type="number" name="salaryMin" value={formData.salaryMin} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg p-3 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />

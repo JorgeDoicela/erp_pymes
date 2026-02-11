@@ -13,10 +13,10 @@ const CareersPage = () => {
 
     return (
         <div className="min-h-screen bg-white">
-            <header className="bg-white border-b border-slate-100 py-20 px-4">
+            <header className="bg-white border-b border-slate-100 py-12 md:py-20 px-6">
                 <div className="max-w-7xl mx-auto text-center">
-                    <h1 className="text-5xl font-bold mb-4 text-slate-800 tracking-tight">Únete a Nuestro Equipo</h1>
-                    <p className="text-xl text-slate-500 max-w-2xl mx-auto font-light">
+                    <h1 className="text-3xl md:text-5xl font-bold mb-4 text-slate-800 tracking-tight">Únete a Nuestro Equipo</h1>
+                    <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-light">
                         Estamos buscando talento apasionado para construir el futuro. Revisa nuestras vacantes abiertas y aplica hoy.
                     </p>
                 </div>
