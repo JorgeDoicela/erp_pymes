@@ -126,50 +126,50 @@ const AttendanceReports = () => {
     };
 
     const StatusCard = ({ title, value, color, text }) => (
-        <div className={`p-6 rounded-xl border ${color} bg-slate-800/50`}>
-            <p className="text-slate-400 text-sm mb-1">{title}</p>
+        <div className={`p-6 rounded-xl border ${color} bg-white shadow-sm hover:shadow-md transition-shadow`}>
+            <p className="text-slate-500 text-sm mb-1">{title}</p>
             <p className={`text-3xl font-bold ${text}`}>{value}</p>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white p-8">
+        <div className="min-h-screen bg-slate-50 text-slate-800 p-8">
             <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                <h1 className="text-3xl font-bold text-slate-800">
                     Reportes de Asistencia
                 </h1>
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center text-gray-400 hover:text-white transition-colors"
+                    className="flex items-center text-slate-500 hover:text-slate-800 transition-colors bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm"
                 >
                     ← Volver
                 </button>
             </div>
 
             {/* Filters */}
-            <div className="bg-slate-800 p-6 rounded-xl border border-white/5 mb-8 flex flex-col lg:flex-row gap-4 items-end flex-wrap">
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 flex flex-col lg:flex-row gap-4 items-end flex-wrap">
                 <div>
-                    <label className="block text-sm text-slate-400 mb-1">Desde</label>
+                    <label className="block text-sm text-slate-500 mb-1 font-medium">Desde</label>
                     <input
                         type="date"
-                        className="bg-slate-900 border border-slate-700 rounded p-2 text-white"
+                        className="bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                         value={filters.startDate}
                         onChange={e => setFilters({ ...filters, startDate: e.target.value })}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm text-slate-400 mb-1">Hasta</label>
+                    <label className="block text-sm text-slate-500 mb-1 font-medium">Hasta</label>
                     <input
                         type="date"
-                        className="bg-slate-900 border border-slate-700 rounded p-2 text-white"
+                        className="bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                         value={filters.endDate}
                         onChange={e => setFilters({ ...filters, endDate: e.target.value })}
                     />
                 </div>
                 <div>
-                    <label className="block text-sm text-slate-400 mb-1">Departamento</label>
+                    <label className="block text-sm text-slate-500 mb-1 font-medium">Departamento</label>
                     <select
-                        className="bg-slate-900 border border-slate-700 rounded p-2 text-white w-40"
+                        className="bg-white border border-slate-200 rounded-lg p-2 text-slate-800 w-40 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                         value={filters.department}
                         onChange={e => setFilters({ ...filters, department: e.target.value })}
                     >
@@ -180,9 +180,9 @@ const AttendanceReports = () => {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm text-slate-400 mb-1">Empleado</label>
+                    <label className="block text-sm text-slate-500 mb-1 font-medium">Empleado</label>
                     <select
-                        className="bg-slate-900 border border-slate-700 rounded p-2 text-white w-48"
+                        className="bg-white border border-slate-200 rounded-lg p-2 text-slate-800 w-48 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                         value={filters.employeeId}
                         onChange={e => setFilters({ ...filters, employeeId: e.target.value })}
                     >
@@ -194,7 +194,7 @@ const AttendanceReports = () => {
                 </div>
                 <button
                     onClick={loadReport}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold h-10 transition-colors"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold h-10 transition-all shadow-md active:scale-95"
                 >
                     {loading ? 'Generando...' : 'Generar'}
                 </button>
@@ -222,77 +222,77 @@ const AttendanceReports = () => {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                        <StatusCard title="Empleados" value={stats.summary.totalEmployees} color="border-slate-700" text="text-white" />
-                        <StatusCard title="Tasa Asistencia" value={`${stats.summary.attendanceRate}%`} color="border-blue-500/30" text="text-blue-400" />
-                        <StatusCard title="Atrasos" value={stats.summary.late} color="border-yellow-500/30" text="text-yellow-400" />
-                        <StatusCard title="Faltas" value={stats.summary.absent} color="border-red-500/30" text="text-red-400" />
-                        <StatusCard title="Horas Extra Total" value={stats.summary.totalOvertime} color="border-purple-500/30" text="text-purple-400" />
+                        <StatusCard title="Empleados" value={stats.summary.totalEmployees} color="border-slate-200" text="text-slate-800" />
+                        <StatusCard title="Tasa Asistencia" value={`${stats.summary.attendanceRate}%`} color="border-blue-200" text="text-blue-600" />
+                        <StatusCard title="Atrasos" value={stats.summary.late} color="border-yellow-200" text="text-yellow-600" />
+                        <StatusCard title="Faltas" value={stats.summary.absent} color="border-red-200" text="text-red-600" />
+                        <StatusCard title="Horas Extra Total" value={stats.summary.totalOvertime} color="border-purple-200" text="text-purple-600" />
                     </div>
 
                     {/* Chart Section */}
-                    <div className="bg-slate-800 p-6 rounded-xl border border-white/5 mb-8">
-                        <h3 className="font-bold mb-4">Tendencias de Asistencia</h3>
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
+                        <h3 className="font-bold mb-4 text-slate-800">Tendencias de Asistencia</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                     data={stats.details}
                                     margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                                 >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                                    <XAxis dataKey="name" stroke="#cbd5e1" fontSize={12} tickFormatter={(val) => val.split(' ')[0]} />
-                                    <YAxis stroke="#cbd5e1" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                    <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickFormatter={(val) => val.split(' ')[0]} />
+                                    <YAxis stroke="#64748b" />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                                        cursor={{ fill: '#33415550' }}
+                                        contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#1e293b' }}
+                                        cursor={{ fill: '#f1f5f9' }}
                                     />
                                     <Legend />
-                                    <Bar dataKey="present" name="Asistencias" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="late" name="Atrasos" fill="#facc15" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="absent" name="Faltas" fill="#f87171" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="present" name="Asistencias" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="late" name="Atrasos" fill="#eab308" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="absent" name="Faltas" fill="#ef4444" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
                     {/* Detailed Table */}
-                    <div className="bg-slate-800 rounded-xl border border-white/5 overflow-hidden">
-                        <div className="p-4 border-b border-white/5 bg-slate-800/80 backdrop-blur-sm">
-                            <h3 className="font-bold">Detalle por Empleado</h3>
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                            <h3 className="font-bold text-slate-800">Detalle por Empleado</h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
-                                <thead className="text-left text-slate-400 bg-slate-900/50">
+                                <thead className="text-left text-slate-500 bg-slate-50">
                                     <tr>
-                                        <th className="p-4 font-medium">Empleado</th>
-                                        <th className="p-4 font-medium">Depto</th>
-                                        <th className="p-4 font-medium text-center">Asist.</th>
-                                        <th className="p-4 font-medium text-center">Atrasos</th>
-                                        <th className="p-4 font-medium text-center">Justif.</th>
-                                        <th className="p-4 font-medium text-center">Faltas</th>
-                                        <th className="p-4 font-medium text-center">Tasa %</th>
-                                        <th className="p-4 font-medium text-right">Hrs Trab.</th>
-                                        <th className="p-4 font-medium text-right text-purple-400">Hrs Extra</th>
+                                        <th className="p-4 font-semibold">Empleado</th>
+                                        <th className="p-4 font-semibold">Depto</th>
+                                        <th className="p-4 font-semibold text-center">Asist.</th>
+                                        <th className="p-4 font-semibold text-center">Atrasos</th>
+                                        <th className="p-4 font-semibold text-center">Justif.</th>
+                                        <th className="p-4 font-semibold text-center">Faltas</th>
+                                        <th className="p-4 font-semibold text-center">Tasa %</th>
+                                        <th className="p-4 font-semibold text-right">Hrs Trab.</th>
+                                        <th className="p-4 font-semibold text-right text-purple-600">Hrs Extra</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-white/5">
+                                <tbody className="divide-y divide-slate-100">
                                     {stats.details.map(row => (
-                                        <tr key={row.id} className="hover:bg-slate-700/50 transition-colors">
-                                            <td className="p-4 font-medium text-white">{row.name}</td>
-                                            <td className="p-4 text-slate-400">{row.department}</td>
-                                            <td className="p-4 text-center text-blue-200">{row.present}</td>
-                                            <td className="p-4 text-center text-yellow-500 font-bold">{row.late > 0 ? row.late : '-'}</td>
-                                            <td className="p-4 text-center text-slate-400">{row.excused}</td>
-                                            <td className="p-4 text-center text-red-400 font-bold">{row.absent > 0 ? row.absent : '-'}</td>
+                                        <tr key={row.id} className="hover:bg-blue-50/30 transition-colors">
+                                            <td className="p-4 font-medium text-slate-800">{row.name}</td>
+                                            <td className="p-4 text-slate-600">{row.department}</td>
+                                            <td className="p-4 text-center text-blue-600">{row.present}</td>
+                                            <td className="p-4 text-center text-yellow-600 font-bold">{row.late > 0 ? row.late : '-'}</td>
+                                            <td className="p-4 text-center text-slate-500">{row.excused}</td>
+                                            <td className="p-4 text-center text-red-600 font-bold">{row.absent > 0 ? row.absent : '-'}</td>
                                             <td className="p-4 text-center">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${row.attendanceRate >= 95 ? 'bg-green-500/20 text-green-400' :
-                                                    row.attendanceRate >= 85 ? 'bg-yellow-500/20 text-yellow-400' :
-                                                        'bg-red-500/20 text-red-400'
+                                                <span className={`px-2 py-1 rounded text-xs font-bold ${row.attendanceRate >= 95 ? 'bg-green-100 text-green-700' :
+                                                    row.attendanceRate >= 85 ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-red-100 text-red-700'
                                                     }`}>
                                                     {(row.attendanceRate || 0).toFixed(0)}%
                                                 </span>
                                             </td>
-                                            <td className="p-4 text-right font-mono text-slate-300">{(row.workedHours || 0).toFixed(1)}</td>
-                                            <td className="p-4 text-right font-mono text-purple-400 font-bold">{row.overtime > 0 ? (row.overtime || 0).toFixed(1) : '-'}</td>
+                                            <td className="p-4 text-right font-mono text-slate-600">{(row.workedHours || 0).toFixed(1)}</td>
+                                            <td className="p-4 text-right font-mono text-purple-600 font-bold">{row.overtime > 0 ? (row.overtime || 0).toFixed(1) : '-'}</td>
                                         </tr>
                                     ))}
                                 </tbody>
