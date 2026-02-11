@@ -43,21 +43,22 @@ const AdminAbsences = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white p-8">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                    Aprobación de Ausencias
-                </h1>
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Aprobación de Ausencias</h2>
+                    <p className="text-slate-500 text-sm">Gestione las solicitudes de permisos y vacaciones</p>
+                </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center text-gray-400 hover:text-white transition-colors"
+                        className="px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium"
                     >
-                        ← Volver
+                        Volver
                     </button>
                     <button
                         onClick={() => setShowCalendar(!showCalendar)}
-                        className="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-sm text-white"
+                        className="px-4 py-2.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100 transition-colors text-sm font-medium"
                     >
                         {showCalendar ? 'Ocultar Calendario' : 'Ver Calendario'}
                     </button>
@@ -67,38 +68,39 @@ const AdminAbsences = () => {
             {showCalendar && <TeamCalendar />}
 
             {!showCalendar && (
-                <div className="grid grid-cols-1 gap-6 mt-8">
+                <div className="grid grid-cols-1 gap-6">
                     {requests.length === 0 ? (
-                        <div className="bg-slate-800 p-8 rounded-xl text-center text-slate-400">
-                            No hay solicitudes pendientes.
+                        <div className="bg-slate-50 border-2 border-dashed border-slate-200 p-12 rounded-xl text-center">
+                            <p className="text-slate-500 font-medium">No hay solicitudes pendientes.</p>
+                            <p className="text-slate-400 text-sm mt-1">Las nuevas solicitudes aparecerán aquí.</p>
                         </div>
                     ) : (
                         requests.map(req => (
-                            <div key={req.id} className="bg-slate-800 rounded-xl border border-white/5 p-6 shadow-lg flex flex-col lg:flex-row gap-6">
+                            <div key={req.id} className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col lg:flex-row gap-6">
                                 {/* Info */}
                                 <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center font-bold text-blue-300">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg border border-blue-100">
                                             {req.employee.firstName[0]}
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-lg">{req.employee.firstName} {req.employee.lastName}</h3>
-                                            <p className="text-xs text-slate-400">{req.employee.position}</p>
+                                            <h3 className="font-bold text-lg text-slate-800">{req.employee.firstName} {req.employee.lastName}</h3>
+                                            <p className="text-sm text-slate-500">{req.employee.position}</p>
                                         </div>
                                     </div>
-                                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <p className="text-slate-500">Tipo</p>
-                                            <p className="font-medium text-blue-200">{req.type}</p>
+                                    <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                            <p className="text-slate-500 text-xs uppercase tracking-wide font-semibold mb-1">Tipo de Ausencia</p>
+                                            <p className="font-medium text-slate-800">{req.type}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-slate-500">Fechas</p>
-                                            <p className="font-medium">{new Date(req.startDate).toLocaleDateString()} - {new Date(req.endDate).toLocaleDateString()}</p>
+                                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                            <p className="text-slate-500 text-xs uppercase tracking-wide font-semibold mb-1">Fechas Solicitadas</p>
+                                            <p className="font-medium text-slate-800">{new Date(req.startDate).toLocaleDateString()} - {new Date(req.endDate).toLocaleDateString()}</p>
                                         </div>
                                     </div>
-                                    <div className="mt-4 bg-slate-900/50 p-3 rounded-lg border border-white/5">
-                                        <p className="text-slate-400 text-sm mb-1">Motivo:</p>
-                                        <p className="text-gray-300 italic">"{req.reason}"</p>
+                                    <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                                        <p className="text-amber-800 text-sm font-medium mb-1">Motivo declarado:</p>
+                                        <p className="text-slate-700 italic">"{req.reason}"</p>
                                     </div>
 
                                     {req.evidenceUrl && (
@@ -107,8 +109,9 @@ const AdminAbsences = () => {
                                                 href={`${import.meta.env.VITE_API_URL || ''}/uploads/evidence/${req.evidenceUrl}`}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="text-blue-400 text-sm hover:underline flex items-center gap-2"
+                                                className="inline-flex items-center gap-2 text-blue-600 text-sm hover:text-blue-800 hover:underline font-medium"
                                             >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                                                 Ver Certificado/Evidencia Adjunta
                                             </a>
                                         </div>
@@ -116,27 +119,29 @@ const AdminAbsences = () => {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="w-full lg:w-1/3 bg-slate-900/50 p-4 rounded-xl border border-white/5 flex flex-col justify-center">
-                                    <p className="text-sm text-slate-400 mb-2">Acciones Administrativas</p>
+                                <div className="w-full lg:w-80 bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col">
+                                    <p className="text-sm font-semibold text-slate-800 mb-3 border-b border-slate-200 pb-2">Acciones Administrativas</p>
                                     <textarea
-                                        className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white mb-3"
-                                        rows="2"
-                                        placeholder="Comentario (opcional)..."
+                                        className="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm text-slate-800 placeholder-slate-400 mb-4 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all resize-none"
+                                        rows="3"
+                                        placeholder="Ingrese un comentario opcional..."
                                         value={activeId === req.id ? comment : ''}
                                         onChange={(e) => { setActiveId(req.id); setComment(e.target.value); }}
                                     ></textarea>
 
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-3 mt-auto">
                                         <button
                                             onClick={() => handleAction(req.id, 'APPROVED')}
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded font-bold text-sm"
+                                            className="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-bold text-sm shadow-sm transition-all hover:shadow md:flex justify-center items-center gap-2"
                                         >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                                             Aprobar
                                         </button>
                                         <button
                                             onClick={() => handleAction(req.id, 'REJECTED')}
-                                            className="bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold text-sm"
+                                            className="bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 py-2.5 rounded-lg font-bold text-sm shadow-sm transition-all md:flex justify-center items-center gap-2"
                                         >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                             Rechazar
                                         </button>
                                     </div>

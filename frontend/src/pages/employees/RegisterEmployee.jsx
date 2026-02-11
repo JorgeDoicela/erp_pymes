@@ -2,8 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useEmployees } from '../../hooks/employees/useEmployees';
-import InputField from '../../components/common/InputField';
-import SelectField from '../../components/common/SelectField';
+import { InputField, SelectField } from './components/EmployeeHelpers';
 import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS } from '../../constants/employeeOptions';
 import { validateCedula, validateEmail, validatePhone, validateSalary, validateDates } from '../../utils/validationUtils';
 
@@ -113,26 +112,26 @@ const RegisterEmployee = ({ token }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 flex items-center justify-center">
-            <div className="w-full max-w-4xl bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-white/20">
+        <div className="space-y-6">
+            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="p-8">
-                    <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
+                    <h2 className="text-3xl font-bold text-slate-800 mb-2">
                         Registro de Empleado
                     </h2>
-                    <p className="text-slate-400 mb-8">Ingrese los datos para registrar un nuevo colaborador.</p>
+                    <p className="text-slate-500 mb-8">Ingrese los datos para registrar un nuevo colaborador.</p>
 
                     {error && (
-                        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
+                        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-lg text-red-700">
                             {error}
                         </div>
                     )}
 
                     {hasSavedData && (
-                        <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-100 flex justify-between items-center">
+                        <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-blue-700 flex justify-between items-center">
                             <span>Tienes un borrador guardado automáticamente. ¿Deseas recuperarlo?</span>
                             <button
                                 onClick={() => { recoverData(); setHasSavedData(false); }}
-                                className="bg-blue-600 hover:bg-blue-500 px-4 py-1 rounded text-sm font-bold transition-colors"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm font-bold transition-colors"
                             >
                                 Recuperar Datos
                             </button>
@@ -142,7 +141,7 @@ const RegisterEmployee = ({ token }) => {
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Información Personal */}
                         <section>
-                            <h3 className="text-xl font-semibold text-blue-300 mb-4 border-b border-white/10 pb-2">Información Personal</h3>
+                            <h3 className="text-xl font-semibold text-blue-600 mb-4 border-b border-slate-200 pb-2">Información Personal</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <InputField label="Nombre" name="firstName" value={formData.firstName} onChange={handleChange} />
                                 <InputField label="Apellido" name="lastName" value={formData.lastName} onChange={handleChange} />
@@ -155,12 +154,12 @@ const RegisterEmployee = ({ token }) => {
                                 <InputField label="Teléfono" name="phone" value={formData.phone} onChange={handleChange} error={fieldErrors.phone} />
                                 <InputField label="Email Personal" name="email" type="email" value={formData.email} onChange={handleChange} error={fieldErrors.email} />
                             </div>
-                            {fieldErrors.dates && <p className="mt-4 text-xs text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">{fieldErrors.dates}</p>}
+                            {fieldErrors.dates && <p className="mt-4 text-xs text-red-600 bg-red-50 p-2 rounded border border-red-100">{fieldErrors.dates}</p>}
                         </section>
 
                         {/* Información Laboral */}
                         <section>
-                            <h3 className="text-xl font-semibold text-emerald-300 mb-4 border-b border-white/10 pb-2">Información Laboral</h3>
+                            <h3 className="text-xl font-semibold text-emerald-600 mb-4 border-b border-slate-200 pb-2">Información Laboral</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <SelectField label="Departamento" name="department" value={formData.department} onChange={handleChange}
                                     options={DEPARTMENTS}
@@ -173,33 +172,33 @@ const RegisterEmployee = ({ token }) => {
                                 <InputField label="Salario Base ($)" name="salary" type="number" min="0" step="0.01" value={formData.salary} onChange={handleChange} error={fieldErrors.salary} />
                             </div>
 
-                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                                <h4 className="text-sm font-semibold text-slate-300 md:col-span-2 mb-2">Configuración Laboral (Ecuador)</h4>
-                                <label className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-slate-600 transition-all">
+                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                <h4 className="text-sm font-semibold text-slate-700 md:col-span-2 mb-2">Configuración Laboral (Ecuador)</h4>
+                                <label className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white cursor-pointer border border-transparent hover:border-slate-200 transition-all">
                                     <input
                                         type="checkbox"
                                         name="hasNightSurcharge"
                                         checked={formData.hasNightSurcharge}
                                         onChange={(e) => setFormData(prev => ({ ...prev, hasNightSurcharge: e.target.checked }))}
-                                        className="w-5 h-5 rounded border-slate-600 text-blue-600 focus:ring-blue-500 bg-slate-700"
+                                        className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 bg-white"
                                     />
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-medium text-white">Pago Nocturno (25%)</span>
-                                        <span className="text-xs text-slate-400">Recargo de 19:00 a 06:00</span>
+                                        <span className="text-sm font-medium text-slate-800">Pago Nocturno (25%)</span>
+                                        <span className="text-xs text-slate-500">Recargo de 19:00 a 06:00</span>
                                     </div>
                                 </label>
 
-                                <label className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-slate-600 transition-all">
+                                <label className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white cursor-pointer border border-transparent hover:border-slate-200 transition-all">
                                     <input
                                         type="checkbox"
                                         name="hasDoubleOvertime"
                                         checked={formData.hasDoubleOvertime}
                                         onChange={(e) => setFormData(prev => ({ ...prev, hasDoubleOvertime: e.target.checked }))}
-                                        className="w-5 h-5 rounded border-slate-600 text-blue-600 focus:ring-blue-500 bg-slate-700"
+                                        className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 bg-white"
                                     />
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-medium text-white">Pago Fines de Semana (100%)</span>
-                                        <span className="text-xs text-slate-400">Doble sueldo Sáb/Dom/Feriados</span>
+                                        <span className="text-sm font-medium text-slate-800">Pago Fines de Semana (100%)</span>
+                                        <span className="text-xs text-slate-500">Doble sueldo Sáb/Dom/Feriados</span>
                                     </div>
                                 </label>
                             </div>
@@ -207,7 +206,7 @@ const RegisterEmployee = ({ token }) => {
 
                         {/* Información Bancaria */}
                         <section>
-                            <h3 className="text-xl font-semibold text-purple-300 mb-4 border-b border-white/10 pb-2">Información Bancaria</h3>
+                            <h3 className="text-xl font-semibold text-purple-600 mb-4 border-b border-slate-200 pb-2">Información Bancaria</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <SelectField label="Banco" name="bankName" value={formData.bankName} onChange={handleChange}
                                     options={BANK_OPTIONS}
@@ -225,19 +224,18 @@ const RegisterEmployee = ({ token }) => {
                             </div>
                         </section>
 
-                        <div className="flex justify-end pt-4">
+                        <div className="flex justify-end pt-4 border-t border-slate-200 mt-8">
                             <button
                                 type="button"
                                 onClick={() => navigate(-1)}
-                                className="mr-4 px-6 py-2 rounded-lg bg-transparent border border-white/20 hover:bg-white/5 transition-colors text-slate-300 flex items-center"
+                                className="mr-4 px-6 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600 flex items-center font-medium"
                             >
                                 ← Volver
-
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-8 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-medium shadow-lg shadow-blue-500/20 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-8 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg shadow-blue-500/20 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Registrando...' : 'Registrar Empleado'}
                             </button>

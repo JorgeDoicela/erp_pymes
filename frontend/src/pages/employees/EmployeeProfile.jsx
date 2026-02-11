@@ -243,8 +243,8 @@ const EmployeeProfile = ({ token, user }) => {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Cargando perfil...</div>;
-    if (!employee) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Empleado no encontrado</div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-500">Cargando perfil...</div>;
+    if (!employee) return <div className="min-h-screen flex items-center justify-center text-slate-500">Empleado no encontrado</div>;
 
     const tabs = [
         { id: 'personal', label: 'Información Personal' },
@@ -256,27 +256,33 @@ const EmployeeProfile = ({ token, user }) => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white p-6">
+        <div className="space-y-6">
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
-                <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl p-8 mb-8 border border-white/5 flex items-center gap-6">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-4xl font-bold shadow-lg shadow-blue-500/20">
+                <div className="bg-white rounded-2xl p-8 mb-8 border border-slate-200 shadow-sm flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-4xl font-bold text-blue-600 shadow-sm border border-blue-100">
                         {employee.firstName?.charAt(0) || 'U'}
                     </div>
                     <div className="flex-1">
-                        <h1 className="text-3xl font-bold mb-1">{employee.firstName} {employee.lastName}</h1>
-                        <p className="text-xl text-blue-400">{employee.position}</p>
-                        <div className="flex gap-4 mt-2 text-sm text-slate-400">
-                            <span>{employee.department}</span>
+                        <h1 className="text-3xl font-bold mb-1 text-slate-800">{employee.firstName} {employee.lastName}</h1>
+                        <p className="text-xl text-blue-600 font-medium">{employee.position}</p>
+                        <div className="flex gap-4 mt-2 text-sm text-slate-500">
+                            <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                {employee.department}
+                            </span>
                             <span>•</span>
-                            <span>{employee.email}</span>
+                            <span className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                {employee.email}
+                            </span>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={handleEditClick} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-sm font-medium">
+                        <button onClick={handleEditClick} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white text-sm font-medium shadow-sm hover:shadow-md">
                             Editar Perfil
                         </button>
-                        <button onClick={() => navigate(-1)} className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm">
+                        <button onClick={() => navigate(-1)} className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium">
                             Volver
                         </button>
                         {employee.isActive && (
@@ -308,14 +314,14 @@ const EmployeeProfile = ({ token, user }) => {
                 </div>
 
                 {/* Tabs Navigation */}
-                <div className="flex border-b border-slate-700 mb-8 overflow-x-auto">
+                <div className="flex border-b border-slate-200 mb-8 overflow-x-auto">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
-                                ? 'border-blue-500 text-blue-400'
-                                : 'border-transparent text-slate-400 hover:text-slate-200'
+                                ? 'border-blue-600 text-blue-600'
+                                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
                                 }`}
                         >
                             {tab.label}
@@ -324,7 +330,7 @@ const EmployeeProfile = ({ token, user }) => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="bg-slate-800/30 rounded-2xl p-8 border border-white/5 min-h-[400px]">
+                <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm min-h-[400px]">
                     {activeTab === 'personal' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <InfoItem label="Cédula" value={employee.identityCard} />
@@ -344,8 +350,8 @@ const EmployeeProfile = ({ token, user }) => {
                             <InfoItem label="Tipo de Contrato" value={CONTRACT_TYPES.find(c => c.value === employee.contractType)?.label || employee.contractType} />
                             <InfoItem label="Salario Base" value={`$${employee.salary}`} isPrivate />
                             <InfoItem label="Rol de Sistema" value={employee.role} />
-                            <div className="col-span-1 md:col-span-2 mt-4 border-t border-slate-700 pt-4">
-                                <h4 className="text-lg font-semibold text-emerald-400 mb-4">Datos Bancarios</h4>
+                            <div className="col-span-1 md:col-span-2 mt-4 border-t border-slate-200 pt-4">
+                                <h4 className="text-lg font-semibold text-emerald-600 mb-4">Datos Bancarios</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <InfoItem label="Banco" value={employee.bankName} isPrivate />
                                     <InfoItem label="N° Cuenta" value={employee.accountNumber} isPrivate />
@@ -367,16 +373,16 @@ const EmployeeProfile = ({ token, user }) => {
 
                     {activeTab === 'documents' && (
                         <div>
-                            <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700 mb-6">
-                                <h3 className="text-lg font-bold text-white mb-4">Subir Documento</h3>
+                            <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6">
+                                <h3 className="text-lg font-bold text-slate-800 mb-4">Subir Documento</h3>
                                 <form onSubmit={handleUploadDocument} className="flex flex-col md:flex-row gap-4 items-end">
                                     <div className="flex-1 w-full">
-                                        <label className="text-sm font-medium text-slate-400 mb-1 block">Tipo</label>
+                                        <label className="text-sm font-medium text-slate-700 mb-1 block">Tipo</label>
                                         <select
                                             name="type"
                                             value={documentForm.type}
                                             onChange={handleDocumentChange}
-                                            className="w-full bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white"
+                                            className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-blue-500 focus:border-blue-500"
                                         >
                                             <option value="DNI">Cédula / Pasaporte</option>
                                             <option value="Licencia">Licencia</option>
@@ -387,29 +393,29 @@ const EmployeeProfile = ({ token, user }) => {
                                         </select>
                                     </div>
                                     <div className="flex-1 w-full">
-                                        <label className="text-sm font-medium text-slate-400 mb-1 block">Archivo (PDF/IMG, Max 5MB)</label>
+                                        <label className="text-sm font-medium text-slate-700 mb-1 block">Archivo (PDF/IMG, Max 5MB)</label>
                                         <input
                                             type="file"
                                             name="file"
                                             onChange={handleDocumentChange}
                                             accept=".pdf,.jpg,.jpeg,.png"
-                                            className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-500"
+                                            className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-500"
                                         />
                                     </div>
                                     <div className="flex-1 w-full">
-                                        <label className="text-sm font-medium text-slate-400 mb-1 block">Vencimiento (Opcional)</label>
+                                        <label className="text-sm font-medium text-slate-700 mb-1 block">Vencimiento (Opcional)</label>
                                         <input
                                             type="date"
                                             name="expiryDate"
                                             value={documentForm.expiryDate}
                                             onChange={handleDocumentChange}
-                                            className="w-full bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white"
+                                            className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-blue-500 focus:border-blue-500"
                                         />
                                     </div>
                                     <button
                                         type="submit"
                                         disabled={isUploading}
-                                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
                                     >
                                         {isUploading ? 'Subiendo...' : 'Subir'}
                                     </button>
@@ -419,33 +425,33 @@ const EmployeeProfile = ({ token, user }) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {documents && documents.length > 0 ? (
                                     documents.map((doc) => (
-                                        <div key={doc.id} className="bg-slate-900/50 p-4 rounded-xl border border-slate-700 relative group">
+                                        <div key={doc.id} className="bg-white p-4 rounded-xl border border-slate-200 relative group shadow-sm hover:shadow-md transition-all">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-2xl">
-                                                        {doc.mimeType?.includes('pdf') ? 'PDF' : 'IMG'}
+                                                    <span className="text-2xl text-slate-400">
+                                                        {doc.mimeType?.includes('pdf') ? '📄' : '🖼️'}
                                                     </span>
                                                     <div>
-                                                        <h4 className="font-bold text-white text-sm">{doc.type}</h4>
-                                                        <p className="text-xs text-slate-400">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                                                        <h4 className="font-bold text-slate-800 text-sm">{doc.type}</h4>
+                                                        <p className="text-xs text-slate-500">{new Date(doc.createdAt).toLocaleDateString()}</p>
                                                     </div>
                                                 </div>
                                                 <button
                                                     onClick={() => handleDeleteDocument(doc.id)}
-                                                    className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 >
-                                                    X
+                                                    ✕
                                                 </button>
                                             </div>
                                             {doc.expiryDate && (
-                                                <p className="text-xs text-yellow-500/80 mb-2">Vence: {new Date(doc.expiryDate).toLocaleDateString()}</p>
+                                                <p className="text-xs text-amber-600 font-medium mb-2 bg-amber-50 inline-block px-2 py-0.5 rounded border border-amber-100">Vence: {new Date(doc.expiryDate).toLocaleDateString()}</p>
                                             )}
                                             <div className="mt-2">
                                                 <a
                                                     href={`${API_URL}/documents/download/${doc.documentUrl}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-xs bg-slate-800 hover:bg-slate-700 text-blue-300 px-3 py-1.5 rounded-lg w-full block text-center transition-colors"
+                                                    className="text-xs bg-slate-50 hover:bg-white border border-slate-200 text-blue-600 font-medium px-3 py-1.5 rounded-lg w-full block text-center transition-colors shadow-sm"
                                                 >
                                                     Ver / Descargar
                                                 </a>
@@ -465,22 +471,22 @@ const EmployeeProfile = ({ token, user }) => {
                         <div className="space-y-4">
                             {history && history.length > 0 ? (
                                 history.map((log) => (
-                                    <div key={log.id} className="bg-slate-900/50 p-4 rounded-xl border border-slate-700 text-sm">
+                                    <div key={log.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm shadow-sm hover:shadow-md transition-shadow">
                                         <div className="flex justify-between mb-2">
-                                            <span className="font-semibold text-blue-400">{log.action}</span>
+                                            <span className="font-semibold text-blue-600">{log.action}</span>
                                             <span className="text-slate-500">{new Date(log.timestamp).toLocaleString()}</span>
                                         </div>
-                                        <div className="text-slate-300">
+                                        <div className="text-slate-600">
                                             {/* Render details nicely */}
                                             {Object.keys(log.details).map(field => (
                                                 <div key={field} className="flex gap-2">
-                                                    <span className="capitalize text-slate-400">{field}:</span>
-                                                    <span>{log.details[field]?.from}</span>
-                                                    <span>→</span>
-                                                    <span className="text-emerald-400">{log.details[field]?.to}</span>
+                                                    <span className="capitalize text-slate-500 font-medium">{field}:</span>
+                                                    <span className="line-through text-red-400 decoration-red-400/50">{log.details[field]?.from}</span>
+                                                    <span className="text-slate-400">→</span>
+                                                    <span className="text-emerald-600 font-medium bg-emerald-50 px-1 rounded">{log.details[field]?.to}</span>
                                                 </div>
                                             ))}
-                                            {Object.keys(log.details).length === 0 && <span>Sin detalles de cambios</span>}
+                                            {Object.keys(log.details).length === 0 && <span className="text-slate-400 italic">Sin detalles de cambios</span>}
                                         </div>
                                     </div>
                                 ))
