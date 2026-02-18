@@ -2,15 +2,31 @@ import prisma from '../../database/db.js';
 
 class SystemService {
     async getSettings() {
-        return await prisma.systemSetting.findUnique({
-            where: { id: 'default' }
+        // upsert guarantees the record always exists
+        return await prisma.systemSetting.upsert({
+            where: { id: 'default' },
+            update: {},
+            create: {
+                id: 'default',
+                maintenanceMode: false,
+                biometricEnabled: false,
+                maintenanceMessage: 'El sistema estará en mantenimiento brevemente.'
+            }
         });
     }
 
     async updateSettings(data) {
-        return await prisma.systemSetting.update({
+        // upsert so it works even if the record doesn't exist yet
+        return await prisma.systemSetting.upsert({
             where: { id: 'default' },
-            data
+            update: data,
+            create: {
+                id: 'default',
+                maintenanceMode: false,
+                biometricEnabled: false,
+                maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
+                ...data
+            }
         });
     }
 
