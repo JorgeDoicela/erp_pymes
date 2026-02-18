@@ -1,4 +1,5 @@
 import systemService from '../services/system/systemService.js';
+import jwt from 'jsonwebtoken';
 
 /**
  * RNF-17: Middleware de Mantenimiento
@@ -14,9 +15,22 @@ export const maintenanceMiddleware = async (req, res, next) => {
         const settings = await systemService.getSettings();
 
         if (settings?.maintenanceMode) {
-            // If user is authenticated and is admin, allow
-            if (req.user && req.user.role === 'admin') {
-                return next();
+            // Check if user is authenticated and is admin
+            // Optimization: Verify token here since this middleware runs before auth middleware
+            const authHeader = req.headers.authorization;
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                try {
+                    const token = authHeader.split(' ')[1];
+                    const secret = process.env.JWT_SECRET || 'secret_key_change_me';
+                    const decoded = jwt.verify(token, secret);
+
+                    if (decoded.role === 'admin') {
+                        // Allow admin to proceed
+                        return next();
+                    }
+                } catch (error) {
+                    // Token invalid or expired, continue to block
+                }
             }
 
             return res.status(503).json({
