@@ -125,7 +125,7 @@ function App() {
           <Route path="/admin/register-employee" element={<RegisterEmployee token={auth.token} />} />
           <Route path="/admin/employees" element={<EmployeeList token={auth.token} />} />
           <Route path="/admin/employees/:id" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
-          <Route path="/attendance" element={<AttendancePage />} />
+          <Route path="/attendance" element={<AttendancePage user={auth.user} />} />
           <Route path="/admin/notifications" element={<NotificationsPage />} />
           <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
           <Route path="/admin/audit" element={<AuditLogsPage />} />
