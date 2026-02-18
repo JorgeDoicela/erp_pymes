@@ -519,6 +519,7 @@ model SystemSetting {
   maintenanceMode      Boolean   @default(false)
   maintenanceScheduled DateTime?
   maintenanceMessage   String?
+  biometricEnabled     Boolean   @default(false)
   updatedAt            DateTime  @updatedAt
 
   @@map("system_settings")

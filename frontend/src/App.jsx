@@ -65,6 +65,7 @@ const NotificationSettings = lazy(() => import('./pages/notifications/Notificati
 const AuditLogsPage = lazy(() => import('./pages/audit/AuditLogsPage.jsx'));
 const HelpCenter = lazy(() => import('./pages/help/HelpCenter.jsx'));
 const IntelligentDashboard = lazy(() => import('./pages/dashboard/IntelligentDashboard.jsx'));
+const AdminSettings = lazy(() => import('./pages/dashboard/AdminSettings.jsx'));
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -130,6 +131,7 @@ function App() {
           <Route path="/admin/audit" element={<AuditLogsPage />} />
           <Route path="/admin/contracts/expiring" element={<ExpiringContracts />} />
           <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
           <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
           <Route path="/admin/payroll/generator" element={<PayrollGenerator />} />

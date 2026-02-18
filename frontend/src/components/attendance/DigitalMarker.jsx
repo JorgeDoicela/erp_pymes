@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import attendanceService from '../../services/attendance/attendanceService';
+import systemService from '../../services/systemService';
 import { motion } from 'framer-motion';
 
 const DigitalMarker = ({ user }) => {
@@ -18,6 +19,10 @@ const DigitalMarker = ({ user }) => {
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingAction, setPendingAction] = useState(null); // 'ENTRY' or 'EXIT'
 
+    // Biometric
+    const [biometricEnabled, setBiometricEnabled] = useState(false);
+    const [biometricSupported, setBiometricSupported] = useState(false);
+
     // Update clock every second
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -31,6 +36,26 @@ const DigitalMarker = ({ user }) => {
             checkStatus(user.id);
         }
     }, [user]);
+
+    // Fetch biometric setting on mount
+    useEffect(() => {
+        const fetchBiometricSetting = async () => {
+            try {
+                const res = await systemService.getBiometricSetting();
+                setBiometricEnabled(res.biometricEnabled ?? false);
+            } catch {
+                setBiometricEnabled(false);
+            }
+        };
+        fetchBiometricSetting();
+
+        // Check WebAuthn support
+        const supported =
+            typeof window !== 'undefined' &&
+            window.PublicKeyCredential !== undefined &&
+            typeof window.PublicKeyCredential === 'function';
+        setBiometricSupported(supported);
+    }, []);
 
     const checkStatus = async (id = employeeId) => {
         if (!id) return;
@@ -102,6 +127,39 @@ const DigitalMarker = ({ user }) => {
         });
     };
 
+    const triggerBiometric = async () => {
+        // If biometric not supported on this device, allow fallback
+        if (!biometricSupported) return true;
+
+        try {
+            // Use a simple platform authenticator assertion
+            // We use a random challenge (not server-verified) — this is a UX-level check
+            // to confirm the person at the device. The attendance is still server-validated.
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge);
+
+            await navigator.credentials.get({
+                publicKey: {
+                    challenge,
+                    timeout: 60000,
+                    userVerification: 'required',
+                    rpId: window.location.hostname,
+                    allowCredentials: [],
+                }
+            });
+            return true; // Biometric passed
+        } catch (err) {
+            // NotAllowedError = user cancelled or failed
+            // NotSupportedError = device has no biometric enrolled
+            if (err.name === 'NotSupportedError' || err.name === 'SecurityError') {
+                // Device doesn't support it — allow fallback
+                return true;
+            }
+            // User cancelled or failed authentication
+            return false;
+        }
+    };
+
     const initiateMark = (type) => {
         setPendingAction(type);
         setShowConfirm(true);
@@ -110,6 +168,19 @@ const DigitalMarker = ({ user }) => {
     const confirmMark = async () => {
         setShowConfirm(false);
         if (!pendingAction) return;
+
+        // If biometric is enabled, trigger it before marking
+        if (biometricEnabled) {
+            setMessage({ type: 'info', text: 'Verificando identidad biométrica...' });
+            const passed = await triggerBiometric();
+            if (!passed) {
+                setMessage({ type: 'error', text: 'Verificación biométrica fallida o cancelada. Intente de nuevo.' });
+                setPendingAction(null);
+                return;
+            }
+            setMessage({ type: '', text: '' });
+        }
+
         await handleMark(pendingAction);
         setPendingAction(null);
     };
@@ -166,6 +237,15 @@ const DigitalMarker = ({ user }) => {
                 <div className="text-slate-500 mt-2 text-base md:text-lg">
                     {currentTime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
+                {/* Biometric badge */}
+                {biometricEnabled && (
+                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                            <path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                        </svg>
+                        Verificación biométrica activa
+                    </div>
+                )}
             </div>
 
             {/* Input ID (Solo si no hay usuario) */}

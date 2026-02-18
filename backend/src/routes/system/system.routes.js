@@ -22,4 +22,14 @@ router.put('/settings', authenticate, authorize(['admin']), async (req, res) => 
     res.json({ success: true, data: updated });
 });
 
+// Public endpoint - biometric setting (no auth needed for attendance page)
+router.get('/biometric-setting', async (req, res) => {
+    try {
+        const settings = await systemService.getSettings();
+        res.json({ success: true, biometricEnabled: settings?.biometricEnabled ?? false });
+    } catch (error) {
+        res.json({ success: true, biometricEnabled: false });
+    }
+});
+
 export default router;
