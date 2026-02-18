@@ -223,12 +223,22 @@ export const attendanceService = {
 
         if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
             // It is an ID, verify existence
-            employee = await employeeRepository.findById(inputIdentifier);
+            // employee = await employeeRepository.findById(inputIdentifier); // REMOVED: To avoid decryption errors
+            employee = await prisma.employee.findUnique({
+                where: { id: inputIdentifier },
+                select: { id: true, firstName: true, lastName: true, position: true, department: true }
+            });
+
             if (!employee) throw new Error('Empleado no encontrado');
             employeeId = employee.id;
         } else {
             // It is an identity card
-            employee = await employeeRepository.findByIdentityCard(inputIdentifier);
+            // employee = await employeeRepository.findByIdentityCard(inputIdentifier); // REMOVED: To avoid decryption errors
+            employee = await prisma.employee.findUnique({
+                where: { identityCard: inputIdentifier },
+                select: { id: true, firstName: true, lastName: true, position: true, department: true }
+            });
+
             if (!employee) throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
             employeeId = employee.id;
         }

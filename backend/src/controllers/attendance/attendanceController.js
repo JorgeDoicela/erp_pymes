@@ -44,6 +44,15 @@ const getStatus = async (req, res, next) => {
         const status = await attendanceService.getStatus(employeeId);
         res.json({ success: true, data: status });
     } catch (error) {
+        console.error('Error en getStatus:', error);
+
+        if (error.message.includes('Empleado no encontrado') || error.message.includes('No se encontró empleado')) {
+            return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
+
         next(error);
     }
 };
