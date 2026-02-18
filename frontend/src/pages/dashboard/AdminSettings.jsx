@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSettings, FiFingerprint, FiSave, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import systemService from '../../services/systemService';
 
 const AdminSettings = () => {
@@ -77,8 +77,8 @@ const AdminSettings = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium ${message.type === 'success'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-red-50 text-red-700 border border-red-200'
                         }`}
                 >
                     {message.type === 'success' ? <FiCheckCircle /> : <FiAlertCircle />}
@@ -102,7 +102,18 @@ const AdminSettings = () => {
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex items-start gap-4">
                                 <div className={`p-3 rounded-xl ${settings.biometricEnabled ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'} transition-colors`}>
-                                    <FiFingerprint size={24} />
+                                    {/* Fingerprint SVG icon */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
+                                        <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+                                        <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+                                        <path d="M2 12a10 10 0 0 1 18-6" />
+                                        <path d="M2 16h.01" />
+                                        <path d="M21.8 16c.2-2 .131-5.354 0-6" />
+                                        <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" />
+                                        <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+                                        <path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
+                                    </svg>
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-slate-800 text-base">Autenticación Biométrica</h3>
@@ -112,8 +123,8 @@ const AdminSettings = () => {
                                         Si el dispositivo no soporta biometría, se permite marcar normalmente.
                                     </p>
                                     <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full ${settings.biometricEnabled
-                                            ? 'bg-blue-100 text-blue-700'
-                                            : 'bg-slate-100 text-slate-500'
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-slate-100 text-slate-500'
                                         }`}>
                                         {settings.biometricEnabled ? 'Activada' : 'Desactivada'}
                                     </span>
@@ -148,8 +159,8 @@ const AdminSettings = () => {
                                         Muestra un banner de mantenimiento a todos los usuarios del sistema.
                                     </p>
                                     <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full ${settings.maintenanceMode
-                                            ? 'bg-amber-100 text-amber-700'
-                                            : 'bg-slate-100 text-slate-500'
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : 'bg-slate-100 text-slate-500'
                                         }`}>
                                         {settings.maintenanceMode ? 'Activado' : 'Desactivado'}
                                     </span>
