@@ -131,7 +131,7 @@ const DigitalMarker = ({ user }) => {
     };
 
     const triggerBiometric = async () => {
-        // If device doesn't support WebAuthn, block — biometric is mandatory
+        // If device doesn't support WebAuthn platform authenticator, block
         if (!biometricSupported) {
             return { passed: false, reason: 'Tu dispositivo no soporta autenticación biométrica. Contacta al administrador.' };
         }
@@ -140,13 +140,32 @@ const DigitalMarker = ({ user }) => {
             const challenge = new Uint8Array(32);
             window.crypto.getRandomValues(challenge);
 
-            await navigator.credentials.get({
+            // Use credentials.create with platform authenticator to trigger
+            // the device's native biometric (Touch ID, Face ID, Windows Hello, Android fingerprint).
+            // authenticatorAttachment: 'platform' is the key — it forces the built-in sensor.
+            await navigator.credentials.create({
                 publicKey: {
                     challenge,
+                    rp: {
+                        name: 'Emplifi RR.HH.',
+                        id: window.location.hostname,
+                    },
+                    user: {
+                        id: new Uint8Array(16),
+                        name: 'attendance-verify',
+                        displayName: 'Verificación de Asistencia',
+                    },
+                    pubKeyCredParams: [
+                        { type: 'public-key', alg: -7 },   // ES256
+                        { type: 'public-key', alg: -257 }, // RS256
+                    ],
+                    authenticatorSelection: {
+                        authenticatorAttachment: 'platform', // ← forces built-in sensor
+                        userVerification: 'required',        // ← requires biometric/PIN
+                        residentKey: 'discouraged',
+                    },
                     timeout: 60000,
-                    userVerification: 'required',
-                    rpId: window.location.hostname,
-                    allowCredentials: [],
+                    attestation: 'none',
                 }
             });
             return { passed: true };
