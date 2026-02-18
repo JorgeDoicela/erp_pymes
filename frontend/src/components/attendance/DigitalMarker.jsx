@@ -60,26 +60,29 @@ const DigitalMarker = ({ user }) => {
     const checkStatus = async (id = employeeId) => {
         if (!id) return;
         setLoading(true);
+        setMessage({ type: '', text: '' });
         try {
             const res = await attendanceService.getStatus(id);
             if (res.success) {
                 setStatus(res.data.status);
-                // Save full record data for UI details
                 if (res.data) {
                     setRecordData(res.data);
                 }
                 if (res.data.employee) {
                     setFoundEmployee(res.data.employee);
-                    // Also update the employeeId to the internal UUID for marking
                     setEmployeeId(res.data.employee.id);
                 }
+            } else {
+                const errMsg = res.message || res.error || 'Empleado no encontrado. Verifique la cédula ingresada.';
+                setMessage({ type: 'error', text: errMsg });
             }
         } catch (err) {
-            console.error(err);
+            setMessage({ type: 'error', text: err?.message || 'Error al buscar empleado.' });
         } finally {
             setLoading(false);
         }
     };
+
 
     // Effect to reverse geocode when recordData has entryLocation
     useEffect(() => {

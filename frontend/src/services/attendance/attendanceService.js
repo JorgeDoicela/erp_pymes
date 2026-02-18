@@ -14,9 +14,9 @@ const getStatus = async (employeeId) => {
         const response = await api.get(`/attendance/status/${employeeId}`);
         return response.data;
     } catch (error) {
-        // If 404 or other error, might just mean no status or invalid ID
-        console.error("Error fetching status", error);
-        return { success: false };
+        // Return the backend error message so the UI can display it
+        const message = error.response?.data?.message || error.response?.data?.error || 'Error al buscar empleado.';
+        return { success: false, message };
     }
 };
 
