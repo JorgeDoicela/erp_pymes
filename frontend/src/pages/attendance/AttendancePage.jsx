@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DigitalMarker from '../../components/attendance/DigitalMarker';
 import { motion } from 'framer-motion';
 
-const AttendancePage = ({ user }) => {
+const AttendancePage = () => {
     const navigate = useNavigate();
     return (
         <div className="space-y-6">
@@ -27,7 +27,7 @@ const AttendancePage = ({ user }) => {
                 className="w-full flex justify-center py-8"
             >
                 <div className="w-full max-w-lg">
-                    <DigitalMarker user={user} />
+                    <DigitalMarker />
                 </div>
             </motion.div>
         </div>
