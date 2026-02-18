@@ -128,13 +128,12 @@ const DigitalMarker = ({ user }) => {
     };
 
     const triggerBiometric = async () => {
-        // If biometric not supported on this device, allow fallback
-        if (!biometricSupported) return true;
+        // If device doesn't support WebAuthn, block — biometric is mandatory
+        if (!biometricSupported) {
+            return { passed: false, reason: 'Tu dispositivo no soporta autenticación biométrica. Contacta al administrador.' };
+        }
 
         try {
-            // Use a simple platform authenticator assertion
-            // We use a random challenge (not server-verified) — this is a UX-level check
-            // to confirm the person at the device. The attendance is still server-validated.
             const challenge = new Uint8Array(32);
             window.crypto.getRandomValues(challenge);
 
@@ -147,16 +146,18 @@ const DigitalMarker = ({ user }) => {
                     allowCredentials: [],
                 }
             });
-            return true; // Biometric passed
+            return { passed: true };
         } catch (err) {
-            // NotAllowedError = user cancelled or failed
-            // NotSupportedError = device has no biometric enrolled
-            if (err.name === 'NotSupportedError' || err.name === 'SecurityError') {
-                // Device doesn't support it — allow fallback
-                return true;
+            if (err.name === 'NotAllowedError') {
+                return { passed: false, reason: 'Verificación biométrica cancelada o fallida. Intente de nuevo.' };
             }
-            // User cancelled or failed authentication
-            return false;
+            if (err.name === 'NotSupportedError') {
+                return { passed: false, reason: 'Este dispositivo no tiene biometría configurada. Contacta al administrador.' };
+            }
+            if (err.name === 'SecurityError') {
+                return { passed: false, reason: 'Error de seguridad biométrica. Asegúrese de usar HTTPS.' };
+            }
+            return { passed: false, reason: 'Error al verificar identidad biométrica. Intente de nuevo.' };
         }
     };
 
@@ -169,12 +170,12 @@ const DigitalMarker = ({ user }) => {
         setShowConfirm(false);
         if (!pendingAction) return;
 
-        // If biometric is enabled, trigger it before marking
+        // If biometric is enabled, it is MANDATORY — no fallback
         if (biometricEnabled) {
             setMessage({ type: 'info', text: 'Verificando identidad biométrica...' });
-            const passed = await triggerBiometric();
-            if (!passed) {
-                setMessage({ type: 'error', text: 'Verificación biométrica fallida o cancelada. Intente de nuevo.' });
+            const result = await triggerBiometric();
+            if (!result.passed) {
+                setMessage({ type: 'error', text: result.reason });
                 setPendingAction(null);
                 return;
             }
