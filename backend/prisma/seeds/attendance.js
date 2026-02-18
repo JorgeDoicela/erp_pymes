@@ -2,6 +2,12 @@ export async function seedAttendance(prisma, employees) {
     console.log('⏳ Generando Asistencia (Últimos 90 días)...');
 
     const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(today.getDate() - 90);
+
     // Helper to generate range
     const getDates = (startDate, endDate) => {
         const dates = [];
@@ -13,13 +19,18 @@ export async function seedAttendance(prisma, employees) {
         return dates;
     };
 
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(today.getDate() - 90);
-    const datesToSeed = getDates(ninetyDaysAgo, today);
+    // Seed from 90 days ago up to YESTERDAY (exclude today)
+    const datesToSeed = getDates(ninetyDaysAgo, yesterday);
+
+    console.log(`[DEBUG] Employees passed: ${employees.length}`);
+    console.log(`[DEBUG] Dates to seed: ${datesToSeed.length}`);
+    console.log(`[DEBUG] Date range: ${ninetyDaysAgo.toISOString()} -> ${yesterday.toISOString()}`);
 
     // Pick candidates for specific patterns
     // Using simple logic to ensure we target employees actually in the list
     const employeesList = employees.filter(e => e.role !== 'admin');
+    console.log(`[DEBUG] Employees to seed (non-admin): ${employeesList.length}`);
+
     const suspiciousCandidates = employeesList.slice(0, 3);
     const lateCandidates = employeesList.slice(3, 6);
 
