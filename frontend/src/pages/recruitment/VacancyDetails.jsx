@@ -38,11 +38,11 @@ const VacancyDetails = () => {
     return (
         <div className="space-y-6">
             <div className="max-w-7xl mx-auto">
-                <button onClick={() => navigate('/recruitment')} className="flex items-center text-slate-500 hover:text-slate-800 mb-6 transition-colors">
+                <button onClick={() => navigate('/recruitment')} className="flex items-center text-slate-500 hover:text-slate-800 mb-6 transition-colors text-sm md:text-base">
                     <FiArrowLeft className="mr-2" /> Volver al tablero
                 </button>
 
-                <h1 className="text-3xl font-bold text-slate-800 mb-8 tracking-tight">Candidatos para la Vacante</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-8 tracking-tight">Candidatos para la Vacante</h1>
 
                 {loading ? (
                     <div className="text-center py-12">
@@ -60,21 +60,21 @@ const VacancyDetails = () => {
 
                         {applications.map(app => (
                             <div key={app.id} onClick={() => navigate(`/recruitment/applications/${app.id}`)}
-                                className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all flex justify-between items-center group">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="font-bold text-lg text-slate-800 group-hover:text-blue-600 transition-colors">{app.firstName} {app.lastName}</h3>
-                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusColor(app.status)}`}>
+                                className="bg-white p-5 md:p-6 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group">
+                                <div className="w-full sm:w-auto">
+                                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                                        <h3 className="font-bold text-base md:text-lg text-slate-800 group-hover:text-blue-600 transition-colors uppercase truncate max-w-[200px] sm:max-w-none">{app.firstName} {app.lastName}</h3>
+                                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold border shrink-0 ${getStatusColor(app.status)}`}>
                                             {app.status}
                                         </span>
                                     </div>
-                                    <div className="text-slate-500 text-sm flex flex-wrap gap-4">
-                                        <span className="flex items-center"><FiMail className="mr-2 text-slate-400" /> {app.email}</span>
-                                        <span className="flex items-center"><FiPhone className="mr-2 text-slate-400" /> {app.phone}</span>
-                                        <span className="flex items-center"><FiCalendar className="mr-2 text-slate-400" /> {new Date(app.createdAt).toLocaleDateString()}</span>
+                                    <div className="text-slate-500 text-xs md:text-sm flex flex-col sm:flex-row flex-wrap gap-2 md:gap-4 lg:gap-6">
+                                        <span className="flex items-center truncate"><FiMail className="mr-2 text-slate-400 shrink-0" /> <span className="truncate">{app.email}</span></span>
+                                        <span className="flex items-center"><FiPhone className="mr-2 text-slate-400 shrink-0" /> {app.phone}</span>
+                                        <span className="flex items-center"><FiCalendar className="mr-2 text-slate-400 shrink-0" /> {new Date(app.createdAt).toLocaleDateString()}</span>
                                     </div>
                                 </div>
-                                <div className="text-slate-300 group-hover:text-blue-500 transition-colors">
+                                <div className="hidden sm:block text-slate-300 group-hover:text-blue-500 transition-colors">
                                     <FiFileText className="text-2xl" />
                                 </div>
                             </div>

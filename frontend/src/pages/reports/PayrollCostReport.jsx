@@ -29,30 +29,30 @@ const PayrollCostReport = () => {
         loadReport();
     };
 
-    if (loading) return <div className="min-h-screen bg-gray-900 text-white p-8">Calculando costos...</div>;
-    if (!data) return <div className="min-h-screen bg-gray-900 text-white p-8">No hay registros de nómina.</div>;
+    if (loading) return <div className="min-h-screen bg-slate-50 text-slate-800 p-8">Calculando costos...</div>;
+    if (!data) return <div className="min-h-screen bg-slate-50 text-slate-800 p-8">No hay registros de nómina.</div>;
 
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+    const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#f97316'];
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold flex items-center">
-                    <FiDollarSign className="mr-3 text-white" /> Costos de Nómina
+        <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center text-slate-800">
+                    <FiDollarSign className="mr-3 text-slate-800" /> Costos de Nómina
                 </h1>
 
-                <form onSubmit={handleFilter} className="flex gap-4 items-end bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <form onSubmit={handleFilter} className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full lg:w-auto">
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">Desde</label>
-                        <input type="date" className="bg-gray-700 border-gray-600 rounded p-2 text-sm text-white"
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Desde</label>
+                        <input type="date" className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={dates.startDate} onChange={e => setDates({ ...dates, startDate: e.target.value })} />
                     </div>
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">Hasta</label>
-                        <input type="date" className="bg-gray-700 border-gray-600 rounded p-2 text-sm text-white"
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Hasta</label>
+                        <input type="date" className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={dates.endDate} onChange={e => setDates({ ...dates, endDate: e.target.value })} />
                     </div>
-                    <button type="submit" className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded font-bold flex items-center">
+                    <button type="submit" className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-bold flex items-center justify-center shadow-md transition-all active:scale-95 h-10 mt-auto">
                         <FiFilter className="mr-2" /> Filtrar
                     </button>
                 </form>
@@ -60,39 +60,39 @@ const PayrollCostReport = () => {
 
             {/* Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <p className="text-gray-400 text-sm">Costo Total (Periodo)</p>
-                    <p className="text-4xl font-bold text-green-400">${data.metrics?.totalCost?.toLocaleString() || '0'}</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-slate-500 text-sm font-medium">Costo Total (Periodo)</p>
+                    <p className="text-4xl font-bold text-green-600">${data.metrics?.totalCost?.toLocaleString() || '0'}</p>
                 </div>
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <p className="text-gray-400 text-sm">Promedio Mensual</p>
-                    <p className="text-4xl font-bold text-yellow-400">${data.metrics?.avgMonthlyCost?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '0'}</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-slate-500 text-sm font-medium">Promedio Mensual</p>
+                    <p className="text-4xl font-bold text-yellow-600">${data.metrics?.avgMonthlyCost?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '0'}</p>
                 </div>
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <p className="text-gray-400 text-sm">Registros Procesados</p>
-                    <p className="text-4xl font-bold text-white">{data.metrics.headcount}</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-slate-500 text-sm font-medium">Registros Procesados</p>
+                    <p className="text-4xl font-bold text-slate-800">{data.metrics.headcount}</p>
                 </div>
             </div>
 
             {/* Main Trend Chart */}
-            <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 mb-8">
-                <h3 className="font-bold mb-4 flex items-center"><FiTrendingUp className="mr-2" /> Tendencia de Costos</h3>
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
+                <h3 className="font-bold mb-4 flex items-center text-slate-800"><FiTrendingUp className="mr-2" /> Tendencia de Costos</h3>
                 <div className="h-96">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data.charts.trend} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <XAxis dataKey="name" stroke="#9ca3af" />
-                            <YAxis stroke="#9ca3af" />
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <Tooltip contentStyle={{ backgroundColor: '#1f2937' }} />
-                            <Area type="monotone" dataKey="total" stroke="#82ca9d" fillOpacity={1} fill="url(#colorTotal)" name="Total" />
-                            <Area type="monotone" dataKey="salary" stackId="1" stroke="#8884d8" fill="#8884d8" name="Salario Base" />
-                            <Area type="monotone" dataKey="overtime" stackId="1" stroke="#ffc658" fill="#ffc658" name="Horas Extra" />
+                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} />
+                            <YAxis stroke="#64748b" fontSize={12} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                            <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+                            <Area type="monotone" dataKey="total" stroke="#10b981" fillOpacity={1} fill="url(#colorTotal)" name="Total" />
+                            <Area type="monotone" dataKey="salary" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} name="Salario Base" />
+                            <Area type="monotone" dataKey="overtime" stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.6} name="Horas Extra" />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
@@ -100,31 +100,31 @@ const PayrollCostReport = () => {
 
             {/* Breakdown Split */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <h3 className="font-bold mb-4">Composición del Costo</h3>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="font-bold mb-4 text-slate-800">Composición del Costo</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie data={data.charts.breakdown} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                                     {data.charts.breakdown.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                 </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#1f2937' }} />
+                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
                                 <Legend />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <h3 className="font-bold mb-4">Costos por Departamento</h3>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="font-bold mb-4 text-slate-800">Costos por Departamento</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data.charts.byDepartment} layout="vertical">
-                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#374151" />
-                                <XAxis type="number" stroke="#9ca3af" />
-                                <YAxis dataKey="name" type="category" width={100} stroke="#9ca3af" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1f2937' }} cursor={{ fill: '#374151' }} />
-                                <Bar dataKey="value" fill="#8884d8">
+                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
+                                <XAxis type="number" stroke="#64748b" fontSize={12} />
+                                <YAxis dataKey="name" type="category" width={100} stroke="#64748b" fontSize={12} />
+                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }} cursor={{ fill: '#f1f5f9' }} />
+                                <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]}>
                                     {data.charts.byDepartment.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                 </Bar>
                             </BarChart>
@@ -149,7 +149,7 @@ const PayrollCostReport = () => {
                         link.click();
                         document.body.removeChild(link);
                     }}
-                    className="text-blue-400 hover:text-white flex items-center gap-2"
+                    className="w-full sm:w-auto justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-colors border border-blue-100"
                 >
                     <FiDownload /> Descargar Reporte Completo (CSV)
                 </button>
