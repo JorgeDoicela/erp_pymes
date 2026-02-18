@@ -28,8 +28,8 @@ export async function seedCoreRecords(prisma, employees) {
                     data: {
                         employeeId: emp.id,
                         type: emp.contractType || 'Indefinido',
-                        startDate: emp.hireDate,
-                        salary: 1500, // Placeholder float, real salary is encrypted in emp
+                        startDate: emp.hireDate || new Date('2020-01-01'),
+                        salary: 1500, // Placeholder float
                         status: 'Active'
                     }
                 });
@@ -42,7 +42,7 @@ export async function seedCoreRecords(prisma, employees) {
                     data: {
                         employeeId: emp.id,
                         shiftId: shiftMorning.id,
-                        startDate: new Date(),
+                        startDate: emp.hireDate || new Date('2020-01-01'), // Set to past date
                         daysOfWeek: JSON.stringify(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"])
                     }
                 });

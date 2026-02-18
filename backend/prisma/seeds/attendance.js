@@ -88,28 +88,40 @@ export async function seedAttendance(prisma, employees) {
                 continue;
             }
 
+            // Normalize date to midnight UTC to match unique constraint logic
+            const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+
             attendanceBatch.push({
                 employeeId: emp.id,
-                date: date,
+                date: normalizedDate,
                 checkIn: checkIn,
                 checkOut: checkOut,
                 status: 'Presente',
                 workedHours: workedHours,
-                isLate: isLateToday
+                isLate: isLateToday,
+                entryLatitude: -0.1807, // Approx Quito
+                entryLongitude: -78.4678,
+                exitLatitude: -0.1807,
+                exitLongitude: -78.4678
             });
         }
     }
 
-    // Insert in chunks of 500 to be safe
-    const chunkSize = 500;
-    console.log(`[ATTENDANCE] Inserting ${attendanceBatch.length} records...`);
+    // Insert in chunks of 100 to avoid parameter limits and memory issues
+    const chunkSize = 100;
+    console.log(`[ATTENDANCE] Inserting ${attendanceBatch.length} records in chunks of ${chunkSize}...`);
 
     for (let i = 0; i < attendanceBatch.length; i += chunkSize) {
         const chunk = attendanceBatch.slice(i, i + chunkSize);
-        await prisma.attendance.createMany({
-            data: chunk,
-            skipDuplicates: true
-        });
+        try {
+            await prisma.attendance.createMany({
+                data: chunk,
+                skipDuplicates: true
+            });
+        } catch (e) {
+            console.error(`❌ Error inserting attendance chunk ${i}: ${e.message}`);
+            // Don't crash, just log and continue
+        }
     }
     console.log('[ATTENDANCE] Batch insert completed.');
 }
