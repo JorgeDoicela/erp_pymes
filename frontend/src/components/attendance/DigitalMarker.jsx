@@ -49,12 +49,25 @@ const DigitalMarker = ({ user }) => {
         };
         fetchBiometricSetting();
 
-        // Check WebAuthn support
-        const supported =
-            typeof window !== 'undefined' &&
-            window.PublicKeyCredential !== undefined &&
-            typeof window.PublicKeyCredential === 'function';
-        setBiometricSupported(supported);
+        // Check if device has ANY user-verifying platform authenticator
+        // (fingerprint, face ID, PIN, password, pattern — anything the OS security system offers)
+        const checkSupport = async () => {
+            try {
+                if (
+                    typeof window !== 'undefined' &&
+                    window.PublicKeyCredential &&
+                    typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
+                ) {
+                    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                    setBiometricSupported(available);
+                } else {
+                    setBiometricSupported(false);
+                }
+            } catch {
+                setBiometricSupported(false);
+            }
+        };
+        checkSupport();
     }, []);
 
     const checkStatus = async (id = employeeId) => {
@@ -131,18 +144,24 @@ const DigitalMarker = ({ user }) => {
     };
 
     const triggerBiometric = async () => {
-        // If device doesn't support WebAuthn platform authenticator, block
+        // Block if device has no user-verifying platform authenticator at all
         if (!biometricSupported) {
-            return { passed: false, reason: 'Tu dispositivo no soporta autenticación biométrica. Contacta al administrador.' };
+            return {
+                passed: false,
+                reason: 'Este dispositivo no tiene seguridad configurada (huella, cara, PIN o contraseña). Configure la seguridad del dispositivo e intente de nuevo.'
+            };
         }
 
         try {
+            // Random challenge and random user.id per attempt to avoid duplicate credential errors
             const challenge = new Uint8Array(32);
+            const userId = new Uint8Array(32);
             window.crypto.getRandomValues(challenge);
+            window.crypto.getRandomValues(userId);
 
-            // Use credentials.create with platform authenticator to trigger
-            // the device's native biometric (Touch ID, Face ID, Windows Hello, Android fingerprint).
-            // authenticatorAttachment: 'platform' is the key — it forces the built-in sensor.
+            // credentials.create with authenticatorAttachment: 'platform' forces the device's
+            // own security system: Touch ID, Face ID, Windows Hello, Android fingerprint/face/PIN.
+            // userVerification: 'required' means the OS MUST verify the user (biometric or PIN/password).
             await navigator.credentials.create({
                 publicKey: {
                     challenge,
@@ -151,8 +170,8 @@ const DigitalMarker = ({ user }) => {
                         id: window.location.hostname,
                     },
                     user: {
-                        id: new Uint8Array(16),
-                        name: 'attendance-verify',
+                        id: userId,           // unique per attempt — avoids InvalidStateError
+                        name: `verify-${Date.now()}`,
                         displayName: 'Verificación de Asistencia',
                     },
                     pubKeyCredParams: [
@@ -160,8 +179,8 @@ const DigitalMarker = ({ user }) => {
                         { type: 'public-key', alg: -257 }, // RS256
                     ],
                     authenticatorSelection: {
-                        authenticatorAttachment: 'platform', // ← forces built-in sensor
-                        userVerification: 'required',        // ← requires biometric/PIN
+                        authenticatorAttachment: 'platform', // built-in sensor only (no USB keys, no QR)
+                        userVerification: 'required',        // must verify: biometric OR PIN/password
                         residentKey: 'discouraged',
                     },
                     timeout: 60000,
@@ -171,15 +190,19 @@ const DigitalMarker = ({ user }) => {
             return { passed: true };
         } catch (err) {
             if (err.name === 'NotAllowedError') {
-                return { passed: false, reason: 'Verificación biométrica cancelada o fallida. Intente de nuevo.' };
+                return { passed: false, reason: 'Verificación cancelada o no autorizada. Intente de nuevo.' };
             }
             if (err.name === 'NotSupportedError') {
-                return { passed: false, reason: 'Este dispositivo no tiene biometría configurada. Contacta al administrador.' };
+                return { passed: false, reason: 'Este dispositivo no tiene seguridad biométrica o PIN configurado.' };
             }
             if (err.name === 'SecurityError') {
-                return { passed: false, reason: 'Error de seguridad biométrica. Asegúrese de usar HTTPS.' };
+                return { passed: false, reason: 'Error de seguridad. Asegúrese de usar HTTPS.' };
             }
-            return { passed: false, reason: 'Error al verificar identidad biométrica. Intente de nuevo.' };
+            if (err.name === 'InvalidStateError') {
+                // Shouldn't happen with random userId, but handle gracefully
+                return { passed: false, reason: 'Error de estado. Intente de nuevo.' };
+            }
+            return { passed: false, reason: 'Error al verificar identidad. Intente de nuevo.' };
         }
     };
 
