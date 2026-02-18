@@ -27,7 +27,28 @@ const resolveEmployeeId = async (input) => {
 
 export const attendanceService = {
     async registerAttendance(inputIdentifier, type, location = null) {
-        const employeeId = await resolveEmployeeId(inputIdentifier);
+        // Resolve Employee ID directly to avoid decryption errors
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const cuidRegex = /^c[a-z0-9]{20,}$/i;
+
+        let employeeId = inputIdentifier;
+        let employee = null;
+
+        if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
+            employee = await prisma.employee.findUnique({
+                where: { id: inputIdentifier },
+                select: { id: true }
+            });
+            if (!employee) throw new Error(`Empleado no encontrado con ID: ${inputIdentifier}`);
+            employeeId = employee.id;
+        } else {
+            employee = await prisma.employee.findUnique({
+                where: { identityCard: inputIdentifier },
+                select: { id: true }
+            });
+            if (!employee) throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
+            employeeId = employee.id;
+        }
 
         // Normalizar la fecha a medianoche para buscar el registro del día
         const now = new Date();

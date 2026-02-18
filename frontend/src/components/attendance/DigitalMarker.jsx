@@ -103,8 +103,9 @@ const DigitalMarker = ({ user }) => {
             if (recordData?.entryLocation && !locationName) {
                 try {
                     const { lat, lng } = recordData.entryLocation;
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
-                    const data = await response.json();
+                    // Use backend proxy to avoid CORS and add User-Agent
+                    const data = await systemService.reverseGeocode(lat, lng);
+
                     if (data && data.display_name) {
                         // Clean up address: take first 3 parts or specific fields
                         const name = data.display_name.split(',').slice(0, 3).join(',');

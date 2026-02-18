@@ -27,4 +27,14 @@ const getBiometricSetting = async () => {
     }
 };
 
-export default { getSettings, updateSettings, getBiometricSetting };
+const reverseGeocode = async (lat, lng) => {
+    try {
+        const response = await api.get(`/system/geocode?lat=${lat}&lng=${lng}`);
+        return response.data;
+    } catch (error) {
+        console.error("Geocode error:", error);
+        return null;
+    }
+};
+
+export default { getSettings, updateSettings, getBiometricSetting, reverseGeocode };

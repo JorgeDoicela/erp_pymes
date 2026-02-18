@@ -22,6 +22,20 @@ router.put('/settings', authenticate, authorize(['admin']), async (req, res) => 
     res.json({ success: true, data: updated });
 });
 
+// Geocoding Proxy (to avoid CORS on frontend)
+router.get('/geocode', async (req, res) => {
+    try {
+        const { lat, lng } = req.query;
+        if (!lat || !lng) {
+            return res.status(400).json({ success: false, message: 'Missing lat/lng' });
+        }
+        const data = await systemService.reverseGeocode(lat, lng);
+        res.json(data || {});
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Public endpoint - biometric setting (no auth needed for attendance page)
 router.get('/biometric-setting', async (req, res) => {
     try {

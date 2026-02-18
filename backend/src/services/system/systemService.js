@@ -49,6 +49,31 @@ class SystemService {
             };
         }
     }
+
+    async reverseGeocode(lat, lng) {
+        try {
+            // Validate coordinates
+            if (!lat || !lng) throw new Error('Coordinates missing');
+
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'Emplifi-App/1.0 (internal-tool)'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Nominatim API Error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Geocoding Error:', error.message);
+            return null; // Return null instead of crashing, frontend will handle it
+        }
+    }
 }
 
 export default new SystemService();
