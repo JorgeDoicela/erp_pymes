@@ -26,7 +26,7 @@ const resolveEmployeeId = async (input) => {
 };
 
 export const attendanceService = {
-    async registerAttendance(inputIdentifier, type, location = null) {
+    async registerAttendance(inputIdentifier, type, location = null, ip = null) {
         // Resolve Employee ID directly to avoid decryption errors
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const cuidRegex = /^c[a-z0-9]{20,}$/i;
@@ -68,6 +68,7 @@ export const attendanceService = {
                 date: today,
                 checkIn: now,
                 status: 'Present',
+                ipAddress: ip
             };
 
             if (location && location.latitude && location.longitude) {
@@ -106,6 +107,18 @@ export const attendanceService = {
             // Crear registro de entrada
             const newRecord = await attendanceRepository.createEntry(entryData);
 
+            // Create Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    entity: 'Attendance',
+                    entityId: newRecord.id,
+                    action: 'ENTRY',
+                    performedBy: employeeId,
+                    details: `Registro de entrada. Ubicación: ${location ? `${location.latitude},${location.longitude}` : 'No proporcionada'}`,
+                    ip: ip
+                }
+            });
+
             return { message: 'Entrada registrada exitosamente', record: newRecord };
         } else if (type === 'EXIT') {
             if (!existingRecord) {
@@ -134,6 +147,7 @@ export const attendanceService = {
             const exitData = {
                 checkOut: now,
                 workedHours,
+                ipAddress: ip
             };
 
             if (location && location.latitude && location.longitude) {
@@ -191,6 +205,18 @@ export const attendanceService = {
 
             // Actualizar registro con salida
             const updatedRecord = await attendanceRepository.updateExit(existingRecord.id, exitData);
+
+            // Create Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    entity: 'Attendance',
+                    entityId: updatedRecord.id,
+                    action: 'EXIT',
+                    performedBy: employeeId,
+                    details: `Registro de salida. Horas trabajadas: ${workedHours}. Ubicación: ${location ? `${location.latitude},${location.longitude}` : 'No proporcionada'}`,
+                    ip: ip
+                }
+            });
 
             return { message: 'Salida registrada exitosamente', record: updatedRecord, workedHours };
         } else if (type === 'BREAK_START') {

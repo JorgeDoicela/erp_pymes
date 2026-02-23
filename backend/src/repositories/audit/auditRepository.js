@@ -23,7 +23,8 @@ class AuditRepository {
                     entityId: String(entityId),
                     action,
                     performedBy: performer,
-                    details: detailsStr
+                    details: detailsStr,
+                    ip: data.ip || null
                 }
             });
         } catch (error) {

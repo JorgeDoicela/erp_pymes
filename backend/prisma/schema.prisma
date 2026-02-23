@@ -116,6 +116,7 @@ model Attendance {
   isEarlyDeparture Boolean   @default(false)
   isLate           Boolean   @default(false)
   overtimeHours    Float?    @default(0)
+  ipAddress        String?
   employee         Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, date])
@@ -188,6 +189,7 @@ model AuditLog {
   action      String
   performedBy String
   details     String
+  ip          String?
   timestamp   DateTime @default(now())
 
   @@index([entityId])

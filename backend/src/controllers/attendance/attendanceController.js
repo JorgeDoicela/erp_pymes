@@ -11,8 +11,9 @@ const markAttendance = async (req, res, next) => {
             });
         }
 
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const start = Date.now();
-        const result = await attendanceService.registerAttendance(employeeId, type, location);
+        const result = await attendanceService.registerAttendance(employeeId, type, location, ip);
         const duration = Date.now() - start;
 
         res.status(200).json({

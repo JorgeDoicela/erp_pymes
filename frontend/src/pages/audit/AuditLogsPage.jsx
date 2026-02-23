@@ -155,6 +155,7 @@ const AuditLogsPage = () => {
                             <th className="px-6 py-4 font-semibold text-gray-700">Usuario</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Acción</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Entidad</th>
+                            <th className="px-6 py-4 font-semibold text-gray-700">IP</th>
                             <th className="px-6 py-4 font-semibold text-gray-700">Detalles</th>
                         </tr>
                     </thead>
@@ -195,6 +196,9 @@ const AuditLogsPage = () => {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600 font-semibold italic">
                                         {log.entity}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm font-mono text-gray-500">
+                                        {log.ip || '-'}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate">
                                         {log.details}
