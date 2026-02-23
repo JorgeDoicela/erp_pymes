@@ -162,6 +162,7 @@ export const verifyRegistration = async (req, res) => {
             const credentialID = registrationInfo.credentialID || credential.id;
             const credentialPublicKey = registrationInfo.credentialPublicKey || credential.publicKey;
             const counter = registrationInfo.counter ?? credential.counter;
+            const aaguid = registrationInfo.aaguid; // Capture unique hardware ID
 
             let credIdStr = '';
             if (typeof credentialID === 'string') {
@@ -192,9 +193,11 @@ export const verifyRegistration = async (req, res) => {
                     employeeId: userId,
                     credentialId: credIdStr,
                     publicKey: pubKeyStr,
+                    aaguid: aaguid,
                     counter: counter,
                     transports: JSON.stringify(body.response.transports || []),
-                    deviceInfo: req.headers['user-agent']
+                    deviceInfo: req.headers['user-agent'],
+                    lastVerified: new Date()
                 }
             });
 

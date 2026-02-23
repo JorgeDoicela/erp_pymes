@@ -123,6 +123,7 @@ const BiometricSettings = () => {
                     <li>Marcaciones en un solo toque.</li>
                     <li>Máxima seguridad: solo usted puede registrar su asistencia.</li>
                     <li>Soporta FaceID, TouchID y Windows Hello.</li>
+                    <li className="text-amber-600 font-medium italic">Nota: Si añade o cambia biometrías en su dispositivo (ej. nuevo dedo), deberá volver a configurar este acceso por seguridad.</li>
                 </ul>
             </div>
 

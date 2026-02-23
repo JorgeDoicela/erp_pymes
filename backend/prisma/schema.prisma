@@ -542,9 +542,11 @@ model BiometricCredential {
   employeeId   String
   credentialId String   @unique
   publicKey    String
+  aaguid       String?  // Hardware authenticator ID
   counter      Int      @default(0)
   transports   String?  // JSON list of transports
   deviceInfo   String?
+  lastVerified DateTime @default(now())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
