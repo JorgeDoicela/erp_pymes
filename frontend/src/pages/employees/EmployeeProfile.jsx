@@ -181,7 +181,11 @@ const EmployeeProfile = ({ token, user }) => {
             hasDoubleOvertime: employee.contracts?.find(c => c.status === 'Active')?.hasDoubleOvertime ?? true,
             bankName: employee.bankName || '',
             accountNumber: employee.accountNumber || '',
-            accountType: employee.accountType || 'Ahorros'
+            accountType: employee.accountType || 'Ahorros',
+            workLatitude: employee.workLatitude || '',
+            workLongitude: employee.workLongitude || '',
+            geofenceRadius: employee.geofenceRadius || 200,
+            enforceGeofence: employee.enforceGeofence || false
             // Identity Card not included -> Immutable
         });
         setFieldErrors({});

@@ -60,6 +60,73 @@ function Login({ onLogin }) {
         }
     };
 
+    const handleBiometricLogin = async () => {
+        if (!email) {
+            setError('Por favor, ingresa tu correo electrónico para usar biometría.');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setError('');
+
+            // 1. Obtener opciones de autenticación
+            const optionsResponse = await fetch(`${API_BASE_URL}/biometric/login/options`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ employeeId: email })
+            });
+
+            const optionsData = await optionsResponse.json();
+            if (!optionsResponse.ok) throw new Error(optionsData.message || 'Error al obtener opciones');
+
+            // 2. Iniciar autenticación en el navegador
+            const { startAuthentication } = await import('@simplewebauthn/browser');
+
+            // Separar metadatos internos de las opciones de WebAuthn
+            const { internalUserId, ...webauthnOptions } = optionsData;
+            const authResponse = await startAuthentication({ optionsJSON: webauthnOptions });
+
+            // 3. Verificar en el servidor
+            const verifyResponse = await fetch(`${API_BASE_URL}/biometric/login/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    body: authResponse,
+                    internalUserId: optionsData.internalUserId
+                })
+            });
+
+            const verifyData = await verifyResponse.json();
+            if (!verifyResponse.ok || !verifyData.verified) {
+                throw new Error(verifyData.message || 'La verificación biométrica falló');
+            }
+
+            // 4. Login exitoso
+            onLogin({
+                user: verifyData.data,
+                token: verifyData.token,
+            });
+            localStorage.setItem('token', verifyData.token);
+
+            if (verifyData.data.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/empleado');
+            }
+
+        } catch (err) {
+            console.error('Biometric Login Error:', err);
+            setError(err.name === 'NotAllowedError' ? 'Operación cancelada o tiempo agotado.' : err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const IconFingerprint = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 10a4 4 0 0 0-4 4c0 1.03.13 2.15.4 3.19"></path><path d="M11 10a4 4 0 0 1 4 4c0 .49-.13.95-.34 1.35"></path><path d="M7 19c1.03 1.23 2.4 2 4 2 3.09 0 6-2.61 6-9a7 7 0 1 0-14 0c0 .99.13 1.94.39 2.85"></path><path d="M11 14a2 2 0 1 0 2 2"></path><path d="M11 2a11 11 0 0 0-11 11c0 1.93.41 3.76 1.15 5.4"></path><path d="M11 5a8 8 0 0 1 8 8c0 2.45-.64 4.74-1.74 6.7"></path></svg>
+    );
+
     return (
         <main className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
             <div className="w-full max-w-md">
@@ -94,25 +161,35 @@ function Login({ onLogin }) {
                         {/* Email */}
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-slate-700">
-                                Correo electrónico
+                                Correo electrónico o Cédula
                             </label>
                             <div className="relative">
                                 <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 placeholder-slate-400 transition-all"
-                                    placeholder="nombre@empresa.com"
+                                    placeholder="nombre@empresa.com o 1234567890"
                                 />
                             </div>
                         </div>
 
                         {/* Password */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-slate-700">
-                                Contraseña
-                            </label>
+                            <div className="flex justify-between items-center">
+                                <label className="block text-sm font-medium text-slate-700">
+                                    Contraseña
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={handleBiometricLogin}
+                                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md transition-colors"
+                                >
+                                    <IconFingerprint />
+                                    Usar Huella
+                                </button>
+                            </div>
                             <div className="relative">
                                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input
@@ -149,7 +226,7 @@ function Login({ onLogin }) {
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Ingresando...
+                                        Procesando...
                                     </span>
                                 ) : (
                                     'Iniciar Sesión'

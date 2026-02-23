@@ -20,7 +20,7 @@ const BiometricSettings = () => {
 
             // Iniciar registro en el navegador (Importación dinámica)
             const { startRegistration } = await import('@simplewebauthn/browser');
-            const regResp = await startRegistration(options);
+            const regResp = await startRegistration({ optionsJSON: options });
 
             const verifyRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/register/verify`, regResp, config);
 

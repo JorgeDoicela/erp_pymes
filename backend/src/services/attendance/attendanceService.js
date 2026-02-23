@@ -25,29 +25,76 @@ const resolveEmployeeId = async (input) => {
     return employee.id;
 };
 
+const getDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // Earth radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) *
+        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // in meters
+};
+
 export const attendanceService = {
     async registerAttendance(inputIdentifier, type, location = null, ip = null) {
         // Resolve Employee ID directly to avoid decryption errors
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const cuidRegex = /^c[a-z0-9]{20,}$/i;
 
         let employeeId = inputIdentifier;
         let employee = null;
 
+        const employeeSelect = {
+            id: true,
+            workLatitude: true,
+            workLongitude: true,
+            geofenceRadius: true,
+            enforceGeofence: true
+        };
+
         if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
             employee = await prisma.employee.findUnique({
                 where: { id: inputIdentifier },
-                select: { id: true }
+                select: employeeSelect
             });
             if (!employee) throw new Error(`Empleado no encontrado con ID: ${inputIdentifier}`);
             employeeId = employee.id;
         } else {
             employee = await prisma.employee.findUnique({
                 where: { identityCard: inputIdentifier },
-                select: { id: true }
+                select: employeeSelect
             });
             if (!employee) throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
             employeeId = employee.id;
+        }
+
+        // --- GEOFENCING VALIDATION ---
+        if (employee.enforceGeofence) {
+            if (!location || !location.latitude || !location.longitude) {
+                throw new Error('La ubicación es requerida para marcar asistencia.');
+            }
+
+            if (!employee.workLatitude || !employee.workLongitude) {
+                console.warn(`Geofencing enabled for employee ${employeeId} but no work location set.`);
+            } else {
+                const distance = getDistance(
+                    location.latitude,
+                    location.longitude,
+                    employee.workLatitude,
+                    employee.workLongitude
+                );
+
+                const radius = employee.geofenceRadius || 200;
+
+                if (distance > radius) {
+                    throw new Error(`Ubicación no permitida. Estás a ${Math.round(distance)}m del sitio de trabajo (Límite: ${radius}m).`);
+                }
+            }
         }
 
         // Normalizar la fecha a medianoche para buscar el registro del día

@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { adminModules } from '../../constants/modules';
+import { adminModules, employeeModules } from '../../constants/modules';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
 
 const Sidebar = ({ user, onLogout, onClose }) => {
@@ -21,7 +21,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                 <div className="px-3 mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Menu Principal
                 </div>
-                {adminModules.map((mod, idx) => {
+                {(user?.role === 'admin' ? adminModules : employeeModules).map((mod, idx) => {
                     const isActive = location.pathname.startsWith(mod.path);
                     return (
                         <button
@@ -52,7 +52,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                     </div>
                     <div>
                         <p className="text-sm font-semibold text-slate-900">{user?.firstName || 'Admin'}</p>
-                        <p className="text-xs text-slate-500">Administrador</p>
+                        <p className="text-xs text-slate-500">{user?.role === 'admin' ? 'Administrador (V2)' : 'Personal (V2)'}</p>
                     </div>
                 </div>
                 <button

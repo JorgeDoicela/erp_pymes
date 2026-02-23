@@ -123,7 +123,16 @@ class ReportService {
                 excused,
                 workedHours: Math.round(workedHours * 100) / 100,
                 overtime: Math.round(overtime * 100) / 100,
-                attendanceRate: (present + excused) / (present + absent + excused) * 100 || 0
+                attendanceRate: (present + excused) / (present + absent + excused) * 100 || 0,
+                records: emp.attendance.map(a => ({
+                    id: a.id,
+                    date: a.date,
+                    checkIn: a.checkIn,
+                    checkOut: a.checkOut,
+                    status: a.status,
+                    entryLocation: a.entryLatitude && a.entryLongitude ? { lat: a.entryLatitude, lng: a.entryLongitude } : null,
+                    exitLocation: a.exitLatitude && a.exitLongitude ? { lat: a.exitLatitude, lng: a.exitLongitude } : null
+                }))
             };
         });
 

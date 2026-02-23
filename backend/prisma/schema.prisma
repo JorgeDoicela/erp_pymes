@@ -54,6 +54,10 @@ model Employee {
   skills               Skill[]
   workHistory          WorkHistory[]
   currentChallenge     String?
+  workLatitude         Float?
+  workLongitude        Float?
+  geofenceRadius       Float?                  @default(200)
+  enforceGeofence      Boolean                 @default(false)
 
   @@index([email])
   @@index([department])

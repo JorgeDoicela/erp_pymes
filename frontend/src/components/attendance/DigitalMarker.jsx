@@ -140,7 +140,7 @@ const DigitalMarker = ({ user }) => {
                     else if (error.code === error.TIMEOUT) msg = 'Tiempo de espera agotado al obtener ubicación';
                     reject(new Error(msg));
                 },
-                { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
             );
         });
     };
@@ -164,7 +164,10 @@ const DigitalMarker = ({ user }) => {
 
             // 2. Ejecutar WebAuthn en el navegador
             const { startAuthentication } = await import('@simplewebauthn/browser');
-            const asseResp = await startAuthentication(options);
+
+            // Separar metadatos internos de las opciones de WebAuthn
+            const { internalUserId, ...webauthnOptions } = options;
+            const asseResp = await startAuthentication({ optionsJSON: webauthnOptions });
 
             // 3. Verificar en el servidor
             const verifyRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/login/verify`, {

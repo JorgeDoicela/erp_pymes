@@ -260,7 +260,8 @@ export class EmployeeController {
       const employee = await employeeService.getEmployee(id);
       res.status(200).json({ success: true, data: employee });
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error al obtener perfil' });
+      console.error('[EmployeeController] Profile Error:', error);
+      res.status(500).json({ success: false, message: 'Error al obtener perfil: ' + error.message });
     }
   }
 

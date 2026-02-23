@@ -12,6 +12,7 @@ const AttendanceReports = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState([]); // List for dropdown
+    const [expandedRow, setExpandedRow] = useState(null);
 
     // Default: Last 30 days
     const today = new Date();
@@ -278,24 +279,120 @@ const AttendanceReports = () => {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {stats.details.map(row => (
-                                        <tr key={row.id} className="hover:bg-blue-50/30 transition-colors">
-                                            <td className="p-4 font-medium text-slate-800">{row.name}</td>
-                                            <td className="p-4 text-slate-600">{row.department}</td>
-                                            <td className="p-4 text-center text-blue-600">{row.present}</td>
-                                            <td className="p-4 text-center text-yellow-600 font-bold">{row.late > 0 ? row.late : '-'}</td>
-                                            <td className="p-4 text-center text-slate-500">{row.excused}</td>
-                                            <td className="p-4 text-center text-red-600 font-bold">{row.absent > 0 ? row.absent : '-'}</td>
-                                            <td className="p-4 text-center">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${row.attendanceRate >= 95 ? 'bg-green-100 text-green-700' :
-                                                    row.attendanceRate >= 85 ? 'bg-yellow-100 text-yellow-700' :
-                                                        'bg-red-100 text-red-700'
-                                                    }`}>
-                                                    {(row.attendanceRate || 0).toFixed(0)}%
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-right font-mono text-slate-600">{(row.workedHours || 0).toFixed(1)}</td>
-                                            <td className="p-4 text-right font-mono text-purple-600 font-bold">{row.overtime > 0 ? (row.overtime || 0).toFixed(1) : '-'}</td>
-                                        </tr>
+                                        <React.Fragment key={row.id}>
+                                            <tr className="hover:bg-blue-50/30 transition-colors border-b border-slate-50">
+                                                <td className="p-4 font-medium text-slate-800">
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setExpandedRow(expandedRow === row.id ? null : row.id)}
+                                                            className="text-slate-400 hover:text-blue-600 transition-colors"
+                                                        >
+                                                            {expandedRow === row.id ? '▼' : '▶'}
+                                                        </button>
+                                                        {row.name}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-slate-600">{row.department}</td>
+                                                <td className="p-4 text-center text-blue-600">{row.present}</td>
+                                                <td className="p-4 text-center text-yellow-600 font-bold">{row.late > 0 ? row.late : '-'}</td>
+                                                <td className="p-4 text-center text-slate-500">{row.excused}</td>
+                                                <td className="p-4 text-center text-red-600 font-bold">{row.absent > 0 ? row.absent : '-'}</td>
+                                                <td className="p-4 text-center">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${row.attendanceRate >= 95 ? 'bg-green-100 text-green-700' :
+                                                        row.attendanceRate >= 85 ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-red-100 text-red-700'
+                                                        }`}>
+                                                        {(row.attendanceRate || 0).toFixed(0)}%
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-right font-mono text-slate-600">{(row.workedHours || 0).toFixed(1)}</td>
+                                                <td className="p-4 text-right font-mono text-purple-600 font-bold">{row.overtime > 0 ? (row.overtime || 0).toFixed(1) : '-'}</td>
+                                            </tr>
+                                            {expandedRow === row.id && (
+                                                <tr className="bg-slate-50/50">
+                                                    <td colSpan="9" className="p-0">
+                                                        <div className="p-6 border-l-4 border-blue-500 bg-white m-4 rounded-xl shadow-inner overflow-hidden">
+                                                            <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                                                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                                                                Registros Detallados
+                                                            </h4>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                                {row.records && row.records.length > 0 ? (
+                                                                    row.records.map((rec) => (
+                                                                        <div key={rec.id} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                                                                            <div className="flex justify-between items-center mb-3">
+                                                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                                                    {new Date(rec.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
+                                                                                </span>
+                                                                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${rec.status === 'Present' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                                                    {rec.status}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="space-y-3">
+                                                                                <div className="flex justify-between items-center text-sm">
+                                                                                    <span className="text-slate-500">Entrada:</span>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <span className="font-mono font-bold text-slate-700">
+                                                                                            {new Date(rec.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                                        </span>
+                                                                                        {rec.entryLocation ? (
+                                                                                            <a
+                                                                                                href={`https://www.google.com/maps?q=${rec.entryLocation.lat},${rec.entryLocation.lng}`}
+                                                                                                target="_blank"
+                                                                                                rel="noopener noreferrer"
+                                                                                                className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                                                                                title="Ver ubicación de entrada"
+                                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                                aria-label="Ver ubicación de entrada en Google Maps"
+                                                                                            >
+                                                                                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                                                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                                                                                                </svg>
+                                                                                            </a>
+                                                                                        ) : (
+                                                                                            <span className="text-[10px] text-slate-300 italic" title="No se capturó ubicación">Sin GPS</span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="flex justify-between items-center text-sm border-t border-slate-50 pt-2">
+                                                                                    <span className="text-slate-500">Salida:</span>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <span className="font-mono font-bold text-slate-700">
+                                                                                            {rec.checkOut ? new Date(rec.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                                                                        </span>
+                                                                                        {rec.exitLocation ? (
+                                                                                            <a
+                                                                                                href={`https://www.google.com/maps?q=${rec.exitLocation.lat},${rec.exitLocation.lng}`}
+                                                                                                target="_blank"
+                                                                                                rel="noopener noreferrer"
+                                                                                                className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                                                                                title="Ver ubicación de salida"
+                                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                                aria-label="Ver ubicación de salida en Google Maps"
+                                                                                            >
+                                                                                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                                                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                                                                                                </svg>
+                                                                                            </a>
+                                                                                        ) : rec.checkOut ? (
+                                                                                            <span className="text-[10px] text-slate-300 italic">Sin GPS</span>
+                                                                                        ) : null}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))
+                                                                ) : (
+                                                                    <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                                                                        No se encontraron registros individuales en este periodo.
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </tbody>
                             </table>
