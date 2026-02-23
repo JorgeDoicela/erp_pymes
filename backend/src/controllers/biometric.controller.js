@@ -52,19 +52,27 @@ export const getRegistrationOptions = async (req, res) => {
         const excludeCredentials = [];
         for (const cred of user.biometricCredentials) {
             try {
-                console.log(`[BIOMETRIC] Processing exclusion for cred: ${cred.id}`);
-                if (!cred.credentialId) {
-                    console.error(`[BIOMETRIC] Credential ${cred.id} has NO credentialId`);
+                // Ensure credentialId is a clean string
+                let cleanId = cred.credentialId;
+                if (typeof cleanId !== 'string') {
+                    console.error(`[BIOMETRIC] Credential ${cred.id} has NON-STRING credentialId:`, typeof cleanId);
+                    cleanId = String(cleanId);
+                }
+
+                cleanId = cleanId.trim().replace(/\s/g, ''); // Remove ANY whitespace/newlines
+
+                if (!cleanId) {
+                    console.error(`[BIOMETRIC] Credential ${cred.id} has empty/invalid credentialId`);
                     continue;
                 }
+
                 excludeCredentials.push({
-                    id: isoBase64URL.toBuffer(cred.credentialId),
+                    id: isoBase64URL.toBuffer(cleanId),
                     type: 'public-key',
                     transports: cred.transports ? JSON.parse(cred.transports) : [],
                 });
             } catch (innerErr) {
                 console.error(`[BIOMETRIC] Failed to process cred ${cred.id}:`, innerErr.message);
-                // Continue with others
             }
         }
 

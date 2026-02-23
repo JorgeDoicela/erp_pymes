@@ -14,7 +14,8 @@ router.get('/health', async (req, res) => {
 // System Settings (Admin Only)
 router.get('/settings', authenticate, authorize(['admin']), async (req, res) => {
     const settings = await systemService.getSettings();
-    res.json({ success: true, data: settings });
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    res.json({ success: true, data: { ...settings, yourIp: ip } });
 });
 
 router.put('/settings', authenticate, authorize(['admin']), async (req, res) => {

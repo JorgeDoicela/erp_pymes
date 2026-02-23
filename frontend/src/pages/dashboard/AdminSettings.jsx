@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle, FiClock, FiMapPin } from 'react-icons/fi';
+import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle, FiClock, FiMapPin, FiExternalLink, FiPlus } from 'react-icons/fi';
 import systemService from '../../services/systemService';
 
 const AdminSettings = () => {
@@ -80,6 +80,20 @@ const AdminSettings = () => {
             },
             { enableHighAccuracy: true }
         );
+    };
+
+    const addCurrentIp = () => {
+        if (!settings?.yourIp) return;
+        const currentIps = settings.allowedIPs ? settings.allowedIPs.split(',').map(i => i.trim()) : [];
+        if (!currentIps.includes(settings.yourIp)) {
+            const newList = [...currentIps, settings.yourIp].join(', ');
+            setSettings({ ...settings, allowedIPs: newList });
+            setMessage({ type: 'success', text: `IP ${settings.yourIp} añadida a la lista. No olvides guardar.` });
+            setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+        } else {
+            setMessage({ type: 'info', text: 'Tu IP ya está en la lista.' });
+            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+        }
     };
 
     return (
@@ -263,16 +277,39 @@ const AdminSettings = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">IPs Permitidas (Separadas por coma)</label>
-                                <p className="text-xs text-slate-400 mb-2">Si se deja vacío, se permite cualquier IP. Ej: 192.168.1.1, 201.12.3.4</p>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="block text-sm font-medium text-slate-700">IPs Permitidas (Separadas por coma)</label>
+                                    {settings.yourIp && (
+                                        <button
+                                            onClick={addCurrentIp}
+                                            className="text-xs font-bold text-blue-600 hover:text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded transition-colors"
+                                        >
+                                            <FiPlus /> Mi IP: {settings.yourIp}
+                                        </button>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-slate-400 mb-2 italic">Si se deja vacío, se permite cualquier IP. Ej: 192.168.1.1, 201.12.3.4</p>
                                 <input
                                     type="text"
                                     placeholder="Ej: 192.168.1.1, 10.0.0.1"
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono"
                                     value={settings.allowedIPs || ''}
                                     onChange={e => setSettings({ ...settings, allowedIPs: e.target.value })}
                                 />
                             </div>
+
+                            {(settings.globalLatitude && settings.globalLongitude) && (
+                                <div className="pt-2 border-t border-slate-50 flex justify-end">
+                                    <a
+                                        href={`https://www.google.com/maps?q=${settings.globalLatitude},${settings.globalLongitude}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-500 flex items-center gap-1 hover:underline"
+                                    >
+                                        <FiExternalLink /> Ver ubicación actual en Google Maps
+                                    </a>
+                                </div>
+                            )}
 
                             <p className="p-3 bg-indigo-50 text-indigo-700 rounded-lg text-xs leading-relaxed">
                                 <strong>Nota:</strong> Estas configuraciones se aplicarán a todos los empleados de forma global, a menos que tengan una configuración específica definida en su perfil personal.

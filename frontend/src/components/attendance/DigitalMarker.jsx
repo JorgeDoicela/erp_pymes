@@ -247,7 +247,19 @@ const DigitalMarker = ({ user }) => {
                 await checkStatus(targetId);
             }
         } catch (err) {
-            setMessage({ type: 'error', text: err.message || 'Error al registrar asistencia.' });
+            let errorMsg = err.message || 'Error al registrar asistencia.';
+            // Si el error es de ubicación (del backend), añadimos un link de ayuda
+            if (errorMsg.includes('Ubicación no permitida') && location) {
+                errorMsg += ` (Tus coordenadas: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)})`;
+                setMessage({
+                    type: 'error',
+                    text: errorMsg,
+                    showMapLink: true,
+                    lastCoords: location
+                });
+            } else {
+                setMessage({ type: 'error', text: errorMsg });
+            }
         } finally {
             setLoading(false);
         }
@@ -326,13 +338,31 @@ const DigitalMarker = ({ user }) => {
 
             {/* Message */}
             {message.text && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`mb-6 px-4 py-3 rounded-lg w-full max-w-sm text-center text-sm font-medium ${message.type === 'error' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}
-                >
-                    {message.text}
-                </motion.div>
+                <div className="w-full max-w-sm mb-6">
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`px-4 py-3 rounded-lg text-center text-sm font-medium ${message.type === 'error' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : message.type === 'info' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}
+                    >
+                        {message.text}
+                    </motion.div>
+
+                    {message.showMapLink && (
+                        <div className="mt-2 flex justify-center gap-3">
+                            <a
+                                href={`https://www.google.com/maps?q=${message.lastCoords.latitude},${message.lastCoords.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-blue-400 hover:underline flex items-center gap-1"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                </svg>
+                                Ver donde estoy según GPS
+                            </a>
+                        </div>
+                    )}
+                </div>
             )}
 
             {/* Confirmation Modal */}
