@@ -293,9 +293,44 @@ export const verifyAuthentication = async (req, res) => {
         });
 
         if (verification.verified) {
+            const { newCounter } = verification.authenticationInfo;
+
+            // SECURITY: Detect if the device's counter did not advance.
+            // A counter stuck at 0 means the platform authenticator is not
+            // properly binding the key to its biometric store — likely the
+            // device changed its biometric database (new fingerprint / new FaceID).
+            // Most secure platform authenticators (Android Keystore, iOS Secure Enclave)
+            // DO invalidate the key when enrollment changes, making the counter jump or
+            // throwing an error. If counter is still the same across multiple auths, treat
+            // as suspicious and force re-registration.
+            if (newCounter > 0 && newCounter <= dbCred.counter) {
+                // Counter went backwards or didn't increase — possible credential clone or
+                // biometric bypass.
+                await prisma.biometricCredential.deleteMany({ where: { employeeId: user.id } });
+                return res.status(401).json({
+                    verified: false,
+                    requiresReRegistration: true,
+                    message: 'Se detectó un problema de seguridad. Regístrate nuevamente para continuar.'
+                });
+            }
+
+            // SECURITY: Credential validity window (90 days). After this period,
+            // the user MUST re-register to ensure biometric data is still current.
+            const MAX_DAYS = parseInt(process.env.BIOMETRIC_MAX_AGE_DAYS || '90', 10);
+            const credAgeMs = Date.now() - new Date(dbCred.createdAt).getTime();
+            const credAgeDays = credAgeMs / (1000 * 60 * 60 * 24);
+            if (credAgeDays > MAX_DAYS) {
+                await prisma.biometricCredential.deleteMany({ where: { employeeId: user.id } });
+                return res.status(401).json({
+                    verified: false,
+                    requiresReRegistration: true,
+                    message: `Tu registro biométrico expiró (${MAX_DAYS} días). Por seguridad, debes volver a configurarlo.`
+                });
+            }
+
             await prisma.biometricCredential.update({
                 where: { id: dbCred.id },
-                data: { counter: verification.authenticationInfo.newCounter }
+                data: { counter: newCounter, lastVerified: new Date() }
             });
 
             await prisma.employee.update({

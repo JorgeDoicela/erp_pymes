@@ -98,6 +98,14 @@ function Login({ onLogin }) {
             });
 
             const verifyData = await verifyResponse.json();
+
+            // SECURITY CHECK: Server detected biometric change or credential expiry
+            if (verifyData.requiresReRegistration) {
+                setError(verifyData.message || 'Tu biometría ha cambiado o expiró. Inicia sesión con tu contraseña y vuelve a registrar tu huella en tu perfil.');
+                setLoading(false);
+                return;
+            }
+
             if (!verifyResponse.ok || !verifyData.verified) {
                 throw new Error(verifyData.message || 'La verificación biométrica falló');
             }

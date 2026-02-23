@@ -182,7 +182,14 @@ const DigitalMarker = ({ user }) => {
             }
         } catch (err) {
             console.error('Biometric Auth Error:', err);
-            const msg = err.response?.data?.message || 'Error al verificar identidad.';
+            const data = err.response?.data;
+            if (data?.requiresReRegistration) {
+                return {
+                    passed: false,
+                    reason: data.message || 'Tu biometría ha cambiado. Ve a tu perfil y vuelve a configurar tu huella para continuar.'
+                };
+            }
+            const msg = data?.message || 'Error al verificar identidad.';
             return { passed: false, reason: msg };
         }
     };
