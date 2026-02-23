@@ -112,14 +112,12 @@ export const attendanceService = {
             }
         }
 
-        // --- IP WHITELIST VALIDATION (Optional) ---
         if (systemSettings?.allowedIPs && ip) {
-            const allowedList = systemSettings.allowedIPs.split(',').map(i => i.trim());
-            // This is a simple exact match. For ranges, a more complex logic would be needed.
+            const allowedList = systemSettings.allowedIPs.split(',').filter(i => i.trim() !== '').map(i => i.trim());
+            // Support both Exact match and simple "contains" or "starts with" maybe? 
+            // For now, exact match as it was intended.
             if (allowedList.length > 0 && !allowedList.includes(ip)) {
-                // throw new Error(`Conexión no permitida desde esta red (${ip}).`);
-                // Keeping it as a comment for now or just log, to avoid locking out the user if they misconfigure it.
-                console.warn(`IP Access denied: ${ip} is not in allowed list.`);
+                throw new Error(`Conexión no permitida desde esta red (${ip}). Contacte al administrador.`);
             }
         }
 

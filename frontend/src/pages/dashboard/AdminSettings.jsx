@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle, FiClock } from 'react-icons/fi';
+import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle, FiClock, FiMapPin } from 'react-icons/fi';
 import systemService from '../../services/systemService';
 
 const AdminSettings = () => {
@@ -54,6 +54,32 @@ const AdminSettings = () => {
         } finally {
             setSaving(false);
         }
+    };
+
+    const useMyLocation = () => {
+        if (!navigator.geolocation) {
+            setMessage({ type: 'error', text: 'Tu navegador no soporta geolocalización.' });
+            return;
+        }
+
+        setMessage({ type: 'info', text: 'Obteniendo tu ubicación...' });
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setSettings(prev => ({
+                    ...prev,
+                    globalLatitude: position.coords.latitude,
+                    globalLongitude: position.coords.longitude
+                }));
+                setMessage({ type: 'success', text: 'Ubicación capturada correctamente. No olvides guardar los cambios.' });
+                setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+            },
+            (err) => {
+                let msg = 'Error al obtener ubicación.';
+                if (err.code === 1) msg = 'Permiso de ubicación denegado.';
+                setMessage({ type: 'error', text: msg });
+            },
+            { enableHighAccuracy: true }
+        );
     };
 
     return (
@@ -192,38 +218,48 @@ const AdminSettings = () => {
                             Control de Asistencia Global
                         </h3>
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Latitud Global</label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        placeholder="Ej: -0.1806"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                        value={settings.globalLatitude || ''}
-                                        onChange={e => setSettings({ ...settings, globalLatitude: parseFloat(e.target.value) || null })}
-                                    />
+                            <div className="flex flex-col md:flex-row items-end gap-6">
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Latitud Global</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            placeholder="Ej: -0.1806"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={settings.globalLatitude || ''}
+                                            onChange={e => setSettings({ ...settings, globalLatitude: parseFloat(e.target.value) || null })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Longitud Global</label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            placeholder="Ej: -78.4678"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={settings.globalLongitude || ''}
+                                            onChange={e => setSettings({ ...settings, globalLongitude: parseFloat(e.target.value) || null })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Radio (metros)</label>
+                                        <input
+                                            type="number"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={settings.globalRadius || ''}
+                                            onChange={e => setSettings({ ...settings, globalRadius: parseInt(e.target.value) || 200 })}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Longitud Global</label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        placeholder="Ej: -78.4678"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                        value={settings.globalLongitude || ''}
-                                        onChange={e => setSettings({ ...settings, globalLongitude: parseFloat(e.target.value) || null })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Radio (metros)</label>
-                                    <input
-                                        type="number"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                        value={settings.globalRadius || ''}
-                                        onChange={e => setSettings({ ...settings, globalRadius: parseInt(e.target.value) || 200 })}
-                                    />
-                                </div>
+                                <button
+                                    onClick={useMyLocation}
+                                    type="button"
+                                    className="mb-0.5 px-4 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 text-sm font-semibold h-[42px] whitespace-nowrap shadow-sm"
+                                    title="Capturar mi ubicación actual para usarla como centro del Geofencing"
+                                >
+                                    <FiMapPin /> Usar mi ubicación
+                                </button>
                             </div>
 
                             <div>
