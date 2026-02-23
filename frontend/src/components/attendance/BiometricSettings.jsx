@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { startRegistration } from '@simplewebauthn/browser';
-import { FiFingerprint, FiCheckCircle, FiAlertCircle, FiShield } from 'react-icons/fi';
 
 const BiometricSettings = () => {
     const [loading, setLoading] = useState(false);
@@ -15,16 +13,15 @@ const BiometricSettings = () => {
             const token = localStorage.getItem('token');
             const config = { headers: { Authorization: `Bearer ${token}` } };
 
-            // 1. Obtener opciones del servidor
             const optionsRes = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/register/options`, config);
             const options = optionsRes.data;
 
             setMessage({ type: 'info', text: 'Por favor, use el sensor de su dispositivo...' });
 
-            // 2. Iniciar registro en el navegador
+            // Iniciar registro en el navegador (Importación dinámica)
+            const { startRegistration } = await import('@simplewebauthn/browser');
             const regResp = await startRegistration(options);
 
-            // 3. Enviar al servidor para verificar y guardar
             const verifyRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/register/verify`, regResp, config);
 
             if (verifyRes.data.verified) {
@@ -41,11 +38,28 @@ const BiometricSettings = () => {
         }
     };
 
+    // Simple SVG icons to avoid react-icons build issues
+    const IconShield = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+    );
+
+    const IconFingerprint = ({ className }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" /></svg>
+    );
+
+    const IconCheck = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+    );
+
+    const IconAlert = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+    );
+
     return (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                    <FiShield size={20} />
+                    <IconShield />
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-slate-800">Seguridad Biométrica</h2>
@@ -55,17 +69,17 @@ const BiometricSettings = () => {
 
             {message && (
                 <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 text-sm ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' :
-                        message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                            'bg-blue-50 text-blue-700 border border-blue-100'
+                    message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                        'bg-blue-50 text-blue-700 border border-blue-100'
                     }`}>
-                    {message.type === 'error' ? <FiAlertCircle /> : message.type === 'success' ? <FiCheckCircle /> : <FiFingerprint className="animate-pulse" />}
+                    {message.type === 'error' ? <IconAlert /> : message.type === 'success' ? <IconCheck /> : <IconFingerprint className="animate-pulse" />}
                     {message.text}
                 </div>
             )}
 
             <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 mb-6">
                 <h3 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <FiFingerprint className="text-blue-500" /> ¿Por qué usar biometría?
+                    <span className="text-blue-500"><IconFingerprint /></span> ¿Por qué usar biometría?
                 </h3>
                 <ul className="text-sm text-slate-600 space-y-2 list-disc ml-5">
                     <li>Marcaciones en un solo toque.</li>
@@ -83,7 +97,7 @@ const BiometricSettings = () => {
             >
                 {loading ? 'Procesando...' : (
                     <>
-                        <FiFingerprint size={20} />
+                        <IconFingerprint />
                         CONFIGURAR HUELLA DIGITAL
                     </>
                 )}
