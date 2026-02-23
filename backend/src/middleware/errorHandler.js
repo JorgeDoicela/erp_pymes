@@ -16,6 +16,22 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
+  // Errores de Multer (Carga de archivos)
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({
+        success: false,
+        message: 'El archivo es demasiado grande. El límite es de 15MB.',
+        type: 'PayloadTooLarge'
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: `Error al subir archivo: ${err.message}`,
+      type: 'UploadError'
+    });
+  }
+
   // Errores de no encontrado
   if (err.message === 'Empleado no encontrado') {
     return res.status(404).json({
