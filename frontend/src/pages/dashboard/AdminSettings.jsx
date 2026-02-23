@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle, FiClock, FiMapPin, FiExternalLink, FiPlus } from 'react-icons/fi';
 import systemService from '../../services/systemService';
+import LocationPickerMap from '../../components/common/LocationPickerMap';
 
 const AdminSettings = () => {
     const navigate = useNavigate();
@@ -232,15 +233,26 @@ const AdminSettings = () => {
                             Control de Asistencia Global
                         </h3>
                         <div className="space-y-6">
-                            <div className="flex flex-col md:flex-row items-end gap-6">
-                                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="flex flex-col gap-6">
+                                <div className="space-y-4">
+                                    <label className="block text-sm font-semibold text-slate-700">Ubicación de la Oficina (Geofencing)</label>
+                                    <LocationPickerMap
+                                        initialLat={settings.globalLatitude}
+                                        initialLng={settings.globalLongitude}
+                                        radius={settings.globalRadius}
+                                        onLocationChange={(lat, lng) => setSettings({ ...settings, globalLatitude: lat, globalLongitude: lng })}
+                                        height="350px"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-2">Latitud Global</label>
                                         <input
                                             type="number"
                                             step="any"
                                             placeholder="Ej: -0.1806"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono"
                                             value={settings.globalLatitude || ''}
                                             onChange={e => setSettings({ ...settings, globalLatitude: parseFloat(e.target.value) || null })}
                                         />
@@ -251,29 +263,31 @@ const AdminSettings = () => {
                                             type="number"
                                             step="any"
                                             placeholder="Ej: -78.4678"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono"
                                             value={settings.globalLongitude || ''}
                                             onChange={e => setSettings({ ...settings, globalLongitude: parseFloat(e.target.value) || null })}
                                         />
                                     </div>
-                                    <div>
+                                    <div className="flex flex-col">
                                         <label className="block text-sm font-medium text-slate-700 mb-2">Radio (metros)</label>
-                                        <input
-                                            type="number"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                            value={settings.globalRadius || ''}
-                                            onChange={e => setSettings({ ...settings, globalRadius: parseInt(e.target.value) || 200 })}
-                                        />
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="number"
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                                value={settings.globalRadius || ''}
+                                                onChange={e => setSettings({ ...settings, globalRadius: parseInt(e.target.value) || 200 })}
+                                            />
+                                            <button
+                                                onClick={useMyLocation}
+                                                type="button"
+                                                className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 text-sm font-semibold whitespace-nowrap"
+                                                title="Capturar mi ubicación actual"
+                                            >
+                                                <FiMapPin /> GPS
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={useMyLocation}
-                                    type="button"
-                                    className="mb-0.5 px-4 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 text-sm font-semibold h-[42px] whitespace-nowrap shadow-sm"
-                                    title="Capturar mi ubicación actual para usarla como centro del Geofencing"
-                                >
-                                    <FiMapPin /> Usar mi ubicación
-                                </button>
                             </div>
 
                             <div>
