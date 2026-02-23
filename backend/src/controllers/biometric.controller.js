@@ -50,21 +50,27 @@ export const getRegistrationOptions = async (req, res) => {
         const userIdentifier = isoUint8Array.fromUTF8String(user.id);
 
         const excludeCredentials = [];
+        console.log(`[BIOMETRIC] Found ${user.biometricCredentials.length} credentials for user ${userId}`);
+
         for (const cred of user.biometricCredentials) {
             try {
-                // Ensure credentialId is a clean string
                 let cleanId = cred.credentialId;
+                console.log(`[BIOMETRIC] Processing cred ${cred.id}, type: ${typeof cleanId}`);
+
                 if (typeof cleanId !== 'string') {
-                    console.error(`[BIOMETRIC] Credential ${cred.id} has NON-STRING credentialId:`, typeof cleanId);
-                    cleanId = String(cleanId);
+                    console.error(`[BIOMETRIC] Credential ${cred.id} has non-string ID:`, cleanId);
+                    cleanId = String(cleanId || '');
                 }
 
-                cleanId = cleanId.trim().replace(/\s/g, ''); // Remove ANY whitespace/newlines
-
-                if (!cleanId) {
-                    console.error(`[BIOMETRIC] Credential ${cred.id} has empty/invalid credentialId`);
+                // Defensive check before replace
+                if (typeof cleanId.replace !== 'function') {
+                    console.error(`[BIOMETRIC] .replace is NOT a function on cleanId for cred ${cred.id}`);
                     continue;
                 }
+
+                cleanId = cleanId.trim().replace(/\s/g, '');
+
+                if (!cleanId) continue;
 
                 excludeCredentials.push({
                     id: isoBase64URL.toBuffer(cleanId),
@@ -76,12 +82,20 @@ export const getRegistrationOptions = async (req, res) => {
             }
         }
 
+        // Final safety check for all string fields
+        const safeRpName = String(RP_NAME || 'Emplifi');
+        const safeRpId = String(RP_ID || 'localhost');
+        const safeEmail = String(user.email || '');
+        const safeName = String(`${user.firstName || ''} ${user.lastName || ''}`).trim() || 'Usuario';
+
+        console.log('[BIOMETRIC] Final check:', { safeRpId, safeEmail, safeName, excludeCount: excludeCredentials.length });
+
         const options = await generateRegistrationOptions({
-            rpName: RP_NAME,
-            rpID: RP_ID,
+            rpName: safeRpName,
+            rpID: safeRpId,
             userID: userIdentifier,
-            userName: user.email,
-            userDisplayName: `${user.firstName} ${user.lastName}`,
+            userName: safeEmail,
+            userDisplayName: safeName,
             attestationType: 'none',
             excludeCredentials,
             authenticatorSelection: {
@@ -91,15 +105,13 @@ export const getRegistrationOptions = async (req, res) => {
             },
         });
 
-        console.log('[BIOMETRIC] Options generated. Saving challenge to user:', userId);
+        console.log('[BIOMETRIC] Options generated successfully');
 
-        // Guardar el challenge para verificar después
         await prisma.employee.update({
             where: { id: userId },
             data: { currentChallenge: options.challenge }
         });
 
-        console.log('[BIOMETRIC] Challenge saved successfully.');
         res.json(options);
     } catch (error) {
         console.error('[BIOMETRIC] Registration Options Error DETAILS:', {
@@ -283,11 +295,14 @@ export const getAuthenticationOptions = async (req, res) => {
 
         const options = await generateAuthenticationOptions({
             rpID: RP_ID,
-            allowCredentials: user.biometricCredentials.map(cred => ({
-                id: cred.credentialId,
-                type: 'public-key',
-                transports: cred.transports ? JSON.parse(cred.transports) : [],
-            })),
+            allowCredentials: user.biometricCredentials.map(cred => {
+                let cleanId = String(cred.credentialId || '').trim().replace(/\s/g, '');
+                return {
+                    id: cleanId,
+                    type: 'public-key',
+                    transports: cred.transports ? JSON.parse(cred.transports) : [],
+                };
+            }),
             userVerification: 'required',
         });
 
@@ -329,8 +344,11 @@ export const verifyAuthentication = async (req, res) => {
 
         console.log(`[BIOMETRIC] Verifying authentication for user ${internalUserId}. Challenge: ${user.currentChallenge}, Origin: ${ORIGIN}, RP_ID: ${RP_ID}`);
 
-        const authCredentialId = isoBase64URL.toBuffer(dbCred.credentialId);
-        const authPublicKey = isoBase64URL.toBuffer(dbCred.publicKey);
+        const cleanCredId = String(dbCred.credentialId || '').trim().replace(/\s/g, '');
+        const cleanPubKey = String(dbCred.publicKey || '').trim().replace(/\s/g, '');
+
+        const authCredentialId = isoBase64URL.toBuffer(cleanCredId);
+        const authPublicKey = isoBase64URL.toBuffer(cleanPubKey);
 
         if (!authCredentialId || !authPublicKey) {
             console.error('[BIOMETRIC] Failed to convert base64 strings back to buffers');

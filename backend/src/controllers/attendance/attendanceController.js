@@ -27,14 +27,30 @@ const markAttendance = async (req, res, next) => {
         });
 
     } catch (error) {
-        // Si es un error de negocio (validación), 400. Si es interno, 500.
-        // Por simplicidad, si el mensaje es conocido enviamos 400.
-        if (error.message.includes('Ya se ha registrado') || error.message.includes('Debe registrar entrada')) {
+        // Validation/Business errors (400) vs Internal errors (500)
+        const businessErrors = [
+            'Ubicación no permitida',
+            'La ubicación es requerida',
+            'Conexión no permitida',
+            'Ya se ha registrado',
+            'Debe registrar entrada',
+            'No se encontró registro de entrada',
+            'Tipo de registro no válido',
+            'No ha iniciado el almuerzo',
+            'Ya ha iniciado un inicio de almuerzo',
+            'Ya ha finalizado su almuerzo'
+        ];
+
+        const isBusinessError = businessErrors.some(msg => error.message.includes(msg));
+
+        if (isBusinessError || error.message.includes('No se encontró empleado') || error.message.includes('Empleado no encontrado')) {
             return res.status(400).json({
                 success: false,
                 message: error.message
             });
         }
+
+        console.error('[ATTENDANCE] Unexpected Server Error:', error);
         next(error);
     }
 };
