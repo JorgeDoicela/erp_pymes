@@ -9,7 +9,7 @@ class AuditRepository {
      * Crear un nuevo registro de auditoría
      * @param {Object} data - Datos del log
      */
-    async createLog({ entity, entityId, action, performedBy, details }) {
+    async createLog({ entity, entityId, action, performedBy, details, ip }) {
         try {
             // Asegurarse de que el performedBy sea un String (puede venir como ID o Nombre)
             const performer = typeof performedBy === 'object' ? JSON.stringify(performedBy) : String(performedBy);
@@ -24,7 +24,7 @@ class AuditRepository {
                     action,
                     performedBy: performer,
                     details: detailsStr,
-                    ip: data.ip || null
+                    ip: ip || null
                 }
             });
         } catch (error) {

@@ -130,6 +130,7 @@ class ReportService {
                     checkIn: a.checkIn,
                     checkOut: a.checkOut,
                     status: a.status,
+                    ipAddress: a.ipAddress,
                     entryLocation: a.entryLatitude && a.entryLongitude ? { lat: a.entryLatitude, lng: a.entryLongitude } : null,
                     exitLocation: a.exitLatitude && a.exitLongitude ? { lat: a.exitLatitude, lng: a.exitLongitude } : null
                 }))
