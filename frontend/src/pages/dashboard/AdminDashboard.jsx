@@ -149,7 +149,10 @@ function AdminDashboard({ user, onLogout }) {
 
                         <div className="p-6 md:w-2/3">
                             {loadingInsights ? (
-                                <div className="text-center text-slate-400 text-sm py-4">Cargando alertas...</div>
+                                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="text-slate-400 text-sm">Cargando alertas inteligentes...</div>
+                                </div>
                             ) : insights.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {insights.slice(0, 4).map((insight, idx) => (
@@ -169,9 +172,12 @@ function AdminDashboard({ user, onLogout }) {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-center gap-3 py-4 text-slate-400">
-                                    <FiCheckCircle size={24} className="text-emerald-400" />
-                                    <span className="text-sm font-medium">Todo al día. No hay nuevas alertas.</span>
+                                <div className="flex flex-col items-center justify-center gap-3 py-8 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                                    <FiCheckCircle size={32} className="text-emerald-400" />
+                                    <div className="text-center px-4">
+                                        <p className="text-sm font-bold text-slate-600">Todo al día</p>
+                                        <p className="text-xs">No hay nuevas alertas que requieran tu atención.</p>
+                                    </div>
                                 </div>
                             )}
                         </div>

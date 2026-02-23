@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle, FiClock } from 'react-icons/fi';
 import systemService from '../../services/systemService';
 
 const AdminSettings = () => {
@@ -39,6 +39,10 @@ const AdminSettings = () => {
                 biometricEnabled: settings.biometricEnabled,
                 maintenanceMode: settings.maintenanceMode,
                 maintenanceMessage: settings.maintenanceMessage,
+                allowedIPs: settings.allowedIPs,
+                globalLatitude: settings.globalLatitude,
+                globalLongitude: settings.globalLongitude,
+                globalRadius: settings.globalRadius
             });
             if (res.success) {
                 setSettings(res.data);
@@ -178,6 +182,65 @@ const AdminSettings = () => {
                                         }`}
                                 />
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Attendance Control Card */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <FiClock className="text-indigo-500" />
+                            Control de Asistencia Global
+                        </h3>
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Latitud Global</label>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        placeholder="Ej: -0.1806"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={settings.globalLatitude || ''}
+                                        onChange={e => setSettings({ ...settings, globalLatitude: parseFloat(e.target.value) || null })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Longitud Global</label>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        placeholder="Ej: -78.4678"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={settings.globalLongitude || ''}
+                                        onChange={e => setSettings({ ...settings, globalLongitude: parseFloat(e.target.value) || null })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Radio (metros)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={settings.globalRadius || ''}
+                                        onChange={e => setSettings({ ...settings, globalRadius: parseInt(e.target.value) || 200 })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">IPs Permitidas (Separadas por coma)</label>
+                                <p className="text-xs text-slate-400 mb-2">Si se deja vacío, se permite cualquier IP. Ej: 192.168.1.1, 201.12.3.4</p>
+                                <input
+                                    type="text"
+                                    placeholder="Ej: 192.168.1.1, 10.0.0.1"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    value={settings.allowedIPs || ''}
+                                    onChange={e => setSettings({ ...settings, allowedIPs: e.target.value })}
+                                />
+                            </div>
+
+                            <p className="p-3 bg-indigo-50 text-indigo-700 rounded-lg text-xs leading-relaxed">
+                                <strong>Nota:</strong> Estas configuraciones se aplicarán a todos los empleados de forma global, a menos que tengan una configuración específica definida en su perfil personal.
+                            </p>
                         </div>
                     </div>
 

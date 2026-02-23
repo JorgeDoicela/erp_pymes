@@ -817,8 +817,13 @@ export async function getProactiveAlerts() {
     const alerts = [];
     const now = new Date();
 
-    // 1. Alertas de Retención Crítica
-    const retention = await getRetentionRiskAnalysis();
+    // 1. Alertas de Retención Crítica, Patrones de Ausencia y Departamentos Críticos (Concurrente)
+    const [retention, attendance, departments] = await Promise.all([
+        getRetentionRiskAnalysis(),
+        getAttendancePatterns(),
+        getDepartmentComparison()
+    ]);
+
     const criticalEmployees = retention.analysis.filter(e => e.level === 'Alto Riesgo' && e.score > 70);
 
     criticalEmployees.forEach(emp => {
@@ -885,23 +890,21 @@ export async function getProactiveAlerts() {
         });
     });
 
-    // 3. Alertas de Patrones de Ausencia
-    const attendance = await getAttendancePatterns();
     const suspiciousEmployees = attendance.suspiciousAbsences.slice(0, 5);
 
     suspiciousEmployees.forEach(emp => {
         alerts.push({
             id: `absence-${emp.employeeId}`,
             type: 'ATTENDANCE',
-            severity: emp.absenceCount > 5 ? 'HIGH' : 'MEDIUM',
+            severity: (emp.totalAbsences || 0) > 5 ? 'HIGH' : 'MEDIUM',
             title: `Patrón Sospechoso de Ausencias: ${emp.employeeName}`,
-            description: `${emp.absenceCount} ausencias en 30 días. Patrón: ${emp.pattern}`,
+            description: `${emp.totalAbsences || 0} ausencias en el periodo analizado. Patrón: ${emp.pattern}`,
             employee: {
                 id: emp.employeeId,
                 name: emp.employeeName,
                 department: emp.department
             },
-            absenceCount: emp.absenceCount,
+            absenceCount: emp.totalAbsences || 0,
             pattern: emp.pattern,
             recommendedActions: [
                 'Reunión con el empleado para entender causas',
@@ -914,7 +917,6 @@ export async function getProactiveAlerts() {
     });
 
     // 4. Alertas de Departamentos Críticos
-    const departments = await getDepartmentComparison();
     const criticalDepts = departments.departments.filter(d => d.health === 'Crítico');
 
     criticalDepts.forEach(dept => {

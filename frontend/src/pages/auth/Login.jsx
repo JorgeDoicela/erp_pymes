@@ -117,7 +117,17 @@ function Login({ onLogin }) {
 
         } catch (err) {
             console.error('Biometric Login Error:', err);
-            setError(err.name === 'NotAllowedError' ? 'Operación cancelada o tiempo agotado.' : err.message);
+            let userMessage = err.message;
+
+            if (err.name === 'NotAllowedError') {
+                userMessage = 'Operación cancelada o tiempo agotado.';
+            } else if (err.message.includes('404') || err.message.includes('no tiene biometría')) {
+                userMessage = 'Este usuario no tiene una huella digital registrada aún.';
+            } else if (err.message.includes('400') || err.message.includes('verificación')) {
+                userMessage = 'No se pudo verificar su identidad. Inténtelo de nuevo.';
+            }
+
+            setError(userMessage);
         } finally {
             setLoading(false);
         }

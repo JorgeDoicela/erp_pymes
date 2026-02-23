@@ -258,8 +258,9 @@ const EmployeeProfile = ({ token, user }) => {
         { id: 'documents', label: 'Documentos' },
         { id: 'history', label: 'Historial' },
         { id: 'skills', label: 'Habilidades' },
-        { id: 'security', label: 'Seguridad' },
-    ];
+        // RNF-15: Only show security (biometrics) on own profile
+        (!id || id === user?.id) && { id: 'security', label: 'Seguridad' },
+    ].filter(Boolean);
 
     return (
         <div className="space-y-6">

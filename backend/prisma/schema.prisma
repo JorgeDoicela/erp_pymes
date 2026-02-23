@@ -528,6 +528,10 @@ model SystemSetting {
   maintenanceScheduled DateTime?
   maintenanceMessage   String?
   biometricEnabled     Boolean   @default(false)
+  allowedIPs           String?   // Permitted IP ranges (comma separated)
+  globalLatitude       Float?    // Global workplace coordinates
+  globalLongitude      Float?
+  globalRadius         Float?    @default(200) // Default global radius in meters
   updatedAt            DateTime  @updatedAt
 
   @@map("system_settings")

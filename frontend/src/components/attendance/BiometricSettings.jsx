@@ -1,9 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const BiometricSettings = () => {
     const [loading, setLoading] = useState(false);
+    const [statusLoading, setStatusLoading] = useState(true);
+    const [isRegistered, setIsRegistered] = useState(false);
     const [message, setMessage] = useState(null);
+
+    useEffect(() => {
+        checkStatus();
+    }, []);
+
+    const checkStatus = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/status`, config);
+            setIsRegistered(res.data.isRegistered);
+        } catch (err) {
+            console.error('Error fetching biometric status:', err);
+        } finally {
+            setStatusLoading(false);
+        }
+    };
 
     const handleRegister = async () => {
         try {
@@ -26,6 +46,7 @@ const BiometricSettings = () => {
 
             if (verifyRes.data.verified) {
                 setMessage({ type: 'success', text: '¡Biometría configurada exitosamente!' });
+                setIsRegistered(true);
             } else {
                 setMessage({ type: 'error', text: 'No se pudo verificar la credencial.' });
             }
@@ -55,6 +76,14 @@ const BiometricSettings = () => {
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
     );
 
+    if (statusLoading) {
+        return (
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex items-center justify-center min-h-[300px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
@@ -63,7 +92,9 @@ const BiometricSettings = () => {
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-slate-800">Seguridad Biométrica</h2>
-                    <p className="text-sm text-slate-500">Configure su huella para marcaciones rápidas y seguras</p>
+                    <p className="text-sm text-slate-500">
+                        {isRegistered ? 'Su biometría está configurada y lista' : 'Configure su huella para marcaciones rápidas y seguras'}
+                    </p>
                 </div>
             </div>
 
@@ -77,6 +108,13 @@ const BiometricSettings = () => {
                 </div>
             )}
 
+            {!message && isRegistered && (
+                <div className="mb-6 p-4 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-3 text-sm">
+                    <IconCheck />
+                    Biometría configurada correctamente en este dispositivo.
+                </div>
+            )}
+
             <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 mb-6">
                 <h3 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <span className="text-blue-500"><IconFingerprint /></span> ¿Por qué usar biometría?
@@ -85,20 +123,20 @@ const BiometricSettings = () => {
                     <li>Marcaciones en un solo toque.</li>
                     <li>Máxima seguridad: solo usted puede registrar su asistencia.</li>
                     <li>Soporta FaceID, TouchID y Windows Hello.</li>
-                    <li>Detección automática de cambios en la configuración del dispositivo.</li>
                 </ul>
             </div>
 
             <button
                 onClick={handleRegister}
                 disabled={loading}
-                className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${loading ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'
+                className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${loading ? 'bg-slate-400 cursor-not-allowed' :
+                    isRegistered ? 'bg-slate-800 hover:bg-slate-700' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'
                     }`}
             >
                 {loading ? 'Procesando...' : (
                     <>
                         <IconFingerprint />
-                        CONFIGURAR HUELLA DIGITAL
+                        {isRegistered ? 'VOLVER A CONFIGURAR HUELLA' : 'CONFIGURAR HUELLA DIGITAL'}
                     </>
                 )}
             </button>

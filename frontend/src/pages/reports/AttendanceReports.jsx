@@ -329,6 +329,10 @@ const AttendanceReports = () => {
                                                                                 </span>
                                                                             </div>
                                                                             <div className="space-y-3">
+                                                                                <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono border-b border-slate-50 pb-1">
+                                                                                    <span>IP de Registro:</span>
+                                                                                    <span>{rec.ipAddress || 'Sin registrar'}</span>
+                                                                                </div>
                                                                                 <div className="flex justify-between items-center text-sm">
                                                                                     <span className="text-slate-500">Entrada:</span>
                                                                                     <div className="flex items-center gap-2">

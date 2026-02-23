@@ -10,6 +10,10 @@ class SystemService {
                 id: 'default',
                 maintenanceMode: false,
                 biometricEnabled: false,
+                allowedIPs: null,
+                globalLatitude: null,
+                globalLongitude: null,
+                globalRadius: 200,
                 maintenanceMessage: 'El sistema estará en mantenimiento brevemente.'
             }
         });
@@ -24,6 +28,10 @@ class SystemService {
                 id: 'default',
                 maintenanceMode: false,
                 biometricEnabled: false,
+                allowedIPs: null,
+                globalLatitude: null,
+                globalLongitude: null,
+                globalRadius: 200,
                 maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
                 ...data
             }

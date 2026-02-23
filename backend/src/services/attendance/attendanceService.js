@@ -57,6 +57,17 @@ export const attendanceService = {
             enforceGeofence: true
         };
 
+        // Fetch global settings for fallback
+        const systemSettings = await prisma.systemSetting.findUnique({
+            where: { id: 'default' },
+            select: {
+                globalLatitude: true,
+                globalLongitude: true,
+                globalRadius: true,
+                allowedIPs: true
+            }
+        });
+
         if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
             employee = await prisma.employee.findUnique({
                 where: { id: inputIdentifier },
@@ -74,26 +85,41 @@ export const attendanceService = {
         }
 
         // --- GEOFENCING VALIDATION ---
-        if (employee.enforceGeofence) {
+        const useGlobalGeofence = systemSettings?.globalLatitude && systemSettings?.globalLongitude;
+
+        if (employee.enforceGeofence || useGlobalGeofence) {
             if (!location || !location.latitude || !location.longitude) {
                 throw new Error('La ubicación es requerida para marcar asistencia.');
             }
 
-            if (!employee.workLatitude || !employee.workLongitude) {
-                console.warn(`Geofencing enabled for employee ${employeeId} but no work location set.`);
-            } else {
+            const activeLat = employee.workLatitude || systemSettings?.globalLatitude;
+            const activeLng = employee.workLongitude || systemSettings?.globalLongitude;
+            const activeRadius = employee.geofenceRadius || systemSettings?.globalRadius || 200;
+
+            if (activeLat && activeLng) {
                 const distance = getDistance(
                     location.latitude,
                     location.longitude,
-                    employee.workLatitude,
-                    employee.workLongitude
+                    activeLat,
+                    activeLng
                 );
 
-                const radius = employee.geofenceRadius || 200;
-
-                if (distance > radius) {
-                    throw new Error(`Ubicación no permitida. Estás a ${Math.round(distance)}m del sitio de trabajo (Límite: ${radius}m).`);
+                if (distance > activeRadius) {
+                    throw new Error(`Ubicación no permitida. Estás a ${Math.round(distance)}m del sitio de trabajo permitido (Límite: ${activeRadius}m).`);
                 }
+            } else if (employee.enforceGeofence) {
+                console.warn(`Geofencing enabled for employee ${employeeId} but no work location set.`);
+            }
+        }
+
+        // --- IP WHITELIST VALIDATION (Optional) ---
+        if (systemSettings?.allowedIPs && ip) {
+            const allowedList = systemSettings.allowedIPs.split(',').map(i => i.trim());
+            // This is a simple exact match. For ranges, a more complex logic would be needed.
+            if (allowedList.length > 0 && !allowedList.includes(ip)) {
+                // throw new Error(`Conexión no permitida desde esta red (${ip}).`);
+                // Keeping it as a comment for now or just log, to avoid locking out the user if they misconfigure it.
+                console.warn(`IP Access denied: ${ip} is not in allowed list.`);
             }
         }
 

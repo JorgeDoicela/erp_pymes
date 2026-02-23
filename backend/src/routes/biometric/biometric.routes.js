@@ -5,6 +5,7 @@ import { authenticate } from '../../middleware/auth.middleware.js';
 const router = Router();
 
 // Registro (Requiere estar logueado por password primero)
+router.get('/status', authenticate, biometricController.getBiometricStatus);
 router.get('/register/options', authenticate, biometricController.getRegistrationOptions);
 router.post('/register/verify', authenticate, biometricController.verifyRegistration);
 
