@@ -6,6 +6,7 @@ import EditEmployeeModal from './components/EditEmployeeModal';
 import SkillsTab from './components/SkillsTab';
 import ContractsTab from './components/ContractsTab';
 import { InfoItem, EmptyState } from './components/EmployeeHelpers';
+import BiometricSettings from '../../components/attendance/BiometricSettings';
 import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES } from '../../constants/employeeOptions';
 import { validateEmail, validatePhone, validateSalary, validateDates } from '../../utils/validationUtils';
 
@@ -253,6 +254,7 @@ const EmployeeProfile = ({ token, user }) => {
         { id: 'documents', label: 'Documentos' },
         { id: 'history', label: 'Historial' },
         { id: 'skills', label: 'Habilidades' },
+        { id: 'security', label: 'Seguridad' },
     ];
 
     return (
@@ -508,6 +510,12 @@ const EmployeeProfile = ({ token, user }) => {
                             onAddSkill={handleAddSkillLocal}
                             onDeleteSkill={handleDeleteSkillLocal}
                         />
+                    )}
+
+                    {activeTab === 'security' && (
+                        <div className="max-w-2xl mx-auto">
+                            <BiometricSettings />
+                        </div>
                     )}
                 </div>
             </div>

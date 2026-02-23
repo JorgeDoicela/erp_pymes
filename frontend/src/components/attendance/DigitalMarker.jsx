@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import attendanceService from '../../services/attendance/attendanceService';
 import systemService from '../../services/systemService';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 const DigitalMarker = ({ user }) => {
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -145,65 +146,41 @@ const DigitalMarker = ({ user }) => {
     };
 
     const triggerBiometric = async () => {
-        // Block if device has no user-verifying platform authenticator at all
         if (!biometricSupported) {
             return {
                 passed: false,
-                reason: 'Este dispositivo no tiene seguridad configurada (huella, cara, PIN o contraseña). Configure la seguridad del dispositivo e intente de nuevo.'
+                reason: 'Este dispositivo no tiene seguridad configurada.'
             };
         }
 
         try {
-            // Random challenge and random user.id per attempt to avoid duplicate credential errors
-            const challenge = new Uint8Array(32);
-            const userId = new Uint8Array(32);
-            window.crypto.getRandomValues(challenge);
-            window.crypto.getRandomValues(userId);
-
-            // credentials.create with authenticatorAttachment: 'platform' forces the device's
-            // own security system: Touch ID, Face ID, Windows Hello, Android fingerprint/face/PIN.
-            // userVerification: 'required' means the OS MUST verify the user (biometric or PIN/password).
-            await navigator.credentials.create({
-                publicKey: {
-                    challenge,
-                    rp: {
-                        name: 'Emplifi RR.HH.',
-                        id: window.location.hostname,
-                    },
-                    user: {
-                        id: userId,           // unique per attempt — avoids InvalidStateError
-                        name: `verify-${Date.now()}`,
-                        displayName: 'Verificación de Asistencia',
-                    },
-                    pubKeyCredParams: [
-                        { type: 'public-key', alg: -7 },   // ES256
-                        { type: 'public-key', alg: -257 }, // RS256
-                    ],
-                    authenticatorSelection: {
-                        authenticatorAttachment: 'platform', // built-in sensor only (no USB keys, no QR)
-                        userVerification: 'required',        // must verify: biometric OR PIN/password
-                        residentKey: 'discouraged',
-                    },
-                    timeout: 60000,
-                    attestation: 'none',
-                }
+            const targetId = user?.id || employeeId;
+            // 1. Obtener opciones del servidor
+            const optionsRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/login/options`, {
+                employeeId: targetId
             });
-            return { passed: true };
+
+            const options = optionsRes.data;
+
+            // 2. Ejecutar WebAuthn en el navegador
+            const { startAuthentication } = await import('@simplewebauthn/browser');
+            const asseResp = await startAuthentication(options);
+
+            // 3. Verificar en el servidor
+            const verifyRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/login/verify`, {
+                body: asseResp,
+                internalUserId: options.internalUserId
+            });
+
+            if (verifyRes.data.verified) {
+                return { passed: true };
+            } else {
+                return { passed: false, reason: 'Error de verificación biométrica.' };
+            }
         } catch (err) {
-            if (err.name === 'NotAllowedError') {
-                return { passed: false, reason: 'Verificación cancelada o no autorizada. Intente de nuevo.' };
-            }
-            if (err.name === 'NotSupportedError') {
-                return { passed: false, reason: 'Este dispositivo no tiene seguridad biométrica o PIN configurado.' };
-            }
-            if (err.name === 'SecurityError') {
-                return { passed: false, reason: 'Error de seguridad. Asegúrese de usar HTTPS.' };
-            }
-            if (err.name === 'InvalidStateError') {
-                // Shouldn't happen with random userId, but handle gracefully
-                return { passed: false, reason: 'Error de estado. Intente de nuevo.' };
-            }
-            return { passed: false, reason: 'Error al verificar identidad. Intente de nuevo.' };
+            console.error('Biometric Auth Error:', err);
+            const msg = err.response?.data?.message || 'Error al verificar identidad.';
+            return { passed: false, reason: msg };
         }
     };
 

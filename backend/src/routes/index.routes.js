@@ -21,8 +21,9 @@ import intelligenceRoutes from './intelligence.routes.js';
 import { runSeed } from '../controllers/admin/seedController.js';
 
 
-const router = Router();
+import biometricRoutes from './biometric/biometric.routes.js';
 
+const router = Router();
 // Ruta de prueba
 router.get('/', (req, res) => {
     res.send('API EMPLIFI funcionando correctamente v1');
@@ -66,6 +67,7 @@ router.use('/skills', skillRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/audit', auditRoutes);
 router.use('/export', exportRoutes);
+router.use('/biometric', biometricRoutes);
 router.use('/intelligence', intelligenceRoutes);
 
 export default router;

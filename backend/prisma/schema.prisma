@@ -45,6 +45,7 @@ model Employee {
   goals                EmployeeGoal[]
   schedules            EmployeeSchedule[]
   reviewedEvaluations  EvaluationReviewer[]
+  biometricCredentials BiometricCredential[]
   interviews           Interview[]
   postedVacancies      JobVacancy[]
   preferences          NotificationPreference?
@@ -52,6 +53,7 @@ model Employee {
   PayrollDetail        PayrollDetail[]
   skills               Skill[]
   workHistory          WorkHistory[]
+  currentChallenge     String?
 
   @@index([email])
   @@index([department])
@@ -525,4 +527,20 @@ model SystemSetting {
   updatedAt            DateTime  @updatedAt
 
   @@map("system_settings")
+}
+
+model BiometricCredential {
+  id           String   @id @default(cuid())
+  employeeId   String
+  credentialId String   @unique
+  publicKey    String
+  counter      Int      @default(0)
+  transports   String?  // JSON list of transports
+  deviceInfo   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("biometric_credentials")
 }
