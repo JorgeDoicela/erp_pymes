@@ -10,6 +10,7 @@ export const maintenanceMiddleware = async (req, res, next) => {
     const publicRoutes = [
         '/api/system/health',
         '/api/auth/login',
+        '/api/recruitment/public',
         '/system/health', // Fallback
         '/auth/login'     // Fallback
     ];

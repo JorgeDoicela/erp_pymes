@@ -316,6 +316,9 @@ export const hireCandidate = async (req, res) => {
         res.json({ message: "Candidato contratado exitosamente", employee: result });
     } catch (error) {
         console.error("Error hiring candidate:", error);
-        res.status(500).json({ message: "Error al contratar candidato" });
+        if (error.code === 'P2002') {
+            return res.status(400).json({ message: "La cédula o el email ya están registrados en el sistema." });
+        }
+        res.status(500).json({ message: "Error al contratar candidato: " + error.message });
     }
 };

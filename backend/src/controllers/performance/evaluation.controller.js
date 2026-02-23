@@ -257,6 +257,8 @@ export const submitAssessment = async (req, res) => {
             }).catch(err => console.error('Audit Log Error:', err));
         }
 
+        // Parse responses back for consistent JSON response if needed, 
+        // though standard is to just send the updated object
         res.json(updatedReview);
 
     } catch (error) {
@@ -291,7 +293,17 @@ export const getEvaluationResults = async (req, res) => {
             return res.status(403).json({ message: "No tienes permiso para ver estos resultados" });
         }
 
-        const criteriaList = JSON.parse(evaluation.template.criteria);
+        // Robust parsing for criteriaList
+        let criteriaList = [];
+        try {
+            criteriaList = typeof evaluation.template.criteria === 'string'
+                ? JSON.parse(evaluation.template.criteria)
+                : evaluation.template.criteria;
+
+            if (!Array.isArray(criteriaList)) criteriaList = [];
+        } catch (e) {
+            console.error("Error parsing criteriaList:", e);
+        }
 
         const criteriaStats = {};
 
@@ -320,15 +332,20 @@ export const getEvaluationResults = async (req, res) => {
         });
 
         const results = criteriaList.map(c => {
-            const stats = criteriaStats[c.name];
+            const stats = criteriaStats[c.name] || { sum: 0, count: 0 };
             const average = stats.count > 0 ? (stats.sum / stats.count).toFixed(2) : 0;
 
             let maxScore = 5;
             if (evaluation.template.scale) {
-                const scaleObj = JSON.parse(evaluation.template.scale);
-                if (scaleObj.max) maxScore = scaleObj.max;
-                else if (scaleObj.type === '1-10') maxScore = 10;
-                else if (scaleObj.type === 'percentage') maxScore = 100;
+                try {
+                    const scaleObj = typeof evaluation.template.scale === 'string'
+                        ? JSON.parse(evaluation.template.scale)
+                        : evaluation.template.scale;
+
+                    if (scaleObj.max) maxScore = scaleObj.max;
+                    else if (scaleObj.type === '1-10') maxScore = 10;
+                    else if (scaleObj.type === 'percentage') maxScore = 100;
+                } catch (e) { }
             }
 
             return {

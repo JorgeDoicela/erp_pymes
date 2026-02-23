@@ -51,12 +51,11 @@ const TakeEvaluation = () => {
         e.preventDefault();
 
         // Validation: Check if all criteria have a value?
-        // Depends on strictness. Let's enforce it.
-        const criteriaList = review.evaluation.template.criteria;
-        const missing = criteriaList.some(c => !responses[c.name]);
+        const criteriaList = review?.evaluation?.template?.criteria || [];
+        const missing = Array.isArray(criteriaList) && criteriaList.some(c => !responses[c.name]);
 
         if (missing) {
-            if (!window.confirm("Algunos criterios no han sido evaluados. ¿Deseas enviarla incompleta (se podría rechazar)?")) {
+            if (!window.confirm("Algunos criterios no han sido evaluados. ¿Deseas enviarla incompleta?")) {
                 return;
             }
         }

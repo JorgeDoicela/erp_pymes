@@ -31,7 +31,12 @@ const SatisfactionReport = () => {
             <h1 className="text-3xl font-bold mb-4 text-slate-800">Clima Laboral</h1>
             <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm text-center">
                 <p className="text-slate-500 mb-4 font-medium">No hay encuestas activas o resultados disponibles.</p>
-                <button className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white font-bold transition-all shadow-md active:scale-95">Lanzar Nueva Encuesta</button>
+                <button
+                    onClick={() => alert("Funcionalidad de creación de encuestas en desarrollo. Por ahora, use el seeder para generar datos de prueba.")}
+                    className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white font-bold transition-all shadow-md active:scale-95"
+                >
+                    Lanzar Nueva Encuesta
+                </button>
             </div>
         </div>
     );
