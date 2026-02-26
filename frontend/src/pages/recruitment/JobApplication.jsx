@@ -12,6 +12,7 @@ const JobApplication = () => {
     });
     const [resume, setResume] = useState(null);
     const [status, setStatus] = useState('ideal'); // ideal, submitting, success, error
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     useEffect(() => {
         // Fetch public vacancy details (we need a service wrapper properly or use raw axios here for simplicity in this file for now if service not updated yet)
@@ -133,12 +134,29 @@ const JobApplication = () => {
                                 value={formData.coverLetter} onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}></textarea>
                         </div>
 
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label className="flex items-start gap-3 cursor-pointer group">
+                                <input
+                                    required
+                                    type="checkbox"
+                                    checked={acceptedTerms}
+                                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-xs text-slate-600 leading-relaxed">
+                                    Acepto el <strong className="text-slate-800">Tratamiento de Datos Personales</strong>.
+                                    Entiendo que mi información será procesada exclusivamente para fines de reclutamiento y selección de personal,
+                                    conforme a la <a href="https://www.telecomunicaciones.gob.ec/wp-content/uploads/2021/06/Ley-Organica-de-Proteccion-de-Datos-Personales.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold">Ley Orgánica de Protección de Datos Personales (LOPDP) de Ecuador</a>.
+                                </span>
+                            </label>
+                        </div>
+
                         <button
-                            disabled={status === 'submitting'}
+                            disabled={status === 'submitting' || !acceptedTerms}
                             type="submit"
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-[1.01] disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
                         >
-                            {status === 'submitting' ? 'Enviando...' : 'Enviar Postulación'}
+                            {status === 'submitting' ? 'Enviando Datos...' : 'Enviar Postulación'}
                         </button>
                     </form>
                 </div>
