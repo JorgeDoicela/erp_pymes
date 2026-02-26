@@ -357,6 +357,23 @@ export class EmployeeRepository {
   }
 
   /**
+   * Obtener todos los departamentos únicos
+   * @returns {Promise<Array>} Lista de nombres de departamentos
+   */
+  async getUniqueDepartments() {
+    try {
+      const departments = await prisma.employee.findMany({
+        distinct: ['department'],
+        select: { department: true },
+        where: { isActive: true }
+      });
+      return departments.map(d => d.department);
+    } catch (error) {
+      throw new Error(`Error al obtener departamentos: ${error.message}`);
+    }
+  }
+
+  /**
    * Desconectar Prisma
    */
   async disconnect() {

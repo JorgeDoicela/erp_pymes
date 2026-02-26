@@ -300,6 +300,25 @@ export class EmployeeController {
       });
     }
   }
+
+  /**
+   * GET /employees/departments
+   * Obtener todos los departamentos únicos
+   */
+  async getDepartments(req, res) {
+    try {
+      const departments = await employeeService.getDepartments();
+      res.status(200).json({
+        success: true,
+        data: departments
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Error al obtener departamentos',
+      });
+    }
+  }
 }
 
 export default new EmployeeController();

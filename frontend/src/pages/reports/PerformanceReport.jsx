@@ -1,16 +1,28 @@
 import { useState, useEffect } from 'react';
 import { getPerformanceReport } from '../../services/analytics.service';
+import { getDepartments } from '../../services/employees/employee.service';
 import { FiFilter, FiDownload, FiAward, FiTrendingUp, FiTrendingDown, FiActivity } from 'react-icons/fi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
 const PerformanceReport = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [departments, setDepartments] = useState([]);
     const [filters, setFilters] = useState({ startDate: '', endDate: '', department: '' });
 
     useEffect(() => {
         loadReport();
+        loadDepartments();
     }, []);
+
+    const loadDepartments = async () => {
+        try {
+            const res = await getDepartments();
+            if (res.success) setDepartments(res.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const loadReport = async () => {
         setLoading(true);
@@ -55,10 +67,9 @@ const PerformanceReport = () => {
                         <select className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             value={filters.department} onChange={e => setFilters({ ...filters, department: e.target.value })}>
                             <option value="">Todos</option>
-                            <option value="IT">IT</option>
-                            <option value="HR">HR</option>
-                            <option value="Sales">Ventas</option>
-                            <option value="Marketing">Marketing</option>
+                            {departments.map(dept => (
+                                <option key={dept} value={dept}>{dept}</option>
+                            ))}
                         </select>
                     </div>
                     <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold flex items-center justify-center shadow-md transition-all active:scale-95 h-10 mt-auto">

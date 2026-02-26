@@ -307,7 +307,7 @@ export const getPayrollCostReport = async (req, res) => {
                     }
                 }
             },
-            orderBy: { createdAt: 'asc' }
+            orderBy: { paymentDate: 'asc' }
         });
 
         // 1. Cost Breakdown (Total)
@@ -323,7 +323,7 @@ export const getPayrollCostReport = async (req, res) => {
         const trendMap = {};
 
         payrolls.forEach(payroll => {
-            const date = new Date(payroll.createdAt);
+            const date = new Date(payroll.paymentDate);
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
             if (!trendMap[monthKey]) {

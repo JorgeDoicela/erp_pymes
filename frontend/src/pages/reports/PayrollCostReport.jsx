@@ -60,16 +60,19 @@ const PayrollCostReport = () => {
 
             {/* Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <p className="text-slate-500 text-sm font-medium">Costo Total (Periodo)</p>
-                    <p className="text-4xl font-bold text-green-600">${data.metrics?.totalCost?.toLocaleString() || '0'}</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-green-500"></div>
+                    <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">Costo Total (Periodo)</p>
+                    <p className="text-4xl font-bold text-slate-800">${data.metrics?.totalCost?.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0'}</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <p className="text-slate-500 text-sm font-medium">Promedio Mensual</p>
-                    <p className="text-4xl font-bold text-yellow-600">${data.metrics?.avgMonthlyCost?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || '0'}</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
+                    <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">Promedio Mensual</p>
+                    <p className="text-4xl font-bold text-slate-800">${data.metrics?.avgMonthlyCost?.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0'}</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <p className="text-slate-500 text-sm font-medium">Registros Procesados</p>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-400"></div>
+                    <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold mb-2">Registros Procesados</p>
                     <p className="text-4xl font-bold text-slate-800">{data.metrics.headcount}</p>
                 </div>
             </div>

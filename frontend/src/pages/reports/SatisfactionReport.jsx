@@ -61,7 +61,7 @@ const SatisfactionReport = () => {
 
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 left-0 w-2 h-full bg-purple-500"></div>
-                    <p className="text-slate-500 text-xs md:text-sm uppercase tracking-wider font-semibold">eNPS (Net Promoter Score)</p>
+                    <p className="text-slate-500 text-xs md:text-sm uppercase tracking-wider font-semibold">eNPS (Índice de Recomendación)</p>
                     <div className="mt-4 flex justify-center items-end">
                         <span className={`text-4xl md:text-5xl font-bold ${data.nps > 0 ? 'text-green-600' : 'text-red-600'}`}>{data.nps}</span>
                     </div>

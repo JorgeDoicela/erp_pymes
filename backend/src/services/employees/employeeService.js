@@ -285,6 +285,14 @@ export class EmployeeService {
     }
     return age;
   }
+
+  /**
+   * Obtener todos los departamentos únicos
+   * @returns {Promise<Array>} Lista de departamentos
+   */
+  async getDepartments() {
+    return await employeeRepository.getUniqueDepartments();
+  }
 }
 
 export default new EmployeeService();

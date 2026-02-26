@@ -9,6 +9,7 @@ const router = Router();
 router.post('/', authenticate, authorize(['admin', 'hr']), validateEmployeeData, employeeController.create);
 router.get('/', authenticate, authorize(['admin', 'hr']), employeeController.getAll);
 router.get('/profile', authenticate, employeeController.getProfile); // Nueva ruta protegida
+router.get('/departments', authenticate, employeeController.getDepartments);
 router.get('/stats/salary', authenticate, authorize(['admin', 'hr']), employeeController.getSalaryStats);
 router.get('/:id', authenticate, authorize(['admin', 'hr', 'employee']), employeeController.getById);
 router.get('/department/:department', authenticate, employeeController.getByDepartment);

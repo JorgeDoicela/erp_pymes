@@ -56,17 +56,18 @@ export async function seedPerformance(prisma, employees) {
                 status = 'PENDING';
             }
 
-            let score = 75; // Base
+            let score = 3.5; // Base score on a 1-5 scale
             if (status === 'COMPLETED') {
-                if (profile === 'HIGH') score = 90 + Math.random() * 8;
-                else if (profile === 'LOW') score = 55 + Math.random() * 10;
+                if (profile === 'HIGH') score = 4.2 + (Math.random() * 0.8);
+                else if (profile === 'LOW') score = 1.0 + (Math.random() * 1.5);
                 else if (profile === 'DECLINING') {
                     // Q3 High, Q4 Mid, Q1 Low
-                    if (template.period === '2023-Q3') score = 88;
-                    if (template.period === '2023-Q4') score = 75;
-                    if (template.period === '2024-Q1') score = 60;
+                    if (template.period === '2023-Q3') score = 4.5;
+                    if (template.period === '2023-Q4') score = 3.2;
+                    if (template.period === '2024-Q1') score = 1.8;
                 } else {
-                    score = 70 + Math.random() * 15;
+                    // AVERAGE
+                    score = 2.8 + (Math.random() * 1.4);
                 }
             }
 

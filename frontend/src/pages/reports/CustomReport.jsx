@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { generateCustomReport } from '../../services/analytics.service';
+import { getDepartments } from '../../services/employees/employee.service';
 import { FiDatabase, FiCheckSquare, FiFilter, FiDownload, FiPlay } from 'react-icons/fi';
 
 const modules = [
@@ -10,6 +11,25 @@ const modules = [
     { id: 'evaluations', name: 'Evaluaciones', fields: ['finalScore', 'status', 'startDate', 'endDate'] }
 ];
 
+const fieldTranslations = {
+    firstName: 'Nombre',
+    lastName: 'Apellido',
+    email: 'Correo',
+    department: 'Departamento',
+    position: 'Puesto',
+    contractType: 'Tipo de Contrato',
+    hireDate: 'Fecha Ingreso',
+    isActive: 'Estado Activo',
+    totalAmount: 'Monto Total',
+    paymentDate: 'Fecha de Pago',
+    status: 'Estado',
+    createdAt: 'Fecha Registro',
+    appliedAt: 'Fecha Postulación',
+    finalScore: 'Calificación',
+    startDate: 'Fecha Inicio',
+    endDate: 'Fecha Fin'
+};
+
 const CustomReport = () => {
     const [config, setConfig] = useState({
         module: '',
@@ -18,6 +38,20 @@ const CustomReport = () => {
     });
     const [results, setResults] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [departments, setDepartments] = useState([]);
+
+    useEffect(() => {
+        loadDepartments();
+    }, []);
+
+    const loadDepartments = async () => {
+        try {
+            const res = await getDepartments();
+            if (res.success) setDepartments(res.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const handleModuleChange = (e) => {
         setConfig({
@@ -53,7 +87,7 @@ const CustomReport = () => {
     const downloadCSV = () => {
         if (!results || results.length === 0) return;
 
-        const headers = Object.keys(results[0]).join(',');
+        const headers = Object.keys(results[0]).map(h => fieldTranslations[h] || h).join(',');
         const rows = results.map(row => Object.values(row).map(v => `"${v}"`).join(','));
         const csv = [headers, ...rows].join('\n');
 
@@ -95,9 +129,9 @@ const CustomReport = () => {
                             <h3 className="font-bold mb-4 flex items-center text-cyan-600">2. Seleccionar Campos</h3>
                             <div className="grid grid-cols-2 gap-2">
                                 {selectedModuleData.fields.map(field => (
-                                    <label key={field} className="flex items-center space-x-2 text-sm text-slate-600">
+                                    <label key={field} className="flex items-center space-x-2 text-sm text-slate-600 cursor-pointer hover:text-cyan-600 transition-colors">
                                         <input type="checkbox" checked={config.fields.includes(field)} onChange={() => toggleField(field)} className="rounded text-cyan-600 focus:ring-cyan-500 bg-white border-slate-300" />
-                                        <span>{field}</span>
+                                        <span>{fieldTranslations[field] || field}</span>
                                     </label>
                                 ))}
                             </div>
@@ -110,10 +144,16 @@ const CustomReport = () => {
                             <h3 className="font-bold mb-4 flex items-center text-cyan-600">3. Filtros Opcionales</h3>
                             <div className="space-y-3">
                                 <div>
-                                    <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Departamento (Exacto)</label>
-                                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm mt-1 text-slate-800 focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
-                                        placeholder="Ej: IT, HR"
-                                        onChange={e => setConfig({ ...config, filters: { ...config.filters, department: e.target.value } })} />
+                                    <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Departamento</label>
+                                    <select
+                                        className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm mt-1 text-slate-800 focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                                        onChange={e => setConfig({ ...config, filters: { ...config.filters, department: e.target.value } })}
+                                    >
+                                        <option value="">Todos</option>
+                                        {departments.map(dept => (
+                                            <option key={dept} value={dept}>{dept}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="pt-4">
                                     <button onClick={handleGenerate} disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg flex justify-center items-center shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100">
@@ -141,17 +181,17 @@ const CustomReport = () => {
                             {!results ? (
                                 <div className="h-64 flex flex-col items-center justify-center text-slate-400">
                                     <FiDatabase size={48} className="mb-4 opacity-30" />
-                                    <p className="font-medium italic">Selecciona un módulo y genera el reporte para ver los datos.</p>
+                                    <p className="font-medium italic text-center px-4">Selecciona un módulo y los campos, luego genera el reporte para ver los datos.</p>
                                 </div>
                             ) : results.length === 0 ? (
                                 <div className="h-64 flex items-center justify-center text-slate-400 italic">No hay datos que coincidan con los filtros.</div>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-sm min-w-[600px]">
-                                        <thead className="bg-slate-50 text-slate-500 uppercase sticky top-0 font-semibold">
+                                        <thead className="bg-slate-50 text-slate-500 uppercase sticky top-0 font-semibold shadow-sm">
                                             <tr>
                                                 {Object.keys(results[0]).map(header => (
-                                                    <th key={header} className="p-4 border-b border-slate-100 whitespace-nowrap text-xs tracking-wider">{header}</th>
+                                                    <th key={header} className="p-4 border-b border-slate-100 whitespace-nowrap text-xs tracking-wider">{fieldTranslations[header] || header}</th>
                                                 ))}
                                             </tr>
                                         </thead>
@@ -160,7 +200,13 @@ const CustomReport = () => {
                                                 <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
                                                     {Object.values(row).map((val, i) => (
                                                         <td key={i} className="p-4 whitespace-nowrap text-slate-600">
-                                                            {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                                            {val instanceof Date || (typeof val === 'string' && val.includes('T') && !isNaN(Date.parse(val)))
+                                                                ? new Date(val).toLocaleDateString()
+                                                                : typeof val === 'boolean'
+                                                                    ? (val ? 'Sí' : 'No')
+                                                                    : typeof val === 'object' && val !== null
+                                                                        ? JSON.stringify(val)
+                                                                        : String(val)}
                                                         </td>
                                                     ))}
                                                 </tr>

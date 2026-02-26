@@ -149,3 +149,13 @@ export const terminateEmployee = async (id, exitData, token) => {
         throw new Error(error.response?.data?.message || 'Error al dar de baja empleado');
     }
 };
+
+export const getDepartments = async (token) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    try {
+        const response = await api.get('/employees/departments', config);
+        return response.data;
+    } catch (error) {
+        throw new Error('Error al obtener departamentos');
+    }
+};

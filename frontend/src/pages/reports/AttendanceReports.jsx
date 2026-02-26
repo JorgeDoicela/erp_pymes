@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as reportService from '../../services/reports/reportService';
-import { getEmployees } from '../../services/employees/employee.service'; // Need to import this
+import { getEmployees, getDepartments } from '../../services/employees/employee.service';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { jsPDF } from 'jspdf';
@@ -12,6 +12,7 @@ const AttendanceReports = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState([]); // List for dropdown
+    const [departments, setDepartments] = useState([]); // Dynamic list
     const [expandedRow, setExpandedRow] = useState(null);
 
     // Default: Last 30 days
@@ -26,11 +27,10 @@ const AttendanceReports = () => {
         employeeId: ''
     });
 
-    const departments = ['IT', 'RRHH', 'Ventas', 'Contabilidad', 'Operaciones'];
-
     useEffect(() => {
         window.scrollTo(0, 0);
         loadEmployees();
+        loadDepartments();
         loadReport();
     }, []);
 
@@ -40,6 +40,15 @@ const AttendanceReports = () => {
             if (res.success) setEmployees(res.data);
         } catch (error) {
             console.error("Error loading employees", error);
+        }
+    }
+
+    const loadDepartments = async () => {
+        try {
+            const res = await getDepartments();
+            if (res.success) setDepartments(res.data);
+        } catch (error) {
+            console.error("Error loading departments", error);
         }
     }
 

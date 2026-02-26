@@ -14,7 +14,7 @@ export async function seedRecruitment(prisma, adminId) {
             const v = await prisma.jobVacancy.create({
                 data: {
                     title,
-                    department: title.includes('React') ? 'IT' : title.includes('RRHH') ? 'HR' : 'Sales',
+                    department: title.includes('React') ? 'Tecnología' : title.includes('RRHH') ? 'Recursos Humanos' : 'Ventas',
                     description: 'Buscamos personas con talento y pasión por la excelencia para unirse a nuestro equipo en crecimiento.',
                     requirements: '- Experiencia sólida en el área\n- Excelentes habilidades de comunicación\n- Proactividad y compromiso',
                     status: 'OPEN',
