@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEmployees } from '../../hooks/employees/useEmployees';
-import ExportButtons from '../../components/common/ExportButtons';
+import { FiDownload } from 'react-icons/fi';
 
 const EmployeeList = ({ token }) => {
     const navigate = useNavigate();
@@ -31,6 +31,40 @@ const EmployeeList = ({ token }) => {
         setSearchTerm(e.target.value);
     };
 
+    const handleExportCSV = () => {
+        if (!employees || employees.length === 0) return;
+
+        // Escape a cell value for CSV
+        const c = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+        const headers = ['Cedula', 'Nombre', 'Apellido', 'Email', 'Cargo', 'Departamento', 'Tipo Contrato', 'Estado', 'Fecha Ingreso'];
+
+        const rows = employees.map(emp => [
+            c(emp.identityCard),
+            c(emp.firstName),
+            c(emp.lastName),
+            c(emp.email),
+            c(emp.position),
+            c(emp.department),
+            c(emp.contractType),
+            c(emp.isActive ? 'Activo' : 'Inactivo'),
+            c(emp.hireDate ? new Date(emp.hireDate).toLocaleDateString('es-EC') : ''),
+        ].join(','));
+
+        // UTF-8 BOM so Excel renders accented characters correctly
+        const csv = '\uFEFF' + [headers.map(h => c(h)).join(','), ...rows].join('\r\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'lista_empleados.csv');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="space-y-6">
             <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -39,7 +73,15 @@ const EmployeeList = ({ token }) => {
                     <p className="text-slate-500 text-sm">Gestiona la nómina y visualiza perfiles</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <ExportButtons type="employees" fileName="lista_empleados" />
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={loading || employees.length === 0}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg shadow-sm hover:shadow-md transition-all text-sm font-medium"
+                    >
+                        <FiDownload size={16} />
+                        <span className="hidden sm:inline">Exportar CSV</span>
+                        <span className="sm:hidden">CSV</span>
+                    </button>
                     <button
                         onClick={() => navigate('/admin/register-employee')}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all text-sm font-medium flex items-center gap-2"
