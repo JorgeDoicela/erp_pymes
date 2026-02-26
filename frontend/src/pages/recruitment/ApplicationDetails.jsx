@@ -40,7 +40,8 @@ const ApplicationDetails = () => {
         contractType: 'Indefinido',
         salary: '',
         startDate: '',
-        closeVacancy: false
+        closeVacancy: false,
+        sendEmail: true
     });
 
     useEffect(() => {
@@ -61,9 +62,15 @@ const ApplicationDetails = () => {
     };
 
     const handleStatusChange = async (newStatus) => {
+        let sendEmail = true;
+        if (newStatus === 'REJECTED') {
+            const confirmEmail = window.confirm("¿Deseas enviar un email automático de rechazo al candidato?");
+            if (confirmEmail === false) sendEmail = false;
+        }
+
         try {
-            await updateApplicationStatus(id, newStatus);
-            toast?.success("Estado actualizado");
+            await updateApplicationStatus(id, newStatus, sendEmail);
+            toast?.success(sendEmail && newStatus === 'REJECTED' ? "Estado actualizado y email enviado" : "Estado actualizado");
             loadData();
         } catch (error) {
             toast?.error("Error al actualizar estado");
@@ -617,7 +624,7 @@ const ApplicationDetails = () => {
                         <form onSubmit={handleHire} className="space-y-6">
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Identificación Personal (Cédula/DNI)</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Identificación Personal (Cédula)</label>
                                     <input required type="text" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 focus:ring-2 focus:ring-blue-600 outline-none transition-all shadow-none" value={hireData.identityCard} onChange={e => setHireData({ ...hireData, identityCard: e.target.value })} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -668,6 +675,13 @@ const ApplicationDetails = () => {
                                         {hireData.closeVacancy && <FiCheckCircle size={16} />}
                                     </div>
                                     <p className="text-slate-700 text-sm font-bold flex-1">Finalizar esta vacante automáticamente</p>
+                                </div>
+
+                                <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center gap-4 transition-all hover:border-blue-400 cursor-pointer select-none" onClick={() => setHireData({ ...hireData, sendEmail: !hireData.sendEmail })}>
+                                    <div className={`w-6 h-6 rounded flex items-center justify-center transition-all border-2 ${hireData.sendEmail ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200'}`}>
+                                        {hireData.sendEmail && <FiCheckCircle size={16} />}
+                                    </div>
+                                    <p className="text-blue-700 text-sm font-bold flex-1">Enviar email de bienvenida automáticamente</p>
                                 </div>
                             </div>
 

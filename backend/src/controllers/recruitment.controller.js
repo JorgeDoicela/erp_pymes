@@ -85,8 +85,8 @@ export const getApplicationDetails = async (req, res) => {
 export const updateApplicationStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
-        const application = await recruitmentService.updateApplicationStatus(id, status);
+        const { status, sendEmail } = req.body;
+        const application = await recruitmentService.updateApplicationStatus(id, status, sendEmail);
         res.json(application);
     } catch (error) {
         res.status(500).json({ message: "Error al actualizar estado" });

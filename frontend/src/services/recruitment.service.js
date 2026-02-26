@@ -33,8 +33,8 @@ export const getApplicationDetails = async (id) => {
     return response.data;
 };
 
-export const updateApplicationStatus = async (id, status) => {
-    const response = await api.put(`/recruitment/applications/${id}/status`, { status });
+export const updateApplicationStatus = async (id, status, sendEmail) => {
+    const response = await api.put(`/recruitment/applications/${id}/status`, { status, sendEmail });
     return response.data;
 };
 
