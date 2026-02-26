@@ -238,13 +238,13 @@ const ApplicationDetails = () => {
                                         onChange={(e) => handleStatusChange(e.target.value)}
                                         className="flex-1 sm:flex-none bg-slate-100 border-slate-200 rounded-xl p-2.5 text-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-slate-200 transition-all text-sm shadow-sm"
                                     >
-                                        <option value="PENDING">⚡ Marcar Pendiente</option>
-                                        <option value="REVIEWING">🔍 En Revisión</option>
-                                        <option value="INTERVIEW">📅 Fase de Entrevistas</option>
-                                        <option value="TESTING">📝 Pruebas Técnicas</option>
-                                        <option value="OFFER">✉️ Enviar Oferta</option>
-                                        <option value="HIRED">✅ Contratado</option>
-                                        <option value="REJECTED">❌ Rechazado</option>
+                                        <option value="PENDING">Marcar Pendiente</option>
+                                        <option value="REVIEWING">En Revisión</option>
+                                        <option value="INTERVIEW">Fase de Entrevistas</option>
+                                        <option value="TESTING">Pruebas Técnicas</option>
+                                        <option value="OFFER">Enviar Oferta</option>
+                                        <option value="HIRED">Contratado</option>
+                                        <option value="REJECTED">Rechazado</option>
                                     </select>
 
                                     {app.status !== 'HIRED' && (
@@ -483,9 +483,9 @@ const ApplicationDetails = () => {
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Canal de Entrevista</label>
                                 <select className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-2 focus:ring-purple-500 outline-none transition-all shadow-sm font-bold" value={interviewData.type} onChange={e => setInterviewData({ ...interviewData, type: e.target.value })}>
-                                    <option value="VIRTUAL">🌐 Videollamada (Virtual)</option>
-                                    <option value="PRESENTIAL">📍 En Oficina (Presencial)</option>
-                                    <option value="PHONE">📞 Llamada Telefónica</option>
+                                    <option value="VIRTUAL">Videollamada (Virtual)</option>
+                                    <option value="PRESENTIAL">En Oficina (Presencial)</option>
+                                    <option value="PHONE">Llamada Telefónica</option>
                                 </select>
                             </div>
                             <div>
