@@ -26,13 +26,25 @@ const VacancyDetails = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'PENDING': return 'bg-yellow-50 text-yellow-700 border-yellow-100';
+            case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-100';
             case 'REVIEWING': return 'bg-blue-50 text-blue-700 border-blue-100';
             case 'INTERVIEW': return 'bg-purple-50 text-purple-700 border-purple-100';
-            case 'HIRED': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+            case 'TESTING': return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+            case 'OFFER': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+            case 'HIRED': return 'bg-blue-600 text-white border-blue-700';
             case 'REJECTED': return 'bg-red-50 text-red-700 border-red-100';
             default: return 'bg-slate-50 text-slate-600 border-slate-200';
         }
+    };
+
+    const statusLabels = {
+        'PENDING': 'Pendiente',
+        'REVIEWING': 'En Revisión',
+        'INTERVIEW': 'Entrevista',
+        'TESTING': 'Pruebas',
+        'OFFER': 'Oferta',
+        'HIRED': 'Contratado',
+        'REJECTED': 'Rechazado'
     };
 
     return (
@@ -65,7 +77,7 @@ const VacancyDetails = () => {
                                     <div className="flex flex-wrap items-center gap-3 mb-2">
                                         <h3 className="font-bold text-base md:text-lg text-slate-800 group-hover:text-blue-600 transition-colors uppercase truncate max-w-[200px] sm:max-w-none">{app.firstName} {app.lastName}</h3>
                                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold border shrink-0 ${getStatusColor(app.status)}`}>
-                                            {app.status}
+                                            {statusLabels[app.status] || app.status}
                                         </span>
                                     </div>
                                     <div className="text-slate-500 text-xs md:text-sm flex flex-col sm:flex-row flex-wrap gap-2 md:gap-4 lg:gap-6">

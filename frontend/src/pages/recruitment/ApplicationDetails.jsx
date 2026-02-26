@@ -18,7 +18,18 @@ const ApplicationDetails = () => {
     const [showHireModal, setShowHireModal] = useState(false); // Hire
 
     const [interviewData, setInterviewData] = useState({ date: '', time: '', type: 'VIRTUAL', location: '', notes: '' });
-    const [evaData, setEvaData] = useState({ overallScore: 0, recommendation: 'MAYBE', comments: '', ratings: { 'Tecnico': 0, 'Blandas': 0, 'Experiencia': 0 } });
+    const [evaData, setEvaData] = useState({
+        overallScore: 0,
+        recommendation: 'MAYBE',
+        comments: '',
+        ratings: {
+            'Técnico': 0,
+            'Blandas': 0,
+            'Experiencia': 0,
+            'Ajuste Cultural': 0,
+            'Motivación': 0
+        }
+    });
 
     // Hire Data
     const [hireData, setHireData] = useState({
@@ -107,7 +118,18 @@ const ApplicationDetails = () => {
             setSubmitting(true);
             await evaluateCandidate(id, evaData);
             setShowEvaModal(false);
-            setEvaData({ overallScore: 0, recommendation: 'MAYBE', comments: '', ratings: { 'Tecnico': 0, 'Blandas': 0, 'Experiencia': 0 } });
+            setEvaData({
+                overallScore: 0,
+                recommendation: 'MAYBE',
+                comments: '',
+                ratings: {
+                    'Técnico': 0,
+                    'Blandas': 0,
+                    'Experiencia': 0,
+                    'Ajuste Cultural': 0,
+                    'Motivación': 0
+                }
+            });
             toast?.success("Evaluación registrada");
             loadData();
         } catch (error) {
@@ -162,11 +184,22 @@ const ApplicationDetails = () => {
             'PENDING': 'bg-amber-50 text-amber-700 border-amber-100',
             'REVIEWING': 'bg-blue-50 text-blue-700 border-blue-100',
             'INTERVIEW': 'bg-purple-50 text-purple-700 border-purple-100',
-            'OFFER': 'bg-indigo-50 text-indigo-700 border-indigo-100',
-            'HIRED': 'bg-emerald-50 text-emerald-700 border-emerald-100',
+            'TESTING': 'bg-indigo-50 text-indigo-700 border-indigo-100',
+            'OFFER': 'bg-emerald-50 text-emerald-700 border-emerald-100',
+            'HIRED': 'bg-blue-600 text-white border-blue-700',
             'REJECTED': 'bg-red-50 text-red-700 border-red-100'
         };
         return colors[status] || 'bg-slate-50 text-slate-700 border-slate-100';
+    };
+
+    const statusLabels = {
+        'PENDING': 'Pendiente',
+        'REVIEWING': 'En Revisión',
+        'INTERVIEW': 'Entrevistas',
+        'TESTING': 'Pruebas Técnicas',
+        'OFFER': 'Oferta Enviada',
+        'HIRED': 'Contratado',
+        'REJECTED': 'Rechazado'
     };
 
     return (
@@ -191,7 +224,7 @@ const ApplicationDetails = () => {
                                             {app.firstName} {app.lastName}
                                         </h1>
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(app.status)}`}>
-                                            {app.status}
+                                            {statusLabels[app.status] || app.status}
                                         </span>
                                     </div>
                                     <p className="text-blue-600 text-lg md:text-xl font-semibold flex items-center">
@@ -203,12 +236,13 @@ const ApplicationDetails = () => {
                                     <select
                                         value={app.status}
                                         onChange={(e) => handleStatusChange(e.target.value)}
-                                        className="flex-1 sm:flex-none bg-slate-50 border-slate-200 rounded-xl p-2.5 text-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-slate-100 transition-all text-sm shadow-sm"
+                                        className="flex-1 sm:flex-none bg-slate-100 border-slate-200 rounded-xl p-2.5 text-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-slate-200 transition-all text-sm shadow-sm"
                                     >
                                         <option value="PENDING">⚡ Marcar Pendiente</option>
                                         <option value="REVIEWING">🔍 En Revisión</option>
-                                        <option value="INTERVIEW">📅 Entrevista</option>
-                                        <option value="OFFER">✉️ Oferta</option>
+                                        <option value="INTERVIEW">📅 Fase de Entrevistas</option>
+                                        <option value="TESTING">📝 Pruebas Técnicas</option>
+                                        <option value="OFFER">✉️ Enviar Oferta</option>
                                         <option value="HIRED">✅ Contratado</option>
                                         <option value="REJECTED">❌ Rechazado</option>
                                     </select>

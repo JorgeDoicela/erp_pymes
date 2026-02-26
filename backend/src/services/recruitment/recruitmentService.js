@@ -149,13 +149,25 @@ export const recruitmentService = {
                     civilStatus,
                     contractType,
                     hireDate: new Date(startDate),
-                    salary: `ENC:${salary}`, // Mock encryption prefix
+                    salary: `ENC:${salary}`, // Mock encryption (kept for compatibility with legacy systems)
                     password: hashedPassword,
                     role: 'employee'
                 }
             });
 
-            // 3. Close Vacancy if requested
+            // 3. Create initial Contract (Critical for payroll system)
+            await tx.contract.create({
+                data: {
+                    employeeId: newEmployee.id,
+                    type: contractType,
+                    startDate: new Date(startDate),
+                    salary: parseFloat(salary),
+                    status: 'Active',
+                    clauses: 'Contrato generado automáticamente desde proceso de reclutamiento.'
+                }
+            });
+
+            // 4. Close Vacancy if requested
             if (closeVacancy) {
                 await tx.jobVacancy.update({
                     where: { id: application.vacancyId },
