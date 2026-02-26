@@ -72,7 +72,7 @@ const JobApplication = () => {
                 </p>
                 <button
                     onClick={() => navigate('/careers')}
-                    className="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+                    className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
                 >
                     Explorar Otras Ofertas
                 </button>

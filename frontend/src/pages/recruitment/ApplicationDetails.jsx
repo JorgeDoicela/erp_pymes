@@ -293,7 +293,7 @@ const ApplicationDetails = () => {
                                     href={`${SERVER_URL}${app.resumeUrl}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3.5 bg-slate-900 text-white hover:bg-slate-800 rounded-xl font-bold transition-all shadow-xl shadow-slate-200 active:scale-95"
+                                    className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold transition-all shadow-xl shadow-blue-100 active:scale-95"
                                 >
                                     <FiDownload className="mr-2" /> Descargar CV (PDF)
                                 </a>
@@ -409,7 +409,7 @@ const ApplicationDetails = () => {
                 {/* Notes Column */}
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm h-[600px] flex flex-col sticky top-6 overflow-hidden">
-                        <div className="p-6 bg-slate-900 text-white">
+                        <div className="p-6 bg-slate-800 text-white">
                             <h3 className="text-lg font-bold flex items-center">
                                 <FiMessageSquare className="mr-2 text-blue-400" /> Notas de Seguimiento
                             </h3>
@@ -457,7 +457,7 @@ const ApplicationDetails = () => {
 
             {/* Interviews Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
+                <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
                     <div className="bg-white p-8 rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl scale-in-center">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
@@ -508,7 +508,7 @@ const ApplicationDetails = () => {
 
             {/* Evaluation Modal */}
             {showEvaModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
+                <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
                     <div className="bg-white p-8 rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-y-auto max-h-[90vh] scale-in-center">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="w-12 h-12 rounded-2xl bg-yellow-100 flex items-center justify-center text-yellow-600">
@@ -542,7 +542,7 @@ const ApplicationDetails = () => {
                                 ))}
                             </div>
 
-                            <div className="flex justify-between items-center bg-slate-900 p-6 rounded-2xl shadow-xl shadow-slate-200">
+                            <div className="flex justify-between items-center bg-slate-800 p-6 rounded-2xl shadow-xl shadow-slate-200">
                                 <span className="font-bold text-white uppercase tracking-widest text-xs">Puntuación Promedio</span>
                                 <span className="text-4xl font-black text-yellow-400 flex items-baseline gap-1">
                                     {evaData.overallScore} <span className="text-xs text-slate-500 font-medium">/ 5.0</span>
@@ -583,7 +583,7 @@ const ApplicationDetails = () => {
 
                             <div className="flex justify-end pt-4 gap-3">
                                 <button type="button" onClick={() => setShowEvaModal(false)} className="px-6 py-3 text-slate-400 hover:text-slate-800 font-bold transition-all">Omitir</button>
-                                <button type="submit" disabled={submitting} className="px-10 py-3.5 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all flex items-center active:scale-95">
+                                <button type="submit" disabled={submitting} className="px-10 py-3.5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center active:scale-95">
                                     {submitting ? 'Guardando...' : 'Finalizar Evaluación'}
                                 </button>
                             </div>
@@ -594,7 +594,7 @@ const ApplicationDetails = () => {
 
             {/* Hire Modal */}
             {showHireModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
+                <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
                     <div className="bg-white p-8 rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-y-auto max-h-[90vh] scale-in-center">
                         <div className="flex items-center gap-4 mb-8">
                             <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-100">

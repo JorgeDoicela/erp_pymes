@@ -55,7 +55,7 @@ const RecruitmentDashboard = () => {
             <div className="max-w-7xl mx-auto">
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">
+                        <h1 className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight mb-2">
                             Talento Humano
                         </h1>
                         <p className="text-slate-500 font-medium">Lidera el crecimiento de la empresa gestionando vacantes y candidatos.</p>
