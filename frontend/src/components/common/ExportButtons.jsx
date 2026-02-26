@@ -10,9 +10,9 @@ const ExportButtons = ({ type, id, fileName = 'export' }) => {
             let url = '';
             let extension = '';
 
-            if (type === 'employees' && format === 'excel') {
-                url = '/export/employees/excel';
-                extension = 'xlsx';
+            if (type === 'employees' && format === 'csv') {
+                url = '/export/employees/excel'; // same route, now returns CSV
+                extension = 'csv';
             } else if (type === 'payroll_csv') {
                 url = `/export/payroll/${id}/csv`;
                 extension = 'csv';
@@ -63,12 +63,12 @@ const ExportButtons = ({ type, id, fileName = 'export' }) => {
         <div className="flex gap-2">
             {type === 'employees' && (
                 <button
-                    onClick={() => handleExport('excel')}
+                    onClick={() => handleExport('csv')}
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-lg shadow-green-900/20"
                 >
                     {loading ? <FiActivity className="animate-spin" /> : <FiGrid />}
-                    Exportar Excel
+                    Exportar CSV
                 </button>
             )}
             {type === 'payroll_csv' && (

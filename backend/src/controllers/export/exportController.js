@@ -1,14 +1,14 @@
-import exportService from '../../services/export/exportService.js';
 import prisma from '../../database/db.js';
 import { safeDecrypt } from '../../utils/encryption.js';
+import exportService from '../../services/export/exportService.js';
 
 class ExportController {
     /**
-     * Export employees to Excel
+     * Export employees to CSV (UTF-8 BOM so Excel opens it correctly as a spreadsheet)
+     * ExcelJS was replaced because it fails silently in Vercel serverless environments.
      */
     async exportEmployees(req, res) {
         try {
-            // Fetch employees with their active contract (salary stored as Float there)
             const employees = await prisma.employee.findMany({
                 include: {
                     contracts: {
@@ -19,44 +19,39 @@ class ExportController {
                 }
             });
 
-            const columns = [
-                { header: 'Cédula', key: 'cedula', width: 15 },
-                { header: 'Nombre', key: 'firstName', width: 20 },
-                { header: 'Apellido', key: 'lastName', width: 20 },
-                { header: 'Correo', key: 'email', width: 30 },
-                { header: 'Cargo', key: 'position', width: 25 },
-                { header: 'Departamento', key: 'department', width: 20 },
-                { header: 'Fecha Ingreso', key: 'hireDate', width: 15 },
-                { header: 'Estado', key: 'status', width: 12 },
-                { header: 'Salario Base', key: 'salary', width: 15 },
-                { header: 'Banco', key: 'bank', width: 20 },
-                { header: 'N° Cuenta', key: 'account', width: 20 }
+            // Escape a value for CSV
+            const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+            const headers = [
+                'Cedula', 'Nombre', 'Apellido', 'Correo', 'Cargo',
+                'Departamento', 'Fecha Ingreso', 'Estado', 'Salario Base',
+                'Banco', 'N Cuenta'
             ];
 
-            const rows = employees.map(emp => ({
-                cedula: emp.identityCard || '',
-                firstName: emp.firstName || '',
-                lastName: emp.lastName || '',
-                email: emp.email || '',
-                position: emp.position || '',
-                department: emp.department || '',
-                hireDate: emp.hireDate ? new Date(emp.hireDate).toLocaleDateString('es-EC') : '',
-                status: emp.isActive ? 'Activo' : 'Inactivo',
-                // Salary from active contract (plain Float — no decryption needed)
-                salary: emp.contracts?.[0]?.salary ?? '',
-                // Bank data: decrypt safely — show empty if key mismatch
-                bank: safeDecrypt(emp.bankName) ?? 'No registrado',
-                account: safeDecrypt(emp.accountNumber) ?? 'No registrado',
-            }));
+            const rows = employees.map(emp => [
+                cell(emp.identityCard),
+                cell(emp.firstName),
+                cell(emp.lastName),
+                cell(emp.email),
+                cell(emp.position),
+                cell(emp.department),
+                cell(emp.hireDate ? new Date(emp.hireDate).toLocaleDateString('es-EC') : ''),
+                cell(emp.isActive ? 'Activo' : 'Inactivo'),
+                cell(emp.contracts?.[0]?.salary ?? ''),
+                cell(safeDecrypt(emp.bankName) ?? 'No registrado'),
+                cell(safeDecrypt(emp.accountNumber) ?? 'No registrado'),
+            ].join(','));
 
-            const buffer = await exportService.generateExcel(rows, 'Empleados', columns);
+            // UTF-8 BOM ensures Excel renders accented characters correctly
+            const BOM = '\uFEFF';
+            const csv = BOM + [headers.map(h => cell(h)).join(','), ...rows].join('\r\n');
 
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', 'attachment; filename=empleados.xlsx');
-            res.send(buffer);
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', 'attachment; filename=lista_empleados.csv');
+            res.send(csv);
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ success: false, message: 'Error al exportar empleados' });
+            console.error('EXPORT_EMPLOYEES_ERROR:', error);
+            res.status(500).json({ success: false, message: 'Error al exportar empleados: ' + error.message });
         }
     }
 
@@ -71,45 +66,47 @@ class ExportController {
                 include: { employee: true, payroll: true }
             });
 
-            if (!payroll.length) return res.status(404).json({ message: 'No hay datos para esta nómina' });
+            if (!payroll.length) return res.status(404).json({ message: 'No hay datos para esta nomina' });
 
-            const data = payroll.map(p => {
-                // safeDecrypt returns null on failure — use fallback string
+            const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+            const headers = ['Cedula', 'Nombre', 'Cuenta', 'Banco', 'Monto', 'Concepto'];
+
+            const rows = payroll.map(p => {
                 const bank = safeDecrypt(p.employee.bankName) ?? 'No registrado';
                 const account = safeDecrypt(p.employee.accountNumber) ?? 'No registrado';
-
                 const period = new Date(p.payroll.period);
-                return {
-                    cedula: p.employee.identityCard,
-                    nombre: `${p.employee.firstName} ${p.employee.lastName}`,
-                    cuenta: account,
-                    banco: bank,
-                    monto: Number(p.netSalary).toFixed(2),
-                    concepto: `Pago Nómina ${period.getMonth() + 1}/${period.getFullYear()}`
-                };
+                return [
+                    cell(p.employee.identityCard),
+                    cell(`${p.employee.firstName} ${p.employee.lastName}`),
+                    cell(account),
+                    cell(bank),
+                    cell(Number(p.netSalary).toFixed(2)),
+                    cell(`Pago Nomina ${period.getMonth() + 1}/${period.getFullYear()}`)
+                ].join(',');
             });
 
-            const fields = ['cedula', 'nombre', 'cuenta', 'banco', 'monto', 'concepto'];
-            const csv = await exportService.generateCSV(data, fields);
+            const BOM = '\uFEFF';
+            const csv = BOM + [headers.map(h => cell(h)).join(','), ...rows].join('\r\n');
 
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', `attachment; filename=payroll_${id}.csv`);
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename=nomina_${id}.csv`);
             res.send(csv);
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ success: false, message: 'Error al exportar CSV de nómina' });
+            console.error('EXPORT_PAYROLL_CSV_ERROR:', error);
+            res.status(500).json({ success: false, message: 'Error al exportar CSV de nomina: ' + error.message });
         }
     }
 
     /**
      * Export pay stub to PDF
+     * NOTE: jsPDF references 'fs' which is unavailable in Vercel serverless.
+     * Returns 501 until migrated to a compatible library (e.g. PDFKit).
      */
     async exportPayStubPDF(req, res) {
-        // NOTE: PDF generation via jsPDF uses 'fs' which is not available in Vercel serverless.
-        // Returning 501 until this is migrated to a server-side PDF library (e.g. PDFKit).
         return res.status(501).json({
             success: false,
-            message: 'La exportación de rol de pago en PDF no está disponible en este entorno. Use la vista de impresión del navegador.'
+            message: 'La exportacion de rol de pago en PDF no esta disponible en este entorno. Use la vista de impresion del navegador.'
         });
     }
 }
