@@ -10,6 +10,30 @@ import {
 } from 'react-icons/fi';
 import axios from 'axios';
 
+const translations = {
+    actions: {
+        'CREATE': 'CREAR',
+        'UPDATE': 'ACTUALIZAR',
+        'DELETE': 'ELIMINAR',
+        'GENERATE': 'GENERAR',
+        'CONFIRM': 'CONFIRMAR',
+        'PAYMENT': 'PAGO',
+        'FAILED_LOGIN': 'LOGIN FALLIDO',
+        'LOGIN': 'INICIO SESIÓN',
+        'LOGOUT': 'CIERRE SESIÓN'
+    },
+    entities: {
+        'Employee': 'Empleado',
+        'Payroll': 'Nómina',
+        'Evaluation': 'Evaluación',
+        'Auth': 'Autenticación',
+        'JobVacancy': 'Vacante',
+        'Attendance': 'Asistencia',
+        'ClimateSurvey': 'Encuesta Clima',
+        'Contract': 'Contrato'
+    }
+};
+
 const AuditLogsPage = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -66,6 +90,18 @@ const AuditLogsPage = () => {
         }
     };
 
+    const formatDetails = (details) => {
+        if (!details) return '-';
+        try {
+            const parsed = JSON.parse(details);
+            return Object.entries(parsed)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+        } catch (e) {
+            return details;
+        }
+    };
+
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
             <div className="flex justify-between items-center mb-6">
@@ -94,10 +130,9 @@ const AuditLogsPage = () => {
                         className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"
                     >
                         <option value="">Todas</option>
-                        <option value="Employee">Empleado</option>
-                        <option value="Payroll">Nómina</option>
-                        <option value="Evaluation">Evaluación</option>
-                        <option value="Auth">Autenticación</option>
+                        {Object.entries(translations.entities).map(([key, label]) => (
+                            <option key={key} value={key}>{label}</option>
+                        ))}
                     </select>
                 </div>
                 <div>
@@ -109,12 +144,9 @@ const AuditLogsPage = () => {
                         className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"
                     >
                         <option value="">Todas</option>
-                        <option value="CREATE">Crear</option>
-                        <option value="UPDATE">Actualizar</option>
-                        <option value="GENERATE">Generar</option>
-                        <option value="CONFIRM">Confirmar</option>
-                        <option value="PAYMENT">Pago</option>
-                        <option value="FAILED_LOGIN">Login Fallido</option>
+                        {Object.entries(translations.actions).map(([key, label]) => (
+                            <option key={key} value={key}>{label}</option>
+                        ))}
                     </select>
                 </div>
                 <div>
@@ -148,66 +180,68 @@ const AuditLogsPage = () => {
 
             {/* Tabla de Logs */}
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Fecha</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Usuario</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Acción</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Entidad</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">IP</th>
-                            <th className="px-6 py-4 font-semibold text-gray-700">Detalles</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                        {loading ? (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b">
                             <tr>
-                                <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                                    Cargando registros...
-                                </td>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Fecha</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Usuario</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Acción</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">Entidad</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700">IP</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-center">Detalles</th>
                             </tr>
-                        ) : logs.length === 0 ? (
-                            <tr>
-                                <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                                    No se encontraron registros de auditoría.
-                                </td>
-                            </tr>
-                        ) : (
-                            logs.map((log) => (
-                                <tr key={log.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                        <div className="flex items-center gap-2">
-                                            <FiCalendar className="text-gray-400" />
-                                            {formatDate(log.timestamp)}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 font-medium text-gray-800">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs">
-                                                {log.performedBy.substring(0, 2).toUpperCase()}
-                                            </div>
-                                            {log.performedBy}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
-                                            {log.action}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 font-semibold italic">
-                                        {log.entity}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm font-mono text-gray-500">
-                                        {log.ip || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate">
-                                        {log.details}
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                        Cargando registros...
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : logs.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                        No se encontraron registros de auditoría.
+                                    </td>
+                                </tr>
+                            ) : (
+                                logs.map((log) => (
+                                    <tr key={log.id} className="hover:bg-blue-50/20 transition-colors">
+                                        <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                                <FiCalendar className="text-gray-400" />
+                                                {formatDate(log.timestamp)}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 font-medium text-gray-800">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-[10px]">
+                                                    {log.performedBy.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <span className="text-sm">{log.performedBy}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${getActionColor(log.action)}`}>
+                                                {translations.actions[log.action] || log.action}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                                            {translations.entities[log.entity] || log.entity}
+                                        </td>
+                                        <td className="px-6 py-4 text-[11px] font-mono text-gray-400">
+                                            {log.ip || '-'}
+                                        </td>
+                                        <td className="px-6 py-4 text-xs text-gray-500 max-w-xs truncate italic">
+                                            {formatDetails(log.details)}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
