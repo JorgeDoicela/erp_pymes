@@ -11,6 +11,7 @@ import Home from './pages/landing/Home.jsx';
 import Login from './pages/auth/Login.jsx';
 import AdminDashboard from './pages/dashboard/AdminDashboard.jsx';
 import EmployeeDashboard from './pages/dashboard/EmployeeDashboard.jsx';
+import ResetPassword from './pages/auth/ResetPassword.jsx';
 
 // Lazy Load Rest of the Pages
 
@@ -117,6 +118,7 @@ function App() {
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/careers/:id" element={<JobApplication />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<RequireAuth role="admin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
           <Route path="/admin/shifts" element={<ShiftManagement />} />

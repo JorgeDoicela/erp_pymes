@@ -58,6 +58,8 @@ model Employee {
   workLongitude        Float?
   geofenceRadius       Float?                  @default(200)
   enforceGeofence      Boolean                 @default(false)
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
 
   @@index([email])
   @@index([department])

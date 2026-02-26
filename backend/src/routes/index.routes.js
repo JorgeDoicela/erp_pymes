@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login } from '../controllers/auth/authController.js';
+import { login, forgotPassword, resetPassword } from '../controllers/auth/authController.js';
 import employeeRoutes from './employees/employee.routes.js';
 import contractRoutes from './contracts/contract.routes.js';
 import documentRoutes from './documents/document.routes.js';
@@ -44,8 +44,10 @@ router.post('/migrate', (req, res, next) => {
     });
 });
 
-// Login real
+// Login y Recuperación
 router.post('/auth/login', login);
+router.post('/auth/forgot-password', forgotPassword);
+router.post('/auth/reset-password', resetPassword);
 
 // Rutas de empleados
 router.use('/employees', employeeRoutes);
