@@ -100,13 +100,14 @@ export function decrypt(encryptedValue) {
 export function safeDecrypt(value) {
     if (!value) return value;
     try {
-        // Si no tiene el formato de 3 separadores ':', probablemente no está encriptado
+        // Si tiene el formato correcto de 4 partes separadas por ':', intentar desencriptar
         if (typeof value === 'string' && value.split(':').length === 4) {
             return decrypt(value);
         }
+        // Si es un número como string (texto plano sin encriptar), retornarlo tal cual
         return value;
     } catch (e) {
-        console.warn('Silent decryption failure, returning original value:', e.message);
+        console.warn('[safeDecrypt] Decryption failed, returning original value:', e.message);
         return value;
     }
 }
@@ -126,15 +127,22 @@ export function encryptSalary(salary) {
 /**
  * Desencripta un salario
  * @param {string} encryptedSalary - Salario encriptado
- * @returns {number} Salario desencriptado como número
+ * @returns {number|null} Salario desencriptado como número, o null si no se puede desencriptar
  */
 export function decryptSalary(encryptedSalary) {
-    const decrypted = safeDecrypt(encryptedSalary);
-    const salary = parseFloat(decrypted);
-
-    if (isNaN(salary)) {
-        throw new Error('El valor desencriptado no es un número válido');
+    if (!encryptedSalary) return null;
+    try {
+        const decrypted = safeDecrypt(encryptedSalary);
+        const salary = parseFloat(decrypted);
+        // Si no es un número válido (ej: clave de encriptación diferente), retornar null
+        // en vez de lanzar un error que cause un 500
+        if (isNaN(salary)) {
+            console.warn('[decryptSalary] Could not parse salary as number, returning null. Value:', String(encryptedSalary).substring(0, 20));
+            return null;
+        }
+        return salary;
+    } catch (e) {
+        console.warn('[decryptSalary] Decryption failed, returning null:', e.message);
+        return null;
     }
-
-    return salary;
 }
