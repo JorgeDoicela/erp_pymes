@@ -26,23 +26,17 @@ export const getDashboardData = async (req, res) => {
         });
         console.log("Analytics: Open Vacancies:", openVacancies);
 
-        // 4. Monthly Payroll Estimate
-        const employees = await prisma.employee.findMany({
-            select: { id: true, salary: true, department: true }
+        // 4. Monthly Payroll Estimate — read from active Contracts (salary stored as plain Float)
+        const activeContracts = await prisma.contract.findMany({
+            where: { status: 'Active' },
+            select: { salary: true }
         });
 
         let payrollTotal = financial.from(0);
-        employees.forEach(emp => {
-            try {
-                if (!emp.salary) return;
-                // Mock Decryption: Remove "ENC:" prefix if present
-                const rawSalary = emp.salary.replace('ENC:', '');
-                const val = parseFloat(rawSalary);
-                if (!isNaN(val)) {
-                    payrollTotal = payrollTotal.plus(val);
-                }
-            } catch (err) {
-                console.error(`Analytics: Error parsing salary for emp ${emp.id}`, err);
+        activeContracts.forEach(contract => {
+            const val = parseFloat(contract.salary || 0);
+            if (!isNaN(val) && val > 0) {
+                payrollTotal = payrollTotal.plus(val);
             }
         });
         console.log("Analytics: Payroll Total:", payrollTotal.toString());
