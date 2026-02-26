@@ -101,7 +101,14 @@ const EmployeeProfile = ({ token, user }) => {
     const handleDocumentChange = (e) => {
         const { name, value, files } = e.target;
         if (name === 'file') {
-            setDocumentForm(prev => ({ ...prev, [name]: files[0] }));
+            const file = files[0];
+            if (file && file.size > 4 * 1024 * 1024) {
+                toast.error("El archivo es demasiado grande. El límite es 4MB.");
+                e.target.value = null;
+                setDocumentForm(prev => ({ ...prev, [name]: null }));
+                return;
+            }
+            setDocumentForm(prev => ({ ...prev, [name]: file }));
         } else {
             setDocumentForm(prev => ({ ...prev, [name]: value }));
         }
@@ -408,7 +415,7 @@ const EmployeeProfile = ({ token, user }) => {
                                         </select>
                                     </div>
                                     <div className="flex-1 w-full">
-                                        <label className="text-sm font-medium text-slate-700 mb-1 block">Archivo (PDF/IMG, Max 5MB)</label>
+                                        <label className="text-sm font-medium text-slate-700 mb-1 block">Archivo (PDF/IMG, Max 4MB)</label>
                                         <input
                                             type="file"
                                             name="file"

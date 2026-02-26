@@ -41,6 +41,11 @@ const JobApplication = () => {
             setStatus('success');
         } catch (error) {
             console.error(error);
+            if (error.response?.status === 413) {
+                alert("El archivo es demasiado grande para el servidor (Límite 4MB en Vercel). Por favor intente con uno más pequeño.");
+            } else {
+                alert(error.response?.data?.message || "Ocurrió un error al enviar la postulación. Intente de nuevo.");
+            }
             setStatus('error');
         }
     };
@@ -120,12 +125,22 @@ const JobApplication = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">CV / Hoja de Vida (PDF)</label>
                             <label className="flex items-center justify-center px-6 py-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
-                                <input required type="file" accept="application/pdf" className="hidden" onChange={e => setResume(e.target.files[0])} />
+                                <input required type="file" accept="application/pdf" className="hidden" onChange={e => {
+                                    const file = e.target.files[0];
+                                    if (file && file.size > 4 * 1024 * 1024) {
+                                        alert("El archivo es demasiado grande. El límite es 4MB.");
+                                        e.target.value = null;
+                                        setResume(null);
+                                        return;
+                                    }
+                                    setResume(file);
+                                }} />
                                 <div className="text-center">
                                     <FiUpload className="mx-auto text-gray-400 text-3xl mb-2" />
                                     <span className="text-gray-600 block">{resume ? resume.name : "Haz clic para subir tu PDF"}</span>
                                 </div>
                             </label>
+                            <p className="text-[10px] text-slate-400 mt-1">Límite máximo: 4MB</p>
                         </div>
 
                         <div>

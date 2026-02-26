@@ -3,8 +3,8 @@
  * RNF-16: Configuración de Almacenamiento
  */
 export const STORAGE_CONFIG = {
-    // Límite individual de archivo: 15MB (Nota: Vercel tiene un límite rígido de 4.5MB)
-    MAX_FILE_SIZE: 15 * 1024 * 1024,
+    // Límite individual de archivo: 4MB (Vercel tiene un límite rígido de 4.5MB en su capa de API)
+    MAX_FILE_SIZE: 4 * 1024 * 1024,
 
     // Extensiones permitidas por tipo
     ALLOWED_DOCUMENT_TYPES: ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
