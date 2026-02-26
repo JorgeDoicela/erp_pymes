@@ -41,9 +41,12 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 export const attendanceService = {
-    async registerAttendance(inputIdentifier, type, location = null, ip = null) {
-        // Resolve Employee ID directly to avoid decryption errors
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    async registerAttendance(inputIdentifierRaw, type, location = null, ip = null) {
+        // 1. Pre-process and validate identifier
+        const inputIdentifier = inputIdentifierRaw?.toString().trim();
+        if (!inputIdentifier) throw new Error('Identificador de empleado es requerido');
+
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const cuidRegex = /^c[a-z0-9]{20,}$/i;
 
         let employeeId = inputIdentifier;
@@ -68,21 +71,21 @@ export const attendanceService = {
             }
         });
 
+        // 2. Resolve employee record
         if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
             employee = await prisma.employee.findUnique({
                 where: { id: inputIdentifier },
                 select: employeeSelect
             });
             if (!employee) throw new Error(`Empleado no encontrado con ID: ${inputIdentifier}`);
-            employeeId = employee.id;
         } else {
             employee = await prisma.employee.findUnique({
                 where: { identityCard: inputIdentifier },
                 select: employeeSelect
             });
             if (!employee) throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
-            employeeId = employee.id;
         }
+        employeeId = employee.id;
 
         // --- GEOFENCING VALIDATION ---
         const useGlobalGeofence = systemSettings?.globalLatitude && systemSettings?.globalLongitude;
@@ -331,8 +334,10 @@ export const attendanceService = {
         }
     },
 
-    async getStatus(inputIdentifier) {
-        // Resolve ID first
+    async getStatus(inputIdentifierRaw) {
+        const inputIdentifier = inputIdentifierRaw?.toString().trim();
+        if (!inputIdentifier) throw new Error('Identificador de empleado es requerido');
+
         let employeeId = inputIdentifier;
         let employee = null;
 
@@ -340,26 +345,23 @@ export const attendanceService = {
         const cuidRegex = /^c[a-z0-9]{20,}$/i;
 
         if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
-            // It is an ID, verify existence
-            // employee = await employeeRepository.findById(inputIdentifier); // REMOVED: To avoid decryption errors
+            // It is an ID
             employee = await prisma.employee.findUnique({
                 where: { id: inputIdentifier },
                 select: { id: true, firstName: true, lastName: true, position: true, department: true }
             });
 
             if (!employee) throw new Error('Empleado no encontrado');
-            employeeId = employee.id;
         } else {
             // It is an identity card
-            // employee = await employeeRepository.findByIdentityCard(inputIdentifier); // REMOVED: To avoid decryption errors
             employee = await prisma.employee.findUnique({
                 where: { identityCard: inputIdentifier },
                 select: { id: true, firstName: true, lastName: true, position: true, department: true }
             });
 
             if (!employee) throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
-            employeeId = employee.id;
         }
+        employeeId = employee.id;
 
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

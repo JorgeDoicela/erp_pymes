@@ -104,7 +104,12 @@ export class EmployeeController {
    */
   async getById(req, res) {
     try {
-      const { id } = req.params;
+      const { id: rawId } = req.params;
+      const id = rawId?.trim();
+
+      if (!id) {
+        return res.status(400).json({ success: false, message: 'ID de empleado es requerido' });
+      }
 
       const employee = await employeeService.getEmployee(id);
 

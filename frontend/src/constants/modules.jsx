@@ -5,7 +5,6 @@ import {
 } from 'react-icons/fi';
 
 export const adminModules = [
-    { title: 'Dashboard', icon: <FiBarChart2 />, color: 'bg-blue-500', path: '/analytics' },
     { title: 'Empleados', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
     { title: 'Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
     { title: 'Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },

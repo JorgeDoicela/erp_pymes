@@ -5,11 +5,24 @@ import auditRepository from '../../repositories/audit/auditRepository.js';
 
 export const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email: identifierRaw, password } = req.body;
+        const identifier = identifierRaw?.toString().trim();
 
-        // Buscar usuario
-        const user = await prisma.employee.findUnique({
-            where: { email },
+        if (!identifier) {
+            return res.status(400).json({
+                success: false,
+                message: 'El identificador (Correo o Cédula) es requerido'
+            });
+        }
+
+        // Buscar usuario por Email o Cédula
+        const user = await prisma.employee.findFirst({
+            where: {
+                OR: [
+                    { email: identifier },
+                    { identityCard: identifier }
+                ]
+            },
         });
 
         if (!user) {

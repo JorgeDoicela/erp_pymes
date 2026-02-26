@@ -35,24 +35,32 @@ const EmployeeProfile = ({ token, user }) => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        fetchEmployee();
-    }, [id]);
+        if (token) {
+            fetchEmployee();
+        }
+    }, [id, token]);
 
     const fetchEmployee = async () => {
+        if (!token) return;
+        setLoading(true);
         try {
             let data;
             if (id) {
-                data = await getEmployeeById(id, token);
+                const cleanId = id.trim();
+                data = await getEmployeeById(cleanId, token);
             } else {
                 data = await getProfile(token);
             }
-            if (data.data) {
+
+            if (data && data.data) {
                 setEmployee(data.data);
             } else {
                 console.error("No employee data received", data);
+                toast.error("No se pudo cargar la información del empleado");
             }
         } catch (err) {
             console.error("Profile Error:", err);
+            toast.error(err.message || "Error al conectar con el servidor");
         } finally {
             setLoading(false);
         }

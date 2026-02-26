@@ -72,11 +72,12 @@ const DigitalMarker = ({ user }) => {
     }, []);
 
     const checkStatus = async (id = employeeId) => {
-        if (!id) return;
+        const cleanId = id?.toString().trim();
+        if (!cleanId) return;
         setLoading(true);
         setMessage({ type: '', text: '' });
         try {
-            const res = await attendanceService.getStatus(id);
+            const res = await attendanceService.getStatus(cleanId);
             if (res.success) {
                 setStatus(res.data.status);
                 if (res.data) {
