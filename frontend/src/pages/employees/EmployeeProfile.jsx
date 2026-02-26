@@ -363,7 +363,7 @@ const EmployeeProfile = ({ token, user }) => {
                             <InfoItem label="Cargo Actual" value={employee.position} />
                             <InfoItem label="Fecha de Ingreso" value={employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : 'N/A'} />
                             <InfoItem label="Tipo de Contrato" value={CONTRACT_TYPES.find(c => c.value === employee.contractType)?.label || employee.contractType} />
-                            <InfoItem label="Salario Base" value={`$${employee.salary}`} isPrivate />
+                            <InfoItem label="Salario Base" value={employee.salary != null ? `$${employee.salary}` : null} isPrivate />
                             <InfoItem label="Rol de Sistema" value={employee.role} />
                             <div className="col-span-1 md:col-span-2 mt-4 border-t border-slate-200 pt-4">
                                 <h4 className="text-lg font-semibold text-emerald-600 mb-4">Datos Bancarios</h4>
