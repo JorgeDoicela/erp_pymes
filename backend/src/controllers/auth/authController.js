@@ -26,13 +26,13 @@ export const login = async (req, res) => {
         });
 
         if (!user) {
-            console.log(`[AUTH] Login failed: User not found (${email})`);
+            console.log(`[AUTH] Login failed: User not found (${identifier})`);
             auditRepository.createLog({
                 entity: 'Auth',
                 entityId: 'UNKNOWN',
                 action: 'FAILED_LOGIN',
                 performedBy: 'System',
-                details: { email, reason: 'User not found' }
+                details: { email: identifier, reason: 'User not found' }
             }).catch(err => console.error('Audit Log Error:', err));
 
             return res.status(401).json({
@@ -44,13 +44,13 @@ export const login = async (req, res) => {
         // Verificar contraseña
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            console.log(`[AUTH] Login failed: Invalid password for ${email}`);
+            console.log(`[AUTH] Login failed: Invalid password for ${user.email}`);
             auditRepository.createLog({
                 entity: 'Auth',
                 entityId: user.id,
                 action: 'FAILED_LOGIN',
                 performedBy: 'System',
-                details: { email, reason: 'Invalid password' }
+                details: { email: user.email, reason: 'Invalid password' }
             }).catch(err => console.error('Audit Log Error:', err));
 
             return res.status(401).json({
@@ -67,13 +67,13 @@ export const login = async (req, res) => {
         );
 
         // Log successful login (Non-blocking)
-        console.log(`[AUTH] Login successful: ${email}`);
+        console.log(`[AUTH] Login successful: ${user.email}`);
         auditRepository.createLog({
             entity: 'Auth',
             entityId: user.id,
             action: 'LOGIN',
             performedBy: user.id,
-            details: `Successful login for ${email}`
+            details: `Successful login for ${user.email}`
         }).catch(err => console.error('Audit Log Error:', err));
 
         res.status(200).json({
