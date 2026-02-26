@@ -7,21 +7,21 @@ export async function seedRecruitment(prisma, adminId) {
     }
     console.log('[RECRUITMENT] Creando Vacantes y Candidatos...');
     const vacancies = [];
-    const titles = ['Senior React Developer', 'HR Assistant', 'Sales Manager'];
+    const titles = ['Desarrollador React Senior', 'Asistente de RRHH', 'Gerente de Ventas'];
 
     for (const title of titles) {
         try {
             const v = await prisma.jobVacancy.create({
                 data: {
                     title,
-                    department: title.includes('Dev') ? 'IT' : title.includes('HR') ? 'HR' : 'Sales',
-                    description: 'We are looking for talented people...',
-                    requirements: '- Experience\n- Motivation',
+                    department: title.includes('React') ? 'IT' : title.includes('RRHH') ? 'HR' : 'Sales',
+                    description: 'Buscamos personas con talento y pasión por la excelencia para unirse a nuestro equipo en crecimiento.',
+                    requirements: '- Experiencia sólida en el área\n- Excelentes habilidades de comunicación\n- Proactividad y compromiso',
                     status: 'OPEN',
                     postedById: adminId,
                     deadline: new Date(new Date().setMonth(new Date().getMonth() + 1)),
                     location: 'Quito',
-                    employmentType: 'Full-time'
+                    employmentType: 'Tiempo completo'
                 }
             });
             vacancies.push(v);
