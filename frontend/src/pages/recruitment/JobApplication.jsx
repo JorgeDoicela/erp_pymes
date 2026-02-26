@@ -11,7 +11,7 @@ const JobApplication = () => {
         firstName: '', lastName: '', email: '', phone: '', coverLetter: ''
     });
     const [resume, setResume] = useState(null);
-    const [status, setStatus] = useState('ideal'); // ideal, submitting, success, error
+    const [status, setStatus] = useState('ideal'); // ideal, submitting, success, error, already_applied
     const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     useEffect(() => {
@@ -19,6 +19,10 @@ const JobApplication = () => {
         // Updating service first properly is better practice
         const fetchDetails = async () => {
             try {
+                // RNF: Anti-Spam - Check if already applied from this browser
+                if (localStorage.getItem(`applied_${id}`)) {
+                    setStatus('already_applied');
+                }
                 const res = await api.get(`/recruitment/public/${id}`);
                 setVacancy(res.data);
             } catch (e) { console.error(e); }
@@ -38,6 +42,7 @@ const JobApplication = () => {
             await api.post(`/recruitment/public/${id}/apply`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
+            localStorage.setItem(`applied_${id}`, 'true');
             setStatus('success');
         } catch (error) {
             console.error(error);
@@ -51,13 +56,26 @@ const JobApplication = () => {
     };
 
     if (!vacancy) return <div className="p-10 text-center">Cargando...</div>;
-    if (status === 'success') return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="bg-white p-10 rounded-2xl shadow-xl text-center max-w-lg">
-                <FiCheckCircle className="text-white text-6xl mx-auto mb-4" />
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">¡Postulación Enviada!</h2>
-                <p className="text-gray-600 mb-8">Hemos recibido tu información correctamente. Nuestro equipo de RRHH revisará tu perfil y te contactará pronto.</p>
-                <button onClick={() => navigate('/careers')} className="text-blue-600 font-bold hover:underline">Volver a Empleos</button>
+    if (status === 'success' || status === 'already_applied') return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="bg-white p-10 rounded-2xl shadow-xl border border-slate-100 text-center max-w-lg scale-in-center">
+                <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-100">
+                    <FiCheckCircle className="text-white text-4xl" />
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 mb-3">
+                    {status === 'already_applied' ? '¡Ya estás postulado!' : '¡Postulación Recibida!'}
+                </h2>
+                <p className="text-slate-500 font-medium mb-8 leading-relaxed">
+                    {status === 'already_applied'
+                        ? 'Tu solicitud para esta vacante ya ha sido registrada anteriormente. Nuestro equipo de RRHH está procesando tu perfil.'
+                        : 'Hemos recibido tu información correctamente. Nuestro equipo de RRHH revisará tu perfil y te contactará pronto.'}
+                </p>
+                <button
+                    onClick={() => navigate('/careers')}
+                    className="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+                >
+                    Explorar Otras Ofertas
+                </button>
             </div>
         </div>
     );
@@ -161,7 +179,7 @@ const JobApplication = () => {
                                 <span className="text-xs text-slate-600 leading-relaxed">
                                     Acepto el <strong className="text-slate-800">Tratamiento de Datos Personales</strong>.
                                     Entiendo que mi información será procesada exclusivamente para fines de reclutamiento y selección de personal,
-                                    conforme a la <a href="https://www.telecomunicaciones.gob.ec/wp-content/uploads/2021/06/Ley-Organica-de-Proteccion-de-Datos-Personales.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold">Ley Orgánica de Protección de Datos Personales (LOPDP) de Ecuador</a>.
+                                    conforme a la <a href="https://www.telecomunicaciones.gob.ec/wp-content/uploads/2021/06/Ley-Organica-de-Datos-Personales.pdf" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold">Ley Orgánica de Protección de Datos Personales (LOPDP) de Ecuador</a>.
                                 </span>
                             </label>
                         </div>

@@ -45,6 +45,16 @@ export const recruitmentService = {
             throw new Error("El CV es obligatorio (PDF)");
         }
 
+        const { email } = applicantData;
+        const existingApplication = await recruitmentRepository.getApplications({
+            vacancyId: id,
+            email: email
+        });
+
+        if (existingApplication.length > 0) {
+            throw new Error("Ya te has postulado a esta vacante con este correo electrónico.");
+        }
+
         return recruitmentRepository.createApplication({
             ...applicantData,
             vacancyId: id,
