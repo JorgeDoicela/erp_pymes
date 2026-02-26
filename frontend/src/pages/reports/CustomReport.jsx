@@ -3,7 +3,8 @@ import { generateCustomReport } from '../../services/analytics.service';
 import { FiDatabase, FiCheckSquare, FiFilter, FiDownload, FiPlay } from 'react-icons/fi';
 
 const modules = [
-    { id: 'employees', name: 'Empleados', fields: ['firstName', 'lastName', 'email', 'department', 'position', 'salary', 'contractType', 'hireDate', 'status'] },
+    // 'salary' excluded: stored encrypted in DB — use the dedicated Excel export instead
+    { id: 'employees', name: 'Empleados', fields: ['firstName', 'lastName', 'email', 'department', 'position', 'contractType', 'hireDate', 'isActive'] },
     { id: 'payrolls', name: 'Nómina', fields: ['totalAmount', 'paymentDate', 'status', 'createdAt'] },
     { id: 'job_applications', name: 'Reclutamiento', fields: ['firstName', 'lastName', 'email', 'position', 'status', 'appliedAt'] },
     { id: 'evaluations', name: 'Evaluaciones', fields: ['finalScore', 'status', 'startDate', 'endDate'] }

@@ -8,20 +8,48 @@ class ExportController {
      */
     async exportEmployees(req, res) {
         try {
-            const employees = await prisma.employee.findMany();
+            // Fetch employees with their active contract (salary stored as Float there)
+            const employees = await prisma.employee.findMany({
+                include: {
+                    contracts: {
+                        where: { status: 'Active' },
+                        orderBy: { createdAt: 'desc' },
+                        take: 1
+                    }
+                }
+            });
 
             const columns = [
-                { header: 'Cédula', key: 'cedula' },
-                { header: 'Nombre', key: 'firstName' },
-                { header: 'Apellido', key: 'lastName' },
-                { header: 'Correo', key: 'email' },
-                { header: 'Cargo', key: 'position' },
-                { header: 'Departamento', key: 'department' },
-                { header: 'Fecha Ingreso', key: 'hireDate' },
-                { header: 'Salario', key: 'salary' }
+                { header: 'Cédula', key: 'cedula', width: 15 },
+                { header: 'Nombre', key: 'firstName', width: 20 },
+                { header: 'Apellido', key: 'lastName', width: 20 },
+                { header: 'Correo', key: 'email', width: 30 },
+                { header: 'Cargo', key: 'position', width: 25 },
+                { header: 'Departamento', key: 'department', width: 20 },
+                { header: 'Fecha Ingreso', key: 'hireDate', width: 15 },
+                { header: 'Estado', key: 'status', width: 12 },
+                { header: 'Salario Base', key: 'salary', width: 15 },
+                { header: 'Banco', key: 'bank', width: 20 },
+                { header: 'N° Cuenta', key: 'account', width: 20 }
             ];
 
-            const buffer = await exportService.generateExcel(employees, 'Empleados', columns);
+            const rows = employees.map(emp => ({
+                cedula: emp.identityCard || '',
+                firstName: emp.firstName || '',
+                lastName: emp.lastName || '',
+                email: emp.email || '',
+                position: emp.position || '',
+                department: emp.department || '',
+                hireDate: emp.hireDate ? new Date(emp.hireDate).toLocaleDateString('es-EC') : '',
+                status: emp.isActive ? 'Activo' : 'Inactivo',
+                // Salary from active contract (plain Float — no decryption needed)
+                salary: emp.contracts?.[0]?.salary ?? '',
+                // Bank data: decrypt safely — show empty if key mismatch
+                bank: safeDecrypt(emp.bankName) ?? 'No registrado',
+                account: safeDecrypt(emp.accountNumber) ?? 'No registrado',
+            }));
+
+            const buffer = await exportService.generateExcel(rows, 'Empleados', columns);
 
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.setHeader('Content-Disposition', 'attachment; filename=empleados.xlsx');
@@ -46,15 +74,9 @@ class ExportController {
             if (!payroll.length) return res.status(404).json({ message: 'No hay datos para esta nómina' });
 
             const data = payroll.map(p => {
-                let bank = '';
-                let account = '';
-                try {
-                    bank = p.employee.bankName ? safeDecrypt(p.employee.bankName) : '';
-                    account = p.employee.accountNumber ? safeDecrypt(p.employee.accountNumber) : '';
-                } catch (e) {
-                    bank = 'ENC_ERROR';
-                    account = 'ENC_ERROR';
-                }
+                // safeDecrypt returns null on failure — use fallback string
+                const bank = safeDecrypt(p.employee.bankName) ?? 'No registrado';
+                const account = safeDecrypt(p.employee.accountNumber) ?? 'No registrado';
 
                 const period = new Date(p.payroll.period);
                 return {
@@ -62,7 +84,7 @@ class ExportController {
                     nombre: `${p.employee.firstName} ${p.employee.lastName}`,
                     cuenta: account,
                     banco: bank,
-                    monto: p.netSalary.toFixed(2),
+                    monto: Number(p.netSalary).toFixed(2),
                     concepto: `Pago Nómina ${period.getMonth() + 1}/${period.getFullYear()}`
                 };
             });
@@ -83,49 +105,12 @@ class ExportController {
      * Export pay stub to PDF
      */
     async exportPayStubPDF(req, res) {
-        try {
-            const { id } = req.params;
-            const record = await prisma.payrollDetail.findUnique({
-                where: { id },
-                include: { employee: true, payroll: true }
-            });
-
-            if (!record) return res.status(404).json({ message: 'Registro de nómina no encontrado' });
-
-            // Check authorization: Admin can see all, Employee only their own
-            if (req.user.role !== 'admin' && record.employeeId !== req.user.id) {
-                return res.status(403).json({ message: 'No tienes permiso para ver este rol de pago' });
-            }
-
-            // Parse bonuses and deductions from JSON strings
-            const bonuses = JSON.parse(record.bonuses || '[]');
-            const deductionsArr = JSON.parse(record.deductions || '[]');
-
-            // Construct data for PDF
-            const periodDate = new Date(record.payroll.period);
-            const pdfData = {
-                employee: record.employee,
-                period: { month: periodDate.getMonth() + 1, year: periodDate.getFullYear() },
-                totalEarnings: record.baseSalary + record.overtimeAmount + bonuses.reduce((a, b) => a + b.amount, 0),
-                totalDeductions: deductionsArr.reduce((a, b) => a + b.amount, 0),
-                netSalary: record.netSalary,
-                details: [
-                    { description: 'Sueldo Básico', amount: record.baseSalary, type: 'earning' },
-                    { description: 'Horas Extras', amount: record.overtimeAmount, type: 'earning' },
-                    ...bonuses.map(b => ({ description: b.name, amount: b.amount, type: 'earning' })),
-                    ...deductionsArr.map(d => ({ description: d.name, amount: d.amount, type: 'deduction' }))
-                ]
-            };
-
-            const buffer = await exportService.generatePayStubPDF(pdfData);
-
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=rol_pago_${record.employee.lastName}.pdf`);
-            res.send(buffer);
-        } catch (error) {
-            console.error('EXPORT_PAY_STUB_PDF_ERROR:', error);
-            res.status(500).json({ success: false, message: 'Error al generar PDF de rol de pago: ' + error.message });
-        }
+        // NOTE: PDF generation via jsPDF uses 'fs' which is not available in Vercel serverless.
+        // Returning 501 until this is migrated to a server-side PDF library (e.g. PDFKit).
+        return res.status(501).json({
+            success: false,
+            message: 'La exportación de rol de pago en PDF no está disponible en este entorno. Use la vista de impresión del navegador.'
+        });
     }
 }
 
