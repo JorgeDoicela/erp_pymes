@@ -1,14 +1,45 @@
 import React from 'react';
-import { FiInfo } from 'react-icons/fi';
+import { FiInfo, FiLock } from 'react-icons/fi';
 
-export const InfoItem = ({ label, value, isPrivate }) => (
-    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-        <label className="text-xs text-slate-500 uppercase font-bold tracking-wider block mb-1">
-            {label} {isPrivate && <span className="text-amber-600 ml-1 text-[10px] bg-amber-50 px-1 py-0.5 rounded border border-amber-100">PRIVADO</span>}
-        </label>
-        <p className="text-base font-medium text-slate-800">{value || 'N/A'}</p>
-    </div>
-);
+// Detecta si un valor parece ser texto cifrado (hex largo con ':') que nunca se desencriptó
+const looksEncrypted = (val) => {
+    if (!val || typeof val !== 'string') return false;
+    // Formato salt:iv:authTag:data  — cuatro segmentos hex largos
+    const parts = val.split(':');
+    return parts.length === 4 && parts.every(p => /^[0-9a-f]{10,}/i.test(p));
+};
+
+const sanitize = (value, isPrivate) => {
+    if (value === null || value === undefined || value === '') {
+        return isPrivate ? null : 'N/A';
+    }
+    if (looksEncrypted(String(value))) return null; // cifrado sin desencriptar
+    return value;
+};
+
+export const InfoItem = ({ label, value, isPrivate }) => {
+    const display = sanitize(value, isPrivate);
+    return (
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label className="text-xs text-slate-500 uppercase font-bold tracking-wider block mb-1">
+                {label}{' '}
+                {isPrivate && (
+                    <span className="text-amber-600 ml-1 text-[10px] bg-amber-50 px-1 py-0.5 rounded border border-amber-100">
+                        PRIVADO
+                    </span>
+                )}
+            </label>
+            {display !== null ? (
+                <p className="text-base font-medium text-slate-800">{display}</p>
+            ) : (
+                <p className="text-sm font-medium text-slate-400 italic flex items-center gap-1">
+                    <FiLock size={13} className="text-slate-300" />
+                    {isPrivate ? 'No registrado' : 'N/A'}
+                </p>
+            )}
+        </div>
+    );
+};
 
 export const EmptyState = ({ message }) => (
     <div className="col-span-full py-12 text-center text-slate-500 italic border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">

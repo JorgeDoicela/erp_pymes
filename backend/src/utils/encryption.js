@@ -92,23 +92,26 @@ export function decrypt(encryptedValue) {
 }
 
 /**
- * Desencripta de forma segura (si falla, retorna el valor original)
- * Útil para migración de datos de texto plano a encriptado.
+ * Desencripta de forma segura.
+ * Si el valor no está encriptado o la clave es incorrecta, retorna null.
+ * NUNCA devuelve el texto cifrado original para evitar exponer datos corruptos.
  * @param {string} value - Valor posiblemente encriptado
- * @returns {string} Valor desencriptado o el original
+ * @returns {string|null} Valor desencriptado, o null si falla
  */
 export function safeDecrypt(value) {
-    if (!value) return value;
+    if (!value) return null;
     try {
-        // Si tiene el formato correcto de 4 partes separadas por ':', intentar desencriptar
+        // Solo intentar desencriptar si tiene el formato correcto (4 partes con ':')
         if (typeof value === 'string' && value.split(':').length === 4) {
             return decrypt(value);
         }
-        // Si es un número como string (texto plano sin encriptar), retornarlo tal cual
-        return value;
+        // Si no tiene el formato encriptado, puede ser texto plano legítimo
+        // Solo retornarlo si parece texto legible (no hex puro largo)
+        const isLikelyPlainText = !/^[0-9a-f]{20,}$/i.test(value);
+        return isLikelyPlainText ? value : null;
     } catch (e) {
-        console.warn('[safeDecrypt] Decryption failed, returning original value:', e.message);
-        return value;
+        console.warn('[safeDecrypt] Decryption failed, returning null:', e.message);
+        return null;
     }
 }
 
