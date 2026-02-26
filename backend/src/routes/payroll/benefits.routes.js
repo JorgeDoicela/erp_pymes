@@ -5,6 +5,7 @@ import { authenticate, authorize } from '../../middleware/auth.middleware.js';
 const router = Router();
 
 router.post('/', authenticate, authorize(['admin', 'hr']), employeeBenefitController.create);
+router.post('/bulk', authenticate, authorize(['admin', 'hr']), employeeBenefitController.bulkCreate);
 router.get('/employee/:employeeId', authenticate, authorize(['admin', 'hr', 'employee']), employeeBenefitController.getByEmployee);
 router.put('/:id/deactivate', authenticate, authorize(['admin', 'hr']), employeeBenefitController.deactivate);
 

@@ -9,6 +9,15 @@ export const createBenefit = async (data) => {
     }
 };
 
+export const bulkCreateBenefit = async (data) => {
+    try {
+        const response = await api.post('/benefits/bulk', data);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al crear beneficios masivos');
+    }
+};
+
 export const getEmployeeBenefits = async (employeeId) => {
     try {
         const response = await api.get(`/benefits/employee/${employeeId}`);
