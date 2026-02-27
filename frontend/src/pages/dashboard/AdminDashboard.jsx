@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { adminModules } from '../../constants/modules';
 import * as intelligenceService from '../../services/intelligenceService';
+import jorgeImg from '../../assets/images/jorge_doicela.jpg';
 
 function AdminDashboard({ user, onLogout }) {
     const navigate = useNavigate();
@@ -242,7 +243,7 @@ function AdminDashboard({ user, onLogout }) {
                         >
                             <div className="relative w-full bg-slate-900 overflow-hidden group">
                                 <img
-                                    src="/jorge_doicela.jpg"
+                                    src={jorgeImg}
                                     alt="Jorge Doicela"
                                     className="w-full h-auto object-contain max-h-[60vh] mx-auto transition-transform duration-700 group-hover:scale-105"
                                 />
