@@ -7,6 +7,7 @@ import {
     FiActivity, FiZap
 } from 'react-icons/fi';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
+import DeveloperCard from '../../components/common/DeveloperCard';
 
 function Home() {
     const modules = [
@@ -322,6 +323,7 @@ function Home() {
             {/* Footer */}
             <footer className="py-8 bg-white border-t border-slate-200">
             </footer>
+            <DeveloperCard />
         </main>
     );
 }

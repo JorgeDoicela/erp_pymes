@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
+import DeveloperCard from '../../components/common/DeveloperCard';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -370,6 +371,7 @@ function Login({ onLogin }) {
                     )}
                 </motion.section>
             </div>
+            <DeveloperCard />
         </main>
     );
 }
