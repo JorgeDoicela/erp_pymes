@@ -105,8 +105,9 @@ const AssignEvaluation = () => {
             alert('Evaluaciones asignadas exitosamente');
             navigate('/performance');
         } catch (error) {
-            console.error(error);
-            alert('Error al asignar evaluaciones');
+            console.error('Full error:', error.response?.data);
+            const detail = error.response?.data?.detail || error.response?.data?.message || error.message;
+            alert(`Error al asignar evaluaciones: ${detail}`);
         } finally {
             setLoading(false);
         }

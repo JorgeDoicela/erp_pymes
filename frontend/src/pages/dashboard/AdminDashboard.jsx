@@ -18,6 +18,7 @@ function AdminDashboard({ user, onLogout }) {
     const [insights, setInsights] = useState([]);
     const [loadingInsights, setLoadingInsights] = useState(true);
     const [showDevModal, setShowDevModal] = useState(false);
+    const [pendingEvals, setPendingEvals] = useState(0);
 
     const getTimeBasedGreeting = () => {
         const hour = new Date().getHours();
@@ -90,7 +91,20 @@ function AdminDashboard({ user, onLogout }) {
             }
         };
 
+        const fetchPending = async () => {
+            try {
+                const data = await intelligenceService.getDashboard(); // Or a specific count service
+                // Just use the service we have for pending evaluations
+                const { getMyPendingEvaluations } = await import('../../services/evaluation.service');
+                const evaluations = await getMyPendingEvaluations();
+                setPendingEvals(evaluations.filter(e => e.status !== 'COMPLETED').length);
+            } catch (e) {
+                console.error('Error fetching pending evaluations:', e);
+            }
+        };
+
         fetchInsights();
+        fetchPending();
     }, []);
 
     return (
@@ -120,6 +134,19 @@ function AdminDashboard({ user, onLogout }) {
                         <p className="text-slate-500">Resumen de actividad del {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                     </div>
                     <div className="flex gap-3">
+                        {pendingEvals > 0 && (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => navigate('/performance/my-evaluations')}
+                                className="px-4 py-2 bg-orange-100 text-orange-700 border border-orange-200 rounded-lg text-sm font-bold hover:bg-orange-200 transition-colors flex items-center gap-2 relative"
+                            >
+                                <FiClipboard /> Realizar Evaluaciones
+                                <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-600 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white">
+                                    {pendingEvals}
+                                </span>
+                            </motion.button>
+                        )}
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}

@@ -84,16 +84,26 @@ export async function seedPerformance(prisma, employees) {
             });
 
             if (!existing) {
+                // Determine status and forced pending for admin
+                let currentStatus = status;
+
+                // For Q1 2024, force some to be PENDING so admin has work to do
+                if (template.period === '2024-Q1') {
+                    if (emp.email === 'kevin.arismendi@emplifi.com' || emp.email === 'lucia.paz@emplifi.com') {
+                        currentStatus = 'PENDING';
+                    }
+                }
+
                 const evaluation = await prisma.employeeEvaluation.create({
                     data: {
                         templateId: template.id,
                         employeeId: emp.id,
                         startDate: start,
                         endDate: end,
-                        status: status,
-                        finalScore: status === 'COMPLETED' ? parseFloat(score.toFixed(1)) : null,
-                        feedback: status === 'COMPLETED' ? `Evaluación generada automáticamente para perfil ${profile}` : null,
-                        createdAt: end // Simulate created in past
+                        status: currentStatus,
+                        finalScore: currentStatus === 'COMPLETED' ? parseFloat(score.toFixed(1)) : null,
+                        feedback: currentStatus === 'COMPLETED' ? `Evaluación generada automáticamente para perfil ${profile}` : null,
+                        createdAt: end
                     }
                 });
 
@@ -102,9 +112,9 @@ export async function seedPerformance(prisma, employees) {
                     data: {
                         evaluationId: evaluation.id,
                         reviewerId: admin.id,
-                        status: status,
-                        feedback: status === 'COMPLETED' ? 'Buen trabajo general' : null,
-                        score: status === 'COMPLETED' ? parseFloat(score.toFixed(1)) : null
+                        status: currentStatus,
+                        feedback: currentStatus === 'COMPLETED' ? 'Buen trabajo general' : null,
+                        score: currentStatus === 'COMPLETED' ? parseFloat(score.toFixed(1)) : null
                     }
                 });
             }

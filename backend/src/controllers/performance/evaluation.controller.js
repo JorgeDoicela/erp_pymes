@@ -1,5 +1,6 @@
 import prisma from '../../database/db.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
+import notificationService from '../../services/notifications/notificationService.js';
 
 export const createEvaluationTemplate = async (req, res) => {
     try {
@@ -61,13 +62,36 @@ export const assignEvaluation = async (req, res) => {
             return res.status(400).json({ message: "Faltan datos requeridos (plantilla, empleados, evaluadores, fechas)" });
         }
 
-        const assignments = [];
+        // Pre-fetch all data and VALIDATE all IDs exist in DB
+        const [allEmployees, template] = await Promise.all([
+            prisma.employee.findMany({
+                where: { id: { in: [...new Set([...employeeIds, ...evaluatorIds])] } }
+            }),
+            prisma.evaluationTemplate.findUnique({ where: { id: templateId } }).catch(() => null)
+        ]);
 
-        // Transaction ensures atomicity
-        await prisma.$transaction(async (tx) => {
-            for (const empId of employeeIds) {
-                // Create evaluation instance for employee
-                const evaluation = await tx.employeeEvaluation.create({
+        if (!template) {
+            return res.status(404).json({ message: "Plantilla de evaluación no encontrada" });
+        }
+
+        const employeesMap = Object.fromEntries(allEmployees.map(e => [e.id, e]));
+        const templateTitle = template.title || "Evaluación de Desempeño";
+
+        // Only use evaluatorIds that actually exist in the DB
+        const validEvaluatorIds = evaluatorIds.filter(id => employeesMap[id]);
+        const validEmployeeIds = employeeIds.filter(id => employeesMap[id]);
+
+        if (validEvaluatorIds.length === 0) {
+            return res.status(400).json({ message: "Ningún evaluador seleccionado es válido" });
+        }
+        if (validEmployeeIds.length === 0) {
+            return res.status(400).json({ message: "Ningún empleado seleccionado es válido" });
+        }
+
+        // Create ALL evaluations in PARALLEL (not sequential) - much faster
+        const createdEvaluations = await Promise.all(
+            validEmployeeIds.map(empId =>
+                prisma.employeeEvaluation.create({
                     data: {
                         templateId,
                         employeeId: empId,
@@ -75,83 +99,68 @@ export const assignEvaluation = async (req, res) => {
                         endDate: new Date(endDate),
                         status: 'PENDING',
                         reviewers: {
-                            create: evaluatorIds.map(reviewerId => ({
-                                reviewerId: reviewerId,
+                            create: validEvaluatorIds.map(reviewerId => ({
+                                reviewerId,
                                 status: 'PENDING'
                             }))
                         }
                     },
-                    include: {
-                        reviewers: true
-                    }
-                });
-                // 3. Notify Employee (Self-Evaluation if applicable, or just general assignment info)
-                // Assuming employee is also a reviewer (Self-Review) or just notified of the process
-                const employee = await tx.employee.findUnique({ where: { id: empId } });
+                    include: { reviewers: true }
+                })
+            )
+        );
 
-                // 4. Notify Reviewers
-                for (const reviewerId of evaluatorIds) {
-                    const reviewer = await tx.employee.findUnique({ where: { id: reviewerId } });
-                    if (reviewer) {
-                        try {
-                            // Use tx-safe values, but notification service uses independent prisma call usually. 
-                            // Ideally we pass the transaction to notification service or run after transaction commit.
-                            // For simplicity/safety, we'll queue them or run them await, assuming failure here shouldn't rollback the whole assignment? 
-                            // Better: Run AFTER transaction to avoid side-effects inside tx if not fully integrated.
-                            // BUT, here we are inside a loop inside a tx. 
-                            // We will collect data to notify AFTER the transaction.
-                        } catch (e) { }
-                    }
-                }
-                assignments.push({ evaluation, employee, evaluatorIds });
-            }
+        // Respond immediately - don't block on notifications
+        res.status(201).json({
+            message: `Se asignaron ${createdEvaluations.length} evaluaciones correctamente`,
+            count: createdEvaluations.length
         });
 
-        // Send Notifications AFTER Transaction (Best Practice to avoid locking/delays)
-        for (const item of assignments) {
-            const { evaluation, employee, evaluatorIds } = item;
-
-            // Notify Reviewers
-            for (const reviewerId of evaluatorIds) {
-                const reviewer = await prisma.employee.findUnique({ where: { id: reviewerId } });
-                if (reviewer) {
-                    await notificationService.sendEvaluationAssigned({
-                        recipientId: reviewer.id,
-                        recipientEmail: reviewer.email,
-                        title: "Evaluación de Desempeño", // Or fetch template title if available in scope
-                        employeeName: `${employee.firstName} ${employee.lastName}`,
-                        endDate: evaluation.endDate,
-                        evaluationId: evaluation.id,
-                        role: reviewer.id === employee.id ? 'SELF' : 'REVIEWER'
-                    });
+        // Fire-and-forget: send notifications and audit log AFTER response
+        setImmediate(async () => {
+            try {
+                for (const evaluation of createdEvaluations) {
+                    const employee = employeesMap[evaluation.employeeId];
+                    if (!employee) continue;
+                    for (const reviewerId of validEvaluatorIds) {
+                        const reviewer = employeesMap[reviewerId];
+                        if (reviewer) {
+                            await notificationService.sendEvaluationAssigned({
+                                recipientId: reviewer.id,
+                                recipientEmail: reviewer.email,
+                                title: templateTitle,
+                                employeeName: `${employee.firstName} ${employee.lastName}`,
+                                endDate: evaluation.endDate,
+                                evaluationId: evaluation.id,
+                                role: reviewer.id === employee.id ? 'SELF' : 'REVIEWER'
+                            }).catch(e => console.error('[ASSIGN] Notif error:', e.message));
+                        }
+                    }
                 }
+            } catch (e) {
+                console.error('[ASSIGN] Post-response error:', e.message);
             }
-        }
 
-        // Audit Log (Non-blocking)
-        if (req.user) {
-            const adminId = req.user.id;
-            const empNames = assignments.map(a => `${a.employee.firstName} ${a.employee.lastName}`).join(', ');
-
-            auditRepository.createLog({
-                entity: 'Evaluation',
-                entityId: templateId,
-                action: 'ASSIGN',
-                performedBy: adminId,
-                details: `Assigned evaluation template ${templateId} to ${assignments.length} employees: ${empNames}`
-            }).catch(err => console.error('Audit Log Error:', err));
-        }
-
-        res.status(201).json({
-            message: `Se asignaron ${assignments.length} evaluaciones correctamente`,
-            assignments
+            if (req.user) {
+                const empNames = createdEvaluations
+                    .map(ev => employeesMap[ev.employeeId])
+                    .filter(Boolean)
+                    .map(e => `${e.firstName} ${e.lastName}`)
+                    .join(', ');
+                auditRepository.createLog({
+                    entity: 'Evaluation', entityId: templateId, action: 'ASSIGN',
+                    performedBy: req.user.id,
+                    details: `Assigned to ${createdEvaluations.length} employees: ${empNames}`
+                }).catch(err => console.error('Audit Log Error:', err));
+            }
         });
 
     } catch (error) {
-        console.error("Error signing evaluation:", error);
-        res.status(500).json({ message: "Error al asignar evaluaciones" });
+        console.error("[ASSIGN] ❌ ERROR:", error.message, "| Code:", error.code);
+        res.status(500).json({ message: "Error al asignar evaluaciones", detail: error.message });
     }
 };
+
 
 export const getMyEvaluations = async (req, res) => {
     try {
