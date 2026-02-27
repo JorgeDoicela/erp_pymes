@@ -145,13 +145,23 @@ function Home() {
                         </p>
 
                         {/* CTA */}
-                        <Link
-                            to="/login"
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold shadow-lg shadow-blue-200 transition-all"
-                        >
-                            Comenzar Ahora
-                            <FiArrowRight className="w-5 h-5" />
-                        </Link>
+                        <div className="flex flex-col items-center gap-4">
+                            <Link
+                                to="/login"
+                                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold shadow-lg shadow-blue-200 transition-all"
+                            >
+                                Comenzar Ahora
+                                <FiArrowRight className="w-5 h-5" />
+                            </Link>
+
+                            <Link
+                                to="/careers"
+                                className="text-slate-500 flex items-center gap-2 hover:text-blue-600 font-medium transition-colors text-sm"
+                            >
+                                <FiBriefcase className="w-4 h-4" />
+                                Ver Vacantes Abiertas
+                            </Link>
+                        </div>
                     </motion.div>
                 </div>
             </section>

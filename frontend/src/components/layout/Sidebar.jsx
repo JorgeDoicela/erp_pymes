@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { adminModules, employeeModules } from '../../constants/modules';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
 
@@ -9,7 +9,9 @@ const Sidebar = ({ user, onLogout, onClose }) => {
     return (
         <aside className="h-full w-full bg-white border-r border-slate-200 flex flex-col text-slate-600 shadow-sm transition-all duration-300">
             <div className="p-6 flex items-center justify-between">
-                <img src={logoEmplifi} alt="EMPLIFI" className="h-10 w-auto object-contain" />
+                <Link to={user?.role === 'admin' ? '/admin' : '/empleado'} className="cursor-pointer">
+                    <img src={logoEmplifi} alt="EMPLIFI" className="h-10 w-auto object-contain hover:opacity-80 transition-opacity" />
+                </Link>
                 {onClose && (
                     <button onClick={onClose} className="md:hidden text-slate-400 hover:text-slate-600 transition-colors">
                         ✕
