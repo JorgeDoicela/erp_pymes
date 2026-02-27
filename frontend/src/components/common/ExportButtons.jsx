@@ -9,20 +9,21 @@ const ExportButtons = ({ type, id, fileName = 'export' }) => {
         try {
             let url = '';
             let extension = '';
+            const BASE = import.meta.env.VITE_API_URL || '/api';
 
             if (type === 'employees' && format === 'csv') {
-                url = '/export/employees/excel'; // same route, now returns CSV
+                url = `${BASE}/export/employees/excel`;
                 extension = 'csv';
             } else if (type === 'payroll_csv') {
-                url = `/export/payroll/${id}/csv`;
+                url = `${BASE}/export/payroll/${id}/csv`;
                 extension = 'csv';
             } else if (type === 'paystub' && format === 'pdf') {
-                url = `/export/paystub/${id}/pdf`;
+                url = `${BASE}/export/paystub/${id}/pdf`;
                 extension = 'pdf';
             }
 
             const token = localStorage.getItem('token');
-            const response = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

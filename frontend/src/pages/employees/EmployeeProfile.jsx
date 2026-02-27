@@ -281,37 +281,39 @@ const EmployeeProfile = ({ token, user }) => {
         <div className="space-y-6">
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
-                <div className="bg-white rounded-2xl p-8 mb-8 border border-slate-200 shadow-sm flex items-center gap-6">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-4xl font-bold text-blue-600 shadow-sm border border-blue-100">
-                        {employee.firstName?.charAt(0) || 'U'}
-                    </div>
-                    <div className="flex-1">
-                        <h1 className="text-3xl font-bold mb-1 text-slate-800">{employee.firstName} {employee.lastName}</h1>
-                        <p className="text-xl text-blue-600 font-medium">{employee.position}</p>
-                        <div className="flex gap-4 mt-2 text-sm text-slate-500">
-                            <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                                {employee.department}
-                            </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                {employee.email}
-                            </span>
+                <div className="bg-white rounded-2xl p-5 mb-6 border border-slate-200 shadow-sm">
+                    {/* Avatar + Info: siempre apilado */}
+                    <div className="flex flex-col items-center text-center gap-3 mb-4">
+                        <div className="w-20 h-20 flex-shrink-0 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-3xl font-bold text-blue-600 shadow-sm border border-blue-100">
+                            {employee.firstName?.charAt(0) || 'U'}
+                        </div>
+                        <div className="min-w-0 w-full">
+                            <h1 className="text-xl font-bold text-slate-800">{employee.firstName} {employee.lastName}</h1>
+                            <p className="text-base text-blue-600 font-medium">{employee.position}</p>
+                            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-500">
+                                <span className="flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    {employee.department}
+                                </span>
+                                <span className="flex items-center gap-1 max-w-full">
+                                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                    <span className="truncate">{employee.email}</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex gap-2">
-                        <button onClick={handleEditClick} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white text-sm font-medium shadow-sm hover:shadow-md">
+                    {/* Action buttons: row, centered */}
+                    <div className="flex flex-wrap justify-center gap-2 pt-3 border-t border-slate-100">
+                        <button onClick={handleEditClick} className="flex-1 min-w-[120px] max-w-[180px] px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-white text-sm font-medium shadow-sm text-center">
                             Editar Perfil
                         </button>
-                        <button onClick={() => navigate(-1)} className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium">
+                        <button onClick={() => navigate(-1)} className="flex-1 min-w-[80px] max-w-[120px] px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-sm font-medium text-center">
                             Volver
                         </button>
-                        {employee.isActive && (
+                        {employee.isActive && user?.role === 'admin' && (
                             <button
                                 onClick={() => {
                                     if (confirm('¿Está seguro de dar de baja a este empleado? Esta acción no se puede deshacer fácilmente.')) {
-                                        // Simple prompt for reason
                                         const reason = prompt('Ingrese motivo de salida (Renuncia, Despido, etc):');
                                         if (reason) {
                                             import('../../services/employees/employee.service').then(mod => {
@@ -327,7 +329,7 @@ const EmployeeProfile = ({ token, user }) => {
                                         }
                                     }
                                 }}
-                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors text-sm font-medium"
+                                className="flex-1 min-w-[100px] max-w-[140px] px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors text-white text-sm font-medium text-center"
                             >
                                 Dar de Baja
                             </button>
@@ -335,13 +337,26 @@ const EmployeeProfile = ({ token, user }) => {
                     </div>
                 </div>
 
-                {/* Tabs Navigation */}
-                <div className="flex border-b border-slate-200 mb-8 overflow-x-auto">
+                {/* Tabs — select en mobile, tab bar en md+ */}
+                {/* Mobile select */}
+                <div className="md:hidden mb-4">
+                    <select
+                        value={activeTab}
+                        onChange={e => setActiveTab(e.target.value)}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                    >
+                        {tabs.map(tab => (
+                            <option key={tab.id} value={tab.id}>{tab.label}</option>
+                        ))}
+                    </select>
+                </div>
+                {/* Desktop tab bar */}
+                <div className="hidden md:flex border-b border-slate-200 mb-6">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
+                            className={`px-5 py-3 font-medium transition-colors border-b-2 whitespace-nowrap text-sm ${activeTab === tab.id
                                 ? 'border-blue-600 text-blue-600'
                                 : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
                                 }`}
@@ -352,7 +367,7 @@ const EmployeeProfile = ({ token, user }) => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm min-h-[400px]">
+                <div className="bg-white rounded-2xl p-4 md:p-8 border border-slate-200 shadow-sm min-h-[400px]">
                     {activeTab === 'personal' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <InfoItem label="Cédula" value={employee.identityCard} />
