@@ -152,6 +152,13 @@ function App() {
           <Route path="/analytics/custom" element={<CustomReport />} />
         </Route>
 
+        {/* Employee Routes - Same MainLayout with sidebar */}
+        <Route element={<RequireAuth role="employee"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+          <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
+          <Route path="/empleado/asistencia" element={<EmployeeAttendance user={auth.user} />} />
+          <Route path="/empleado/ausencias" element={<EmployeeAbsences />} />
+        </Route>
+
         <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
           <Route path="/performance/results/:id" element={<EvaluationResults />} />
@@ -161,19 +168,6 @@ function App() {
           <Route path="/profile" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
           <Route path="/help" element={<HelpCenter />} />
         </Route>
-        {/* Employee Routes - Keep specialized layout or wrap if needed */}
-        {/* For now keeping them separate as verified in requirement */}
-        <Route path="/empleado" element={<RequireAuth role="employee"><EmployeeDashboard user={auth.user} onLogout={handleLogout} /></RequireAuth>} />
-        <Route path="/empleado/asistencia" element={<RequireAuth role="employee"><EmployeeAttendance user={auth.user} /></RequireAuth>} />
-        <Route path="/empleado/ausencias" element={<RequireAuth role="employee"><EmployeeAbsences /></RequireAuth>} />
-        <Route
-          path="/help"
-          element={
-            <RequireAuth>
-              <HelpCenter />
-            </RequireAuth>
-          }
-        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <footer className="mt-12 text-gray-600 text-sm text-center w-full pb-6">

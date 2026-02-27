@@ -6,9 +6,10 @@ const MainLayout = ({ user, onLogout }) => {
     const path = location.pathname;
 
     let title = "Panel de Control";
-    if (path.includes('/intelligence')) title = "Agente Inteligente";
+    if (path === '/empleado') title = "Portal del Empleado";
+    else if (path.includes('/intelligence')) title = "Agente Inteligente";
     else if (path.includes('/employees') || path === '/admin/register-employee') title = "Gestión de Empleados";
-    else if (path.includes('/attendance') || path.includes('/shifts') || path.includes('/absences')) title = "Gestión de Asistencia";
+    else if (path.includes('/attendance') || path.includes('/shifts') || path.includes('/absences') || path.includes('/asistencia') || path.includes('/ausencias')) title = "Gestión de Asistencia";
     else if (path.includes('/payroll') || path.includes('/my-payments')) title = "Nómina y Pagos";
     else if (path.includes('/performance') || path.includes('/evaluations')) title = "Evaluaciones y Desempeño";
     else if (path.includes('/recruitment') || path.includes('/careers')) title = "Reclutamiento";
