@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { motion, AnimatePresence } from 'framer-motion';
+import DeveloperCard from '../common/DeveloperCard';
 
 const DashboardLayout = ({ children, user, onLogout, title }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,6 +47,7 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
                     </div>
                 </main>
             </div>
+            <DeveloperCard />
         </div>
     );
 };
