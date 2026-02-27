@@ -40,12 +40,19 @@ export async function seedPerformance(prisma, employees) {
     };
 
     for (const emp of targetEmployees) {
-        // Asignar perfil de desempeño aleatorio: 'HIGH', 'LOW', 'AVERAGE', 'DECLINING'
-        const rand = Math.random();
+        // Asignar perfil de desempeño aleatorio o específico
         let profile = 'AVERAGE';
-        if (rand < 0.2) profile = 'HIGH';
-        else if (rand < 0.4) profile = 'LOW';
-        else if (rand < 0.5) profile = 'DECLINING';
+        if (emp.email === 'kevin.arismendi@emplifi.com' || emp.email === 'lucia.paz@emplifi.com') {
+            profile = 'LOW';
+        } else if (emp.email === 'andres.morales@emplifi.com') {
+            profile = 'DECLINING';
+        } else if (emp.email === 'sebastian.herrera@emplifi.com') {
+            profile = 'HIGH';
+        } else {
+            const rand = Math.random();
+            if (rand < 0.2) profile = 'HIGH';
+            else if (rand < 0.4) profile = 'LOW';
+        }
 
         for (const template of templates) {
             const { start, end } = getDatesForPeriod(template.period);
@@ -56,18 +63,18 @@ export async function seedPerformance(prisma, employees) {
                 status = 'PENDING';
             }
 
-            let score = 3.5; // Base score on a 1-5 scale
+            let score = 70; // Base score on a 0-100 scale
             if (status === 'COMPLETED') {
-                if (profile === 'HIGH') score = 4.2 + (Math.random() * 0.8);
-                else if (profile === 'LOW') score = 1.0 + (Math.random() * 1.5);
+                if (profile === 'HIGH') score = 85 + (Math.random() * 15);
+                else if (profile === 'LOW') score = 30 + (Math.random() * 30);
                 else if (profile === 'DECLINING') {
-                    // Q3 High, Q4 Mid, Q1 Low
-                    if (template.period === '2023-Q3') score = 4.5;
-                    if (template.period === '2023-Q4') score = 3.2;
-                    if (template.period === '2024-Q1') score = 1.8;
+                    // 2023-Q3 High, 2023-Q4 Mid, 2024-Q1 Low
+                    if (template.period === '2023-Q3') score = 92;
+                    if (template.period === '2023-Q4') score = 75;
+                    if (template.period === '2024-Q1') score = 48;
                 } else {
                     // AVERAGE
-                    score = 2.8 + (Math.random() * 1.4);
+                    score = 65 + (Math.random() * 25);
                 }
             }
 

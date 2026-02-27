@@ -26,13 +26,15 @@ export async function seedAttendance(prisma, employees) {
     console.log(`[DEBUG] Dates to seed: ${datesToSeed.length}`);
     console.log(`[DEBUG] Date range: ${ninetyDaysAgo.toISOString()} -> ${yesterday.toISOString()}`);
 
-    // Pick candidates for specific patterns
-    // Using simple logic to ensure we target employees actually in the list
     const employeesList = employees.filter(e => e.role !== 'admin');
-    console.log(`[DEBUG] Employees to seed (non-admin): ${employeesList.length}`);
 
-    const suspiciousCandidates = employeesList.slice(0, 3);
-    const lateCandidates = employeesList.slice(3, 6);
+    // Deterministic candidates for intelligence patterns
+    const suspiciousCandidates = employeesList.filter(e =>
+        ['kevin.arismendi@emplifi.com', 'lucia.paz@emplifi.com'].includes(e.email)
+    );
+    const lateCandidates = employeesList.filter(e =>
+        ['gabriela.torres@emplifi.com', 'camila.rodriguez@emplifi.com'].includes(e.email)
+    );
 
     const attendanceBatch = [];
 

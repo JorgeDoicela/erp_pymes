@@ -35,6 +35,19 @@ export async function seedGoals(prisma, employees) {
                         priority: 'MEDIUM',
                         status: 'PENDING',
                         progress: 0
+                    },
+                    {
+                        employeeId: emp.id,
+                        title: 'Optimización de API Crítica',
+                        description: 'Reducir tiempos de respuesta en 200ms',
+                        metric: 'ms',
+                        targetValue: 200,
+                        currentValue: 40,
+                        unit: 'ms',
+                        deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // En 15 días (En riesgo)
+                        priority: 'HIGH',
+                        status: 'IN_PROGRESS',
+                        progress: 20 // < 70%
                     }
                 ]
             });

@@ -35,8 +35,22 @@ export async function seedPayroll(prisma, employees) {
                 if (existing) continue;
 
                 const baseSalary = 1000 + Math.random() * 2000;
-                const overtime = Math.random() > 0.8 ? 100 : 0;
-                const bonuses = Math.random() > 0.7 ? [{ name: 'Desempeño', amount: 200 }] : [];
+                let overtime = Math.random() > 0.8 ? 100 : 0;
+                let overtimeHours = overtime > 0 ? 10 : 0;
+
+                // Anomaly: Sebastián extra hours
+                if (emp.email === 'sebastian.herrera@emplifi.com' && i === 0) {
+                    overtime = 800; // Extremely high
+                    overtimeHours = 45;
+                }
+
+                let bonuses = Math.random() > 0.7 ? [{ name: 'Desempeño', amount: 200 }] : [];
+
+                // Aggressive cost increase for latest month (i === 0)
+                if (i === 0) {
+                    bonuses.push({ name: 'Bono Especial Trimestral', amount: 800 });
+                }
+
                 const deductions = [{ name: 'IESS', amount: baseSalary * 0.0945 }];
 
                 const bonusAmount = bonuses.reduce((a, b) => a + b.amount, 0);
@@ -49,7 +63,7 @@ export async function seedPayroll(prisma, employees) {
                         employeeId: emp.id,
                         baseSalary: parseFloat(baseSalary.toFixed(2)),
                         workedDays: 30,
-                        overtimeHours: overtime > 0 ? 10 : 0,
+                        overtimeHours: overtimeHours,
                         overtimeAmount: parseFloat(overtime.toFixed(2)),
                         bonuses: JSON.stringify(bonuses),
                         deductions: JSON.stringify(deductions),
