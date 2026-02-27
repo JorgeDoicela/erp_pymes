@@ -395,6 +395,8 @@ export const attendanceService = {
             if (rec) {
                 response.checkIn = rec.checkIn;
                 response.checkOut = rec.checkOut;
+                response.breakStart = rec.breakStart;
+                response.breakEnd = rec.breakEnd;
 
                 // Add Location info
                 if (rec.entryLatitude && rec.entryLongitude) {

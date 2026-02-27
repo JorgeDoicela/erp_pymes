@@ -20,7 +20,10 @@ const translations = {
         'PAYMENT': 'PAGO',
         'FAILED_LOGIN': 'LOGIN FALLIDO',
         'LOGIN': 'INICIO SESIÓN',
-        'LOGOUT': 'CIERRE SESIÓN'
+        'LOGOUT': 'CIERRE SESIÓN',
+        'RESET_PASSWORD': 'RESTABLECER CONTRASEÑA',
+        'BULK_CREATE': 'CREACIÓN MASIVA',
+        'DEACTIVATE': 'DESACTIVAR'
     },
     entities: {
         'Employee': 'Empleado',

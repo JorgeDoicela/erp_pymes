@@ -1,24 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import attendanceService from '../../services/attendance/attendanceService';
 import systemService from '../../services/systemService';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { updateConsentTracking } from '../../services/employees/employee.service';
+import { FiShield, FiMapPin, FiCheckCircle, FiLock } from 'react-icons/fi';
+import { MdFingerprint } from 'react-icons/md';
 
 const DigitalMarker = ({ user }) => {
     const [currentTime, setCurrentTime] = useState(new Date());
-    // Si tenemos usuario, usamos su ID directamente (asumiendo user.id o user.employeeId)
     const [employeeId, setEmployeeId] = useState(user?.id || '');
-    const [status, setStatus] = useState(null); // 'WORKING', 'COMPLETED', 'NOT_STARTED'
+    const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showConsent, setShowConsent] = useState(false);
+    const [consenting, setConsenting] = useState(false);
+    const [consentStatus, setConsentStatus] = useState(user?.trackingConsent || false);
 
     const [message, setMessage] = useState({ type: '', text: '' });
     const [foundEmployee, setFoundEmployee] = useState(null);
     const [recordData, setRecordData] = useState(null);
     const [locationName, setLocationName] = useState(null);
 
-    // Modal State
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingAction, setPendingAction] = useState(null); // 'ENTRY' or 'EXIT'
+
+    const handleAcceptConsent = async () => {
+        setConsenting(true);
+        try {
+            await updateConsentTracking(true);
+
+            // Actualizar localStorage para que persista en la sesión actual
+            const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            savedUser.trackingConsent = true;
+            localStorage.setItem('user', JSON.stringify(savedUser));
+            setConsentStatus(true);
+
+            setShowConsent(false);
+            setMessage({ type: 'success', text: 'Consentimiento registrado correctamente.' });
+        } catch (err) {
+            setMessage({ type: 'error', text: 'No se pudo registrar el consentimiento.' });
+        } finally {
+            setConsenting(false);
+        }
+    };
+
+    const handleRejectConsent = async () => {
+        setConsenting(true);
+        try {
+            await updateConsentTracking(false);
+
+            const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            savedUser.trackingConsent = false;
+            localStorage.setItem('user', JSON.stringify(savedUser));
+            setConsentStatus(false);
+
+            setShowConsent(false);
+            setMessage({ type: 'info', text: 'Consentimiento retirado. No podrá marcar asistencia sin aceptar los términos.' });
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Error al procesar la solicitud.' });
+        } finally {
+            setConsenting(false);
+        }
+    };
 
     // Biometric
     const [biometricEnabled, setBiometricEnabled] = useState(false);
@@ -35,6 +78,10 @@ const DigitalMarker = ({ user }) => {
         if (user?.id) {
             setEmployeeId(user.id);
             checkStatus(user.id);
+            // Check if user has consented
+            if (user.trackingConsent === false) {
+                setShowConsent(true);
+            }
         }
     }, [user]);
 
@@ -430,15 +477,15 @@ const DigitalMarker = ({ user }) => {
                 {(status === 'NOT_STARTED' || status === 'COMPLETED' || status === null) && (
                     <button
                         onClick={() => initiateMark('ENTRY')}
-                        disabled={loading || status === 'COMPLETED'}
+                        disabled={loading || status === 'COMPLETED' || !consentStatus}
                         className={`
                             col-span-2 py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2
-                            ${status === 'COMPLETED'
+                            ${(status === 'COMPLETED' || !consentStatus)
                                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                                 : 'bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-emerald-500/20'}
                         `}
                     >
-                        <span className="text-2xl"></span>
+                        <span className="text-2xl">{!consentStatus && <FiLock className="mb-1" />}</span>
                         ENTRADA
                     </button>
                 )}
@@ -446,20 +493,23 @@ const DigitalMarker = ({ user }) => {
                 {/* Working Actions */}
                 {status === 'WORKING' && (
                     <>
-                        <button
-                            onClick={() => initiateMark('BREAK_START')}
-                            disabled={loading}
-                            className="py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-blue-500/20"
-                        >
-                            <span className="text-2xl"></span>
-                            ALMUERZO
-                        </button>
+                        {/* Only show lunch button if they haven't started lunch yet today */}
+                        {!recordData?.breakStart && (
+                            <button
+                                onClick={() => initiateMark('BREAK_START')}
+                                disabled={loading || !consentStatus}
+                                className={`py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 ${!consentStatus ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-blue-500/20'}`}
+                            >
+                                <span className="text-2xl">{!consentStatus && <FiLock />}</span>
+                                ALMUERZO
+                            </button>
+                        )}
                         <button
                             onClick={() => initiateMark('EXIT')}
-                            disabled={loading}
-                            className="py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-amber-500/20"
+                            disabled={loading || !consentStatus}
+                            className={`py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 ${!consentStatus ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-amber-500/20'} ${!recordData?.breakStart ? '' : 'col-span-2'}`}
                         >
-                            <span className="text-2xl"></span>
+                            <span className="text-2xl">{!consentStatus && <FiLock />}</span>
                             SALIDA
                         </button>
                     </>
@@ -479,7 +529,7 @@ const DigitalMarker = ({ user }) => {
             </div>
 
             {/* Status Footer */}
-            <div className="mt-8 text-center">
+            <div className="mt-8 flex flex-col items-center gap-4">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${status === 'WORKING' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                     status === 'COMPLETED' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                         status === 'ON_BREAK' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
@@ -490,6 +540,14 @@ const DigitalMarker = ({ user }) => {
                             status === 'COMPLETED' ? 'Jornada Completada' :
                                 'Sin registrar entrada'}
                 </span>
+
+                <button
+                    onClick={() => setShowConsent(true)}
+                    className="flex items-center gap-2 text-[10px] text-slate-400 hover:text-blue-500 transition-colors uppercase tracking-widest font-bold"
+                >
+                    <FiShield size={12} />
+                    Privacidad y Consentimiento
+                </button>
             </div>
 
             {/* In-situ History & Details */}
@@ -538,6 +596,19 @@ const DigitalMarker = ({ user }) => {
                             </div>
                         )}
 
+                        {/* Lunch Info if exists */}
+                        {recordData.breakStart && (
+                            <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                                <span className="text-slate-500">Almuerzo:</span>
+                                <div className="flex flex-col items-end">
+                                    <span className="font-mono text-slate-800">
+                                        {new Date(recordData.breakStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {recordData.breakEnd && ` - ${new Date(recordData.breakEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Exit Info if exists */}
                         {recordData.checkOut && (
                             <div className="flex justify-between items-center pt-2 border-t border-slate-200">
@@ -552,6 +623,107 @@ const DigitalMarker = ({ user }) => {
                     </div>
                 </motion.div>
             )}
+
+            {/* Tracking Consent Modal */}
+            <AnimatePresence>
+                {showConsent && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[60] flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl overflow-hidden relative"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500" />
+
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                    <FiShield size={32} />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold text-slate-800">Consentimiento de Seguridad</h3>
+                                    <p className="text-slate-500 text-sm">Protección de datos y verificación de identidad</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 mb-8">
+                                <div className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 italic text-slate-700">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-blue-500">
+                                        <MdFingerprint size={20} />
+                                    </div>
+                                    <div className="text-sm">
+                                        <p className="font-bold mb-1">Verificación Biométrica</p>
+                                        <p>Utilizamos la seguridad de tu dispositivo (huella o rostro) únicamente para confirmar que eres tú quien marca la asistencia.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 italic text-slate-700">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-500">
+                                        <FiMapPin size={20} />
+                                    </div>
+                                    <div className="text-sm">
+                                        <p className="font-bold mb-1">Geolocalización en Tiempo Real</p>
+                                        <p>Se capturará tu ubicación exacta al momento de marcar para validar el cumplimiento de zonas de trabajo configuradas.</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 italic text-slate-700">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+                                        <FiLock size={20} />
+                                    </div>
+                                    <div className="text-sm">
+                                        <p className="font-bold mb-1">Privacidad Asegurada</p>
+                                        <p>Esta información es confidencial y solo se utiliza con fines de registro laboral. No rastreamos tu ubicación fuera de los eventos de marcado.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={handleAcceptConsent}
+                                    disabled={consenting}
+                                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-xl shadow-slate-900/20 active:scale-[0.98]"
+                                >
+                                    {consenting ? (
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            <FiCheckCircle />
+                                            {consentStatus ? 'ACEPTO (ACTUALIZAR)' : 'ACEPTO Y ENTIENDO LOS TÉRMINOS'}
+                                        </>
+                                    )}
+                                </button>
+
+                                {consentStatus && (
+                                    <button
+                                        onClick={handleRejectConsent}
+                                        disabled={consenting}
+                                        className="w-full py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold transition-all"
+                                    >
+                                        RETIRAR CONSENTIMIENTO / RECHAZAR
+                                    </button>
+                                )}
+
+                                {!consentStatus && (
+                                    <button
+                                        onClick={() => setShowConsent(false)}
+                                        className="w-full py-2 text-slate-400 hover:text-slate-600 text-xs font-medium transition-all"
+                                    >
+                                        Cerrar sin aceptar
+                                    </button>
+                                )}
+                                <p className="text-[10px] text-center text-slate-400">
+                                    Al hacer clic, autorizas el uso de estas tecnologías para tu registro de asistencia según las políticas de la empresa.
+                                </p>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

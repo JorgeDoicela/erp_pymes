@@ -319,6 +319,36 @@ export class EmployeeController {
       });
     }
   }
+
+  /**
+   * POST /employees/consent
+   * Actualizar consentimiento de rastreo
+   */
+  async updateConsent(req, res) {
+    try {
+      const id = req.user.id;
+      const { consent } = req.body;
+
+      const employee = await employeeService.updateEmployee(id, {
+        trackingConsent: !!consent,
+        trackingConsentDate: new Date()
+      }, id);
+
+      res.status(200).json({
+        success: true,
+        message: 'Consentimiento actualizado',
+        data: {
+          trackingConsent: employee.trackingConsent,
+          trackingConsentDate: employee.trackingConsentDate
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Error al actualizar consentimiento'
+      });
+    }
+  }
 }
 
 export default new EmployeeController();

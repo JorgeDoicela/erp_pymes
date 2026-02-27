@@ -60,6 +60,8 @@ model Employee {
   enforceGeofence      Boolean                 @default(false)
   resetPasswordToken   String?
   resetPasswordExpires DateTime?
+  trackingConsent      Boolean                 @default(false)
+  trackingConsentDate  DateTime?
 
   @@index([email])
   @@index([department])

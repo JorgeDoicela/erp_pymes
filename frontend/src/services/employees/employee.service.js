@@ -159,3 +159,13 @@ export const getDepartments = async (token) => {
         throw new Error('Error al obtener departamentos');
     }
 };
+
+export const updateConsentTracking = async (consent, token) => {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    try {
+        const response = await api.post('/employees/consent', { consent }, config);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al actualizar consentimiento');
+    }
+};
