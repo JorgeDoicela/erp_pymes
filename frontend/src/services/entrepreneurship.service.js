@@ -32,10 +32,18 @@ const entrepreneurshipService = {
         const response = await api.patch(`/entrepreneurship/milestones/${id}`, data);
         return response.data;
     },
+    deleteMilestone: async (id) => {
+        const response = await api.delete(`/entrepreneurship/milestones/${id}`);
+        return response.data;
+    },
 
     // Actualizaciones (Updates)
     addUpdate: async (data) => {
         const response = await api.post('/entrepreneurship/updates', data);
+        return response.data;
+    },
+    deleteUpdate: async (id) => {
+        const response = await api.delete(`/entrepreneurship/updates/${id}`);
         return response.data;
     },
 

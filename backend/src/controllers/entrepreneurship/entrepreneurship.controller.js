@@ -105,18 +105,31 @@ export const addMilestone = async (req, res) => {
 export const updateMilestone = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, completedDate, kanbanColumn } = req.body;
+        const { title, description, status, dueDate, completedDate, kanbanColumn } = req.body;
         const milestone = await prisma.entrepreneurshipMilestone.update({
             where: { id },
             data: { 
-                status, 
-                completedDate: completedDate ? new Date(completedDate) : null,
-                kanbanColumn
+                ...(title && { title }),
+                ...(description !== undefined && { description }),
+                ...(status && { status }),
+                ...(dueDate && { dueDate: new Date(dueDate) }),
+                completedDate: completedDate ? new Date(completedDate) : undefined,
+                ...(kanbanColumn && { kanbanColumn })
             }
         });
         res.json(milestone);
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar hito', details: error.message });
+    }
+};
+
+export const deleteMilestone = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.entrepreneurshipMilestone.delete({ where: { id } });
+        res.json({ message: 'Hito eliminado' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar hito', details: error.message });
     }
 };
 
@@ -130,6 +143,16 @@ export const addUpdate = async (req, res) => {
         res.status(201).json(update);
     } catch (error) {
         res.status(500).json({ error: 'Error al añadir actualización', details: error.message });
+    }
+};
+
+export const deleteUpdate = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.entrepreneurshipUpdate.delete({ where: { id } });
+        res.json({ message: 'Actualización eliminada' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar actualización', details: error.message });
     }
 };
 

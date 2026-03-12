@@ -7,7 +7,9 @@ import {
     deleteProject,
     addMilestone,
     updateMilestone,
-    addUpdate
+    deleteMilestone,
+    addUpdate,
+    deleteUpdate
 } from '../controllers/entrepreneurship/entrepreneurship.controller.js';
 import * as intelligence from '../controllers/entrepreneurship/intelligence.controller.js';
 import * as capTable from '../controllers/entrepreneurship/capTable.controller.js';
@@ -48,8 +50,10 @@ router.post('/market', validation.updateMarketSize);
 // Rutas de hitos (Milestones)
 router.post('/milestones', addMilestone);
 router.patch('/milestones/:id', updateMilestone);
+router.delete('/milestones/:id', deleteMilestone);
 
 // Rutas de actualizaciones (Bitácora)
 router.post('/updates', addUpdate);
+router.delete('/updates/:id', deleteUpdate);
 
 export default router;

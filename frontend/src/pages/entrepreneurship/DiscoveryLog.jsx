@@ -9,6 +9,8 @@ const DiscoveryLog = () => {
     const [interviews, setInterviews] = useState([]);
     const [market, setMarket] = useState({ tam: '0', sam: '0', som: '0' });
     const [loading, setLoading] = useState(true);
+    const [showInterviewModal, setShowInterviewModal] = useState(false);
+    const [newInterview, setNewInterview] = useState({ customerName: '', feedback: '', sentiment: 'POSITIVE', insights: '' });
     // ...
     useEffect(() => {
         fetchData();
