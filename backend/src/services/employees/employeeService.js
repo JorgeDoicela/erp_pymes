@@ -33,7 +33,18 @@ export class EmployeeService {
       throw new Error('La cédula ya está registrada');
     }
 
-    return await employeeRepository.create(employeeData);
+    const employee = await employeeRepository.create(employeeData);
+
+    // Audit logging (Non-blocking)
+    auditRepository.createLog({
+      entity: 'Employee',
+      entityId: employee.id,
+      action: 'CREATE',
+      performedBy: 'System', // Often triggered by admin or recruitment
+      details: { firstName: employee.firstName, lastName: employee.lastName, department: employee.department }
+    }).catch(err => console.error('Error logging employee creation:', err));
+
+    return employee;
   }
 
   /**
@@ -147,7 +158,18 @@ export class EmployeeService {
     if (!id || typeof id !== 'string') {
       throw new Error('ID de empleado inválido');
     }
-    return await employeeRepository.delete(id);
+    const deleted = await employeeRepository.delete(id);
+
+    // Audit logging (Non-blocking)
+    auditRepository.createLog({
+      entity: 'Employee',
+      entityId: id,
+      action: 'DELETE',
+      performedBy: 'Admin',
+      details: `Deleted employee ${id}`
+    }).catch(err => console.error('Error logging employee deletion:', err));
+
+    return deleted;
   }
 
   /**
@@ -264,9 +286,8 @@ export class EmployeeService {
    * @param {string} id - ID del empleado
    * @returns {Promise<Array>} Historial de cambios
    */
-  async getEmployeeHistory(id) {
-    // Audit logging disabled - return empty array
-    return [];
+   async getEmployeeHistory(id) {
+    return await auditRepository.getLogsByEntityId(id);
   }
 
   /**

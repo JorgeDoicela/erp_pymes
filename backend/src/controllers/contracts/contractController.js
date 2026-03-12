@@ -1,4 +1,5 @@
 import contractService from '../../services/contracts/contractService.js';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 import path from 'path';
 
 class ContractController {
@@ -18,6 +19,14 @@ class ContractController {
             };
 
             const contract = await contractService.createContract(contractData);
+
+            auditRepository.createLog({
+                entity: 'Contract',
+                entityId: contract.id,
+                action: 'CREATE',
+                performedBy: req.user?.id || 'Admin',
+                details: `Contrato registrado para empleado ${employeeId}. Tipo: ${type}, Salario: ${salary}`
+            }).catch(err => console.error('Audit Log Error:', err));
 
             res.status(201).json({
                 success: true,

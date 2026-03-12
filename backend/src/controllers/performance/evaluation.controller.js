@@ -21,6 +21,14 @@ export const createEvaluationTemplate = async (req, res) => {
             }
         });
 
+        auditRepository.createLog({
+            entity: 'Evaluation',
+            entityId: template.id,
+            action: 'CREATE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Plantilla de evaluación creada: ${title}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(201).json(template);
     } catch (error) {
         console.error("Error creating evaluation template:", error);

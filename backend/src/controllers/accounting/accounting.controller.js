@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 const prisma = new PrismaClient();
 
 // ==========================================
@@ -38,6 +39,15 @@ export const createPeriod = async (req, res) => {
                 status: 'OPEN'
             }
         });
+
+        auditRepository.createLog({
+            entity: 'AccountingPeriod',
+            entityId: period.id,
+            action: 'CREATE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Periodo creado: ${month}/${year}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(201).json(period);
     } catch (error) {
         res.status(500).json({ message: 'Error creating period', error: error.message });
@@ -55,6 +65,15 @@ export const togglePeriodStatus = async (req, res) => {
             where: { id },
             data: { status: period.status === 'OPEN' ? 'CLOSED' : 'OPEN' }
         });
+
+        auditRepository.createLog({
+            entity: 'AccountingPeriod',
+            entityId: id,
+            action: 'UPDATE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Estado cambiado a ${updated.status}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(200).json(updated);
     } catch (error) {
         res.status(500).json({ message: 'Error updating period', error: error.message });
@@ -114,6 +133,14 @@ export const createAccount = async (req, res) => {
                 parentId: parentId || null
             }
         });
+        auditRepository.createLog({
+            entity: 'AccountingAccount',
+            entityId: account.id,
+            action: 'CREATE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Cuenta creada: ${code} - ${name} (${type})`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(201).json(account);
     } catch (error) {
         res.status(500).json({ message: 'Error creating account', error: error.message });
@@ -128,6 +155,15 @@ export const updateAccount = async (req, res) => {
             where: { id },
             data: { name, description, isTransactional }
         });
+
+        auditRepository.createLog({
+            entity: 'AccountingAccount',
+            entityId: id,
+            action: 'UPDATE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Cuenta actualizada: ${updated.code}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(200).json(updated);
     } catch (error) {
         res.status(500).json({ message: 'Error updating account', error: error.message });
@@ -144,6 +180,15 @@ export const deleteAccount = async (req, res) => {
         if (hasMovements > 0) return res.status(400).json({ message: 'No se puede eliminar una cuenta que ya tiene movimientos contables.' });
 
         await prisma.accountingAccount.delete({ where: { id } });
+
+        auditRepository.createLog({
+            entity: 'AccountingAccount',
+            entityId: id,
+            action: 'DELETE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Cuenta eliminada: ID ${id}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(200).json({ message: 'Cuenta eliminada' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting account', error: error.message });
@@ -185,6 +230,15 @@ export const updateCostCenter = async (req, res) => {
             where: { id },
             data: { name, description }
         });
+
+        auditRepository.createLog({
+            entity: 'CostCenter',
+            entityId: id,
+            action: 'UPDATE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Centro de costo actualizado: ${updated.code}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(200).json(updated);
     } catch (error) {
         res.status(500).json({ message: 'Error updating cost center', error: error.message });
@@ -198,6 +252,15 @@ export const deleteCostCenter = async (req, res) => {
         if (hasMovements > 0) return res.status(400).json({ message: 'No se puede eliminar un centro de costo con movimientos registrados.' });
 
         await prisma.costCenter.delete({ where: { id } });
+
+        auditRepository.createLog({
+            entity: 'CostCenter',
+            entityId: id,
+            action: 'DELETE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Centro de costo eliminado: ID ${id}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(200).json({ message: 'Centro de costo eliminado' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting cost center', error: error.message });
@@ -294,6 +357,14 @@ export const createJournalEntry = async (req, res) => {
             return entry;
         });
 
+        auditRepository.createLog({
+            entity: 'JournalEntry',
+            entityId: result.id,
+            action: 'CREATE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Asiento creado: ${entryNumber} por $${totalDebit}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(201).json(result);
     } catch (error) {
         res.status(500).json({ message: 'Error creating journal entry', error: error.message });
@@ -341,6 +412,14 @@ export const postJournalEntry = async (req, res) => {
             data: { status: 'POSTED' }
         });
 
+        auditRepository.createLog({
+            entity: 'JournalEntry',
+            entityId: id,
+            action: 'CONFIRM',
+            performedBy: req.user?.id || 'Admin',
+            details: `Asiento mayorizado: ${updatedEntry.entryNumber}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(200).json({
             message: 'Asiento mayorizado exitosamente. Los saldos han sido afectados.',
             entry: updatedEntry
@@ -358,6 +437,15 @@ export const deleteJournalEntry = async (req, res) => {
         if (entry.status === 'POSTED') return res.status(400).json({ message: 'No se puede eliminar un asiento ya mayorizado.' });
 
         await prisma.journalEntry.delete({ where: { id } });
+
+        auditRepository.createLog({
+            entity: 'JournalEntry',
+            entityId: id,
+            action: 'DELETE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Asiento eliminado: ID ${id}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
         res.status(200).json({ message: 'Asiento eliminado' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting journal entry', error: error.message });
@@ -585,7 +673,6 @@ export const integratePayroll = async (req, res) => {
             });
         }
 
-        // 5. Crear el Asiento Contable
         const dateObj = new Date(payroll.period);
         const entry = await prisma.journalEntry.create({
             data: {
@@ -601,6 +688,14 @@ export const integratePayroll = async (req, res) => {
                 lines: { create: lines }
             }
         });
+
+        auditRepository.createLog({
+            entity: 'JournalEntry',
+            entityId: entry.id,
+            action: 'GENERATE',
+            performedBy: req.user?.id || 'Admin',
+            details: `Integración de nómina realizada. Asiento: ${entry.entryNumber}`
+        }).catch(err => console.error('Audit Log Error:', err));
 
         res.json({
             message: 'Nexus: Nómina importada exitosamente como BORRADOR',

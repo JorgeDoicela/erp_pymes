@@ -2,6 +2,7 @@ import recruitmentRepository from '../../repositories/recruitment/recruitmentRep
 import prisma from '../../database/db.js';
 import bcrypt from 'bcryptjs';
 import emailService from '../notifications/emailService.js';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 
 export const recruitmentService = {
     async createVacancy(data, userId) {
@@ -11,7 +12,7 @@ export const recruitmentService = {
             throw new Error("Faltan campos obligatorios");
         }
 
-        return recruitmentRepository.createVacancy({
+        const vacancy = await recruitmentRepository.createVacancy({
             ...data,
             salaryMin: salaryMin ? parseFloat(salaryMin) : null,
             salaryMax: salaryMax ? parseFloat(salaryMax) : null,
@@ -19,6 +20,17 @@ export const recruitmentService = {
             status: 'OPEN',
             postedById: userId
         });
+
+        // Audit Log
+        auditRepository.createLog({
+            entity: 'JobVacancy',
+            entityId: vacancy.id,
+            action: 'CREATE',
+            performedBy: userId,
+            details: `Created vacancy: ${title} in ${location}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
+        return vacancy;
     },
 
     async getVacancies() {
@@ -38,7 +50,17 @@ export const recruitmentService = {
     },
 
     async updateVacancyStatus(id, status) {
-        return recruitmentRepository.updateVacancy(id, { status });
+        const vacancy = await recruitmentRepository.updateVacancy(id, { status });
+        
+        auditRepository.createLog({
+            entity: 'JobVacancy',
+            entityId: id,
+            action: 'UPDATE',
+            performedBy: 'Admin',
+            details: `Status updated to ${status}`
+        }).catch(err => console.error('Audit Log Error:', err));
+
+        return vacancy;
     },
 
     async applyToVacancy(id, applicantData, resumeUrl) {
@@ -85,6 +107,15 @@ export const recruitmentService = {
 
     async updateApplicationStatus(id, status, sendEmail = true) {
         const application = await recruitmentRepository.updateApplication(id, { status });
+
+        // Audit Log
+        auditRepository.createLog({
+            entity: 'JobApplication',
+            entityId: id,
+            action: 'UPDATE',
+            performedBy: 'HR',
+            details: `Application status updated to ${status}`
+        }).catch(err => console.error('Audit Log Error:', err));
 
         // Enviar email si es rechazado y la opción está habilitada
         if (status === 'REJECTED' && sendEmail) {
@@ -199,6 +230,15 @@ export const recruitmentService = {
                     data: { status: 'CLOSED' }
                 });
             }
+
+            // 5. Audit Log (Inside transaction to ensure atomicity with hiring)
+            await auditRepository.createLog({
+                entity: 'Employee',
+                entityId: newEmployee.id,
+                action: 'CREATE',
+                performedBy: 'System/Recruitment',
+                details: `Candidato contratado desde vacante: ${application.vacancy.title}. Contrato: ${contractType}, Salario: ${salary}`
+            });
 
             return newEmployee;
         }).then(async (newEmployee) => {
