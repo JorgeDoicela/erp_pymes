@@ -16,6 +16,7 @@ import { seedAudit } from './seeds/audit.js';
 import { seedPayrollConfig } from './seeds/payroll_config.js';
 import { seedNotifications } from './seeds/notifications.js';
 import { seedAccounting, seedJournalEntries } from './seeds/accounting.js';
+import { seedEntrepreneurship } from './seeds/entrepreneurship.js';
 
 // ─── Utilidades de conexión ───────────────────────────────────────────────────
 
@@ -165,6 +166,11 @@ async function main() {
     await sleep(1000);
     await withRetry('JOURNAL_ENTRIES', (prisma) => seedJournalEntries(prisma))
         .catch((e) => console.error('❌ Error en seedJournalEntries:', e.message));
+
+    // 11. Emprendimiento (AISLADO)
+    console.log('\n[11/11] Configurando Incubadora de Startups...');
+    await withRetry('ENTREPRENEURSHIP', (prisma) => seedEntrepreneurship(prisma, employees, admin))
+        .catch((e) => console.error('❌ Error en seedEntrepreneurship:', e.message));
 
     console.log('\n╔══════════════════════════════════════╗');
     console.log('║        SEED COMPLETADO ✅            ║');

@@ -76,6 +76,11 @@ const TrialBalance = lazy(() => import('./pages/accounting/TrialBalance.jsx'));
 const PeriodsManagement = lazy(() => import('./pages/accounting/PeriodsManagement.jsx'));
 const CostCenterManagement = lazy(() => import('./pages/accounting/CostCenterManagement.jsx'));
 
+// Emprendimiento (Incubadora)
+const EntrepreneurshipDashboard = lazy(() => import('./pages/entrepreneurship/Dashboard.jsx'));
+const EntrepreneurshipForm = lazy(() => import('./pages/entrepreneurship/ProjectForm.jsx'));
+const EntrepreneurshipDetails = lazy(() => import('./pages/entrepreneurship/ProjectDetails.jsx'));
+
 function App() {
   const [auth, setAuth] = useState(() => {
     // Intentar recuperar sesión al cargar
@@ -154,6 +159,11 @@ function App() {
           <Route path="/admin/accounting/periods" element={<PeriodsManagement />} />
           <Route path="/admin/accounting/cost-centers" element={<CostCenterManagement />} />
 
+          {/* Incubadora de Emprendimiento */}
+          <Route path="/admin/entrepreneurship" element={<EntrepreneurshipDashboard />} />
+          <Route path="/admin/entrepreneurship/create" element={<EntrepreneurshipForm />} />
+          <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
+
           <Route path="/performance" element={<EvaluationDashboard />} />
           <Route path="/performance/create" element={<CreateEvaluation />} />
           <Route path="/performance/assign" element={<AssignEvaluation />} />
@@ -174,6 +184,9 @@ function App() {
           <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
           <Route path="/empleado/asistencia" element={<EmployeeAttendance user={auth.user} />} />
           <Route path="/empleado/ausencias" element={<EmployeeAbsences />} />
+          <Route path="/entrepreneurship" element={<EntrepreneurshipDashboard />} />
+          <Route path="/entrepreneurship/create" element={<EntrepreneurshipForm />} />
+          <Route path="/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
         </Route>
 
         <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>

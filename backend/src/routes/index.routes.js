@@ -23,6 +23,7 @@ import { runSeed } from '../controllers/admin/seedController.js';
 
 
 import biometricRoutes from './biometric/biometric.routes.js';
+import entrepreneurshipRoutes from './entrepreneurship.routes.js';
 
 const router = Router();
 // Ruta de prueba
@@ -73,5 +74,6 @@ router.use('/export', exportRoutes);
 router.use('/biometric', biometricRoutes);
 router.use('/intelligence', intelligenceRoutes);
 router.use('/accounting', accountingRoutes);
+router.use('/entrepreneurship', entrepreneurshipRoutes);
 
 export default router;

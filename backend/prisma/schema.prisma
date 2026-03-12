@@ -62,6 +62,9 @@ model Employee {
   resetPasswordExpires DateTime?
   trackingConsent      Boolean                 @default(false)
   trackingConsentDate  DateTime?
+  entrepreneurships    Entrepreneurship[]       @relation("ProjectOwner")
+  projectMemberships   EntrepreneurshipMember[]
+  projectMentorships   EntrepreneurshipMentor[]
 
   @@index([email])
   @@index([department])
@@ -652,4 +655,183 @@ model JournalLine {
   @@index([journalEntryId])
   @@index([accountId])
   @@map("acc_journal_lines")
+}
+
+// ============================================================================
+// MODULO DE EMPRENDIMIENTO (INCUBADORA PROFESIONAL - AISLADO)
+// ============================================================================
+
+model Entrepreneurship {
+  id              String                   @id @default(cuid())
+  title           String
+  description     String
+  industry        String?
+  stage           String                   @default("IDEATION") // IDEATION, VALIDATION, MVP, SCALING
+  status          String                   @default("ACTIVE")   // ACTIVE, COMPLETED, SUSPENDED
+  valuation       Float?                   @default(0)
+  currency        String                   @default("USD")
+  equityAvailable Float?                   @default(100)
+  budget          Float?                   @default(0)
+  expenses        Float?                   @default(0)
+  innovationScore Float?                   @default(0)
+  logoUrl         String?
+  videoPitchUrl   String?
+  
+  // Relación con el creador (Dueño principal)
+  ownerId         String
+  owner           Employee                 @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  // Relaciones del módulo
+  members         EntrepreneurshipMember[]
+  mentors         EntrepreneurshipMentor[]
+  milestones      EntrepreneurshipMilestone[]
+  documents       EntrepreneurshipDocument[]
+  updates         EntrepreneurshipUpdate[]
+  equities        EntrepreneurshipEquity[]
+  fundingRounds   EntrepreneurshipFundingRound[]
+  interviews      EntrepreneurshipInterview[]
+  targetMarket    EntrepreneurshipTargetMarket?
+  
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@map("ent_projects")
+}
+
+model EntrepreneurshipEquity {
+  id               String           @id @default(cuid())
+  projectId        String
+  holderName       String           
+  percentage       Float
+  role             String           // Founder, Investor, Advisor, Employee
+  vestingTerms     String?          
+  
+  project          Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime         @default(now())
+
+  @@index([projectId])
+  @@map("ent_equities")
+}
+
+model EntrepreneurshipFundingRound {
+  id               String           @id @default(cuid())
+  projectId        String
+  roundName        String           // Pre-Seed, Seed, Series A
+  amountRaised     Float
+  valuation        Float
+  date             DateTime
+  investors        String?
+  
+  project          Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime         @default(now())
+
+  @@index([projectId])
+  @@map("ent_funding_rounds")
+}
+
+model EntrepreneurshipInterview {
+  id               String           @id @default(cuid())
+  projectId        String
+  customerName     String
+  feedback         String
+  sentiment        String?          // POSITIVE, NEUTRAL, NEGATIVE
+  insights         String?
+  
+  project          Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime         @default(now())
+
+  @@index([projectId])
+  @@map("ent_interviews")
+}
+
+model EntrepreneurshipTargetMarket {
+  id               String           @id @default(cuid())
+  projectId        String           @unique
+  tam              Float?           // Total Addressable Market
+  sam              Float?           // Serviceable Addressable Market
+  som              Float?           // Serviceable Obtainable Market
+  
+  project          Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  updatedAt        DateTime         @updatedAt
+
+  @@map("ent_target_market")
+}
+
+model EntrepreneurshipMember {
+  id              String           @id @default(cuid())
+  projectId       String
+  employeeId      String?          // Opcional si es externo
+  externalName    String?
+  externalEmail   String?
+  role            String           // CEO, CTO, Developer, etc.
+  
+  project         Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee        Employee?        @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([employeeId])
+  @@map("ent_members")
+}
+
+model EntrepreneurshipMentor {
+  id              String           @id @default(cuid())
+  projectId       String
+  employeeId      String?          // Un experto interno de la empresa
+  mentorName      String
+  specialty       String
+  email           String?
+  
+  project         Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee        Employee?        @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@map("ent_mentors")
+}
+
+model EntrepreneurshipMilestone {
+  id              String           @id @default(cuid())
+  projectId       String
+  title           String
+  description     String?
+  dueDate         DateTime
+  completedDate   DateTime?
+  status          String           @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  
+  project         Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("ent_milestones")
+}
+
+model EntrepreneurshipDocument {
+  id              String           @id @default(cuid())
+  projectId       String
+  title           String           // Pitch Deck, Financial Plan, etc.
+  fileUrl         String
+  fileType        String?
+  version         String           @default("1.0")
+  
+  project         Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("ent_documents")
+}
+
+model EntrepreneurshipUpdate {
+  id              String           @id @default(cuid())
+  projectId       String
+  title           String
+  content         String
+  type            String           @default("GENERAL") // PROGRESS, PIVOT, FINANCIAL, NEWS
+  
+  project         Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime         @default(now())
+
+  @@index([projectId])
+  @@map("ent_updates")
 }
