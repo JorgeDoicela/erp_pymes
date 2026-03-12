@@ -108,7 +108,7 @@ app.use('/uploads', authenticate, protectStaticFiles, (req, res, next) => {
         const fullPath = path.join(STORAGE_CONFIG.PATHS.RESUMES, filename);
         
         if (fs.existsSync(fullPath)) {
-            return res.download(fullPath, filename);
+            return res.sendFile(fullPath);
         } else {
             return res.status(404).json({
                 message: 'Archivo no encontrado',
