@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getJournalEntries, createJournalEntry, postJournalEntry, getAccounts, getCostCenters, deleteJournalEntry } from '../../services/accounting.service';
+import { getJournalEntries, createJournalEntry, postJournalEntry, getAccounts, getCostCenters, deleteJournalEntry, getPeriods } from '../../services/accounting.service';
 import { FiBook, FiPlus, FiCheckCircle, FiAlertCircle, FiEye, FiTrash2, FiX, FiInfo, FiRefreshCw } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,8 @@ const JournalEntries = () => {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState(null);
+    const [periods, setPeriods] = useState([]);
+    const [selectedPeriod, setSelectedPeriod] = useState('');
 
     // Estado para el formulario del nuevo asiento
     const [formData, setFormData] = useState({
@@ -27,7 +29,7 @@ const JournalEntries = () => {
     const location = useLocation();
 
     useEffect(() => {
-        fetchData();
+        fetchPeriods();
     }, [location]);
 
     useEffect(() => {
@@ -41,31 +43,16 @@ const JournalEntries = () => {
         }
     }, [entries, location]);
 
-    const fetchPeriods = async () => {
-        try {
-            const data = await getPeriods();
-            setPeriods(data);
-            if (data.length > 0 && !selectedPeriod) {
-                const latest = data.find(p => p.status === 'OPEN')?.id || data[0].id;
-                setSelectedPeriod(latest);
-                fetchData(latest); // Call fetchData with the newly selected period
-            } else if (selectedPeriod) {
-                fetchData(selectedPeriod); // Call fetchData with the existing selected period
-            }
-        } catch (error) {
-            toast.error('Error al cargar periodos');
-        }
-    };
-
-    const fetchData = async (periodId = selectedPeriod) => {
-        if (!periodId) {
+    const fetchData = async (periodId) => {
+        const idToUse = periodId || selectedPeriod;
+        if (!idToUse) {
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
             const [entriesData, accountsData, centersData] = await Promise.all([
-                getJournalEntries(periodId),
+                getJournalEntries(idToUse),
                 getAccounts(),
                 getCostCenters()
             ]);
@@ -76,6 +63,25 @@ const JournalEntries = () => {
             toast.error('Error al cargar datos');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchPeriods = async () => {
+        try {
+            const data = await getPeriods();
+            setPeriods(data);
+            if (data.length > 0) {
+                // If there's an open period and no selection yet, pick it
+                if (!selectedPeriod) {
+                    const latest = data.find(p => p.status === 'OPEN')?.id || data[0].id;
+                    setSelectedPeriod(latest);
+                    fetchData(latest);
+                } else {
+                    fetchData(selectedPeriod);
+                }
+            }
+        } catch (error) {
+            toast.error('Error al cargar periodos');
         }
     };
 

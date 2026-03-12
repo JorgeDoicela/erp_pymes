@@ -5,7 +5,10 @@ export const authenticate = (req, res, next) => {
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ message: 'No autenticado: Falta token' });
+            return res.status(401).json({
+                message: 'No autenticado: Falta token o formato inválido',
+                code: 'AUTH_MISSING_TOKEN'
+            });
         }
 
         const token = authHeader.split(' ')[1];
@@ -19,7 +22,11 @@ export const authenticate = (req, res, next) => {
         next();
     } catch (error) {
         console.error('Auth Middleware Error:', error.message);
-        return res.status(401).json({ message: 'Token inválido o expirado' });
+        return res.status(401).json({
+            message: 'Token inválido o expirado: ' + error.message,
+            code: 'AUTH_INVALID_TOKEN',
+            detail: error.message
+        });
     }
 };
 
