@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEmployees } from '../../hooks/employees/useEmployees';
 import { InputField, SelectField } from './components/EmployeeHelpers';
 import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS } from '../../constants/employeeOptions';
-import { validateCedula, validateEmail, validatePhone, validateSalary, validateDates } from '../../utils/validationUtils';
+import { validateCedula, validateEmail, validatePhone, validateSalary, validateDates, validateAge } from '../../utils/validationUtils';
 
 const RegisterEmployee = ({ token }) => {
     const navigate = useNavigate();
@@ -85,6 +85,9 @@ const RegisterEmployee = ({ token }) => {
         const salaryErr = validateSalary(formData.salary);
         if (salaryErr) errors.salary = salaryErr;
 
+        const ageErr = validateAge(formData.birthDate);
+        if (ageErr) errors.birthDate = ageErr;
+
         const dateErr = validateDates(formData.birthDate, formData.hireDate);
         if (dateErr) errors.dates = dateErr; // Error general de coherencia
 
@@ -146,7 +149,7 @@ const RegisterEmployee = ({ token }) => {
                                 <InputField label="Nombre" name="firstName" value={formData.firstName} onChange={handleChange} />
                                 <InputField label="Apellido" name="lastName" value={formData.lastName} onChange={handleChange} />
                                 <InputField label="Cédula" name="identityCard" value={formData.identityCard} onChange={handleChange} error={fieldErrors.identityCard} />
-                                <InputField label="Fecha de Nacimiento" name="birthDate" type="date" value={formData.birthDate} onChange={handleChange} />
+                                <InputField label="Fecha de Nacimiento" name="birthDate" type="date" value={formData.birthDate} onChange={handleChange} error={fieldErrors.birthDate} />
                                 <SelectField label="Estado Civil" name="civilStatus" value={formData.civilStatus} onChange={handleChange}
                                     options={CIVIL_STATUS_OPTIONS}
                                 />

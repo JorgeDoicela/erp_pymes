@@ -60,6 +60,30 @@ export const validateSalary = (salary) => {
 };
 
 /**
+ * Validador de Edad (Mínimo 18 años)
+ * @param {string} birthDate 
+ * @param {Date} referenceDate - Fecha contra la cual comparar (por defecto hoy)
+ */
+export const validateAge = (birthDate, referenceDate = new Date()) => {
+    if (!birthDate) return "La fecha de nacimiento es obligatoria";
+    const birth = new Date(birthDate);
+    const ref = new Date(referenceDate);
+    
+    let age = ref.getFullYear() - birth.getFullYear();
+    const m = ref.getMonth() - birth.getMonth();
+    
+    if (m < 0 || (m === 0 && ref.getDate() < birth.getDate())) {
+        age--;
+    }
+
+    if (age < 18) {
+        const dateStr = ref.toLocaleDateString();
+        return `El empleado debe haber tenido al menos 18 años (Ley de Ecuador). Edad a la fecha ${dateStr}: ${age} años.`;
+    }
+    return null;
+};
+
+/**
  * Validador de Coherencia de Fechas
  */
 export const validateDates = (birthDate, hireDate) => {
@@ -68,9 +92,10 @@ export const validateDates = (birthDate, hireDate) => {
     const h = new Date(hireDate);
 
     if (b >= h) return "La fecha de nacimiento debe ser anterior a la de contratación";
-
-    const age = new Date().getFullYear() - b.getFullYear();
-    if (age < 18) return "El empleado debe ser mayor de edad";
+    
+    // Validar que al momento de contratación tuviera 18 años
+    const ageAtHireError = validateAge(birthDate, hireDate);
+    if (ageAtHireError) return ageAtHireError;
 
     return null;
 };

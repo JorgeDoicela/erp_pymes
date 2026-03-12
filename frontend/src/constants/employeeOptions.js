@@ -1,17 +1,16 @@
 export const CIVIL_STATUS_OPTIONS = [
-    { value: 'single', label: 'Soltero/a' },
-    { value: 'married', label: 'Casado/a' },
-    { value: 'divorced', label: 'Divorciado/a' },
-    { value: 'widowed', label: 'Viudo/a' }
+    { value: 'Soltero', label: 'Soltero/a' },
+    { value: 'Casado', label: 'Casado/a' },
+    { value: 'Divorciado', label: 'Divorciado/a' },
+    { value: 'Viudo', label: 'Viudo/a' },
+    { value: 'Union Libre', label: 'Unión Libre' }
 ];
 
 export const CONTRACT_TYPES = [
-    { value: 'permanent', label: 'Indefinido' },
-    { value: 'fixed', label: 'Plazo Fijo' },
-    { value: 'contractor', label: 'Prestación de Servicios' },
-    { value: 'internship', label: 'Prácticas' },
-    { value: 'temporal', label: 'Temporal' },
-    { value: 'project', label: 'Por Obra' } // Added based on CreateContractModal options
+    { value: 'Indefinido', label: 'Indefinido' },
+    { value: 'Temporal', label: 'Temporal' },
+    { value: 'Por Obra', label: 'Por Obra' },
+    { value: 'Prácticas', label: 'Prácticas' }
 ];
 
 export const ACCOUNT_TYPES = [
