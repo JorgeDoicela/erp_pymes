@@ -53,7 +53,15 @@ export const updateVacancyStatus = async (req, res) => {
 export const applyToVacancy = async (req, res) => {
     try {
         const { id } = req.params;
-        const resumeUrl = req.file ? req.file.path : null;
+        // Normalizar ruta para almacenamiento consistente (evitar backslashes en Windows y rutas absolutas /tmp en Vercel)
+        let resumeUrl = null;
+        if (req.file) {
+            resumeUrl = req.file.path.replace(/\\/g, '/');
+            // En Vercel req.file.path puede incluir /tmp/, lo limpiamos para que sea relativo al punto de montaje /uploads
+            if (resumeUrl.includes('uploads/')) {
+                resumeUrl = resumeUrl.substring(resumeUrl.indexOf('uploads/'));
+            }
+        }
         const application = await recruitmentService.applyToVacancy(id, req.body, resumeUrl);
         res.status(201).json({ message: "Postulación enviada exitosamente", applicationId: application.id });
     } catch (error) {
