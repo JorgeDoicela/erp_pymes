@@ -99,6 +99,7 @@ const RegisterEmployee = ({ token }) => {
         }
 
         try {
+            console.log('[RegisterEmployee] Submitting salary:', formData.salary, 'Converted to number:', Number(formData.salary));
             const dataToSend = {
                 ...formData,
                 salary: Number(formData.salary)

@@ -221,8 +221,8 @@ export class EmployeeService {
         throw new Error(`El empleado debe ser mayor de edad hoy. Edad actual: ${ageToday} años.`);
       }
       // "La edad máxima para contratación será de 65 años..."
-      if (age > 65) {
-        throw new Error(`El empleado supera la edad máxima de contratación (65 años). Edad actual: ${age} años.`);
+      if (ageToday > 65) {
+        throw new Error(`El empleado supera la edad máxima de contratación (65 años). Edad actual: ${ageToday} años.`);
       }
 
       // "Todo empleado debe contar con documentación de identidad válida..."

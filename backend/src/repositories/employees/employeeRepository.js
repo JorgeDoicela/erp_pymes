@@ -30,6 +30,7 @@ export class EmployeeRepository {
       } = data;
 
       // Encriptar el salario para el registro de Empleado (Legacy/Seguridad)
+      console.log(`[EmployeeRepository.create] Raw salary received: ${salary}`);
       const encryptedSalary = encryptSalary(salary);
 
       // Preparar contrato inicial
@@ -246,6 +247,7 @@ export class EmployeeRepository {
       const updateData = { ...rest };
 
       if (salary !== undefined) {
+        console.log(`[EmployeeRepository.update] Salary update received: ${salary}`);
         updateData.salary = encryptSalary(salary);
       }
       if (updateData.bankName) {

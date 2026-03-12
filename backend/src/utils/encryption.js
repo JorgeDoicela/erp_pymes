@@ -124,6 +124,7 @@ export function encryptSalary(salary) {
     if (typeof salary !== 'number' || isNaN(salary)) {
         throw new Error('El salario debe ser un número válido');
     }
+    console.log(`[encryptSalary] Encrypting salary: ${salary} (Type: ${typeof salary})`);
     return encrypt(salary);
 }
 
@@ -136,7 +137,17 @@ export function decryptSalary(encryptedSalary) {
     if (!encryptedSalary) return null;
     try {
         const decrypted = safeDecrypt(encryptedSalary);
-        const salary = parseFloat(decrypted);
+        let salary = parseFloat(decrypted);
+        
+        // RNF-20: Prevenir errores de precisión de punto flotante (ej: 1999.999999999998 -> 2000)
+        if (!isNaN(salary)) {
+            const originalSalary = salary;
+            salary = Math.round(salary * 100) / 100;
+            if (originalSalary !== salary) {
+                console.log(`[decryptSalary] Precision adjustment: ${originalSalary} -> ${salary}`);
+            }
+        }
+
         // Si no es un número válido (ej: clave de encriptación diferente), retornar null
         // en vez de lanzar un error que cause un 500
         if (isNaN(salary)) {

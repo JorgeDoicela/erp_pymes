@@ -247,6 +247,7 @@ const EmployeeProfile = ({ token, user }) => {
 
         try {
             const targetId = id || employee?.id;
+            console.log('[EmployeeProfile] Saving salary edit:', editForm.salary, 'Converted to number:', Number(editForm.salary));
             await updateEmployee(targetId, {
                 ...editForm,
                 salary: Number(editForm.salary),
