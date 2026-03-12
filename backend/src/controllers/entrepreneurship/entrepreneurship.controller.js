@@ -105,12 +105,13 @@ export const addMilestone = async (req, res) => {
 export const updateMilestone = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, completedDate } = req.body;
+        const { status, completedDate, kanbanColumn } = req.body;
         const milestone = await prisma.entrepreneurshipMilestone.update({
             where: { id },
             data: { 
                 status, 
-                completedDate: completedDate ? new Date(completedDate) : null 
+                completedDate: completedDate ? new Date(completedDate) : null,
+                kanbanColumn
             }
         });
         res.json(milestone);

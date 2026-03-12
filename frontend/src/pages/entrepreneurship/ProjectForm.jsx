@@ -16,7 +16,8 @@ const ProjectForm = () => {
         stage: 'IDEATION',
         ownerId: JSON.parse(localStorage.getItem('user'))?.id,
         budget: '',
-        innovationScore: 70
+        innovationScore: 70,
+        pitchNarrative: ''
     });
 
     const handleChange = (e) => {
@@ -167,6 +168,21 @@ const ProjectForm = () => {
                                             <span className="font-black text-indigo-600 text-lg w-8">{formData.innovationScore}</span>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1 flex items-center gap-2">
+                                        <FiFileText className="text-indigo-500" /> Elevator Pitch (Narrativa)
+                                    </label>
+                                    <textarea 
+                                        name="pitchNarrative"
+                                        rows="4"
+                                        value={formData.pitchNarrative}
+                                        onChange={handleChange}
+                                        placeholder="Escribe tu pitch aquí para que nuestra IA lo optimice..."
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 font-medium text-slate-700 leading-relaxed"
+                                    />
+                                    <p className="text-[10px] text-slate-400 font-medium px-2 italic">* Este texto será analizado por inteligencia de datos para proyectar el éxito.</p>
                                 </div>
 
                                 <div className="space-y-4">

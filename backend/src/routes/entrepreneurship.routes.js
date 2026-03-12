@@ -24,6 +24,8 @@ router.delete('/:id', deleteProject);
 
 // Inteligencia y BI (NUEVO)
 router.get('/:id/analytics', intelligence.getProjectAnalytics);
+router.get('/:id/pitch-analysis', intelligence.getPitchAnalysis);
+router.get('/:id/growth-metrics', intelligence.getGrowthData);
 
 // Gestión de Capital e Inversión (NUEVO)
 router.get('/:id/captable', capTable.getCapTable);

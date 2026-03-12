@@ -12,13 +12,16 @@ import { toast } from 'react-hot-toast';
 import AnalyticsView from './AnalyticsView';
 import CapTableManager from './CapTableManager';
 import DiscoveryLog from './DiscoveryLog';
+import KanbanRoadmap from './KanbanRoadmap';
+import PitchOptimizer from './PitchOptimizer';
+import GrowthMetrics from './GrowthMetrics';
 
 const ProjectDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState('roadmap');
 
     useEffect(() => {
         fetchProject();
@@ -57,11 +60,13 @@ const ProjectDetails = () => {
     );
 
     const tabs = [
-        { id: 'overview', label: 'Roadmap', icon: <FiActivity /> },
-        { id: 'team', label: 'Equipo', icon: <FiUsers /> },
+        { id: 'roadmap', label: 'Roadmap', icon: <FiActivity /> },
         { id: 'analytics', label: 'BI Analytics', icon: <FiBarChart2 /> },
+        { id: 'growth', label: 'Growth', icon: <FiTrendingUp /> },
+        { id: 'pitch', label: 'Pitch AI', icon: <FiZap /> },
         { id: 'captable', label: 'CapTable', icon: <FiPieChart /> },
         { id: 'validation', label: 'Validación', icon: <FiMessageSquare /> },
+        { id: 'team', label: 'Equipo', icon: <FiUsers /> },
         { id: 'updates', label: 'Bitácora', icon: <FiMapPin /> }
     ];
 
@@ -131,50 +136,12 @@ const ProjectDetails = () => {
 
             {/* Tab Content Panels */}
             <div className="animate-fadeIn pb-12">
-                {activeTab === 'overview' && (
-                    <div className="space-y-8">
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                            <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-2xl font-black text-slate-800">Roadmap Estratégico</h3>
-                                <button className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-all">
-                                    <FiPlus /> Definir Hito
-                                </button>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {project.milestones?.length === 0 ? (
-                                    <div className="col-span-2 bg-slate-50 rounded-[2rem] p-12 text-center text-slate-400 text-sm italic border-2 border-dashed border-slate-200">
-                                        No hay hitos definidos todavía para este trayecto.
-                                    </div>
-                                ) : (
-                                    project.milestones.map(m => (
-                                        <div 
-                                            key={m.id}
-                                            onClick={() => handleUpdateMilestone(m.id, m.status)}
-                                            className={`group cursor-pointer p-6 rounded-[2rem] border-2 transition-all flex items-center gap-6 ${
-                                                m.status === 'COMPLETED' ? 'border-emerald-100 bg-emerald-50/30' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-50/50'
-                                            }`}
-                                        >
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all ${
-                                                m.status === 'COMPLETED' ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-indigo-500 group-hover:scale-110'
-                                            }`}>
-                                                {m.status === 'COMPLETED' ? <FiCheckCircle /> : <FiCircle />}
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className={`text-lg font-bold ${m.status === 'COMPLETED' ? 'text-emerald-900 line-through opacity-70' : 'text-slate-800'}`}>
-                                                    {m.title}
-                                                </h4>
-                                                <p className="text-sm text-slate-500 mt-1 flex items-center gap-2">
-                                                    <FiCalendar /> {new Date(m.dueDate).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {activeTab === 'roadmap' && <KanbanRoadmap />}
+                {activeTab === 'analytics' && <AnalyticsView />}
+                {activeTab === 'growth' && <GrowthMetrics />}
+                {activeTab === 'pitch' && <PitchOptimizer />}
+                {activeTab === 'captable' && <CapTableManager />}
+                {activeTab === 'validation' && <DiscoveryLog />}
 
                 {activeTab === 'team' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -62,17 +62,89 @@ export async function calculateSuccessScore(projectId) {
     factors.push({ name: 'Finanzas', score: financialScore, weight: 15 });
 
     // 5. Innovación y Potencial (10%)
-    const innovationScore = (project.innovationScore || 0) / 10; // Asumiendo que innovationScore es 0-100
+    const innovationScore = (project.innovationScore || 0) / 10;
     score += innovationScore;
     factors.push({ name: 'Innovación', score: innovationScore, weight: 10 });
 
+    // 6. Tracción (Nuevo - 5% Bonus)
+    const hasUsers = project.growthUsers > 0 ? 5 : 0;
+    score += hasUsers;
+
     return {
-        totalScore: Math.round(score),
+        totalScore: Math.min(Math.round(score), 100),
         factors,
         level: score > 80 ? 'Tier 5 (Ready to Scale)' : 
                score > 60 ? 'Tier 4 (MVP Validated)' : 
                score > 40 ? 'Tier 3 (Validation Phase)' : 
                score > 20 ? 'Tier 2 (Ideation High)' : 'Tier 1 (Emerging)'
+    };
+}
+
+/**
+ * AI Pitch Optimizer: Analiza la narrativa del proyecto
+ * Provee críticas constructivas y sugerencias.
+ */
+export async function analyzePitchNarrative(projectId) {
+    const project = await prisma.entrepreneurship.findUnique({
+        where: { id: projectId }
+    });
+
+    if (!project || !project.pitchNarrative) {
+        return { 
+            score: 0, 
+            analysis: "No se ha proporcionado una narrativa de pitch para analizar.",
+            suggestions: ["Escribe un elevator pitch claro", "Describe el problema y la solución"]
+        };
+    }
+
+    const narrative = project.pitchNarrative;
+    const suggestions = [];
+    let score = 50; // Base score
+
+    // Heurísticas simples de análisis AI
+    if (narrative.length < 100) {
+        score -= 20;
+        suggestions.push("El pitch es muy corto. Intenta expandir más sobre el modelo de negocio.");
+    }
+    
+    if (!narrative.toLowerCase().includes("problema") && !narrative.toLowerCase().includes("necesidad")) {
+        score -= 10;
+        suggestions.push("Falta definir claramente el problema que resuelves.");
+    }
+
+    if (!narrative.toLowerCase().includes("mercado") && !narrative.toLowerCase().includes("clientes")) {
+        score -= 10;
+        suggestions.push("Incluye datos sobre el tamaño del mercado o el perfil del cliente.");
+    }
+
+    if (narrative.toLowerCase().includes("único") || narrative.toLowerCase().includes("revolucionario")) {
+        score += 5; // Bonus por confianza (o penalización si es muy cliché, pero aquí lo tomamos como positivo)
+    }
+
+    return {
+        score: Math.max(score, 0),
+        analysis: score > 70 ? "Pitch sólido y bien estructurado." : "El pitch necesita más claridad y datos de validación.",
+        suggestions: suggestions.length > 0 ? suggestions : ["El pitch es excelente, considera añadir testimonios."]
+    };
+}
+
+/**
+ * Obtiene métricas de crecimiento (Growth Metrics)
+ */
+export async function getGrowthMetrics(projectId) {
+    const project = await prisma.entrepreneurship.findUnique({
+        where: { id: projectId }
+    });
+
+    if (!project) return null;
+
+    return {
+        mrr: project.growthMRR || 0,
+        users: project.growthUsers || 0,
+        cac: project.growthCAC || 0,
+        ltv: project.growthLTV || 0,
+        unitEconomics: project.growthCAC > 0 ? (project.growthLTV / project.growthCAC).toFixed(2) : 0,
+        isSustainable: (project.growthLTV / project.growthCAC) > 3
     };
 }
 

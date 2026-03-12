@@ -1,0 +1,9 @@
+-- AlterTable
+ALTER TABLE "ent_milestones" ADD COLUMN     "kanbanColumn" TEXT NOT NULL DEFAULT 'BACKLOG';
+
+-- AlterTable
+ALTER TABLE "ent_projects" ADD COLUMN     "growthCAC" DOUBLE PRECISION DEFAULT 0,
+ADD COLUMN     "growthLTV" DOUBLE PRECISION DEFAULT 0,
+ADD COLUMN     "growthMRR" DOUBLE PRECISION DEFAULT 0,
+ADD COLUMN     "growthUsers" INTEGER DEFAULT 0,
+ADD COLUMN     "pitchNarrative" TEXT;

@@ -676,6 +676,13 @@ model Entrepreneurship {
   innovationScore Float?                   @default(0)
   logoUrl         String?
   videoPitchUrl   String?
+  pitchNarrative  String?                  // Para el análisis de IA
+  
+  // Growth Metrics (Métricas de Crecimiento)
+  growthMRR       Float?                   @default(0)
+  growthUsers     Int?                     @default(0)
+  growthCAC       Float?                   @default(0)
+  growthLTV       Float?                   @default(0)
   
   // Relación con el creador (Dueño principal)
   ownerId         String
@@ -800,6 +807,7 @@ model EntrepreneurshipMilestone {
   dueDate         DateTime
   completedDate   DateTime?
   status          String           @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  kanbanColumn    String           @default("BACKLOG") // BACKLOG, IN_PROGRESS, REVIEW, DONE
   
   project         Entrepreneurship @relation(fields: [projectId], references: [id], onDelete: Cascade)
 

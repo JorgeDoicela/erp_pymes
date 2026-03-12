@@ -21,6 +21,17 @@ async function main() {
 
     const absences = await prisma.absenceRequest.count();
     console.log(`Absence Requests: ${absences}`);
+
+    const entrepreneurships = await prisma.entrepreneurship.count();
+    console.log(`Entrepreneurship Projects: ${entrepreneurships}`);
+
+    const adminUser = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
+    console.log('--- Admin User Check ---');
+    console.log(adminUser);
+
+    const summary = await prisma.employee.findMany({ select: { email: true, role: true } });
+    console.log('--- Quick Summary ---');
+    summary.forEach(s => console.log(`${s.email} [${s.role}]`));
 }
 
 main()

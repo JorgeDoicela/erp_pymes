@@ -41,6 +41,8 @@ const entrepreneurshipService = {
 
     // Analytics (BI)
     getAnalytics: (id) => api.get(`/entrepreneurship/${id}/analytics`),
+    getPitchAnalysis: (id) => api.get(`/entrepreneurship/${id}/pitch-analysis`),
+    getGrowthMetrics: (id) => api.get(`/entrepreneurship/${id}/growth-metrics`),
 
     // Gestión de Capital (Equity)
     getCapTable: (id) => api.get(`/entrepreneurship/${id}/captable`),
