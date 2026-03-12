@@ -56,7 +56,7 @@ const PitchOptimizer = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-                        <FiCpu className="text-indigo-600" /> AI Pitch Optimizer
+                        <FiCpu className="text-indigo-600" /> Optimizador de Pitch IA
                     </h2>
                     <p className="text-slate-500 text-sm font-medium">Refina tu propuesta de valor con inteligencia predictiva.</p>
                 </div>
@@ -97,7 +97,7 @@ const PitchOptimizer = () => {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>
                                 <div className="relative z-10">
                                     <div className="flex justify-between items-center mb-8">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">AI Scorecard</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Scorecard de IA</span>
                                         <div className="text-5xl font-black">{analysis.score}<span className="text-lg opacity-30">/100</span></div>
                                     </div>
                                     <div className="space-y-4">

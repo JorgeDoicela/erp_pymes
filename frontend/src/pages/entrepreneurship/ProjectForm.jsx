@@ -54,7 +54,7 @@ const ProjectForm = () => {
                     </div>
                     <div className="relative z-10">
                         <h2 className="text-3xl font-black flex items-center gap-3 tracking-tight">
-                             Lanzar Startup Profesional
+                             Lanzar Emprendimiento Profesional
                         </h2>
                         <p className="opacity-60 text-sm mt-2 font-medium">Inicia tu proceso de incubación con estándares de nivel internacional.</p>
                     </div>
@@ -153,7 +153,7 @@ const ProjectForm = () => {
                                     </div>
                                     <div className="space-y-3">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1 flex items-center gap-2">
-                                            <FiActivity className="text-amber-500" /> Innovation Score (0-100)
+                                            <FiActivity className="text-amber-500" /> Puntaje de Innovación (0-100)
                                         </label>
                                         <div className="flex items-center gap-4 bg-slate-50 px-6 py-4 rounded-2xl border border-slate-100">
                                             <input 

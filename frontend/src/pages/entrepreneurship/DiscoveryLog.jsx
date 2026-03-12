@@ -96,7 +96,7 @@ const DiscoveryLog = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <FiMessageSquare className="text-indigo-600" /> Customer Discovery
+                        <FiMessageSquare className="text-indigo-600" /> Descubrimiento de Clientes
                     </h2>
                     <p className="text-slate-500 text-sm">Validación de mercado basada en feedback real de clientes.</p>
                 </div>
@@ -141,7 +141,7 @@ const DiscoveryLog = () => {
                                 <p className="text-sm text-slate-600 leading-relaxed italic mb-4">"{interview.feedback}"</p>
                                 {interview.insights && (
                                     <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50">
-                                        <span className="text-[10px] font-black text-indigo-600 uppercase block mb-1 tracking-wider">Key Insights:</span>
+                                        <span className="text-[10px] font-black text-indigo-600 uppercase block mb-1 tracking-wider">Aprendizajes Clave:</span>
                                         <p className="text-xs text-indigo-900 font-medium">{interview.insights}</p>
                                     </div>
                                 )}
@@ -156,12 +156,12 @@ const DiscoveryLog = () => {
                         <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
                             <FiTarget className="text-2xl" />
                         </div>
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Market Opportunity</h3>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Oportunidad de Mercado</h3>
                     </div>
                     
                     <div className="space-y-6">
                         <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 transition-all hover:bg-white hover:shadow-md">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">TAM (Total Addressable Market)</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">TAM (Mercado Total Direccionable)</label>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-slate-400 font-mono italic text-sm">$</span>
                                 <input 
@@ -175,7 +175,7 @@ const DiscoveryLog = () => {
                         </div>
 
                         <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 border-l-4 border-l-indigo-500 transition-all hover:bg-white hover:shadow-md">
-                            <label className="block text-[10px] font-black text-indigo-400 uppercase mb-2 tracking-widest">SAM (Serviceable Market)</label>
+                            <label className="block text-[10px] font-black text-indigo-400 uppercase mb-2 tracking-widest">SAM (Mercado Atendible)</label>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-slate-400 font-mono italic text-sm">$</span>
                                 <input 
@@ -189,7 +189,7 @@ const DiscoveryLog = () => {
                         </div>
 
                         <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 border-l-4 border-l-emerald-500 transition-all hover:bg-white hover:shadow-md">
-                            <label className="block text-[10px] font-black text-emerald-400 uppercase mb-2 tracking-widest">SOM (Obtainable Market)</label>
+                            <label className="block text-[10px] font-black text-emerald-400 uppercase mb-2 tracking-widest">SOM (Mercado Obtenible)</label>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-slate-400 font-mono italic text-sm">$</span>
                                 <input 
@@ -250,7 +250,7 @@ const DiscoveryLog = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Feedback Directo (Raw Data)</label>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Feedback Directo (Datos Raw)</label>
                                 <textarea 
                                     required
                                     rows="4"

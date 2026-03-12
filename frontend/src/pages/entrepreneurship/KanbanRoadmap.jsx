@@ -161,7 +161,9 @@ const KanbanRoadmap = () => {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase ${statusColors[detailModal.status] || 'bg-slate-100 text-slate-600'}`}>
-                                    {detailModal.status}
+                                    {detailModal.status === 'PENDING' ? 'PENDIENTE' : 
+                                     detailModal.status === 'IN_PROGRESS' ? 'EN PROCESO' : 
+                                     detailModal.status === 'REVIEW' ? 'EN REVISIÓN' : 'COMPLETADO'}
                                 </span>
                                 <h3 className="text-2xl font-black text-slate-800 mt-3 tracking-tight">{detailModal.title}</h3>
                             </div>

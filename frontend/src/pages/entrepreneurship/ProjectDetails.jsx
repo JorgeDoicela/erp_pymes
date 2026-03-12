@@ -93,9 +93,9 @@ const ProjectDetails = () => {
 
     const tabs = [
         { id: 'roadmap', label: 'Roadmap', icon: <FiActivity /> },
-        { id: 'analytics', label: 'BI Analytics', icon: <FiBarChart2 /> },
-        { id: 'growth', label: 'Growth', icon: <FiTrendingUp /> },
-        { id: 'pitch', label: 'Pitch AI', icon: <FiZap /> },
+        { id: 'analytics', label: 'Analíticas BI', icon: <FiBarChart2 /> },
+        { id: 'growth', label: 'Crecimiento', icon: <FiTrendingUp /> },
+        { id: 'pitch', label: 'Pitch IA', icon: <FiZap /> },
         { id: 'captable', label: 'CapTable', icon: <FiPieChart /> },
         { id: 'validation', label: 'Validación', icon: <FiMessageSquare /> },
         { id: 'team', label: 'Equipo', icon: <FiUsers /> },
@@ -117,7 +117,7 @@ const ProjectDetails = () => {
                         {project.stage}
                     </span>
                     <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest leading-none flex items-center">
-                        Tier 4 Validated
+                        Tier 4 Validado
                     </span>
                 </div>
             </div>
@@ -188,7 +188,7 @@ const ProjectDetails = () => {
                                     </div>
                                     <div>
                                         <p className="font-bold text-slate-800 text-lg leading-tight">{project.owner?.firstName} {project.owner?.lastName}</p>
-                                        <p className="text-[10px] uppercase font-black text-indigo-600 tracking-widest mt-1">Founder / CEO</p>
+                                        <p className="text-[10px] uppercase font-black text-indigo-600 tracking-widest mt-1">Fundador / CEO</p>
                                     </div>
                                 </div>
                                 {project.members?.map(member => (
@@ -308,10 +308,10 @@ const ProjectDetails = () => {
                                     <label className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Tipo</label>
                                     <select className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700" value={newUpdate.type} onChange={(e) => setNewUpdate({...newUpdate, type: e.target.value})}>
                                         <option value="GENERAL">GENERAL</option>
-                                        <option value="MILESTONE">MILESTONE</option>
-                                        <option value="TECH">TECH</option>
-                                        <option value="INVESTMENT">INVESTMENT</option>
-                                        <option value="PIVOT">PIVOT</option>
+                                        <option value="MILESTONE">HITO</option>
+                                        <option value="TECH">TECNOLOGÍA</option>
+                                        <option value="INVESTMENT">INVERSIÓN</option>
+                                        <option value="PIVOT">PIVOTE</option>
                                     </select>
                                 </div>
                                 <div>

@@ -92,7 +92,7 @@ const CapTableManager = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <FiPieChart className="text-indigo-600" /> CapTable & Capital
+                        <FiPieChart className="text-indigo-600" /> CapTable y Capital
                     </h2>
                     <p className="text-slate-500 text-sm">Distribución de propiedad y rondas de inversión.</p>
                 </div>
@@ -190,7 +190,7 @@ const CapTableManager = () => {
                                             <span className="text-[10px] text-slate-400">{new Date(round.date).toLocaleDateString()}</span>
                                         </div>
                                         <div className="text-lg font-bold text-indigo-600">${round.amountRaised.toLocaleString()}</div>
-                                        <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-tighter font-bold">Valuation: ${round.valuation.toLocaleString()}</div>
+                                        <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-tighter font-bold">Valuación: ${round.valuation.toLocaleString()}</div>
                                     </div>
                                 ))
                             )}
@@ -235,10 +235,10 @@ const CapTableManager = () => {
                                         value={newEquity.role}
                                         onChange={(e) => setNewEquity({...newEquity, role: e.target.value})}
                                     >
-                                        <option value="Founder">Founder</option>
-                                        <option value="Investor">Investor</option>
-                                        <option value="Advisor">Advisor</option>
-                                        <option value="Employee">Employee</option>
+                                        <option value="Founder">Fundador</option>
+                                        <option value="Investor">Inversor</option>
+                                        <option value="Advisor">Asesor</option>
+                                        <option value="Employee">Empleado</option>
                                     </select>
                                 </div>
                             </div>
@@ -264,7 +264,11 @@ const CapTableManager = () => {
                                 <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-black text-2xl">{detailEquity.holderName.charAt(0)}</div>
                                 <div>
                                     <h3 className="text-xl font-black text-slate-800">{detailEquity.holderName}</h3>
-                                    <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg font-bold">{detailEquity.role}</span>
+                                    <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg font-bold">
+                                        {detailEquity.role === 'Founder' ? 'Fundador' : 
+                                         detailEquity.role === 'Investor' ? 'Inversor' : 
+                                         detailEquity.role === 'Advisor' ? 'Asesor' : 'Empleado'}
+                                    </span>
                                 </div>
                             </div>
                             <button onClick={() => setDetailEquity(null)} className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-all">✕</button>
@@ -276,7 +280,11 @@ const CapTableManager = () => {
                             </div>
                             <div className="bg-slate-50 p-5 rounded-2xl text-center">
                                 <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Tipo</p>
-                                <p className="text-lg font-black text-slate-700">{detailEquity.role}</p>
+                                <p className="text-lg font-black text-slate-700">
+                                    {detailEquity.role === 'Founder' ? 'Fundador' : 
+                                     detailEquity.role === 'Investor' ? 'Inversor' : 
+                                     detailEquity.role === 'Advisor' ? 'Asesor' : 'Empleado'}
+                                </p>
                             </div>
                         </div>
                         {detailEquity.vestingTerms && (

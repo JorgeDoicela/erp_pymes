@@ -41,7 +41,7 @@ const AnalyticsView = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-2 text-indigo-600">
                         <FiZap className="text-xl" />
-                        <span className="font-semibold uppercase tracking-wider text-xs">Success Score</span>
+                        <span className="font-semibold uppercase tracking-wider text-xs">Puntaje de Éxito</span>
                     </div>
                     <div className="text-3xl font-bold">{successScore.totalScore}%</div>
                     <div className="text-sm text-slate-500 mt-1">{successScore.level}</div>
@@ -57,7 +57,8 @@ const AnalyticsView = () => {
                         financialAnalysis.healthStatus === 'HEALTHY' ? 'bg-emerald-100 text-emerald-700' :
                         financialAnalysis.healthStatus === 'WARNING' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
                     }`}>
-                        {financialAnalysis.healthStatus}
+                        {financialAnalysis.healthStatus === 'HEALTHY' ? 'SALUDABLE' :
+                        financialAnalysis.healthStatus === 'WARNING' ? 'ADVERTENCIA' : 'RIESGO'}
                     </div>
                 </div>
 
@@ -83,7 +84,7 @@ const AnalyticsView = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Radar Chart de Capacidades */}
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6">Matriz de Potencial</h3>
+                    <h3 className="text-lg font-bold text-slate-800 mb-6">Radar de Capacidades</h3>
                     <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <RadarChart cx="50%" cy="50%" outerRadius="80%" data={successScore.factors}>
@@ -139,7 +140,7 @@ const AnalyticsView = () => {
                                     {mentor.name.charAt(0)}
                                 </div>
                                 <span className="bg-white px-2 py-0.5 rounded-lg border border-slate-100 text-[10px] font-bold text-emerald-600">
-                                    {mentor.matchScore}% MATCH
+                                    {mentor.matchScore}% AFINIDAD
                                 </span>
                             </div>
                             <h4 className="font-bold text-slate-800">{mentor.name}</h4>

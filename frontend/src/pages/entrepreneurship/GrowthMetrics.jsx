@@ -40,7 +40,7 @@ const GrowthMetrics = () => {
         { title: 'MRR', value: `$${metrics?.mrr || 0}`, icon: <FiDollarSign />, color: 'emerald', detail: 'Ingresos Mensuales' },
         { title: 'Usuarios', value: metrics?.users || 0, icon: <FiUsers />, color: 'indigo', detail: 'Activos' },
         { title: 'CAC', value: `$${metrics?.cac || 0}`, icon: <FiActivity />, color: 'rose', detail: 'Costo Adquisición' },
-        { title: 'LTV', value: `$${metrics?.ltv || 0}`, icon: <FiBarChart2 />, color: 'amber', detail: 'Lifetime Value' }
+        { title: 'LTV', value: `$${metrics?.ltv || 0}`, icon: <FiBarChart2 />, color: 'amber', detail: 'Valor de Vida' }
     ];
 
     return (
@@ -48,7 +48,7 @@ const GrowthMetrics = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-                        <FiTrendingUp className="text-indigo-600" /> Growth Engine
+                        <FiTrendingUp className="text-indigo-600" /> Motor de Crecimiento
                     </h2>
                     <p className="text-slate-500 text-sm font-medium">Métricas clave de tracción y rentabilidad del negocio.</p>
                 </div>
@@ -121,7 +121,7 @@ const GrowthMetrics = () => {
                 {/* Units Economics */}
                 <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl flex flex-col justify-between">
                     <div>
-                        <h3 className="font-black uppercase tracking-[0.2em] text-indigo-400 text-[10px] mb-8">Unit Economics</h3>
+                        <h3 className="font-black uppercase tracking-[0.2em] text-indigo-400 text-[10px] mb-8">Economía de Unidad</h3>
                         <div className="space-y-8">
                             <div>
                                 <div className="flex justify-between items-end mb-2">
