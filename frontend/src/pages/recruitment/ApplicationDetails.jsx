@@ -148,6 +148,21 @@ const ApplicationDetails = () => {
 
     const handleHire = async (e) => {
         e.preventDefault();
+
+        // Validar mayoría de edad (18 años)
+        const birth = new Date(hireData.birthDate);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+
+        if (age < 18) {
+            toast?.error("El candidato debe ser mayor de 18 años (Ley de Ecuador)");
+            return;
+        }
+
         if (!window.confirm("¿Estás seguro de contratar a este candidato? Se creará una cuenta de empleado.")) return;
         try {
             setSubmitting(true);

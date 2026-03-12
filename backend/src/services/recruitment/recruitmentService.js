@@ -182,6 +182,19 @@ export const recruitmentService = {
         const application = await recruitmentRepository.getApplicationById(applicationId, { vacancy: true });
         if (!application) throw new Error("Postulación no encontrada");
 
+        // Validar mayoría de edad (18 años)
+        const birth = new Date(birthDate);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+
+        if (age < 18) {
+            throw new Error("El candidato debe ser mayor de 18 años para ser contratado.");
+        }
+
         return recruitmentRepository.executeTransaction(async (tx) => {
             // 1. Update Application Status
             await tx.jobApplication.update({
