@@ -297,7 +297,7 @@ const ApplicationDetails = () => {
 
                             {app.resumeUrl && (
                                 <a
-                                    href={`${SERVER_URL.endsWith('/') ? SERVER_URL.slice(0, -1) : SERVER_URL}${app.resumeUrl.startsWith('/') ? '' : '/'}${app.resumeUrl}`}
+                                    href={`${SERVER_URL.endsWith('/') ? SERVER_URL.slice(0, -1) : SERVER_URL}${app.resumeUrl.startsWith('/') ? '' : '/'}${app.resumeUrl}?token=${localStorage.getItem('token')}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold transition-all shadow-xl shadow-blue-100 active:scale-95"

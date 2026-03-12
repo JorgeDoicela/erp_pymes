@@ -30,6 +30,10 @@
             "destination": "/backend/src/server.js"
         },
         {
+            "source": "/uploads/(.*)",
+            "destination": "/backend/src/server.js"
+        },
+        {
             "source": "/assets/(.*)",
             "destination": "/frontend/assets/$1"
         },
