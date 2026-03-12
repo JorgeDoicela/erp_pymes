@@ -1,6 +1,7 @@
 import { attendanceRepository } from '../../repositories/attendance/attendanceRepository.js';
 import prisma from '../../database/db.js';
 import employeeRepository from '../../repositories/employees/employeeRepository.js';
+import axios from 'axios';
 
 const resolveEmployeeId = async (input) => {
     // Verificar si es un UUID válido (v4) o un CUID (Prisma)
@@ -38,6 +39,24 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c; // in meters
+};
+
+const isVPNDetected = async (ip) => {
+    if (!ip || ip === '::1' || ip === '127.0.0.1') return false;
+
+    try {
+        // Use ip-api.com (free for non-commercial use, 45 req/min)
+        // Fields: proxy (mobile/proxy/vpn), hosting (datacenter/cloud)
+        const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`, { timeout: 3000 });
+        
+        if (response.data.status === 'success') {
+            return response.data.proxy === true || response.data.hosting === true;
+        }
+        return false;
+    } catch (error) {
+        console.error('[VPN_CHECK] Error querying ip-api:', error.message);
+        return false; // Default to allow on failure to avoid blocking legitimate users
+    }
 };
 
 export const attendanceService = {
@@ -112,6 +131,14 @@ export const attendanceService = {
                 }
             } else if (employee.enforceGeofence) {
                 console.warn(`Geofencing enabled for employee ${employeeId} but no work location set.`);
+            }
+
+            // --- VPN VALIDATION (Only if Geofence is active) ---
+            if (ip) {
+                const isVPN = await isVPNDetected(ip);
+                if (isVPN) {
+                    throw new Error('Conexión vía VPN/Proxy detectada. No está permitido marcar asistencia usando este tipo de conexiones.');
+                }
             }
         }
 

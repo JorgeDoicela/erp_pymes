@@ -54,7 +54,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                     </div>
                     <div>
                         <p className="text-sm font-semibold text-slate-900">{user?.firstName || 'Admin'}</p>
-                        <p className="text-xs text-slate-500">{user?.role === 'admin' ? 'Administrador (V2)' : 'Personal (V2)'}</p>
+                        <p className="text-xs text-slate-500">{user?.role === 'admin' ? 'Administrador' : 'Personal (V2)'}</p>
                     </div>
                 </div>
                 <button
