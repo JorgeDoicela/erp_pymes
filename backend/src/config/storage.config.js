@@ -1,3 +1,4 @@
+import path from 'path';
 
 /**
  * RNF-16: Configuración de Almacenamiento
@@ -12,8 +13,8 @@ export const STORAGE_CONFIG = {
 
     // Rutas de almacenamiento
     PATHS: {
-        DOCUMENTS: process.env.VERCEL ? '/tmp/uploads/documents' : 'uploads/documents',
-        RESUMES: process.env.VERCEL ? '/tmp/uploads/resumes' : 'uploads/resumes',
-        EVIDENCE: process.env.VERCEL ? '/tmp/uploads/evidence' : 'uploads/evidence'
+        DOCUMENTS: process.env.VERCEL ? '/tmp/uploads/documents' : path.resolve(process.cwd(), 'backend/uploads/documents'),
+        RESUMES: process.env.VERCEL ? '/tmp/uploads/resumes' : path.resolve(process.cwd(), 'backend/uploads/resumes'),
+        EVIDENCE: process.env.VERCEL ? '/tmp/uploads/evidence' : path.resolve(process.cwd(), 'backend/uploads/evidence')
     }
 };

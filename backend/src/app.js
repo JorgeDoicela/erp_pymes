@@ -5,6 +5,7 @@ import indexRoutes from './routes/index.routes.js';
 import systemRoutes from './routes/system/system.routes.js';
 import { maintenanceMiddleware } from './middleware/maintenance.middleware.js';
 import { errorHandler, requestLogger, validateBodyNotEmpty } from './middleware/errorHandler.js';
+import { STORAGE_CONFIG } from './config/storage.config.js';
 
 const app = express();
 
@@ -101,25 +102,19 @@ import { protectStaticFiles } from './middleware/security.middleware.js';
 
 // Servir archivos estáticos de forma protegida o mediante controlador
 app.use('/uploads', authenticate, protectStaticFiles, (req, res, next) => {
-    // Si es un CV, usamos el controlador para mejor diagnóstico en Vercel
+    // Si es un CV, usamos el controlador para asegurar acceso en Vercel/Local
     if (req.path.includes('/resumes/')) {
         const filename = path.basename(req.path);
-        const fullPath = path.join(uploadsPath, 'resumes', filename);
-        
-        console.log(`[CV_DEBUG] Intentando descargar: ${fullPath}`);
+        const fullPath = path.join(STORAGE_CONFIG.PATHS.RESUMES, filename);
         
         if (fs.existsSync(fullPath)) {
             return res.download(fullPath, filename);
         } else {
-            console.error(`[CV_DEBUG] Archivo no encontrado en esta instancia: ${fullPath}`);
-            // Listar archivos para diagnóstico
-            const resumesDir = path.join(uploadsPath, 'resumes');
-            const files = fs.existsSync(resumesDir) ? fs.readdirSync(resumesDir) : ['Directorio no existe'];
-            
             return res.status(404).json({
-                message: 'Archivo no encontrado en esta instancia del servidor',
-                detail: `El archivo ${filename} no existe en /tmp. Esto sucede en Vercel porque los archivos subidos son temporales y no se comparten entre servidores.`,
-                available_files: files
+                message: 'Archivo no encontrado',
+                detail: process.env.VERCEL 
+                    ? 'En Vercel los archivos son temporales. Se recomienda usar Cloudinary.' 
+                    : `El archivo no existe en la ruta: ${fullPath}`
             });
         }
     }
