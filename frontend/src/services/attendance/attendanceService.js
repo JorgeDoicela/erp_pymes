@@ -5,7 +5,9 @@ const markAttendance = async (employeeId, type, location = null) => {
         const response = await api.post('/attendance/mark', { employeeId, type, location });
         return response.data;
     } catch (error) {
-        throw error.response?.data || error.message;
+        // Return object with success: false and the actual message for consistency
+        const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Error desconocido';
+        return { success: false, message };
     }
 };
 

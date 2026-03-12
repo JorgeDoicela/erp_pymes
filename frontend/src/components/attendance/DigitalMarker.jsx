@@ -300,21 +300,23 @@ const DigitalMarker = ({ user }) => {
                 setMessage({ type: 'success', text: res.message + (res.workedHours ? ` (${res.workedHours} hrs)` : '') });
                 // Refresh status
                 await checkStatus(targetId);
+            } else {
+                let errorMsg = res.message || 'Error al registrar asistencia.';
+                // Si el error es de ubicación (del backend), añadimos un link de ayuda
+                if (errorMsg.includes('Ubicación no permitida') && location) {
+                    errorMsg += ` (Tus coordenadas: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)})`;
+                    setMessage({
+                        type: 'error',
+                        text: errorMsg,
+                        showMapLink: true,
+                        lastCoords: location
+                    });
+                } else {
+                    setMessage({ type: 'error', text: errorMsg });
+                }
             }
         } catch (err) {
-            let errorMsg = err.message || 'Error al registrar asistencia.';
-            // Si el error es de ubicación (del backend), añadimos un link de ayuda
-            if (errorMsg.includes('Ubicación no permitida') && location) {
-                errorMsg += ` (Tus coordenadas: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)})`;
-                setMessage({
-                    type: 'error',
-                    text: errorMsg,
-                    showMapLink: true,
-                    lastCoords: location
-                });
-            } else {
-                setMessage({ type: 'error', text: errorMsg });
-            }
+            setMessage({ type: 'error', text: err?.message || 'Error inesperado al registrar asistencia.' });
         } finally {
             setLoading(false);
         }

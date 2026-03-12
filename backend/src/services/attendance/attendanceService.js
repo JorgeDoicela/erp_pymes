@@ -42,16 +42,23 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 const isVPNDetected = async (ip) => {
-    if (!ip || ip === '::1' || ip === '127.0.0.1') return false;
+    if (!ip || ip === '::1' || ip === '127.0.0.1') {
+        console.log(`[VPN_CHECK] IP ignored: ${ip}`);
+        return false;
+    }
 
     try {
+        console.log(`[VPN_CHECK] Checking IP: ${ip}`);
         // Use ip-api.com (free for non-commercial use, 45 req/min)
         // Fields: proxy (mobile/proxy/vpn), hosting (datacenter/cloud)
-        const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`, { timeout: 2000 });
+        const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`, { timeout: 3000 });
         
         if (response.data.status === 'success') {
-            return response.data.proxy === true || response.data.hosting === true;
+            const isVPN = response.data.proxy === true || response.data.hosting === true;
+            console.log(`[VPN_CHECK] Result for ${ip}: ${isVPN} (Proxy: ${response.data.proxy}, Hosting: ${response.data.hosting})`);
+            return isVPN;
         }
+        console.warn(`[VPN_CHECK] ip-api status: ${response.data.status}, message: ${response.data.message}`);
         return false;
     } catch (error) {
         console.error('[VPN_CHECK] Error querying ip-api:', error.message);
@@ -133,12 +140,13 @@ export const attendanceService = {
                 console.warn(`Geofencing enabled for employee ${employeeId} but no work location set.`);
             }
 
-            // --- VPN VALIDATION (Only if Geofence is active) ---
-            if (ip) {
-                const isVPN = await isVPNDetected(ip);
-                if (isVPN) {
-                    throw new Error('Conexión vía VPN/Proxy detectada. No está permitido marcar asistencia usando este tipo de conexiones.');
-                }
+        }
+
+        // --- VPN VALIDATION (Always performed if IP is available) ---
+        if (ip) {
+            const isVPN = await isVPNDetected(ip);
+            if (isVPN) {
+                throw new Error('Conexión vía VPN/Proxy detectada. No está permitido marcar asistencia usando este tipo de conexiones.');
             }
         }
 
