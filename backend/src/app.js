@@ -99,11 +99,33 @@ app.use((req, res, next) => {
 import { authenticate } from './middleware/auth.middleware.js';
 import { protectStaticFiles } from './middleware/security.middleware.js';
 
-// Servir archivos estáticos de forma protegida
-// Antes: app.use('/uploads', express.static(uploadsPath));
-// Ahora:
-app.use('/uploads', authenticate, protectStaticFiles, express.static(uploadsPath));
-console.log('Serving protected static files from:', uploadsPath);
+// Servir archivos estáticos de forma protegida o mediante controlador
+app.use('/uploads', authenticate, protectStaticFiles, (req, res, next) => {
+    // Si es un CV, usamos el controlador para mejor diagnóstico en Vercel
+    if (req.path.includes('/resumes/')) {
+        const filename = path.basename(req.path);
+        const fullPath = path.join(uploadsPath, 'resumes', filename);
+        
+        console.log(`[CV_DEBUG] Intentando descargar: ${fullPath}`);
+        
+        if (fs.existsSync(fullPath)) {
+            return res.download(fullPath, filename);
+        } else {
+            console.error(`[CV_DEBUG] Archivo no encontrado en esta instancia: ${fullPath}`);
+            // Listar archivos para diagnóstico
+            const resumesDir = path.join(uploadsPath, 'resumes');
+            const files = fs.existsSync(resumesDir) ? fs.readdirSync(resumesDir) : ['Directorio no existe'];
+            
+            return res.status(404).json({
+                message: 'Archivo no encontrado en esta instancia del servidor',
+                detail: `El archivo ${filename} no existe en /tmp. Esto sucede en Vercel porque los archivos subidos son temporales y no se comparten entre servidores.`,
+                available_files: files
+            });
+        }
+    }
+    // Para otros archivos, seguimos con static
+    express.static(uploadsPath)(req, res, next);
+});
 
 // Maintenance Middleware (Applied before main routes)
 app.use(maintenanceMiddleware);
