@@ -296,14 +296,18 @@ const ApplicationDetails = () => {
                             </div>
 
                             {app.resumeUrl && (
-                                <a
-                                    href={`${SERVER_URL.endsWith('/') ? SERVER_URL.slice(0, -1) : SERVER_URL}${app.resumeUrl.startsWith('/') ? '' : '/'}${app.resumeUrl}?token=${localStorage.getItem('token')}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                <button
+                                    onClick={() => {
+                                        const token = localStorage.getItem('token');
+                                        const baseUrl = SERVER_URL.endsWith('/') ? SERVER_URL.slice(0, -1) : SERVER_URL;
+                                        const resumePath = app.resumeUrl.startsWith('/') ? app.resumeUrl : `/${app.resumeUrl}`;
+                                        const finalUrl = `${baseUrl}${resumePath}?token=${token}`;
+                                        window.open(finalUrl, '_blank');
+                                    }}
                                     className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold transition-all shadow-xl shadow-blue-100 active:scale-95"
                                 >
                                     <FiDownload className="mr-2" /> Descargar CV (PDF)
-                                </a>
+                                </button>
                             )}
                         </div>
                     </div>

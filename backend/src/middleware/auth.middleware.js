@@ -4,6 +4,8 @@ export const authenticate = (req, res, next) => {
     try {
         let token = null;
         const authHeader = req.headers.authorization;
+        
+        console.log(`[auth.middleware] Path: ${req.path}, Query Token: ${req.query.token ? 'Present' : 'Missing'}`);
 
         if (authHeader && authHeader.startsWith('Bearer ')) {
             token = authHeader.split(' ')[1];
