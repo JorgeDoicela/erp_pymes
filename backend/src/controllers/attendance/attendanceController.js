@@ -32,6 +32,7 @@ const markAttendance = async (req, res, next) => {
             'Ubicación no permitida',
             'La ubicación es requerida',
             'Conexión no permitida',
+            'Conexión vía VPN/Proxy detectada',
             'Ya se ha registrado',
             'Debe registrar entrada',
             'No se encontró registro de entrada',

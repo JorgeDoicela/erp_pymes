@@ -47,7 +47,7 @@ const isVPNDetected = async (ip) => {
     try {
         // Use ip-api.com (free for non-commercial use, 45 req/min)
         // Fields: proxy (mobile/proxy/vpn), hosting (datacenter/cloud)
-        const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`, { timeout: 3000 });
+        const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`, { timeout: 2000 });
         
         if (response.data.status === 'success') {
             return response.data.proxy === true || response.data.hosting === true;
