@@ -15,6 +15,7 @@ import { seedDocuments } from './seeds/documents.js';
 import { seedAudit } from './seeds/audit.js';
 import { seedPayrollConfig } from './seeds/payroll_config.js';
 import { seedNotifications } from './seeds/notifications.js';
+import { seedAccounting, seedJournalEntries } from './seeds/accounting.js';
 
 // ─── Utilidades de conexión ───────────────────────────────────────────────────
 
@@ -156,6 +157,14 @@ async function main() {
     await sleep(1000);
     await withRetry('NOTIFICATIONS', (prisma) => seedNotifications(prisma, admin, allEmployees))
         .catch((e) => console.error('❌ Error en seedNotifications:', e.message));
+
+    // 10. Contabilidad (NUEVO)
+    console.log('\n[10/10] Configurando Contabilidad y Nexus...');
+    await withRetry('ACCOUNTING', (prisma) => seedAccounting(prisma))
+        .catch((e) => console.error('❌ Error en seedAccounting:', e.message));
+    await sleep(1000);
+    await withRetry('JOURNAL_ENTRIES', (prisma) => seedJournalEntries(prisma))
+        .catch((e) => console.error('❌ Error en seedJournalEntries:', e.message));
 
     console.log('\n╔══════════════════════════════════════╗');
     console.log('║        SEED COMPLETADO ✅            ║');

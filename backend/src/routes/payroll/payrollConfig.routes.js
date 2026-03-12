@@ -17,7 +17,9 @@ router.get('/', authenticate, authorize(['admin', 'hr']), payrollController.getA
 router.get('/my-payrolls', authenticate, payrollController.getMyPayrolls); // Open to all authenticated
 router.get('/:id', authenticate, authorize(['admin', 'hr']), payrollController.getById);
 router.put('/:id/confirm', authenticate, authorize(['admin', 'hr']), payrollController.confirm);
+router.patch('/detail/:id', authenticate, authorize(['admin', 'hr']), payrollController.updateDetail);
 router.get('/:id/bank-file', authenticate, authorize(['admin', 'hr']), payrollController.generateBankFile);
 router.put('/:id/mark-paid', authenticate, authorize(['admin', 'hr']), payrollController.markAsPaid);
+router.delete('/:id', authenticate, authorize(['admin', 'hr']), payrollController.delete);
 
 export default router;

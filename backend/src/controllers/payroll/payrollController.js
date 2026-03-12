@@ -83,6 +83,30 @@ class PayrollController {
             res.status(500).json({ success: false, message: error.message });
         }
     }
+
+    async updateDetail(req, res) {
+        try {
+            const { id } = req.params;
+            const adminId = req.user?.id;
+            const result = await payrollCalculationService.updatePayrollDetail(id, req.body, adminId);
+            res.status(200).json({ success: true, message: 'Detalle de nómina actualizado', data: result });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    async delete(req, res) {
+        try {
+            const { id } = req.params;
+            const adminId = req.user?.id;
+            const result = await payrollCalculationService.deletePayroll(id, adminId);
+            res.status(200).json({ success: true, message: 'Nómina eliminada correctamente', data: result });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }
 
 export default new PayrollController();

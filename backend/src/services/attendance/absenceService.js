@@ -7,6 +7,19 @@ export const absenceService = {
         const end = new Date(endDate);
         const daysRequested = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
+        // 0. Verificación de Periodo Contable (No permitir en periodos CERRADOS)
+        const closedPeriod = await prisma.accountingPeriod.findFirst({
+            where: {
+                year: start.getFullYear(),
+                month: start.getMonth() + 1,
+                status: 'CLOSED'
+            }
+        });
+
+        if (closedPeriod) {
+            throw new Error('No se pueden registrar ausencias en un periodo contable ya CERRADO.');
+        }
+
         // Validación de Vacaciones (Robust comparison)
         const cleanType = type.trim();
         console.log(`[DEBUG] createRequest: Type='${type}', Clean='${cleanType}'`);

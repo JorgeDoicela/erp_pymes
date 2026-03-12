@@ -68,6 +68,14 @@ const HelpCenter = lazy(() => import('./pages/help/HelpCenter.jsx'));
 const IntelligentDashboard = lazy(() => import('./pages/dashboard/IntelligentDashboard.jsx'));
 const AdminSettings = lazy(() => import('./pages/dashboard/AdminSettings.jsx'));
 
+// Contabilidad (Aislado)
+const AccountingDashboard = lazy(() => import('./pages/accounting/AccountingDashboard.jsx'));
+const ChartOfAccounts = lazy(() => import('./pages/accounting/ChartOfAccounts.jsx'));
+const JournalEntries = lazy(() => import('./pages/accounting/JournalEntries.jsx'));
+const TrialBalance = lazy(() => import('./pages/accounting/TrialBalance.jsx'));
+const PeriodsManagement = lazy(() => import('./pages/accounting/PeriodsManagement.jsx'));
+const CostCenterManagement = lazy(() => import('./pages/accounting/CostCenterManagement.jsx'));
+
 function App() {
   const [auth, setAuth] = useState(() => {
     // Intentar recuperar sesión al cargar
@@ -137,6 +145,15 @@ function App() {
           <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
           <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
           <Route path="/admin/payroll/generator" element={<PayrollGenerator />} />
+
+          {/* Contabilidad Profesional */}
+          <Route path="/admin/accounting" element={<AccountingDashboard />} />
+          <Route path="/admin/accounting/chart" element={<ChartOfAccounts />} />
+          <Route path="/admin/accounting/journals" element={<JournalEntries />} />
+          <Route path="/admin/accounting/reports/trial-balance" element={<TrialBalance />} />
+          <Route path="/admin/accounting/periods" element={<PeriodsManagement />} />
+          <Route path="/admin/accounting/cost-centers" element={<CostCenterManagement />} />
+
           <Route path="/performance" element={<EvaluationDashboard />} />
           <Route path="/performance/create" element={<CreateEvaluation />} />
           <Route path="/performance/assign" element={<AssignEvaluation />} />

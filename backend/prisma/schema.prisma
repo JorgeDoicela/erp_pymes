@@ -558,3 +558,98 @@ model BiometricCredential {
   @@index([employeeId])
   @@map("biometric_credentials")
 }
+
+// ============================================================================
+// MODULO DE CONTABILIDAD FINANCIERA (AISLADO)
+// ============================================================================
+
+model AccountingPeriod {
+  id        String   @id @default(cuid())
+  year      Int
+  month     Int
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("OPEN") // OPEN, CLOSED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([year, month])
+  @@map("acc_periods")
+}
+
+model AccountingAccount {
+  id           String              @id @default(cuid())
+  code         String              @unique
+  name         String
+  description  String?
+  type         String              // ASSET (Activo), LIABILITY (Pasivo), EQUITY (Patrimonio), REVENUE (Ingreso), EXPENSE (Gasto)
+  level        Int                 @default(1)
+  isTransactional Boolean          @default(false) // Si false, es una cuenta agrupadora
+  parentId     String?
+  parent       AccountingAccount?  @relation("AccountHierarchy", fields: [parentId], references: [id])
+  subAccounts  AccountingAccount[] @relation("AccountHierarchy")
+  lines        JournalLine[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  isActive     Boolean             @default(true)
+
+  @@index([code])
+  @@map("acc_accounts")
+}
+
+model CostCenter {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  name        String
+  description String?
+  isActive    Boolean       @default(true)
+  lines       JournalLine[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("acc_cost_centers")
+}
+
+model JournalEntry {
+  id              String        @id @default(cuid())
+  entryNumber     String        @unique // Ej: ACC-2026-0001
+  date            DateTime
+  description     String
+  type            String        // DAILY (Diario), INCOME (Ingreso), EXPENSE (Egreso)
+  status          String        @default("DRAFT") // DRAFT, POSTED, ANNULLED
+  totalDebit      Float         @default(0)
+  totalCredit     Float         @default(0)
+  
+  // Nexo Opcional con RRHH (No restrictivo)
+  referenceModule String?       // Ej: PAYROLL, LOAN
+  referenceId     String?       // Ej: ID de la Nómina
+  
+  lines           JournalLine[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([date])
+  @@index([entryNumber])
+  @@map("acc_journal_entries")
+}
+
+model JournalLine {
+  id             String            @id @default(cuid())
+  journalEntryId String
+  accountId      String
+  costCenterId   String?
+  description    String?
+  debit          Float             @default(0)
+  credit         Float             @default(0)
+
+  journalEntry   JournalEntry      @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account        AccountingAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  costCenter     CostCenter?       @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@map("acc_journal_lines")
+}

@@ -1,4 +1,5 @@
 import prisma from '../database/db.js';
+import { decryptSalary, safeDecrypt } from '../utils/encryption.js';
 
 /**
  * Servicio de Inteligencia para Análisis de RRHH
@@ -114,8 +115,8 @@ export async function getRetentionRiskAnalysis() {
         if (!departmentSalaries[emp.department]) {
             departmentSalaries[emp.department] = [];
         }
-        // Desencriptar salario (asumiendo que está encriptado)
-        const salary = parseFloat(emp.salary) || 0;
+        // Desencriptar salario de forma segura
+        const salary = decryptSalary(emp.salary) || 0;
         departmentSalaries[emp.department].push(salary);
     });
 
@@ -129,10 +130,10 @@ export async function getRetentionRiskAnalysis() {
     const analysis = employees.map(employee => {
         const riskData = calculateRetentionRiskScore(employee);
 
-        // Agregar factor de salario
-        const empSalary = parseFloat(employee.salary) || 0;
+        // Agregar factor de salario (desencriptado)
+        const empSalary = decryptSalary(employee.salary) || 0;
         const avgSalary = departmentAvgSalaries[employee.department] || empSalary;
-        const salaryRatio = empSalary / avgSalary;
+        const salaryRatio = empSalary / (avgSalary || 1);
 
         if (salaryRatio < 0.8) {
             riskData.score += 15;

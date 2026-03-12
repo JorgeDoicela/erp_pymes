@@ -89,3 +89,20 @@ export const markPayrollAsPaid = async (id) => {
         throw new Error(error.response?.data?.message || 'Error al marcar como pagado');
     }
 };
+export const deletePayroll = async (id) => {
+    try {
+        const response = await api.delete(`/payroll/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al eliminar nómina');
+    }
+};
+
+export const updatePayrollDetail = async (detailId, data) => {
+    try {
+        const response = await api.patch(`/payroll/detail/${detailId}`, data);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al actualizar detalle');
+    }
+};

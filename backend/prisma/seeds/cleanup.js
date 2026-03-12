@@ -4,6 +4,11 @@ export async function seedCleanup(prisma) {
     // Usamos una transacción para limpiar todo de una vez y no perder la conexión entre tablas
     try {
         await prisma.$transaction([
+            prisma.journalLine.deleteMany(),
+            prisma.journalEntry.deleteMany(),
+            prisma.costCenter.deleteMany(),
+            prisma.accountingAccount.deleteMany(),
+            prisma.accountingPeriod.deleteMany(),
             prisma.climateResponse.deleteMany(),
             prisma.climateSurvey.deleteMany(),
             prisma.payrollDetail.deleteMany(),
@@ -37,6 +42,7 @@ export async function seedCleanup(prisma) {
         // Si la transacción falla (e.g. tabla no existe), intentar tabla por tabla
         console.log('⚠️ Transacción falló, intentando tabla por tabla...');
         const tables = [
+            'journalLine', 'journalEntry', 'costCenter', 'accountingAccount', 'accountingPeriod',
             'climateResponse', 'climateSurvey',
             'payrollDetail', 'payrollItem', 'payrollConfig', 'payroll',
             'evaluationReviewer', 'employeeEvaluation', 'evaluationTemplate',

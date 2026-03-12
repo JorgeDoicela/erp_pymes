@@ -1,7 +1,7 @@
 import {
     FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift,
     FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle,
-    FiTrendingUp, FiShield, FiSettings, FiTarget
+    FiTrendingUp, FiShield, FiSettings, FiTarget, FiActivity
 } from 'react-icons/fi';
 
 export const adminModules = [
@@ -11,6 +11,7 @@ export const adminModules = [
     { title: 'Ausencias', icon: <FiUserX />, color: 'bg-rose-500', path: '/admin/absences' },
     { title: 'Nómina', icon: <FiDollarSign />, color: 'bg-green-500', path: '/admin/payroll/generator' },
     { title: 'Beneficios', icon: <FiGift />, color: 'bg-yellow-500', path: '/admin/payroll/benefits' },
+    { title: 'Contabilidad', icon: <FiActivity />, color: 'bg-blue-800', path: '/admin/accounting' },
     { title: 'Evaluaciones', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
     { title: 'Mis Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-500', path: '/performance/my-evaluations' },
     { title: 'Mis Objetivos', icon: <FiTarget />, color: 'bg-cyan-500', path: '/performance/goals' },

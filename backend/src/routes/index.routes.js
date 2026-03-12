@@ -18,6 +18,7 @@ import notificationRoutes from './notifications/notification.routes.js';
 import auditRoutes from './audit.routes.js';
 import exportRoutes from './export/export.routes.js';
 import intelligenceRoutes from './intelligence.routes.js';
+import accountingRoutes from './accounting.routes.js';
 import { runSeed } from '../controllers/admin/seedController.js';
 
 
@@ -71,5 +72,6 @@ router.use('/audit', auditRoutes);
 router.use('/export', exportRoutes);
 router.use('/biometric', biometricRoutes);
 router.use('/intelligence', intelligenceRoutes);
+router.use('/accounting', accountingRoutes);
 
 export default router;

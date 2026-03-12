@@ -17,6 +17,38 @@ class ContractService {
             throw new Error('Empleado no encontrado');
         }
 
+        // 1. Validar solapamiento de fechas
+        const newStart = new Date(data.startDate);
+        const newEnd = data.endDate ? new Date(data.endDate) : null;
+
+        const overlapping = await prisma.contract.findFirst({
+            where: {
+                employeeId: data.employeeId,
+                status: 'Active',
+                OR: [
+                    // Caso 1: Un contrato existente cubre la nueva fecha de inicio
+                    {
+                        startDate: { lte: newStart },
+                        OR: [
+                            { endDate: null },
+                            { endDate: { gte: newStart } }
+                        ]
+                    },
+                    // Caso 2: El nuevo contrato cubre el inicio de un contrato existente
+                    newEnd ? {
+                        startDate: { lte: newEnd, gte: newStart }
+                    } : {
+                        // Si el nuevo es indefinido (null), se solapa con cualquier contrato que empiece después
+                        startDate: { gte: newStart }
+                    }
+                ]
+            }
+        });
+
+        if (overlapping) {
+            throw new Error('El empleado ya tiene un contrato activo en este rango de fechas. Cierre el contrato anterior primero.');
+        }
+
         return await contractRepository.create(data);
     }
 

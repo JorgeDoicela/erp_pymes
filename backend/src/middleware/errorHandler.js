@@ -84,6 +84,12 @@ export function validateBodyNotEmpty(req, res, next) {
       return next();
     }
 
+    // Permitir cuerpos vacíos para acciones específicas de "trigger" (ej: mayorizar, activar/desactivar)
+    const isTriggerAction = req.path.endsWith('/post') || req.path.endsWith('/toggle');
+    if (isTriggerAction && req.method === 'PATCH') {
+      return next();
+    }
+
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({
         success: false,

@@ -14,8 +14,11 @@ class PayrollCalculationService {
      * @returns {Promise<Object>} Resumen del proceso de nómina
      */
     async generatePayroll(month, year, adminId) {
-        // 1. Verificación de duplicados: Evitar generar nómina dos veces para el mismo mes/año
         const periodDate = new Date(year, month - 1, 1);
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0);
+
+        // 1. Verificación de duplicados: Evitar generar nómina dos veces para el mismo mes/año
         const existingPayroll = await prisma.payroll.findFirst({
             where: {
                 period: periodDate
@@ -26,7 +29,7 @@ class PayrollCalculationService {
             throw new Error(`Ya existe una nómina para el período ${month}/${year}`);
         }
 
-        // 2. Obtención de Parámetros Globales: IESS, Impuesto a la Renta, etc.
+        // 3. Obtención de Parámetros Globales
         const config = await prisma.payrollConfig.findFirst({
             where: { isActive: true },
             include: { items: true }
@@ -36,27 +39,42 @@ class PayrollCalculationService {
             throw new Error("No hay configuración de nómina activa. Configure los parámetros primero.");
         }
 
-        // 3. Selección de Empleados con Contrato Activo
+        // 4. Selección de Empleados con Contrato VIGENTE en este periodo específico
+        // Un contrato es válido si empezó antes del fin de mes Y (no ha terminado o terminó después del inicio de mes)
         const employees = await prisma.employee.findMany({
             where: {
                 contracts: {
                     some: {
+                        startDate: { lte: endDate },
+                        OR: [
+                            { endDate: null },
+                            { endDate: { gte: startDate } }
+                        ],
                         status: 'Active'
                     }
                 }
             },
             include: {
                 contracts: {
-                    where: { status: 'Active' },
-                    orderBy: { createdAt: 'desc' },
+                    where: {
+                        startDate: { lte: endDate },
+                        OR: [
+                            { endDate: null },
+                            { endDate: { gte: startDate } }
+                        ],
+                        status: 'Active'
+                    },
+                    orderBy: { startDate: 'desc' },
                     take: 1
                 }
             }
         });
 
+        if (employees.length === 0) {
+            throw new Error(`No se encontraron empleados con contratos activos para el periodo ${month}/${year}.`);
+        }
+
         const employeeIds = employees.map(e => e.id);
-        const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 0);
 
         // a. Carga Batch de Asistencias: Minimiza el impacto en BD comparado con consultas individuales
         const allAttendance = await prisma.attendance.findMany({
@@ -515,6 +533,105 @@ class PayrollCalculationService {
         }
 
         return updated;
+    }
+
+    async updatePayrollDetail(detailId, data, adminId) {
+        return await prisma.$transaction(async (tx) => {
+            const detail = await tx.payrollDetail.findUnique({
+                where: { id: detailId },
+                include: { payroll: true }
+            });
+
+            if (!detail) throw new Error('Detalle de nómina no encontrado');
+            if (detail.payroll.status !== 'DRAFT') {
+                throw new Error(`No se puede editar una nómina en estado ${detail.payroll.status}. Solo se permiten cambios en modo BORRADOR.`);
+            }
+
+            // Recalcular el Neto basado en los nuevos valores o los existentes
+            const bonuses = data.bonuses ? JSON.parse(data.bonuses) : JSON.parse(detail.bonuses);
+            const deductions = data.deductions ? JSON.parse(data.deductions) : JSON.parse(detail.deductions);
+
+            const totalBonuses = bonuses.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
+            const totalDeductions = deductions.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
+
+            const baseSalary = financial.from(data.baseSalary ?? detail.baseSalary);
+            const overtimeAmount = financial.from(data.overtimeAmount ?? detail.overtimeAmount);
+
+            // Suponemos que earnedSalary ya viene calculado o lo ajustamos proporcional al baseSalary
+            // Para simplificar esta edición manual, el usuario edita el baseSalary ganado en el mes
+            const netSalary = baseSalary.plus(overtimeAmount).plus(totalBonuses).minus(totalDeductions);
+
+            const updatedDetail = await tx.payrollDetail.update({
+                where: { id: detailId },
+                data: {
+                    baseSalary: financial.round(baseSalary),
+                    overtimeAmount: financial.round(overtimeAmount),
+                    bonuses: JSON.stringify(bonuses),
+                    deductions: JSON.stringify(deductions),
+                    netSalary: financial.round(netSalary),
+                    workedDays: data.workedDays ?? detail.workedDays
+                }
+            });
+
+            // Recalcular el total general de la nómina (Payroll)
+            const allDetails = await tx.payrollDetail.findMany({
+                where: { payrollId: detail.payrollId }
+            });
+
+            const newTotalAmount = allDetails.reduce((acc, d) => acc.plus(d.netSalary), financial.from(0));
+
+            await tx.payroll.update({
+                where: { id: detail.payrollId },
+                data: { totalAmount: financial.round(newTotalAmount) }
+            });
+
+            if (adminId) {
+                await auditRepository.createLog({
+                    entity: 'PayrollDetail',
+                    entityId: detailId,
+                    action: 'UPDATE_MANUAL',
+                    performedBy: adminId,
+                    details: `Manual adjustment for employee in payroll ${detail.payrollId}. New Net: ${updatedDetail.netSalary}`
+                }, tx).catch(err => console.error('Audit Log Error:', err));
+            }
+
+            return updatedDetail;
+        });
+    }
+
+    async deletePayroll(id, adminId) {
+        return await prisma.$transaction(async (tx) => {
+            const payroll = await tx.payroll.findUnique({
+                where: { id }
+            });
+
+            if (!payroll) throw new Error('Nómina no encontrada');
+            if (payroll.status !== 'DRAFT') {
+                throw new Error(`No se puede eliminar una nómina en estado ${payroll.status}. Solo se permiten eliminaciones en modo BORRADOR.`);
+            }
+
+            // Eliminar detalles primero (Prisma debería hacerlo si hay cascade, pero aseguramos)
+            await tx.payrollDetail.deleteMany({
+                where: { payrollId: id }
+            });
+
+            // Eliminar cabecera
+            const deleted = await tx.payroll.delete({
+                where: { id }
+            });
+
+            if (adminId) {
+                await auditRepository.createLog({
+                    entity: 'Payroll',
+                    entityId: id,
+                    action: 'DELETE',
+                    performedBy: adminId,
+                    details: `Deleted payroll draft for period ${payroll.period}`
+                }, tx).catch(err => console.error('Audit Log Error:', err));
+            }
+
+            return deleted;
+        });
     }
 }
 

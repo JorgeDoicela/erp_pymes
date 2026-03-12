@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { generatePayroll, getPayrolls, getPayrollById, confirmPayroll, downloadBankFile, markPayrollAsPaid } from '../../services/payroll/payrollConfig.service';
+import { generatePayroll, getPayrolls, getPayrollById, confirmPayroll, downloadBankFile, markPayrollAsPaid, deletePayroll } from '../../services/payroll/payrollConfig.service';
+import { integratePayroll } from '../../services/accounting.service';
 import { generatePayslipPDF } from '../../utils/generatePayslipPDF';
 import ExportButtons from '../../components/common/ExportButtons';
 
@@ -104,6 +105,59 @@ const PayrollGenerator = () => {
         }
     };
 
+    const handleDelete = async () => {
+        if (!confirm("¿Está seguro de eliminar este borrador de nómina? Podrá volver a generarla después de corregir los datos necesarios.")) return;
+        try {
+            const res = await deletePayroll(selectedPayroll.id);
+            if (res.success) {
+                alert("Borrador eliminado. El periodo ha sido liberado para una nueva generación.");
+                setSelectedPayroll(null);
+                loadHistory();
+            }
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+    const handleIntegrateAccounting = async () => {
+        if (!confirm("¿Generar asiento contable (Nexus) para esta nómina? Esto creará un borrador en el módulo de Contabilidad.")) return;
+        try {
+            const res = await integratePayroll(selectedPayroll.id);
+            if (res.entryId) {
+                if (confirm(`${res.message}. ¿Deseas ver el asiento generado ahora?`)) {
+                    navigate('/admin/accounting/journals', { state: { highlightEntryId: res.entryId } });
+                }
+            } else {
+                alert(res.message);
+            }
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Error integrando con contabilidad';
+            alert(msg);
+            if (error.response?.data?.entryId) {
+                if (confirm("Esta nómina ya fue contabilizada anteriormente. ¿Deseas ver el asiento?")) {
+                    navigate('/admin/accounting/journals', { state: { highlightEntryId: error.response.data.entryId } });
+                }
+            }
+        }
+    };
+
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editingDetail, setEditingDetail] = useState(null);
+
+    const handleUpdateDetail = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await updatePayrollDetail(editingDetail.id, editingDetail);
+            if (res.success) {
+                alert("Detalle actualizado y nómina recalculada");
+                setEditModalOpen(false);
+                viewDetail(selectedPayroll.id);
+            }
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -158,8 +212,9 @@ const PayrollGenerator = () => {
                                                 {new Date(pay.period).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
                                             </p>
                                         </div>
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${pay.status === 'APPROVED' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
-                                            {pay.status === 'APPROVED' ? 'APROBADO' : 'BORRADOR'}
+                                        <span className={`px-2 py-1 rounded text-[10px] font-bold border ${pay.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-100' :
+                                            pay.status === 'PAID' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
+                                            {pay.status === 'APPROVED' ? 'APROBADO' : pay.status === 'PAID' ? 'PAGADO' : 'BORRADOR'}
                                         </span>
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
@@ -198,14 +253,22 @@ const PayrollGenerator = () => {
                         </div>
                         <div className="flex flex-wrap gap-3">
                             {selectedPayroll.status === 'DRAFT' && (
-                                <button
-                                    onClick={handleConfirm}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-sm transition-all hover:shadow-md"
-                                >
-                                    Aprobar Nómina
-                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleDelete}
+                                        className="bg-white border border-red-200 text-red-600 hover:bg-red-50 px-4 py-2.5 rounded-lg font-bold transition-all shadow-sm"
+                                    >
+                                        Eliminar Borrador
+                                    </button>
+                                    <button
+                                        onClick={handleConfirm}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-sm transition-all hover:shadow-md"
+                                    >
+                                        Aprobar Nómina
+                                    </button>
+                                </div>
                             )}
-                            {selectedPayroll.status === 'APPROVED' && (
+                            {(selectedPayroll.status === 'APPROVED' || selectedPayroll.status === 'PAID') && (
                                 <>
                                     <ExportButtons
                                         type="payroll_csv"
@@ -218,11 +281,20 @@ const PayrollGenerator = () => {
                                     >
                                         Archivo Banco
                                     </button>
+                                    {selectedPayroll.status === 'APPROVED' && (
+                                        <button
+                                            onClick={handleMarkAsPaid}
+                                            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-all hover:shadow-md"
+                                        >
+                                            Confirmar Pago
+                                        </button>
+                                    )}
                                     <button
-                                        onClick={handleMarkAsPaid}
-                                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-all hover:shadow-md"
+                                        onClick={handleIntegrateAccounting}
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-all hover:shadow-md"
+                                        title="Generar asiento en Contabilidad"
                                     >
-                                        Confirmar Pago
+                                        Contabilizar Role
                                     </button>
                                 </>
                             )}
@@ -235,7 +307,7 @@ const PayrollGenerator = () => {
                                 <thead className="bg-slate-50 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
                                     <tr>
                                         <th className="p-4">Empleado</th>
-                                        <th className="p-4 text-right">Sueldo Base</th>
+                                        <th className="p-4 text-right">Sueldo Ganado</th>
                                         <th className="p-4 text-center">Días Trab.</th>
                                         <th className="p-4 text-right">Ingresos (Bonos)</th>
                                         <th className="p-4 text-right">Hrs Extra ($)</th>
@@ -271,13 +343,26 @@ const PayrollGenerator = () => {
                                                     ${(det.netSalary || 0).toFixed(2)}
                                                 </td>
                                                 <td className="p-4 text-center">
-                                                    <button
-                                                        onClick={() => generatePayslipPDF(det, det.employee, selectedPayroll.period)}
-                                                        className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shadow-sm"
-                                                        title="Descargar Rol Individual"
-                                                    >
-                                                        PDF
-                                                    </button>
+                                                    <div className="flex justify-center gap-2">
+                                                        {selectedPayroll.status === 'DRAFT' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingDetail({ ...det });
+                                                                    setEditModalOpen(true);
+                                                                }}
+                                                                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                                                            >
+                                                                Editar
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => generatePayslipPDF(det, det.employee, selectedPayroll.period)}
+                                                            className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shadow-sm"
+                                                            title="Descargar Rol Individual"
+                                                        >
+                                                            PDF
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -329,6 +414,193 @@ const PayrollGenerator = () => {
                                     {generating ? 'Calculando...' : 'Generar'}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* EDIT DETAIL MODAL */}
+            {
+                editModalOpen && editingDetail && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl border border-slate-200 w-full max-w-2xl shadow-2xl overflow-hidden">
+                            <div className="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-800">Ajuste Manual de Rol</h3>
+                                    <p className="text-sm text-slate-500">{editingDetail.employee.firstName} {editingDetail.employee.lastName}</p>
+                                </div>
+                                <button onClick={() => setEditModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+                            </div>
+
+                            <form onSubmit={handleUpdateDetail} className="p-6 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">Sueldo Ganado (Mensual)</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-slate-400 font-mono">$</span>
+                                            <input
+                                                type="number" step="0.01"
+                                                className="w-full bg-white border border-slate-200 rounded-lg p-2.5 pl-8 text-slate-800 font-mono focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                                value={editingDetail.baseSalary}
+                                                onChange={e => setEditingDetail({ ...editingDetail, baseSalary: parseFloat(e.target.value) })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">Horas Extra ($)</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-slate-400 font-mono">$</span>
+                                            <input
+                                                type="number" step="0.01"
+                                                className="w-full bg-white border border-slate-200 rounded-lg p-2.5 pl-8 text-slate-800 font-mono focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                                value={editingDetail.overtimeAmount}
+                                                onChange={e => setEditingDetail({ ...editingDetail, overtimeAmount: parseFloat(e.target.value) })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                                        <h4 className="font-bold text-slate-800">Bonos e Ingresos Extra</h4>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const b = JSON.parse(editingDetail.bonuses || '[]');
+                                                b.push({ name: '', amount: 0 });
+                                                setEditingDetail({ ...editingDetail, bonuses: JSON.stringify(b) });
+                                            }}
+                                            className="text-blue-600 hover:text-blue-700 text-xs font-bold"
+                                        >
+                                            + Añadir Bono
+                                        </button>
+                                    </div>
+                                    <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                                        {JSON.parse(editingDetail.bonuses || '[]').map((item, idx) => (
+                                            <div key={idx} className="flex gap-3 items-center">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Descripción"
+                                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-blue-400"
+                                                    value={item.name}
+                                                    onChange={e => {
+                                                        const b = JSON.parse(editingDetail.bonuses);
+                                                        b[idx].name = e.target.value;
+                                                        setEditingDetail({ ...editingDetail, bonuses: JSON.stringify(b) });
+                                                    }}
+                                                />
+                                                <div className="relative w-28">
+                                                    <span className="absolute left-2 top-2 text-slate-400 text-xs">$</span>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 pl-5 text-sm font-mono outline-none focus:border-blue-400"
+                                                        value={item.amount}
+                                                        onChange={e => {
+                                                            const b = JSON.parse(editingDetail.bonuses);
+                                                            b[idx].amount = parseFloat(e.target.value) || 0;
+                                                            setEditingDetail({ ...editingDetail, bonuses: JSON.stringify(b) });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const b = JSON.parse(editingDetail.bonuses);
+                                                        b.splice(idx, 1);
+                                                        setEditingDetail({ ...editingDetail, bonuses: JSON.stringify(b) });
+                                                    }}
+                                                    className="text-red-400 hover:text-red-600"
+                                                >
+                                                    &times;
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                                        <h4 className="font-bold text-slate-800">Deducciones y Egresos</h4>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const d = JSON.parse(editingDetail.deductions || '[]');
+                                                d.push({ name: '', amount: 0 });
+                                                setEditingDetail({ ...editingDetail, deductions: JSON.stringify(d) });
+                                            }}
+                                            className="text-red-600 hover:text-red-700 text-xs font-bold"
+                                        >
+                                            + Añadir Deducción
+                                        </button>
+                                    </div>
+                                    <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                                        {JSON.parse(editingDetail.deductions || '[]').map((item, idx) => (
+                                            <div key={idx} className="flex gap-3 items-center">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Descripción"
+                                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm outline-none focus:border-red-400"
+                                                    value={item.name}
+                                                    onChange={e => {
+                                                        const d = JSON.parse(editingDetail.deductions);
+                                                        d[idx].name = e.target.value;
+                                                        setEditingDetail({ ...editingDetail, deductions: JSON.stringify(d) });
+                                                    }}
+                                                />
+                                                <div className="relative w-28">
+                                                    <span className="absolute left-2 top-2 text-slate-400 text-xs">$</span>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 pl-5 text-sm font-mono outline-none focus:border-red-400"
+                                                        value={item.amount}
+                                                        onChange={e => {
+                                                            const d = JSON.parse(editingDetail.deductions);
+                                                            d[idx].amount = parseFloat(e.target.value) || 0;
+                                                            setEditingDetail({ ...editingDetail, deductions: JSON.stringify(d) });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const d = JSON.parse(editingDetail.deductions);
+                                                        d.splice(idx, 1);
+                                                        setEditingDetail({ ...editingDetail, deductions: JSON.stringify(d) });
+                                                    }}
+                                                    className="text-red-400 hover:text-red-600"
+                                                >
+                                                    &times;
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex justify-between items-center">
+                                    <span className="text-blue-800 font-bold uppercase text-xs">Neto a Pagar:</span>
+                                    <span className="text-2xl font-bold text-blue-900 font-mono">
+                                        ${(() => {
+                                            try {
+                                                const b = JSON.parse(editingDetail.bonuses || '[]');
+                                                const d = JSON.parse(editingDetail.deductions || '[]');
+                                                const totalB = b.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+                                                const totalD = d.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+                                                const net = (parseFloat(editingDetail.baseSalary) || 0) +
+                                                    (parseFloat(editingDetail.overtimeAmount) || 0) +
+                                                    totalB - totalD;
+                                                return net.toFixed(2);
+                                            } catch (e) {
+                                                return "0.00";
+                                            }
+                                        })()}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button type="button" onClick={() => setEditModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-500 hover:text-slate-800 transition-colors">Cancelar</button>
+                                    <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-bold shadow-md transition-all">Guardar Ajustes</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )
