@@ -209,11 +209,16 @@ export class EmployeeService {
       if (hireDate <= birthDate) throw new Error('La fecha de ingreso debe ser posterior a la fecha de nacimiento');
       if (hireDate > today) throw new Error('La fecha de ingreso no puede ser futura');
 
-      const age = this.calculateAge(birthDate);
+      const ageAtHire = this.calculateAge(birthDate, hireDate);
+      const ageToday = this.calculateAge(birthDate, today);
 
       // "El empleado debe ser mayor de 18 años para poder ser contratado."
-      if (age < 18) {
-        throw new Error(`El empleado debe ser mayor de edad. Edad actual: ${age} años.`);
+      if (ageAtHire < 18) {
+        throw new Error(`El empleado debe haber tenido al menos 18 años al momento de su contratación. Edad a esa fecha: ${ageAtHire} años.`);
+      }
+
+      if (ageToday < 18) {
+        throw new Error(`El empleado debe ser mayor de edad hoy. Edad actual: ${ageToday} años.`);
       }
       // "La edad máxima para contratación será de 65 años..."
       if (age > 65) {
@@ -293,15 +298,16 @@ export class EmployeeService {
   /**
    * Calcular edad basada en fecha de nacimiento
    * @param {Date} birthDate 
+   * @param {Date} referenceDate - Fecha contra la cual comparar (por defecto hoy)
    * @returns {number} Edad en años
    */
-  calculateAge(birthDate) {
-    const today = new Date();
+  calculateAge(birthDate, referenceDate = new Date()) {
     const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
+    const ref = new Date(referenceDate);
+    let age = ref.getFullYear() - birth.getFullYear();
+    const monthDiff = ref.getMonth() - birth.getMonth();
 
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    if (monthDiff < 0 || (monthDiff === 0 && ref.getDate() < birth.getDate())) {
       age--;
     }
     return age;

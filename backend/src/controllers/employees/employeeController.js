@@ -27,6 +27,24 @@ export class EmployeeController {
         });
       }
 
+      // Validación de edad al ingreso (18 años)
+      if (birthDate && hireDate) {
+        const hire = new Date(hireDate);
+        const birth = new Date(birthDate);
+        let ageAtHire = hire.getFullYear() - birth.getFullYear();
+        const m = hire.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && hire.getDate() < birth.getDate())) {
+          ageAtHire--;
+        }
+
+        if (ageAtHire < 18) {
+          return res.status(400).json({
+            success: false,
+            message: `El empleado debe haber tenido al menos 18 años a su fecha de ingreso (${hire.toLocaleDateString()}).`,
+          });
+        }
+      }
+
       const hashedPassword = await bcrypt.hash(password || 'defaultPassword123', 10);
 
       const employee = await employeeService.createEmployee({
