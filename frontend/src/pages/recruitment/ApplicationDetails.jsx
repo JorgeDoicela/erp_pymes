@@ -40,6 +40,7 @@ const ApplicationDetails = () => {
         contractType: 'Indefinido',
         salary: '',
         startDate: '',
+        password: '',
         closeVacancy: false,
         sendEmail: true
     });
@@ -160,6 +161,11 @@ const ApplicationDetails = () => {
 
         if (age < 18) {
             toast?.error("El candidato debe ser mayor de 18 años (Ley de Ecuador)");
+            return;
+        }
+
+        if (!hireData.password || hireData.password.length < 8) {
+            toast?.error("La contraseña debe tener al menos 8 caracteres");
             return;
         }
 
@@ -635,7 +641,7 @@ const ApplicationDetails = () => {
                             <div className="w-8 h-8 rounded-full bg-blue-200 flex flex-shrink-0 items-center justify-center text-blue-700 font-bold text-sm">!</div>
                             <div>
                                 <p className="text-blue-900 font-extrabold text-sm mb-1">Nota importante:</p>
-                                <p className="text-blue-700 text-xs leading-relaxed font-medium">La cuenta de empleado se activará tras confirmar. La contraseña provisional será el número de cédula.</p>
+                                <p className="text-blue-700 text-xs leading-relaxed font-medium">La cuenta de empleado se activará tras confirmar. Asegúrate de proporcionar una contraseña segura.</p>
                             </div>
                         </div>
 
@@ -686,6 +692,11 @@ const ApplicationDetails = () => {
                                         <span className="absolute left-4 top-3.5 font-bold text-slate-400">$</span>
                                         <input required type="number" step="0.01" className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-8 p-3.5 text-slate-800 font-bold focus:ring-2 focus:ring-blue-600 outline-none transition-all" value={hireData.salary} onChange={e => setHireData({ ...hireData, salary: e.target.value })} />
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Contraseña Inicial</label>
+                                    <input required type="password" placeholder="Mínimo 8 caracteres" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 focus:ring-2 focus:ring-blue-600 outline-none transition-all" value={hireData.password} onChange={e => setHireData({ ...hireData, password: e.target.value })} />
                                 </div>
 
                                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-4 transition-all hover:border-blue-400 cursor-pointer select-none" onClick={() => setHireData({ ...hireData, closeVacancy: !hireData.closeVacancy })}>

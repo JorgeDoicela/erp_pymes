@@ -30,6 +30,7 @@ const RegisterEmployee = ({ token }) => {
         bankName: '',
         accountNumber: '',
         accountType: 'Ahorros',
+        password: '',
         hasNightSurcharge: true,
         hasDoubleOvertime: true
     });
@@ -88,6 +89,10 @@ const RegisterEmployee = ({ token }) => {
 
         const ageErr = validateAge(formData.birthDate);
         if (ageErr) errors.birthDate = ageErr;
+
+        if (!formData.password || formData.password.length < 8) {
+            errors.password = 'La contraseña debe tener al menos 8 caracteres';
+        }
 
         const dateErr = validateDates(formData.birthDate, formData.hireDate);
         if (dateErr) errors.dates = dateErr; // Error general de coherencia
@@ -178,6 +183,7 @@ const RegisterEmployee = ({ token }) => {
                                 <SelectField label="Rol en el Sistema" name="role" value={formData.role} onChange={handleChange}
                                     options={ROLE_OPTIONS}
                                 />
+                                <InputField label="Contraseña Inicial" name="password" type="password" value={formData.password} onChange={handleChange} error={fieldErrors.password} help="Mínimo 8 caracteres" />
                             </div>
 
                             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">

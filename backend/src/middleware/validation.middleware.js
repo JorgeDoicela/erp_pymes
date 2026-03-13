@@ -37,7 +37,7 @@ const validateCedulaEcuatoriana = (cedula) => {
 export const validateEmployeeData = (req, res, next) => {
     const {
         firstName, lastName, email, identityCard, phone,
-        salary, birthDate, hireDate
+        salary, birthDate, hireDate, password
     } = req.body;
 
     const errors = [];
@@ -50,6 +50,13 @@ export const validateEmployeeData = (req, res, next) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (email && !emailRegex.test(email)) {
         errors.push('El formato del correo electrónico es inválido');
+    }
+    
+    // 2.5 Password (Sólo si es creación)
+    if (req.method === 'POST') {
+        if (!password || password.length < 8) {
+            errors.push('La contraseña es obligatoria y debe tener al menos 8 caracteres');
+        }
     }
 
     // 3. Cédula

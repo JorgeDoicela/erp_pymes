@@ -176,7 +176,7 @@ export const recruitmentService = {
     async hireCandidate(applicationId, hireData) {
         const {
             identityCard, birthDate, address, civilStatus,
-            contractType, salary, startDate, closeVacancy
+            contractType, salary, startDate, closeVacancy, password
         } = hireData;
 
         const application = await recruitmentRepository.getApplicationById(applicationId, { vacancy: true });
@@ -203,7 +203,10 @@ export const recruitmentService = {
             });
 
             // 2. Create Employee
-            const hashedPassword = await bcrypt.hash(identityCard, 10);
+            if (!password || password.length < 8) {
+                throw new Error("La contraseña es obligatoria y debe tener al menos 8 caracteres.");
+            }
+            const hashedPassword = await bcrypt.hash(password, 10);
             const newEmployee = await tx.employee.create({
                 data: {
                     firstName: application.firstName,
@@ -290,7 +293,7 @@ export const recruitmentService = {
                 <div style="background-color: #f8fafc; padding: 25px; border-radius: 12px; margin: 30px 0; border: 1px solid #f1f5f9;">
                     <h3 style="margin-top: 0; color: #2563eb; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Detalles de Inicio</h3>
                     <p style="margin-bottom: 5px;"><strong>Fecha de ingreso:</strong> ${formattedDate}</p>
-                    <p style="margin-top: 0;"><strong>Contraseña inicial:</strong> Tu número de cédula</p>
+                    <p style="margin-top: 0;"><strong>Acceso:</strong> Utiliza el correo electrónico registrado y la contraseña asignada por el administrador.</p>
                 </div>
 
                 <p>Ya puedes acceder al portal de empleados para completar tu perfil y revisar la documentación inicial.</p>

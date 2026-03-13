@@ -20,10 +20,10 @@ export class EmployeeController {
         hasDoubleOvertime
       } = req.body;
 
-      if (password && password.length < 8) {
+      if (!password || password.length < 8) {
         return res.status(400).json({
           success: false,
-          message: 'La contraseña debe tener al menos 8 caracteres',
+          message: 'La contraseña es obligatoria y debe tener al menos 8 caracteres',
         });
       }
 
@@ -45,7 +45,7 @@ export class EmployeeController {
         }
       }
 
-      const hashedPassword = await bcrypt.hash(password || 'defaultPassword123', 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
 
       const employee = await employeeService.createEmployee({
         firstName,
