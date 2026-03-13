@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useEmployees } from '../../hooks/employees/useEmployees';
 import { InputField, SelectField } from './components/EmployeeHelpers';
-import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS } from '../../constants/employeeOptions';
+import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS, ROLE_OPTIONS } from '../../constants/employeeOptions';
 import { validateCedula, validateEmail, validatePhone, validateSalary, validateDates, validateAge } from '../../utils/validationUtils';
 
 const RegisterEmployee = ({ token }) => {
@@ -26,6 +26,7 @@ const RegisterEmployee = ({ token }) => {
         salary: '',
         hireDate: '',
         contractType: '',
+        role: 'employee',
         bankName: '',
         accountNumber: '',
         accountType: 'Ahorros',
@@ -174,6 +175,9 @@ const RegisterEmployee = ({ token }) => {
                                     options={CONTRACT_TYPES}
                                 />
                                 <InputField label="Salario Base ($)" name="salary" type="number" min="0" step="0.01" value={formData.salary} onChange={handleChange} error={fieldErrors.salary} />
+                                <SelectField label="Rol en el Sistema" name="role" value={formData.role} onChange={handleChange}
+                                    options={ROLE_OPTIONS}
+                                />
                             </div>
 
                             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">

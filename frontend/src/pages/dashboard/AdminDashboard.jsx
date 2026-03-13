@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { adminModules } from '../../constants/modules';
+import { adminModules, employeeModules, accountingModules, entrepreneurModules } from '../../constants/modules';
 import * as intelligenceService from '../../services/intelligenceService';
 
 function AdminDashboard({ user, onLogout }) {
@@ -24,6 +24,17 @@ function AdminDashboard({ user, onLogout }) {
         if (hour < 18) return 'Buenas tardes';
         return 'Buenas noches';
     };
+
+    const getModules = () => {
+        switch (user?.role) {
+            case 'admin': return adminModules;
+            case 'accounting': return accountingModules;
+            case 'entrepreneur': return entrepreneurModules;
+            default: return employeeModules;
+        }
+    };
+
+    const modules = getModules();
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -91,7 +102,6 @@ function AdminDashboard({ user, onLogout }) {
 
         const fetchPending = async () => {
             try {
-                const data = await intelligenceService.getDashboard(); // Or a specific count service
                 // Just use the service we have for pending evaluations
                 const { getMyPendingEvaluations } = await import('../../services/evaluation.service');
                 const evaluations = await getMyPendingEvaluations();
@@ -216,7 +226,7 @@ function AdminDashboard({ user, onLogout }) {
                             Aplicaciones y Módulos
                         </h3>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                            {adminModules.map((mod, idx) => (
+                            {modules.filter(m => m.path !== '/admin' && m.path !== '/empleado').map((mod, idx) => (
                                 <motion.button
                                     key={idx}
                                     variants={itemVariants}

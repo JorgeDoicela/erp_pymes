@@ -1,15 +1,36 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { adminModules, employeeModules } from '../../constants/modules';
+import { adminModules, employeeModules, accountingModules, entrepreneurModules } from '../../constants/modules';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
 
 const Sidebar = ({ user, onLogout, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Determinar qué módulos mostrar según el rol
+    const getModules = () => {
+        switch (user?.role) {
+            case 'admin': return adminModules;
+            case 'accounting': return accountingModules;
+            case 'entrepreneur': return entrepreneurModules;
+            default: return employeeModules;
+        }
+    };
+
+    const getRoleLabel = () => {
+        switch (user?.role) {
+            case 'admin': return 'Administrador';
+            case 'accounting': return 'Contabilidad';
+            case 'entrepreneur': return 'Emprendedor';
+            default: return 'Personal (V2)';
+        }
+    };
+
+    const modules = getModules();
+
     return (
         <aside className="h-full w-full bg-white border-r border-slate-200 flex flex-col text-slate-600 shadow-sm transition-all duration-300">
             <div className="p-6 flex items-center justify-between">
-                <Link to={user?.role === 'admin' ? '/admin' : '/empleado'} className="cursor-pointer">
+                <Link to={user?.role === 'employee' ? '/empleado' : '/admin'} className="cursor-pointer">
                     <img src={logoEmplifi} alt="EMPLIFI" className="h-10 w-auto object-contain hover:opacity-80 transition-opacity" />
                 </Link>
                 {onClose && (
@@ -23,7 +44,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                 <div className="px-3 mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Menu Principal
                 </div>
-                {(user?.role === 'admin' ? adminModules : employeeModules).map((mod, idx) => {
+                {modules.map((mod, idx) => {
                     const isActive = location.pathname.startsWith(mod.path);
                     return (
                         <button
@@ -54,7 +75,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                     </div>
                     <div>
                         <p className="text-sm font-semibold text-slate-900">{user?.firstName || 'Admin'}</p>
-                        <p className="text-xs text-slate-500">{user?.role === 'admin' ? 'Administrador' : 'Personal (V2)'}</p>
+                        <p className="text-xs text-slate-500">{getRoleLabel()}</p>
                     </div>
                 </div>
                 <button

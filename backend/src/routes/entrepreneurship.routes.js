@@ -15,7 +15,12 @@ import * as intelligence from '../controllers/entrepreneurship/intelligence.cont
 import * as capTable from '../controllers/entrepreneurship/capTable.controller.js';
 import * as validation from '../controllers/entrepreneurship/validation.controller.js';
 
+import { authenticate, authorize } from '../middleware/auth.middleware.js';
+
 const router = Router();
+
+// Protección de rutas: Solo Emprendedores, Admin y Empleados autorizados
+router.use(authenticate, authorize(['entrepreneur', 'admin', 'employee']));
 
 // Rutas base de proyectos
 router.get('/', getProjects);

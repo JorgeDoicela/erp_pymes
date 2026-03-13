@@ -176,6 +176,7 @@ async function main() {
     console.log('║        SEED COMPLETADO ✅            ║');
     console.log('╠══════════════════════════════════════╣');
     console.log('║  Admin:  admin@emplifi.com           ║');
+    console.log('║  Contab: contabilidad@emplifi.com    ║');
     console.log('║  Pass:   Emplifi2025!                ║');
     console.log('║  Empleados: 10 (ver consola arriba)  ║');
     console.log('╚══════════════════════════════════════╝');

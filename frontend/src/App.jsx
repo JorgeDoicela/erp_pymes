@@ -114,9 +114,19 @@ function App() {
       return <Navigate to="/login" replace />
     }
 
-    if (role && auth.user.role !== role) {
-      if (auth.user.role === 'admin') return <Navigate to="/admin" replace />
-      if (auth.user.role === 'employee') return <Navigate to="/empleado" replace />
+    const userRole = auth.user.role;
+
+    if (role) {
+      const allowedRoles = Array.isArray(role) ? role : [role];
+
+      if (!allowedRoles.includes(userRole)) {
+        // Redirigir según el rol real del usuario a su "home"
+        if (userRole === 'admin') return <Navigate to="/admin" replace />;
+        if (userRole === 'accounting') return <Navigate to="/admin" replace />;
+        if (userRole === 'entrepreneur') return <Navigate to="/admin" replace />;
+        if (userRole === 'employee') return <Navigate to="/empleado" replace />;
+        return <Navigate to="/login" replace />;
+      }
     }
 
     return children
@@ -132,8 +142,14 @@ function App() {
         <Route path="/careers/:id" element={<JobApplication />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route element={<RequireAuth role="admin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        {/* Panel compartido para roles administrativos/especializados */}
+        <Route element={<RequireAuth role={['admin', 'accounting', 'entrepreneur']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
+          <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
+        </Route>
+
+        {/* Solo Administrador (RRHH) */}
+        <Route element={<RequireAuth role="admin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin/shifts" element={<ShiftManagement />} />
           <Route path="/admin/reports" element={<AttendanceReports />} />
           <Route path="/admin/absences" element={<AdminAbsences />} />
@@ -145,25 +161,10 @@ function App() {
           <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
           <Route path="/admin/audit" element={<AuditLogsPage />} />
           <Route path="/admin/contracts/expiring" element={<ExpiringContracts />} />
-          <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
           <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
           <Route path="/admin/payroll/generator" element={<PayrollGenerator />} />
-
-          {/* Contabilidad Profesional */}
-          <Route path="/admin/accounting" element={<AccountingDashboard />} />
-          <Route path="/admin/accounting/chart" element={<ChartOfAccounts />} />
-          <Route path="/admin/accounting/journals" element={<JournalEntries />} />
-          <Route path="/admin/accounting/reports/trial-balance" element={<TrialBalance />} />
-          <Route path="/admin/accounting/periods" element={<PeriodsManagement />} />
-          <Route path="/admin/accounting/cost-centers" element={<CostCenterManagement />} />
-
-          {/* Incubadora de Emprendimiento */}
-          <Route path="/admin/entrepreneurship" element={<EntrepreneurshipDashboard />} />
-          <Route path="/admin/entrepreneurship/create" element={<EntrepreneurshipForm />} />
-          <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
-
           <Route path="/performance" element={<EvaluationDashboard />} />
           <Route path="/performance/create" element={<CreateEvaluation />} />
           <Route path="/performance/assign" element={<AssignEvaluation />} />
@@ -177,6 +178,23 @@ function App() {
           <Route path="/analytics/payroll-costs" element={<PayrollCostReport />} />
           <Route path="/analytics/satisfaction" element={<SatisfactionReport />} />
           <Route path="/analytics/custom" element={<CustomReport />} />
+        </Route>
+
+        {/* Roles Especializados (Contabilidad) */}
+        <Route element={<RequireAuth role="accounting"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+          <Route path="/admin/accounting" element={<AccountingDashboard />} />
+          <Route path="/admin/accounting/chart" element={<ChartOfAccounts />} />
+          <Route path="/admin/accounting/journals" element={<JournalEntries />} />
+          <Route path="/admin/accounting/reports/trial-balance" element={<TrialBalance />} />
+          <Route path="/admin/accounting/periods" element={<PeriodsManagement />} />
+          <Route path="/admin/accounting/cost-centers" element={<CostCenterManagement />} />
+        </Route>
+
+        {/* Roles Especializados (Emprendimiento) */}
+        <Route element={<RequireAuth role="entrepreneur"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+          <Route path="/admin/entrepreneurship" element={<EntrepreneurshipDashboard />} />
+          <Route path="/admin/entrepreneurship/create" element={<EntrepreneurshipForm />} />
+          <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
         </Route>
 
         {/* Employee Routes - Same MainLayout with sidebar */}

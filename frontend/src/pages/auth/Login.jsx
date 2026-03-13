@@ -52,7 +52,7 @@ function Login({ onLogin }) {
             localStorage.setItem('token', data.token);
 
             // Redirección automática basada en el rol
-            if (data.data.role === 'admin') {
+            if (['admin', 'accounting', 'entrepreneur'].includes(data.data.role)) {
                 navigate('/admin');
             } else {
                 navigate('/empleado');
@@ -121,7 +121,7 @@ function Login({ onLogin }) {
             });
             localStorage.setItem('token', verifyData.token);
 
-            if (verifyData.data.role === 'admin') {
+            if (['admin', 'accounting', 'entrepreneur'].includes(verifyData.data.role)) {
                 navigate('/admin');
             } else {
                 navigate('/empleado');

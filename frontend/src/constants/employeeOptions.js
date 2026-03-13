@@ -42,3 +42,10 @@ export const SKILL_LEVELS = [
     { value: 'Advanced', label: 'Avanzado (Advanced)' },
     { value: 'Expert', label: 'Experto (Expert)' }
 ];
+
+export const ROLE_OPTIONS = [
+    { value: 'admin', label: 'Administrador' },
+    { value: 'employee', label: 'Empleado/Personal' },
+    { value: 'accounting', label: 'Contabilidad' },
+    { value: 'entrepreneur', label: 'Emprendedor/Innovación' }
+];

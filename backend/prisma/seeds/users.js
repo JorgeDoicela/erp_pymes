@@ -312,6 +312,74 @@ export async function seedUsers(prisma) {
         }
     }
 
+    // ── Contador ─────────────────────────────────────────────────────────────
+    let accountant;
+    try {
+        accountant = await prisma.employee.upsert({
+            where: { email: 'contabilidad@emplifi.com' },
+            update: { password },
+            create: {
+                firstName: 'Ana',
+                lastName: 'Contadora',
+                email: 'contabilidad@emplifi.com',
+                role: 'accounting',
+                department: 'Finanzas',
+                position: 'Contadora Senior',
+                salary: encryptSalary(2500),
+                password,
+                identityCard: '1799999999',
+                birthDate: new Date('1985-05-20'),
+                hireDate: new Date('2019-01-15'),
+                isActive: true,
+                address: 'Av. Gran Colombia, Quito',
+                phone: '0988888888',
+                civilStatus: 'Casada',
+                contractType: 'Indefinido',
+                bankName: encrypt('Banco Guayaquil'),
+                accountNumber: encrypt('9988776655'),
+                accountType: 'Corriente',
+                vacationDays: 15,
+            }
+        });
+        console.log('✅ Contabilidad: contabilidad@emplifi.com / Emplifi2025!');
+    } catch (e) {
+        console.log('⚠️ Accountant creation failed: ' + e.message);
+    }
+
+    // ── Emprendedor ──────────────────────────────────────────────────────────
+    let entrepreneur;
+    try {
+        entrepreneur = await prisma.employee.upsert({
+            where: { email: 'emprendedor@emplifi.com' },
+            update: { password },
+            create: {
+                firstName: 'Carlos',
+                lastName: 'Emprendedor',
+                email: 'emprendedor@emplifi.com',
+                role: 'entrepreneur',
+                department: 'Innovación',
+                position: 'Gestor de Incuadora',
+                salary: encryptSalary(2800),
+                password,
+                identityCard: '1788888888',
+                birthDate: new Date('1988-08-08'),
+                hireDate: new Date('2023-01-01'),
+                isActive: true,
+                address: 'Cumbayá, Quito',
+                phone: '0977777777',
+                civilStatus: 'Soltero',
+                contractType: 'Indefinido',
+                bankName: encrypt('Banco del Pacífico'),
+                accountNumber: encrypt('1122334455'),
+                accountType: 'Ahorros',
+                vacationDays: 15,
+            }
+        });
+        console.log('✅ Emprendimiento: emprendedor@emplifi.com / Emplifi2025!');
+    } catch (e) {
+        console.log('⚠️ Entrepreneur creation failed: ' + e.message);
+    }
+
     // ── System Settings ───────────────────────────────────────────────────────
     try {
         await prisma.systemSetting.upsert({

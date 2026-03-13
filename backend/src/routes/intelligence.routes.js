@@ -11,7 +11,7 @@ const router = Router();
 
 // Aplicar autenticación y autorización a todas las rutas
 router.use(authenticate);
-router.use(authorize(['admin']));
+router.use(authorize(['admin', 'accounting', 'entrepreneur']));
 
 // Dashboard principal con todos los insights
 router.get('/dashboard', intelligenceController.getDashboard);

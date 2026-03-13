@@ -818,11 +818,10 @@ export async function getProactiveAlerts() {
     const alerts = [];
     const now = new Date();
 
-    // 1. Alertas de Retención Crítica, Patrones de Ausencia y Departamentos Críticos (Concurrente)
-    const [retention, attendance, departments] = await Promise.all([
+    // 1. Alertas de Retención Crítica y Patrones de Ausencia (Optimizado)
+    const [retention, attendance] = await Promise.all([
         getRetentionRiskAnalysis(),
-        getAttendancePatterns(),
-        getDepartmentComparison()
+        getAttendancePatterns()
     ]);
 
     const criticalEmployees = retention.analysis.filter(e => e.level === 'Alto Riesgo' && e.score > 70);
@@ -911,32 +910,6 @@ export async function getProactiveAlerts() {
                 'Reunión con el empleado para entender causas',
                 'Verificar si requiere apoyo médico o personal',
                 'Revisar políticas de asistencia'
-            ],
-            detectedAt: now,
-            priority: 3
-        });
-    });
-
-    // 4. Alertas de Departamentos Críticos
-    const criticalDepts = departments.departments.filter(d => d.health === 'Crítico');
-
-    criticalDepts.forEach(dept => {
-        alerts.push({
-            id: `dept-${dept.department}`,
-            type: 'DEPARTMENT',
-            severity: 'HIGH',
-            title: `Departamento en Estado Crítico: ${dept.department}`,
-            description: `Score general de ${dept.overallScore.toFixed(0)}/100. Requiere intervención urgente.`,
-            department: dept.department,
-            metrics: {
-                employeeCount: dept.employeeCount,
-                highRiskCount: dept.highRiskCount,
-                overallScore: dept.overallScore
-            },
-            recommendedActions: [
-                'Reunión con líder del departamento',
-                'Análisis profundo de causas raíz',
-                'Plan de acción inmediato'
             ],
             detectedAt: now,
             priority: 2
