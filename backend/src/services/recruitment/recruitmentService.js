@@ -277,7 +277,7 @@ export const recruitmentService = {
         const name = `${firstName} ${lastName}`;
         const position = vacancy ? vacancy.title : 'nuestro equipo';
         const formattedDate = new Date(startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-        const loginUrl = process.env.ORIGIN || 'https://recursoshumanos-phi.vercel.app';
+        const loginUrl = process.env.ORIGIN || 'https://recursoshumanos-eight.vercel.app';
 
         const html = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; overflow: hidden; shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">

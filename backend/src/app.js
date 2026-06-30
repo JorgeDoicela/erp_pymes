@@ -41,7 +41,7 @@ const corsOptions = {
         const allowedOrigins = [
             'http://localhost:5173',  // Vite dev server
             'http://localhost:3000',  // Alternativa
-            'https://recursoshumanos-phi.vercel.app', // Vercel Frontend
+            'https://recursoshumanos-eight.vercel.app', // Vercel Frontend
             process.env.FRONTEND_URL, // Producción
             process.env.ORIGIN,       // Soporte dinámico para ORIGIN
         ].filter(Boolean); // Eliminar undefined
