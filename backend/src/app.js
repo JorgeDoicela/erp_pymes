@@ -43,6 +43,7 @@ const corsOptions = {
             'http://localhost:3000',  // Alternativa
             'https://recursoshumanos-phi.vercel.app', // Vercel Frontend
             process.env.FRONTEND_URL, // Producción
+            process.env.ORIGIN,       // Soporte dinámico para ORIGIN
         ].filter(Boolean); // Eliminar undefined
 
         if (allowedOrigins.indexOf(origin) !== -1) {
