@@ -113,7 +113,7 @@ export async function seedPerformance(prisma, employees) {
                         evaluationId: evaluation.id,
                         reviewerId: admin.id,
                         status: currentStatus,
-                        feedback: currentStatus === 'COMPLETED' ? 'Buen trabajo general' : null,
+                        comments: currentStatus === 'COMPLETED' ? 'Buen trabajo general' : null,
                         score: currentStatus === 'COMPLETED' ? parseFloat(score.toFixed(1)) : null
                     }
                 });
