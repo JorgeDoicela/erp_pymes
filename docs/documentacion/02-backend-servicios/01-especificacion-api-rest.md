@@ -1,0 +1,97 @@
+# 01. Especificación Técnica de la API REST
+
+## 1. Módulos y Catálogo Completo de Endpoints REST
+
+La API REST de EMPLIFI expone rutas agrupadas por dominios bajo la raíz `/api`. Todas las peticiones protegidas requieren la cabecera `Authorization: Bearer <JWT_TOKEN>`.
+
+---
+
+## 2. Detalle de Endpoints por Módulo
+
+### 2.1. Autenticación y Administración del Sistema (`/api/auth`, `/api/system`, `/api`)
+- `POST /api/auth/login`: Autenticación con `{ email, password }`. Retorna JWT token y objeto de usuario. (Público)
+- `POST /api/auth/forgot-password`: Genera token de recuperación `{ email }`. (Público)
+- `POST /api/auth/reset-password`: Restablece credencial con `{ token, newPassword }`. (Público)
+- `GET /api/system/status`: Devuelve estado del servidor y bandera `maintenanceMode`. (Autenticado)
+- `POST /api/system/maintenance`: Alterna modo mantenimiento `{ maintenanceMode, message }`. (Solo `admin`)
+- `POST /api/seed`: Ejecuta seeder remoto de datos de prueba. (Solo `admin`)
+- `POST /api/migrate`: Ejecuta migraciones remota de esquema. (Solo `admin`)
+
+### 2.2. Gestión de Empleados, Habilidades e Historial (`/api/employees`, `/api/skills`)
+- `GET /api/employees`: Lista paginada de empleados con parámetros `department`, `role`, `search`, `page`, `limit`. (Requiere `admin` o `hr`)
+- `POST /api/employees`: Crea empleado con encriptación AES-256-GCM sobre `salary`, `identityCard`, `accountNumber`. (Requiere `admin` o `hr`)
+- `GET /api/employees/stats/salary`: Estadísticas agregadas de masa salarial desglosada. (Requiere `admin` o `hr`)
+- `GET /api/employees/:id`: Obtiene datos completos de un empleado. (Requiere `admin`, `hr` o el propio `employee`)
+- `PUT /api/employees/:id`: Actualiza datos personales y laborales. (Requiere `admin` o `hr`)
+- `DELETE /api/employees/:id`: Baja lógica (`isActive = false`). (Requiere `admin` o `hr`)
+- `GET /api/employees/:id/skills`: Obtiene competencias vinculadas. (Autenticado)
+- `POST /api/employees/:id/skills`: Asigna habilidad `{ name, level }`. (Requiere `admin` o `hr`)
+- `DELETE /api/skills/:id`: Elimina habilidad. (Requiere `admin` o `hr`)
+- `GET /api/employees/:id/work-history`: Obtiene trayectoria laboral previa. (Autenticado)
+- `POST /api/employees/:id/work-history`: Registra experiencia laboral `{ company, position, startDate, endDate }`. (Requiere `admin` o `hr`)
+
+### 2.3. Asistencia, Turnos, Geofencing y Ausencias (`/api/attendance`, `/api/shifts`, `/api/absences`)
+- `POST /api/attendance/check-in`: Registro de entrada validando coordenadas GPS `{ entryLatitude, entryLongitude }`. Computa `isLate` contra el turno activo. (Autenticado)
+- `POST /api/attendance/check-out`: Registro de salida `{ exitLatitude, exitLongitude }`. Computa `workedHours` y `overtimeHours`. (Autenticado)
+- `GET /api/attendance/history`: Consulta registros de asistencia por rango de fechas `{ startDate, endDate }`. (Autenticado)
+- `GET /api/shifts`: Lista de turnos de trabajo configurados. (Autenticado)
+- `POST /api/shifts`: Crea turno con `{ name, startTime, endTime, breakMinutes, toleranceMinutes }`. (Requiere `admin` o `hr`)
+- `PUT /api/shifts/:id`: Modifica parámetros de turno. (Requiere `admin` o `hr`)
+- `POST /api/absences`: Registra solicitud de ausencia `{ type, startDate, endDate, reason, evidenceUrl }`. (Autenticado)
+- `GET /api/absences`: Lista solicitudes de ausencias filtradas por estado `PENDING`, `APPROVED`, `REJECTED`. (Requiere `admin` o `hr`)
+- `PATCH /api/absences/:id/status`: Aprueba o rechaza solicitud `{ status, adminComment }`. (Requiere `admin` o `hr`)
+
+### 2.4. Nómina, Beneficios y Contratos (`/api/payroll`, `/api/benefits`, `/api/contracts`)
+- `GET /api/payroll/config`: Parámetros de nómina (`workingDays`, `iessPersonalRatio`, `items`). (Requiere `admin`, `hr` o `accounting`)
+- `PUT /api/payroll/config`: Actualiza parámetros globales de nómina. (Requiere `admin`)
+- `POST /api/payroll/generate`: Procesa cálculo de nómina para el periodo especificado `{ period }`. (Requiere `admin` o `hr`)
+- `GET /api/payroll/my-payments`: Obtiene historial de roles de pago del empleado autenticado. (Requiere `employee`)
+- `GET /api/payroll/:id`: Detalle completo de nómina por ID con registros `PayrollDetail`. (Requiere `admin`, `hr` o `accounting`)
+- `GET /api/benefits`: Lista de beneficios corporativos activos. (Requiere `admin` o `hr`)
+- `POST /api/benefits`: Asigna beneficio individual `{ employeeId, name, amount, type, frequency }`. (Requiere `admin` o `hr`)
+- `POST /api/benefits/bulk`: Asignación masiva de beneficios a un grupo de empleados. (Requiere `admin` o `hr`)
+- `GET /api/contracts/expiring`: Lista contratos próximos a vencer en N días. (Requiere `admin` o `hr`)
+
+### 2.5. Evaluaciones 360 y Objetivos (`/api/performance`, `/api/goals`)
+- `POST /api/performance/templates`: Crea plantilla de evaluación `{ title, period, criteria, scale }`. (Requiere `admin`)
+- `GET /api/performance/templates`: Lista plantillas activas. (Requiere `admin` o `hr`)
+- `POST /api/performance/assignments`: Asigna evaluaciones a evaluadores (`EvaluationReviewer`). (Requiere `admin` o `hr`)
+- `GET /api/performance/my-pending`: Evaluaciones pendientes del usuario activo. (Autenticado)
+- `POST /api/performance/submit`: Envía respuestas y puntuaciones `{ evaluationId, responses, score, comments }`. (Autenticado)
+- `GET /api/performance/my-results`: Resultados consolidados del evaluado. (Autenticado)
+- `POST /api/goals`: Crea objetivo `{ title, description, targetValue, metric, deadline, priority }`. (Autenticado)
+- `PUT /api/goals/:id/progress`: Actualiza avance cuantitativo `{ currentValue }`. (Autenticado)
+
+### 2.6. Reclutamiento y Selección (`/api/recruitment`)
+- `POST /api/recruitment`: Publica vacante `{ title, department, description, requirements, salaryMin, salaryMax, deadline }`. (Requiere `admin` o `hr`)
+- `GET /api/recruitment`: Lista ofertas de empleo. (Público / Autenticado)
+- `PUT /api/recruitment/:id/status`: Cambia estado de vacante `OPEN`, `CLOSED`, `PAUSED`. (Requiere `admin` o `hr`)
+- `POST /api/recruitment/apply`: Postula a vacante enviando CV PDF multipart. (Público)
+- `GET /api/recruitment/:id/applications`: Obtiene postulaciones de una vacante. (Requiere `admin` o `hr`)
+- `POST /api/recruitment/applications/:id/interviews`: Programa entrevista con candidato `{ date, type, interviewerId }`. (Requiere `admin` o `hr`)
+- `POST /api/recruitment/applications/:id/hire`: Convierte candidato contratado en registro de `Employee`. (Requiere `admin` o `hr`)
+
+### 2.7. Contabilidad Financiera (`/api/accounting`)
+- `GET /api/accounting/chart-of-accounts`: Obtiene plan de cuentas estructurado por niveles. (Requiere `accounting` o `admin`)
+- `POST /api/accounting/chart-of-accounts`: Registra cuenta contable `{ code, name, type, level, isTransactional, parentId }`. (Requiere `accounting` o `admin`)
+- `GET /api/accounting/journal-entries`: Consulta libro diario de asientos contables. (Requiere `accounting` o `admin`)
+- `POST /api/accounting/journal-entries`: Crea asiento contable `{ date, description, type, lines: [{ accountId, debit, credit }] }`. (Requiere `accounting` o `admin`)
+- `GET /api/accounting/trial-balance`: Genera balance de comprobación de sumas y saldos. (Requiere `accounting` o `admin`)
+- `GET /api/accounting/periods`: Consulta períodos contables. (Requiere `accounting` o `admin`)
+- `GET /api/accounting/cost-centers`: Consulta centros de costo. (Requiere `accounting` o `admin`)
+
+### 2.8. Emprendimiento e Incubadora (`/api/entrepreneurship`)
+- `GET /api/entrepreneurship/projects`: Lista proyectos de innovación e incubación. (Requiere `entrepreneur`, `admin` o `employee`)
+- `POST /api/entrepreneurship/projects`: Registra proyecto `{ title, description, industry, stage, valuation, pitchNarrative }`. (Requiere `entrepreneur` o `admin`)
+- `GET /api/entrepreneurship/projects/:id`: Obtiene detalle del proyecto, métricas MRR, CAC, LTV y miembros. (Autenticado)
+- `POST /api/entrepreneurship/projects/:id/members`: Agrega miembro `{ employeeId, externalName, role }`. (Requiere `entrepreneur` o `admin`)
+- `POST /api/entrepreneurship/projects/:id/mentors`: Asigna mentor interno `{ mentorName, specialty, email }`. (Requiere `entrepreneur` o `admin`)
+- `POST /api/entrepreneurship/projects/:id/milestones`: Registra hito Kanban `{ title, dueDate, kanbanColumn }`. (Requiere `entrepreneur` o `admin`)
+
+### 2.9. Analítica, Auditoría y Exportación (`/api/analytics`, `/api/audit`, `/api/export`)
+- `GET /api/analytics/dashboard`: Datos agregados para tablero principal. (Requiere `admin` o `hr`)
+- `GET /api/analytics/turnover`: Reporte de tasa de rotación de personal. (Requiere `admin` o `hr`)
+- `GET /api/analytics/payroll-costs`: Reporte de evolución de costos salariales. (Requiere `admin` o `hr`)
+- `GET /api/audit`: Consulta historial inmutable `AuditLog` con filtros por entidad, usuario o fecha. (Solo `admin`)
+- `GET /api/export/employees/excel`: Genera reporte descargable `.xlsx` de nómina de empleados. (Solo `admin`)
+- `GET /api/export/payroll/:id/csv`: Genera archivo `.csv` detallado de una nómina. (Solo `admin`)
