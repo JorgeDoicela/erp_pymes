@@ -371,7 +371,7 @@ const EmployeeProfile = ({ token, user }) => {
                 <div className="bg-white rounded-2xl p-4 md:p-8 border border-slate-200 shadow-sm min-h-[400px]">
                     {activeTab === 'personal' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <InfoItem label="Cédula" value={employee.identityCard} />
+                            <InfoItem label="Cédula" value={employee.identityCard} isMasked={true} />
                             <InfoItem label="Fecha de Nacimiento" value={employee.birthDate ? new Date(employee.birthDate).toLocaleDateString() : 'N/A'} />
                             <InfoItem label="Estado Civil" value={CIVIL_STATUS_OPTIONS.find(c => c.value === employee.civilStatus)?.label || employee.civilStatus} />
                             <InfoItem label="Dirección" value={employee.address} />

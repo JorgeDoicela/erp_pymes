@@ -1,3 +1,6 @@
+import prisma from '../../src/database/db.js';
+import { encryptCoordinate } from '../../src/utils/encryption.js';
+
 export async function seedAttendance(prisma, employees) {
     console.log('⏳ Generando Asistencia (Últimos 180 días con patrones determinísticos)...');
 
@@ -98,10 +101,10 @@ export async function seedAttendance(prisma, employees) {
                 status: 'Presente',
                 workedHours: workedHours,
                 isLate: isLateToday,
-                entryLatitude: -0.1807,
-                entryLongitude: -78.4678,
-                exitLatitude: -0.1807,
-                exitLongitude: -78.4678
+                entryLatitude: encryptCoordinate(-0.1807),
+                entryLongitude: encryptCoordinate(-78.4678),
+                exitLatitude: encryptCoordinate(-0.1807),
+                exitLongitude: encryptCoordinate(-78.4678)
             });
         }
     }

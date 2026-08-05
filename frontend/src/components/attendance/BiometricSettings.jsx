@@ -132,25 +132,25 @@ const BiometricSettings = () => {
             {/* Sección 1: Consentimiento de Protección de Datos y Ubicación */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800">
                         <IconPin />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-800">Protección de Datos y Geolocalización</h2>
-                        <p className="text-sm text-slate-500">Gestione su consentimiento para la captura de ubicación durante marcaciones</p>
+                        <h2 className="text-lg font-bold text-slate-900">Protección de Datos y Geolocalización</h2>
+                        <p className="text-xs text-slate-500">Gestione su consentimiento para el tratamiento de ubicación en registros de asistencia</p>
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 mb-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
-                        <div className="flex items-center gap-2 font-semibold text-slate-800">
-                            Estado: {trackingConsent ? (
-                                <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-100 px-2.5 py-0.5 rounded-full text-xs font-bold">
-                                    <IconCheck /> OTORGADO
+                        <div className="flex items-center gap-2 font-semibold text-slate-900 text-sm">
+                            Estado del consentimiento: {trackingConsent ? (
+                                <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md text-xs font-semibold">
+                                    <IconCheck /> Otorgado
                                 </span>
                             ) : (
-                                <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-100 px-2.5 py-0.5 rounded-full text-xs font-bold">
-                                    NO OTORGADO
+                                <span className="inline-flex items-center gap-1 text-slate-600 bg-slate-200/70 border border-slate-300/60 px-2.5 py-0.5 rounded-md text-xs font-semibold">
+                                    No otorgado
                                 </span>
                             )}
                         </div>
@@ -162,13 +162,13 @@ const BiometricSettings = () => {
                     <button
                         onClick={() => handleToggleConsent(!trackingConsent)}
                         disabled={consentLoading}
-                        className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-2 ${
+                        className={`px-4 py-2 rounded-lg font-medium text-xs transition-all shadow-xs flex items-center gap-2 cursor-pointer ${
                             trackingConsent
-                                ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
-                                : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-500/20'
+                                ? 'bg-white border border-slate-300 text-slate-700 hover:text-red-700 hover:border-red-200 hover:bg-red-50/50'
+                                : 'bg-slate-900 text-white hover:bg-slate-800'
                         }`}
                     >
-                        {consentLoading ? 'Procesando...' : trackingConsent ? 'Retirar Consentimiento' : 'Otorgar Consentimiento'}
+                        {consentLoading ? 'Procesando...' : trackingConsent ? 'Retirar consentimiento' : 'Otorgar consentimiento'}
                     </button>
                 </div>
 

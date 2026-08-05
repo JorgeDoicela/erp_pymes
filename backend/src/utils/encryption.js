@@ -123,8 +123,10 @@ export function decryptSalary(encryptedSalary) {
  * @returns {string|null} Coordenada encriptada en formato iv:authTag:encryptedData
  */
 export function encryptCoordinate(coord) {
-    if (typeof coord !== 'number' || isNaN(coord)) return null;
-    const sanitized = parseFloat(coord.toFixed(4));
+    if (coord === null || coord === undefined || coord === '') return null;
+    const num = typeof coord === 'number' ? coord : parseFloat(coord);
+    if (isNaN(num)) return null;
+    const sanitized = parseFloat(num.toFixed(4));
     return encrypt(sanitized);
 }
 
@@ -134,17 +136,21 @@ export function encryptCoordinate(coord) {
  * @returns {number|null} Coordenada desencriptada o null si falla
  */
 export function decryptCoordinate(encryptedCoord) {
-    if (encryptedCoord === null || encryptedCoord === undefined) return null;
+    if (encryptedCoord === null || encryptedCoord === undefined || encryptedCoord === '') return null;
     if (typeof encryptedCoord === 'number') return parseFloat(encryptedCoord.toFixed(4));
 
     try {
         const decrypted = safeDecrypt(encryptedCoord);
-        if (decrypted === null) return null;
+        if (decrypted === null) {
+            const parsed = parseFloat(encryptedCoord);
+            return isNaN(parsed) ? null : parseFloat(parsed.toFixed(4));
+        }
 
         const coord = parseFloat(decrypted);
         return isNaN(coord) ? null : parseFloat(coord.toFixed(4));
     } catch (e) {
-        return null;
+        const parsed = parseFloat(encryptedCoord);
+        return isNaN(parsed) ? null : parseFloat(parsed.toFixed(4));
     }
 }
 

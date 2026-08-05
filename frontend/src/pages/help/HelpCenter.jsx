@@ -74,7 +74,7 @@ const HelpCenter = () => {
                 icon: FiBriefcase,
                 content: (
                     <>
-                        <p><strong>EMPLIFI</strong> es un ecosistema integral de gestión de capital humano. Integra desde el control de asistencia básico hasta contabilidad avanzada y análisis preventivo (IA).</p>
+                        <p><strong>EMPLIFI</strong> es un ecosistema integral de gestión de capital humano. Integra desde el control de asistencia básico hasta contabilidad avanzada y análisis preventivo (Análisis Predictivo).</p>
                         <ul className="list-disc pl-5 space-y-2 mt-2">
                             <li><strong>Interfaz Unificada:</strong> Un solo lugar para todas las gestiones administrativas.</li>
                             <li><strong>Roles Dinámicos:</strong> Los permisos cambian lo que ves en la barra lateral.</li>
@@ -248,7 +248,7 @@ const HelpCenter = () => {
         analytics: [
             {
                 id: 'a1',
-                title: 'Dashboards de Inteligencia (IA)',
+                title: 'Dashboards de Análisis Predictivo',
                 icon: FiActivity,
                 content: (
                     <>

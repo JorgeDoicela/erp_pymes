@@ -175,7 +175,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                 <FiArrowLeft className="w-5 h-5" />
                             </motion.button>
                             <div>
-                                <h1 className="text-xl font-bold text-slate-800 tracking-tight">Centro de Inteligencia</h1>
+                                <h1 className="text-xl font-bold text-slate-800 tracking-tight">Centro Predictivo</h1>
                                 <p className="text-sm text-slate-500">Análisis predictivo y recomendaciones</p>
                             </div>
                         </div>

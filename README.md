@@ -162,7 +162,7 @@ recursos_humanos/
 │   ├── 03-motores-especializados/ # PDF, Geocercas GPS, Evaluaciones 360 y Biometría
 │   ├── 04-base-de-datos/     # Esquema relacional Prisma / PostgreSQL y catálogos
 │   ├── 05-frontend-web/      # Arquitectura React + Vite y componentes UI
-│   ├── 06-inteligencia-y-analitica/ # Módulo IA y analítica predictiva
+│   ├── 06-inteligencia-y-analitica/ # Módulo de Analítica Predictiva
 │   ├── 07-despliegue-y-operaciones/ # Guías de instalación, auditoría, DRP y testing
 │   ├── 08-artefactos-scrum/  # Artefactos formales de metodología Scrum (.docx)
 │   └── README.md             # Índice y portal maestro de navegación

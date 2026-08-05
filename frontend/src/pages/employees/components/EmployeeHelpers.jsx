@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiInfo, FiLock } from 'react-icons/fi';
+import MaskedText from '../../../components/common/MaskedText';
 
 // Detecta si un valor parece ser texto cifrado (hex largo con ':') que nunca se desencriptó
 const looksEncrypted = (val) => {
@@ -17,7 +18,7 @@ const sanitize = (value, isPrivate) => {
     return value;
 };
 
-export const InfoItem = ({ label, value, isPrivate }) => {
+export const InfoItem = ({ label, value, isPrivate, isMasked }) => {
     const display = sanitize(value, isPrivate);
     return (
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -30,7 +31,13 @@ export const InfoItem = ({ label, value, isPrivate }) => {
                 )}
             </label>
             {display !== null ? (
-                <p className="text-base font-medium text-slate-800">{display}</p>
+                isMasked ? (
+                    <div className="text-base font-medium text-slate-800">
+                        <MaskedText value={display} label={label.toLowerCase()} />
+                    </div>
+                ) : (
+                    <p className="text-base font-medium text-slate-800">{display}</p>
+                )
             ) : (
                 <p className="text-sm font-medium text-slate-400 italic flex items-center gap-1">
                     <FiLock size={13} className="text-slate-300" />

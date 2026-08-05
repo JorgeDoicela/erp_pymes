@@ -1,13 +1,13 @@
 import {
     FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift,
     FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle,
-    FiTrendingUp, FiShield, FiSettings, FiTarget, FiActivity, FiZap,
-    FiList, FiPlus
+    FiTrendingUp, FiShield, FiSettings, FiTarget, FiActivity, FiCompass,
+    FiBookOpen, FiList, FiPlus
 } from 'react-icons/fi';
 
 export const adminModules = [
     { title: 'Empleados', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
-    { title: 'Inteligencia IA', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
+    { title: 'Análisis Predictivo', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
     { title: 'Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
     { title: 'Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },
     { title: 'Ausencias', icon: <FiUserX />, color: 'bg-rose-500', path: '/admin/absences' },
@@ -30,7 +30,7 @@ export const employeeModules = [
     { title: 'Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/empleado/asistencia' },
     { title: 'Permisos', icon: <FiCalendar />, color: 'bg-rose-500', path: '/empleado/ausencias' },
     { title: 'Mis Pagos', icon: <FiDollarSign />, color: 'bg-green-500', path: '/my-payments' },
-    { title: 'Emprendimiento', icon: <FiZap />, color: 'bg-amber-600', path: '/entrepreneurship' },
+    { title: 'Emprendimiento', icon: <FiCompass />, color: 'bg-amber-600', path: '/entrepreneurship' },
     { title: 'Mis Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-500', path: '/performance/my-evaluations' },
     { title: 'Mis Objetivos', icon: <FiTarget />, color: 'bg-cyan-500', path: '/performance/goals' },
     { title: 'Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
@@ -38,8 +38,8 @@ export const employeeModules = [
 
 export const accountingModules = [
     { title: 'Dashboard', icon: <FiBarChart2 />, color: 'bg-blue-500', path: '/admin' },
-    { title: 'Inteligencia IA', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
-    { title: 'Contabilidad', icon: <FiActivity />, color: 'bg-blue-800', path: '/admin/accounting' },
+    { title: 'Análisis Predictivo', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
+    { title: 'Contabilidad', icon: <FiBookOpen />, color: 'bg-blue-800', path: '/admin/accounting' },
     { title: 'Asientos', icon: <FiFileText />, color: 'bg-indigo-500', path: '/admin/accounting/journals' },
     { title: 'Catalogo', icon: <FiList />, color: 'bg-purple-500', path: '/admin/accounting/chart' },
     { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
@@ -48,8 +48,8 @@ export const accountingModules = [
 
 export const entrepreneurModules = [
     { title: 'Dashboard', icon: <FiBarChart2 />, color: 'bg-blue-500', path: '/admin' },
-    { title: 'Inteligencia IA', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
-    { title: 'Emprendimiento', icon: <FiZap />, color: 'bg-amber-600', path: '/admin/entrepreneurship' },
+    { title: 'Análisis Predictivo', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
+    { title: 'Emprendimiento', icon: <FiCompass />, color: 'bg-amber-600', path: '/admin/entrepreneurship' },
     { title: 'Nuevo Proyecto', icon: <FiPlus />, color: 'bg-green-500', path: '/admin/entrepreneurship/create' },
     { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
     { title: 'Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },

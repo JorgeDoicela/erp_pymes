@@ -45,7 +45,7 @@ const PitchOptimizer = () => {
             const response = await entrepreneurshipService.getPitchAnalysis(id);
             setAnalysis(response.data);
         } catch (error) {
-            toast.error("Error en el análisis de IA");
+            toast.error("Error en el análisis predictivo");
         } finally {
             setLoading(false);
         }
@@ -56,7 +56,7 @@ const PitchOptimizer = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-                        <FiCpu className="text-indigo-600" /> Optimizador de Pitch IA
+                        <FiCpu className="text-indigo-600" /> Optimizador Predictivo de Pitch
                     </h2>
                     <p className="text-slate-500 text-sm font-medium">Refina tu propuesta de valor con inteligencia predictiva.</p>
                 </div>
@@ -85,7 +85,7 @@ const PitchOptimizer = () => {
                         disabled={loading || !narrative}
                         className="w-full mt-6 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
                     >
-                        {loading ? 'Analizando...' : <><FiZap /> Ejecutar Análisis IA</>}
+                        {loading ? 'Analizando...' : <><FiZap /> Ejecutar Análisis Predictivo</>}
                     </button>
                 </div>
 
@@ -97,7 +97,7 @@ const PitchOptimizer = () => {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>
                                 <div className="relative z-10">
                                     <div className="flex justify-between items-center mb-8">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Scorecard de IA</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Scorecard Predictivo</span>
                                         <div className="text-5xl font-black">{analysis.score}<span className="text-lg opacity-30">/100</span></div>
                                     </div>
                                     <div className="space-y-4">
@@ -128,8 +128,8 @@ const PitchOptimizer = () => {
                     ) : (
                         <div className="h-full bg-slate-50 border-4 border-dashed border-slate-100 rounded-[32px] flex flex-col items-center justify-center p-12 text-center opacity-60">
                             <FiCpu className="text-5xl text-slate-200 mb-6" />
-                            <h4 className="font-black text-slate-400 uppercase tracking-widest text-sm">IA Inactiva</h4>
-                            <p className="text-xs text-slate-400 mt-2 font-medium">Escribe tu pitch y presiona analizar para obtener feedback instantáneo de nuestro motor de inteligencia corporativa.</p>
+                            <h4 className="font-black text-slate-400 uppercase tracking-widest text-sm">Análisis Predictivo Inactivo</h4>
+                            <p className="text-xs text-slate-400 mt-2 font-medium">Escribe tu pitch y presiona analizar para obtener feedback instantáneo de nuestro motor predictivo corporativo.</p>
                         </div>
                     )}
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiZap, FiPlus, FiBox, FiTrendingUp, FiCheckCircle, FiClock } from 'react-icons/fi';
+import { FiCompass, FiPlus, FiBox, FiTrendingUp, FiCheckCircle, FiClock } from 'react-icons/fi';
 import entrepreneurshipService from '../../services/entrepreneurship.service';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
@@ -57,7 +57,7 @@ const Dashboard = () => {
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-                        <FiZap className="text-amber-500" /> Incubadora de Startups
+                        <FiCompass className="text-amber-500" /> Incubadora de Startups
                     </h1>
                     <p className="text-slate-500 mt-1">Ecosistema de innovación e intraemprendimiento profesional.</p>
                 </div>
@@ -73,7 +73,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {[
                     { label: 'Total Proyectos', val: stats.total, icon: <FiBox />, color: 'text-indigo-600' },
-                    { label: 'Ideación', val: stats.ideation, icon: <FiZap />, color: 'text-blue-500' },
+                    { label: 'Ideación', val: stats.ideation, icon: <FiCompass />, color: 'text-blue-500' },
                     { label: 'Validación', val: stats.validation, icon: <FiCheckCircle />, color: 'text-purple-500' },
                     { label: 'MVP', val: stats.mvp, icon: <FiTrendingUp />, color: 'text-amber-500' },
                     { label: 'Escalamiento', val: stats.scaling, icon: <FiTrendingUp />, color: 'text-emerald-500' },
@@ -93,7 +93,7 @@ const Dashboard = () => {
             ) : projects.length === 0 ? (
                 <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                        <FiZap className="text-3xl text-slate-300" />
+                        <FiCompass className="text-3xl text-slate-300" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-700">No hay proyectos activos</h3>
                     <p className="text-slate-500 mt-2 max-w-sm mx-auto">

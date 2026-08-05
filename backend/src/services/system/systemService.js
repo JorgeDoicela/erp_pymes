@@ -1,9 +1,10 @@
 import prisma from '../../database/db.js';
+import { encryptCoordinate, decryptCoordinate } from '../../utils/encryption.js';
 
 class SystemService {
     async getSettings() {
         // upsert guarantees the record always exists
-        return await prisma.systemSetting.upsert({
+        const settings = await prisma.systemSetting.upsert({
             where: { id: 'default' },
             update: {},
             create: {
@@ -17,13 +18,27 @@ class SystemService {
                 maintenanceMessage: 'El sistema estará en mantenimiento brevemente.'
             }
         });
+
+        return {
+            ...settings,
+            globalLatitude: decryptCoordinate(settings.globalLatitude),
+            globalLongitude: decryptCoordinate(settings.globalLongitude)
+        };
     }
 
     async updateSettings(data) {
+        const updateData = { ...data };
+        if (data.globalLatitude !== undefined) {
+            updateData.globalLatitude = encryptCoordinate(data.globalLatitude);
+        }
+        if (data.globalLongitude !== undefined) {
+            updateData.globalLongitude = encryptCoordinate(data.globalLongitude);
+        }
+
         // upsert so it works even if the record doesn't exist yet
-        return await prisma.systemSetting.upsert({
+        const settings = await prisma.systemSetting.upsert({
             where: { id: 'default' },
-            update: data,
+            update: updateData,
             create: {
                 id: 'default',
                 maintenanceMode: false,
@@ -33,9 +48,15 @@ class SystemService {
                 globalLongitude: null,
                 globalRadius: 200,
                 maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
-                ...data
+                ...updateData
             }
         });
+
+        return {
+            ...settings,
+            globalLatitude: decryptCoordinate(settings.globalLatitude),
+            globalLongitude: decryptCoordinate(settings.globalLongitude)
+        };
     }
 
     async checkHealth() {

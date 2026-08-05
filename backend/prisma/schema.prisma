@@ -54,8 +54,8 @@ model Employee {
   skills               Skill[]
   workHistory          WorkHistory[]
   currentChallenge     String?
-  workLatitude         Float?
-  workLongitude        Float?
+  workLatitude         String?
+  workLongitude        String?
   geofenceRadius       Float?                  @default(200)
   enforceGeofence      Boolean                 @default(false)
   resetPasswordToken   String?
@@ -120,10 +120,10 @@ model Attendance {
   employeeId       String
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-  entryLatitude    Float?
-  entryLongitude   Float?
-  exitLatitude     Float?
-  exitLongitude    Float?
+  entryLatitude    String?
+  entryLongitude   String?
+  exitLatitude     String?
+  exitLongitude    String?
   breakEnd         DateTime?
   breakStart       DateTime?
   isEarlyDeparture Boolean   @default(false)
@@ -536,8 +536,8 @@ model SystemSetting {
   maintenanceMessage   String?
   biometricEnabled     Boolean   @default(false)
   allowedIPs           String?   // Permitted IP ranges (comma separated)
-  globalLatitude       Float?    // Global workplace coordinates
-  globalLongitude      Float?
+  globalLatitude       String?    // Global workplace coordinates
+  globalLongitude      String?
   globalRadius         Float?    @default(200) // Default global radius in meters
   updatedAt            DateTime  @updatedAt
 

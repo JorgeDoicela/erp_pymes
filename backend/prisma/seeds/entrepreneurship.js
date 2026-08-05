@@ -14,7 +14,7 @@ export async function seedEntrepreneurship(prisma) {
             valuation: 150000,
             equityAvailable: 85,
             ownerId: entrepreneurUser?.id || adminUser.id,
-            pitchNarrative: 'Nuestra plataforma utiliza inteligencia artificial para encontrar las rutas más eficientes para camiones eléctricos, reduciendo costos operativos en un 30% y eliminando el desperdicio de combustible. Tenemos un mercado claro de empresas de logística en Latam.',
+            pitchNarrative: 'Nuestra plataforma utiliza modelos predictivos para encontrar las rutas más eficientes para camiones eléctricos, reduciendo costos operativos en un 30% y eliminando el desperdicio de combustible. Tenemos un mercado claro de empresas de logística en Latam.',
             growthMRR: 2500,
             growthUsers: 120,
             growthCAC: 45,
@@ -103,7 +103,7 @@ export async function seedEntrepreneurship(prisma) {
         },
         {
             title: 'AgroScanner Pro',
-            description: 'Software de análisis de cultivos mediante drones e IA para detección temprana de plagas y estrés hídrico.',
+            description: 'Software de análisis de cultivos mediante drones y analítica predictiva para detección temprana de plagas y estrés hídrico.',
             industry: 'AgriTech',
             stage: 'SCALING',
             valuation: 850000,

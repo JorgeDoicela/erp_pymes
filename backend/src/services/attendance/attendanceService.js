@@ -2,6 +2,7 @@ import { attendanceRepository } from '../../repositories/attendance/attendanceRe
 import prisma from '../../database/db.js';
 import employeeRepository from '../../repositories/employees/employeeRepository.js';
 import axios from 'axios';
+import { encryptCoordinate, decryptCoordinate } from '../../utils/encryption.js';
 
 const resolveEmployeeId = async (input) => {
     // Verificar si es un UUID válido (v4) o un CUID (Prisma)
@@ -135,11 +136,13 @@ export const attendanceService = {
                 throw new Error('La ubicación es requerida para marcar asistencia.');
             }
 
-            const activeLat = employee.workLatitude || systemSettings?.globalLatitude;
-            const activeLng = employee.workLongitude || systemSettings?.globalLongitude;
+            const rawLat = employee.workLatitude || systemSettings?.globalLatitude;
+            const rawLng = employee.workLongitude || systemSettings?.globalLongitude;
+            const activeLat = decryptCoordinate(rawLat);
+            const activeLng = decryptCoordinate(rawLng);
             const activeRadius = employee.geofenceRadius || systemSettings?.globalRadius || 200;
 
-            if (activeLat && activeLng && location?.latitude && location?.longitude) {
+            if (activeLat !== null && activeLng !== null && location?.latitude && location?.longitude) {
                 const distance = getDistance(
                     location.latitude,
                     location.longitude,
@@ -192,8 +195,8 @@ export const attendanceService = {
             };
 
             if (location && location.latitude && location.longitude && employee.trackingConsent) {
-                entryData.entryLatitude = sanitizeCoordinate(location.latitude);
-                entryData.entryLongitude = sanitizeCoordinate(location.longitude);
+                entryData.entryLatitude = encryptCoordinate(location.latitude);
+                entryData.entryLongitude = encryptCoordinate(location.longitude);
             }
 
             // Determine Lateness at Entry
@@ -267,8 +270,8 @@ export const attendanceService = {
             };
 
             if (location && location.latitude && location.longitude && employee.trackingConsent) {
-                exitData.exitLatitude = sanitizeCoordinate(location.latitude);
-                exitData.exitLongitude = sanitizeCoordinate(location.longitude);
+                exitData.exitLatitude = encryptCoordinate(location.latitude);
+                exitData.exitLongitude = encryptCoordinate(location.longitude);
             }
 
             // Calculate Overtime
@@ -430,7 +433,18 @@ export const attendanceService = {
 
                 // Add Location info
                 if (rec.entryLatitude && rec.entryLongitude) {
-                    response.entryLocation = { lat: rec.entryLatitude, lng: rec.entryLongitude };
+                    const entryLat = decryptCoordinate(rec.entryLatitude);
+                    const entryLng = decryptCoordinate(rec.entryLongitude);
+                    if (entryLat !== null && entryLng !== null) {
+                        response.entryLocation = { lat: entryLat, lng: entryLng };
+                    }
+                }
+                if (rec.exitLatitude && rec.exitLongitude) {
+                    const exitLat = decryptCoordinate(rec.exitLatitude);
+                    const exitLng = decryptCoordinate(rec.exitLongitude);
+                    if (exitLat !== null && exitLng !== null) {
+                        response.exitLocation = { lat: exitLat, lng: exitLng };
+                    }
                 }
 
                 // Determine Lateness

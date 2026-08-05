@@ -95,7 +95,7 @@ const ProjectDetails = () => {
         { id: 'roadmap', label: 'Roadmap', icon: <FiActivity /> },
         { id: 'analytics', label: 'Analíticas BI', icon: <FiBarChart2 /> },
         { id: 'growth', label: 'Crecimiento', icon: <FiTrendingUp /> },
-        { id: 'pitch', label: 'Pitch IA', icon: <FiZap /> },
+        { id: 'pitch', label: 'Pitch Predictivo', icon: <FiZap /> },
         { id: 'captable', label: 'CapTable', icon: <FiPieChart /> },
         { id: 'validation', label: 'Validación', icon: <FiMessageSquare /> },
         { id: 'team', label: 'Equipo', icon: <FiUsers /> },

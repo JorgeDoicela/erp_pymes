@@ -72,7 +72,7 @@ function Home() {
         {
             icon: <FiCpu />,
             title: 'Asistente Inteligente',
-            desc: 'Dashboard predictivo con alertas proactivas y recomendaciones basadas en heurística'
+            desc: 'Dashboard predictivo con alertas proactivas y recomendaciones inteligentes'
         },
         {
             icon: <FiActivity />,
@@ -250,7 +250,7 @@ function Home() {
                             </div>
                             <p className="text-slate-600 mb-4 leading-relaxed">
                                 Dashboard inteligente que analiza tus datos y te proporciona alertas proactivas,
-                                predicciones de rotación y recomendaciones basadas en heurística.
+                                predicciones de rotación y recomendaciones predictivas.
                             </p>
                             <div className="flex items-center gap-2 text-sm font-semibold text-blue-600">
                                 <FiCpu />

@@ -131,8 +131,8 @@ class ReportService {
                     checkOut: a.checkOut,
                     status: a.status,
                     ipAddress: a.ipAddress,
-                    entryLocation: a.entryLatitude && a.entryLongitude ? { lat: a.entryLatitude, lng: a.entryLongitude } : null,
-                    exitLocation: a.exitLatitude && a.exitLongitude ? { lat: a.exitLatitude, lng: a.exitLongitude } : null
+                    entryLocation: (decryptCoordinate(a.entryLatitude) !== null && decryptCoordinate(a.entryLongitude) !== null) ? { lat: decryptCoordinate(a.entryLatitude), lng: decryptCoordinate(a.entryLongitude) } : null,
+                    exitLocation: (decryptCoordinate(a.exitLatitude) !== null && decryptCoordinate(a.exitLongitude) !== null) ? { lat: decryptCoordinate(a.exitLatitude), lng: decryptCoordinate(a.exitLongitude) } : null
                 }))
             };
         });

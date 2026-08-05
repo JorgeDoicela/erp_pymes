@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getPeriods, getJournalEntries, getTrialBalance } from '../../services/accounting.service';
-import { FiTrendingUp, FiActivity, FiBriefcase, FiAlertCircle, FiFolder, FiFileText, FiPieChart, FiCalendar, FiCheckCircle } from 'react-icons/fi';
+import { FiTrendingUp, FiBookOpen, FiBriefcase, FiAlertCircle, FiFolder, FiFileText, FiPieChart, FiCalendar, FiCheckCircle, FiLayers } from 'react-icons/fi';
 
 const AccountingDashboard = () => {
     const [stats, setStats] = useState({ periods: 0, entries: 0, balanceCount: 0 });
@@ -49,7 +49,7 @@ const AccountingDashboard = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all">
                     <div className="flex gap-4 items-center mb-4">
                         <div className="bg-indigo-100 p-3 rounded-xl text-indigo-600">
-                            <FiActivity className="w-6 h-6" />
+                            <FiBookOpen className="w-6 h-6" />
                         </div>
                         <div>
                             <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Comprobantes</p>
@@ -123,7 +123,7 @@ const AccountingDashboard = () => {
 
                     <Link to="/admin/accounting/reports/trial-balance" className="group p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg hover:emerald-200 transition-all flex items-center gap-5">
                         <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex justify-center items-center text-emerald-600 group-hover:scale-110 transition-transform">
-                            <FiActivity className="w-8 h-8" />
+                            <FiLayers className="w-8 h-8" />
                         </div>
                         <div>
                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Balance de Comprobación</h3>

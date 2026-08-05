@@ -1,5 +1,5 @@
 import prisma from '../../database/db.js';
-import { encrypt, decrypt, encryptSalary, decryptSalary, safeDecrypt } from '../../utils/encryption.js';
+import { encrypt, decrypt, encryptSalary, decryptSalary, safeDecrypt, encryptCoordinate, decryptCoordinate } from '../../utils/encryption.js';
 
 /**
  * EmployeeRepository
@@ -44,6 +44,9 @@ export class EmployeeRepository {
         status: 'Active'
       };
 
+      if (rest.workLatitude !== undefined) rest.workLatitude = encryptCoordinate(rest.workLatitude);
+      if (rest.workLongitude !== undefined) rest.workLongitude = encryptCoordinate(rest.workLongitude);
+
       const employee = await prisma.employee.create({
         data: {
           ...rest,
@@ -64,6 +67,8 @@ export class EmployeeRepository {
         salary: decryptSalary(employee.salary),
         bankName: employee.bankName ? safeDecrypt(employee.bankName) : null,
         accountNumber: employee.accountNumber ? safeDecrypt(employee.accountNumber) : null,
+        workLatitude: decryptCoordinate(employee.workLatitude),
+        workLongitude: decryptCoordinate(employee.workLongitude),
       };
     } catch (error) {
       throw new Error(`Error al crear empleado: ${error.message}`);
@@ -100,6 +105,8 @@ export class EmployeeRepository {
         salary: decryptSalary(employee.salary),
         bankName: employee.bankName ? safeDecrypt(employee.bankName) : null,
         accountNumber: employee.accountNumber ? safeDecrypt(employee.accountNumber) : null,
+        workLatitude: decryptCoordinate(employee.workLatitude),
+        workLongitude: decryptCoordinate(employee.workLongitude),
       };
     } catch (error) {
       throw new Error(`Error al obtener empleado: ${error.message}`);
@@ -250,6 +257,12 @@ export class EmployeeRepository {
         console.log(`[EmployeeRepository.update] Salary update received: ${salary}`);
         updateData.salary = encryptSalary(salary);
       }
+      if (updateData.workLatitude !== undefined) {
+        updateData.workLatitude = encryptCoordinate(updateData.workLatitude);
+      }
+      if (updateData.workLongitude !== undefined) {
+        updateData.workLongitude = encryptCoordinate(updateData.workLongitude);
+      }
       if (updateData.bankName) {
         updateData.bankName = encrypt(updateData.bankName);
       }
@@ -294,6 +307,8 @@ export class EmployeeRepository {
         salary: decryptSalary(result.salary),
         bankName: result.bankName ? safeDecrypt(result.bankName) : null,
         accountNumber: result.accountNumber ? safeDecrypt(result.accountNumber) : null,
+        workLatitude: decryptCoordinate(result.workLatitude),
+        workLongitude: decryptCoordinate(result.workLongitude),
       };
     } catch (error) {
       if (error.code === 'P2025') {

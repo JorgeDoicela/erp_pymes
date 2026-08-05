@@ -179,10 +179,10 @@ const ProjectForm = () => {
                                         rows="4"
                                         value={formData.pitchNarrative}
                                         onChange={handleChange}
-                                        placeholder="Escribe tu pitch aquí para que nuestra IA lo optimice..."
+                                        placeholder="Escribe tu pitch aquí para que nuestro motor predictivo lo optimice..."
                                         className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 font-medium text-slate-700 leading-relaxed"
                                     />
-                                    <p className="text-[10px] text-slate-400 font-medium px-2 italic">* Este texto será analizado por inteligencia de datos para proyectar el éxito.</p>
+                                    <p className="text-[10px] text-slate-400 font-medium px-2 italic">* Este texto será analizado mediante análisis predictivo de datos para proyectar el éxito.</p>
                                 </div>
 
                                 <div className="space-y-4">
