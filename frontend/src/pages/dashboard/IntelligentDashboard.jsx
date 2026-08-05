@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
     FiUsers, FiTrendingUp, FiClock, FiDollarSign, FiBriefcase,
-    FiAlertTriangle, FiArrowLeft, FiRefreshCw
+    FiAlertTriangle, FiArrowLeft, FiRefreshCw, FiSliders, FiCpu, FiPrinter, FiActivity
 } from 'react-icons/fi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -19,11 +19,16 @@ import EmployeeScoreCard from '../../components/EmployeeScoreCard.jsx';
 import PredictiveTrendChart from '../../components/PredictiveTrendChart.jsx';
 import Loading from '../../components/Loading.jsx';
 import ErrorState from '../../components/ErrorState.jsx';
+import ExecutiveKPIBanner from '../../components/ExecutiveKPIBanner.jsx';
+import WhatIfScenarioSimulator from '../../components/WhatIfScenarioSimulator.jsx';
+import StrategicAIAdvisor from '../../components/StrategicAIAdvisor.jsx';
+import ExecutiveReportModal from '../../components/ExecutiveReportModal.jsx';
+import AdvancedBusinessAnalytics from '../../components/AdvancedBusinessAnalytics.jsx';
 
 
 /**
  * Dashboard Inteligente de Gestión
- * Muestra insights, análisis y recomendaciones inteligentes
+ * Muestra insights, análisis y recomendaciones inteligentes para directivos
  */
 export default function IntelligentDashboard({ user, onLogout }) {
     const navigate = useNavigate();
@@ -37,11 +42,15 @@ export default function IntelligentDashboard({ user, onLogout }) {
     const [employeeScoring, setEmployeeScoring] = useState(null);
     const [predictiveInsights, setPredictiveInsights] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null); // Fix #21: timestamp
+    const [isReportOpen, setIsReportOpen] = useState(false);
     // Estado para las pestañas
     const [activeTab, setActiveTab] = useState('overview');
 
     const tabs = [
-        { id: 'overview', label: 'Resumen Estratégico', icon: FiTrendingUp },
+        { id: 'overview', label: 'Resumen Estratégico & ROI', icon: FiTrendingUp },
+        { id: 'analytics', label: 'Proyección & Algoritmos', icon: FiActivity },
+        { id: 'simulator', label: 'Simulador de Escenarios', icon: FiSliders },
+        { id: 'ai_advisor', label: 'Asistente IA Consultor', icon: FiCpu },
         { id: 'talent', label: 'Talento y Desempeño', icon: FiUsers },
         { id: 'alerts', label: 'Alertas y Acciones', icon: FiAlertTriangle },
         { id: 'organization', label: 'Organización', icon: FiBriefcase },
@@ -179,16 +188,27 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                 <p className="text-sm text-slate-500">Análisis predictivo y recomendaciones</p>
                             </div>
                         </div>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={handleRefresh}
-                            disabled={refreshing}
-                            className={`px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all text-sm font-medium flex items-center gap-2 shadow-sm ${refreshing ? 'opacity-70 cursor-not-allowed' : ''}`}
-                        >
-                            <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                            {refreshing ? 'Actualizando...' : 'Actualizar Datos'}
-                        </motion.button>
+                        <div className="flex items-center gap-2">
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setIsReportOpen(true)}
+                                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all text-sm font-semibold flex items-center gap-2 shadow-sm"
+                            >
+                                <FiPrinter className="w-4 h-4" />
+                                Informe Ejecutivo (PDF)
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleRefresh}
+                                disabled={refreshing}
+                                className={`px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all text-sm font-medium flex items-center gap-2 shadow-sm ${refreshing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            >
+                                <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                                {refreshing ? 'Actualizando...' : 'Actualizar Datos'}
+                            </motion.button>
+                        </div>
                     </div>
 
                     {/* Fix #21: Timestamp de última actualización */}
@@ -231,9 +251,12 @@ export default function IntelligentDashboard({ user, onLogout }) {
                     transition={{ duration: 0.3 }}
                     variants={itemVariants}
                 >
-                    {/* TAB 1: RESUMEN ESTRATÉGICO */}
+                    {/* TAB 1: RESUMEN ESTRATÉGICO & ROI */}
                     {activeTab === 'overview' && (
                         <div className="space-y-6">
+                            {/* Banner Ejecutivo de Impacto Financiero y ROI */}
+                            <ExecutiveKPIBanner financialImpact={dashboard?.financialImpact} />
+
                             {/* Predicción (Full Width) */}
                             {predictiveInsights && (
                                 <PredictiveTrendChart data={predictiveInsights} />
@@ -289,6 +312,21 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* TAB: PROYECCIÓN & ALGORITMOS DE NEGOCIO */}
+                    {activeTab === 'analytics' && (
+                        <AdvancedBusinessAnalytics data={dashboard} />
+                    )}
+
+                    {/* TAB: SIMULADOR DE ESCENARIOS (WHAT-IF) */}
+                    {activeTab === 'simulator' && (
+                        <WhatIfScenarioSimulator initialData={dashboard} />
+                    )}
+
+                    {/* TAB: ASISTENTE IA CONSULTOR ESTRATÉGICO */}
+                    {activeTab === 'ai_advisor' && (
+                        <StrategicAIAdvisor dashboardData={dashboard} />
                     )}
 
                     {/* TAB 2: TALENTO Y DESEMPEÑO */}
@@ -467,6 +505,13 @@ export default function IntelligentDashboard({ user, onLogout }) {
                     )}
                 </motion.div>
             </motion.div>
+
+            {/* Modal de Informe Ejecutivo Imprimible */}
+            <ExecutiveReportModal
+                isOpen={isReportOpen}
+                onClose={() => setIsReportOpen(false)}
+                data={dashboard}
+            />
         </>
     );
 }

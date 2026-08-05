@@ -33,6 +33,8 @@ const PayrollConfiguration = lazy(() => import('./pages/payroll/PayrollConfigura
 const PayrollGenerator = lazy(() => import('./pages/payroll/PayrollGenerator.jsx'));
 const MyPayments = lazy(() => import('./pages/payroll/MyPayments.jsx'));
 const BenefitsManagement = lazy(() => import('./pages/payroll/BenefitsManagement.jsx'));
+const SalaryAdvancesManagement = lazy(() => import('./pages/payroll/SalaryAdvancesManagement.jsx'));
+const MySalaryAdvances = lazy(() => import('./pages/payroll/MySalaryAdvances.jsx'));
 
 // Performance
 const EvaluationDashboard = lazy(() => import('./pages/performance/EvaluationDashboard.jsx'));
@@ -164,6 +166,7 @@ function App() {
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
           <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
+          <Route path="/admin/payroll/advances" element={<SalaryAdvancesManagement />} />
           <Route path="/admin/payroll/generator" element={<PayrollGenerator />} />
           <Route path="/performance" element={<EvaluationDashboard />} />
           <Route path="/performance/create" element={<CreateEvaluation />} />
@@ -209,6 +212,7 @@ function App() {
 
         <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
+          <Route path="/my-advances" element={<MySalaryAdvances />} />
           <Route path="/performance/results/:id" element={<EvaluationResults />} />
           <Route path="/performance/goals" element={<MyGoals />} />
           <Route path="/performance/my-evaluations" element={<MyEvaluations />} />

@@ -9,6 +9,7 @@ import absenceRoutes from './attendance/absence.routes.js';
 import reportRoutes from './reports/report.routes.js';
 import payrollConfigRoutes from './payroll/payrollConfig.routes.js';
 import benefitsRoutes from './payroll/benefits.routes.js';
+import salaryAdvanceRoutes from './payroll/salaryAdvance.routes.js';
 import evaluationRoutes from './performance/evaluation.routes.js';
 import goalsRoutes from './performance/goals.routes.js';
 import recruitmentRoutes from './recruitment.routes.js';
@@ -63,6 +64,7 @@ router.use('/reports', reportRoutes);
 // Payroll Routes
 router.use('/payroll', payrollConfigRoutes);
 router.use('/benefits', benefitsRoutes);
+router.use('/salary-advances', salaryAdvanceRoutes);
 router.use('/performance', evaluationRoutes);
 router.use('/goals', goalsRoutes);
 router.use('/recruitment', recruitmentRoutes);

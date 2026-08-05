@@ -2,7 +2,7 @@ import {
     FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift,
     FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle,
     FiTrendingUp, FiShield, FiSettings, FiTarget, FiActivity, FiCompass,
-    FiBookOpen, FiList, FiPlus
+    FiBookOpen, FiList, FiPlus, FiCreditCard
 } from 'react-icons/fi';
 
 export const adminModules = [
@@ -13,6 +13,7 @@ export const adminModules = [
     { title: 'Ausencias', icon: <FiUserX />, color: 'bg-rose-500', path: '/admin/absences' },
     { title: 'Nómina', icon: <FiDollarSign />, color: 'bg-green-500', path: '/admin/payroll/generator' },
     { title: 'Beneficios', icon: <FiGift />, color: 'bg-yellow-500', path: '/admin/payroll/benefits' },
+    { title: 'Anticipos y Préstamos', icon: <FiCreditCard />, color: 'bg-emerald-600', path: '/admin/payroll/advances' },
     { title: 'Evaluaciones', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
     { title: 'Mis Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-500', path: '/performance/my-evaluations' },
     { title: 'Mis Objetivos', icon: <FiTarget />, color: 'bg-cyan-500', path: '/performance/goals' },
@@ -30,6 +31,7 @@ export const employeeModules = [
     { title: 'Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/empleado/asistencia' },
     { title: 'Permisos', icon: <FiCalendar />, color: 'bg-rose-500', path: '/empleado/ausencias' },
     { title: 'Mis Pagos', icon: <FiDollarSign />, color: 'bg-green-500', path: '/my-payments' },
+    { title: 'Mis Anticipos', icon: <FiCreditCard />, color: 'bg-emerald-600', path: '/my-advances' },
     { title: 'Emprendimiento', icon: <FiCompass />, color: 'bg-amber-600', path: '/entrepreneurship' },
     { title: 'Mis Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-500', path: '/performance/my-evaluations' },
     { title: 'Mis Objetivos', icon: <FiTarget />, color: 'bg-cyan-500', path: '/performance/goals' },

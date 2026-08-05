@@ -608,6 +608,7 @@ export const integratePayroll = async (req, res) => {
         const lines = [];
         let totalSueldos = 0;
         let totalHorasExtras = 0;
+        let totalBonos = 0;
         let totalDeducciones = 0;
         let totalNeto = 0;
 
@@ -620,14 +621,19 @@ export const integratePayroll = async (req, res) => {
             const ccId = cc ? cc.id : null;
 
             if (!expensesByCC[ccId || 'DEFAULT']) {
-                expensesByCC[ccId || 'DEFAULT'] = { ccId, sueldos: 0, extras: 0 };
+                expensesByCC[ccId || 'DEFAULT'] = { ccId, sueldos: 0, extras: 0, bonos: 0 };
             }
+
+            const bonuses = JSON.parse(det.bonuses || '[]');
+            const detBonuses = bonuses.reduce((acc, b) => acc + (b.amount || 0), 0);
 
             expensesByCC[ccId || 'DEFAULT'].sueldos += det.baseSalary;
             expensesByCC[ccId || 'DEFAULT'].extras += det.overtimeAmount;
+            expensesByCC[ccId || 'DEFAULT'].bonos += detBonuses;
 
             totalSueldos += det.baseSalary;
             totalHorasExtras += det.overtimeAmount;
+            totalBonos += detBonuses;
             totalNeto += det.netSalary;
 
             const deductions = JSON.parse(det.deductions || '[]');
@@ -651,6 +657,15 @@ export const integratePayroll = async (req, res) => {
                     costCenterId: group.ccId,
                     description: `Gasto Horas Extras - ${group.ccId ? 'CC' : 'Gral'}`,
                     debit: Number(group.extras.toFixed(2)),
+                    credit: 0
+                });
+            }
+            if (group.bonos > 0) {
+                lines.push({
+                    accountId: accMap['5.1.3'] || accMap['5.1.1'],
+                    costCenterId: group.ccId,
+                    description: `Gasto Bonos y Beneficios - ${group.ccId ? 'CC' : 'Gral'}`,
+                    debit: Number(group.bonos.toFixed(2)),
                     credit: 0
                 });
             }

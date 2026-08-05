@@ -1,4 +1,5 @@
 import prisma from '../../database/db.js';
+import { decryptCoordinate } from '../../utils/encryption.js';
 
 class ReportService {
     async getAttendanceStats(startDate, endDate, department, employeeId) {
@@ -13,12 +14,6 @@ class ReportService {
         const whereEmployee = {};
         if (department) whereEmployee.department = department;
         if (employeeId) whereEmployee.id = employeeId;
-
-        // Filter by specific employee if provided (passed as argument but need to update method signature first)
-        // We will handle it in the next step or assume method signature change. 
-
-        // Let's refactor signature in next tool call or do hack here? 
-        // I will stick to current and fix signature in next step.
 
         const employees = await prisma.employee.findMany({
             where: whereEmployee,
@@ -124,16 +119,23 @@ class ReportService {
                 workedHours: Math.round(workedHours * 100) / 100,
                 overtime: Math.round(overtime * 100) / 100,
                 attendanceRate: (present + excused) / (present + absent + excused) * 100 || 0,
-                records: emp.attendance.map(a => ({
-                    id: a.id,
-                    date: a.date,
-                    checkIn: a.checkIn,
-                    checkOut: a.checkOut,
-                    status: a.status,
-                    ipAddress: a.ipAddress,
-                    entryLocation: (decryptCoordinate(a.entryLatitude) !== null && decryptCoordinate(a.entryLongitude) !== null) ? { lat: decryptCoordinate(a.entryLatitude), lng: decryptCoordinate(a.entryLongitude) } : null,
-                    exitLocation: (decryptCoordinate(a.exitLatitude) !== null && decryptCoordinate(a.exitLongitude) !== null) ? { lat: decryptCoordinate(a.exitLatitude), lng: decryptCoordinate(a.exitLongitude) } : null
-                }))
+                records: emp.attendance.map(a => {
+                    const entryLat = decryptCoordinate(a.entryLatitude);
+                    const entryLng = decryptCoordinate(a.entryLongitude);
+                    const exitLat = decryptCoordinate(a.exitLatitude);
+                    const exitLng = decryptCoordinate(a.exitLongitude);
+
+                    return {
+                        id: a.id,
+                        date: a.date,
+                        checkIn: a.checkIn,
+                        checkOut: a.checkOut,
+                        status: a.status,
+                        ipAddress: a.ipAddress,
+                        entryLocation: (entryLat !== null && entryLng !== null) ? { lat: entryLat, lng: entryLng } : null,
+                        exitLocation: (exitLat !== null && exitLng !== null) ? { lat: exitLat, lng: exitLng } : null
+                    };
+                })
             };
         });
 

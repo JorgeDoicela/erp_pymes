@@ -44,7 +44,7 @@ export const generatePayslipPDF = (detail, employee, periodDate) => {
 
     // Tables
     const earningsData = [
-        ["Sueldo Ganado", detail.workedDays < 30 ? ((detail.baseSalary / 30) * detail.workedDays).toFixed(2) : detail.baseSalary.toFixed(2)],
+        ["Sueldo Ganado", detail.baseSalary.toFixed(2)],
         ["Horas Extra", detail.overtimeAmount.toFixed(2)],
         ...bonuses.map(b => [b.name, b.amount.toFixed(2)])
     ];

@@ -328,7 +328,14 @@ const PayrollGenerator = () => {
                                                 <td className="p-4 font-medium text-slate-900">
                                                     {det.employee.firstName} {det.employee.lastName}
                                                 </td>
-                                                <td className="p-4 text-right">${(det.baseSalary || 0).toFixed(2)}</td>
+                                                <td className="p-4 text-right font-mono font-medium">
+                                                    ${(det.baseSalary || 0).toFixed(2)}
+                                                    {det.employee?.contracts?.[0]?.salary && Math.abs(det.employee.contracts[0].salary - det.baseSalary) > 0.01 && (
+                                                        <div className="text-[10px] text-slate-400 font-sans" title="Sueldo base mensual según contrato">
+                                                            Contrato: ${det.employee.contracts[0].salary.toFixed(2)}
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td className="p-4 text-center">{det.workedDays}</td>
                                                 <td className="p-4 text-right text-emerald-600 font-mono font-medium">
                                                     +${totalBonuses.toFixed(2)}

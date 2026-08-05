@@ -127,6 +127,20 @@ class PayrollCalculationService {
             benefitMap.get(ben.employeeId).push(ben);
         });
 
+        // d. Carga Batch de Anticipos de Sueldo / Préstamos Aprobados
+        const allAdvances = await prisma.salaryAdvance.findMany({
+            where: {
+                employeeId: { in: employeeIds },
+                status: 'APPROVED'
+            }
+        });
+
+        const advanceMap = new Map();
+        allAdvances.forEach(adv => {
+            if (!advanceMap.has(adv.employeeId)) advanceMap.set(adv.employeeId, []);
+            advanceMap.get(adv.employeeId).push(adv);
+        });
+
         const payrollDetails = [];
         let totalPayrollAmount = financial.from(0);
 
@@ -203,7 +217,8 @@ class PayrollCalculationService {
             const employeeDeductions = [];
 
             records.forEach(rec => {
-                const dayOfWeek = rec.date.getDay(); // 0 = Sunday, 6 = Saturday
+                const recDate = new Date(rec.date);
+                const dayOfWeek = recDate.getUTCDay(); // 0 = Sunday, 6 = Saturday (UTC to avoid server TZ shift)
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
                 // 1. Night Surcharge (25%)
@@ -234,7 +249,6 @@ class PayrollCalculationService {
                 // 2. Overtime Splits
                 const hours = financial.from(rec.workedHours || 0);
                 let dailyExpectedHours = financial.from(8);
-                const recDate = new Date(rec.date);
                 const dailySchedule = schedules.find(sched => {
                     const sStart = new Date(sched.startDate);
                     const sEnd = sched.endDate ? new Date(sched.endDate) : new Date(2100, 0, 1);
@@ -299,19 +313,32 @@ class PayrollCalculationService {
                 });
             });
 
-            const totalBonuses = employeeBonuses.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
-            const totalDeductions = employeeDeductions.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
-
-            let netSalary = earnedSalary.plus(overtimeTotalCost).minus(undertimeAmount).plus(totalBonuses).minus(totalDeductions);
-            if (netSalary.lt(0)) netSalary = financial.from(0);
+            // 3. Anticipos de Sueldo / Préstamos Aprobados
+            const employeeAdvances = advanceMap.get(emp.id) || [];
+            employeeAdvances.forEach(adv => {
+                const quotaNumber = adv.paidInstallments + 1;
+                if (quotaNumber <= adv.installments) {
+                    employeeDeductions.push({
+                        name: `Anticipo/Préstamo (Cuota ${quotaNumber}/${adv.installments})`,
+                        amount: financial.round(adv.monthlyDeduction),
+                        advanceId: adv.id
+                    });
+                }
+            });
 
             if (undertimeAmount.gt(0)) {
                 employeeDeductions.push({ name: 'Descuento por Horas No Trabajadas', amount: financial.round(undertimeAmount) });
             }
 
+            const totalBonuses = employeeBonuses.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
+            const totalDeductions = employeeDeductions.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
+
+            let netSalary = earnedSalary.plus(overtimeTotalCost).plus(totalBonuses).minus(totalDeductions);
+            if (netSalary.lt(0)) netSalary = financial.from(0);
+
             payrollDetails.push({
                 employeeId: emp.id,
-                baseSalary: financial.round(baseSalary),
+                baseSalary: financial.round(earnedSalary),
                 workedDays: workedDays,
                 overtimeHours: financial.round(totalOvertimeHours),
                 overtimeAmount: financial.round(overtimeTotalCost),
@@ -412,7 +439,16 @@ class PayrollCalculationService {
             where: { id },
             include: {
                 details: {
-                    include: { employee: true }
+                    include: {
+                        employee: {
+                            include: {
+                                contracts: {
+                                    orderBy: { startDate: 'desc' },
+                                    take: 1
+                                }
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -447,6 +483,28 @@ class PayrollCalculationService {
                             where: { id: bonus.benefitId },
                             data: { status: 'PROCESSED' }
                         });
+                    }
+                }
+
+                // Process Salary Advances / Loans
+                const deductions = JSON.parse(detail.deductions || '[]');
+                for (const ded of deductions) {
+                    if (ded.advanceId) {
+                        const adv = await tx.salaryAdvance.findUnique({ where: { id: ded.advanceId } });
+                        if (adv) {
+                            const newPaidInstallments = adv.paidInstallments + 1;
+                            const newPaidAmount = adv.paidAmount + (ded.amount || 0);
+                            const isFullyPaid = newPaidInstallments >= adv.installments || newPaidAmount >= adv.amount;
+
+                            await tx.salaryAdvance.update({
+                                where: { id: ded.advanceId },
+                                data: {
+                                    paidInstallments: newPaidInstallments,
+                                    paidAmount: newPaidAmount,
+                                    status: isFullyPaid ? 'PAID' : 'APPROVED'
+                                }
+                            });
+                        }
                     }
                 }
             }

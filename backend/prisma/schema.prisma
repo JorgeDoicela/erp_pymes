@@ -62,6 +62,7 @@ model Employee {
   resetPasswordExpires DateTime?
   trackingConsent      Boolean                 @default(false)
   trackingConsentDate  DateTime?
+  salaryAdvances       SalaryAdvance[]
   entrepreneurships    Entrepreneurship[]       @relation("ProjectOwner")
   projectMemberships   EntrepreneurshipMember[]
   projectMentorships   EntrepreneurshipMentor[]
@@ -842,4 +843,28 @@ model EntrepreneurshipUpdate {
 
   @@index([projectId])
   @@map("ent_updates")
+}
+
+model SalaryAdvance {
+  id               String    @id @default(cuid())
+  employeeId       String
+  amount           Float
+  installments     Int       @default(1)
+  monthlyDeduction Float
+  reason           String?
+  status           String    @default("PENDING") // PENDING, APPROVED, REJECTED, PAID, CANCELLED
+  approvedBy       String?
+  approvedAt       DateTime?
+  rejectionReason  String?
+  paidAmount       Float     @default(0)
+  paidInstallments Int       @default(0)
+  requestDate      DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  employee         Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([status])
+  @@map("salary_advances")
 }
