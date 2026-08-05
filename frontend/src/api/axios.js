@@ -28,14 +28,22 @@ api.interceptors.request.use(
 
 import toast from 'react-hot-toast';
 
-// Interceptor to handle expired sessions or suspended subscriptions (402 Payment Required)
+// Interceptor to handle expired sessions or suspended subscriptions (402 Payment Required / 403 Tenant Inactive)
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response) {
-            const { status, data } = error.response;
-            if (status === 402 || data?.code === 'SUBSCRIPTION_SUSPENDED' || data?.code === 'TRIAL_EXPIRED') {
-                const msg = data?.message || 'La suscripción de la empresa se encuentra suspendida por pago pendiente.';
+            const { status, data, config } = error.response;
+            const isSuperAdminRoute = config?.url?.includes('/superadmin');
+            const isSuspendedOrInactive = 
+                status === 402 || 
+                data?.code === 'SUBSCRIPTION_SUSPENDED' || 
+                data?.code === 'TRIAL_EXPIRED' || 
+                data?.code === 'TENANT_INACTIVE' ||
+                data?.code === 'SUBSCRIPTION_CANCELLED';
+
+            if (isSuspendedOrInactive && !isSuperAdminRoute) {
+                const msg = data?.message || 'La suscripción de la empresa se encuentra suspendida o inactiva.';
                 
                 toast.error(msg, {
                     duration: 4000,

@@ -78,6 +78,31 @@ export const login = async (req, res) => {
 
         const effectiveRole = user.email === 'admin@emplifi.com' ? 'superadmin' : user.role;
 
+        // Verificar si la empresa del usuario está suspendida o inactiva (salvo para SuperAdmin)
+        if (effectiveRole !== 'superadmin' && user.tenant) {
+            if (user.tenant.subscriptionStatus === 'SUSPENDED') {
+                return res.status(402).json({
+                    success: false,
+                    message: `La suscripción de la empresa '${user.tenant.name}' se encuentra suspendida por pago pendiente. Por favor contacta al Administrador de la empresa o a soporte de EMPLIFI.`,
+                    code: 'SUBSCRIPTION_SUSPENDED'
+                });
+            }
+            if (user.tenant.subscriptionStatus === 'CANCELLED') {
+                return res.status(403).json({
+                    success: false,
+                    message: `La cuenta de la empresa '${user.tenant.name}' ha sido cancelada.`,
+                    code: 'SUBSCRIPTION_CANCELLED'
+                });
+            }
+            if (user.tenant.isActive === false) {
+                return res.status(403).json({
+                    success: false,
+                    message: `La empresa '${user.tenant.name}' está desactivada temporalmente en el sistema.`,
+                    code: 'TENANT_INACTIVE'
+                });
+            }
+        }
+
         // Generar Token con tenantId y email
         const token = jwt.sign(
             { id: user.id, email: user.email, role: effectiveRole, tenantId: user.tenantId },

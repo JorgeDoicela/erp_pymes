@@ -294,25 +294,25 @@ const AnnouncementsBoard = ({ user }) => {
 
                 {/* Sidebar Widgets (Birthdays of the month & Quick Policies) */}
                 <div className="space-y-6">
-                    {/* Birthdays Card */}
-                    <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white p-6 rounded-2xl shadow-md space-y-4">
-                        <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
-                            <GiftIcon className="w-6 h-6 text-pink-400" />
+                    {/* Birthdays Card Clean Corporate */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                        <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                            <GiftIcon className="w-5 h-5 text-indigo-600" />
                             <span>Cumpleaños del Mes</span>
                         </div>
-                        <p className="text-xs text-purple-200">¡Celebremos a nuestros compañeros este mes!</p>
+                        <p className="text-xs text-slate-500">Compañeros que celebran su cumpleaños este mes.</p>
 
-                        <div className="space-y-3 pt-2">
+                        <div className="space-y-2 pt-1">
                             {birthdays.length === 0 ? (
-                                <p className="text-xs text-purple-300/70 italic text-center py-2">Sin cumpleaños registrados este mes</p>
+                                <p className="text-xs text-slate-400 italic text-center py-2">Sin cumpleaños registrados este mes</p>
                             ) : (
                                 birthdays.map(bday => (
-                                    <div key={bday.id} className="p-3 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-between border border-white/10 text-xs">
+                                    <div key={bday.id} className="p-3 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100 text-xs">
                                         <div>
-                                            <p className="font-bold text-white">{bday.firstName} {bday.lastName}</p>
-                                            <p className="text-[11px] text-purple-200">{bday.department || 'General'}</p>
+                                            <p className="font-semibold text-slate-900">{bday.firstName} {bday.lastName}</p>
+                                            <p className="text-[11px] text-slate-500">{bday.department || 'General'}</p>
                                         </div>
-                                        <span className="px-2.5 py-1 bg-pink-500/20 text-pink-300 border border-pink-400/40 rounded-full font-bold text-[11px]">
+                                        <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full font-bold text-[11px]">
                                             Día {bday.day} 🎉
                                         </span>
                                     </div>

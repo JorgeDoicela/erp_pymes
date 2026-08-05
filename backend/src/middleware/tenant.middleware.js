@@ -34,11 +34,28 @@ export const requireTenant = async (req, res, next) => {
             }
         });
 
-        if (!tenant || !tenant.isActive) {
+        if (!tenant) {
+            return res.status(404).json({
+                success: false,
+                message: 'No se encontró la empresa asociada a esta cuenta de usuario.',
+                code: 'TENANT_NOT_FOUND'
+            });
+        }
+
+        // Validar Estado de Suscripción Específico
+        if (tenant.subscriptionStatus === 'SUSPENDED') {
+            return res.status(402).json({
+                success: false,
+                message: `La suscripción de la empresa '${tenant.name}' se encuentra suspendida por falta de pago o pago pendiente. Por favor contacta al Administrador de tu empresa o a Soporte para reactivar el servicio.`,
+                code: 'SUBSCRIPTION_SUSPENDED'
+            });
+        }
+
+        if (tenant.subscriptionStatus === 'CANCELLED') {
             return res.status(403).json({
                 success: false,
-                message: 'La empresa asociada no está activa o no fue encontrada.',
-                code: 'TENANT_INACTIVE'
+                message: `La cuenta de la empresa '${tenant.name}' ha sido cancelada.`,
+                code: 'SUBSCRIPTION_CANCELLED'
             });
         }
 
@@ -49,30 +66,22 @@ export const requireTenant = async (req, res, next) => {
         if (tenant.subscriptionStatus === 'TRIAL' && expirationDate && new Date(expirationDate) < now) {
             prisma.tenant.update({
                 where: { id: tenant.id },
-                data: { subscriptionStatus: 'SUSPENDED' }
+                data: { subscriptionStatus: 'SUSPENDED', isActive: false }
             }).catch(err => console.error('Error auto-suspending tenant:', err));
 
             return res.status(402).json({
                 success: false,
-                message: 'Tu período de prueba gratuita de 14 días ha finalizado. Por favor actualiza tu suscripción para continuar.',
+                message: `El período de prueba gratuita de 14 días para la empresa '${tenant.name}' ha finalizado. Por favor actualiza la suscripción para continuar.`,
                 code: 'TRIAL_EXPIRED'
             });
         }
 
-        // Validar Estado de Suscripción
-        if (tenant.subscriptionStatus === 'SUSPENDED') {
-            return res.status(402).json({
-                success: false,
-                message: 'La suscripción de la empresa se encuentra suspendida por pago pendiente.',
-                code: 'SUBSCRIPTION_SUSPENDED'
-            });
-        }
-
-        if (tenant.subscriptionStatus === 'CANCELLED') {
+        // Validar si la empresa fue marcada inactiva explícitamente
+        if (!tenant.isActive) {
             return res.status(403).json({
                 success: false,
-                message: 'La cuenta de la empresa ha sido cancelada.',
-                code: 'SUBSCRIPTION_CANCELLED'
+                message: `La empresa '${tenant.name}' se encuentra desactivada en la plataforma. Por favor contacta a soporte técnico.`,
+                code: 'TENANT_INACTIVE'
             });
         }
 

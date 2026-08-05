@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { 
-    getComplianceAlerts, 
-    getStatutoryProvisions 
+import {
+    getComplianceAlerts,
+    getStatutoryProvisions
 } from '../../services/compliance/compliance.service';
 import ExportButtons from '../../components/common/ExportButtons';
-import { 
-    ShieldExclamationIcon, 
-    ExclamationTriangleIcon, 
-    ClockIcon, 
-    BanknotesIcon, 
+import {
+    ShieldExclamationIcon,
+    ExclamationTriangleIcon,
+    ClockIcon,
+    BanknotesIcon,
     ArrowPathIcon,
     BuildingOfficeIcon,
     DocumentTextIcon,
@@ -91,21 +91,19 @@ const LegalComplianceDashboard = () => {
                 <div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
                     <button
                         onClick={() => setActiveTab('ALERTS')}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                            activeTab === 'ALERTS'
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'ALERTS'
                                 ? 'bg-white text-slate-800 shadow-sm'
                                 : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                            }`}
                     >
-                        🚨 Centro de Alertas ({alertsData.summary?.totalAlerts || 0})
+                        Centro de Alertas ({alertsData.summary?.totalAlerts || 0})
                     </button>
                     <button
                         onClick={() => setActiveTab('PROVISIONS')}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                            activeTab === 'PROVISIONS'
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${activeTab === 'PROVISIONS'
                                 ? 'bg-blue-600 text-white shadow-sm'
                                 : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                            }`}
                     >
                         <BanknotesIcon className="w-4 h-4" />
                         Provisiones Sociales
@@ -165,9 +163,8 @@ const LegalComplianceDashboard = () => {
                                     key={alert.id}
                                     initial={{ opacity: 0, y: 5 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className={`p-5 rounded-2xl border bg-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
-                                        alert.urgency === 'CRITICAL' ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200/80'
-                                    }`}
+                                    className={`p-5 rounded-2xl border bg-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${alert.urgency === 'CRITICAL' ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200/80'
+                                        }`}
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="p-3 bg-slate-100 rounded-2xl shrink-0">

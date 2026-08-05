@@ -41,7 +41,9 @@ export const authorize = (roles = []) => {
             return res.status(401).json({ message: 'No autenticado' });
         }
 
-        if (roles.length > 0 && !roles.includes(req.user.role)) {
+        const isSuperAdmin = req.user.role === 'superadmin' || req.user.email === 'admin@emplifi.com';
+
+        if (roles.length > 0 && !roles.includes(req.user.role) && !isSuperAdmin) {
             return res.status(403).json({ message: 'No autorizado: Rol insuficiente' });
         }
 
