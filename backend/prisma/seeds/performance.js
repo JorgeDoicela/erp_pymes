@@ -1,9 +1,10 @@
 export async function seedPerformance(prisma, employees) {
     console.log('[PERFORMANCE] Generando Evaluaciones e Historial...');
 
-    // 1. Crear Templates para Q3 y Q4 2023, Q1 2024
+    const year = new Date().getFullYear();
+    const activePeriod = `${year}-Q1`;
     const templates = [];
-    const periods = ['2023-Q3', '2023-Q4', '2024-Q1'];
+    const periods = [`${year - 1}-Q3`, `${year - 1}-Q4`, activePeriod];
 
     for (const period of periods) {
         let template = await prisma.evaluationTemplate.findFirst({ where: { period } });
@@ -18,11 +19,13 @@ export async function seedPerformance(prisma, employees) {
                         { name: 'Cultura', weight: 30 }
                     ]),
                     scale: JSON.stringify({ min: 1, max: 5 }),
-                    isActive: period === '2024-Q1' // Solo la actual activa
+                    isActive: period === activePeriod
                 }
             });
         }
-        templates.push(template);
+        if (template && template.id) {
+            templates.push(template);
+        }
     }
 
     // Ensure we have Admin (to be the reviewer)
@@ -34,9 +37,9 @@ export async function seedPerformance(prisma, employees) {
 
     // Helper para fechas
     const getDatesForPeriod = (period) => {
-        if (period === '2023-Q3') return { start: new Date('2023-07-01'), end: new Date('2023-09-30') };
-        if (period === '2023-Q4') return { start: new Date('2023-10-01'), end: new Date('2023-12-31') };
-        return { start: new Date('2024-01-01'), end: new Date('2024-03-31') };
+        if (period.endsWith('-Q3')) return { start: new Date(`${year - 1}-07-01`), end: new Date(`${year - 1}-09-30`) };
+        if (period.endsWith('-Q4')) return { start: new Date(`${year - 1}-10-01`), end: new Date(`${year - 1}-12-31`) };
+        return { start: new Date(`${year}-01-01`), end: new Date(`${year}-03-31`) };
     };
 
     for (const emp of targetEmployees) {

@@ -86,11 +86,14 @@ async function main() {
 
     // 2. Crear Admin + 10 Empleados reales + System Settings
     console.log('\n[2/9] Creando usuarios...');
-    let admin, employees;
+    let admin, employees, accountant, entrepreneur, allEmployees;
     await withRetry('USERS', async (prisma) => {
         const result = await seedUsers(prisma);
         admin = result.admin;
         employees = result.employees;
+        accountant = result.accountant;
+        entrepreneur = result.entrepreneur;
+        allEmployees = result.allUsers || [admin, ...employees, accountant, entrepreneur].filter(Boolean);
     });
 
     if (!admin) {
@@ -98,8 +101,7 @@ async function main() {
         process.exit(1);
     }
 
-    const allEmployees = [admin, ...employees];
-    console.log(`\n✅ Total de empleados para seed: ${allEmployees.length}`);
+    console.log(`\n✅ Total de empleados para seed (Admin, Staff, Contabilidad, Emprendimiento): ${allEmployees.length}`);
     await sleep(1500);
 
     // 3. Core Records (Contratos, Habilidades, Horarios, Documentos)
@@ -169,7 +171,7 @@ async function main() {
 
     // 11. Emprendimiento (AISLADO)
     console.log('\n[11/11] Configurando Incubadora de Startups...');
-    await withRetry('ENTREPRENEURSHIP', (prisma) => seedEntrepreneurship(prisma, employees, admin))
+    await withRetry('ENTREPRENEURSHIP', (prisma) => seedEntrepreneurship(prisma))
         .catch((e) => console.error('❌ Error en seedEntrepreneurship:', e.message));
 
     console.log('\n╔══════════════════════════════════════╗');

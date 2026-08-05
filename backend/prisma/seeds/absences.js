@@ -14,7 +14,8 @@ export async function seedAbsences(prisma, employees) {
             const numRequests = Math.floor(Math.random() * 3) + 1;
 
             for (let i = 0; i < numRequests; i++) {
-                const startDate = getRandomDate(new Date('2024-01-01'), new Date('2024-12-01'));
+                const currentYear = new Date().getFullYear();
+                const startDate = getRandomDate(new Date(`${currentYear}-01-01`), new Date());
                 const endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + Math.floor(Math.random() * 3) + 1);
 

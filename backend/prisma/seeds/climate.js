@@ -3,16 +3,17 @@ import { getRandomElement, departments } from './utils.js';
 export async function seedClimate(prisma) {
     console.log('[CLIMATE] Generando Encuesta de Clima...');
     try {
-        let survey = await prisma.climateSurvey.findFirst({ where: { title: 'Clima Q4 2024' } });
+        const currentYear = new Date().getFullYear();
+        let survey = await prisma.climateSurvey.findFirst({ where: { title: `Clima Q4 ${currentYear}` } });
 
         if (!survey) {
             survey = await prisma.climateSurvey.create({
                 data: {
-                    title: 'Clima Q4 2024',
-                    startDate: new Date('2024-10-01'),
-                    endDate: new Date('2024-12-31'),
+                    title: `Clima Q4 ${currentYear}`,
+                    startDate: new Date(`${currentYear}-10-01`),
+                    endDate: new Date(`${currentYear}-12-31`),
                     isActive: true,
-                    description: 'Medición de fin de año'
+                    description: 'Medición de clima laboral anual'
                 }
             });
         }

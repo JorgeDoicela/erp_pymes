@@ -1,9 +1,9 @@
-export async function seedEntrepreneurship(prisma, employees, admin) {
+export async function seedEntrepreneurship(prisma) {
     console.log('🚀 Iniciando seeder de Emprendimiento (Incubadora)...');
 
-    if (!employees || employees.length === 0) {
-        console.warn('⚠️ No hay empleados para vincular proyectos. Usando admin.');
-    }
+    const dbEmployees = await prisma.employee.findMany({ where: { isActive: true } });
+    const adminUser = dbEmployees.find(e => e.role === 'admin') || dbEmployees[0];
+    const entrepreneurUser = dbEmployees.find(e => e.role === 'entrepreneur') || dbEmployees[0];
 
     const projects = [
         {
@@ -13,7 +13,7 @@ export async function seedEntrepreneurship(prisma, employees, admin) {
             stage: 'MVP',
             valuation: 150000,
             equityAvailable: 85,
-            ownerId: employees[0]?.id || admin.id,
+            ownerId: entrepreneurUser?.id || adminUser.id,
             pitchNarrative: 'Nuestra plataforma utiliza inteligencia artificial para encontrar las rutas más eficientes para camiones eléctricos, reduciendo costos operativos en un 30% y eliminando el desperdicio de combustible. Tenemos un mercado claro de empresas de logística en Latam.',
             growthMRR: 2500,
             growthUsers: 120,
@@ -58,7 +58,7 @@ export async function seedEntrepreneurship(prisma, employees, admin) {
             stage: 'VALIDATION',
             valuation: 320000,
             equityAvailable: 90,
-            ownerId: employees[1]?.id || admin.id,
+            ownerId: dbEmployees[1]?.id || adminUser.id,
             pitchNarrative: 'Salvamos vidas detectando arritmias antes de que ocurran mediante hardware propietario de bajo costo y una red de telemedicina instantánea.',
             growthMRR: 0,
             growthUsers: 85,
@@ -72,7 +72,7 @@ export async function seedEntrepreneurship(prisma, employees, admin) {
             },
             mentors: {
                 create: [
-                    { mentorName: 'Dr. Roberto Gomez', specialty: 'Cardiología / IoT', employeeId: employees[5]?.id }
+                    { mentorName: 'Dr. Roberto Gomez', specialty: 'Cardiología / IoT', employeeId: dbEmployees[5]?.id || adminUser.id }
                 ]
             },
             interviews: {
@@ -88,7 +88,7 @@ export async function seedEntrepreneurship(prisma, employees, admin) {
             stage: 'IDEATION',
             valuation: 50000,
             equityAvailable: 100,
-            ownerId: employees[2]?.id || admin.id,
+            ownerId: dbEmployees[2]?.id || adminUser.id,
             pitchNarrative: 'Hacemos que los niños aprendan a ahorrar e invertir jugando. Cada logro educativo se convierte en una simulación real de cómo funciona el mercado financiero.',
             growthMRR: 0,
             growthUsers: 0,
@@ -108,7 +108,7 @@ export async function seedEntrepreneurship(prisma, employees, admin) {
             stage: 'SCALING',
             valuation: 850000,
             equityAvailable: 70,
-            ownerId: employees[3]?.id || admin.id,
+            ownerId: dbEmployees[3]?.id || adminUser.id,
             pitchNarrative: 'Revolucionamos la agricultura de precisión con drones que detectan el estrés hídrico antes de que sea visible al ojo humano. Nuestra tecnología ahorra millones en pérdidas de cosechas y optimiza el uso de agua en un 40%.',
             growthMRR: 12500,
             growthUsers: 450,

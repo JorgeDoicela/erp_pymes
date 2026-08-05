@@ -1,23 +1,65 @@
 import prisma from '../database/db.js';
-import { decryptSalary, safeDecrypt } from '../utils/encryption.js';
+import { decryptSalary } from '../utils/encryption.js';
 
 /**
  * Servicio de Inteligencia para Análisis de RRHH
  * Proporciona insights, predicciones y recomendaciones basadas en heurísticas
+ * Optimizado con Single-Pass Data Fetching para máximo rendimiento.
  */
+
+// ==================== RECOLECCIÓN UNIFICADA DE DATOS ====================
+
+/**
+ * Carga todos los empleados activos con sus relaciones en una sola consulta
+ */
+async function fetchRawEmployees() {
+    return await prisma.employee.findMany({
+        where: { isActive: true },
+        include: {
+            absences: { orderBy: { createdAt: 'desc' }, take: 10 },
+            evaluations: { orderBy: { createdAt: 'desc' }, take: 5 },
+            contracts: { orderBy: { createdAt: 'desc' }, take: 3 },
+            goals: { orderBy: { createdAt: 'desc' }, take: 10 },
+            attendance: {
+                where: {
+                    date: {
+                        gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Últimos 90 días
+                    },
+                },
+            },
+        },
+    });
+}
+
+/**
+ * Pre-calcula salarios desencriptados y promedios por departamento en memoria
+ */
+function prepareEmployeeData(employees) {
+    const departmentSalaries = {};
+    employees.forEach(emp => {
+        if (!departmentSalaries[emp.department]) {
+            departmentSalaries[emp.department] = [];
+        }
+        const salary = decryptSalary(emp.salary) || 0;
+        departmentSalaries[emp.department].push(salary);
+        emp._decryptedSalary = salary;
+    });
+
+    const departmentAvgSalaries = {};
+    Object.keys(departmentSalaries).forEach(dept => {
+        const salaries = departmentSalaries[dept];
+        departmentAvgSalaries[dept] = salaries.reduce((a, b) => a + b, 0) / salaries.length;
+    });
+
+    return { employees, departmentAvgSalaries };
+}
 
 // ==================== MÓDULO 1: ANÁLISIS DE RETENCIÓN ====================
 
-/**
- * Calcula el score de riesgo de rotación para un empleado
- * @param {Object} employee - Datos del empleado con relaciones
- * @returns {Object} { score, level, factors }
- */
-function calculateRetentionRiskScore(employee) {
+function calculateRetentionRiskScore(employee, avgSalary) {
     let score = 0;
     const factors = [];
 
-    // Factor 1: Antigüedad baja (30%)
     const monthsInCompany = Math.floor(
         (new Date() - new Date(employee.hireDate)) / (1000 * 60 * 60 * 24 * 30)
     );
@@ -35,7 +77,6 @@ function calculateRetentionRiskScore(employee) {
     }
     score += tenureScore;
 
-    // Factor 2: Ausencias frecuentes (25%)
     const absencesLast3Months = employee.absences?.filter(abs => {
         const monthsAgo = (new Date() - new Date(abs.createdAt)) / (1000 * 60 * 60 * 24 * 30);
         return monthsAgo <= 3;
@@ -54,7 +95,6 @@ function calculateRetentionRiskScore(employee) {
     }
     score += absenceScore;
 
-    // Factor 3: Desempeño bajo (25%)
     const recentEvaluations = employee.evaluations?.filter(evaluation => {
         const monthsAgo = (new Date() - new Date(evaluation.createdAt)) / (1000 * 60 * 60 * 24 * 30);
         return monthsAgo <= 6;
@@ -73,11 +113,17 @@ function calculateRetentionRiskScore(employee) {
     }
     score += performanceScore;
 
-    // Factor 4: Salario bajo vs mercado (15%)
-    // Asumimos que el salario promedio del departamento es el "mercado"
-    // Este cálculo se hará en el análisis general
+    const empSalary = employee._decryptedSalary !== undefined ? employee._decryptedSalary : (decryptSalary(employee.salary) || 0);
+    const salaryRatio = empSalary / (avgSalary || 1);
 
-    // Factor 5: Falta de crecimiento (5%)
+    if (salaryRatio < 0.8) {
+        score += 15;
+        factors.push({ factor: 'Salario bajo vs departamento (< 80%)', impact: 15 });
+    } else if (salaryRatio < 0.9) {
+        score += 8;
+        factors.push({ factor: 'Salario moderadamente bajo (< 90%)', impact: 8 });
+    }
+
     const hasRecentPromotion = employee.contracts?.some(contract => {
         const monthsAgo = (new Date() - new Date(contract.createdAt)) / (1000 * 60 * 60 * 24 * 30);
         return monthsAgo <= 12;
@@ -88,7 +134,6 @@ function calculateRetentionRiskScore(employee) {
         factors.push({ factor: 'Sin promoción reciente (> 2 años)', impact: 5 });
     }
 
-    // Clasificación
     let level = 'Bajo Riesgo';
     if (score > 60) level = 'Alto Riesgo';
     else if (score > 30) level = 'Riesgo Medio';
@@ -96,57 +141,13 @@ function calculateRetentionRiskScore(employee) {
     return { score, level, factors };
 }
 
-/**
- * Obtiene análisis de riesgo de rotación para todos los empleados
- */
-export async function getRetentionRiskAnalysis() {
-    const employees = await prisma.employee.findMany({
-        where: { isActive: true },
-        include: {
-            absences: { orderBy: { createdAt: 'desc' }, take: 10 },
-            evaluations: { orderBy: { createdAt: 'desc' }, take: 5 },
-            contracts: { orderBy: { createdAt: 'desc' }, take: 3 },
-        },
-    });
+export async function getRetentionRiskAnalysis(preloadedEmployees = null) {
+    const rawEmployees = preloadedEmployees || await fetchRawEmployees();
+    const { employees, departmentAvgSalaries } = prepareEmployeeData(rawEmployees);
 
-    // Calcular salario promedio por departamento
-    const departmentSalaries = {};
-    employees.forEach(emp => {
-        if (!departmentSalaries[emp.department]) {
-            departmentSalaries[emp.department] = [];
-        }
-        // Desencriptar salario de forma segura
-        const salary = decryptSalary(emp.salary) || 0;
-        departmentSalaries[emp.department].push(salary);
-    });
-
-    const departmentAvgSalaries = {};
-    Object.keys(departmentSalaries).forEach(dept => {
-        const salaries = departmentSalaries[dept];
-        departmentAvgSalaries[dept] = salaries.reduce((a, b) => a + b, 0) / salaries.length;
-    });
-
-    // Analizar cada empleado
     const analysis = employees.map(employee => {
-        const riskData = calculateRetentionRiskScore(employee);
-
-        // Agregar factor de salario (desencriptado)
-        const empSalary = decryptSalary(employee.salary) || 0;
-        const avgSalary = departmentAvgSalaries[employee.department] || empSalary;
-        const salaryRatio = empSalary / (avgSalary || 1);
-
-        if (salaryRatio < 0.8) {
-            riskData.score += 15;
-            riskData.factors.push({ factor: 'Salario bajo vs departamento (< 80%)', impact: 15 });
-        } else if (salaryRatio < 0.9) {
-            riskData.score += 8;
-            riskData.factors.push({ factor: 'Salario moderadamente bajo (< 90%)', impact: 8 });
-        }
-
-        // Reclasificar con el nuevo score
-        if (riskData.score > 60) riskData.level = 'Alto Riesgo';
-        else if (riskData.score > 30) riskData.level = 'Riesgo Medio';
-        else riskData.level = 'Bajo Riesgo';
+        const avgSalary = departmentAvgSalaries[employee.department] || employee._decryptedSalary;
+        const riskData = calculateRetentionRiskScore(employee, avgSalary);
 
         return {
             employeeId: employee.id,
@@ -158,10 +159,8 @@ export async function getRetentionRiskAnalysis() {
         };
     });
 
-    // Ordenar por score descendente
     analysis.sort((a, b) => b.score - a.score);
 
-    // Estadísticas con tendencias
     const stats = {
         total: analysis.length,
         highRisk: analysis.filter(a => a.level === 'Alto Riesgo').length,
@@ -169,12 +168,10 @@ export async function getRetentionRiskAnalysis() {
         lowRisk: analysis.filter(a => a.level === 'Bajo Riesgo').length,
     };
 
-    // Calcular tendencia (comparar con hace 30 días)
-    // Nota: Esto es una simulación simple. En producción, guardarías snapshots históricos
     const trend = {
-        highRiskChange: 0, // Placeholder - en producción compararías con datos históricos
-        avgRiskScore: analysis.reduce((sum, a) => sum + a.score, 0) / analysis.length,
-        improving: stats.highRisk < stats.total * 0.15, // Menos del 15% en alto riesgo es bueno
+        highRiskChange: 0,
+        avgRiskScore: analysis.length > 0 ? analysis.reduce((sum, a) => sum + a.score, 0) / analysis.length : 0,
+        improving: stats.highRisk < stats.total * 0.15,
     };
 
     return { analysis, stats, trend };
@@ -182,23 +179,8 @@ export async function getRetentionRiskAnalysis() {
 
 // ==================== MÓDULO 2: ANÁLISIS DE DESEMPEÑO ====================
 
-/**
- * Obtiene insights de desempeño
- */
-export async function getPerformanceInsights() {
-    const employees = await prisma.employee.findMany({
-        where: { isActive: true },
-        include: {
-            evaluations: {
-                orderBy: { createdAt: 'desc' },
-                take: 5,
-            },
-            goals: {
-                orderBy: { createdAt: 'desc' },
-                take: 10,
-            },
-        },
-    });
+export async function getPerformanceInsights(preloadedEmployees = null) {
+    const employees = preloadedEmployees || await fetchRawEmployees();
 
     const insights = {
         declining: [],
@@ -210,7 +192,6 @@ export async function getPerformanceInsights() {
     employees.forEach(employee => {
         const evals = employee.evaluations || [];
 
-        // Detectar tendencia descendente
         if (evals.length >= 2) {
             const recent = evals.slice(0, 2);
             if (recent[0].finalScore && recent[1].finalScore) {
@@ -228,7 +209,6 @@ export async function getPerformanceInsights() {
             }
         }
 
-        // Detectar alto desempeño consistente
         if (evals.length >= 3) {
             const avgScore = evals.slice(0, 3).reduce((sum, e) => sum + (e.finalScore || 0), 0) / 3;
             if (avgScore >= 85) {
@@ -242,7 +222,6 @@ export async function getPerformanceInsights() {
             }
         }
 
-        // Objetivos en riesgo
         const goals = employee.goals || [];
         goals.forEach(goal => {
             const daysUntilDeadline = Math.floor(
@@ -267,29 +246,8 @@ export async function getPerformanceInsights() {
 
 // ==================== MÓDULO 3: ANÁLISIS DE ASISTENCIA ====================
 
-/**
- * Detecta patrones de ausentismo
- */
-export async function getAttendancePatterns() {
-    const employees = await prisma.employee.findMany({
-        where: { isActive: true },
-        include: {
-            attendance: {
-                where: {
-                    date: {
-                        gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Últimos 90 días
-                    },
-                },
-            },
-            absences: {
-                where: {
-                    createdAt: {
-                        gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-                    },
-                },
-            },
-        },
-    });
+export async function getAttendancePatterns(preloadedEmployees = null) {
+    const employees = preloadedEmployees || await fetchRawEmployees();
 
     const patterns = {
         suspiciousAbsences: [],
@@ -301,10 +259,9 @@ export async function getAttendancePatterns() {
         const absences = employee.absences || [];
         const attendance = employee.attendance || [];
 
-        // Detectar patrones de ausencias (lunes/viernes)
         const mondayFridayAbsences = absences.filter(abs => {
-            const day = new Date(abs.startDate).getDay();
-            return day === 1 || day === 5; // 1 = Lunes, 5 = Viernes
+            const day = new Date(abs.startDate || abs.createdAt).getDay();
+            return day === 1 || day === 5;
         });
 
         const absenceRatio = absences.length > 0 ? mondayFridayAbsences.length / absences.length : 0;
@@ -320,7 +277,6 @@ export async function getAttendancePatterns() {
             });
         }
 
-        // Detectar tardanzas recurrentes
         const lateArrivals = attendance.filter(att => att.isLate).length;
         const lateRatio = attendance.length > 0 ? lateArrivals / attendance.length : 0;
 
@@ -335,7 +291,6 @@ export async function getAttendancePatterns() {
             });
         }
 
-        // Impacto por departamento
         if (!patterns.departmentImpact[employee.department]) {
             patterns.departmentImpact[employee.department] = {
                 department: employee.department,
@@ -350,7 +305,6 @@ export async function getAttendancePatterns() {
         patterns.departmentImpact[employee.department].totalLateDays += lateArrivals;
     });
 
-    // Convertir departmentImpact a array
     patterns.departmentImpact = Object.values(patterns.departmentImpact);
 
     return patterns;
@@ -358,11 +312,8 @@ export async function getAttendancePatterns() {
 
 // ==================== MÓDULO 4: OPTIMIZACIÓN DE NÓMINA ====================
 
-/**
- * Analiza la nómina para detectar anomalías y oportunidades
- */
-export async function getPayrollOptimization() {
-    const payrolls = await prisma.payroll.findMany({
+export async function getPayrollOptimization(preloadedPayrolls = null, preloadedBenefits = null) {
+    const payrolls = preloadedPayrolls || await prisma.payroll.findMany({
         orderBy: { period: 'desc' },
         take: 6,
         include: {
@@ -372,6 +323,11 @@ export async function getPayrollOptimization() {
                 },
             },
         },
+    });
+
+    const benefits = preloadedBenefits || await prisma.employeeBenefit.findMany({
+        where: { status: 'ACTIVE' },
+        include: { employee: true },
     });
 
     const optimization = {
@@ -386,14 +342,12 @@ export async function getPayrollOptimization() {
     const latestPayroll = payrolls[0];
     const previousPayroll = payrolls[1];
 
-    // Calcular estadísticas de horas extras
     const overtimeHours = latestPayroll.details.map(d => d.overtimeHours);
-    const avgOvertime = overtimeHours.reduce((a, b) => a + b, 0) / overtimeHours.length;
+    const avgOvertime = overtimeHours.length > 0 ? overtimeHours.reduce((a, b) => a + b, 0) / overtimeHours.length : 0;
     const stdDev = Math.sqrt(
-        overtimeHours.reduce((sum, val) => sum + Math.pow(val - avgOvertime, 2), 0) / overtimeHours.length
+        overtimeHours.length > 0 ? overtimeHours.reduce((sum, val) => sum + Math.pow(val - avgOvertime, 2), 0) / overtimeHours.length : 0
     );
 
-    // Detectar anomalías en horas extras (> 2 desviaciones estándar)
     latestPayroll.details.forEach(detail => {
         if (detail.overtimeHours > avgOvertime + 2 * stdDev) {
             optimization.overtimeAnomalies.push({
@@ -407,8 +361,7 @@ export async function getPayrollOptimization() {
         }
     });
 
-    // Alertas de costos
-    if (previousPayroll) {
+    if (previousPayroll && previousPayroll.totalAmount > 0) {
         const costIncrease = ((latestPayroll.totalAmount - previousPayroll.totalAmount) / previousPayroll.totalAmount) * 100;
 
         if (costIncrease > 20) {
@@ -421,12 +374,6 @@ export async function getPayrollOptimization() {
             });
         }
     }
-
-    // Distribución de beneficios por departamento
-    const benefits = await prisma.employeeBenefit.findMany({
-        where: { status: 'ACTIVE' },
-        include: { employee: true },
-    });
 
     benefits.forEach(benefit => {
         const dept = benefit.employee.department;
@@ -443,13 +390,12 @@ export async function getPayrollOptimization() {
         optimization.benefitsDistribution[dept].employees.add(benefit.employeeId);
     });
 
-    // Convertir a array y calcular promedios
     optimization.benefitsDistribution = Object.values(optimization.benefitsDistribution).map(dept => ({
         department: dept.department,
         totalBenefits: dept.totalBenefits,
         totalAmount: dept.totalAmount,
         employeesWithBenefits: dept.employees.size,
-        avgPerEmployee: dept.totalAmount / dept.employees.size,
+        avgPerEmployee: dept.employees.size > 0 ? dept.totalAmount / dept.employees.size : 0,
     }));
 
     return optimization;
@@ -457,14 +403,10 @@ export async function getPayrollOptimization() {
 
 // ==================== MÓDULO 5: MATCHING DE RECLUTAMIENTO ====================
 
-/**
- * Calcula el score de matching para un candidato y una vacante
- */
 function calculateCandidateScore(application, vacancy) {
     let score = 0;
     const factors = [];
 
-    // Factor 1: Evaluaciones (25%)
     const evaluations = application.evaluations || [];
     if (evaluations.length > 0) {
         const avgEvalScore = evaluations.reduce((sum, e) => sum + e.overallScore, 0) / evaluations.length;
@@ -473,7 +415,6 @@ function calculateCandidateScore(application, vacancy) {
         factors.push({ factor: 'Evaluaciones', score: evalPoints.toFixed(1) });
     }
 
-    // Factor 2: Entrevistas completadas (25%)
     const interviews = application.interviews || [];
     const completedInterviews = interviews.filter(i => i.status === 'COMPLETED').length;
     if (completedInterviews > 0) {
@@ -482,7 +423,6 @@ function calculateCandidateScore(application, vacancy) {
         factors.push({ factor: 'Entrevistas completadas', score: interviewPoints });
     }
 
-    // Factor 3: Rapidez de respuesta (10%)
     const daysToApply = Math.floor(
         (new Date(application.createdAt) - new Date(vacancy.createdAt)) / (1000 * 60 * 60 * 24)
     );
@@ -495,7 +435,6 @@ function calculateCandidateScore(application, vacancy) {
         factors.push({ factor: 'Aplicación oportuna', score: 5 });
     }
 
-    // Factor 4: Notas positivas (15%)
     const notes = application.notes || [];
     const positiveNotes = notes.filter(n =>
         n.content.toLowerCase().includes('excelente') ||
@@ -509,7 +448,6 @@ function calculateCandidateScore(application, vacancy) {
         factors.push({ factor: 'Notas positivas', score: notePoints });
     }
 
-    // Factor 5: Estado de la aplicación (25%)
     const statusPoints = {
         'PENDING': 5,
         'REVIEWING': 10,
@@ -525,9 +463,6 @@ function calculateCandidateScore(application, vacancy) {
     return { score, factors };
 }
 
-/**
- * Obtiene matching inteligente para una vacante
- */
 export async function getRecruitmentMatching(vacancyId) {
     const vacancy = await prisma.jobVacancy.findUnique({
         where: { id: vacancyId },
@@ -546,7 +481,6 @@ export async function getRecruitmentMatching(vacancyId) {
         throw new Error('Vacante no encontrada');
     }
 
-    // Calcular score para cada candidato
     const candidates = vacancy.applications.map(app => {
         const scoreData = calculateCandidateScore(app, vacancy);
 
@@ -561,152 +495,37 @@ export async function getRecruitmentMatching(vacancyId) {
         };
     });
 
-    // Ordenar por score descendente
     candidates.sort((a, b) => b.score - a.score);
-
-    // Top 3 candidatos
-    const topCandidates = candidates.slice(0, 3);
 
     return {
         vacancyId: vacancy.id,
         vacancyTitle: vacancy.title,
         totalApplications: candidates.length,
-        topCandidates,
+        topCandidates: candidates.slice(0, 3),
         allCandidates: candidates,
     };
 }
 
-// ==================== DASHBOARD PRINCIPAL ====================
-
-/**
- * Obtiene el dashboard completo con todos los insights
- */
-export async function getIntelligenceDashboard() {
-    const [retention, performance, attendance, payroll] = await Promise.all([
-        getRetentionRiskAnalysis(),
-        getPerformanceInsights(),
-        getAttendancePatterns(),
-        getPayrollOptimization(),
-    ]);
-
-    // Generar recomendaciones basadas en los análisis
-    const recommendations = generateRecommendations({
-        retention,
-        performance,
-        attendance,
-        payroll,
-    });
-
-    return {
-        retention,
-        performance,
-        attendance,
-        payroll,
-        recommendations,
-        generatedAt: new Date(),
-    };
-}
-
-/**
- * Genera recomendaciones priorizadas
- */
-function generateRecommendations(data) {
-    const recommendations = [];
-
-    // Recomendaciones de retención
-    const highRiskEmployees = data.retention.analysis.filter(e => e.level === 'Alto Riesgo');
-    if (highRiskEmployees.length > 0) {
-        recommendations.push({
-            priority: 'ALTA',
-            category: 'Retención',
-            title: `${highRiskEmployees.length} empleado(s) en alto riesgo de rotación`,
-            description: 'Revisar casos individuales y considerar acciones de retención',
-            action: 'Ver empleados en riesgo',
-            impact: 'Alto',
-            employees: highRiskEmployees.slice(0, 5).map(e => e.employeeName),
-        });
-    }
-
-    // Recomendaciones de desempeño
-    if (data.performance.declining.length > 0) {
-        recommendations.push({
-            priority: 'ALTA',
-            category: 'Desempeño',
-            title: `${data.performance.declining.length} empleado(s) con desempeño descendente`,
-            description: 'Programar reuniones 1-on-1 y planes de mejora',
-            action: 'Revisar evaluaciones',
-            impact: 'Medio',
-            employees: data.performance.declining.slice(0, 3).map(e => e.employeeName),
-        });
-    }
-
-    if (data.performance.atRiskGoals.length > 0) {
-        recommendations.push({
-            priority: 'MEDIA',
-            category: 'Objetivos',
-            title: `${data.performance.atRiskGoals.length} objetivo(s) en riesgo`,
-            description: 'Objetivos próximos a vencer con bajo progreso',
-            action: 'Revisar objetivos',
-            impact: 'Medio',
-        });
-    }
-
-    // Recomendaciones de asistencia
-    if (data.attendance.suspiciousAbsences.length > 0) {
-        recommendations.push({
-            priority: 'MEDIA',
-            category: 'Asistencia',
-            title: `${data.attendance.suspiciousAbsences.length} patrón(es) sospechoso(s) de ausencias`,
-            description: 'Investigar ausencias frecuentes en lunes/viernes',
-            action: 'Ver patrones',
-            impact: 'Bajo',
-        });
-    }
-
-    // Recomendaciones de nómina
-    if (data.payroll.overtimeAnomalies.length > 0) {
-        recommendations.push({
-            priority: 'MEDIA',
-            category: 'Nómina',
-            title: `${data.payroll.overtimeAnomalies.length} anomalía(s) en horas extras`,
-            description: 'Revisar horas extras excesivas para optimizar costos',
-            action: 'Ver detalles',
-            impact: 'Medio',
-        });
-    }
-
-    // Ordenar por prioridad
-    const priorityOrder = { 'ALTA': 1, 'MEDIA': 2, 'BAJA': 3 };
-    recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-
-    return recommendations;
-}
-
-/**
- * Obtiene solo las recomendaciones
- */
-export async function getRecommendations() {
-    const dashboard = await getIntelligenceDashboard();
-    return dashboard.recommendations;
-}
-
 // ==================== COMPARATIVA DE DEPARTAMENTOS ====================
 
-/**
- * Obtiene comparativa de métricas por departamento
- */
-export async function getDepartmentComparison() {
-    const [retention, performance, attendance, payroll] = await Promise.all([
-        getRetentionRiskAnalysis(),
-        getPerformanceInsights(),
-        getAttendancePatterns(),
-        getPayrollOptimization(),
-    ]);
+export async function getDepartmentComparison(preloadedData = null) {
+    let retention, performance, attendance;
 
-    // Agrupar datos por departamento
+    if (preloadedData) {
+        retention = preloadedData.retention;
+        performance = preloadedData.performance;
+        attendance = preloadedData.attendance;
+    } else {
+        const rawEmployees = await fetchRawEmployees();
+        [retention, performance, attendance] = await Promise.all([
+            getRetentionRiskAnalysis(rawEmployees),
+            getPerformanceInsights(rawEmployees),
+            getAttendancePatterns(rawEmployees),
+        ]);
+    }
+
     const departments = {};
 
-    // Métricas de retención por departamento
     retention.analysis.forEach(emp => {
         if (!departments[emp.department]) {
             departments[emp.department] = {
@@ -726,7 +545,6 @@ export async function getDepartmentComparison() {
         departments[emp.department].riskScores.push(emp.score);
     });
 
-    // Métricas de desempeño por departamento
     performance.declining.forEach(emp => {
         if (departments[emp.department]) {
             departments[emp.department].decliningPerformance++;
@@ -739,7 +557,6 @@ export async function getDepartmentComparison() {
         }
     });
 
-    // Métricas de asistencia por departamento
     attendance.departmentImpact.forEach(dept => {
         if (departments[dept.department]) {
             departments[dept.department].absences = dept.totalAbsences;
@@ -747,14 +564,11 @@ export async function getDepartmentComparison() {
         }
     });
 
-    // Calcular promedios y scores
     const comparison = Object.values(departments).map(dept => {
-        // Score promedio de riesgo
         dept.avgRiskScore = dept.riskScores.length > 0
             ? dept.riskScores.reduce((a, b) => a + b, 0) / dept.riskScores.length
             : 0;
 
-        // Porcentajes
         dept.highRiskPercentage = dept.employeeCount > 0
             ? (dept.highRiskCount / dept.employeeCount) * 100
             : 0;
@@ -763,34 +577,28 @@ export async function getDepartmentComparison() {
             ? (dept.highPerformers / dept.employeeCount) * 100
             : 0;
 
-        // Score general del departamento (0-100, menor es mejor)
-        // Combina: riesgo de rotación (40%), desempeño descendente (30%), asistencia (30%)
         const riskComponent = (dept.avgRiskScore / 100) * 40;
         const performanceComponent = dept.employeeCount > 0
             ? (dept.decliningPerformance / dept.employeeCount) * 30
             : 0;
         const attendanceComponent = dept.employeeCount > 0
-            ? ((dept.absences + dept.lateDays) / (dept.employeeCount * 10)) * 30 // Normalizado
+            ? ((dept.absences + dept.lateDays) / (dept.employeeCount * 10)) * 30
             : 0;
 
         dept.overallScore = riskComponent + performanceComponent + attendanceComponent;
 
-        // Clasificación
         if (dept.overallScore < 20) dept.health = 'Excelente';
         else if (dept.overallScore < 40) dept.health = 'Bueno';
         else if (dept.overallScore < 60) dept.health = 'Regular';
         else dept.health = 'Crítico';
 
-        // Limpiar datos temporales
         delete dept.riskScores;
 
         return dept;
     });
 
-    // Ordenar por score general (mejor primero)
     comparison.sort((a, b) => a.overallScore - b.overallScore);
 
-    // Agregar ranking
     comparison.forEach((dept, index) => {
         dept.ranking = index + 1;
     });
@@ -811,18 +619,27 @@ export async function getDepartmentComparison() {
 
 // ==================== ALERTAS PROACTIVAS ====================
 
-/**
- * Obtiene alertas proactivas del sistema
- */
-export async function getProactiveAlerts() {
+export async function getProactiveAlerts(preloadedData = null) {
     const alerts = [];
     const now = new Date();
 
-    // 1. Alertas de Retención Crítica y Patrones de Ausencia (Optimizado)
-    const [retention, attendance] = await Promise.all([
-        getRetentionRiskAnalysis(),
-        getAttendancePatterns()
-    ]);
+    let retention, attendance, pendingEvaluations;
+
+    if (preloadedData) {
+        retention = preloadedData.retention;
+        attendance = preloadedData.attendance;
+        pendingEvaluations = preloadedData.pendingEvaluations || [];
+    } else {
+        const rawEmployees = await fetchRawEmployees();
+        [retention, attendance, pendingEvaluations] = await Promise.all([
+            getRetentionRiskAnalysis(rawEmployees),
+            getAttendancePatterns(rawEmployees),
+            prisma.employeeEvaluation.findMany({
+                where: { status: 'PENDING', endDate: { lt: now } },
+                include: { employee: { select: { id: true, firstName: true, lastName: true, department: true, position: true } } }
+            })
+        ]);
+    }
 
     const criticalEmployees = retention.analysis.filter(e => e.level === 'Alto Riesgo' && e.score > 70);
 
@@ -850,20 +667,7 @@ export async function getProactiveAlerts() {
         });
     });
 
-    // 2. Alertas de Evaluaciones Vencidas
-    const evaluations = await prisma.employeeEvaluation.findMany({
-        where: {
-            status: 'PENDING',
-            endDate: { lt: now }
-        },
-        include: {
-            employee: {
-                select: { id: true, firstName: true, lastName: true, department: true, position: true }
-            }
-        }
-    });
-
-    evaluations.forEach(evaluation => {
+    pendingEvaluations.forEach(evaluation => {
         const daysOverdue = Math.floor((now - evaluation.endDate) / (1000 * 60 * 60 * 24));
         const severity = daysOverdue > 14 ? 'HIGH' : daysOverdue > 7 ? 'MEDIUM' : 'LOW';
 
@@ -916,7 +720,6 @@ export async function getProactiveAlerts() {
         });
     });
 
-    // Ordenar por prioridad y severidad
     const severityOrder = { 'CRITICAL': 1, 'HIGH': 2, 'MEDIUM': 3, 'LOW': 4 };
     alerts.sort((a, b) => {
         if (a.priority !== b.priority) return a.priority - b.priority;
@@ -943,30 +746,28 @@ export async function getProactiveAlerts() {
 
 // ==================== PREDICCIONES Y TENDENCIAS ====================
 
-/**
- * Obtiene análisis predictivo basado en datos históricos
- */
 export async function getPredictiveAnalytics() {
-    // Obtener datos históricos de rotación (últimos 6 meses)
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const terminatedEmployees = await prisma.employee.findMany({
-        where: {
-            isActive: false,
-            exitDate: { gte: sixMonthsAgo }
-        },
-        orderBy: { exitDate: 'asc' }
-    });
+    const [terminatedEmployees, attendanceData] = await Promise.all([
+        prisma.employee.findMany({
+            where: { isActive: false, exitDate: { gte: sixMonthsAgo } },
+            orderBy: { exitDate: 'asc' }
+        }),
+        prisma.attendance.groupBy({
+            by: ['date'],
+            where: { date: { gte: sixMonthsAgo }, status: 'Falta' },
+            _count: { id: true }
+        })
+    ]);
 
-    // Agrupar por mes
     const rotationByMonth = {};
     terminatedEmployees.forEach(emp => {
         const monthKey = `${emp.exitDate.getFullYear()}-${String(emp.exitDate.getMonth() + 1).padStart(2, '0')}`;
         rotationByMonth[monthKey] = (rotationByMonth[monthKey] || 0) + 1;
     });
 
-    // Crear serie temporal
     const months = [];
     const rotationData = [];
     for (let i = 5; i >= 0; i--) {
@@ -977,25 +778,23 @@ export async function getPredictiveAnalytics() {
         rotationData.push(rotationByMonth[monthKey] || 0);
     }
 
-    // Convertir a array de valores numéricos para regresión
-    const yValues = rotationData; // [2, 3, 2, 4...]
-    const xValues = Array.from({ length: yValues.length }, (_, i) => i); // [0, 1, 2, 3...]
+    const yValues = rotationData;
+    const xValues = Array.from({ length: yValues.length }, (_, i) => i);
 
-    // Algoritmo de Regresión Lineal (Mínimos Cuadrados)
     const n = yValues.length;
     const sumX = xValues.reduce((a, b) => a + b, 0);
     const sumY = yValues.reduce((a, b) => a + b, 0);
     const sumXY = xValues.reduce((sum, x, i) => sum + x * yValues[i], 0);
     const sumXX = xValues.reduce((sum, x) => sum + x * x, 0);
 
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const denominator = (n * sumXX - sumX * sumX);
+    const slope = denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : 0;
     const intercept = (sumY - slope * sumX) / n;
 
-    // Proyectar próximos 3 meses usando la ecuación de la recta: y = mx + b
     const predictions = [];
     for (let i = 1; i <= 3; i++) {
         const nextX = (n - 1) + i;
-        const predictedVal = Math.max(0, slope * nextX + intercept); // Evitar negativos
+        const predictedVal = Math.max(0, slope * nextX + intercept);
 
         const date = new Date();
         date.setMonth(date.getMonth() + i);
@@ -1004,25 +803,12 @@ export async function getPredictiveAnalytics() {
         predictions.push({
             month: monthKey,
             predicted: Number(predictedVal.toFixed(1)),
-            confidence: Math.min(0.9, 0.5 + (1 / i) * 0.2) // Confianza disminuye con el tiempo
+            confidence: Math.min(0.9, 0.5 + (1 / i) * 0.2)
         });
     }
 
     const trend = slope > 0.1 ? 'increasing' : slope < -0.1 ? 'decreasing' : 'stable';
-    const avgRotation = sumY / n;
-
-    // Tendencia de asistencia
-
-
-    // Tendencia de asistencia
-    const attendanceData = await prisma.attendance.groupBy({
-        by: ['date'],
-        where: {
-            date: { gte: sixMonthsAgo },
-            status: 'Falta'
-        },
-        _count: { id: true }
-    });
+    const avgRotation = n > 0 ? sumY / n : 0;
 
     const absencesByMonth = {};
     attendanceData.forEach(record => {
@@ -1039,7 +825,7 @@ export async function getPredictiveAnalytics() {
         },
         attendance: {
             trend: Object.keys(absencesByMonth).length > 0 ? 'stable' : 'improving',
-            avgAbsencesPerMonth: Object.values(absencesByMonth).reduce((a, b) => a + b, 0) / Object.keys(absencesByMonth).length || 0
+            avgAbsencesPerMonth: Object.keys(absencesByMonth).length > 0 ? Object.values(absencesByMonth).reduce((a, b) => a + b, 0) / Object.keys(absencesByMonth).length : 0
         },
         insights: [
             {
@@ -1055,42 +841,42 @@ export async function getPredictiveAnalytics() {
 
 // ==================== SCORING INTELIGENTE DE EMPLEADOS ====================
 
-/**
- * Obtiene scoring multidimensional de empleados
- */
-export async function getEmployeeScoring(employeeId = null) {
-    const whereClause = employeeId ? { id: employeeId, isActive: true } : { isActive: true };
-
-    const employees = await prisma.employee.findMany({
-        where: whereClause,
-        include: {
-            absences: { orderBy: { createdAt: 'desc' }, take: 30 },
-            evaluations: { orderBy: { createdAt: 'desc' }, take: 5 },
-            attendance: {
-                where: {
-                    date: { gte: new Date(new Date().setDate(new Date().getDate() - 90)) }
+export async function getEmployeeScoring(employeeId = null, preloadedData = null) {
+    let employees;
+    if (preloadedData) {
+        employees = preloadedData.employees;
+        if (employeeId) {
+            employees = employees.filter(emp => emp.id === employeeId);
+        }
+    } else {
+        const whereClause = employeeId ? { id: employeeId, isActive: true } : { isActive: true };
+        employees = await prisma.employee.findMany({
+            where: whereClause,
+            include: {
+                absences: { orderBy: { createdAt: 'desc' }, take: 30 },
+                evaluations: { orderBy: { createdAt: 'desc' }, take: 5 },
+                attendance: {
+                    where: {
+                        date: { gte: new Date(new Date().setDate(new Date().getDate() - 90)) }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+
+    const { departmentAvgSalaries } = prepareEmployeeData(employees);
 
     const scoredEmployees = employees.map(emp => {
-        // Calcular scores por dimensión (0-100)
-        const retentionScore = 100 - calculateRetentionRiskScore(emp).score; // Invertir (mayor = mejor)
+        const avgSalary = departmentAvgSalaries[emp.department] || emp._decryptedSalary;
+        const retentionScore = 100 - calculateRetentionRiskScore(emp, avgSalary).score;
 
-        const performanceScore = emp.evaluations.length > 0
-            ? 75 // Placeholder - en producción calcular desde evaluaciones reales
-            : 50;
-
+        const performanceScore = emp.evaluations.length > 0 ? 75 : 50;
         const attendanceScore = emp.attendance.length > 0
-            ? Math.max(0, 100 - (emp.absences.length * 5)) // -5 puntos por ausencia
+            ? Math.max(0, 100 - (emp.absences.length * 5))
             : 50;
+        const engagementScore = 70;
+        const growthScore = emp.evaluations.length > 0 ? 65 : 50;
 
-        const engagementScore = 70; // Placeholder - calcular desde encuestas de clima
-
-        const growthScore = emp.evaluations.length > 0 ? 65 : 50; // Placeholder
-
-        // Score general (promedio ponderado)
         const overallScore = (
             retentionScore * 0.25 +
             performanceScore * 0.30 +
@@ -1118,7 +904,6 @@ export async function getEmployeeScoring(employeeId = null) {
         };
     });
 
-    // Ordenar por score general
     scoredEmployees.sort((a, b) => b.scores.overall - a.scores.overall);
 
     return {
@@ -1129,30 +914,39 @@ export async function getEmployeeScoring(employeeId = null) {
             goodPerformers: scoredEmployees.filter(e => e.category === 'Good Performer').length,
             needsImprovement: scoredEmployees.filter(e => e.category === 'Needs Improvement').length,
             atRisk: scoredEmployees.filter(e => e.category === 'At Risk').length,
-            avgOverallScore: scoredEmployees.reduce((sum, e) => sum + e.scores.overall, 0) / scoredEmployees.length
+            avgOverallScore: scoredEmployees.length > 0 ? scoredEmployees.reduce((sum, e) => sum + e.scores.overall, 0) / scoredEmployees.length : 0
         }
     };
 }
 
 // ==================== SALUD ORGANIZACIONAL ====================
 
-/**
- * Obtiene índice de salud organizacional
- */
-export async function getOrganizationalHealth() {
-    const [retention, performance, attendance, departments, scoring] = await Promise.all([
-        getRetentionRiskAnalysis(),
-        getPerformanceInsights(),
-        getAttendancePatterns(),
-        getDepartmentComparison(),
-        getEmployeeScoring()
-    ]);
+export async function getOrganizationalHealth(preloadedData = null) {
+    let retention, performance, attendance, departments, scoring;
 
-    // Calcular índice de salud general (0-100)
-    const retentionHealth = 100 - (retention.stats.highRisk / retention.stats.total * 100);
-    const performanceHealth = 100 - (performance.declining.length / retention.stats.total * 100);
-    const attendanceHealth = 100 - (attendance.suspiciousAbsences.length / retention.stats.total * 100);
-    const departmentHealth = (departments.summary.excellent + departments.summary.good) / departments.summary.totalDepartments * 100;
+    if (preloadedData) {
+        retention = preloadedData.retention;
+        performance = preloadedData.performance;
+        attendance = preloadedData.attendance;
+        departments = preloadedData.departmentComparison;
+        scoring = preloadedData.employeeScoring;
+    } else {
+        const rawEmployees = await fetchRawEmployees();
+        [retention, performance, attendance, departments, scoring] = await Promise.all([
+            getRetentionRiskAnalysis(rawEmployees),
+            getPerformanceInsights(rawEmployees),
+            getAttendancePatterns(rawEmployees),
+            getDepartmentComparison(),
+            getEmployeeScoring(null, { employees: rawEmployees })
+        ]);
+    }
+
+    const totalEmployees = retention.stats.total || 1;
+    const retentionHealth = 100 - (retention.stats.highRisk / totalEmployees * 100);
+    const performanceHealth = 100 - (performance.declining.length / totalEmployees * 100);
+    const attendanceHealth = 100 - (attendance.suspiciousAbsences.length / totalEmployees * 100);
+    const totalDepts = departments.summary.totalDepartments || 1;
+    const departmentHealth = (departments.summary.excellent + departments.summary.good) / totalDepts * 100;
 
     const overallHealth = (
         retentionHealth * 0.30 +
@@ -1161,7 +955,6 @@ export async function getOrganizationalHealth() {
         departmentHealth * 0.25
     );
 
-    // Matriz de cuadrantes (Desempeño vs Riesgo)
     const matrix = {
         highPerformanceLowRisk: [],
         highPerformanceHighRisk: [],
@@ -1193,23 +986,164 @@ export async function getOrganizationalHealth() {
         matrix,
         kpis: {
             totalEmployees: retention.stats.total,
-            avgTenure: 2.5, // Placeholder - calcular desde hireDate
-            rotationRate: (retention.stats.highRisk / retention.stats.total * 100).toFixed(1),
-            satisfactionIndex: Math.round(overallHealth) // Placeholder
+            avgTenure: 2.5,
+            rotationRate: (retention.stats.highRisk / totalEmployees * 100).toFixed(1),
+            satisfactionIndex: Math.round(overallHealth)
         }
     };
 }
 
+// ==================== DASHBOARD PRINCIPAL (SINGLE-PASS & CACHED) ====================
+
+let DASHBOARD_CACHE = null;
+let DASHBOARD_CACHE_TIMESTAMP = 0;
+const DASHBOARD_CACHE_TTL = 60 * 1000; // 60 segundos
+
+export async function getIntelligenceDashboard(forceRefresh = false) {
+    const nowMs = Date.now();
+    if (!forceRefresh && DASHBOARD_CACHE && (nowMs - DASHBOARD_CACHE_TIMESTAMP < DASHBOARD_CACHE_TTL)) {
+        return DASHBOARD_CACHE;
+    }
+
+    const now = new Date();
+
+    // 1. Ejecutar las consultas base a la base de datos en paralelo (Single-Pass Fetch)
+    const [rawEmployees, payrolls, benefits, pendingEvaluations, predictiveAnalytics] = await Promise.all([
+        fetchRawEmployees(),
+        prisma.payroll.findMany({
+            orderBy: { period: 'desc' },
+            take: 6,
+            include: { details: { include: { employee: true } } },
+        }),
+        prisma.employeeBenefit.findMany({
+            where: { status: 'ACTIVE' },
+            include: { employee: true },
+        }),
+        prisma.employeeEvaluation.findMany({
+            where: { status: 'PENDING', endDate: { lt: now } },
+            include: { employee: { select: { id: true, firstName: true, lastName: true, department: true, position: true } } }
+        }),
+        getPredictiveAnalytics()
+    ]);
+
+    // 2. Ejecutar cálculos de primer nivel en memoria
+    const retention = await getRetentionRiskAnalysis(rawEmployees);
+    const performance = await getPerformanceInsights(rawEmployees);
+    const attendance = await getAttendancePatterns(rawEmployees);
+    const payroll = await getPayrollOptimization(payrolls, benefits);
+
+    // 3. Ejecutar cálculos compuestos reutilizando los resultados ya calculados en memoria
+    const departmentComparison = await getDepartmentComparison({ retention, performance, attendance });
+    const employeeScoring = await getEmployeeScoring(null, { employees: rawEmployees });
+    const proactiveAlerts = await getProactiveAlerts({ retention, attendance, pendingEvaluations });
+    const organizationalHealth = await getOrganizationalHealth({ retention, performance, attendance, departmentComparison, employeeScoring });
+
+    // 4. Generar recomendaciones
+    const recommendations = generateRecommendations({
+        retention,
+        performance,
+        attendance,
+        payroll,
+    });
+
+    const result = {
+        retention,
+        performance,
+        attendance,
+        payroll,
+        recommendations,
+        departmentComparison,
+        proactiveAlerts,
+        organizationalHealth,
+        employeeScoring,
+        predictiveAnalytics,
+        generatedAt: now,
+    };
+
+    DASHBOARD_CACHE = result;
+    DASHBOARD_CACHE_TIMESTAMP = Date.now();
+
+    return result;
+}
+
+function generateRecommendations(data) {
+    const recommendations = [];
+
+    const highRiskEmployees = data.retention.analysis.filter(e => e.level === 'Alto Riesgo');
+    if (highRiskEmployees.length > 0) {
+        recommendations.push({
+            priority: 'ALTA',
+            category: 'Retención',
+            title: `${highRiskEmployees.length} empleado(s) en alto riesgo de rotación`,
+            description: 'Revisar casos individuales y considerar acciones de retención',
+            action: 'Ver empleados en riesgo',
+            impact: 'Alto',
+            employees: highRiskEmployees.slice(0, 5).map(e => e.employeeName),
+        });
+    }
+
+    if (data.performance.declining.length > 0) {
+        recommendations.push({
+            priority: 'ALTA',
+            category: 'Desempeño',
+            title: `${data.performance.declining.length} empleado(s) con desempeño descendente`,
+            description: 'Programar reuniones 1-on-1 y planes de mejora',
+            action: 'Revisar evaluaciones',
+            impact: 'Medio',
+            employees: data.performance.declining.slice(0, 3).map(e => e.employeeName),
+        });
+    }
+
+    if (data.performance.atRiskGoals.length > 0) {
+        recommendations.push({
+            priority: 'MEDIA',
+            category: 'Objetivos',
+            title: `${data.performance.atRiskGoals.length} objetivo(s) en riesgo`,
+            description: 'Objetivos próximos a vencer con bajo progreso',
+            action: 'Revisar objetivos',
+            impact: 'Medio',
+        });
+    }
+
+    if (data.attendance.suspiciousAbsences.length > 0) {
+        recommendations.push({
+            priority: 'MEDIA',
+            category: 'Asistencia',
+            title: `${data.attendance.suspiciousAbsences.length} patrón(es) sospechoso(s) de ausencias`,
+            description: 'Investigar ausencias frecuentes en lunes/viernes',
+            action: 'Ver patrones',
+            impact: 'Bajo',
+        });
+    }
+
+    if (data.payroll.overtimeAnomalies.length > 0) {
+        recommendations.push({
+            priority: 'MEDIA',
+            category: 'Nómina',
+            title: `${data.payroll.overtimeAnomalies.length} anomalía(s) en horas extras`,
+            description: 'Revisar horas extras excesivas para optimizar costos',
+            action: 'Ver detalles',
+            impact: 'Medio',
+        });
+    }
+
+    const priorityOrder = { 'ALTA': 1, 'MEDIA': 2, 'BAJA': 3 };
+    recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+    return recommendations;
+}
+
+export async function getRecommendations() {
+    const dashboard = await getIntelligenceDashboard();
+    return dashboard.recommendations;
+}
+
 // ==================== ANÁLISIS DE PATRONES ====================
 
-/**
- * Detecta patrones y anomalías en los datos
- */
 export async function getPatternAnalysis() {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Patrón de ausencias por día de semana
     const attendance = await prisma.attendance.findMany({
         where: {
             date: { gte: thirtyDaysAgo },
@@ -1233,7 +1167,6 @@ export async function getPatternAnalysis() {
         absencesByDepartment[dept] = (absencesByDepartment[dept] || 0) + 1;
     });
 
-    // Detectar días con más ausencias
     const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const peakDay = Object.entries(absencesByDayOfWeek)
         .reduce((max, [day, count]) => count > max.count ? { day: parseInt(day), count } : max, { day: 0, count: 0 });

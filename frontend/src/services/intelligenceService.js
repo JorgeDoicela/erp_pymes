@@ -9,9 +9,10 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 /**
  * Obtiene el dashboard completo con todos los insights
  */
-export async function getDashboard() {
+export async function getDashboard(refresh = false) {
     const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/dashboard`, {
+    const url = refresh ? `${API_URL}/intelligence/dashboard?refresh=true` : `${API_URL}/intelligence/dashboard`;
+    const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;

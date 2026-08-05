@@ -134,7 +134,7 @@ const AlertsPanel = ({ alerts, summary }) => {
                                                 {alert.factors.map((factor, i) => (
                                                     <li key={i} className="flex items-center gap-1">
                                                         <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                                        {factor}
+                                                        {typeof factor === 'object' ? (factor.factor || JSON.stringify(factor)) : factor}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -179,7 +179,7 @@ AlertsPanel.propTypes = {
             department: PropTypes.string,
             position: PropTypes.string
         }),
-        factors: PropTypes.arrayOf(PropTypes.string),
+        factors: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.object])),
         recommendedActions: PropTypes.arrayOf(PropTypes.string),
         detectedAt: PropTypes.string,
         priority: PropTypes.number

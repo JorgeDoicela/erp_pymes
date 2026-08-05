@@ -7,6 +7,7 @@ import {
 
 export const adminModules = [
     { title: 'Empleados', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
+    { title: 'Inteligencia IA', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
     { title: 'Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
     { title: 'Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },
     { title: 'Ausencias', icon: <FiUserX />, color: 'bg-rose-500', path: '/admin/absences' },
@@ -37,6 +38,7 @@ export const employeeModules = [
 
 export const accountingModules = [
     { title: 'Dashboard', icon: <FiBarChart2 />, color: 'bg-blue-500', path: '/admin' },
+    { title: 'Inteligencia IA', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
     { title: 'Contabilidad', icon: <FiActivity />, color: 'bg-blue-800', path: '/admin/accounting' },
     { title: 'Asientos', icon: <FiFileText />, color: 'bg-indigo-500', path: '/admin/accounting/journals' },
     { title: 'Catalogo', icon: <FiList />, color: 'bg-purple-500', path: '/admin/accounting/chart' },
@@ -46,6 +48,7 @@ export const accountingModules = [
 
 export const entrepreneurModules = [
     { title: 'Dashboard', icon: <FiBarChart2 />, color: 'bg-blue-500', path: '/admin' },
+    { title: 'Inteligencia IA', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
     { title: 'Emprendimiento', icon: <FiZap />, color: 'bg-amber-600', path: '/admin/entrepreneurship' },
     { title: 'Nuevo Proyecto', icon: <FiPlus />, color: 'bg-green-500', path: '/admin/entrepreneurship/create' },
     { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },

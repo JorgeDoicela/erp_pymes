@@ -11,7 +11,8 @@ import * as intelligenceService from '../services/intelligenceService.js';
  */
 export async function getDashboard(req, res) {
     try {
-        const dashboard = await intelligenceService.getIntelligenceDashboard();
+        const forceRefresh = req.query.refresh === 'true';
+        const dashboard = await intelligenceService.getIntelligenceDashboard(forceRefresh);
         res.json({
             success: true,
             data: dashboard,

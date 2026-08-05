@@ -48,54 +48,24 @@ export default function IntelligentDashboard({ user, onLogout }) {
         loadDashboard();
     }, []);
 
-    const loadDashboard = async () => {
+    const loadDashboard = async (forceRefresh = false) => {
         try {
             setLoading(true);
-            const [
-                dashboardResponse,
-                deptResponse,
-                alertsResponse,
-                healthResponse,
-                scoringResponse,
-                predictionsResponse
-            ] = await Promise.all([
-                intelligenceService.getDashboard(),
-                intelligenceService.getDepartmentComparison(),
-                intelligenceService.getProactiveAlerts(),
-                intelligenceService.getOrganizationalHealth(),
-                intelligenceService.getEmployeeScoring(),
-                intelligenceService.getPredictiveAnalytics(),
-            ]);
+            const dashboardResponse = await intelligenceService.getDashboard(forceRefresh);
 
-            if (dashboardResponse.success) {
-                setDashboard(dashboardResponse.data);
+            if (dashboardResponse?.success && dashboardResponse?.data) {
+                const data = dashboardResponse.data;
+                setDashboard(data);
+                if (data.departmentComparison) setDepartmentComparison(data.departmentComparison);
+                if (data.proactiveAlerts) setAlerts(data.proactiveAlerts);
+                if (data.organizationalHealth) setOrganizationalHealth(data.organizationalHealth);
+                if (data.employeeScoring) setEmployeeScoring(data.employeeScoring);
+                if (data.predictiveAnalytics) setPredictiveInsights(data.predictiveAnalytics);
             } else {
                 toast.error('Error al cargar el dashboard de inteligencia');
             }
-
-            if (deptResponse.success) {
-                setDepartmentComparison(deptResponse.data);
-            }
-
-            if (alertsResponse.success) {
-                setAlerts(alertsResponse.data);
-            }
-
-            if (healthResponse.success) {
-                setOrganizationalHealth(healthResponse.data);
-            }
-
-            if (scoringResponse.success) {
-                setEmployeeScoring(scoringResponse.data);
-            }
-
-            if (predictionsResponse.success) {
-                setPredictiveInsights(predictionsResponse.data);
-            }
         } catch (error) {
             console.error('Error loading intelligence dashboard:', error);
-            // toast.error('Error al cargar el dashboard de inteligencia');
-            // Assuming errors might happen in dev with incomplete API, fail gracefully
         } finally {
             setLoading(false);
         }
@@ -103,7 +73,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
 
     const handleRefresh = async () => {
         setRefreshing(true);
-        await loadDashboard();
+        await loadDashboard(true);
         setRefreshing(false);
         toast.success('Dashboard actualizado');
     };

@@ -8,6 +8,7 @@ export async function seedGoals(prisma, employees) {
             const count = await prisma.employeeGoal.count({ where: { employeeId: emp.id } });
             if (count > 0) continue;
 
+            const currentYear = new Date().getFullYear();
             await prisma.employeeGoal.createMany({
                 data: [
                     {
@@ -18,7 +19,7 @@ export async function seedGoals(prisma, employees) {
                         targetValue: 80,
                         currentValue: 65,
                         unit: '%',
-                        deadline: new Date('2024-12-31'),
+                        deadline: new Date(`${currentYear}-12-31`),
                         priority: 'HIGH',
                         status: 'IN_PROGRESS',
                         progress: 65
@@ -31,7 +32,7 @@ export async function seedGoals(prisma, employees) {
                         targetValue: 1,
                         currentValue: 0,
                         unit: 'Bool',
-                        deadline: new Date('2024-06-30'),
+                        deadline: new Date(`${currentYear}-09-30`),
                         priority: 'MEDIUM',
                         status: 'PENDING',
                         progress: 0

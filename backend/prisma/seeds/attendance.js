@@ -64,11 +64,14 @@ export async function seedAttendance(prisma, employees) {
             let workedHours = 8;
             let isLateToday = false;
 
+            // Normalize date to midnight UTC to match unique constraint logic
+            const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+
             // Pattern: Suspicious (Mon/Fri absences)
             if (isSuspicious && (dayOfWeek === 1 || dayOfWeek === 5) && Math.random() > 0.6) {
                 attendanceBatch.push({
                     employeeId: emp.id,
-                    date: date,
+                    date: normalizedDate,
                     checkIn: new Date(date), // Dummy
                     checkOut: null,
                     status: 'Falta',
@@ -91,7 +94,7 @@ export async function seedAttendance(prisma, employees) {
             if (!isSuspicious && Math.random() < 0.02) {
                 attendanceBatch.push({
                     employeeId: emp.id,
-                    date: date,
+                    date: normalizedDate,
                     checkIn: new Date(date),
                     checkOut: null,
                     status: 'Falta',
@@ -100,9 +103,6 @@ export async function seedAttendance(prisma, employees) {
                 });
                 continue;
             }
-
-            // Normalize date to midnight UTC to match unique constraint logic
-            const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 
             attendanceBatch.push({
                 employeeId: emp.id,

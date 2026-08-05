@@ -1,3 +1,5 @@
+import { decryptSalary } from '../../src/utils/encryption.js';
+
 export async function seedPayroll(prisma, employees) {
     console.log('[PAYROLL] Generando Historial de Nómina...');
     const today = new Date();
@@ -34,7 +36,7 @@ export async function seedPayroll(prisma, employees) {
                 });
                 if (existing) continue;
 
-                const baseSalary = 1000 + Math.random() * 2000;
+                const baseSalary = decryptSalary(emp.salary) || 1200;
                 let overtime = Math.random() > 0.8 ? 100 : 0;
                 let overtimeHours = overtime > 0 ? 10 : 0;
 

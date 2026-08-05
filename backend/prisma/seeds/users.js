@@ -392,10 +392,22 @@ export async function seedUsers(prisma) {
                 maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
             }
         });
-        console.log('✅ System Settings configurados');
     } catch (e) {
         console.log('⚠️ System Settings failed: ' + e.message);
     }
 
-    return { admin, employees };
+    // Obtener la lista real y actualizada de todos los empleados en BD
+    const allUsers = await prisma.employee.findMany();
+    const freshAdmin = allUsers.find(e => e.role === 'admin') || admin;
+    const freshAccountant = allUsers.find(e => e.role === 'accounting') || accountant;
+    const freshEntrepreneur = allUsers.find(e => e.role === 'entrepreneur') || entrepreneur;
+    const freshEmployees = allUsers.filter(e => e.role === 'employee');
+
+    return {
+        admin: freshAdmin,
+        employees: freshEmployees,
+        accountant: freshAccountant,
+        entrepreneur: freshEntrepreneur,
+        allUsers
+    };
 }

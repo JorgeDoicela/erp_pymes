@@ -1,62 +1,89 @@
 export async function seedCleanup(prisma) {
-    console.log('[CLEANUP] Limpiando base de datos (con manejo de errores)...');
+    console.log('[CLEANUP] Limpiando base de datos (con manejo de relaciones e incubadora)...');
 
-    // Usamos una transacción para limpiar todo de una vez y no perder la conexión entre tablas
+    const cleanTable = async (modelName) => {
+        try {
+            if (prisma[modelName]) {
+                await prisma[modelName].deleteMany();
+            }
+        } catch (e) {
+            // Ignorar si la tabla no existe en el schema actual
+        }
+    };
+
+    const tablesInOrder = [
+        // 1. Incubadora / Emprendimiento (Hijos de Entrepreneurship)
+        'entrepreneurshipMentor',
+        'entrepreneurshipMember',
+        'startupUpdate',
+        'customerInterview',
+        'targetMarket',
+        'fundingRound',
+        'startupEquity',
+        'startupMilestone',
+        'entrepreneurship',
+
+        // 2. Contabilidad
+        'journalLine',
+        'journalEntry',
+        'costCenter',
+        'accountingAccount',
+        'accountingPeriod',
+
+        // 3. Clima y Evaluaciones
+        'climateResponse',
+        'climateSurvey',
+        'evaluationReviewer',
+        'employeeEvaluation',
+        'evaluationTemplate',
+
+        // 4. Reclutamiento
+        'candidateEvaluation',
+        'interview',
+        'applicationNote',
+        'jobApplication',
+        'jobVacancy',
+
+        // 5. Nómina
+        'payrollDetail',
+        'payrollItem',
+        'payrollConfig',
+        'payroll',
+
+        // 6. Asistencia y Ausencias
+        'attendance',
+        'absenceRequest',
+
+        // 7. Horarios y Registros Core
+        'employeeSchedule',
+        'shift',
+        'contract',
+        'skill',
+        'workHistory',
+
+        // 8. Documentos, Notificaciones y Auditoría
+        'document',
+        'auditLog',
+        'employeeBenefit',
+        'notificationPreference',
+        'notification',
+        'biometricCredential',
+
+        // 9. Empleados y Usuarios
+        'employee'
+    ];
+
     try {
-        await prisma.$transaction([
-            prisma.journalLine.deleteMany(),
-            prisma.journalEntry.deleteMany(),
-            prisma.costCenter.deleteMany(),
-            prisma.accountingAccount.deleteMany(),
-            prisma.accountingPeriod.deleteMany(),
-            prisma.climateResponse.deleteMany(),
-            prisma.climateSurvey.deleteMany(),
-            prisma.payrollDetail.deleteMany(),
-            prisma.payrollItem.deleteMany(),
-            prisma.payrollConfig.deleteMany(),
-            prisma.payroll.deleteMany(),
-            prisma.evaluationReviewer.deleteMany(),
-            prisma.employeeEvaluation.deleteMany(),
-            prisma.evaluationTemplate.deleteMany(),
-            prisma.candidateEvaluation.deleteMany(),
-            prisma.interview.deleteMany(),
-            prisma.applicationNote.deleteMany(),
-            prisma.jobApplication.deleteMany(),
-            prisma.jobVacancy.deleteMany(),
-            prisma.employeeGoal.deleteMany(),
-            prisma.attendance.deleteMany(),
-            prisma.absenceRequest.deleteMany(),
-            prisma.employeeSchedule.deleteMany(),
-            prisma.shift.deleteMany(),
-            prisma.contract.deleteMany(),
-            prisma.skill.deleteMany(),
-            prisma.workHistory.deleteMany(),
-            prisma.document.deleteMany(),
-            prisma.auditLog.deleteMany(),
-            prisma.employeeBenefit.deleteMany(),
-            prisma.notification.deleteMany(),
-            prisma.employee.deleteMany(),
-        ], { timeout: 30000 });
+        await prisma.$transaction(
+            tablesInOrder.map(t => prisma[t]?.deleteMany()).filter(Boolean),
+            { timeout: 30000 }
+        );
         console.log('✅ Base de datos limpiada correctamente.');
     } catch (e) {
-        // Si la transacción falla (e.g. tabla no existe), intentar tabla por tabla
-        console.log('⚠️ Transacción falló, intentando tabla por tabla...');
-        const tables = [
-            'journalLine', 'journalEntry', 'costCenter', 'accountingAccount', 'accountingPeriod',
-            'climateResponse', 'climateSurvey',
-            'payrollDetail', 'payrollItem', 'payrollConfig', 'payroll',
-            'evaluationReviewer', 'employeeEvaluation', 'evaluationTemplate',
-            'candidateEvaluation', 'interview', 'applicationNote', 'jobApplication', 'jobVacancy',
-            'employeeGoal', 'attendance', 'absenceRequest', 'employeeSchedule', 'shift',
-            'contract', 'skill', 'workHistory', 'document', 'auditLog', 'employeeBenefit',
-            'notification', 'employee'
-        ];
-        for (const table of tables) {
-            try {
-                await prisma[table].deleteMany();
-            } catch (err) {
-                console.error(`⚠️ Error deleting table ${table}: ${err.message}`);
-            }
+        console.log('⚠️ Transacción en lote falló. Ejecutando limpieza secuencial por tabla...');
+        for (const table of tablesInOrder) {
+            await cleanTable(table);
         }
+        console.log('✅ Limpieza secuencial completada.');
     }
 }

@@ -22,14 +22,13 @@ export async function seedCoreRecords(prisma, employees) {
             // 1. Contract
             const existingContract = await prisma.contract.findFirst({ where: { employeeId: emp.id } });
             if (!existingContract) {
-                // Decrypt salary to verify or just use a random value consistent
-                // Since I can't easily decrypt without potential error if format changes, I'll assume valid ranges
+                const decSal = decryptSalary(emp.salary) || 1500;
                 await prisma.contract.create({
                     data: {
                         employeeId: emp.id,
                         type: emp.contractType || 'Indefinido',
                         startDate: emp.hireDate || new Date('2020-01-01'),
-                        salary: 1500, // Placeholder float
+                        salary: decSal,
                         status: 'Active'
                     }
                 });

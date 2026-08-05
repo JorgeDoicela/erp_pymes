@@ -94,7 +94,7 @@ export default function RecommendationsList({ recommendations, onActionClick }) 
                                         <div className="flex flex-wrap gap-1">
                                             {rec.employees.slice(0, 3).map((emp, i) => (
                                                 <span key={i} className="px-2 py-1 bg-white rounded text-xs text-gray-700">
-                                                    {emp}
+                                                    {typeof emp === 'object' ? (emp.name || emp.firstName || JSON.stringify(emp)) : emp}
                                                 </span>
                                             ))}
                                             {rec.employees.length > 3 && (

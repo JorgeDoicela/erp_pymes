@@ -9,7 +9,7 @@
     "db:seed": "node prisma/seed.js",
     "prisma:dev": "npx prisma migrate dev",
     "prisma:studio": "npx prisma studio",
-    "postinstall": "npx prisma generate && npx prisma db push --accept-data-loss",
+    "postinstall": "npx prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
