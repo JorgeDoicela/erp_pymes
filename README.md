@@ -1,270 +1,191 @@
-# EMPLIFI - Sistema de Recursos Humanos
+# EMPLIFI — Sistema Integral de Gestión de Recursos Humanos & Analítica
 
-Sistema integral de gestión de recursos humanos desarrollado con React + Vite (Frontend) y Express + Prisma + PostgreSQL (Backend).
+[![Estado del Proyecto](https://img.shields.io/badge/Estado-Producción_Lista-success.svg)](#)
+[![Stack Backend](https://img.shields.io/badge/Backend-Node.js_v20+_|_Express_v5-blue.svg)](#)
+[![ORM](https://img.shields.io/badge/ORM-Prisma_v7.0-indigo.svg)](#)
+[![Base de Datos](https://img.shields.io/badge/Base_de_Datos-PostgreSQL_v14+-blue.svg)](#)
+[![Frontend](https://img.shields.io/badge/Frontend-React_v19_|_Vite_v6-61dafb.svg)](#)
+[![Seguridad](https://img.shields.io/badge/Seguridad-AES--256--GCM_|_PBKDF2_|_RBAC-red.svg)](#)
 
-## Características Principales
+> **EMPLIFI** es una solución web empresarial integral para la administración del talento humano, control de asistencia asistido por geocercas GPS, procesamiento automatizado de nómina, evaluación de desempeño 360°, inteligencia de negocios con analítica predictiva de *turnover*, e incubadora de proyectos.
 
-- **Gestión de Empleados**: Registro, actualización y seguimiento completo del personal
-- **Control de Asistencia**: Registro de entrada/salida, gestión de turnos y ausencias
-- **Nómina**: Configuración, generación y consulta de pagos
-- **Evaluaciones de Desempeño**: Creación y asignación de evaluaciones
-- **Reclutamiento**: Gestión de vacantes y aplicaciones
-- **Reportes y Analytics**: Dashboard con métricas clave y reportes personalizados
-- **Gestión Documental**: Almacenamiento de contratos y documentos de empleados
+---
 
-## Requisitos Previos
+## 📚 Portal de Documentación del Proyecto
 
-Antes de comenzar, asegúrate de tener instalado:
+Toda la documentación técnica detallada, guías de arquitectura, modelos de datos, APIs y operaciones del sistema han sido organizados en el directorio **[`docs/`](docs/)**:
 
-- **Node.js** (v18 o superior) - [Descargar aquí](https://nodejs.org/)
-- **PostgreSQL** (v14 o superior) - [Descargar aquí](https://www.postgresql.org/download/)
-- **Git** - [Descargar aquí](https://git-scm.com/)
-- **npm** o **yarn** (viene con Node.js)
+* 🏛️ **[Centro Principal de Documentación](docs/README.md)** — Portal maestro de navegación del proyecto y artefactos Scrum.
 
-## Instalación
+### Módulos Destacados de Documentación
+- **[01. Arquitectura del Sistema](docs/01-arquitectura/)**: Clean Architecture, macro/micro patrones y diagramas de flujo.
+- **[02. Servicios Backend y API REST](docs/02-backend-servicios/)**: Especificación de 50+ endpoints, RBAC, SSO y seguridad.
+- **[03. Motores Especializados](docs/03-motores-especializados/)**: PDF, Geocercas GPS (Haversine), Evaluaciones 360°, Biometría y Notificaciones.
+- **[04. Base de Datos](docs/04-base-de-datos/)**: Esquema relacional Prisma / PostgreSQL y catálogos normativos.
+- **[05. Frontend Web](docs/05-frontend-web/)**: SPA React, Vite, catálogo de 45+ componentes UI e interceptores Axios.
+- **[06. Inteligencia y Analítica](docs/06-inteligencia-y-analitica/)**: Indicadores clave (eNPS, rotación) y analítica predictiva.
+- **[07. Despliegue y Operaciones](docs/07-despliegue-y-operaciones/)**: Guía de instalación, auditoría, testing y DRP.
+- **[08. Artefactos Scrum](docs/08-artefactos-scrum/)**: Requerimientos, Historias de Usuario, Sprints y Product Backlog (.docx).
+
+---
+
+## 🛠️ Stack Tecnológico
+
+| Capa | Tecnologías Clave |
+|---|---|
+| **Backend API** | Node.js (v20+), Express (v5.1.0 ES Modules), Helmet, CORS |
+| **Persistencia & ORM** | PostgreSQL 14+, Prisma ORM (v7.0.0 con `prisma.config.ts`) |
+| **Seguridad & Cifrado** | AES-256-GCM (Salarios cifrados), PBKDF2 (100,000 iteraciones), JWT (Bearer), Bcrypt |
+| **Frontend Web** | React 19.2.0, Vite, Tailwind CSS, Lucide Icons, Recharts, Framer Motion |
+| **Comunicación HTTP** | Axios con Interceptores de Auth, 401 Refresh & 503 Maintenance Guard |
+
+---
+
+## 🚀 Requisitos Previos
+
+Asegúrate de contar con los siguientes elementos instalados antes del despliegue:
+
+* **Node.js** v20.x o superior ([Descargar Node.js](https://nodejs.org/))
+* **PostgreSQL** v14.x o superior ([Descargar PostgreSQL](https://www.postgresql.org/download/))
+* **Git** v2.x o superior ([Descargar Git](https://git-scm.com/))
+* **npm** (incluido con Node.js)
+
+---
+
+## ⚡ Guía Rápida de Instalación y Configuración
 
 ### 1. Clonar el Repositorio
-
 ```bash
-git clone <url-del-repositorio>
+git clone <URL-DEL-REPOSITORIO>
 cd recursos_humanos
 ```
 
-### 2. Configurar la Base de Datos
-
-#### Opción A: Usando pgAdmin o psql
-
+### 2. Configurar la Base de Datos PostgreSQL
+Crea la base de datos principal desde `psql` o pgAdmin:
 ```sql
 CREATE DATABASE db_recursos_humanos;
 ```
 
-#### Opción B: Desde la línea de comandos
-
-```bash
-psql -U postgres
-CREATE DATABASE db_recursos_humanos;
-\q
-```
-
-### 3. Configurar el Backend
-
+### 3. Configurar e Iniciar el Backend
 ```bash
 cd backend
+
+# Instalar dependencias
 npm install
+
+# Generar archivo de variables de entorno
+copy .env.example .env   # En Windows
+# cp .env.example .env   # En Linux/macOS
 ```
 
-Crea un archivo `.env` en la carpeta `backend/` basándote en `.env.example`:
-
+Configura tu archivo `backend/.env`:
 ```env
 PORT=4000
-DATABASE_URL="postgresql://usuario:password@localhost:5432/db_recursos_humanos?schema=public"
-ENCRYPTION_KEY="tu-clave-de-encriptacion-de-64-caracteres-hex"
-JWT_SECRET="tu-secret-jwt-super-seguro"
-FRONTEND_URL="http://localhost:5173"
+DATABASE_URL=postgresql://postgres:tu_password@localhost:5432/db_recursos_humanos?schema=public
+ENCRYPTION_KEY=tu_clave_de_encriptacion_hex_64_caracteres
+JWT_SECRET=tu_jwt_secret_seguro
+FRONTEND_URL=http://localhost:5173
 ```
 
-> **Importante**: Genera una clave de encriptación segura ejecutando:
+> 🔐 **Generar ENCRYPTION_KEY Segura (64 hex characters)**:
 > ```bash
 > node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 > ```
 
-### 4. Ejecutar Migraciones de Base de Datos
-
+Ejecutar migraciones de Prisma y poblar la base de datos con datos de prueba:
 ```bash
-cd backend
-npx prisma migrate dev
-```
-
-### 5. Poblar la Base de Datos con Datos de Prueba
-
-El proyecto incluye seeders completos para generar datos de demostración:
-
-```bash
-cd backend
-node -r dotenv/config prisma/seed.js
-```
-
-Esto creará:
-- Usuario administrador: `admin@emplifi.com` / `123456`
-- Usuario empleado de prueba: `empleado@test.com` / `123456`
-- 25+ empleados adicionales con datos completos
-- Vacantes de trabajo, aplicaciones, entrevistas
-- Evaluaciones de desempeño, objetivos
-- Contratos, documentos, horarios
-- Historial de nómina
-- Encuestas de clima laboral
-
-### 6. Configurar el Frontend
-
-```bash
-cd frontend
-npm install
-```
-
-Crea un archivo `.env` en la carpeta `frontend/` (opcional):
-
-```env
-VITE_API_URL=http://localhost:4000
-```
-
-## Ejecutar el Proyecto
-
-### Opción 1: Ejecutar Backend y Frontend por Separado
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-npm run dev
-```
-El servidor estará disponible en `http://localhost:4000`
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-La aplicación estará disponible en `http://localhost:5173`
-
-### Opción 2: Usando Docker (Si está configurado)
-
-```bash
-docker-compose up
-```
-
-## Usuarios de Prueba
-
-Después de ejecutar el seeder, puedes iniciar sesión con:
-
-| Rol | Email | Contraseña |
-|-----|-------|------------|
-| Administrador | admin@emplifi.com | 123456 |
-| Empleado | empleado@test.com | 123456 |
-
-## Estructura del Proyecto
-
-```
-recursos_humanos/
-├── backend/
-│   ├── prisma/
-│   │   ├── schema.prisma          # Esquema de base de datos
-│   │   ├── seed.js                # Orquestador de seeders
-│   │   └── seeds/                 # Módulos de seeding
-│   ├── src/
-│   │   ├── controllers/           # Controladores de rutas
-│   │   ├── middleware/            # Middlewares (auth, etc.)
-│   │   ├── routes/                # Definición de rutas
-│   │   ├── services/              # Lógica de negocio
-│   │   ├── repositories/          # Acceso a datos
-│   │   ├── utils/                 # Utilidades (encriptación, etc.)
-│   │   └── server.js              # Punto de entrada
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── api/                   # Configuración de Axios
-│   │   ├── components/            # Componentes reutilizables
-│   │   ├── pages/                 # Páginas/Vistas
-│   │   ├── services/              # Servicios de API
-│   │   └── App.jsx                # Componente principal
-│   └── package.json
-│
-└── README.md
-```
-
-## Scripts Útiles
-
-### Backend
-
-```bash
-# Desarrollo
-npm run dev
-
-# Reiniciar base de datos (¡CUIDADO: Borra todos los datos!)
-npx prisma migrate reset
-
 # Generar cliente de Prisma
 npx prisma generate
 
-# Abrir Prisma Studio (interfaz visual de DB)
-npm run prisma:studio
+# Ejecutar migraciones
+npx prisma migrate dev
 
-# Ejecutar seeder solo para un módulo
-node -r dotenv/config prisma/seed.js --only=users
-node -r dotenv/config prisma/seed.js --only=recruitment
-```
+# Poblado completo de datos (Seeders)
+node -r dotenv/config prisma/seed.js
 
-### Frontend
-
-```bash
-# Desarrollo
+# Iniciar servidor backend en desarrollo
 npm run dev
-
-# Build para producción
-npm run build
-
-# Preview de build
-npm run preview
 ```
+El servidor backend estará disponible en: `http://localhost:4000`
 
-## Solución de Problemas
-
-### Error: "Cannot find module '@prisma/client'"
+### 4. Configurar e Iniciar el Frontend Web
+En una nueva ventana de terminal:
 ```bash
-cd backend
-npx prisma generate
+cd frontend
+
+# Instalar dependencias
+npm install
+
+# Iniciar servidor de desarrollo Vite
+npm run dev
 ```
-
-### Error: "Port 4000 is already in use"
-Cambia el puerto en `backend/.env` o detén el proceso que usa el puerto 4000.
-
-### Error al conectar con PostgreSQL
-Verifica que:
-1. PostgreSQL esté corriendo
-2. La URL de conexión en `.env` sea correcta
-3. El usuario tenga permisos en la base de datos
-
-### Pantalla en blanco en el frontend
-1. Verifica que el backend esté corriendo
-2. Revisa la consola del navegador para errores
-3. Asegúrate de que `VITE_API_URL` sea correcto
-
-## Tecnologías Utilizadas
-
-### Backend
-- **Express.js** - Framework web
-- **Prisma** - ORM para PostgreSQL
-- **PostgreSQL** - Base de datos
-- **JWT** - Autenticación
-- **bcryptjs** - Hash de contraseñas
-- **Multer** - Upload de archivos
-
-### Frontend
-- **React 19** - Librería UI
-- **Vite** - Build tool
-- **React Router** - Navegación
-- **Axios** - Cliente HTTP
-- **Recharts** - Gráficos
-- **Framer Motion** - Animaciones
-- **Tailwind CSS** - Estilos
-
-## Licencia
-
-Este proyecto es privado y de uso educativo.
-
-## Contribución
-
-Para contribuir al proyecto:
-
-1. Crea un fork del repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## Soporte
-
-Para reportar problemas o solicitar nuevas características, abre un issue en el repositorio.
+El cliente web estará disponible en: `http://localhost:5173`
 
 ---
 
-Desarrollado con dedicación para la gestión eficiente de recursos humanos
+## 🔐 Usuarios de Prueba (Seeders)
+
+Una vez ejecutados los seeders, se activarán las siguientes credenciales predeterminadas para pruebas de roles:
+
+| Rol | Correo Electrónico | Contraseña | Capacidades |
+|---|---|---|---|
+| **Administrador General** | `admin@emplifi.com` | `123456` | Acceso total, auditoría, parámetros, nómina y gestión global |
+| **Empleado de Prueba** | `empleado@test.com` | `123456` | Autogestión, marcación GPS, consulta de roles de pago y permisos |
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+recursos_humanos/
+├── backend/                  # Servidor de API REST (Express + Prisma ORM)
+│   ├── prisma/               # Esquema relacional (schema.prisma) y seeders
+│   ├── src/
+│   │   ├── controllers/      # Controladores HTTP de la API
+│   │   ├── services/         # Lógica de negocio y algoritmos de cálculo
+│   │   ├── repositories/     # Capa de acceso a datos Prisma
+│   │   ├── middleware/       # Autenticación JWT, RBAC, Helmet y CORS
+│   │   └── database/         # Instancia y configuración del cliente DB
+│   ├── prisma.config.ts      # Configuración de Prisma 7
+│   └── package.json
+├── frontend/                 # Aplicación Cliente SPA (React + Vite)
+│   ├── src/
+│   │   ├── api/              # Cliente Axios centralizado con interceptores
+│   │   ├── components/       # Componentes UI reutilizables (Sidebar, Cards, Tables)
+│   │   ├── pages/            # 45+ Vistas agrupadas por módulos
+│   │   ├── services/         # Servicios de integración frontend-backend
+│   │   └── App.jsx           # Enrutador principal y guards de navegación
+│   └── package.json
+├── docs/                     # 📂 ÚNICO DIRECTORIO DE DOCUMENTACIÓN DEL PROYECTO
+│   ├── 01-arquitectura/      # Arquitectura, Clean Arch y patrones
+│   ├── 02-backend-servicios/ # API REST, RBAC, SSO, cifrado AES-256 y LOPDP
+│   ├── 03-motores-especializados/ # PDF, Geocercas GPS, Evaluaciones 360 y Biometría
+│   ├── 04-base-de-datos/     # Esquema relacional Prisma / PostgreSQL y catálogos
+│   ├── 05-frontend-web/      # Arquitectura React + Vite y componentes UI
+│   ├── 06-inteligencia-y-analitica/ # Módulo IA y analítica predictiva
+│   ├── 07-despliegue-y-operaciones/ # Guías de instalación, auditoría, DRP y testing
+│   ├── 08-artefactos-scrum/  # Artefactos formales de metodología Scrum (.docx)
+│   └── README.md             # Índice y portal maestro de navegación
+└── README.md                 # Guía ejecutiva y de inicio rápido (Raíz)
+```
+
+---
+
+## 🛡️ Seguridad y Verificación
+
+Para validar de forma automatizada que el sistema de cifrado **AES-256-GCM** y las reglas de seguridad operan correctamente:
+
+```bash
+cd backend
+node validate-implementation.js
+```
+Este comando ejecuta la suite de verificación comprobando 11 controles criticos de seguridad y cifrado de datos salariales.
+
+---
+
+## 👨‍💻 Autores & Créditos
+
+Desarrollado con estándares de ingeniería de software por **Karen Mendoza** y **Jorge Doicela**.
+
+&copy; 2026 EMPLIFI — Todos los derechos reservados.
+

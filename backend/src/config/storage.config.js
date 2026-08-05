@@ -13,8 +13,8 @@ export const STORAGE_CONFIG = {
 
     // Rutas de almacenamiento
     PATHS: {
-        DOCUMENTS: process.env.VERCEL ? '/tmp/uploads/documents' : path.resolve(process.cwd(), 'backend/uploads/documents'),
-        RESUMES: process.env.VERCEL ? '/tmp/uploads/resumes' : path.resolve(process.cwd(), 'backend/uploads/resumes'),
-        EVIDENCE: process.env.VERCEL ? '/tmp/uploads/evidence' : path.resolve(process.cwd(), 'backend/uploads/evidence')
+        DOCUMENTS: process.env.VERCEL ? '/tmp/uploads/documents' : path.resolve(process.cwd(), process.cwd().endsWith('backend') ? 'uploads/documents' : 'backend/uploads/documents'),
+        RESUMES: process.env.VERCEL ? '/tmp/uploads/resumes' : path.resolve(process.cwd(), process.cwd().endsWith('backend') ? 'uploads/resumes' : 'backend/uploads/resumes'),
+        EVIDENCE: process.env.VERCEL ? '/tmp/uploads/evidence' : path.resolve(process.cwd(), process.cwd().endsWith('backend') ? 'uploads/evidence' : 'backend/uploads/evidence')
     }
 };
