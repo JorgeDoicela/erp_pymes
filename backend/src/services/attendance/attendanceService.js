@@ -41,6 +41,11 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
     return R * c; // in meters
 };
 
+const sanitizeCoordinate = (val) => {
+    if (typeof val !== 'number' || isNaN(val)) return null;
+    return parseFloat(val.toFixed(4));
+};
+
 const isVPNDetected = async (ip) => {
     if (!ip || ip === '::1' || ip === '127.0.0.1') {
         console.log(`[VPN_CHECK] IP ignored: ${ip}`);
@@ -83,7 +88,8 @@ export const attendanceService = {
             workLatitude: true,
             workLongitude: true,
             geofenceRadius: true,
-            enforceGeofence: true
+            enforceGeofence: true,
+            trackingConsent: true
         };
 
         // Fetch global settings for fallback
@@ -113,11 +119,19 @@ export const attendanceService = {
         }
         employeeId = employee.id;
 
-        // --- GEOFENCING VALIDATION ---
+        // --- CONSENT & GEOFENCING VALIDATION ---
         const useGlobalGeofence = systemSettings?.globalLatitude && systemSettings?.globalLongitude;
 
-        if (employee.enforceGeofence || useGlobalGeofence) {
-            if (!location || !location.latitude || !location.longitude) {
+        if (!employee.trackingConsent) {
+            if (employee.enforceGeofence || useGlobalGeofence) {
+                throw new Error('No ha otorgado el consentimiento obligatorio para el tratamiento de datos de ubicación. Por favor acepte los términos de privacidad en su perfil para marcar asistencia.');
+            }
+            // Si el consentimiento no fue otorgado y la geocerca no es obligatoria, se ignora cualquier coordenada de ubicación enviada
+            location = null;
+        }
+
+        if (employee.enforceGeofence || useGlobalGeofence || location) {
+            if ((employee.enforceGeofence || useGlobalGeofence) && (!location || !location.latitude || !location.longitude)) {
                 throw new Error('La ubicación es requerida para marcar asistencia.');
             }
 
@@ -125,7 +139,7 @@ export const attendanceService = {
             const activeLng = employee.workLongitude || systemSettings?.globalLongitude;
             const activeRadius = employee.geofenceRadius || systemSettings?.globalRadius || 200;
 
-            if (activeLat && activeLng) {
+            if (activeLat && activeLng && location?.latitude && location?.longitude) {
                 const distance = getDistance(
                     location.latitude,
                     location.longitude,
@@ -139,7 +153,6 @@ export const attendanceService = {
             } else if (employee.enforceGeofence) {
                 console.warn(`Geofencing enabled for employee ${employeeId} but no work location set.`);
             }
-
         }
 
         // --- VPN VALIDATION (Always performed if IP is available) ---
@@ -152,8 +165,6 @@ export const attendanceService = {
 
         if (systemSettings?.allowedIPs && ip) {
             const allowedList = systemSettings.allowedIPs.split(',').filter(i => i.trim() !== '').map(i => i.trim());
-            // Support both Exact match and simple "contains" or "starts with" maybe? 
-            // For now, exact match as it was intended.
             if (allowedList.length > 0 && !allowedList.includes(ip)) {
                 throw new Error(`Conexión no permitida desde esta red (${ip}). Contacte al administrador.`);
             }
@@ -171,7 +182,7 @@ export const attendanceService = {
                 throw new Error('Ya se ha registrado una entrada para este día.');
             }
 
-            const checkInDate = now; // Use the 'now' date object defined above
+            const checkInDate = now;
             const entryData = {
                 employeeId,
                 date: today,
@@ -180,15 +191,12 @@ export const attendanceService = {
                 ipAddress: ip
             };
 
-            if (location && location.latitude && location.longitude) {
-                entryData.entryLatitude = location.latitude;
-                entryData.entryLongitude = location.longitude;
+            if (location && location.latitude && location.longitude && employee.trackingConsent) {
+                entryData.entryLatitude = sanitizeCoordinate(location.latitude);
+                entryData.entryLongitude = sanitizeCoordinate(location.longitude);
             }
 
             // Determine Lateness at Entry
-            // Fetch Active Schedule for lateness check (Copied logic or refactor helper? For speed, inline logic)
-            // Ideally we use a helper. But let's keep it simple here.
-            // We need to fetch schedule to know if late.
             const activeSchedule = await prisma.employeeSchedule.findFirst({
                 where: {
                     employeeId: employeeId,
@@ -202,13 +210,13 @@ export const attendanceService = {
             const shiftStartTime = activeSchedule?.shift?.startTime || "08:00";
             const tolerance = activeSchedule?.shift?.toleranceMinutes || 15;
 
-            const limitParams = new Date(checkInDate); // checkInDate is 'now' from line 48
+            const limitParams = new Date(checkInDate);
             const [sh, sm] = shiftStartTime.split(':').map(Number);
             limitParams.setHours(sh, sm + tolerance, 0, 0);
 
             if (checkInDate > limitParams) {
-                entryData.status = 'LATE'; // We map status string
-                entryData.isLate = true;   // And boolean flag
+                entryData.status = 'LATE';
+                entryData.isLate = true;
             } else {
                 entryData.isLate = false;
             }
@@ -216,14 +224,14 @@ export const attendanceService = {
             // Crear registro de entrada
             const newRecord = await attendanceRepository.createEntry(entryData);
 
-            // Create Audit Log
+            // Create Audit Log (obfuscated GPS coordinates)
             await prisma.auditLog.create({
                 data: {
                     entity: 'Attendance',
                     entityId: newRecord.id,
                     action: 'ENTRY',
                     performedBy: employeeId,
-                    details: `Registro de entrada. Ubicación: ${location ? `${location.latitude},${location.longitude}` : 'No proporcionada'}`,
+                    details: `Registro de entrada. Ubicación validada por geocerca (Consentimiento activo).`,
                     ip: ip
                 }
             });
@@ -242,9 +250,8 @@ export const attendanceService = {
             const checkInTime = new Date(existingRecord.checkIn);
             let diffMs = now - checkInTime;
 
-            // Subtract Break Time if exists
             if (existingRecord.breakStart) {
-                const breakEnd = existingRecord.breakEnd || now; // If not ended, assume ended now
+                const breakEnd = existingRecord.breakEnd || now;
                 const breakDuration = breakEnd - new Date(existingRecord.breakStart);
                 if (breakDuration > 0) {
                     diffMs -= breakDuration;
@@ -259,13 +266,12 @@ export const attendanceService = {
                 ipAddress: ip
             };
 
-            if (location && location.latitude && location.longitude) {
-                exitData.exitLatitude = location.latitude;
-                exitData.exitLongitude = location.longitude;
+            if (location && location.latitude && location.longitude && employee.trackingConsent) {
+                exitData.exitLatitude = sanitizeCoordinate(location.latitude);
+                exitData.exitLongitude = sanitizeCoordinate(location.longitude);
             }
 
             // Calculate Overtime
-            // 1. Fetch active schedule
             const activeSchedule = await prisma.employeeSchedule.findFirst({
                 where: {
                     employeeId: employeeId,
@@ -280,32 +286,21 @@ export const attendanceService = {
             });
 
             if (activeSchedule && activeSchedule.shift) {
-                // Parse shift End Time
                 const [eh, em] = activeSchedule.shift.endTime.split(':').map(Number);
                 const shiftEndTime = new Date(now);
                 shiftEndTime.setHours(eh, em, 0, 0);
 
-                // If CheckOut > ShiftEndTime
                 if (now > shiftEndTime) {
                     const extraMs = now - shiftEndTime;
                     const extraHours = parseFloat((extraMs / (1000 * 60 * 60)).toFixed(2));
-                    // Optional: Minimum threshold for overtime? e.g., 30 mins. For now, strict.
                     if (extraHours > 0) {
                         exitData.overtimeHours = extraHours;
                     }
                 }
 
-                // NEW: Early Departure Detection
-                // If CheckOut < ShiftEndTime - tolerance (or just strict ShiftEndTime)
-                // Let's use a small tolerance like 5 mins before flagging "Early" purely to avoid micro-seconds diffs, 
-                // but user said "Turn ends 18:00 and leaves 17:30".
-                // We'll compare with strict end time.
                 if (now < shiftEndTime) {
-                    // Check difference
                     const diffMs = shiftEndTime - now;
                     const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-                    // If leaves more than 1 minute early (to avoid seconds precision issues)
                     if (diffMinutes >= 1) {
                         exitData.isEarlyDeparture = true;
                     }
@@ -315,14 +310,14 @@ export const attendanceService = {
             // Actualizar registro con salida
             const updatedRecord = await attendanceRepository.updateExit(existingRecord.id, exitData);
 
-            // Create Audit Log
+            // Create Audit Log (obfuscated GPS coordinates)
             await prisma.auditLog.create({
                 data: {
                     entity: 'Attendance',
                     entityId: updatedRecord.id,
                     action: 'EXIT',
                     performedBy: employeeId,
-                    details: `Registro de salida. Horas trabajadas: ${workedHours}. Ubicación: ${location ? `${location.latitude},${location.longitude}` : 'No proporcionada'}`,
+                    details: `Registro de salida. Horas trabajadas: ${workedHours}. Ubicación validada por geocerca.`,
                     ip: ip
                 }
             });

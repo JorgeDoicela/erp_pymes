@@ -31,6 +31,7 @@ const markAttendance = async (req, res, next) => {
         const businessErrors = [
             'Ubicación no permitida',
             'La ubicación es requerida',
+            'No ha otorgado el consentimiento',
             'Conexión no permitida',
             'Conexión vía VPN/Proxy detectada',
             'Ya se ha registrado',

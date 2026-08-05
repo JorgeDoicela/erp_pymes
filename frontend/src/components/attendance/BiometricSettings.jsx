@@ -1,25 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { updateConsentTracking } from '../../services/employees/employee.service';
 
 const BiometricSettings = () => {
     const [loading, setLoading] = useState(false);
     const [statusLoading, setStatusLoading] = useState(true);
     const [isRegistered, setIsRegistered] = useState(false);
+    const [trackingConsent, setTrackingConsent] = useState(false);
+    const [consentDate, setConsentDate] = useState(null);
+    const [consentLoading, setConsentLoading] = useState(false);
     const [message, setMessage] = useState(null);
 
     useEffect(() => {
-        checkStatus();
+        fetchSecurityData();
     }, []);
 
-    const checkStatus = async () => {
+    const fetchSecurityData = async () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/status`, config);
-            setIsRegistered(res.data.isRegistered);
+            
+            const [bioRes, profileRes] = await Promise.all([
+                axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/status`, config),
+                axios.get(`${import.meta.env.VITE_API_URL || '/api'}/employees/profile`, config)
+            ]);
+
+            setIsRegistered(bioRes.data.isRegistered);
+            if (profileRes.data?.data) {
+                setTrackingConsent(!!profileRes.data.data.trackingConsent);
+                setConsentDate(profileRes.data.data.trackingConsentDate);
+            }
         } catch (err) {
-            console.error('Error fetching biometric status:', err);
+            console.error('Error fetching security settings:', err);
         } finally {
             setStatusLoading(false);
         }
@@ -38,7 +51,6 @@ const BiometricSettings = () => {
 
             setMessage({ type: 'info', text: 'Por favor, use el sensor de su dispositivo...' });
 
-            // Iniciar registro en el navegador (Importación dinámica)
             const { startRegistration } = await import('@simplewebauthn/browser');
             const regResp = await startRegistration({ optionsJSON: options });
 
@@ -59,13 +71,44 @@ const BiometricSettings = () => {
         }
     };
 
-    // Simple SVG icons to avoid react-icons build issues
+    const handleToggleConsent = async (newStatus) => {
+        try {
+            setConsentLoading(true);
+            const token = localStorage.getItem('token');
+            await updateConsentTracking(newStatus, token);
+            
+            setTrackingConsent(newStatus);
+            setConsentDate(new Date());
+
+            // Actualizar también en localStorage
+            const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            savedUser.trackingConsent = newStatus;
+            localStorage.setItem('user', JSON.stringify(savedUser));
+
+            setMessage({
+                type: newStatus ? 'success' : 'info',
+                text: newStatus 
+                    ? 'Consentimiento de protección de datos y geolocalización otorgado.' 
+                    : 'Consentimiento de geolocalización retirado.'
+            });
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Error al actualizar el consentimiento.' });
+        } finally {
+            setConsentLoading(false);
+        }
+    };
+
+    // Icons
     const IconShield = () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
     );
 
     const IconFingerprint = ({ className }) => (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" /></svg>
+    );
+
+    const IconPin = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
     );
 
     const IconCheck = () => (
@@ -85,62 +128,113 @@ const BiometricSettings = () => {
     }
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                    <IconShield />
+        <div className="space-y-6">
+            {/* Sección 1: Consentimiento de Protección de Datos y Ubicación */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <IconPin />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Protección de Datos y Geolocalización</h2>
+                        <p className="text-sm text-slate-500">Gestione su consentimiento para la captura de ubicación durante marcaciones</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 className="text-xl font-bold text-slate-800">Seguridad Biométrica</h2>
-                    <p className="text-sm text-slate-500">
-                        {isRegistered ? 'Su biometría está configurada y lista' : 'Configure su huella para marcaciones rápidas y seguras'}
-                    </p>
+
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 font-semibold text-slate-800">
+                            Estado: {trackingConsent ? (
+                                <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-100 px-2.5 py-0.5 rounded-full text-xs font-bold">
+                                    <IconCheck /> OTORGADO
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-100 px-2.5 py-0.5 rounded-full text-xs font-bold">
+                                    NO OTORGADO
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                            {consentDate ? `Última actualización: ${new Date(consentDate).toLocaleDateString()}` : 'No se ha registrado fecha de consentimiento.'}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => handleToggleConsent(!trackingConsent)}
+                        disabled={consentLoading}
+                        className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-2 ${
+                            trackingConsent
+                                ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                                : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-500/20'
+                        }`}
+                    >
+                        {consentLoading ? 'Procesando...' : trackingConsent ? 'Retirar Consentimiento' : 'Otorgar Consentimiento'}
+                    </button>
                 </div>
+
+                <p className="text-xs text-slate-500 leading-relaxed">
+                    <strong>Nota LOPDP/GDPR:</strong> La geolocalización solo se procesa puntualmente al momento de registrar entrada o salida dentro de geocercas configuradas. Sus datos no son rastreados de forma continua.
+                </p>
             </div>
 
-            {message && (
-                <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 text-sm ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' :
-                    message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                        'bg-blue-50 text-blue-700 border border-blue-100'
-                    }`}>
-                    {message.type === 'error' ? <IconAlert /> : message.type === 'success' ? <IconCheck /> : <IconFingerprint className="animate-pulse" />}
-                    {message.text}
+            {/* Sección 2: Seguridad Biométrica */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <IconShield />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Seguridad Biométrica</h2>
+                        <p className="text-sm text-slate-500">
+                            {isRegistered ? 'Su biometría está configurada y lista' : 'Configure su huella para marcaciones rápidas y seguras'}
+                        </p>
+                    </div>
                 </div>
-            )}
 
-            {!message && isRegistered && (
-                <div className="mb-6 p-4 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-3 text-sm">
-                    <IconCheck />
-                    Biometría configurada correctamente en este dispositivo.
-                </div>
-            )}
-
-            <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 mb-6">
-                <h3 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="text-blue-500"><IconFingerprint /></span> ¿Por qué usar biometría?
-                </h3>
-                <ul className="text-sm text-slate-600 space-y-2 list-disc ml-5">
-                    <li>Marcaciones en un solo toque.</li>
-                    <li>Máxima seguridad: solo usted puede registrar su asistencia.</li>
-                    <li>Soporta FaceID, TouchID y Windows Hello.</li>
-                    <li className="text-amber-600 font-medium italic">Nota: Si añade o cambia biometrías en su dispositivo (ej. nuevo dedo), deberá volver a configurar este acceso por seguridad.</li>
-                </ul>
-            </div>
-
-            <button
-                onClick={handleRegister}
-                disabled={loading}
-                className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${loading ? 'bg-slate-400 cursor-not-allowed' :
-                    isRegistered ? 'bg-slate-800 hover:bg-slate-700' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'
-                    }`}
-            >
-                {loading ? 'Procesando...' : (
-                    <>
-                        <IconFingerprint />
-                        {isRegistered ? 'VOLVER A CONFIGURAR HUELLA' : 'CONFIGURAR HUELLA DIGITAL'}
-                    </>
+                {message && (
+                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 text-sm ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' :
+                        message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                            'bg-blue-50 text-blue-700 border border-blue-100'
+                        }`}>
+                        {message.type === 'error' ? <IconAlert /> : message.type === 'success' ? <IconCheck /> : <IconFingerprint className="animate-pulse" />}
+                        {message.text}
+                    </div>
                 )}
-            </button>
+
+                {!message && isRegistered && (
+                    <div className="mb-6 p-4 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-3 text-sm">
+                        <IconCheck />
+                        Biometría configurada correctamente en este dispositivo.
+                    </div>
+                )}
+
+                <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 mb-6">
+                    <h3 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                        <span className="text-blue-500"><IconFingerprint /></span> ¿Por qué usar biometría?
+                    </h3>
+                    <ul className="text-sm text-slate-600 space-y-2 list-disc ml-5">
+                        <li>Marcaciones en un solo toque.</li>
+                        <li>Máxima seguridad: solo usted puede registrar su asistencia.</li>
+                        <li>Soporta FaceID, TouchID y Windows Hello.</li>
+                        <li className="text-amber-600 font-medium italic">Nota: Si añade o cambia biometrías en su dispositivo (ej. nuevo dedo), deberá volver a configurar este acceso por seguridad.</li>
+                    </ul>
+                </div>
+
+                <button
+                    onClick={handleRegister}
+                    disabled={loading}
+                    className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${loading ? 'bg-slate-400 cursor-not-allowed' :
+                        isRegistered ? 'bg-slate-800 hover:bg-slate-700' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'
+                        }`}
+                >
+                    {loading ? 'Procesando...' : (
+                        <>
+                            <IconFingerprint />
+                            {isRegistered ? 'VOLVER A CONFIGURAR HUELLA' : 'CONFIGURAR HUELLA DIGITAL'}
+                        </>
+                    )}
+                </button>
+            </div>
         </div>
     );
 };

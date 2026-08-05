@@ -115,3 +115,36 @@ export function decryptSalary(encryptedSalary) {
         return null;
     }
 }
+
+/**
+ * Encripta una coordenada numérica (latitud o longitud) usando AES-256-GCM.
+ * Trunca primero la coordenada a 4 decimales para mayor privacidad (~11 metros).
+ * @param {number} coord - Coordenada a encriptar
+ * @returns {string|null} Coordenada encriptada en formato iv:authTag:encryptedData
+ */
+export function encryptCoordinate(coord) {
+    if (typeof coord !== 'number' || isNaN(coord)) return null;
+    const sanitized = parseFloat(coord.toFixed(4));
+    return encrypt(sanitized);
+}
+
+/**
+ * Desencripta una coordenada encriptada con AES-256-GCM y la retorna como número flotante.
+ * @param {string|number} encryptedCoord - Coordenada encriptada o número legado en texto plano
+ * @returns {number|null} Coordenada desencriptada o null si falla
+ */
+export function decryptCoordinate(encryptedCoord) {
+    if (encryptedCoord === null || encryptedCoord === undefined) return null;
+    if (typeof encryptedCoord === 'number') return parseFloat(encryptedCoord.toFixed(4));
+
+    try {
+        const decrypted = safeDecrypt(encryptedCoord);
+        if (decrypted === null) return null;
+
+        const coord = parseFloat(decrypted);
+        return isNaN(coord) ? null : parseFloat(coord.toFixed(4));
+    } catch (e) {
+        return null;
+    }
+}
+

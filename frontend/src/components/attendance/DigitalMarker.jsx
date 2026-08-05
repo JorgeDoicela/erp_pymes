@@ -323,11 +323,11 @@ const DigitalMarker = ({ user }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-white backdrop-blur-sm border border-slate-200 text-slate-900 p-8 rounded-2xl shadow-sm">
+        <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-white backdrop-blur-sm border border-slate-200 text-slate-900 p-4 sm:p-8 rounded-2xl shadow-sm">
             {/* Clock */}
-            <div className="mb-8 text-center">
-                <h2 className="text-xl text-slate-500 font-light tracking-widest uppercase mb-2">Marcador Digital</h2>
-                <div className="text-5xl md:text-6xl font-bold tracking-tighter text-blue-600 tabular-nums">
+            <div className="mb-6 sm:mb-8 text-center">
+                <h2 className="text-sm sm:text-xl text-slate-500 font-light tracking-widest uppercase mb-2">Marcador Digital</h2>
+                <div className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tighter text-blue-600 tabular-nums">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </div>
                 <div className="text-slate-500 mt-2 text-base md:text-lg">
@@ -644,7 +644,7 @@ const DigitalMarker = ({ user }) => {
                         <motion.div
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
-                            className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl overflow-hidden relative"
+                            className="bg-white rounded-3xl p-5 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative"
                         >
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500" />
 
