@@ -29,6 +29,7 @@ export const adminModules = [
 ];
 
 export const employeeModules = [
+    { title: 'Portal Móvil Operativo', icon: <FiCompass />, color: 'bg-indigo-600', path: '/empleado/portal' },
     { title: 'Dashboard', icon: <FiBarChart2 />, color: 'bg-blue-500', path: '/empleado' },
     { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
     { title: 'Mi Expediente Digital', icon: <FiFolder />, color: 'bg-blue-600', path: '/my-expedient' },

@@ -22,6 +22,7 @@ const EmployeeProfile = lazy(() => import('./pages/employees/EmployeeProfile.jsx
 const EmployeeExpedient = lazy(() => import('./pages/employees/EmployeeExpedient.jsx'));
 const EmployeeAssetsManagement = lazy(() => import('./pages/employees/EmployeeAssetsManagement.jsx'));
 const OffboardingManagement = lazy(() => import('./pages/employees/OffboardingManagement.jsx'));
+const MobileEmployeePortal = lazy(() => import('./pages/dashboard/MobileEmployeePortal.jsx'));
 
 // Attendance
 const AttendancePage = lazy(() => import('./pages/attendance/AttendancePage.jsx'));
@@ -210,6 +211,7 @@ function App() {
         {/* Employee Routes - Same MainLayout with sidebar */}
         <Route element={<RequireAuth role="employee"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
+          <Route path="/empleado/portal" element={<MobileEmployeePortal user={auth.user} />} />
           <Route path="/empleado/asistencia" element={<EmployeeAttendance user={auth.user} />} />
           <Route path="/empleado/ausencias" element={<EmployeeAbsences />} />
           <Route path="/entrepreneurship" element={<EntrepreneurshipDashboard />} />
