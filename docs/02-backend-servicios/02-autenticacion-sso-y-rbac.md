@@ -6,18 +6,18 @@ EMPLIFI utiliza **JSON Web Tokens (JWT)** para la autenticación stateless en pe
 
 ```mermaid
 sequenceDiagram
-    participant User as Usuario / Client
-    participant API as API Express Server
-    participant AuthMod as Auth Controller
-    participant DB as PostgreSQL
+ participant User as Usuario / Client
+ participant API as API Express Server
+ participant AuthMod as Auth Controller
+ participant DB as PostgreSQL
 
-    User->>API: POST /api/auth/login (email, password)
-    API->>AuthMod: Validar credenciales
-    AuthMod->>DB: Buscar employee por email
-    DB-->>AuthMod: Retorna record (password bcrypt hash)
-    AuthMod->>AuthMod: bcrypt.compare(password, hash)
-    AuthMod->>AuthMod: Generar JWT (userId, role, exp)
-    AuthMod-->>User: HTTP 200 { user, token }
+ User->>API: POST /api/auth/login (email, password)
+ API->>AuthMod: Validar credenciales
+ AuthMod->>DB: Buscar employee por email
+ DB-->>AuthMod: Retorna record (password bcrypt hash)
+ AuthMod->>AuthMod: bcrypt.compare(password, hash)
+ AuthMod->>AuthMod: Generar JWT (userId, role, exp)
+ AuthMod-->>User: HTTP 200 { user, token }
 ```
 
 ### 1.1. Estructura del Token JWT
@@ -45,17 +45,17 @@ El acceso a las distintas rutas y recursos está regulado por el middleware `aut
 
 ```
 ┌───────────────────────────┬───────────┬───────────┬──────────────┬────────────────┬──────────────────┐
-│ Módulo / Recurso          │  admin    │    hr     │  employee    │  accounting    │  entrepreneur    │
+│ Módulo / Recurso │ admin │ hr │ employee │ accounting │ entrepreneur │
 ├───────────────────────────┼───────────┼───────────┼──────────────┼────────────────┼──────────────────┤
-│ Gestión Empleados (CRUD)  │     ✓     │     ✓     │    Solo id   │       ✗        │        ✗         │
-│ Auditoría (AuditLogs)     │     ✓     │     ✗     │      ✗       │       ✗        │        ✗         │
-│ Exportar Excel / CSV      │     ✓     │     ✗     │      ✗       │       ✗        │        ✗         │
-│ Nómina (Generar / Config) │     ✓     │     ✓     │      ✗       │    Lectura     │        ✗         │
-│ Reclutamiento & Vacantes  │     ✓     │     ✓     │      ✗       │       ✗        │        ✗         │
-│ Marcación GPS Asistencia  │     ✓     │     ✓     │      ✓       │       ✓        │        ✓         │
-│ Evaluaciones (Tomar)      │     ✓     │     ✓     │      ✓       │       ✓        │        ✓         │
-│ Módulo Contabilidad       │     ✓     │     ✗     │      ✗       │       ✓        │        ✗         │
-│ Módulo Emprendimiento     │     ✓     │     ✗     │  Solo Miembro│       ✗        │        ✓         │
+│ Gestión Empleados (CRUD) │ │ │ Solo id │ │ │
+│ Auditoría (AuditLogs) │ │ │ │ │ │
+│ Exportar Excel / CSV │ │ │ │ │ │
+│ Nómina (Generar / Config) │ │ │ │ Lectura │ │
+│ Reclutamiento & Vacantes │ │ │ │ │ │
+│ Marcación GPS Asistencia │ │ │ │ │ │
+│ Evaluaciones (Tomar) │ │ │ │ │ │
+│ Módulo Contabilidad │ │ │ │ │ │
+│ Módulo Emprendimiento │ │ │ Solo Miembro│ │ │
 └───────────────────────────┴───────────┴───────────┴──────────────┴────────────────┴──────────────────┘
 ```
 

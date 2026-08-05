@@ -6,11 +6,11 @@ El cliente web de EMPLIFI es una **Single Page Application (SPA)** moderna const
 
 ```mermaid
 graph TD
-    EntryPoint[index.html / main.jsx] --> AppContainer[App.jsx - Router Base]
-    AppContainer --> AuthGuard[RequireAuth / Control de Roles: admin, hr, employee, accounting, entrepreneur]
-    AuthGuard --> Layout[MainLayout: Sidebar Adaptativa + Navbar + Banner]
-    Layout --> SuspenseFallback[Suspense & Loading Spinner]
-    SuspenseFallback --> LazyPages[Lazy Loaded Pages: Dashboards, Nómina, Asistencia, Evaluaciones, Contabilidad, Emprendimiento]
+ EntryPoint[index.html / main.jsx] --> AppContainer[App.jsx - Router Base]
+ AppContainer --> AuthGuard[RequireAuth / Control de Roles: admin, hr, employee, accounting, entrepreneur]
+ AuthGuard --> Layout[MainLayout: Sidebar Adaptativa + Navbar + Banner]
+ Layout --> SuspenseFallback[Suspense & Loading Spinner]
+ SuspenseFallback --> LazyPages[Lazy Loaded Pages: Dashboards, Nómina, Asistencia, Evaluaciones, Contabilidad, Emprendimiento]
 ```
 
 ---

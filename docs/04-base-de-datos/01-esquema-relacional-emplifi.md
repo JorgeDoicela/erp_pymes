@@ -6,22 +6,22 @@ La base de datos PostgreSQL de EMPLIFI comprende **45 modelos de datos** adminis
 
 ```mermaid
 erDiagram
-    Employee ||--o{ Attendance : "attendance"
-    Employee ||--o{ AbsenceRequest : "absences"
-    Employee ||--o{ Contract : "contracts"
-    Employee ||--o{ Document : "documents"
-    Employee ||--o{ EmployeeGoal : "goals"
-    Employee ||--o{ EmployeeEvaluation : "evaluations"
-    Employee ||--o{ PayrollDetail : "PayrollDetail"
-    Employee ||--o{ BiometricCredential : "biometricCredentials"
-    Employee ||--o{ Notification : "notifications"
-    Employee ||--o{ Skill : "skills"
-    Employee ||--o{ WorkHistory : "workHistory"
-    Employee ||--o{ Entrepreneurship : "entrepreneurships"
-    AccountingAccount ||--o{ JournalLine : "lines"
-    JournalEntry ||--o{ JournalLine : "lines"
-    Entrepreneurship ||--o{ EntrepreneurshipMember : "members"
-    Entrepreneurship ||--o{ EntrepreneurshipMilestone : "milestones"
+ Employee ||--o{ Attendance : "attendance"
+ Employee ||--o{ AbsenceRequest : "absences"
+ Employee ||--o{ Contract : "contracts"
+ Employee ||--o{ Document : "documents"
+ Employee ||--o{ EmployeeGoal : "goals"
+ Employee ||--o{ EmployeeEvaluation : "evaluations"
+ Employee ||--o{ PayrollDetail : "PayrollDetail"
+ Employee ||--o{ BiometricCredential : "biometricCredentials"
+ Employee ||--o{ Notification : "notifications"
+ Employee ||--o{ Skill : "skills"
+ Employee ||--o{ WorkHistory : "workHistory"
+ Employee ||--o{ Entrepreneurship : "entrepreneurships"
+ AccountingAccount ||--o{ JournalLine : "lines"
+ JournalEntry ||--o{ JournalLine : "lines"
+ Entrepreneurship ||--o{ EntrepreneurshipMember : "members"
+ Entrepreneurship ||--o{ EntrepreneurshipMilestone : "milestones"
 ```
 
 ---
@@ -88,3 +88,10 @@ erDiagram
 43. **`EntrepreneurshipMilestone` (`ent_milestones`)**: Hitos de avance Kanban. Atributos: `id`, `projectId`, `title`, `description`, `dueDate`, `completedDate`, `status`, `kanbanColumn`.
 44. **`EntrepreneurshipDocument` (`ent_documents`)**: Pitch decks y planes. Atributos: `id`, `projectId`, `title`, `fileUrl`, `fileType`, `version`.
 45. **`EntrepreneurshipUpdate` (`ent_updates`)**: Bitácora de actualizaciones. Atributos: `id`, `projectId`, `title`, `content`, `type`.
+
+### 2.9. Anticipos, Expediente Digital, EPPs, Offboarding y Comunicados
+46. **`SalaryAdvance` (`salary_advances`)**: Solicitudes de anticipos de sueldo y préstamos internos. Atributos: `id`, `employeeId`, `amount`, `installments`, `paidInstallments`, `monthlyQuota`, `reason`, `status` (`PENDING`, `APPROVED`, `REJECTED`, `PAID`), `approvedBy`, `approvedAt`, `rejectionReason`.
+47. **`EmployeeAsset` (`employee_assets`)**: Equipos, herramientas, tarjetas de acceso y EPPs asignados. Atributos: `id`, `employeeId`, `name`, `serialNumber`, `category` (`EQUIPMENT`, `UNIFORM_PPE`, `TOOL`, `ACCESS_CARD`), `condition`, `status` (`DELIVERED`, `RETURNED`, `LOST_DAMAGED`), `deliveryDate`, `returnDate`, `returnNotes`, `receiptSignatureUrl`.
+48. **`OffboardingProcess` (`offboarding_processes`)**: Registro de procesos de salida de personal y liquidaciones legales. Atributos: `id`, `employeeId`, `exitDate`, `causal` (`VOLUNTARY_RESIGNATION`, `UNFAIR_DISMISSAL`, `CONTRACT_END`, `JUST_CAUSE`), `status` (`IN_PROGRESS`, `PENDING_APPROVAL`, `COMPLETED`), `checklist` (JSON), `baseSalary`, `monthsWorked`, `thirteenthProportional`, `fourteenthProportional`, `vacationDaysOwed`, `vacationAmount`, `desahucioAmount`, `severanceAmount`, `totalSettlement`, `notes`.
+49. **`Announcement` (`announcements`)**: Tablón de anuncios y comunicados oficiales. Atributos: `id`, `title`, `content`, `category` (`GENERAL`, `POLICY`, `HOLIDAY`, `BIRTHDAY`), `priority` (`NORMAL`, `URGENT`), `requiresAcknowledgment`, `attachmentUrl`, `createdById`, `createdAt`, `updatedAt`.
+50. **`AnnouncementRead` (`announcement_reads`)**: Registro de lectura y acuse de recibo digital de comunicados. Atributos: `id`, `announcementId`, `employeeId`, `readAt`, `acknowledged`. Clave Única: `[announcementId, employeeId]`.

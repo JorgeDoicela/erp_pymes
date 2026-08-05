@@ -10,11 +10,15 @@ Datos Estructurados (JSON/DB) ──► Plantilla HTML/CSS (Templates) ──►
 
 ---
 
-## 2. Tipos de Documentos Soportados
+## 2. Tipos de Documentos Soportados y Utilidades del Cliente
 
-1. **Contratos Laborales (`Contract`)**: Renderiza clausulado legal, salario acordado, tipo de relación laboral y fecha de inicio/finalización.
-2. **Roles de Pago Individuales (`PayrollDetail`)**: Desglosa ingresos (salario base, bonos, horas extras), egresos (aportes, retenciones, anticipos) y neto a recibir.
-3. **Certificados de Trabajo**: Certificados automáticos con código de verificación QR y firma digital del Departamento de Talento Humano.
+1. **Roles de Pago Individuales (`generatePayslipPDF.js`)**:
+ - Desglosa ingresos (salario ganado por días trabajados, bonos, horas extras), egresos (descuentos de ley, anticipos de sueldo) y líquido a recibir.
+2. **Acta de Finiquito y Liquidación Legal (`generateSettlementPDF.js`)**:
+ - Renderiza el desglose legal completo de haberes al término de la relación laboral: 13er sueldo proporcional, 14to sueldo proporcional (SBU), vacaciones no gozadas, desahucio (Art. 185) e indemnización por despido intempestivo (Art. 188). Incluye declaración de satisfacción y bloques de firma formal para ambas partes.
+3. **Certificados de Trabajo Oficiales (`generateCertificatePDF.js`)**:
+ - Certificado laboral emitido en 1 clic desde el portal del empleado. Renderiza membrete oficial, cédula, cargo, departamento, salario base y fecha de ingreso.
+ - **Validación de Autenticidad QR:** Genera un recuadro de seguridad con código QR matriz y código hash único de autenticación (`CERT-ID-TIMESTAMP`) para verificación institucional externa.
 
 ---
 

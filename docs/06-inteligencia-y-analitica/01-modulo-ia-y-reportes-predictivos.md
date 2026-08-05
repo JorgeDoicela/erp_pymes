@@ -6,13 +6,13 @@ El módulo de **Inteligencia y Analytics en EMPLIFI** transforma los datos opera
 
 ```mermaid
 graph LR
-    SubData[Datos Operativos: Asistencia, Ausencias, Evaluaciones, Nomina] --> Aggregator[Motor Agregador de Inteligencia]
-    Aggregator --> TurnoverPredictor[Prediccion de Rotacion / Turnover]
-    Aggregator --> ClimateAnalyzer[Analizador de Clima & Satisfaccion]
-    Aggregator --> CostForecaster[Proyeccion de Costos Salariales]
-    TurnoverPredictor --> DashboardUI[Dashboard Inteligente Executivo]
-    ClimateAnalyzer --> DashboardUI
-    CostForecaster --> DashboardUI
+ SubData[Datos Operativos: Asistencia, Ausencias, Evaluaciones, Nomina] --> Aggregator[Motor Agregador de Inteligencia]
+ Aggregator --> TurnoverPredictor[Prediccion de Rotacion / Turnover]
+ Aggregator --> ClimateAnalyzer[Analizador de Clima & Satisfaccion]
+ Aggregator --> CostForecaster[Proyeccion de Costos Salariales]
+ TurnoverPredictor --> DashboardUI[Dashboard Inteligente Executivo]
+ ClimateAnalyzer --> DashboardUI
+ CostForecaster --> DashboardUI
 ```
 
 ---

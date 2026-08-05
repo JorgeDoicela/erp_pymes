@@ -5,7 +5,7 @@ import {
     deliverAsset, 
     returnAsset 
 } from '../../services/employees/onboardingOffboarding.service';
-import { getEmployees } from '../../services/employees/employeeService';
+import { getEmployees } from '../../services/employees/employee.service';
 import { 
     CubeIcon, 
     CheckCircleIcon, 

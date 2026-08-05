@@ -6,14 +6,14 @@ El sistema **EMPLIFI** adopta una arquitectura desacoplada y orientada a capas b
 
 ```mermaid
 graph TD
-    Client[Cliente Web / Mobile] -->|HTTP/HTTPS JSON| SecurityLayer[Capa de Seguridad: Helmet, CORS, HSTS]
-    SecurityLayer --> Middlewares[Middlewares: Auth, Performance, Maintenance, RequestLogger]
-    Middlewares --> Router[Router Capa Express: index.routes.js]
-    Router --> Controller[Capa de Controladores: HTTP Handlers]
-    Controller --> Service[Capa de Servicios: Lógica de Negocio]
-    Service --> Repository[Capa de Repositorios: Acceso a Datos & Cifrado AES-256]
-    Repository --> PrismaClient[Prisma Client ORM]
-    PrismaClient --> Database[(PostgreSQL Database)]
+ Client[Cliente Web / Mobile] -->|HTTP/HTTPS JSON| SecurityLayer[Capa de Seguridad: Helmet, CORS, HSTS]
+ SecurityLayer --> Middlewares[Middlewares: Auth, Performance, Maintenance, RequestLogger]
+ Middlewares --> Router[Router Capa Express: index.routes.js]
+ Router --> Controller[Capa de Controladores: HTTP Handlers]
+ Controller --> Service[Capa de Servicios: Lógica de Negocio]
+ Service --> Repository[Capa de Repositorios: Acceso a Datos & Cifrado AES-256]
+ Repository --> PrismaClient[Prisma Client ORM]
+ PrismaClient --> Database[(PostgreSQL Database)]
 ```
 
 ---

@@ -61,34 +61,34 @@ Generated Prisma Client
 
 ```bash
 curl -X POST http://localhost:4000/employees \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "Juan",
-    "lastName": "Pérez",
-    "email": "juan@ejemplo.com",
-    "department": "IT",
-    "position": "Developer",
-    "salary": 50000
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+ "firstName": "Juan",
+ "lastName": "Pérez",
+ "email": "juan@ejemplo.com",
+ "department": "IT",
+ "position": "Developer",
+ "salary": 50000
+ }'
 ```
 
 **Respuesta esperada (201):**
 
 ```json
 {
-  "success": true,
-  "message": "Empleado creado exitosamente",
-  "data": {
-    "id": "clp...",
-    "firstName": "Juan",
-    "lastName": "Pérez",
-    "email": "juan@ejemplo.com",
-    "department": "IT",
-    "position": "Developer",
-    "salary": 50000,
-    "createdAt": "2025-12-03T...",
-    "updatedAt": "2025-12-03T..."
-  }
+ "success": true,
+ "message": "Empleado creado exitosamente",
+ "data": {
+ "id": "clp...",
+ "firstName": "Juan",
+ "lastName": "Pérez",
+ "email": "juan@ejemplo.com",
+ "department": "IT",
+ "position": "Developer",
+ "salary": 50000,
+ "createdAt": "2025-12-03T...",
+ "updatedAt": "2025-12-03T..."
+ }
 }
 ```
 
@@ -108,8 +108,8 @@ curl http://localhost:4000/employees/{ID}
 
 ```bash
 curl -X PUT http://localhost:4000/employees/{ID} \
-  -H "Content-Type: application/json" \
-  -d '{"salary": 55000}'
+ -H "Content-Type: application/json" \
+ -d '{"salary": 55000}'
 ```
 
 #### Obtener Estadísticas
@@ -122,15 +122,15 @@ curl http://localhost:4000/employees/stats/salary
 
 ```json
 {
-  "success": true,
-  "message": "Estadísticas de salarios obtenidas",
-  "data": {
-    "total": 1,
-    "sum": 50000,
-    "average": 50000,
-    "min": 50000,
-    "max": 50000
-  }
+ "success": true,
+ "message": "Estadísticas de salarios obtenidas",
+ "data": {
+ "total": 1,
+ "sum": 50000,
+ "average": 50000,
+ "min": 50000,
+ "max": 50000
+ }
 }
 ```
 
@@ -155,12 +155,12 @@ curl -X DELETE http://localhost:4000/employees/{ID}
 
 ```json
 {
-  "firstName": "María",
-  "lastName": "García",
-  "email": "maria@ejemplo.com",
-  "department": "RH",
-  "position": "Manager",
-  "salary": 60000
+ "firstName": "María",
+ "lastName": "García",
+ "email": "maria@ejemplo.com",
+ "department": "RH",
+ "position": "Manager",
+ "salary": 60000
 }
 ```
 
@@ -182,8 +182,8 @@ curl -X DELETE http://localhost:4000/employees/{ID}
 
 ```json
 {
-  "position": "Senior Manager",
-  "salary": 70000
+ "position": "Senior Manager",
+ "salary": 70000
 }
 ```
 
@@ -221,9 +221,9 @@ SELECT id, firstName, lastName, salary FROM employees;
 **Resultado esperado:**
 
 ```
- id  | firstName | lastName |                              salary
+ id | firstName | lastName | salary
 -----+-----------+----------+---------------------------------------------------------------------
- abc | Juan      | Pérez    | 6a3f8e2d...:a1b2c3d4...:f1f2f3f4...:x9y8z7w6... (encriptado)
+ abc | Juan | Pérez | 6a3f8e2d...:a1b2c3d4...:f1f2f3f4...:x9y8z7w6... (encriptado)
 ```
 
 **NOTA:** El salario se ve encriptado (formato hex) en la BD, pero la API lo devuelve desencriptado
@@ -234,15 +234,15 @@ SELECT id, firstName, lastName, salary FROM employees;
 \d employees
 
 -- Debe mostrar:
--- id           | character varying
--- firstName    | character varying
--- lastName     | character varying
--- email        | character varying (unique)
--- department   | character varying
--- position     | character varying
--- salary       | text (ENCRIPTADO)
--- createdAt    | timestamp
--- updatedAt    | timestamp
+-- id | character varying
+-- firstName | character varying
+-- lastName | character varying
+-- email | character varying (unique)
+-- department | character varying
+-- position | character varying
+-- salary | text (ENCRIPTADO)
+-- createdAt | timestamp
+-- updatedAt | timestamp
 ```
 
 ---
@@ -255,8 +255,8 @@ SELECT id, firstName, lastName, salary FROM employees;
 
 ```bash
 curl -H "Origin: http://malicious.com" \
-  -H "Access-Control-Request-Method: POST" \
-  http://localhost:4000/employees -v
+ -H "Access-Control-Request-Method: POST" \
+ http://localhost:4000/employees -v
 ```
 
 **Resultado esperado:** Error CORS (403)
@@ -282,24 +282,24 @@ X-XSS-Protection: 1; mode=block
 
 ```bash
 curl -X POST http://localhost:4000/employees \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "Test",
-    "lastName": "User",
-    "email": "test@test.com",
-    "department": "IT",
-    "position": "Dev",
-    "salary": -1000
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+ "firstName": "Test",
+ "lastName": "User",
+ "email": "test@test.com",
+ "department": "IT",
+ "position": "Dev",
+ "salary": -1000
+ }'
 ```
 
 **Resultado esperado (400):**
 
 ```json
 {
-  "success": false,
-  "message": "Salario debe ser un número positivo",
-  "type": "ValidationError"
+ "success": false,
+ "message": "Salario debe ser un número positivo",
+ "type": "ValidationError"
 }
 ```
 
@@ -307,23 +307,23 @@ curl -X POST http://localhost:4000/employees \
 
 ```bash
 curl -X POST http://localhost:4000/employees \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "Test",
-    "lastName": "User",
-    "email": "invalid-email",
-    "department": "IT",
-    "position": "Dev",
-    "salary": 50000
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+ "firstName": "Test",
+ "lastName": "User",
+ "email": "invalid-email",
+ "department": "IT",
+ "position": "Dev",
+ "salary": 50000
+ }'
 ```
 
 **Resultado esperado (400):**
 
 ```json
 {
-  "success": false,
-  "message": "Email inválido"
+ "success": false,
+ "message": "Email inválido"
 }
 ```
 
@@ -331,23 +331,23 @@ curl -X POST http://localhost:4000/employees \
 
 ```bash
 curl -X POST http://localhost:4000/employees \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "Another",
-    "lastName": "User",
-    "email": "juan@ejemplo.com",  # Email que ya existe
-    "department": "IT",
-    "position": "Dev",
-    "salary": 50000
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+ "firstName": "Another",
+ "lastName": "User",
+ "email": "juan@ejemplo.com", # Email que ya existe
+ "department": "IT",
+ "position": "Dev",
+ "salary": 50000
+ }'
 ```
 
 **Resultado esperado (400):**
 
 ```json
 {
-  "success": false,
-  "message": "El email ya está registrado"
+ "success": false,
+ "message": "El email ya está registrado"
 }
 ```
 
@@ -364,66 +364,66 @@ const fetch = require("node-fetch");
 const BASE_URL = "http://localhost:4000";
 
 async function runTests() {
-  console.log("Iniciando tests...\n");
+ console.log("Iniciando tests...\n");
 
-  try {
-    // Test 1: Crear empleado
-    console.log("Crear empleado...");
-    const createRes = await fetch(`${BASE_URL}/employees`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        firstName: "Test",
-        lastName: "User",
-        email: "test@test.com",
-        department: "IT",
-        position: "Developer",
-        salary: 50000,
-      }),
-    });
-    const created = await createRes.json();
-    console.log(`Empleado creado: ${created.data.id}\n`);
+ try {
+ // Test 1: Crear empleado
+ console.log("Crear empleado...");
+ const createRes = await fetch(`${BASE_URL}/employees`, {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({
+ firstName: "Test",
+ lastName: "User",
+ email: "test@test.com",
+ department: "IT",
+ position: "Developer",
+ salary: 50000,
+ }),
+ });
+ const created = await createRes.json();
+ console.log(`Empleado creado: ${created.data.id}\n`);
 
-    // Test 2: Listar empleados
-    console.log("Listar empleados...");
-    const listRes = await fetch(`${BASE_URL}/employees`);
-    const list = await listRes.json();
-    console.log(`✓ ${list.data.length} empleados encontrados\n`);
+ // Test 2: Listar empleados
+ console.log("Listar empleados...");
+ const listRes = await fetch(`${BASE_URL}/employees`);
+ const list = await listRes.json();
+ console.log(` ${list.data.length} empleados encontrados\n`);
 
-    // Test 3: Obtener por ID
-    console.log("Obtener por ID...");
-    const getRes = await fetch(`${BASE_URL}/employees/${created.data.id}`);
-    const gotten = await getRes.json();
-    console.log(`Salario: $${gotten.data.salary}\n`);
+ // Test 3: Obtener por ID
+ console.log("Obtener por ID...");
+ const getRes = await fetch(`${BASE_URL}/employees/${created.data.id}`);
+ const gotten = await getRes.json();
+ console.log(`Salario: $${gotten.data.salary}\n`);
 
-    // Test 4: Actualizar
-    console.log("Actualizar salario...");
-    const updateRes = await fetch(`${BASE_URL}/employees/${created.data.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ salary: 60000 }),
-    });
-    const updated = await updateRes.json();
-    console.log(`Nuevo salario: $${updated.data.salary}\n`);
+ // Test 4: Actualizar
+ console.log("Actualizar salario...");
+ const updateRes = await fetch(`${BASE_URL}/employees/${created.data.id}`, {
+ method: "PUT",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({ salary: 60000 }),
+ });
+ const updated = await updateRes.json();
+ console.log(`Nuevo salario: $${updated.data.salary}\n`);
 
-    // Test 5: Estadísticas
-    console.log("Obtener estadísticas...");
-    const statsRes = await fetch(`${BASE_URL}/employees/stats/salary`);
-    const stats = await statsRes.json();
-    console.log(`✓ Promedio de salarios: $${stats.data.average}\n`);
+ // Test 5: Estadísticas
+ console.log("Obtener estadísticas...");
+ const statsRes = await fetch(`${BASE_URL}/employees/stats/salary`);
+ const stats = await statsRes.json();
+ console.log(` Promedio de salarios: $${stats.data.average}\n`);
 
-    // Test 6: Eliminar
-    console.log("Eliminar empleado...");
-    const delRes = await fetch(`${BASE_URL}/employees/${created.data.id}`, {
-      method: "DELETE",
-    });
-    const deleted = await delRes.json();
-    console.log(`Empleado eliminado\n`);
+ // Test 6: Eliminar
+ console.log("Eliminar empleado...");
+ const delRes = await fetch(`${BASE_URL}/employees/${created.data.id}`, {
+ method: "DELETE",
+ });
+ const deleted = await delRes.json();
+ console.log(`Empleado eliminado\n`);
 
-    console.log("Todos los tests pasaron!");
-  } catch (error) {
-    console.error("Error:", error.message);
-  }
+ console.log("Todos los tests pasaron!");
+ } catch (error) {
+ console.error("Error:", error.message);
+ }
 }
 
 runTests();
@@ -462,16 +462,16 @@ npm install -g artillery
 
 ```yaml
 config:
-  target: "http://localhost:4000"
-  phases:
-    - duration: 60
-      arrivalRate: 10
+ target: "http://localhost:4000"
+ phases:
+ - duration: 60
+ arrivalRate: 10
 
 scenarios:
-  - name: "GET /employees"
-    flow:
-      - get:
-          url: "/employees"
+ - name: "GET /employees"
+ flow:
+ - get:
+ url: "/employees"
 ```
 
 ```bash
@@ -525,5 +525,5 @@ artillery run artillery-config.yml
 
 ---
 
-**Última actualización:** 3 de diciembre de 2025  
+**Última actualización:** 3 de diciembre de 2025 
 **Status:** Lista para Testing

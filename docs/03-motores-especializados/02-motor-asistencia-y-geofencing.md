@@ -6,14 +6,14 @@ EMPLIFI incluye un **Motor de Marcación Inteligente** que exige la verificació
 
 ```mermaid
 graph TD
-    CheckInRequest[Peticion de Check-In GPS: Lat, Lng] --> CheckConsent{¿Consentimiento Activo?}
-    CheckConsent -- No --> RejectConsent[Error 403: Consentimiento de Rastreo Requerido]
-    CheckConsent -- Si --> CheckGeofenceConfig{¿enforceGeofence Activo?}
-    CheckGeofenceConfig -- No --> RegisterAttendance[Registrar Marcacion Exitosamente]
-    CheckGeofenceConfig -- Si --> CalculateDistance[Calcular Distancia Haversine entre Marcacion y Sede]
-    CalculateDistance --> DistanceCheck{¿Distancia <= geofenceRadius?}
-    DistanceCheck -- Si --> RegisterAttendance
-    DistanceCheck -- No --> RejectGeofence[Error 400: Fuera del Radio Permitido de Trabajo]
+ CheckInRequest[Peticion de Check-In GPS: Lat, Lng] --> CheckConsent{¿Consentimiento Activo?}
+ CheckConsent -- No --> RejectConsent[Error 403: Consentimiento de Rastreo Requerido]
+ CheckConsent -- Si --> CheckGeofenceConfig{¿enforceGeofence Activo?}
+ CheckGeofenceConfig -- No --> RegisterAttendance[Registrar Marcacion Exitosamente]
+ CheckGeofenceConfig -- Si --> CalculateDistance[Calcular Distancia Haversine entre Marcacion y Sede]
+ CalculateDistance --> DistanceCheck{¿Distancia <= geofenceRadius?}
+ DistanceCheck -- Si --> RegisterAttendance
+ DistanceCheck -- No --> RejectGeofence[Error 400: Fuera del Radio Permitido de Trabajo]
 ```
 
 ### 1.1. Fórmula de Distancia Haversine

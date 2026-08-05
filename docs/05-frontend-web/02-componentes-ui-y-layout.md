@@ -6,21 +6,21 @@ El cliente web de EMPLIFI contiene **45+ vistas especializadas** organizadas en 
 
 ```
 src/pages/
-├── landing/            # Home.jsx (Página pública principal)
-├── auth/               # Login.jsx, ResetPassword.jsx
-├── dashboard/          # AdminDashboard, EmployeeDashboard, IntelligentDashboard, AdminSettings
-├── employees/          # RegisterEmployee, EmployeeList, EmployeeProfile
-├── attendance/         # AttendancePage, ShiftManagement, AdminAbsences
-├── payroll/            # PayrollConfiguration, PayrollGenerator, MyPayments, BenefitsManagement
-├── performance/        # EvaluationDashboard, CreateEvaluation, AssignEvaluation, MyEvaluations, TakeEvaluation, EvaluationResults, MyGoals
-├── recruitment/        # RecruitmentDashboard, CreateJobVacancy, CareersPage, JobApplication, VacancyDetails, ApplicationDetails
-├── analytics/          # AnalyticsDashboard
-├── reports/            # TurnoverReport, PerformanceReport, PayrollCostReport, SatisfactionReport, CustomReport, AttendanceReports
-├── contracts/          # ExpiringContracts
-├── notifications/      # NotificationsPage, NotificationSettings
-├── audit/              # AuditLogsPage
-├── accounting/         # AccountingDashboard, ChartOfAccounts, JournalEntries, TrialBalance, PeriodsManagement, CostCenterManagement
-└── entrepreneurship/  # Dashboard, ProjectForm, ProjectDetails
+├── landing/ # Home.jsx (Página pública principal)
+├── auth/ # Login.jsx, ResetPassword.jsx
+├── dashboard/ # AdminDashboard, EmployeeDashboard, IntelligentDashboard, AdminSettings
+├── employees/ # RegisterEmployee, EmployeeList, EmployeeProfile
+├── attendance/ # AttendancePage, ShiftManagement, AdminAbsences
+├── payroll/ # PayrollConfiguration, PayrollGenerator, MyPayments, BenefitsManagement
+├── performance/ # EvaluationDashboard, CreateEvaluation, AssignEvaluation, MyEvaluations, TakeEvaluation, EvaluationResults, MyGoals
+├── recruitment/ # RecruitmentDashboard, CreateJobVacancy, CareersPage, JobApplication, VacancyDetails, ApplicationDetails
+├── analytics/ # AnalyticsDashboard
+├── reports/ # TurnoverReport, PerformanceReport, PayrollCostReport, SatisfactionReport, CustomReport, AttendanceReports
+├── contracts/ # ExpiringContracts
+├── notifications/ # NotificationsPage, NotificationSettings
+├── audit/ # AuditLogsPage
+├── accounting/ # AccountingDashboard, ChartOfAccounts, JournalEntries, TrialBalance, PeriodsManagement, CostCenterManagement
+└── entrepreneurship/ # Dashboard, ProjectForm, ProjectDetails
 ```
 
 ---
@@ -79,3 +79,13 @@ src/pages/
 - **`Dashboard.jsx`**: Métrica de proyectos en incubación, valoración total y puntajes de innovación.
 - **`ProjectForm.jsx`**: Formulario de registro de proyectos con narrativa de pitch.
 - **`ProjectDetails.jsx`**: Expediente del proyecto con pestañas de Cap Table (Equity), Rondas de Inversión, Entrevistas de Descubrimiento, Hitos Kanban y Documentos.
+
+### 2.9. Anticipos, Expediente Digital, EPPs, Offboarding, Cumplimiento y Comunicados
+- **`SalaryAdvancesManagement.jsx`**: Panel de administración para aprobar o rechazar solicitudes de anticipos de sueldo con filtros por estado y cálculo de tope del 50% de cuota mensual.
+- **`MySalaryAdvances.jsx`**: Vista de autoservicio para que el empleado solicite anticipos quincenales/mensuales y consulte la amortización de sus cuotas.
+- **`EmployeeExpedient.jsx`**: Expediente digital del empleado con tarjeta de progreso de onboarding (%), visualizador de documentos requeridos y modal de validación para RRHH.
+- **`EmployeeAssetsManagement.jsx`**: Control de inventario de equipos tecnológicos, herramientas y EPPs asignados a colaboradores con registro de entregas y devoluciones.
+- **`OffboardingManagement.jsx`**: Tablero de desvinculación con simulador de liquidaciones legales (13er, 14to SBU, vacaciones, desahucio Art. 185 e indemnización Art. 188) y control del checklist de salida.
+- **`MobileEmployeePortal.jsx`**: Aplicación de autoservicio estilo App Móvil para personal operativo y de campo con navegación táctil inferior, marcación GPS en 1 toque, emisión de certificado laboral con QR y descarga de roles de pago.
+- **`LegalComplianceDashboard.jsx`**: Tablero de alertas preventivas de cumplimiento laboral (período de prueba 90d, contratos temporales por vencer, documentos caducados) y matriz de provisiones mensuales patronales de ley.
+- **`AnnouncementsBoard.jsx`**: Tablón de noticias y comunicados oficiales con firma digital de acuse de recibo para normas obligatorias, widget automático de cumpleaños del mes y consola de métricas de lectura para administradores.

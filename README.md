@@ -11,11 +11,11 @@
 
 ---
 
-## 📚 Portal de Documentación del Proyecto
+## Portal de Documentación del Proyecto
 
 Toda la documentación técnica detallada, guías de arquitectura, modelos de datos, APIs y operaciones del sistema han sido organizados en el directorio **[`docs/`](docs/)**:
 
-* 🏛️ **[Centro Principal de Documentación](docs/README.md)** — Portal maestro de navegación del proyecto y artefactos Scrum.
+* **[Centro Principal de Documentación](docs/README.md)** — Portal maestro de navegación del proyecto y artefactos Scrum.
 
 ### Módulos Destacados de Documentación
 - **[01. Arquitectura del Sistema](docs/01-arquitectura/)**: Clean Architecture, macro/micro patrones y diagramas de flujo.
@@ -29,7 +29,7 @@ Toda la documentación técnica detallada, guías de arquitectura, modelos de da
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Stack Tecnológico
 
 | Capa | Tecnologías Clave |
 |---|---|
@@ -41,7 +41,7 @@ Toda la documentación técnica detallada, guías de arquitectura, modelos de da
 
 ---
 
-## 🚀 Requisitos Previos
+## Requisitos Previos
 
 Asegúrate de contar con los siguientes elementos instalados antes del despliegue:
 
@@ -52,7 +52,7 @@ Asegúrate de contar con los siguientes elementos instalados antes del despliegu
 
 ---
 
-## ⚡ Guía Rápida de Instalación y Configuración
+## Guía Rápida de Instalación y Configuración
 
 ### 1. Clonar el Repositorio
 ```bash
@@ -74,8 +74,8 @@ cd backend
 npm install
 
 # Generar archivo de variables de entorno
-copy .env.example .env   # En Windows
-# cp .env.example .env   # En Linux/macOS
+copy .env.example .env # En Windows
+# cp .env.example .env # En Linux/macOS
 ```
 
 Configura tu archivo `backend/.env`:
@@ -87,7 +87,7 @@ JWT_SECRET=tu_jwt_secret_seguro
 FRONTEND_URL=http://localhost:5173
 ```
 
-> 🔐 **Generar ENCRYPTION_KEY Segura (64 hex characters)**:
+> **Generar ENCRYPTION_KEY Segura (64 hex characters)**:
 > ```bash
 > node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 > ```
@@ -123,7 +123,7 @@ El cliente web estará disponible en: `http://localhost:5173`
 
 ---
 
-## 🔐 Usuarios de Prueba (Seeders)
+## Usuarios de Prueba (Seeders)
 
 Una vez ejecutados los seeders, se activarán las siguientes credenciales predeterminadas para pruebas de roles:
 
@@ -134,44 +134,44 @@ Una vez ejecutados los seeders, se activarán las siguientes credenciales predet
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 recursos_humanos/
-├── backend/                  # Servidor de API REST (Express + Prisma ORM)
-│   ├── prisma/               # Esquema relacional (schema.prisma) y seeders
-│   ├── src/
-│   │   ├── controllers/      # Controladores HTTP de la API
-│   │   ├── services/         # Lógica de negocio y algoritmos de cálculo
-│   │   ├── repositories/     # Capa de acceso a datos Prisma
-│   │   ├── middleware/       # Autenticación JWT, RBAC, Helmet y CORS
-│   │   └── database/         # Instancia y configuración del cliente DB
-│   ├── prisma.config.ts      # Configuración de Prisma 7
-│   └── package.json
-├── frontend/                 # Aplicación Cliente SPA (React + Vite)
-│   ├── src/
-│   │   ├── api/              # Cliente Axios centralizado con interceptores
-│   │   ├── components/       # Componentes UI reutilizables (Sidebar, Cards, Tables)
-│   │   ├── pages/            # 45+ Vistas agrupadas por módulos
-│   │   ├── services/         # Servicios de integración frontend-backend
-│   │   └── App.jsx           # Enrutador principal y guards de navegación
-│   └── package.json
-├── docs/                     # 📂 ÚNICO DIRECTORIO DE DOCUMENTACIÓN DEL PROYECTO
-│   ├── 01-arquitectura/      # Arquitectura, Clean Arch y patrones
-│   ├── 02-backend-servicios/ # API REST, RBAC, SSO, cifrado AES-256 y LOPDP
-│   ├── 03-motores-especializados/ # PDF, Geocercas GPS, Evaluaciones 360 y Biometría
-│   ├── 04-base-de-datos/     # Esquema relacional Prisma / PostgreSQL y catálogos
-│   ├── 05-frontend-web/      # Arquitectura React + Vite y componentes UI
-│   ├── 06-inteligencia-y-analitica/ # Módulo de Analítica Predictiva
-│   ├── 07-despliegue-y-operaciones/ # Guías de instalación, auditoría, DRP y testing
-│   ├── 08-artefactos-scrum/  # Artefactos formales de metodología Scrum (.docx)
-│   └── README.md             # Índice y portal maestro de navegación
-└── README.md                 # Guía ejecutiva y de inicio rápido (Raíz)
+├── backend/ # Servidor de API REST (Express + Prisma ORM)
+│ ├── prisma/ # Esquema relacional (schema.prisma) y seeders
+│ ├── src/
+│ │ ├── controllers/ # Controladores HTTP de la API
+│ │ ├── services/ # Lógica de negocio y algoritmos de cálculo
+│ │ ├── repositories/ # Capa de acceso a datos Prisma
+│ │ ├── middleware/ # Autenticación JWT, RBAC, Helmet y CORS
+│ │ └── database/ # Instancia y configuración del cliente DB
+│ ├── prisma.config.ts # Configuración de Prisma 7
+│ └── package.json
+├── frontend/ # Aplicación Cliente SPA (React + Vite)
+│ ├── src/
+│ │ ├── api/ # Cliente Axios centralizado con interceptores
+│ │ ├── components/ # Componentes UI reutilizables (Sidebar, Cards, Tables)
+│ │ ├── pages/ # 45+ Vistas agrupadas por módulos
+│ │ ├── services/ # Servicios de integración frontend-backend
+│ │ └── App.jsx # Enrutador principal y guards de navegación
+│ └── package.json
+├── docs/ # ÚNICO DIRECTORIO DE DOCUMENTACIÓN DEL PROYECTO
+│ ├── 01-arquitectura/ # Arquitectura, Clean Arch y patrones
+│ ├── 02-backend-servicios/ # API REST, RBAC, SSO, cifrado AES-256 y LOPDP
+│ ├── 03-motores-especializados/ # PDF, Geocercas GPS, Evaluaciones 360 y Biometría
+│ ├── 04-base-de-datos/ # Esquema relacional Prisma / PostgreSQL y catálogos
+│ ├── 05-frontend-web/ # Arquitectura React + Vite y componentes UI
+│ ├── 06-inteligencia-y-analitica/ # Módulo de Analítica Predictiva
+│ ├── 07-despliegue-y-operaciones/ # Guías de instalación, auditoría, DRP y testing
+│ ├── 08-artefactos-scrum/ # Artefactos formales de metodología Scrum (.docx)
+│ └── README.md # Índice y portal maestro de navegación
+└── README.md # Guía ejecutiva y de inicio rápido (Raíz)
 ```
 
 ---
 
-## 🛡️ Seguridad y Verificación
+## Seguridad y Verificación
 
 Para validar de forma automatizada que el sistema de cifrado **AES-256-GCM** y las reglas de seguridad operan correctamente:
 
@@ -183,7 +183,7 @@ Este comando ejecuta la suite de verificación comprobando 11 controles criticos
 
 ---
 
-## 👨‍💻 Autores & Créditos
+## Autores & Créditos
 
 Desarrollado con estándares de ingeniería de software por **Jorge Doicela**.
 

@@ -22,7 +22,14 @@ const getStatus = async (employeeId) => {
     }
 };
 
+export const clockIn = (employeeId, location) => markAttendance(employeeId, 'IN', location);
+export const clockOut = (employeeId, location) => markAttendance(employeeId, 'OUT', location);
+
+export { markAttendance, getStatus };
+
 export default {
     markAttendance,
-    getStatus
+    getStatus,
+    clockIn,
+    clockOut
 };

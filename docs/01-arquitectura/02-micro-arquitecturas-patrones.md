@@ -8,14 +8,14 @@ El backend aísla el acceso a datos mediante repositorios dedicados por entidad 
 ```javascript
 // Ejemplo de patrón Repositorio con cifrado en EMPLIFI
 export const employeeRepository = {
-    async create(data) {
-        const encryptedData = {
-            ...data,
-            salary: encryptSalary(data.salary)
-        };
-        const record = await prisma.employee.create({ data: encryptedData });
-        return { ...record, salary: decryptSalary(record.salary) };
-    }
+ async create(data) {
+ const encryptedData = {
+ ...data,
+ salary: encryptSalary(data.salary)
+ };
+ const record = await prisma.employee.create({ data: encryptedData });
+ return { ...record, salary: decryptSalary(record.salary) };
+ }
 };
 ```
 

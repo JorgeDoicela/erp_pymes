@@ -16,14 +16,14 @@ Cada modificación crítica ejecutada en la plataforma (creación de empleados, 
 
 ```prisma
 model AuditLog {
-  id          String   @id @default(cuid())
-  entity      String   // Entidad modificada: "Employee", "Payroll", "AbsenceRequest"
-  entityId    String   // ID del registro impactado
-  action      String   // Accion ejecutada: "CREATE", "UPDATE", "DELETE", "APPROVE"
-  performedBy String   // ID o email del usuario ejecutante
-  details     String   // Payload de cambios formateado en JSON / Texto
-  ip          String?  // Direccion IP de origen
-  timestamp   DateTime @default(now())
+ id String @id @default(cuid())
+ entity String // Entidad modificada: "Employee", "Payroll", "AbsenceRequest"
+ entityId String // ID del registro impactado
+ action String // Accion ejecutada: "CREATE", "UPDATE", "DELETE", "APPROVE"
+ performedBy String // ID o email del usuario ejecutante
+ details String // Payload de cambios formateado en JSON / Texto
+ ip String? // Direccion IP de origen
+ timestamp DateTime @default(now())
 }
 ```
 

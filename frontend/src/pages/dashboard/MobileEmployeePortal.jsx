@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { getMyPayrolls } from '../../services/payroll/payrollConfig.service';
-import { getMyAbsences, createAbsenceRequest } from '../../services/attendance/absence.service';
-import { clockIn, clockOut } from '../../services/attendance/attendance.service';
+import { getMyAbsences, createAbsenceRequest } from '../../services/attendance/absenceService';
+import { clockIn, clockOut } from '../../services/attendance/attendanceService';
 import { generatePayslipPDF } from '../../utils/generatePayslipPDF';
 import { generateCertificatePDF } from '../../utils/generateCertificatePDF';
 import { 

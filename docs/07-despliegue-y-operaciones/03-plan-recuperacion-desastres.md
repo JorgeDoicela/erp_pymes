@@ -8,10 +8,10 @@
 ### B. Corrupción de Base de Datos
 - **Síntoma**: Errores de Prisma en consultas básicas o datos incoherentes.
 - **Recuperación**:
-    1. Identificar el último backup válido en la carpeta `/backend/backups`.
-    2. Ejecutar la restauración mediante el comando:
-       `psql "DATABASE_URL" < backups/archivo.sql`
-    3. Reiniciar el servidor.
+ 1. Identificar el último backup válido en la carpeta `/backend/backups`.
+ 2. Ejecutar la restauración mediante el comando:
+ `psql "DATABASE_URL" < backups/archivo.sql`
+ 3. Reiniciar el servidor.
 
 ### C. Fallo en Generación de Nómina
 - **Síntoma**: La nómina se queda en estado "PENDING" pero no muestra detalles.

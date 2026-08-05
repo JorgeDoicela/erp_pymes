@@ -153,15 +153,15 @@ node src/test-encryption.js
 
 # Prueba con curl
 curl -X POST http://localhost:4000/employees \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName":"Juan",
-    "lastName":"Pérez",
-    "email":"juan@example.com",
-    "department":"IT",
-    "position":"Developer",
-    "salary":50000
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+ "firstName":"Juan",
+ "lastName":"Pérez",
+ "email":"juan@example.com",
+ "department":"IT",
+ "position":"Developer",
+ "salary":50000
+ }'
 ```
 
 ---
@@ -184,16 +184,16 @@ curl -X POST http://localhost:4000/employees \
 
 ## CARACTERÍSTICAS DE SEGURIDAD
 
-| Característica           | Estado | Detalles                   |
+| Característica | Estado | Detalles |
 | ------------------------ | ------ | -------------------------- |
-| Encriptación de Salarios | Bien   | AES-256-GCM con salt único |
-| Helmet                   | Bien   | 6 headers de seguridad     |
-| CORS                     | Bien   | Whitelist de orígenes      |
-| Validación de Datos      | Bien   | En servicio y repositorio  |
-| Manejo de Errores        | Bien   | Centralizado y consistente |
-| Variables de Entorno     | Bien   | ENCRYPTION_KEY segura      |
-| Índices BD               | Bien   | email y department         |
-| Timestamps               | Bien   | createdAt y updatedAt      |
+| Encriptación de Salarios | Bien | AES-256-GCM con salt único |
+| Helmet | Bien | 6 headers de seguridad |
+| CORS | Bien | Whitelist de orígenes |
+| Validación de Datos | Bien | En servicio y repositorio |
+| Manejo de Errores | Bien | Centralizado y consistente |
+| Variables de Entorno | Bien | ENCRYPTION_KEY segura |
+| Índices BD | Bien | email y department |
+| Timestamps | Bien | createdAt y updatedAt |
 
 ---
 

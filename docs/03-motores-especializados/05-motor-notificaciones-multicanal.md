@@ -13,10 +13,10 @@ Evento de Sistema (Contrato por vencer, Solicitud de Ausencia) ──► Evaluad
 ## 2. Canales de Notificación y Entidades
 
 1. **Notificaciones In-App (`Notification`)**:
-   - Mensajes interactivos desplegados en la campana de notificaciones de la barra superior.
-   - Estado de lectura (`isRead`), categorías (`INFO`, `WARNING`, `ACTION_REQUIRED`) y enlace de acción directa.
+ - Mensajes interactivos desplegados en la campana de notificaciones de la barra superior.
+ - Estado de lectura (`isRead`), categorías (`INFO`, `WARNING`, `ACTION_REQUIRED`) y enlace de acción directa.
 2. **Alertas de Correo Electrónico (SMTP / Nodemailer)**:
-   - Envío automático de notificaciones para restablecimiento de contraseña, emisión de rol de pago y convocatorias a entrevistas de selección.
+ - Envío automático de notificaciones para restablecimiento de contraseña, emisión de rol de pago y convocatorias a entrevistas de selección.
 
 ---
 

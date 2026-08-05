@@ -44,9 +44,13 @@ const updateStatus = async (id, status, adminComment) => {
     }
 };
 
+export { createRequest, getRequests, getMyRequests, updateStatus, createRequest as createAbsenceRequest, getMyRequests as getMyAbsences };
+
 export default {
     createRequest,
     getRequests,
     getMyRequests,
-    updateStatus
+    updateStatus,
+    createAbsenceRequest: createRequest,
+    getMyAbsences: getMyRequests
 };

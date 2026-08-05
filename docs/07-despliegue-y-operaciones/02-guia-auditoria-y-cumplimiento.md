@@ -18,6 +18,6 @@ Esta guía detalla los controles técnicos implementados en EMPLIFI que deben va
 ## 2. Procedimiento de Auditoría de Código y Respaldo
 
 1. **Rotación de Claves Criptográficas**:
-   - `ENCRYPTION_KEY` y `JWT_SECRET` deben ser gestionados como secretos en variables de entorno seguras (Vercel Secret / AWS Secrets Manager) y rotarse periódicamente.
+ - `ENCRYPTION_KEY` y `JWT_SECRET` deben ser gestionados como secretos en variables de entorno seguras (Vercel Secret / AWS Secrets Manager) y rotarse periódicamente.
 2. **Respaldo de Base de Datos**:
-   - Programar respaldos diarios comprimidos de PostgreSQL (`pg_dump`) preservando el historial de logs de auditoría por un mínimo de 5 años por regulaciones laborales.
+ - Programar respaldos diarios comprimidos de PostgreSQL (`pg_dump`) preservando el historial de logs de auditoría por un mínimo de 5 años por regulaciones laborales.

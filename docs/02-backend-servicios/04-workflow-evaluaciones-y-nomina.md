@@ -6,17 +6,17 @@ El motor de nómina en EMPLIFI procesa el pago periódico consolidando salario b
 
 ```mermaid
 flowchart TD
-    Start([Inicio Proceso Nómina]) --> FetchConfig[Obtener PayrollConfig: días laborales, % retención, % horas extras]
-    FetchConfig --> FetchEmployees[Obtener lista de Empleados Activos]
-    FetchEmployees --> LoopEmployees{Procesar Empleado}
-    LoopEmployees --> DecryptSalary[Descifrar Salario Base (AES-256-GCM)]
-    DecryptSalary --> CalcAttendance[Calcular Horas Extras + Recargos Nocturnos desde Attendance]
-    CalcAttendance --> CalcBenefits[Sumar Beneficios Activos: Bonos, Seguros]
-    CalcBenefits --> CalcDeductions[Calcular Aporte Individual / Retenciones]
-    CalcDeductions --> GenerateDetail[Crear Registro en PayrollDetail]
-    GenerateDetail --> LoopEmployees
-    LoopEmployees -- Finalizado --> SaveBatch[Guardar Registro de Nómina en Estado Procesado]
-    SaveBatch --> End([Fin de Proceso Nómina])
+ Start([Inicio Proceso Nómina]) --> FetchConfig[Obtener PayrollConfig: días laborales, % retención, % horas extras]
+ FetchConfig --> FetchEmployees[Obtener lista de Empleados Activos]
+ FetchEmployees --> LoopEmployees{Procesar Empleado}
+ LoopEmployees --> DecryptSalary[Descifrar Salario Base (AES-256-GCM)]
+ DecryptSalary --> CalcAttendance[Calcular Horas Extras + Recargos Nocturnos desde Attendance]
+ CalcAttendance --> CalcBenefits[Sumar Beneficios Activos: Bonos, Seguros]
+ CalcBenefits --> CalcDeductions[Calcular Aporte Individual / Retenciones]
+ CalcDeductions --> GenerateDetail[Crear Registro en PayrollDetail]
+ GenerateDetail --> LoopEmployees
+ LoopEmployees -- Finalizado --> SaveBatch[Guardar Registro de Nómina en Estado Procesado]
+ SaveBatch --> End([Fin de Proceso Nómina])
 ```
 
 ### 1.1. Reglas de Cálculo Monetario
