@@ -84,4 +84,4 @@ Documentos formales elaborados durante las fases de análisis, diseño y ejecuci
 - 🛠️ **[Plan de Recuperación DRP](07-despliegue-y-operaciones/03-plan-recuperacion-desastres.md)**
 
 ---
-&copy; 2026 **Mendoza y Doicela** — Sistema EMPLIFI
+&copy; 2026 **Jorge Doicela** — Sistema EMPLIFI

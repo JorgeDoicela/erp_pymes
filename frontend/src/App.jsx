@@ -219,7 +219,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <footer className="mt-12 text-gray-600 text-sm text-center w-full pb-6">
-        &copy; {new Date().getFullYear()} - Sistema de Recursos Humanos - Mendoza y Doicela
+        &copy; {new Date().getFullYear()} - Sistema de Recursos Humanos - Jorge Doicela
       </footer>
     </Suspense>
   )

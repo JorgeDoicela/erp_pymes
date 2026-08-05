@@ -26,4 +26,4 @@
 - Soporte Técnico: [Correo]
 
 ---
-&copy; 2026 - Mendoza y Doicela - HR System
+&copy; 2026 - Jorge Doicela - HR System

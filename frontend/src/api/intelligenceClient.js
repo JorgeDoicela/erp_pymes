@@ -9,7 +9,7 @@
 
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 const intelligenceClient = axios.create({
     baseURL: `${BASE_URL}/intelligence`,

@@ -185,7 +185,7 @@ Este comando ejecuta la suite de verificación comprobando 11 controles criticos
 
 ## 👨‍💻 Autores & Créditos
 
-Desarrollado con estándares de ingeniería de software por **Karen Mendoza** y **Jorge Doicela**.
+Desarrollado con estándares de ingeniería de software por **Jorge Doicela**.
 
 &copy; 2026 EMPLIFI — Todos los derechos reservados.
 

@@ -1,6 +1,7 @@
 {
     "name": "hr-system-root",
     "version": "1.0.0",
+    "author": "Jorge Doicela",
     "scripts": {
         "vercel-build": "echo 'Building...'"
     },

@@ -15,17 +15,25 @@ import { decryptSalary } from '../utils/encryption.js';
 async function fetchRawEmployees() {
     return await prisma.employee.findMany({
         where: { isActive: true },
-        include: {
-            absences: { orderBy: { createdAt: 'desc' }, take: 10 },
-            evaluations: { orderBy: { createdAt: 'desc' }, take: 5 },
-            contracts: { orderBy: { createdAt: 'desc' }, take: 3 },
-            goals: { orderBy: { createdAt: 'desc' }, take: 10 },
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            department: true,
+            position: true,
+            salary: true,
+            hireDate: true,
+            absences: { select: { createdAt: true, startDate: true }, orderBy: { createdAt: 'desc' }, take: 10 },
+            evaluations: { select: { finalScore: true, createdAt: true }, orderBy: { createdAt: 'desc' }, take: 5 },
+            contracts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 3 },
+            goals: { select: { title: true, progress: true, priority: true, deadline: true }, orderBy: { createdAt: 'desc' }, take: 10 },
             attendance: {
                 where: {
                     date: {
                         gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Últimos 90 días
                     },
                 },
+                select: { isLate: true },
             },
         },
     });
@@ -323,18 +331,27 @@ export async function getPayrollOptimization(preloadedPayrolls = null, preloaded
     const payrolls = preloadedPayrolls || await prisma.payroll.findMany({
         orderBy: { period: 'desc' },
         take: 6,
-        include: {
+        select: {
+            id: true,
+            totalAmount: true,
             details: {
-                include: {
-                    employee: true,
-                },
-            },
-        },
+                select: {
+                    employeeId: true,
+                    overtimeHours: true,
+                    overtimeAmount: true,
+                    employee: { select: { firstName: true, lastName: true, department: true } }
+                }
+            }
+        }
     });
 
     const benefits = preloadedBenefits || await prisma.employeeBenefit.findMany({
         where: { status: 'ACTIVE' },
-        include: { employee: true },
+        select: {
+            amount: true,
+            employeeId: true,
+            employee: { select: { department: true } }
+        }
     });
 
     const optimization = {
@@ -626,7 +643,15 @@ export async function getDepartmentComparison(preloadedData = null) {
 
 // ==================== ALERTAS PROACTIVAS ====================
 
+let alertsCache = null;
+let alertsCacheTime = 0;
+const ALERTS_CACHE_TTL = 30000; // 30 segundos en ms
+
 export async function getProactiveAlerts(preloadedData = null) {
+    if (!preloadedData && alertsCache && (Date.now() - alertsCacheTime < ALERTS_CACHE_TTL)) {
+        return alertsCache;
+    }
+
     const alerts = [];
     const now = new Date();
 
@@ -733,7 +758,7 @@ export async function getProactiveAlerts(preloadedData = null) {
         return severityOrder[a.severity] - severityOrder[b.severity];
     });
 
-    return {
+    const result = {
         alerts,
         summary: {
             total: alerts.length,
@@ -749,6 +774,13 @@ export async function getProactiveAlerts(preloadedData = null) {
             }
         }
     };
+
+    if (!preloadedData) {
+        alertsCache = result;
+        alertsCacheTime = Date.now();
+    }
+
+    return result;
 }
 
 // ==================== PREDICCIONES Y TENDENCIAS ====================
@@ -1087,11 +1119,26 @@ export async function getIntelligenceDashboard(forceRefresh = false) {
                 prisma.payroll.findMany({
                     orderBy: { period: 'desc' },
                     take: 6,
-                    include: { details: { include: { employee: true } } },
+                    select: {
+                        id: true,
+                        totalAmount: true,
+                        details: {
+                            select: {
+                                employeeId: true,
+                                overtimeHours: true,
+                                overtimeAmount: true,
+                                employee: { select: { firstName: true, lastName: true, department: true } }
+                            }
+                        }
+                    }
                 }),
                 prisma.employeeBenefit.findMany({
                     where: { status: 'ACTIVE' },
-                    include: { employee: true },
+                    select: {
+                        amount: true,
+                        employeeId: true,
+                        employee: { select: { department: true } }
+                    }
                 }),
                 prisma.employeeEvaluation.findMany({
                     where: { status: 'PENDING', endDate: { lt: now } },
@@ -1252,7 +1299,8 @@ export async function getPatternAnalysis() {
             date: { gte: thirtyDaysAgo },
             status: 'Falta'
         },
-        include: {
+        select: {
+            date: true,
             employee: {
                 select: { department: true }
             }

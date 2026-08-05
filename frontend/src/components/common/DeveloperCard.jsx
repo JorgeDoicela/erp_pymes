@@ -14,7 +14,7 @@ const DeveloperCard = () => {
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setShowDevModal(true)}
                     className="w-14 h-14 bg-transparent hover:bg-slate-100/50 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-all group backdrop-blur-sm"
-                    title="Conocer a los desarrolladores"
+                    title="Conocer al desarrollador"
                 >
                     <FiCode size={24} className="group-hover:text-blue-500 transition-colors" />
                 </motion.button>
@@ -46,16 +46,16 @@ const DeveloperCard = () => {
                                     <FiX size={20} />
                                 </button>
                                 <div className="space-y-2 pr-8">
-                                    <h4 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">Jorge Doicela y Karen Mendoza</h4>
+                                    <h4 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">Jorge Doicela</h4>
                                     <div className="flex items-center gap-2 mt-2">
                                         <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse" />
-                                        <p className="text-sm text-blue-600 font-bold uppercase tracking-[0.2em]">Software Developers</p>
+                                        <p className="text-sm text-blue-600 font-bold uppercase tracking-[0.2em]">Software Developer</p>
                                     </div>
                                 </div>
 
                                 <div className="mt-8 pt-8 border-t border-slate-100">
                                     <p className="text-slate-500 text-lg leading-relaxed italic font-medium">
-                                        "Desarrolladores de software apasionados por el software y el diseño de soluciones de alto rendimiento. Combinamos nuestra experiencia para construir sistemas robustos, seguros y eficientes, transformando ideas complejas en productos digitales que aportan valor real."
+                                        "Desarrollador de software apasionado por el diseño de soluciones de alto rendimiento. Construyendo sistemas robustos, seguros y eficientes, transformando ideas complejas en productos digitales que aportan valor real."
                                     </p>
                                 </div>
 
