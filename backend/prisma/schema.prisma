@@ -65,6 +65,8 @@ model Employee {
   salaryAdvances       SalaryAdvance[]
   assets               EmployeeAsset[]
   offboardings         OffboardingProcess[]
+  announcementReads    AnnouncementRead[]
+  createdAnnouncements Announcement[]          @relation("CreatedAnnouncements")
   entrepreneurships    Entrepreneurship[]       @relation("ProjectOwner")
   projectMemberships   EntrepreneurshipMember[]
   projectMentorships   EntrepreneurshipMentor[]
@@ -925,3 +927,39 @@ model OffboardingProcess {
   @@index([status])
   @@map("offboarding_processes")
 }
+
+model Announcement {
+  id                     String             @id @default(cuid())
+  title                  String
+  content                String             @db.Text
+  category               String             @default("GENERAL") // GENERAL, POLICY, HOLIDAY, BIRTHDAY
+  priority               String             @default("NORMAL") // NORMAL, URGENT
+  requiresAcknowledgment Boolean            @default(false)
+  attachmentUrl          String?
+  createdById            String
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  createdBy              Employee           @relation("CreatedAnnouncements", fields: [createdById], references: [id], onDelete: Cascade)
+  reads                  AnnouncementRead[]
+
+  @@index([createdById])
+  @@index([category])
+  @@map("announcements")
+}
+
+model AnnouncementRead {
+  id             String       @id @default(cuid())
+  announcementId String
+  employeeId     String
+  readAt         DateTime     @default(now())
+  acknowledged   Boolean      @default(false)
+
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, employeeId])
+  @@index([employeeId])
+  @@map("announcement_reads")
+}
+
