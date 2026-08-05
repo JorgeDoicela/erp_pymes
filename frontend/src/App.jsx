@@ -89,6 +89,9 @@ const EntrepreneurshipDashboard = lazy(() => import('./pages/entrepreneurship/Da
 const EntrepreneurshipForm = lazy(() => import('./pages/entrepreneurship/ProjectForm.jsx'));
 const EntrepreneurshipDetails = lazy(() => import('./pages/entrepreneurship/ProjectDetails.jsx'));
 
+const RegisterTenant = lazy(() => import('./pages/auth/RegisterTenant.jsx'));
+const SuperAdminDashboard = lazy(() => import('./pages/superadmin/SuperAdminDashboard.jsx'));
+
 function App() {
   const [auth, setAuth] = useState(() => {
     // Intentar recuperar sesión al cargar
@@ -123,12 +126,17 @@ function App() {
     }
 
     const userRole = auth.user.role;
+    const isSuperAdmin = userRole === 'superadmin' || auth.user.email === 'admin@emplifi.com';
 
     if (role) {
       const allowedRoles = Array.isArray(role) ? role : [role];
 
-      if (!allowedRoles.includes(userRole)) {
+      const hasPermission = allowedRoles.includes(userRole) ||
+        (isSuperAdmin && (allowedRoles.includes('superadmin') || allowedRoles.includes('admin')));
+
+      if (!hasPermission) {
         // Redirigir según el rol real del usuario a su "home"
+        if (isSuperAdmin) return <Navigate to="/superadmin/dashboard" replace />;
         if (userRole === 'admin') return <Navigate to="/admin" replace />;
         if (userRole === 'accounting') return <Navigate to="/admin" replace />;
         if (userRole === 'entrepreneur') return <Navigate to="/admin" replace />;
@@ -146,6 +154,7 @@ function App() {
       <MaintenanceBanner />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/register-company" element={<RegisterTenant />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/careers/:id" element={<JobApplication />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
@@ -154,6 +163,13 @@ function App() {
         <Route element={<RequireAuth role={['admin', 'accounting', 'entrepreneur']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
           <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
+        </Route>
+
+        {/* Solo SuperAdministrador (Backoffice SaaS) */}
+        <Route element={<RequireAuth role="superadmin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+          <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+          <Route path="/superadmin/tenants" element={<SuperAdminDashboard />} />
+          <Route path="/superadmin/metrics" element={<SuperAdminDashboard />} />
         </Route>
 
         {/* Solo Administrador (RRHH) */}
@@ -191,7 +207,6 @@ function App() {
           <Route path="/analytics/performance" element={<PerformanceReport />} />
           <Route path="/analytics/payroll-costs" element={<PayrollCostReport />} />
           <Route path="/analytics/satisfaction" element={<SatisfactionReport />} />
-          <Route path="/analytics/custom" element={<CustomReport />} />
         </Route>
 
         {/* Roles Especializados (Contabilidad) */}

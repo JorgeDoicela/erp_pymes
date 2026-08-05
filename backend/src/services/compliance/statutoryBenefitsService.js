@@ -8,21 +8,24 @@ class StatutoryBenefitsService {
     /**
      * Matriz de Provisiones Mensuales y Beneficios Sociales Patronales de Ley.
      */
-    async calculateStatutoryProvisions(month = new Date().getMonth() + 1, year = new Date().getFullYear()) {
+    async calculateStatutoryProvisions(month = new Date().getMonth() + 1, year = new Date().getFullYear(), tenantId = null) {
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month, 0);
 
+        const empWhere = {
+            ...(tenantId ? { tenantId } : {}),
+            contracts: {
+                some: {
+                    startDate: { lte: endDate },
+                    OR: [{ endDate: null }, { endDate: { gte: startDate } }],
+                    status: 'Active'
+                }
+            }
+        };
+
         // Obtener todos los empleados activos con su contrato vigente
         const employees = await prisma.employee.findMany({
-            where: {
-                contracts: {
-                    some: {
-                        startDate: { lte: endDate },
-                        OR: [{ endDate: null }, { endDate: { gte: startDate } }],
-                        status: 'Active'
-                    }
-                }
-            },
+            where: empWhere,
             include: {
                 contracts: {
                     where: {

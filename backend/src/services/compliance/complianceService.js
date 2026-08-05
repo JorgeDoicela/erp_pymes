@@ -4,19 +4,24 @@ class ComplianceService {
     /**
      * Centro de Alertas Preventivas de Cumplimiento Laboral y Vencimientos.
      */
-    async getComplianceAlerts() {
+    async getComplianceAlerts(tenantId = null) {
         const today = new Date();
         const alerts = [];
 
+        const contractWhere = {
+            status: 'Active',
+            OR: [{ endDate: null }, { endDate: { gte: today } }]
+        };
+        if (tenantId) {
+            contractWhere.employee = { tenantId };
+        }
+
         // 1. Alertas de Fin de Período de Prueba (90 días)
         const activeContracts = await prisma.contract.findMany({
-            where: {
-                status: 'Active',
-                OR: [{ endDate: null }, { endDate: { gte: today } }]
-            },
+            where: contractWhere,
             include: {
                 employee: {
-                    select: { id: true, firstName: true, lastName: true, identityCard: true, department: true, position: true }
+                    select: { id: true, tenantId: true, firstName: true, lastName: true, identityCard: true, department: true, position: true }
                 }
             }
         });

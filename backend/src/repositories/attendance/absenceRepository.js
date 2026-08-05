@@ -6,8 +6,13 @@ export const absenceRepository = {
     },
 
     async getAllRequests(filter = {}) {
+        const { tenantId, ...rest } = filter;
+        const where = { ...rest };
+        if (tenantId) {
+            where.employee = { tenantId };
+        }
         return prisma.absenceRequest.findMany({
-            where: filter,
+            where,
             include: { employee: true }, // Incluir datos del empleado para el admin
             orderBy: { createdAt: 'desc' }
         });

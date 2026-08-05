@@ -13,15 +13,16 @@ class PayrollCalculationService {
      * @param {string} adminId - ID del administrador que ejecuta la acción
      * @returns {Promise<Object>} Resumen del proceso de nómina
      */
-    async generatePayroll(month, year, adminId) {
+    async generatePayroll(month, year, adminId = null, tenantId = null) {
         const periodDate = new Date(year, month - 1, 1);
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month, 0);
 
-        // 1. Verificación de duplicados: Evitar generar nómina dos veces para el mismo mes/año
+        // 1. Verificación de duplicados: Evitar generar nómina dos veces para el mismo mes/año en la misma empresa
         const existingPayroll = await prisma.payroll.findFirst({
             where: {
-                period: periodDate
+                period: periodDate,
+                ...(tenantId ? { tenantId } : {})
             }
         });
 
@@ -31,7 +32,10 @@ class PayrollCalculationService {
 
         // 3. Obtención de Parámetros Globales
         const config = await prisma.payrollConfig.findFirst({
-            where: { isActive: true },
+            where: {
+                isActive: true,
+                ...(tenantId ? { tenantId } : {})
+            },
             include: { items: true }
         });
 
@@ -43,6 +47,7 @@ class PayrollCalculationService {
         // Un contrato es válido si empezó antes del fin de mes Y (no ha terminado o terminó después del inicio de mes)
         const employees = await prisma.employee.findMany({
             where: {
+                ...(tenantId ? { tenantId } : {}),
                 contracts: {
                     some: {
                         startDate: { lte: endDate },
@@ -352,6 +357,7 @@ class PayrollCalculationService {
         // 5. Save to DB
         const payroll = await prisma.payroll.create({
             data: {
+                tenantId,
                 period: periodDate,
                 endDate: new Date(year, month, 0),
                 totalAmount: financial.round(totalPayrollAmount),
@@ -399,15 +405,17 @@ class PayrollCalculationService {
         return true;
     }
 
-    async getPayrolls(page = 1, limit = 10) {
+    async getPayrolls(page = 1, limit = 10, tenantId = null) {
         const skip = (page - 1) * limit;
+        const where = tenantId ? { tenantId } : {};
         const [payrolls, total] = await Promise.all([
             prisma.payroll.findMany({
+                where,
                 skip,
                 take: limit,
                 orderBy: { period: 'desc' }
             }),
-            prisma.payroll.count()
+            prisma.payroll.count({ where })
         ]);
 
         return {

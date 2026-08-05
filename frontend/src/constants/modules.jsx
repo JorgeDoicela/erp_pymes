@@ -64,3 +64,8 @@ export const entrepreneurModules = [
     { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
     { title: 'Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
 ];
+
+export const superAdminModules = [
+    { title: 'Panel SuperAdmin SaaS', icon: <FiShield />, color: 'bg-rose-600', path: '/superadmin/dashboard' },
+    ...adminModules
+];

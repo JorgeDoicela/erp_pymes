@@ -10,6 +10,7 @@ export const createEvaluationTemplate = async (req, res) => {
         const criteriaString = typeof criteria === 'object' ? JSON.stringify(criteria) : criteria;
         const scaleString = typeof scale === 'object' ? JSON.stringify(scale) : scale;
 
+        const tenantId = req.tenantId || req.user?.tenantId;
         const template = await prisma.evaluationTemplate.create({
             data: {
                 title,
@@ -17,7 +18,8 @@ export const createEvaluationTemplate = async (req, res) => {
                 period,
                 instructions,
                 criteria: criteriaString,
-                scale: scaleString
+                scale: scaleString,
+                ...(tenantId ? { tenantId } : {})
             }
         });
 
@@ -38,7 +40,9 @@ export const createEvaluationTemplate = async (req, res) => {
 
 export const getEvaluationTemplates = async (req, res) => {
     try {
+        const tenantId = req.tenantId || req.user?.tenantId;
         const templates = await prisma.evaluationTemplate.findMany({
+            where: tenantId ? { tenantId } : {},
             orderBy: { createdAt: 'desc' }
         });
 

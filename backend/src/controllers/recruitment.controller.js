@@ -4,7 +4,8 @@ import { uploadFileToStorage } from '../services/storage/blobService.js';
 // RF-REC-001: Create Vacancy
 export const createVacancy = async (req, res) => {
     try {
-        const vacancy = await recruitmentService.createVacancy(req.body, req.user.id);
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const vacancy = await recruitmentService.createVacancy(req.body, req.user.id, tenantId);
         res.status(201).json(vacancy);
     } catch (error) {
         console.error("Error creating vacancy:", error);
@@ -14,7 +15,8 @@ export const createVacancy = async (req, res) => {
 
 export const getVacancies = async (req, res) => {
     try {
-        const vacancies = await recruitmentService.getVacancies();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const vacancies = await recruitmentService.getVacancies(tenantId);
         res.json(vacancies);
     } catch (error) {
         res.status(500).json({ message: "Error al obtener vacantes" });

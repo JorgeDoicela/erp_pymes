@@ -5,7 +5,7 @@ import emailService from '../notifications/emailService.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
 
 export const recruitmentService = {
-    async createVacancy(data, userId) {
+    async createVacancy(data, userId, tenantId = null) {
         const { title, description, requirements, location, deadline, salaryMin, salaryMax } = data;
 
         if (!title || !description || !requirements || !location || !deadline) {
@@ -14,6 +14,7 @@ export const recruitmentService = {
 
         const vacancy = await recruitmentRepository.createVacancy({
             ...data,
+            ...(tenantId ? { tenantId } : {}),
             salaryMin: salaryMin ? parseFloat(salaryMin) : null,
             salaryMax: salaryMax ? parseFloat(salaryMax) : null,
             deadline: new Date(deadline),
@@ -33,8 +34,9 @@ export const recruitmentService = {
         return vacancy;
     },
 
-    async getVacancies() {
-        return recruitmentRepository.getVacancies({}, {
+    async getVacancies(tenantId = null) {
+        const where = tenantId ? { tenantId } : {};
+        return recruitmentRepository.getVacancies(where, {
             postedBy: { select: { firstName: true, lastName: true } }
         });
     },

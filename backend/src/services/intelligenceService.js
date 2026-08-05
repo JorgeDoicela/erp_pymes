@@ -12,11 +12,17 @@ import { decryptSalary } from '../utils/encryption.js';
 /**
  * Carga todos los empleados activos con sus relaciones en una sola consulta
  */
-async function fetchRawEmployees() {
+async function fetchRawEmployees(tenantId = null) {
+    const where = { isActive: true };
+    if (tenantId) {
+        where.tenantId = tenantId;
+    }
+
     return await prisma.employee.findMany({
-        where: { isActive: true },
+        where,
         select: {
             id: true,
+            tenantId: true,
             firstName: true,
             lastName: true,
             department: true,
@@ -1093,59 +1099,61 @@ export async function getOrganizationalHealth(preloadedData = null) {
 
 // ==================== DASHBOARD PRINCIPAL (SINGLE-PASS & CACHED) ====================
 
-let DASHBOARD_CACHE = null;
-let DASHBOARD_CACHE_TIMESTAMP = 0;
+const DASHBOARD_CACHE_MAP = new Map();
 const DASHBOARD_CACHE_TTL = 300 * 1000; // 5 minutos de cache
-let IS_FETCHING_DASHBOARD = null;
 
-export async function getIntelligenceDashboard(forceRefresh = false) {
+export async function getIntelligenceDashboard(tenantId = null, forceRefresh = false) {
+    const cacheKey = tenantId || 'default';
     const nowMs = Date.now();
-    if (!forceRefresh && DASHBOARD_CACHE && (nowMs - DASHBOARD_CACHE_TIMESTAMP < DASHBOARD_CACHE_TTL)) {
-        return DASHBOARD_CACHE;
+    const cached = DASHBOARD_CACHE_MAP.get(cacheKey);
+
+    if (!forceRefresh && cached && (nowMs - cached.timestamp < DASHBOARD_CACHE_TTL)) {
+        return cached.data;
     }
 
-    // Prevención de Thundering Herd (lock por Promesa activa)
-    if (IS_FETCHING_DASHBOARD) {
-        return await IS_FETCHING_DASHBOARD;
-    }
+    const now = new Date();
 
-    IS_FETCHING_DASHBOARD = (async () => {
-        try {
-            const now = new Date();
-
-            // 1. Single-Pass Fetching — una sola ronda de consultas a la BD
-            const [rawEmployees, payrolls, benefits, pendingEvaluations, predictiveAnalytics] = await Promise.all([
-                fetchRawEmployees(),
-                prisma.payroll.findMany({
-                    orderBy: { period: 'desc' },
-                    take: 6,
+    // Single-Pass Fetching — una sola ronda de consultas filtradas por tenantId
+    const [rawEmployees, payrolls, benefits, pendingEvaluations, predictiveAnalytics] = await Promise.all([
+        fetchRawEmployees(tenantId),
+        prisma.payroll.findMany({
+            where: tenantId ? { tenantId } : {},
+            orderBy: { period: 'desc' },
+            take: 6,
+            select: {
+                id: true,
+                totalAmount: true,
+                details: {
                     select: {
-                        id: true,
-                        totalAmount: true,
-                        details: {
-                            select: {
-                                employeeId: true,
-                                overtimeHours: true,
-                                overtimeAmount: true,
-                                employee: { select: { firstName: true, lastName: true, department: true } }
-                            }
-                        }
-                    }
-                }),
-                prisma.employeeBenefit.findMany({
-                    where: { status: 'ACTIVE' },
-                    select: {
-                        amount: true,
                         employeeId: true,
-                        employee: { select: { department: true } }
+                        overtimeHours: true,
+                        overtimeAmount: true,
+                        employee: { select: { firstName: true, lastName: true, department: true } }
                     }
-                }),
-                prisma.employeeEvaluation.findMany({
-                    where: { status: 'PENDING', endDate: { lt: now } },
-                    include: { employee: { select: { id: true, firstName: true, lastName: true, department: true, position: true } } }
-                }),
-                getPredictiveAnalytics()
-            ]);
+                }
+            }
+        }),
+        prisma.employeeBenefit.findMany({
+            where: {
+                status: 'ACTIVE',
+                ...(tenantId ? { employee: { tenantId } } : {})
+            },
+            select: {
+                amount: true,
+                employeeId: true,
+                employee: { select: { department: true } }
+            }
+        }),
+        prisma.employeeEvaluation.findMany({
+            where: {
+                status: 'PENDING',
+                endDate: { lt: now },
+                ...(tenantId ? { employee: { tenantId } } : {})
+            },
+            include: { employee: { select: { id: true, firstName: true, lastName: true, department: true, position: true } } }
+        }),
+        getPredictiveAnalytics()
+    ]);
 
             // 2. Cálculos en memoria (sin más consultas a BD)
             const retention = await getRetentionRiskAnalysis(rawEmployees);
@@ -1204,15 +1212,8 @@ export async function getIntelligenceDashboard(forceRefresh = false) {
                 generatedAt: now,
             };
 
-            DASHBOARD_CACHE = result;
-            DASHBOARD_CACHE_TIMESTAMP = Date.now();
+            DASHBOARD_CACHE_MAP.set(cacheKey, { data: result, timestamp: Date.now() });
             return result;
-        } finally {
-            IS_FETCHING_DASHBOARD = null;
-        }
-    })();
-
-    return await IS_FETCHING_DASHBOARD;
 }
 
 function calculateFinancialImpact({ retention, rawEmployees = [], attendance, payroll }) {

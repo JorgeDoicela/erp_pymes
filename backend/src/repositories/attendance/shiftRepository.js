@@ -2,12 +2,19 @@ import prisma from '../../database/db.js';
 
 export const shiftRepository = {
     // --- SHIFTS ---
-    async createShift(data) {
-        return prisma.shift.create({ data });
+    async createShift(data, tenantId = null) {
+        return prisma.shift.create({
+            data: {
+                ...data,
+                ...(tenantId ? { tenantId } : {})
+            }
+        });
     },
 
-    async getAllShifts() {
-        return prisma.shift.findMany();
+    async getAllShifts(tenantId = null) {
+        return prisma.shift.findMany({
+            where: tenantId ? { tenantId } : {}
+        });
     },
 
     async getShiftById(id) {

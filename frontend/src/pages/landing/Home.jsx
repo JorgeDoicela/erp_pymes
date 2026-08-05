@@ -108,12 +108,20 @@ function Home() {
                         <div className="flex items-center">
                             <img src={logoEmplifi} alt="EMPLIFI" className="h-10 w-auto object-contain" />
                         </div>
-                        <Link
-                            to="/login"
-                            className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-colors"
-                        >
-                            Iniciar Sesión
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <Link
+                                to="/login"
+                                className="px-5 py-2 rounded-lg text-slate-700 hover:text-blue-600 text-sm font-semibold transition-colors"
+                            >
+                                Iniciar Sesión
+                            </Link>
+                            <Link
+                                to="/register-company"
+                                className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-colors"
+                            >
+                                Crear Cuenta Empresa
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </motion.nav>
@@ -130,29 +138,38 @@ function Home() {
                         {/* Badge */}
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 border border-blue-100 mb-6">
                             <FiCpu className="w-4 h-4" />
-                            <span className="text-sm font-medium">Asistente Inteligente con Análisis Predictivo</span>
+                            <span className="text-sm font-medium">SaaS Multi-Empresa con Cumplimiento Legal Ecuador</span>
                         </div>
 
                         {/* Title */}
                         <h1 className="text-4xl lg:text-6xl font-bold text-slate-800 mb-6 tracking-tight">
-                            Gestión de RRHH Simple e Inteligente
+                            Gestión de RRHH, Nómina y Asistencia Simple e Inteligente
                         </h1>
 
                         {/* Subtitle */}
                         <p className="text-lg lg:text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-                            Plataforma completa para gestionar tu equipo. Automatiza procesos,
-                            analiza datos y toma mejores decisiones con el asistente inteligente.
+                            Plataforma completa para gestionar tu equipo. Automatiza nómina con asientos contables,
+                            asistencia por GPS, finiquitos legales y analítica en tiempo real.
                         </p>
 
                         {/* CTA */}
-                        <div className="flex flex-col items-center gap-4">
-                            <Link
-                                to="/login"
-                                className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold shadow-lg shadow-blue-200 transition-all"
-                            >
-                                Comenzar Ahora
-                                <FiArrowRight className="w-5 h-5" />
-                            </Link>
+                        <div className="flex flex-col items-center gap-6">
+                            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                                <Link
+                                    to="/register-company"
+                                    className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold shadow-lg shadow-blue-200 transition-all"
+                                >
+                                    Registrar Empresa (Prueba 14 Días)
+                                    <FiArrowRight className="w-5 h-5" />
+                                </Link>
+
+                                <Link
+                                    to="/login"
+                                    className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-lg font-semibold transition-all"
+                                >
+                                    Iniciar Sesión
+                                </Link>
+                            </div>
 
                             <Link
                                 to="/careers"

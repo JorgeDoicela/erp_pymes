@@ -39,7 +39,8 @@ function handleError(res, error, defaultMessage) {
 export async function getDashboard(req, res) {
     try {
         const forceRefresh = req.query.refresh === 'true';
-        const dashboard = await intelligenceService.getIntelligenceDashboard(forceRefresh);
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const dashboard = await intelligenceService.getIntelligenceDashboard(tenantId, forceRefresh);
         res.json({
             success: true,
             data: dashboard,

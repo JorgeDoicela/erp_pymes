@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
 import DeveloperCard from '../../components/common/DeveloperCard';
 
@@ -17,6 +18,14 @@ function Login({ onLogin }) {
     const [successMsg, setSuccessMsg] = useState('');
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const authErr = sessionStorage.getItem('auth_error_toast');
+        if (authErr) {
+            setError(authErr);
+            sessionStorage.removeItem('auth_error_toast');
+        }
+    }, []);
 
     const handleSubmit = async (event) => {
         event.preventDefault();

@@ -47,7 +47,10 @@ export class EmployeeController {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      const tenantId = req.tenantId || req.user?.tenantId;
+
       const employee = await employeeService.createEmployee({
+        tenantId,
         firstName,
         lastName,
         email,
@@ -91,11 +94,13 @@ export class EmployeeController {
     try {
       const { page = 1, limit = 10, q } = req.query;
       const skip = (parseInt(page) - 1) * parseInt(limit);
+      const tenantId = req.tenantId || req.user?.tenantId;
 
       const employees = await employeeService.getAllEmployees({
         skip,
         take: parseInt(limit),
         q,
+        tenantId,
       });
 
       res.status(200).json({

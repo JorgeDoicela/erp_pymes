@@ -465,16 +465,40 @@ const EMPLOYEES = [
 ];
 
 export async function seedUsers(prisma) {
-    console.log('[USERS] Creando Admin y 10 Empleados...');
+    console.log('[USERS] Creando Tenant Demo, Admin y 10 Empleados...');
     const password = await bcrypt.hash('Emplifi2025!', 10);
+
+    // ── Tenant Demo ────────────────────────────────────────────────────────────
+    let defaultTenant;
+    try {
+        defaultTenant = await prisma.tenant.upsert({
+            where: { slug: 'empresa-demo' },
+            update: {},
+            create: {
+                name: 'Empresa Demo Ecuador S.A.',
+                slug: 'empresa-demo',
+                ruc: '1792345678001',
+                plan: 'ENTERPRISE',
+                subscriptionStatus: 'ACTIVE',
+                maxEmployees: 100,
+                trialEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            }
+        });
+        console.log(`✅ Tenant Demo listo: ${defaultTenant.name} (${defaultTenant.id})`);
+    } catch (e) {
+        console.log('⚠️ Tenant creation failed: ' + e.message);
+    }
+
+    const tenantId = defaultTenant?.id || null;
 
     // ── Admin ──────────────────────────────────────────────────────────────────
     let admin;
     try {
         admin = await prisma.employee.upsert({
             where: { email: 'admin@emplifi.com' },
-            update: { password },
+            update: { password, tenantId },
             create: {
+                tenantId,
                 firstName: 'Jorge',
                 lastName: 'Doicela',
                 email: 'admin@emplifi.com',
@@ -509,8 +533,9 @@ export async function seedUsers(prisma) {
         try {
             const created = await prisma.employee.upsert({
                 where: { email: emp.email },
-                update: { password },
+                update: { password, tenantId },
                 create: {
+                    tenantId,
                     firstName: emp.firstName,
                     lastName: emp.lastName,
                     email: emp.email,
@@ -546,8 +571,9 @@ export async function seedUsers(prisma) {
     try {
         accountant = await prisma.employee.upsert({
             where: { email: 'contabilidad@emplifi.com' },
-            update: { password },
+            update: { password, tenantId },
             create: {
+                tenantId,
                 firstName: 'Ana',
                 lastName: 'Contadora',
                 email: 'contabilidad@emplifi.com',
@@ -580,8 +606,9 @@ export async function seedUsers(prisma) {
     try {
         entrepreneur = await prisma.employee.upsert({
             where: { email: 'emprendedor@emplifi.com' },
-            update: { password },
+            update: { password, tenantId },
             create: {
+                tenantId,
                 firstName: 'Carlos',
                 lastName: 'Emprendedor',
                 email: 'emprendedor@emplifi.com',
@@ -613,9 +640,10 @@ export async function seedUsers(prisma) {
     try {
         await prisma.systemSetting.upsert({
             where: { id: 'default' },
-            update: {},
+            update: { tenantId },
             create: {
                 id: 'default',
+                tenantId,
                 maintenanceMode: false,
                 biometricEnabled: false,
                 maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',

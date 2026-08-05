@@ -1,13 +1,16 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { adminModules, employeeModules, accountingModules, entrepreneurModules } from '../../constants/modules';
+import { adminModules, employeeModules, accountingModules, entrepreneurModules, superAdminModules } from '../../constants/modules';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
 
 const Sidebar = ({ user, onLogout, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const isSuperAdmin = user?.role === 'superadmin' || user?.email === 'admin@emplifi.com';
+
     // Determinar qué módulos mostrar según el rol
     const getModules = () => {
+        if (isSuperAdmin) return superAdminModules;
         switch (user?.role) {
             case 'admin': return adminModules;
             case 'accounting': return accountingModules;
@@ -17,6 +20,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
     };
 
     const getRoleLabel = () => {
+        if (isSuperAdmin) return 'SuperAdmin SaaS';
         switch (user?.role) {
             case 'admin': return 'Administrador';
             case 'accounting': return 'Contabilidad';

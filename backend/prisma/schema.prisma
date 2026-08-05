@@ -8,8 +8,42 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Tenant {
+  id                 String   @id @default(cuid())
+  name               String
+  slug               String   @unique
+  ruc                String?  @unique
+  plan               String   @default("ESSENTIAL") // ESSENTIAL, GROWTH, ENTERPRISE
+  subscriptionStatus String   @default("ACTIVE")    // TRIAL, ACTIVE, SUSPENDED, CANCELLED
+  maxEmployees       Int      @default(50)
+  trialEndsAt        DateTime?
+  subscriptionEndsAt DateTime?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  employees          Employee[]
+  systemSettings     SystemSetting[]
+  payrollConfigs     PayrollConfig[]
+  payrolls           Payroll[]
+  accountingPeriods  AccountingPeriod[]
+  accountingAccounts AccountingAccount[]
+  costCenters        CostCenter[]
+  journalEntries     JournalEntry[]
+  jobVacancies       JobVacancy[]
+  announcements      Announcement[]
+  climateSurveys     ClimateSurvey[]
+  evaluationTemplates EvaluationTemplate[]
+  shifts             Shift[]
+  auditLogs          AuditLog[]
+
+  @@map("tenants")
+}
+
 model Employee {
   id                   String                  @id @default(cuid())
+  tenantId             String?
+  tenant               Tenant?                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   firstName            String
   lastName             String
   email                String                  @unique
@@ -73,6 +107,7 @@ model Employee {
 
   @@index([email])
   @@index([department])
+  @@index([tenantId])
   @@map("employees")
 }
 
@@ -145,6 +180,8 @@ model Attendance {
 
 model Shift {
   id               String             @id @default(cuid())
+  tenantId         String?
+  tenant           Tenant?            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name             String
   startTime        String
   endTime          String
@@ -154,6 +191,7 @@ model Shift {
   toleranceMinutes Int                @default(15)
   schedules        EmployeeSchedule[]
 
+  @@index([tenantId])
   @@map("shifts")
 }
 
@@ -202,6 +240,8 @@ model WorkHistory {
 
 model AuditLog {
   id          String   @id @default(cuid())
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   entity      String
   entityId    String
   action      String
@@ -210,6 +250,7 @@ model AuditLog {
   ip          String?
   timestamp   DateTime @default(now())
 
+  @@index([tenantId])
   @@index([entityId])
   @@index([timestamp])
   @@map("audit_logs")
@@ -258,6 +299,8 @@ model Document {
 
 model PayrollConfig {
   id          String        @id @default(cuid())
+  tenantId    String?
+  tenant      Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   workingDays Int           @default(30)
   currency    String        @default("USD")
   validFrom   DateTime      @default(now())
@@ -266,6 +309,7 @@ model PayrollConfig {
   updatedAt   DateTime      @updatedAt
   items       PayrollItem[]
 
+  @@index([tenantId])
   @@map("payroll_configs")
 }
 
@@ -287,6 +331,8 @@ model PayrollItem {
 
 model Payroll {
   id          String          @id @default(cuid())
+  tenantId    String?
+  tenant      Tenant?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   period      DateTime
   endDate     DateTime
   status      String          @default("DRAFT")
@@ -296,6 +342,7 @@ model Payroll {
   paymentDate DateTime?
   details     PayrollDetail[]
 
+  @@index([tenantId])
   @@index([period])
   @@map("payrolls")
 }
@@ -339,6 +386,8 @@ model EmployeeBenefit {
 
 model EvaluationTemplate {
   id           String               @id @default(cuid())
+  tenantId     String?
+  tenant       Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   title        String
   description  String?
   period       String
@@ -350,6 +399,7 @@ model EvaluationTemplate {
   updatedAt    DateTime             @updatedAt
   evaluations  EmployeeEvaluation[]
 
+  @@index([tenantId])
   @@map("evaluation_templates")
 }
 
@@ -394,6 +444,8 @@ model EvaluationReviewer {
 
 model JobVacancy {
   id                 String           @id @default(cuid())
+  tenantId           String?
+  tenant             Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   title              String
   department         String
   description        String
@@ -413,6 +465,7 @@ model JobVacancy {
   applications       JobApplication[]
   postedBy           Employee         @relation(fields: [postedById], references: [id])
 
+  @@index([tenantId])
   @@index([postedById])
   @@map("job_vacancies")
 }
@@ -487,6 +540,8 @@ model CandidateEvaluation {
 
 model ClimateSurvey {
   id          String            @id @default(cuid())
+  tenantId    String?
+  tenant      Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   title       String
   startDate   DateTime
   endDate     DateTime?
@@ -496,6 +551,7 @@ model ClimateSurvey {
   updatedAt   DateTime          @updatedAt
   responses   ClimateResponse[]
 
+  @@index([tenantId])
   @@map("climate_surveys")
 }
 
@@ -542,6 +598,8 @@ model NotificationPreference {
 
 model SystemSetting {
   id                   String    @id @default(cuid())
+  tenantId             String?   @unique
+  tenant               Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   maintenanceMode      Boolean   @default(false)
   maintenanceScheduled DateTime?
   maintenanceMessage   String?
@@ -579,6 +637,8 @@ model BiometricCredential {
 
 model AccountingPeriod {
   id        String   @id @default(cuid())
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   year      Int
   month     Int
   startDate DateTime
@@ -587,12 +647,15 @@ model AccountingPeriod {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([tenantId])
   @@unique([year, month])
   @@map("acc_periods")
 }
 
 model AccountingAccount {
   id           String              @id @default(cuid())
+  tenantId     String?
+  tenant       Tenant?             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   code         String              @unique
   name         String
   description  String?
@@ -607,12 +670,15 @@ model AccountingAccount {
   updatedAt    DateTime            @updatedAt
   isActive     Boolean             @default(true)
 
+  @@index([tenantId])
   @@index([code])
   @@map("acc_accounts")
 }
 
 model CostCenter {
   id          String        @id @default(cuid())
+  tenantId    String?
+  tenant      Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   code        String        @unique
   name        String
   description String?
@@ -621,11 +687,14 @@ model CostCenter {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  @@index([tenantId])
   @@map("acc_cost_centers")
 }
 
 model JournalEntry {
   id              String        @id @default(cuid())
+  tenantId        String?
+  tenant          Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   entryNumber     String        @unique // Ej: ACC-2026-0001
   date            DateTime
   description     String
@@ -642,6 +711,7 @@ model JournalEntry {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  @@index([tenantId])
   @@index([date])
   @@index([entryNumber])
   @@map("acc_journal_entries")
@@ -930,6 +1000,8 @@ model OffboardingProcess {
 
 model Announcement {
   id                     String             @id @default(cuid())
+  tenantId               String?
+  tenant                 Tenant?            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   title                  String
   content                String             @db.Text
   category               String             @default("GENERAL") // GENERAL, POLICY, HOLIDAY, BIRTHDAY
@@ -943,6 +1015,7 @@ model Announcement {
   createdBy              Employee           @relation("CreatedAnnouncements", fields: [createdById], references: [id], onDelete: Cascade)
   reads                  AnnouncementRead[]
 
+  @@index([tenantId])
   @@index([createdById])
   @@index([category])
   @@map("announcements")

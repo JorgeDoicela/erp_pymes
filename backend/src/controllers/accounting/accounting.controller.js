@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../database/db.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
-const prisma = new PrismaClient();
 
 // ==========================================
 // 1. Accounting Periods (Periodos Contables)

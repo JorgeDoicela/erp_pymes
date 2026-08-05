@@ -1,34 +1,46 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../database/db.js';
 import { financial } from '../utils/financialUtils.js';
 
 export const getDashboardData = async (req, res) => {
     console.log("Analytics: Request received for dashboard data");
     try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const tenantWhere = tenantId ? { tenantId } : {};
+
         // --- KPIs ---
 
         // 1. Total Employees
-        const totalEmployees = await prisma.employee.count();
+        const totalEmployees = await prisma.employee.count({
+            where: tenantWhere
+        });
         console.log("Analytics: Total Employees:", totalEmployees);
 
         // 2. New Hires (Current Month)
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const newHires = await prisma.employee.count({
-            where: { hireDate: { gte: startOfMonth } }
+            where: {
+                ...tenantWhere,
+                hireDate: { gte: startOfMonth }
+            }
         });
         console.log("Analytics: New Hires:", newHires);
 
         // 3. Open Vacancies
         const openVacancies = await prisma.jobVacancy.count({
-            where: { status: 'OPEN' }
+            where: {
+                status: 'OPEN',
+                ...tenantWhere
+            }
         });
         console.log("Analytics: Open Vacancies:", openVacancies);
 
         // 4. Monthly Payroll Estimate — read from active Contracts (salary stored as plain Float)
         const activeContracts = await prisma.contract.findMany({
-            where: { status: 'Active' },
+            where: {
+                status: 'Active',
+                ...(tenantId ? { employee: { tenantId } } : {})
+            },
             select: { salary: true }
         });
 
@@ -47,6 +59,7 @@ export const getDashboardData = async (req, res) => {
         // 1. Employees by Department
         const employeesByDept = await prisma.employee.groupBy({
             by: ['department'],
+            where: tenantWhere,
             _count: { id: true }
         });
         const deptChartData = employeesByDept.map(item => ({
@@ -58,7 +71,10 @@ export const getDashboardData = async (req, res) => {
         const vacanciesByDept = await prisma.jobVacancy.groupBy({
             by: ['department'],
             _count: { id: true },
-            where: { status: 'OPEN' }
+            where: {
+                status: 'OPEN',
+                ...tenantWhere
+            }
         });
         const vacancyChartData = vacanciesByDept.map(item => ({
             name: item.department || 'Sin Dept',

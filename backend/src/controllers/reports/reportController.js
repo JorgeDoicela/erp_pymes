@@ -9,7 +9,8 @@ class ReportController {
                 return res.status(400).json({ success: false, message: 'Se requieren fechas de inicio y fin' });
             }
 
-            const report = await reportService.getAttendanceStats(startDate, endDate, department, employeeId);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const report = await reportService.getAttendanceStats(startDate, endDate, department, employeeId, tenantId);
 
             res.status(200).json({
                 success: true,

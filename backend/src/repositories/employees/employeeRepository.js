@@ -122,9 +122,13 @@ export class EmployeeRepository {
    */
   async findAll(options = {}) {
     try {
-      const { skip = 0, take = 10, q } = options;
+      const { skip = 0, take = 10, q, tenantId } = options;
 
       const where = {};
+
+      if (tenantId) {
+        where.tenantId = tenantId;
+      }
 
       if (q) {
         where.OR = [

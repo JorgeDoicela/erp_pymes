@@ -6,7 +6,8 @@ class PayrollController {
             const { month, year } = req.body;
             if (!month || !year) return res.status(400).json({ message: 'Mes y año requeridos' });
             const userId = req.user?.id; // RNF-14 Audit
-            const payroll = await payrollCalculationService.generatePayroll(month, year, userId);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const payroll = await payrollCalculationService.generatePayroll(month, year, userId, tenantId);
             res.status(201).json({ success: true, data: payroll, message: 'Nómina generada correctamente (Borrador)' });
         } catch (error) {
             console.error(error);
@@ -18,8 +19,9 @@ class PayrollController {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
+            const tenantId = req.tenantId || req.user?.tenantId;
 
-            const result = await payrollCalculationService.getPayrolls(page, limit);
+            const result = await payrollCalculationService.getPayrolls(page, limit, tenantId);
 
             res.status(200).json({
                 success: true,

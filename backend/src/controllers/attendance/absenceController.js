@@ -77,9 +77,11 @@ const createRequest = async (req, res, next) => {
 const getRequests = async (req, res, next) => {
     try {
         const { status, employeeId } = req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
         const filter = {};
         if (status) filter.status = status;
         if (employeeId) filter.employeeId = employeeId;
+        if (tenantId) filter.tenantId = tenantId;
 
         const requests = await absenceService.getAllRequests(filter);
         res.json({ success: true, data: requests });

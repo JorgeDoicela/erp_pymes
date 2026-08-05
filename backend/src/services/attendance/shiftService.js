@@ -1,12 +1,12 @@
 import { shiftRepository } from '../../repositories/attendance/shiftRepository.js';
 
 export const shiftService = {
-    async createShift(data) {
-        return shiftRepository.createShift(data);
+    async createShift(data, tenantId = null) {
+        return shiftRepository.createShift(data, tenantId);
     },
 
-    async getAllShifts() {
-        return shiftRepository.getAllShifts();
+    async getAllShifts(tenantId = null) {
+        return shiftRepository.getAllShifts(tenantId);
     },
 
     async assignShiftToEmployees({ employeeIds, shiftId, startDate, endDate, daysOfWeek }) {

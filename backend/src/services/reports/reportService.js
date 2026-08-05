@@ -2,7 +2,7 @@ import prisma from '../../database/db.js';
 import { decryptCoordinate } from '../../utils/encryption.js';
 
 class ReportService {
-    async getAttendanceStats(startDate, endDate, department, employeeId) {
+    async getAttendanceStats(startDate, endDate, department, employeeId, tenantId = null) {
         // Parse dates to start and end of day
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
@@ -12,6 +12,7 @@ class ReportService {
 
         // Filter by department if provided
         const whereEmployee = {};
+        if (tenantId) whereEmployee.tenantId = tenantId;
         if (department) whereEmployee.department = department;
         if (employeeId) whereEmployee.id = employeeId;
 

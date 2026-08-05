@@ -4,8 +4,9 @@ const createShift = async (req, res, next) => {
     try {
         const { name, startTime, endTime } = req.body;
         if (!name || !startTime || !endTime) return res.status(400).json({ message: 'Faltan datos.' });
+        const tenantId = req.tenantId || req.user?.tenantId;
 
-        const shift = await shiftService.createShift({ name, startTime, endTime });
+        const shift = await shiftService.createShift({ name, startTime, endTime }, tenantId);
         res.status(201).json({ success: true, data: shift });
     } catch (error) {
         next(error);
@@ -14,7 +15,8 @@ const createShift = async (req, res, next) => {
 
 const getAllShifts = async (req, res, next) => {
     try {
-        const shifts = await shiftService.getAllShifts();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const shifts = await shiftService.getAllShifts(tenantId);
         res.json({ success: true, data: shifts });
     } catch (error) {
         next(error);
