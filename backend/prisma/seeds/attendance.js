@@ -1,14 +1,13 @@
 export async function seedAttendance(prisma, employees) {
-    console.log('⏳ Generando Asistencia (Últimos 90 días)...');
+    console.log('⏳ Generando Asistencia (Últimos 180 días con patrones determinísticos)...');
 
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(today.getDate() - 90);
+    const hundredEightyDaysAgo = new Date();
+    hundredEightyDaysAgo.setDate(today.getDate() - 180);
 
-    // Helper to generate range
     const getDates = (startDate, endDate) => {
         const dates = [];
         let currentDate = new Date(startDate);
@@ -19,79 +18,50 @@ export async function seedAttendance(prisma, employees) {
         return dates;
     };
 
-    // Seed from 90 days ago up to YESTERDAY (exclude today)
-    const datesToSeed = getDates(ninetyDaysAgo, yesterday);
-
-    console.log(`[DEBUG] Employees passed: ${employees.length}`);
-    console.log(`[DEBUG] Dates to seed: ${datesToSeed.length}`);
-    console.log(`[DEBUG] Date range: ${ninetyDaysAgo.toISOString()} -> ${yesterday.toISOString()}`);
-
+    const datesToSeed = getDates(hundredEightyDaysAgo, yesterday);
     const employeesList = employees.filter(e => e.role !== 'admin');
 
-    // Deterministic candidates for intelligence patterns
-    const suspiciousCandidates = employeesList.filter(e =>
-        ['kevin.arismendi@emplifi.com', 'lucia.paz@emplifi.com'].includes(e.email)
-    );
-    const lateCandidates = employeesList.filter(e =>
-        ['gabriela.torres@emplifi.com', 'camila.rodriguez@emplifi.com'].includes(e.email)
-    );
+    // Helper para hash numérico de ID de string
+    const getEmpNumericHash = (id) => {
+        if (!id) return 1;
+        return String(id).split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    };
 
     const attendanceBatch = [];
 
     for (const emp of employeesList) {
-        // Skip if already seeded (check count once per employee not needed if we rely on clean state or just append)
-        // Optimization: checking count for every employee is slow. 
-        // Better: Assumed seeded if ANY record exists? Or just skip check for speed if we trust clean
-        // Let's keep a fast check or remove it. 
-        // For mass seed, let's skip the check or do one check at start.
-        // Doing one check per employee is 27 queries. That's fine.
-
-        // Skip heavy check for speed in this context
-        // const count = await prisma.attendance.count({ where: { employeeId: emp.id } });
-        // if (count > 50) continue; 
-
-        const isSuspicious = suspiciousCandidates.find(c => c.id === emp.id);
-        const isLate = lateCandidates.find(c => c.id === emp.id);
+        const empHash = getEmpNumericHash(emp.id);
+        const isCriticalSuspicious = emp.email === 'kevin.arismendi@emplifi.com';
+        const isHighSuspicious = emp.email === 'lucia.paz@emplifi.com';
+        const isChronicLate = emp.email === 'gabriela.torres@emplifi.com';
+        const isModerateLate = emp.email === 'camila.rodriguez@emplifi.com';
 
         for (const date of datesToSeed) {
             const dayOfWeek = date.getDay();
-            if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
+            if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Fin de semana
 
-            // Determine Status
-            let status = 'Presente';
-            let checkIn = new Date(date); checkIn.setHours(8, 0, 0);
-            let checkOut = new Date(date); checkOut.setHours(17, 0, 0);
+            // Normalizar fecha a medianoche UTC
+            const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const checkIn = new Date(date); checkIn.setHours(8, 0, 0);
+            const checkOut = new Date(date); checkOut.setHours(17, 0, 0);
             let workedHours = 8;
             let isLateToday = false;
 
-            // Normalize date to midnight UTC to match unique constraint logic
-            const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            // Determinar si es falta sospechosa (Lunes = 1, Viernes = 5)
+            let isAbsence = false;
 
-            // Pattern: Suspicious (Mon/Fri absences)
-            if (isSuspicious && (dayOfWeek === 1 || dayOfWeek === 5) && Math.random() > 0.6) {
-                attendanceBatch.push({
-                    employeeId: emp.id,
-                    date: normalizedDate,
-                    checkIn: new Date(date), // Dummy
-                    checkOut: null,
-                    status: 'Falta',
-                    workedHours: 0,
-                    isLate: false
-                });
-                continue;
-            }
-
-            // Pattern: Late
-            if (isLate && Math.random() > 0.4) {
-                isLateToday = true;
-                checkIn.setMinutes(Math.floor(Math.random() * 45) + 15); // 8:15 - 9:00
+            if (isCriticalSuspicious && (dayOfWeek === 1 || dayOfWeek === 5)) {
+                const dayHash = (date.getDate() * 17 + date.getMonth() * 31) % 100;
+                if (dayHash < 45) isAbsence = true;
+            } else if (isHighSuspicious && (dayOfWeek === 1 || dayOfWeek === 5)) {
+                const dayHash = (date.getDate() * 13 + date.getMonth() * 29) % 100;
+                if (dayHash < 35) isAbsence = true;
             } else {
-                // Random variation normal
-                checkIn.setMinutes(Math.floor(Math.random() * 10)); // 8:00 - 8:10
+                const dayHash = (empHash * 7 + date.getDate() * 19 + date.getMonth() * 3) % 1000;
+                if (dayHash < 15) isAbsence = true;
             }
 
-            // Random Absences for others (low probability)
-            if (!isSuspicious && Math.random() < 0.02) {
+            if (isAbsence) {
                 attendanceBatch.push({
                     employeeId: emp.id,
                     date: normalizedDate,
@@ -104,6 +74,22 @@ export async function seedAttendance(prisma, employees) {
                 continue;
             }
 
+            // Determinar retraso
+            const dayHashLate = (empHash * 11 + date.getDate() * 23 + date.getMonth() * 7) % 100;
+
+            if (isChronicLate && dayHashLate < 60) {
+                isLateToday = true;
+                checkIn.setMinutes(15 + (dayHashLate % 30)); // 8:15 a 8:45
+            } else if ((isModerateLate || isCriticalSuspicious) && dayHashLate < 40) {
+                isLateToday = true;
+                checkIn.setMinutes(10 + (dayHashLate % 25)); // 8:10 a 8:35
+            } else if (dayHashLate < 8) {
+                isLateToday = true;
+                checkIn.setMinutes(5 + (dayHashLate % 15));
+            } else {
+                checkIn.setMinutes(dayHashLate % 8); // 8:00 a 8:07 (a tiempo)
+            }
+
             attendanceBatch.push({
                 employeeId: emp.id,
                 date: normalizedDate,
@@ -112,7 +98,7 @@ export async function seedAttendance(prisma, employees) {
                 status: 'Presente',
                 workedHours: workedHours,
                 isLate: isLateToday,
-                entryLatitude: -0.1807, // Approx Quito
+                entryLatitude: -0.1807,
                 entryLongitude: -78.4678,
                 exitLatitude: -0.1807,
                 exitLongitude: -78.4678
@@ -120,9 +106,9 @@ export async function seedAttendance(prisma, employees) {
         }
     }
 
-    // Insert in chunks of 100 to avoid parameter limits and memory issues
-    const chunkSize = 100;
-    console.log(`[ATTENDANCE] Inserting ${attendanceBatch.length} records in chunks of ${chunkSize}...`);
+    // Inserción en chunks de 150
+    const chunkSize = 150;
+    console.log(`[ATTENDANCE] Insertando ${attendanceBatch.length} registros en chunks de ${chunkSize}...`);
 
     for (let i = 0; i < attendanceBatch.length; i += chunkSize) {
         const chunk = attendanceBatch.slice(i, i + chunkSize);
@@ -132,9 +118,8 @@ export async function seedAttendance(prisma, employees) {
                 skipDuplicates: true
             });
         } catch (e) {
-            console.error(`❌ Error inserting attendance chunk ${i}: ${e.message}`);
-            // Don't crash, just log and continue
+            console.error(`❌ Error insertando chunk de asistencia ${i}: ${e.message}`);
         }
     }
-    console.log('[ATTENDANCE] Batch insert completed.');
+    console.log('[ATTENDANCE] Carga determinística de 180 días completada.');
 }

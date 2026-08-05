@@ -1,8 +1,11 @@
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { FiTrendingUp, FiTrendingDown, FiAward, FiAlertTriangle } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown, FiAward, FiAlertTriangle, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 
 export default function DepartmentComparison({ departments, summary }) {
+    const [sortConfig, setSortConfig] = useState({ key: 'ranking', direction: 'asc' });
+
     const getHealthColor = (health) => {
         switch (health) {
             case 'Excelente':
@@ -32,6 +35,36 @@ export default function DepartmentComparison({ departments, summary }) {
         }
     };
 
+    // Fix #19: Ordenamiento interactivo por columna
+    const handleSort = (key) => {
+        setSortConfig(prev =>
+            prev.key === key
+                ? { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+                : { key, direction: 'asc' }
+        );
+    };
+
+    const sortedDepartments = useMemo(() => {
+        if (!departments) return [];
+        return [...departments].sort((a, b) => {
+            const aVal = a[sortConfig.key];
+            const bVal = b[sortConfig.key];
+            const dir = sortConfig.direction === 'asc' ? 1 : -1;
+            if (typeof aVal === 'string') return aVal.localeCompare(bVal) * dir;
+            return (aVal - bVal) * dir;
+        });
+    }, [departments, sortConfig]);
+
+    const SortIcon = ({ colKey }) => {
+        if (sortConfig.key !== colKey) return <FiChevronDown className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />;
+        return sortConfig.direction === 'asc'
+            ? <FiChevronUp className="w-3 h-3 text-indigo-500" />
+            : <FiChevronDown className="w-3 h-3 text-indigo-500" />;
+    };
+
+    const thClass = "group text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer hover:text-indigo-600 select-none transition-colors";
+    const thCenterClass = thClass + " text-center";
+
     return (
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
             {/* Header */}
@@ -42,7 +75,7 @@ export default function DepartmentComparison({ departments, summary }) {
                         Comparativa de Departamentos
                     </h2>
                     <p className="text-sm text-gray-600 mt-1">
-                        Ranking basado en retención, desempeño y asistencia
+                        Ranking basado en retención, desempeño y asistencia · Haz clic en los encabezados para ordenar
                     </p>
                 </div>
                 {summary && (
@@ -80,22 +113,34 @@ export default function DepartmentComparison({ departments, summary }) {
                 <table className="w-full">
                     <thead>
                         <tr className="border-b-2 border-gray-200">
-                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Ranking</th>
-                            <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Departamento</th>
-                            <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Empleados</th>
-                            <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Alto Riesgo</th>
-                            <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Alto Desempeño</th>
-                            <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Score</th>
-                            <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Estado</th>
+                            <th className={thClass} onClick={() => handleSort('ranking')}>
+                                <span className="flex items-center gap-1">Ranking <SortIcon colKey="ranking" /></span>
+                            </th>
+                            <th className={thClass} onClick={() => handleSort('department')}>
+                                <span className="flex items-center gap-1">Departamento <SortIcon colKey="department" /></span>
+                            </th>
+                            <th className={thCenterClass} onClick={() => handleSort('employeeCount')}>
+                                <span className="flex items-center justify-center gap-1">Empleados <SortIcon colKey="employeeCount" /></span>
+                            </th>
+                            <th className={thCenterClass} onClick={() => handleSort('highRiskCount')}>
+                                <span className="flex items-center justify-center gap-1">Alto Riesgo <SortIcon colKey="highRiskCount" /></span>
+                            </th>
+                            <th className={thCenterClass} onClick={() => handleSort('highPerformers')}>
+                                <span className="flex items-center justify-center gap-1">Alto Desempeño <SortIcon colKey="highPerformers" /></span>
+                            </th>
+                            <th className={thCenterClass} onClick={() => handleSort('overallScore')}>
+                                <span className="flex items-center justify-center gap-1">Score <SortIcon colKey="overallScore" /></span>
+                            </th>
+                            <th className={thCenterClass}>Estado</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {departments && departments.map((dept, index) => (
+                        {sortedDepartments.map((dept, index) => (
                             <motion.tr
                                 key={dept.department}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
+                                transition={{ delay: index * 0.04 }}
                                 className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                             >
                                 {/* Ranking */}
@@ -177,6 +222,12 @@ export default function DepartmentComparison({ departments, summary }) {
                         ))}
                     </tbody>
                 </table>
+
+                {sortedDepartments.length === 0 && (
+                    <div className="text-center py-12 text-gray-400">
+                        <p className="text-sm">No hay departamentos para mostrar.</p>
+                    </div>
+                )}
             </div>
 
             {/* Legend */}

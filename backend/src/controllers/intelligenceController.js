@@ -6,6 +6,33 @@ import * as intelligenceService from '../services/intelligenceService.js';
  */
 
 /**
+ * Helper centralizado de respuesta de error
+ * Clasifica los errores por tipo para retornar el HTTP status correcto
+ */
+function handleError(res, error, defaultMessage) {
+    console.error(`[Intelligence] ${defaultMessage}:`, error.message);
+
+    // Errores de negocio conocidos — no son fallos del servidor
+    if (error.message?.includes('no encontrada') || error.message?.includes('not found')) {
+        return res.status(404).json({ success: false, message: error.message });
+    }
+    if (error.message?.includes('no autorizado') || error.message?.includes('unauthorized')) {
+        return res.status(403).json({ success: false, message: error.message });
+    }
+    if (error.message?.includes('inválido') || error.message?.includes('invalid')) {
+        return res.status(400).json({ success: false, message: error.message });
+    }
+
+    // Error interno genuino
+    return res.status(500).json({
+        success: false,
+        message: defaultMessage,
+        // Solo exponer detalles del error en desarrollo
+        ...(process.env.NODE_ENV !== 'production' && { detail: error.message }),
+    });
+}
+
+/**
  * GET /api/intelligence/dashboard
  * Obtiene el dashboard completo con todos los insights
  */
@@ -18,12 +45,7 @@ export async function getDashboard(req, res) {
             data: dashboard,
         });
     } catch (error) {
-        console.error('Error getting intelligence dashboard:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener el dashboard de inteligencia',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener el dashboard de inteligencia');
     }
 }
 
@@ -39,12 +61,7 @@ export async function getRetentionRisk(req, res) {
             data: analysis,
         });
     } catch (error) {
-        console.error('Error getting retention risk analysis:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener análisis de riesgo de rotación',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener análisis de riesgo de rotación');
     }
 }
 
@@ -60,12 +77,7 @@ export async function getPerformanceInsights(req, res) {
             data: insights,
         });
     } catch (error) {
-        console.error('Error getting performance insights:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener insights de desempeño',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener insights de desempeño');
     }
 }
 
@@ -81,12 +93,7 @@ export async function getAttendancePatterns(req, res) {
             data: patterns,
         });
     } catch (error) {
-        console.error('Error getting attendance patterns:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener patrones de asistencia',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener patrones de asistencia');
     }
 }
 
@@ -102,12 +109,7 @@ export async function getPayrollOptimization(req, res) {
             data: optimization,
         });
     } catch (error) {
-        console.error('Error getting payroll optimization:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener optimización de nómina',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener optimización de nómina');
     }
 }
 
@@ -124,12 +126,7 @@ export async function getRecruitmentMatching(req, res) {
             data: matching,
         });
     } catch (error) {
-        console.error('Error getting recruitment matching:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener matching de candidatos',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener matching de candidatos');
     }
 }
 
@@ -145,12 +142,7 @@ export async function getRecommendations(req, res) {
             data: recommendations,
         });
     } catch (error) {
-        console.error('Error getting recommendations:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener recomendaciones',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener recomendaciones');
     }
 }
 
@@ -166,12 +158,7 @@ export async function getDepartmentComparison(req, res) {
             data: comparison,
         });
     } catch (error) {
-        console.error('Error getting department comparison:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener comparativa de departamentos',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener comparativa de departamentos');
     }
 }
 
@@ -187,12 +174,7 @@ export async function getProactiveAlerts(req, res) {
             data: alerts,
         });
     } catch (error) {
-        console.error('Error getting proactive alerts:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener alertas proactivas',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener alertas proactivas');
     }
 }
 
@@ -208,12 +190,7 @@ export async function getPredictiveAnalytics(req, res) {
             data: predictions,
         });
     } catch (error) {
-        console.error('Error getting predictive analytics:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener análisis predictivo',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener análisis predictivo');
     }
 }
 
@@ -231,12 +208,7 @@ export async function getEmployeeScoring(req, res) {
             data: scoring,
         });
     } catch (error) {
-        console.error('Error getting employee scoring:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener scoring de empleados',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener scoring de empleados');
     }
 }
 
@@ -252,12 +224,7 @@ export async function getOrganizationalHealth(req, res) {
             data: health,
         });
     } catch (error) {
-        console.error('Error getting organizational health:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener salud organizacional',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener salud organizacional');
     }
 }
 
@@ -273,11 +240,6 @@ export async function getPatternAnalysis(req, res) {
             data: patterns,
         });
     } catch (error) {
-        console.error('Error getting pattern analysis:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener análisis de patrones',
-            error: error.message,
-        });
+        return handleError(res, error, 'Error al obtener análisis de patrones');
     }
 }

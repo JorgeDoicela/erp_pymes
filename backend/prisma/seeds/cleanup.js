@@ -12,15 +12,16 @@ export async function seedCleanup(prisma) {
     };
 
     const tablesInOrder = [
-        // 1. Incubadora / Emprendimiento (Hijos de Entrepreneurship)
-        'entrepreneurshipMentor',
+        // 1. Incubadora / Emprendimiento
+        'entrepreneurshipDocument',
+        'entrepreneurshipEquity',
+        'entrepreneurshipFundingRound',
+        'entrepreneurshipInterview',
         'entrepreneurshipMember',
-        'startupUpdate',
-        'customerInterview',
-        'targetMarket',
-        'fundingRound',
-        'startupEquity',
-        'startupMilestone',
+        'entrepreneurshipMentor',
+        'entrepreneurshipMilestone',
+        'entrepreneurshipTargetMarket',
+        'entrepreneurshipUpdate',
         'entrepreneurship',
 
         // 2. Contabilidad
@@ -54,7 +55,8 @@ export async function seedCleanup(prisma) {
         'attendance',
         'absenceRequest',
 
-        // 7. Horarios y Registros Core
+        // 7. Horarios, Metas y Registros Core
+        'employeeGoal',
         'employeeSchedule',
         'shift',
         'contract',

@@ -1,20 +1,17 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-
 /**
  * Servicio de API para el Agente Inteligente
+ * Usa el cliente HTTP centralizado (intelligenceClient) que gestiona
+ * automáticamente el token y los errores de autenticación.
  */
+
+import intelligenceClient from '../api/intelligenceClient.js';
 
 /**
  * Obtiene el dashboard completo con todos los insights
  */
 export async function getDashboard(refresh = false) {
-    const token = localStorage.getItem('token');
-    const url = refresh ? `${API_URL}/intelligence/dashboard?refresh=true` : `${API_URL}/intelligence/dashboard`;
-    const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const url = refresh ? '/dashboard?refresh=true' : '/dashboard';
+    const response = await intelligenceClient.get(url);
     return response.data;
 }
 
@@ -22,10 +19,7 @@ export async function getDashboard(refresh = false) {
  * Obtiene análisis de riesgo de rotación
  */
 export async function getRetentionRisk() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/retention-risk`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/retention-risk');
     return response.data;
 }
 
@@ -33,10 +27,7 @@ export async function getRetentionRisk() {
  * Obtiene insights de desempeño
  */
 export async function getPerformanceInsights() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/performance-insights`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/performance-insights');
     return response.data;
 }
 
@@ -44,10 +35,7 @@ export async function getPerformanceInsights() {
  * Obtiene patrones de asistencia
  */
 export async function getAttendancePatterns() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/attendance-patterns`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/attendance-patterns');
     return response.data;
 }
 
@@ -55,10 +43,7 @@ export async function getAttendancePatterns() {
  * Obtiene optimización de nómina
  */
 export async function getPayrollOptimization() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/payroll-optimization`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/payroll-optimization');
     return response.data;
 }
 
@@ -66,10 +51,7 @@ export async function getPayrollOptimization() {
  * Obtiene matching inteligente para una vacante
  */
 export async function getRecruitmentMatching(vacancyId) {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/recruitment-matching/${vacancyId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get(`/recruitment-matching/${vacancyId}`);
     return response.data;
 }
 
@@ -77,10 +59,7 @@ export async function getRecruitmentMatching(vacancyId) {
  * Obtiene recomendaciones priorizadas
  */
 export async function getRecommendations() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/recommendations`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/recommendations');
     return response.data;
 }
 
@@ -88,10 +67,7 @@ export async function getRecommendations() {
  * Obtiene comparativa de departamentos
  */
 export async function getDepartmentComparison() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/departments`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/departments');
     return response.data;
 }
 
@@ -99,10 +75,7 @@ export async function getDepartmentComparison() {
  * Obtiene alertas proactivas del sistema
  */
 export async function getProactiveAlerts() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/alerts`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/alerts');
     return response.data;
 }
 
@@ -110,24 +83,16 @@ export async function getProactiveAlerts() {
  * Obtiene análisis predictivo
  */
 export async function getPredictiveAnalytics() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/predictions`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/predictions');
     return response.data;
 }
 
 /**
- * Obtiene scoring de empleados
+ * Obtiene scoring de empleados (todos o uno específico)
  */
 export async function getEmployeeScoring(employeeId = null) {
-    const token = localStorage.getItem('token');
-    const url = employeeId
-        ? `${API_URL}/intelligence/employee-scoring/${employeeId}`
-        : `${API_URL}/intelligence/employee-scoring`;
-    const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const url = employeeId ? `/employee-scoring/${employeeId}` : '/employee-scoring';
+    const response = await intelligenceClient.get(url);
     return response.data;
 }
 
@@ -135,10 +100,7 @@ export async function getEmployeeScoring(employeeId = null) {
  * Obtiene índice de salud organizacional
  */
 export async function getOrganizationalHealth() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/organizational-health`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/organizational-health');
     return response.data;
 }
 
@@ -146,9 +108,6 @@ export async function getOrganizationalHealth() {
  * Obtiene análisis de patrones y anomalías
  */
 export async function getPatternAnalysis() {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/intelligence/patterns`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await intelligenceClient.get('/patterns');
     return response.data;
 }

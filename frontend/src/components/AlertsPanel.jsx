@@ -1,8 +1,9 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { FiAlertTriangle, FiAlertCircle, FiInfo, FiCheckCircle, FiUsers, FiTrendingDown, FiClock, FiTarget } from 'react-icons/fi';
+import { FiAlertTriangle, FiAlertCircle, FiInfo, FiCheckCircle, FiUsers, FiTrendingDown, FiClock, FiTarget, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
-const AlertsPanel = ({ alerts, summary }) => {
+const AlertsPanel = ({ alerts, summary, onAlertAction }) => {
     if (!alerts || alerts.length === 0) {
         return (
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -15,6 +16,14 @@ const AlertsPanel = ({ alerts, summary }) => {
             </div>
         );
     }
+
+    // Estado de colapso por alerta
+    const [collapsedIds, setCollapsedIds] = useState(new Set());
+    const toggleCollapse = (id) => setCollapsedIds(prev => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+    });
 
     const getSeverityConfig = (severity) => {
         const configs = {
@@ -91,6 +100,7 @@ const AlertsPanel = ({ alerts, summary }) => {
                     const severityConfig = getSeverityConfig(alert.severity);
                     const SeverityIcon = severityConfig.icon;
                     const TypeIcon = getTypeIcon(alert.type);
+                    const isCollapsed = collapsedIds.has(alert.id);
 
                     return (
                         <motion.div
@@ -98,66 +108,83 @@ const AlertsPanel = ({ alerts, summary }) => {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className={`border-l-4 ${severityConfig.borderColor} ${severityConfig.bgColor} p-4 rounded-r-lg`}
+                            className={`border-l-4 ${severityConfig.borderColor} ${severityConfig.bgColor} rounded-r-lg overflow-hidden`}
                         >
-                            <div className="flex items-start gap-3">
-                                <div className={`p-2 rounded-lg ${severityConfig.badgeBg}`}>
+                            {/* Header colapsable */}
+                            <button
+                                onClick={() => toggleCollapse(alert.id)}
+                                className="w-full flex items-start gap-3 p-4 text-left hover:brightness-95 transition-all"
+                            >
+                                <div className={`p-2 rounded-lg ${severityConfig.badgeBg} shrink-0`}>
                                     <SeverityIcon className={`w-5 h-5 ${severityConfig.textColor}`} />
                                 </div>
-
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h4 className={`font-semibold ${severityConfig.textColor}`}>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <h4 className={`font-semibold ${severityConfig.textColor} text-sm leading-snug`}>
                                             {alert.title}
                                         </h4>
-                                        <span className={`px-2 py-0.5 ${severityConfig.badgeBg} ${severityConfig.badgeText} rounded text-xs font-medium`}>
+                                        <span className={`px-2 py-0.5 ${severityConfig.badgeBg} ${severityConfig.badgeText} rounded text-xs font-medium shrink-0`}>
                                             {alert.severity}
                                         </span>
-                                        <TypeIcon className="w-4 h-4 text-gray-400" />
+                                        <TypeIcon className="w-4 h-4 text-gray-400 shrink-0" />
                                     </div>
-
-                                    <p className="text-sm text-gray-700 mb-3">
-                                        {alert.description}
-                                    </p>
-
-                                    {alert.employee && (
-                                        <div className="text-xs text-gray-600 mb-2">
-                                            <span className="font-medium">Empleado:</span> {alert.employee.name}
-                                            {alert.employee.department && ` - ${alert.employee.department}`}
-                                        </div>
-                                    )}
-
-                                    {alert.factors && alert.factors.length > 0 && (
-                                        <div className="mb-3">
-                                            <p className="text-xs font-medium text-gray-600 mb-1">Factores:</p>
-                                            <ul className="text-xs text-gray-600 space-y-0.5">
-                                                {alert.factors.map((factor, i) => (
-                                                    <li key={i} className="flex items-center gap-1">
-                                                        <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                                        {typeof factor === 'object' ? (factor.factor || JSON.stringify(factor)) : factor}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-
-                                    {alert.recommendedActions && alert.recommendedActions.length > 0 && (
-                                        <div className="mt-3 pt-3 border-t border-gray-200">
-                                            <p className="text-xs font-medium text-gray-700 mb-2">Acciones Recomendadas:</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {alert.recommendedActions.map((action, i) => (
-                                                    <button
-                                                        key={i}
-                                                        className="px-3 py-1 bg-white border border-gray-300 rounded-lg text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-                                                    >
-                                                        {action}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <p className="text-xs text-gray-600 mt-0.5 truncate">{alert.description}</p>
                                 </div>
-                            </div>
+                                {isCollapsed ? <FiChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-1" /> : <FiChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-1" />}
+                            </button>
+
+                            {/* Detalle expandible */}
+                            <AnimatePresence initial={false}>
+                                {!isCollapsed && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="px-4 pb-4 pl-[60px]">
+                                            {alert.employee && (
+                                                <div className="text-xs text-gray-600 mb-2">
+                                                    <span className="font-medium">Empleado:</span> {alert.employee.name}
+                                                    {alert.employee.department && ` — ${alert.employee.department}`}
+                                                </div>
+                                            )}
+
+                                            {alert.factors && alert.factors.length > 0 && (
+                                                <div className="mb-3">
+                                                    <p className="text-xs font-medium text-gray-600 mb-1">Factores detectados:</p>
+                                                    <ul className="text-xs text-gray-600 space-y-0.5">
+                                                        {alert.factors.map((factor, i) => (
+                                                            <li key={i} className="flex items-center gap-1.5">
+                                                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full shrink-0" />
+                                                                {typeof factor === 'object' ? (factor.factor || JSON.stringify(factor)) : factor}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {alert.recommendedActions && alert.recommendedActions.length > 0 && (
+                                                <div className="mt-2 pt-3 border-t border-gray-200">
+                                                    <p className="text-xs font-medium text-gray-700 mb-2">Acciones recomendadas:</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {alert.recommendedActions.map((action, i) => (
+                                                            <button
+                                                                key={i}
+                                                                onClick={() => onAlertAction && onAlertAction(alert, action)}
+                                                                className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition-colors font-medium"
+                                                            >
+                                                                {action}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </motion.div>
                     );
                 })}
@@ -191,7 +218,8 @@ AlertsPanel.propTypes = {
         medium: PropTypes.number,
         low: PropTypes.number,
         byType: PropTypes.object
-    })
+    }),
+    onAlertAction: PropTypes.func,
 };
 
 export default AlertsPanel;
