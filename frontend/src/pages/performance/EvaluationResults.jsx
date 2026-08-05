@@ -203,7 +203,7 @@ const EvaluationResults = () => {
                     </div>
 
                     <div className="mt-12 text-center text-slate-400 text-xs border-t border-slate-200 pt-4">
-                        Generado por EMPLIFI - Sistema de Gestión de Recursos Humanos
+                        Generado por Emplifi · Plataforma ERP para PYMEs
                     </div>
                 </div>
             </div>

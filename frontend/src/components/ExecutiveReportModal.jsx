@@ -56,7 +56,7 @@ export default function ExecutiveReportModal({ isOpen, onClose, data }) {
                     {/* Document Header */}
                     <div className="flex justify-between items-start border-b border-slate-200 pb-6">
                         <div>
-                            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">INFORME ESTRATÉGICO DE RECURSOS HUMANOS</h1>
+                            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">INFORME ESTRATÉGICO EMPRESARIAL</h1>
                             <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mt-1">
                                 Sistema de Inteligencia Predictiva & Capital Humano
                             </p>
@@ -140,12 +140,12 @@ export default function ExecutiveReportModal({ isOpen, onClose, data }) {
                     {/* Footer Signature Block */}
                     <div className="pt-8 border-t border-slate-200 flex justify-between items-end text-xs text-slate-500">
                         <div>
-                            <p className="font-bold text-slate-800">Generado por Sistema Inteligente de RRHH</p>
+                            <p className="font-bold text-slate-800">Generado por Emplifi · Plataforma ERP para PYMEs</p>
                             <p>Plataforma de Analítica Predictiva & Gestión de Talento</p>
                         </div>
                         <div className="text-right border-t border-slate-300 pt-2 w-48 text-center">
                             <p className="font-semibold text-slate-800">Firma / Aprobación</p>
-                            <p className="text-[10px] text-slate-400">Dirección de Recursos Humanos</p>
+                            <p className="text-[10px] text-slate-400">Dirección General / Gestión Empresarial</p>
                         </div>
                     </div>
                 </div>

@@ -51,7 +51,7 @@ class ExportService {
 
             // Header
             doc.setFontSize(20);
-            doc.text('EMPLIFI - SISTEMA DE RECURSOS HUMANOS', 105, 20, { align: 'center' });
+            doc.text('EMPLIFI - PLATAFORMA ERP PARA PYMES', 105, 20, { align: 'center' });
             doc.setFontSize(14);
             doc.text('ROL DE PAGOS INDIVIDUAL', 105, 30, { align: 'center' });
 

@@ -3,7 +3,7 @@ import React from 'react';
 export const Footer = () => {
     return (
         <footer className="mt-12 text-gray-600 text-sm text-center w-full pb-6 select-none">
-            &copy; {new Date().getFullYear()} - Sistema de Recursos Humanos - Jorge Doicela
+            &copy; {new Date().getFullYear()} Emplifi · Plataforma ERP para PYMEs
         </footer>
     );
 };

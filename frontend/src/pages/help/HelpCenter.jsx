@@ -420,7 +420,7 @@ const HelpCenter = () => {
             
             <footer className="mt-20 text-center pb-12 border-t border-slate-200 pt-8">
                 <p className="text-slate-400 text-sm font-medium">
-                    © {new Date().getFullYear()} EMPLIFI - Sistema de Recursos Humanos Experimental
+                    © {new Date().getFullYear()} Emplifi · Plataforma ERP para PYMEs
                 </p>
                 <div className="flex justify-center gap-6 mt-4">
                     <a href="#" className="text-slate-400 hover:text-indigo-600 text-xs font-bold transition-colors">POLÍTICA DE PRIVACIDAD</a>

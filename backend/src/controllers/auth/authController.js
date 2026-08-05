@@ -185,20 +185,20 @@ export const forgotPassword = async (req, res) => {
         <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
             <h2 style="color: #1e293b; text-align: center;">Recuperación de Contraseña</h2>
             <p>Hola <strong>${user.firstName}</strong>,</p>
-            <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en <strong>Jorge-Doicela Recursos Humanos</strong>.</p>
+            <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en <strong>Emplifi</strong>.</p>
             <p>Haz clic en el botón de abajo para elegir una nueva contraseña. Este enlace es válido por 1 hora.</p>
             <div style="text-align: center; margin: 30px 0;">
                 <a href="${resetUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Restablecer Contraseña</a>
             </div>
             <p style="color: #64748b; font-size: 14px;">Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
             <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
-            <p style="font-size: 11px; color: #94a3b8; text-align: center;">© ${new Date().getFullYear()} Jorge-Doicela Recursos Humanos. Sistema de Gestión de Talento Humano.</p>
+            <p style="font-size: 11px; color: #94a3b8; text-align: center;">© ${new Date().getFullYear()} Emplifi · Plataforma ERP para PYMEs.</p>
         </div>
         `;
 
         await emailService.sendEmail({
             to: user.email,
-            subject: 'Recuperación de Contraseña - Recursos Humanos',
+            subject: 'Recuperación de Contraseña - Emplifi',
             html
         });
 

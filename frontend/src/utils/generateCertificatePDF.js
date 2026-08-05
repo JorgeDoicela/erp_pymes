@@ -36,7 +36,7 @@ export const generateCertificatePDF = (employeeData) => {
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 116, 139);
-    doc.text("RUC: 1792884910001 • Departamento de Recursos Humanos", 105, 32, null, null, "center");
+    doc.text("RUC: 1792884910001 • Emplifi · Plataforma ERP para PYMEs", 105, 32, null, null, "center");
     doc.text("Quito, Ecuador • Contacto: rrhh@emplifi.com", 105, 37, null, null, "center");
 
     doc.setLineWidth(0.7);

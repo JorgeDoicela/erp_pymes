@@ -59,7 +59,7 @@ const printPayStubPDF = (detail, user) => {
   <div class="header">
     <div>
       <div class="company">EMPLIFI HR</div>
-      <div class="company-sub">Sistema de Recursos Humanos</div>
+      <div class="company-sub">Plataforma ERP para PYMEs</div>
     </div>
     <div class="badge">ROL DE PAGO</div>
   </div>
@@ -115,7 +115,7 @@ const printPayStubPDF = (detail, user) => {
     <div>
       <div class="signature-line"></div>
       <div>Firma Autorizada</div>
-      <div>Recursos Humanos</div>
+      <div>Emplifi</div>
     </div>
   </div>
 </body>

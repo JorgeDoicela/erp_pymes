@@ -1,4 +1,4 @@
-# EMPLIFI — Sistema Integral de Gestión de Recursos Humanos & Analítica
+# EMPLIFI — Plataforma ERP para PYMEs
 
 [![Estado del Proyecto](https://img.shields.io/badge/Estado-Producción_Lista-success.svg)](#)
 [![Stack Backend](https://img.shields.io/badge/Backend-Node.js_v20+_|_Express_v5-blue.svg)](#)

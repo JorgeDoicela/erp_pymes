@@ -289,7 +289,7 @@ export const recruitmentService = {
             </div>
             <div style="padding: 40px; color: #1e293b; line-height: 1.8;">
                 <p style="font-size: 18px;">Hola <strong>${name}</strong>,</p>
-                <p>¡Muchas felicidades! Nos complace informarte que has sido seleccionado(a) para el puesto de <strong>${position}</strong> en <strong>Jorge-Doicela Recursos Humanos</strong>.</p>
+                <p>¡Muchas felicidades! Nos complace informarte que has sido seleccionado(a) para el puesto de <strong>${position}</strong> en <strong>Emplifi</strong>.</p>
                 <p>Tu talento y experiencia destacaron entre los candidatos, y estamos convencidos de que harás una contribución valiosa a nuestra organización.</p>
                 
                 <div style="background-color: #f8fafc; padding: 25px; border-radius: 12px; margin: 30px 0; border: 1px solid #f1f5f9;">
@@ -305,7 +305,7 @@ export const recruitmentService = {
                 </div>
             </div>
             <div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px; border-top: 1px solid #f1f5f9; background-color: #f8fafc;">
-                © ${new Date().getFullYear()} Jorge-Doicela Recursos Humanos. Todos los derechos reservados.<br>
+                © ${new Date().getFullYear()} Emplifi · Plataforma ERP para PYMEs. Todos los derechos reservados.<br>
                 Este es un mensaje automático, por favor no respondas a este correo.
             </div>
         </div>
@@ -330,14 +330,14 @@ export const recruitmentService = {
             </div>
             <div style="padding: 40px; color: #475569; line-height: 1.8;">
                 <p style="font-size: 16px;">Hola <strong>${name}</strong>,</p>
-                <p>Agradecemos sinceramente el tiempo y el interés que demostraste al postularte para la vacante de <strong>${position}</strong> en <strong>Jorge-Doicela Recursos Humanos</strong>.</p>
+                <p>Agradecemos sinceramente el tiempo y el interés que demostraste al postularte para la vacante de <strong>${position}</strong> en <strong>Emplifi</strong>.</p>
                 <p>Tras una cuidadosa revisión de todas las candidaturas, queremos informarte que en esta ocasión hemos decidido avanzar con otros perfiles que se alinean más estrechamente con los requerimientos específicos del puesto en este momento.</p>
                 <p>Tu perfil es muy valioso y mantendremos tu información en nuestra base de datos para futuras oportunidades que se ajusten a tu experiencia profesional.</p>
                 <p style="margin-top: 20px;">Te deseamos mucho éxito en tu búsqueda laboral y en tus futuros proyectos profesionales.</p>
-                <p style="margin-top: 30px; font-weight: 600; color: #1e293b;">Atentamente,<br><span style="color: #2563eb;">Equipo de Selección</span><br>Jorge-Doicela Recursos Humanos</p>
+                <p style="margin-top: 30px; font-weight: 600; color: #1e293b;">Atentamente,<br><span style="color: #2563eb;">Equipo de Selección</span><br>Emplifi</p>
             </div>
             <div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px; border-top: 1px solid #f1f5f9; background-color: #f8fafc;">
-                © ${new Date().getFullYear()} Jorge-Doicela Recursos Humanos. Todos los derechos reservados.
+                © ${new Date().getFullYear()} Emplifi · Plataforma ERP para PYMEs. Todos los derechos reservados.
             </div>
         </div>
         `;

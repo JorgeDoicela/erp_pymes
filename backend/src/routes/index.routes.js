@@ -62,6 +62,9 @@ router.post('/auth/login', rateLimit({ windowMs: 15 * 60 * 1000, maxRequests: 10
 router.post('/auth/forgot-password', rateLimit({ windowMs: 15 * 60 * 1000, maxRequests: 5 }), forgotPassword);
 router.post('/auth/reset-password', resetPassword);
 
+// Rutas de reclutamiento: las públicas no tienen auth, las admin aplican authenticate+authorize internamente
+router.use('/recruitment', recruitmentRoutes);
+
 import { authenticate } from '../middleware/auth.middleware.js';
 import { requireTenant } from '../middleware/tenant.middleware.js';
 
@@ -82,7 +85,8 @@ router.use('/benefits', protectedTenant, benefitsRoutes);
 router.use('/salary-advances', protectedTenant, salaryAdvanceRoutes);
 router.use('/performance', protectedTenant, evaluationRoutes);
 router.use('/goals', protectedTenant, goalsRoutes);
-router.use('/recruitment', protectedTenant, recruitmentRoutes);
+// Las rutas admin de /recruitment ya están cubiertas por el router compartido arriba.
+// El router interno aplica authenticate + authorize en cada ruta admin individualmente.
 router.use('/analytics', protectedTenant, analyticsRoutes);
 router.use('/skills', protectedTenant, skillRoutes);
 router.use('/notifications', protectedTenant, notificationRoutes);
