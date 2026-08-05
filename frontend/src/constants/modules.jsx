@@ -10,6 +10,7 @@ export const adminModules = [
     { title: 'Expedientes Digitales', icon: <FiFolder />, color: 'bg-blue-600', path: '/admin/expedientes' },
     { title: 'Equipos y EPPs', icon: <FiPackage />, color: 'bg-purple-600', path: '/admin/assets' },
     { title: 'Offboarding & Liquidaciones', icon: <FiUserMinus />, color: 'bg-rose-600', path: '/admin/offboarding' },
+    { title: 'Cumplimiento y Alertas', icon: <FiShield />, color: 'bg-emerald-700', path: '/admin/compliance' },
     { title: 'Análisis Predictivo', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
     { title: 'Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
     { title: 'Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },
