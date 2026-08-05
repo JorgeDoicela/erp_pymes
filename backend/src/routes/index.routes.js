@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { login, forgotPassword, resetPassword } from '../controllers/auth/authController.js';
 import employeeRoutes from './employees/employee.routes.js';
+import onboardingOffboardingRoutes from './employees/onboardingOffboarding.routes.js';
 import contractRoutes from './contracts/contract.routes.js';
 import documentRoutes from './documents/document.routes.js';
 import attendanceRoutes from './attendance/attendance.routes.js';
@@ -54,6 +55,7 @@ router.post('/auth/reset-password', resetPassword);
 
 // Rutas de empleados
 router.use('/employees', employeeRoutes);
+router.use('/onboarding-offboarding', onboardingOffboardingRoutes);
 router.use('/contracts', contractRoutes);
 router.use('/documents', documentRoutes);
 router.use('/attendance', attendanceRoutes);

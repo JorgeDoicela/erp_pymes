@@ -63,6 +63,8 @@ model Employee {
   trackingConsent      Boolean                 @default(false)
   trackingConsentDate  DateTime?
   salaryAdvances       SalaryAdvance[]
+  assets               EmployeeAsset[]
+  offboardings         OffboardingProcess[]
   entrepreneurships    Entrepreneurship[]       @relation("ProjectOwner")
   projectMemberships   EntrepreneurshipMember[]
   projectMentorships   EntrepreneurshipMentor[]
@@ -232,17 +234,23 @@ model Contract {
 }
 
 model Document {
-  id           String    @id @default(cuid())
-  type         String
-  employeeId   String
-  createdAt    DateTime  @default(now())
-  documentUrl  String
-  expiryDate   DateTime?
-  mimeType     String?
-  originalName String?
-  employee     Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id                String    @id @default(cuid())
+  type              String
+  documentCategory  String    @default("OTHER") // IDENTIFICATION, BANK_CERTIFICATE, TITLE_DIPLOMA, POLICE_RECORD, CURRICULUM, SAFETY_CERTIFICATE, OTHER
+  status            String    @default("PENDING") // PENDING, VERIFIED, REJECTED
+  verificationNotes String?
+  verifiedBy        String?
+  verifiedAt        DateTime?
+  employeeId        String
+  createdAt         DateTime  @default(now())
+  documentUrl       String
+  expiryDate        DateTime?
+  mimeType          String?
+  originalName      String?
+  employee          Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
+  @@index([status])
   @@map("documents")
 }
 
@@ -867,4 +875,53 @@ model SalaryAdvance {
   @@index([employeeId])
   @@index([status])
   @@map("salary_advances")
+}
+
+model EmployeeAsset {
+  id                 String    @id @default(cuid())
+  employeeId         String
+  name               String    // Ej: Laptop Lenovo ThinkPad T14, Uniforme Talla M, Casco de Seguridad
+  serialNumber       String?
+  category           String    @default("EQUIPMENT") // EQUIPMENT, UNIFORM_PPE, TOOL, ACCESS_CARD
+  deliveryDate       DateTime  @default(now())
+  condition          String    @default("GOOD") // NEW, GOOD, FAIR
+  status             String    @default("DELIVERED") // DELIVERED, RETURNED, LOST_DAMAGED
+  returnDate         DateTime?
+  returnNotes        String?
+  receiptSignatureUrl String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  employee           Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([status])
+  @@map("employee_assets")
+}
+
+model OffboardingProcess {
+  id                    String    @id @default(cuid())
+  employeeId            String
+  exitDate              DateTime
+  causal                String    // VOLUNTARY_RESIGNATION, UNFAIR_DISMISSAL, CONTRACT_END, JUST_CAUSE
+  status                String    @default("IN_PROGRESS") // IN_PROGRESS, PENDING_APPROVAL, COMPLETED
+  checklist             String    // JSON: array de tareas de salida y entrega
+  baseSalary            Float
+  monthsWorked          Float
+  thirteenthProportional Float    @default(0)
+  fourteenthProportional Float    @default(0)
+  vacationDaysOwed      Float     @default(0)
+  vacationAmount        Float     @default(0)
+  desahucioAmount       Float     @default(0)
+  severanceAmount       Float     @default(0)
+  totalSettlement       Float     @default(0)
+  notes                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  employee              Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([status])
+  @@map("offboarding_processes")
 }

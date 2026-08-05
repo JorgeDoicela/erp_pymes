@@ -19,6 +19,9 @@ import ResetPassword from './pages/auth/ResetPassword.jsx';
 const RegisterEmployee = lazy(() => import('./pages/employees/RegisterEmployee.jsx'));
 const EmployeeList = lazy(() => import('./pages/employees/EmployeeList.jsx'));
 const EmployeeProfile = lazy(() => import('./pages/employees/EmployeeProfile.jsx'));
+const EmployeeExpedient = lazy(() => import('./pages/employees/EmployeeExpedient.jsx'));
+const EmployeeAssetsManagement = lazy(() => import('./pages/employees/EmployeeAssetsManagement.jsx'));
+const OffboardingManagement = lazy(() => import('./pages/employees/OffboardingManagement.jsx'));
 
 // Attendance
 const AttendancePage = lazy(() => import('./pages/attendance/AttendancePage.jsx'));
@@ -164,6 +167,10 @@ function App() {
           <Route path="/admin/audit" element={<AuditLogsPage />} />
           <Route path="/admin/contracts/expiring" element={<ExpiringContracts />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/expedientes" element={<EmployeeExpedient />} />
+          <Route path="/admin/expedientes/:employeeId" element={<EmployeeExpedient />} />
+          <Route path="/admin/assets" element={<EmployeeAssetsManagement />} />
+          <Route path="/admin/offboarding" element={<OffboardingManagement />} />
           <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
           <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
           <Route path="/admin/payroll/advances" element={<SalaryAdvancesManagement />} />
@@ -213,6 +220,7 @@ function App() {
         <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
           <Route path="/my-advances" element={<MySalaryAdvances />} />
+          <Route path="/my-expedient" element={<EmployeeExpedient />} />
           <Route path="/performance/results/:id" element={<EvaluationResults />} />
           <Route path="/performance/goals" element={<MyGoals />} />
           <Route path="/performance/my-evaluations" element={<MyEvaluations />} />
