@@ -319,10 +319,14 @@ const ApplicationDetails = () => {
                             {app.resumeUrl && (
                                 <button
                                     onClick={() => {
-                                        const token = localStorage.getItem('token');
-                                        const resumePath = app.resumeUrl.startsWith('/') ? app.resumeUrl : `/${app.resumeUrl}`;
-                                        const finalUrl = `${resumePath}?token=${token}`;
-                                        window.open(finalUrl, '_blank');
+                                        if (app.resumeUrl.startsWith('http://') || app.resumeUrl.startsWith('https://')) {
+                                            window.open(app.resumeUrl, '_blank');
+                                        } else {
+                                            const token = localStorage.getItem('token');
+                                            const resumePath = app.resumeUrl.startsWith('/') ? app.resumeUrl : `/${app.resumeUrl}`;
+                                            const finalUrl = `${resumePath}?token=${token}`;
+                                            window.open(finalUrl, '_blank');
+                                        }
                                     }}
                                     className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold transition-all shadow-xl shadow-blue-100 active:scale-95"
                                 >
