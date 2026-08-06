@@ -347,11 +347,20 @@ const ApplicationDetails = () => {
                                         if (app.resumeUrl.startsWith('http://') || app.resumeUrl.startsWith('https://')) {
                                             window.open(app.resumeUrl, '_blank');
                                         } else {
-                                            const token = localStorage.getItem('token');
+                                            const token = localStorage.getItem('token') || '';
                                             let cleanPath = app.resumeUrl;
                                             if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+                                            if (cleanPath.startsWith('resumes/')) cleanPath = `uploads/${cleanPath}`;
                                             if (!cleanPath.startsWith('api/')) cleanPath = `api/${cleanPath}`;
-                                            const finalUrl = `/${cleanPath}?token=${token}`;
+
+                                            const apiBase = import.meta.env.VITE_API_URL || '/api';
+                                            let finalUrl;
+                                            if (apiBase.startsWith('http')) {
+                                                const baseUrl = apiBase.replace(/\/api\/?$/, '');
+                                                finalUrl = `${baseUrl}/${cleanPath}?token=${encodeURIComponent(token)}`;
+                                            } else {
+                                                finalUrl = `/${cleanPath}?token=${encodeURIComponent(token)}`;
+                                            }
                                             window.open(finalUrl, '_blank');
                                         }
                                     }}

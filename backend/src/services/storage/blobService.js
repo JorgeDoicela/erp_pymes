@@ -1,38 +1,16 @@
-import { put, del } from '@vercel/blob';
 import fs from 'fs';
 import path from 'path';
 import { STORAGE_CONFIG } from '../../config/storage.config.js';
 
 /**
- * Servicio de almacenamiento híbrido (Vercel Blob / Disco Local)
- * Permite persistir PDFs/documentos en la nube en Vercel manteniendo fallback local.
+ * Servicio de almacenamiento local en servidor (Disco Local / Volumen Docker EC2)
  */
 export const uploadFileToStorage = async (file, folder = 'resumes') => {
     if (!file) return null;
 
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const extension = path.extname(file.originalname || '.pdf');
-    const filename = `${folder}/${file.fieldname || 'file'}-${uniqueSuffix}${extension}`;
 
-    // 1. Si el Token de Vercel Blob está presente, subir a la nube Vercel Blob
-    if (token) {
-        try {
-            const blob = await put(filename, file.buffer || file.path, {
-                access: 'public',
-                contentType: file.mimetype || 'application/pdf',
-                token: token
-            });
-            console.log(`[Storage] Archivo subido exitosamente a Vercel Blob: ${blob.url}`);
-            return blob.url;
-        } catch (error) {
-            console.error('[Storage Error] Fallo al subir a Vercel Blob, recurriendo a almacenamiento local:', error.message);
-        }
-    } else if (process.env.VERCEL) {
-        console.warn('[Storage Warning] Ejecutando en Vercel pero falta BLOB_READ_WRITE_TOKEN. Los archivos guardados en /tmp serán efímeros.');
-    }
-
-    // 2. Fallback: Almacenamiento local en disco (para desarrollo local)
     const targetDir = folder === 'resumes' 
         ? STORAGE_CONFIG.PATHS.RESUMES 
         : (folder === 'documents' ? STORAGE_CONFIG.PATHS.DOCUMENTS : STORAGE_CONFIG.PATHS.EVIDENCE);
@@ -51,28 +29,32 @@ export const uploadFileToStorage = async (file, folder = 'resumes') => {
     }
 
     const relativePath = `uploads/${folder}/${localFilename}`;
-    console.log(`[Storage] Archivo guardado localmente en: ${relativePath}`);
+    console.log(`[Storage] Archivo guardado localmente en servidor: ${relativePath}`);
     return relativePath;
 };
 
 /**
- * Elimina un archivo del almacenamiento (Vercel Blob o Disco Local)
+ * Elimina un archivo del almacenamiento local del servidor
  */
 export const deleteFileFromStorage = async (fileUrl) => {
     if (!fileUrl) return;
 
     try {
-        const token = process.env.BLOB_READ_WRITE_TOKEN;
-
-        if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
-            if (token) {
-                await del(fileUrl, { token });
-                console.log(`[Storage] Archivo eliminado de Vercel Blob: ${fileUrl}`);
-            }
-            return;
+        let cleanPath = fileUrl;
+        if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
+            const urlObj = new URL(cleanPath);
+            cleanPath = urlObj.pathname.replace(/^\/api\//, '');
         }
 
-        const absolutePath = path.resolve(fileUrl);
+        if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+
+        const filename = path.basename(cleanPath);
+        let targetDir = STORAGE_CONFIG.PATHS.RESUMES;
+        if (cleanPath.includes('documents')) targetDir = STORAGE_CONFIG.PATHS.DOCUMENTS;
+        if (cleanPath.includes('evidence')) targetDir = STORAGE_CONFIG.PATHS.EVIDENCE;
+
+        const absolutePath = path.join(targetDir, filename);
+
         if (fs.existsSync(absolutePath)) {
             fs.unlinkSync(absolutePath);
             console.log(`[Storage] Archivo local eliminado: ${absolutePath}`);
@@ -81,3 +63,4 @@ export const deleteFileFromStorage = async (fileUrl) => {
         console.error('[Storage Error] Error al eliminar archivo:', error.message);
     }
 };
+

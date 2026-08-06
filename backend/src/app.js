@@ -122,9 +122,7 @@ app.use(['/uploads', '/api/uploads'], authenticate, protectStaticFiles, (req, re
         } else {
             return res.status(404).json({
                 message: 'Archivo no encontrado',
-                detail: process.env.VERCEL 
-                    ? 'En Vercel los archivos locales son temporales. Configura BLOB_READ_WRITE_TOKEN en las variables de entorno de Vercel para guardar los CVs en Vercel Blob.' 
-                    : `El archivo no existe en la ruta: ${fullPath}`
+                detail: `El archivo no existe en el servidor: ${fullPath}`
             });
         }
     }

@@ -1,4 +1,27 @@
 import path from 'path';
+import fs from 'fs';
+
+/**
+ * Resuelve la ruta absoluta de almacenamiento según el entorno (Vercel, Docker /app, Local backend)
+ */
+const resolveUploadPath = (folder) => {
+    if (process.env.VERCEL) {
+        return `/tmp/uploads/${folder}`;
+    }
+    const cwd = process.cwd();
+    // 1. Si cwd ya contiene carpeta uploads (ej: en Docker /app/uploads o local backend/uploads)
+    if (fs.existsSync(path.resolve(cwd, 'uploads'))) {
+        return path.resolve(cwd, 'uploads', folder);
+    }
+    // 2. Si cwd está en la raíz del monorepo y contiene backend/uploads
+    if (fs.existsSync(path.resolve(cwd, 'backend/uploads'))) {
+        return path.resolve(cwd, 'backend/uploads', folder);
+    }
+    // Fallback según cwd
+    return cwd.endsWith('backend') 
+        ? path.resolve(cwd, 'uploads', folder) 
+        : path.resolve(cwd, 'backend/uploads', folder);
+};
 
 /**
  * RNF-16: Configuración de Almacenamiento
@@ -13,8 +36,9 @@ export const STORAGE_CONFIG = {
 
     // Rutas de almacenamiento
     PATHS: {
-        DOCUMENTS: process.env.VERCEL ? '/tmp/uploads/documents' : path.resolve(process.cwd(), process.cwd().endsWith('backend') ? 'uploads/documents' : 'backend/uploads/documents'),
-        RESUMES: process.env.VERCEL ? '/tmp/uploads/resumes' : path.resolve(process.cwd(), process.cwd().endsWith('backend') ? 'uploads/resumes' : 'backend/uploads/resumes'),
-        EVIDENCE: process.env.VERCEL ? '/tmp/uploads/evidence' : path.resolve(process.cwd(), process.cwd().endsWith('backend') ? 'uploads/evidence' : 'backend/uploads/evidence')
+        DOCUMENTS: resolveUploadPath('documents'),
+        RESUMES: resolveUploadPath('resumes'),
+        EVIDENCE: resolveUploadPath('evidence')
     }
 };
+
