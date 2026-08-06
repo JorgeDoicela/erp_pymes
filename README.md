@@ -134,6 +134,35 @@ Una vez ejecutados los seeders, se activarán las siguientes credenciales predet
 
 ---
 
+## Pruebas Automatizadas & CI/CD Enterprise Pipeline
+
+El proyecto implementa un estándar de pruebas automatizadas con **Vitest**, **Supertest** y **React Testing Library**, integrado en GitHub Actions ([deploy.yml](file:///.github/workflows/deploy.yml)).
+
+### Ejecución de Pruebas Localmente
+
+#### Backend (API Express)
+```bash
+cd backend
+npm test
+```
+* **Pruebas integradas:** Verificación de endpoints (`health.test.js`), middleware de seguridad Helmet, respuestas de error y validación de payload (`security.test.js`).
+
+#### Frontend (React / Vite)
+```bash
+cd frontend
+npm test
+```
+* **Pruebas integradas:** Renderizado de componentes UI, ciclo de vida de React, eventos y simulación de usuario (`ErrorState.test.jsx`).
+
+### Flujo CI/CD en GitHub Actions
+Cada `push` a las ramas `main` o `master` desencadena la validación automática:
+1. **Filtro Inteligente de Rutas:** Evalúa cambios de forma aislada para backend y frontend.
+2. **Backend QA:** Ejecuta `npm install` -> `npm test` -> Auditoría de seguridad `npm audit`.
+3. **Frontend QA:** Ejecuta `npm install` -> Linter `npm run lint` -> `npm test` -> Compilación Vite `npm run build`.
+4. **Construcción y Despliegue:** Generación de imágenes Docker publicadas en GitHub Container Registry (GHCR) y despliegue automatizado en AWS EC2.
+
+---
+
 ## Estructura del Proyecto
 
 ```

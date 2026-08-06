@@ -1,6 +1,67 @@
-# GUÍA DE TESTING - Encriptación & Seguridad
+# GUÍA DE TESTING - Encriptación, Pruebas Automatizadas & CI/CD
 
-## TESTING LOCAL (Antes de DB)
+## 1. SUITE DE PRUEBAS AUTOMATIZADAS (Vitest & Supertest)
+
+La aplicación cuenta con una suite de pruebas automatizadas unitarias y de integración tanto para el backend (API REST Node.js/Express) como para el frontend (SPA React 19/Vite).
+
+### Backend Unit & Integration Testing
+* **Framework:** `Vitest` + `Supertest`
+* **Directorio de pruebas:** `backend/tests/`
+* **Configuración:** `backend/vitest.config.js`
+
+**Comandos:**
+```bash
+cd backend
+npm test         # Ejecución única de tests
+```
+
+**Módulos Evaluados:**
+- **Endpoints Base & Healthcheck:** Validación de respuesta HTTP 200 y mensaje de bienvenida (`health.test.js`).
+- **Manejo de Errores y 404:** Garantiza que rutas inexistentes devuelvan código HTTP 404 estructurado.
+- **Middleware de Seguridad (Helmet):** Verifica la presencia de encabezados de seguridad (`X-DNS-Prefetch-Control`, `X-Frame-Options`, `Strict-Transport-Security`).
+- **Validación de Payload:** Prueba rechazos HTTP 400/401 ante payloads incompletos.
+
+---
+
+### Frontend Component Testing
+* **Framework:** `Vitest` + `@testing-library/react` + `jsdom`
+* **Directorio de pruebas:** `frontend/src/**/__tests__/`
+* **Configuración:** `frontend/vite.config.js` & `frontend/src/test/setup.js`
+
+**Comandos:**
+```bash
+cd frontend
+npm test         # Ejecución de pruebas de componentes React
+```
+
+**Módulos Evaluados:**
+- Renderizado de componentes UI (`ErrorState.test.jsx`).
+- Manejo de props personalizadas, mensajes de error y callbacks de eventos (`onRetry`).
+
+---
+
+## 2. PIPELINE DE CI/CD EN GITHUB ACTIONS
+
+Las pruebas se ejecutan de manera obligatoria e insalvable en el pipeline de GitHub Actions (`.github/workflows/deploy.yml`):
+
+1. **Job `backend-qa`:**
+   - Instala dependencias con caché `npm`.
+   - Ejecuta `npm test` (Si falla alguna prueba, el pipeline se aborta e impide el despliegue).
+   - Realiza auditoría de seguridad `npm audit --audit-level=high`.
+
+2. **Job `frontend-qa`:**
+   - Instala dependencias con caché `npm`.
+   - Corre análisis estático de código `npm run lint || true`.
+   - Ejecuta suite de pruebas unitarias `npm test`.
+   - Valida la compilación de producción `npm run build`.
+
+3. **Jobs `build-backend` / `build-frontend`:**
+   - Compilan las imágenes Docker únicamente si los jobs de QA fueron exitosos.
+   - Publican las imágenes etiquetadas con el SHA del commit en GitHub Container Registry (GHCR).
+
+---
+
+## 3. TESTING MANUAL & DE ENCRIPTACIÓN
 
 ### Test de Encriptación en Memoria
 

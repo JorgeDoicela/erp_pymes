@@ -102,7 +102,7 @@ jobs:
   build-backend:
     name: Build & Push API Image (GHCR)
     needs: [detect-changes, backend-qa]
-    if: always() && needs.detect-changes.outputs.backend == 'true' && (needs.backend-qa.result == 'success' || needs.backend-qa.result == 'skipped')
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -147,7 +147,7 @@ jobs:
   build-frontend:
     name: Build & Push Web Image (GHCR)
     needs: [detect-changes, frontend-qa]
-    if: always() && needs.detect-changes.outputs.frontend == 'true' && (needs.frontend-qa.result == 'success' || needs.frontend-qa.result == 'skipped')
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     permissions:
       contents: read
