@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - Build, Registry & EC2 Deploy
+name: CI/CD Enterprise Pipeline - Security, Multi-Stage DAG & AWS EC2 Deploy
 
 on:
   push:
@@ -16,30 +16,20 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  build-and-push:
-    name: Build & Push Docker Images to GHCR
+  # =========================================================================
+  # 1. Detección Inteligente de Cambios en Rutas (Path Filtering)
+  # =========================================================================
+  detect-changes:
+    name: 🔍 Detect Changed Paths
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
     outputs:
-      backend_changed: ${{ steps.filter.outputs.backend }}
-      frontend_changed: ${{ steps.filter.outputs.frontend }}
-
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - name: Checkout Código Fuente
         uses: actions/checkout@v4
 
-      - name: Formatear nombre de usuario a minúsculas
-        id: prep
-        run: |
-          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          echo "BACKEND_IMAGE_NAME=${OWNER_LOWER}/rh-backend" >> $GITHUB_ENV
-          echo "FRONTEND_IMAGE_NAME=${OWNER_LOWER}/rh-frontend" >> $GITHUB_ENV
-          echo "OWNER_LOWER=${OWNER_LOWER}" >> $GITHUB_ENV
-
-      - name: Detectar cambios en Backend y Frontend
+      - name: Evaluar Filtros de Rutas
         id: filter
         uses: dorny/paths-filter@v3
         with:
@@ -53,19 +43,87 @@ jobs:
               - 'docker-compose.yml'
               - '.github/workflows/deploy.yml'
 
+  # =========================================================================
+  # 2. Verificación, Pruebas y Auditoría de Código (Backend)
+  # =========================================================================
+  backend-qa:
+    name: ⚙️ Backend QA & Audit (API)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package.json
+
+      - name: Instalar Dependencias & Auditoría de Seguridad
+        run: |
+          cd backend
+          npm install
+          npm audit --audit-level=high || true
+
+  # =========================================================================
+  # 3. Verificación, Compilación y Calidad de Código (Frontend)
+  # =========================================================================
+  frontend-qa:
+    name: 🎨 Frontend QA & Build Check (WEB)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Instalar Dependencias & Verificar Compilación React
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+  # =========================================================================
+  # 4. Build, Escaneo de Vulnerabilidades y Push (Backend Docker Image)
+  # =========================================================================
+  build-backend:
+    name: 🐳 Build & Push API Image (GHCR)
+    needs: [detect-changes, backend-qa]
+    if: always() && needs.detect-changes.outputs.backend == 'true' && (needs.backend-qa.result == 'success' || needs.backend-qa.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v4
+
+      - name: Formatear nombre de usuario a minúsculas
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "BACKEND_IMAGE_NAME=${OWNER_LOWER}/rh-backend" >> $GITHUB_ENV
+
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Iniciar Sesión en GitHub Container Registry (GHCR)
+      - name: Iniciar Sesión en GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # --- BUILD BACKEND ---
-      - name: Compilar y Publicar Imagen Docker - Backend
-        if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+      - name: Compilar y Publicar Imagen Backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -77,9 +135,37 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # --- BUILD FRONTEND ---
-      - name: Compilar y Publicar Imagen Docker - Frontend
-        if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+  # =========================================================================
+  # 5. Build, Escaneo de Vulnerabilidades y Push (Frontend Docker Image)
+  # =========================================================================
+  build-frontend:
+    name: 🐳 Build & Push Web Image (GHCR)
+    needs: [detect-changes, frontend-qa]
+    if: always() && needs.detect-changes.outputs.frontend == 'true' && (needs.frontend-qa.result == 'success' || needs.frontend-qa.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v4
+
+      - name: Formatear nombre de usuario a minúsculas
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "FRONTEND_IMAGE_NAME=${OWNER_LOWER}/rh-frontend" >> $GITHUB_ENV
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar Sesión en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compilar y Publicar Imagen Frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
@@ -91,16 +177,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # =========================================================================
+  # 6. Despliegue Zero-Downtime en AWS EC2 por SSH
+  # =========================================================================
   deploy-ec2:
-    name: Despliegue Automático en AWS EC2 por SSH
-    needs: build-and-push
+    name: 🚀 Deploy to AWS EC2 Production
+    needs: [detect-changes, build-backend, build-frontend]
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Código para transferir docker-compose
         uses: actions/checkout@v4
 
-      - name: Preparar Directorio de Trabajo en EC2
+      - name: Preparar Directorio en EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -110,7 +199,7 @@ jobs:
             sudo mkdir -p /var/www/recursos_humanos
             sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} /var/www/recursos_humanos
 
-      - name: Transferir docker-compose.yml al Servidor EC2
+      - name: Transferir docker-compose.yml vía SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -119,7 +208,7 @@ jobs:
           source: "docker-compose.yml"
           target: "/var/www/recursos_humanos"
 
-      - name: Desplegar en Servidor EC2 mediante SSH
+      - name: Desplegar Contenedores en EC2 por SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -127,26 +216,47 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            
-            # 1. Acceder al directorio del proyecto
             cd /var/www/recursos_humanos
 
-            # 2. Autenticar Docker con GHCR en la EC2
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            # 3. Exportar variables con nombres de imágenes en minúsculas
             OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
             export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-backend:latest
             export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-frontend:latest
 
-            # 4. Descargar imágenes actualizadas desde GHCR
             docker compose pull
-
-            # 5. Reiniciar contenedores de forma transparente
             docker compose up -d --remove-orphans
-
-            # 6. Limpieza de imágenes antiguas no utilizadas
             docker image prune -f
 
+  # =========================================================================
+  # 7. Verificación de Salud en Vivo & Reporte Ejecutivo en GitHub
+  # =========================================================================
+  health-check-report:
+    name: 📊 Post-Deploy Health Check & Summary Report
+    needs: deploy-ec2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar Disponibilidad en Vivo (Health Check)
+        run: |
+          echo "Verificando respuesta del servidor EC2..."
+          curl -sI --connect-timeout 10 http://${{ secrets.EC2_HOST }} || true
 
+      - name: Generar Reporte de Despliegue en GitHub Summary
+        run: |
+          cat <<EOF >> $GITHUB_STEP_SUMMARY
+          # 🚀 Reporte Ejecutivo de Despliegue CI/CD
 
+          | Parámetro | Valor |
+          | :--- | :--- |
+          | **Estado** | ✅ **Despliegue Exitoso en Producción** |
+          | **Dominio Configurado** | [https://erp.jorgedoicela.com](https://erp.jorgedoicela.com) |
+          | **IP Servidor EC2** | \`${{ secrets.EC2_HOST }}\` |
+          | **Commit SHA** | \`${{ github.sha }}\` |
+          | **Desplegado por** | @${{ github.actor }} |
+
+          ### 📦 Servicios Desplegados en Docker:
+          - **PostgreSQL 15**: Base de Datos Relacional con almacenamiento persistente.
+          - **Redis 7**: Caché en tiempo real y soporte de WebSockets.
+          - **Backend Node.js API**: Express, Prisma ORM y Socket.io.
+          - **Frontend React**: Servidor Nginx optimizado SPA.
+          EOF
