@@ -38,6 +38,18 @@
             "destination": "/frontend/assets/$1"
         },
         {
+            "source": "/sw.js",
+            "destination": "/frontend/sw.js"
+        },
+        {
+            "source": "/manifest.webmanifest",
+            "destination": "/frontend/manifest.webmanifest"
+        },
+        {
+            "source": "/(.*\\.(?:png|jpg|jpeg|ico|svg|json|webmanifest|js|css|woff|woff2))",
+            "destination": "/frontend/$1"
+        },
+        {
             "source": "/(.*)",
             "destination": "/frontend/index.html"
         }
