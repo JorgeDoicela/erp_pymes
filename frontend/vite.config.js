@@ -74,6 +74,12 @@ export default defineConfig({
         watch: {
             usePolling: true, // Sometimes needed on Windows for faster detection
         }
+    },
+    test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: './src/test/setup.js',
+        include: ['src/**/*.test.{js,jsx}'],
     }
 })
 
