@@ -50,3 +50,26 @@ export const authorize = (roles = []) => {
         next();
     };
 };
+
+export const optionalAuth = (req, res, next) => {
+    try {
+        let token = null;
+        const authHeader = req.headers.authorization;
+        
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        } else if (req.query.token) {
+            token = req.query.token;
+        }
+
+        if (token) {
+            const secret = process.env.JWT_SECRET || 'secret_key_change_me';
+            const decoded = jwt.verify(token, secret);
+            req.user = decoded;
+        }
+        next();
+    } catch (error) {
+        // Token inválido o expirado en petición opcional, continua sin req.user
+        next();
+    }
+};

@@ -64,7 +64,18 @@ const BiometricSettings = () => {
             }
         } catch (err) {
             console.error('Biometric Reg Error:', err);
-            const msg = err.response?.data?.message || err.message || 'Error al configurar biometría.';
+            let msg = err.response?.data?.message || err.message || 'Error al configurar biometría.';
+            
+            if (err.name === 'NotAllowedError') {
+                msg = 'La operación fue cancelada por el usuario o expiró el tiempo de espera del lector biométrico/PIN.';
+            } else if (err.name === 'InvalidStateError') {
+                msg = 'Este dispositivo o credencial biométrica ya se encuentra registrado.';
+            } else if (err.name === 'NotSupportedError') {
+                msg = 'Este navegador o dispositivo no soporta autenticación biométrica WebAuthn.';
+            } else if (err.name === 'SecurityError') {
+                msg = 'Error de seguridad originado por dominio. Asegúrese de ingresar mediante HTTPS o localhost.';
+            }
+
             setMessage({ type: 'error', text: msg });
         } finally {
             setLoading(false);

@@ -67,6 +67,9 @@ api.interceptors.response.use(
                 setTimeout(() => {
                     window.location.href = '/login';
                 }, 1600);
+            } else if (status === 401 && data?.code === 'AUTH_INVALID_TOKEN') {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
             }
         }
         return Promise.reject(error);
