@@ -4,9 +4,6 @@ import { Toaster } from 'react-hot-toast';
 import Loading from './components/Loading.jsx';
 import MaintenanceBanner from './components/common/MaintenanceBanner.jsx';
 import MainLayout from './components/layout/MainLayout.jsx';
-import PWAInstallPrompt from './components/pwa/PWAInstallPrompt.jsx';
-import OfflineIndicator from './components/pwa/OfflineIndicator.jsx';
-import PWAReloadPrompt from './components/pwa/PWAReloadPrompt.jsx';
 
 // Lazy Load Pages
 // Eager Load Critical Pages
@@ -155,9 +152,6 @@ function App() {
     <Suspense fallback={<Loading />}>
       <Toaster position="top-right" />
       <MaintenanceBanner />
-      <OfflineIndicator />
-      <PWAInstallPrompt />
-      <PWAReloadPrompt />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register-company" element={<RegisterTenant />} />
