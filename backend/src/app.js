@@ -108,14 +108,16 @@ app.use((req, res, next) => {
 import { authenticate } from './middleware/auth.middleware.js';
 import { protectStaticFiles } from './middleware/security.middleware.js';
 
-// Servir archivos estáticos de forma protegida o mediante controlador
-app.use('/uploads', authenticate, protectStaticFiles, (req, res, next) => {
-    // Si es un CV, usamos el controlador para asegurar acceso en Vercel/Local
+// Servir archivos estáticos de forma protegida o mediante controlador (soporta /uploads y /api/uploads)
+app.use(['/uploads', '/api/uploads'], authenticate, protectStaticFiles, (req, res, next) => {
+    // Si es un CV, usamos el controlador para asegurar acceso en Vercel/Local/EC2
     if (req.path.includes('/resumes/')) {
         const filename = path.basename(req.path);
         const fullPath = path.join(STORAGE_CONFIG.PATHS.RESUMES, filename);
         
         if (fs.existsSync(fullPath)) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
             return res.sendFile(fullPath);
         } else {
             return res.status(404).json({

@@ -348,8 +348,10 @@ const ApplicationDetails = () => {
                                             window.open(app.resumeUrl, '_blank');
                                         } else {
                                             const token = localStorage.getItem('token');
-                                            const resumePath = app.resumeUrl.startsWith('/') ? app.resumeUrl : `/${app.resumeUrl}`;
-                                            const finalUrl = `${resumePath}?token=${token}`;
+                                            let cleanPath = app.resumeUrl;
+                                            if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+                                            if (!cleanPath.startsWith('api/')) cleanPath = `api/${cleanPath}`;
+                                            const finalUrl = `/${cleanPath}?token=${token}`;
                                             window.open(finalUrl, '_blank');
                                         }
                                     }}
