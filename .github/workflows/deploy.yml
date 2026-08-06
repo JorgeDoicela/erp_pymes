@@ -100,6 +100,25 @@ jobs:
       - name: Checkout Código para transferir docker-compose
         uses: actions/checkout@v4
 
+      - name: Preparar Directorio de Trabajo en EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo mkdir -p /var/www/recursos_humanos
+            sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} /var/www/recursos_humanos
+
+      - name: Transferir docker-compose.yml al Servidor EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/var/www/recursos_humanos"
+
       - name: Desplegar en Servidor EC2 mediante SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -109,9 +128,7 @@ jobs:
           script: |
             set -e
             
-            # 1. Crear directorio del proyecto si no existe
-            sudo mkdir -p /var/www/recursos_humanos
-            sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} /var/www/recursos_humanos
+            # 1. Acceder al directorio del proyecto
             cd /var/www/recursos_humanos
 
             # 2. Autenticar Docker con GHCR en la EC2
@@ -130,4 +147,6 @@ jobs:
 
             # 6. Limpieza de imágenes antiguas no utilizadas
             docker image prune -f
+
+
 
