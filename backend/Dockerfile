@@ -20,5 +20,5 @@ RUN npx prisma generate
 
 EXPOSE 5000
 
-# Script de inicio: ejecuta migraciones pendientes y arranca el servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
+# Script de inicio: sincroniza el esquema Prisma con la BD y arranca el servidor
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node src/server.js"]
