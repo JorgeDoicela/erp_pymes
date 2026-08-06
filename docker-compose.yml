@@ -53,6 +53,8 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       JWT_SECRET: ${JWT_SECRET:-TuClaveSecretaUltraSegura}
       CLIENT_URL: ${CLIENT_URL:-https://erp.jorgedoicela.com}
+      FRONTEND_URL: ${FRONTEND_URL:-https://erp.jorgedoicela.com}
+      ORIGIN: ${ORIGIN:-https://erp.jorgedoicela.com}
     depends_on:
       db:
         condition: service_healthy

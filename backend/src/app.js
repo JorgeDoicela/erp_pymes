@@ -42,14 +42,17 @@ const corsOptions = {
             'http://localhost:5173',  // Vite dev server
             'http://localhost:3000',  // Alternativa
             'https://recursoshumanos-eight.vercel.app', // Vercel Frontend
-            process.env.FRONTEND_URL, // Producción
-            process.env.ORIGIN,       // Soporte dinámico para ORIGIN
+            'https://erp.jorgedoicela.com', // Produccion EC2 HTTPS
+            'http://erp.jorgedoicela.com',  // Produccion EC2 HTTP
+            process.env.FRONTEND_URL, // Produccion
+            process.env.CLIENT_URL,   // Soporte CLIENT_URL
+            process.env.ORIGIN,       // Soporte dinamico para ORIGIN
         ].filter(Boolean); // Eliminar undefined
 
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        if (allowedOrigins.indexOf(origin) !== -1 || (origin && origin.endsWith('jorgedoicela.com'))) {
             callback(null, true);
         } else {
-            console.error(`[CORS] Blogged origin: ${origin}`);
+            console.error(`[CORS] Blocked origin: ${origin}`);
             callback(new Error(`No permitido por CORS: ${origin}`));
         }
     },
