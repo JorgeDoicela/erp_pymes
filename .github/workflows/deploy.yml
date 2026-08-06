@@ -1,0 +1,125 @@
+name: CI/CD Pipeline - Build, Registry & EC2 Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE_NAME: ${{ github.repository_owner }}/rh-backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository_owner }}/rh-frontend
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Images to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      backend_changed: ${{ steps.filter.outputs.backend }}
+      frontend_changed: ${{ steps.filter.outputs.frontend }}
+
+    steps:
+      - name: Checkout Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Detectar cambios en Backend y Frontend
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'docker-compose.yml'
+              - '.github/workflows/deploy.yml'
+            frontend:
+              - 'frontend/**'
+              - 'docker-compose.yml'
+              - '.github/workflows/deploy.yml'
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar Sesión en GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- BUILD BACKEND ---
+      - name: Compilar y Publicar Imagen Docker - Backend
+        if: steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- BUILD FRONTEND ---
+      - name: Compilar y Publicar Imagen Docker - Frontend
+        if: steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-ec2:
+    name: Despliegue Automático en AWS EC2 por SSH
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Código para transferir docker-compose
+        uses: actions/checkout@v4
+
+      - name: Desplegar en Servidor EC2 mediante SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            # 1. Crear directorio del proyecto si no existe
+            sudo mkdir -p /var/www/recursos_humanos
+            sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} /var/www/recursos_humanos
+            cd /var/www/recursos_humanos
+
+            # 2. Autenticar Docker con GHCR en la EC2
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            # 3. Exportar variables con nombres de imágenes de GHCR
+            export BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
+            export FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+
+            # 4. Descargar imágenes actualizadas desde GHCR
+            docker compose pull
+
+            # 5. Reiniciar contenedores de forma transparente
+            docker compose up -d --remove-orphans
+
+            # 6. Limpieza de imágenes antiguas no utilizadas
+            docker image prune -f

@@ -3,15 +3,53 @@ version: '3.8'
 services:
   db:
     image: postgres:15-alpine
-    container_name: emplifi_db
+    container_name: rh_postgres
+    restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: db_recursos_humanos
+      POSTGRES_USER: ${POSTGRES_USER:-admin_rh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-TuPasswordSeguro123!}
+      POSTGRES_DB: ${POSTGRES_DB:-db_recursos_humanos}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rh_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-rh-backend:latest}
+    container_name: rh_backend
+    restart: always
+    environment:
+      PORT: 5000
+      DATABASE_URL: ${DATABASE_URL:-postgresql://admin_rh:TuPasswordSeguro123!@db:5432/db_recursos_humanos?schema=public}
+      JWT_SECRET: ${JWT_SECRET:-TuClaveSecretaUltraSegura}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost}
+    depends_on:
+      - db
+    networks:
+      - rh_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ${FRONTEND_IMAGE:-rh-frontend:latest}
+    container_name: rh_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - rh_network
 
 volumes:
   postgres_data:
+
+networks:
+  rh_network:
+    driver: bridge
