@@ -39,7 +39,7 @@ services:
     networks:
       - rh_network
 
-  # Servidor Backend API Express + Prisma + WebSockets
+  # Servidor Backend API Express + Prisma + WebSockets + Almacenamiento Local Persistente
   backend:
     build:
       context: ./backend
@@ -55,6 +55,13 @@ services:
       CLIENT_URL: ${CLIENT_URL:-https://erp.jorgedoicela.com}
       FRONTEND_URL: ${FRONTEND_URL:-https://erp.jorgedoicela.com}
       ORIGIN: ${ORIGIN:-https://erp.jorgedoicela.com}
+      RP_ID: ${RP_ID:-erp.jorgedoicela.com}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-your-32-byte-hex-key-here}
+      SEED_SECRET: ${SEED_SECRET:-your-seed-secret-here}
+      EMAIL_USER: ${EMAIL_USER:-your-email@example.com}
+      EMAIL_PASS: ${EMAIL_PASS:-your-app-password}
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -84,6 +91,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  uploads_data:
 
 networks:
   rh_network:
