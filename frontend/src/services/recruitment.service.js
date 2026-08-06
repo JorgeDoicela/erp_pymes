@@ -22,6 +22,11 @@ export const updateVacancyStatus = async (id, status) => {
     return response.data;
 };
 
+export const deleteVacancy = async (id) => {
+    const response = await api.delete(`/recruitment/${id}`);
+    return response.data;
+};
+
 // Admin Applications
 export const getApplicationsByVacancy = async (id) => {
     const response = await api.get(`/recruitment/${id}/applications`);

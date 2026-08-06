@@ -1,4 +1,4 @@
-import { put } from '@vercel/blob';
+import { put, del } from '@vercel/blob';
 import fs from 'fs';
 import path from 'path';
 import { STORAGE_CONFIG } from '../../config/storage.config.js';
@@ -53,4 +53,31 @@ export const uploadFileToStorage = async (file, folder = 'resumes') => {
     const relativePath = `uploads/${folder}/${localFilename}`;
     console.log(`[Storage] Archivo guardado localmente en: ${relativePath}`);
     return relativePath;
+};
+
+/**
+ * Elimina un archivo del almacenamiento (Vercel Blob o Disco Local)
+ */
+export const deleteFileFromStorage = async (fileUrl) => {
+    if (!fileUrl) return;
+
+    try {
+        const token = process.env.BLOB_READ_WRITE_TOKEN;
+
+        if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+            if (token) {
+                await del(fileUrl, { token });
+                console.log(`[Storage] Archivo eliminado de Vercel Blob: ${fileUrl}`);
+            }
+            return;
+        }
+
+        const absolutePath = path.resolve(fileUrl);
+        if (fs.existsSync(absolutePath)) {
+            fs.unlinkSync(absolutePath);
+            console.log(`[Storage] Archivo local eliminado: ${absolutePath}`);
+        }
+    } catch (error) {
+        console.error('[Storage Error] Error al eliminar archivo:', error.message);
+    }
 };

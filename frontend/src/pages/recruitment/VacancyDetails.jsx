@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getApplicationsByVacancy } from '../../services/recruitment.service';
-import { FiArrowLeft, FiUser, FiMail, FiPhone, FiCalendar, FiFileText } from 'react-icons/fi';
+import { getApplicationsByVacancy, deleteVacancy } from '../../services/recruitment.service';
+import { FiArrowLeft, FiUser, FiMail, FiPhone, FiCalendar, FiFileText, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 const VacancyDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         loadApplications();
@@ -21,6 +24,21 @@ const VacancyDetails = () => {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            setDeleting(true);
+            await deleteVacancy(id);
+            toast.success("Vacante y todos sus archivos asociados eliminados correctamente");
+            navigate('/recruitment');
+        } catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || "Error al eliminar la vacante");
+        } finally {
+            setDeleting(false);
+            setShowDeleteModal(false);
         }
     };
 
@@ -50,11 +68,20 @@ const VacancyDetails = () => {
     return (
         <div className="space-y-6">
             <div className="max-w-7xl mx-auto">
-                <button onClick={() => navigate('/recruitment')} className="flex items-center text-slate-500 hover:text-slate-800 mb-6 transition-colors text-sm md:text-base">
-                    <FiArrowLeft className="mr-2" /> Volver al tablero
-                </button>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <button onClick={() => navigate('/recruitment')} className="flex items-center text-slate-500 hover:text-slate-800 transition-colors text-sm md:text-base font-medium">
+                        <FiArrowLeft className="mr-2" /> Volver al tablero
+                    </button>
 
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-8 tracking-tight">Candidatos para la Vacante</h1>
+                    <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold flex items-center transition-all border border-red-200 shadow-sm active:scale-95 text-sm"
+                    >
+                        <FiTrash2 className="mr-2" size={18} /> Eliminar Vacante
+                    </button>
+                </div>
+
+                <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-8 tracking-tight">Candidatos para la Vacante</h1>
 
                 {loading ? (
                     <div className="text-center py-12">
@@ -66,7 +93,7 @@ const VacancyDetails = () => {
                         {applications.length === 0 && (
                             <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
                                 <FiUser className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                                <p className="text-slate-500 text-lg">No hay postulaciones aún para esta vacante.</p>
+                                <p className="text-slate-500 text-lg font-medium">No hay postulaciones aún para esta vacante.</p>
                             </div>
                         )}
 
@@ -94,6 +121,41 @@ const VacancyDetails = () => {
                     </div>
                 )}
             </div>
+
+            {/* Modal Confirmar Eliminación */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">
+                        <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                            <FiAlertTriangle size={28} />
+                        </div>
+
+                        <div className="text-center space-y-2">
+                            <h3 className="text-xl font-black text-slate-800">¿Eliminar esta vacante?</h3>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                Esta acción es irreversible. Se eliminará la vacante de empleo, las <strong className="text-slate-800">{applications.length} postulaciones</strong> recibidas y <strong className="text-slate-800">todos los archivos de Hojas de Vida (PDF)</strong> subidos por los postulantes.
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                disabled={deleting}
+                                onClick={() => setShowDeleteModal(false)}
+                                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-sm"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                disabled={deleting}
+                                onClick={handleDelete}
+                                className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-red-100 disabled:opacity-50"
+                            >
+                                {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -3,6 +3,7 @@ import prisma from '../../database/db.js';
 import bcrypt from 'bcryptjs';
 import emailService from '../notifications/emailService.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
+import { deleteFileFromStorage } from '../storage/blobService.js';
 
 export const recruitmentService = {
     async createVacancy(data, userId, tenantId = null) {
@@ -63,6 +64,39 @@ export const recruitmentService = {
         }).catch(err => console.error('Audit Log Error:', err));
 
         return vacancy;
+    },
+
+    async deleteVacancy(id, tenantId = null) {
+        const vacancy = await recruitmentRepository.getVacancyById(id);
+        if (!vacancy) {
+            throw new Error("Vacante no encontrada");
+        }
+
+        if (tenantId && vacancy.tenantId && vacancy.tenantId !== tenantId) {
+            throw new Error("No tienes permisos para eliminar esta vacante");
+        }
+
+        // 1. Obtener postulaciones para borrar sus archivos subidos (CVs en PDF)
+        const applications = await recruitmentRepository.getApplications({ vacancyId: id });
+        for (const app of applications) {
+            if (app.resumeUrl) {
+                await deleteFileFromStorage(app.resumeUrl).catch(err => console.error("Error eliminando CV:", err));
+            }
+        }
+
+        // 2. Eliminar vacante (la cascada de Prisma eliminará registros vinculados)
+        await recruitmentRepository.deleteVacancy(id);
+
+        // 3. Registrar auditoría
+        auditRepository.createLog({
+            entity: 'JobVacancy',
+            entityId: id,
+            action: 'DELETE',
+            performedBy: 'Admin',
+            details: `Vacante '${vacancy.title}' eliminada junto con ${applications.length} postulaciones y sus archivos`
+        }).catch(err => console.error('Audit Log Error:', err));
+
+        return { success: true, message: `Vacante eliminada exitosamente.` };
     },
 
     async applyToVacancy(id, applicantData, resumeUrl) {

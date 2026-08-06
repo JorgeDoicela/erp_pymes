@@ -35,6 +35,23 @@ button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
+  color: #0f172a;
+}
+
+input, select, textarea {
+  color: #0f172a;
+  background-color: #ffffff;
+}
+
+/* Ensure browser autofill maintains dark text on white inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Fix focus ring outline artifacts */

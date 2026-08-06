@@ -116,33 +116,33 @@ const JobApplication = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                                <input required type="text" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Nombre</label>
+                                <input required type="text" className="w-full bg-white text-slate-900 border-slate-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium placeholder:text-slate-400"
+                                    value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} placeholder="Ej: Juan" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                                <input required type="text" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Apellido</label>
+                                <input required type="text" className="w-full bg-white text-slate-900 border-slate-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium placeholder:text-slate-400"
+                                    value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} placeholder="Ej: Pérez" />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input required type="email" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                                <input required type="email" className="w-full bg-white text-slate-900 border-slate-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium placeholder:text-slate-400"
+                                    value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="juan.perez@ejemplo.com" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                                <input required type="tel" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Teléfono</label>
+                                <input required type="tel" className="w-full bg-white text-slate-900 border-slate-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium placeholder:text-slate-400"
+                                    value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="0991234567" />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">CV / Hoja de Vida (PDF)</label>
-                            <label className="flex items-center justify-center px-6 py-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">CV / Hoja de Vida (PDF)</label>
+                            <label className="flex items-center justify-center px-6 py-4 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
                                 <input required type="file" accept="application/pdf" className="hidden" onChange={e => {
                                     const file = e.target.files[0];
                                     if (file && file.size > 4 * 1024 * 1024) {
@@ -154,17 +154,17 @@ const JobApplication = () => {
                                     setResume(file);
                                 }} />
                                 <div className="text-center">
-                                    <FiUpload className="mx-auto text-gray-400 text-3xl mb-2" />
-                                    <span className="text-gray-600 block">{resume ? resume.name : "Haz clic para subir tu PDF"}</span>
+                                    <FiUpload className="mx-auto text-slate-400 text-3xl mb-2" />
+                                    <span className="text-slate-600 block font-medium">{resume ? resume.name : "Haz clic para subir tu PDF"}</span>
                                 </div>
                             </label>
                             <p className="text-[10px] text-slate-400 mt-1">Límite máximo: 4MB</p>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Carta de Presentación (Opcional)</label>
-                            <textarea rows="4" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
-                                value={formData.coverLetter} onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}></textarea>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Carta de Presentación (Opcional)</label>
+                            <textarea rows="4" className="w-full bg-white text-slate-900 border-slate-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium placeholder:text-slate-400"
+                                value={formData.coverLetter} onChange={e => setFormData({ ...formData, coverLetter: e.target.value })} placeholder="Cuéntanos brevemente sobre tu experiencia e interés en la vacante..."></textarea>
                         </div>
 
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">

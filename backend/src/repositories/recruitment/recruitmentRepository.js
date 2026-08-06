@@ -28,6 +28,12 @@ export const recruitmentRepository = {
         });
     },
 
+    async deleteVacancy(id) {
+        return prisma.jobVacancy.delete({
+            where: { id }
+        });
+    },
+
     // Applications
     async createApplication(data) {
         return prisma.jobApplication.create({ data });

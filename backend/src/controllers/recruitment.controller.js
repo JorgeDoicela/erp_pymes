@@ -53,6 +53,18 @@ export const updateVacancyStatus = async (req, res) => {
     }
 };
 
+export const deleteVacancy = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const result = await recruitmentService.deleteVacancy(id, tenantId);
+        res.json(result);
+    } catch (error) {
+        console.error("Error deleting vacancy:", error);
+        res.status(error.message?.includes("No tienes permisos") ? 403 : 500).json({ message: error.message || "Error al eliminar la vacante" });
+    }
+};
+
 export const applyToVacancy = async (req, res) => {
     try {
         const { id } = req.params;

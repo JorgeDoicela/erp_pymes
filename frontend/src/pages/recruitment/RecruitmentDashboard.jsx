@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getVacancies, updateVacancyStatus } from '../../services/recruitment.service';
-import { FiPlus, FiBriefcase, FiUsers, FiGlobe, FiEye, FiCheckCircle, FiSlash, FiCopy, FiInfo, FiSearch, FiFilter } from 'react-icons/fi';
+import { getVacancies, updateVacancyStatus, deleteVacancy } from '../../services/recruitment.service';
+import { FiPlus, FiBriefcase, FiUsers, FiGlobe, FiEye, FiCheckCircle, FiSlash, FiCopy, FiInfo, FiSearch, FiFilter, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
@@ -9,6 +9,8 @@ const RecruitmentDashboard = () => {
     const [vacancies, setVacancies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [vacancyToDelete, setVacancyToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -36,6 +38,22 @@ const RecruitmentDashboard = () => {
             loadVacancies();
         } catch (error) {
             toast?.error("Error al actualizar estado");
+        }
+    };
+
+    const handleDeleteVacancy = async () => {
+        if (!vacancyToDelete) return;
+        try {
+            setDeleting(true);
+            await deleteVacancy(vacancyToDelete.id);
+            toast?.success("Vacante y archivos asociados eliminados correctamente");
+            setVacancyToDelete(null);
+            loadVacancies();
+        } catch (error) {
+            console.error(error);
+            toast?.error(error.response?.data?.message || "Error al eliminar la vacante");
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -147,6 +165,13 @@ const RecruitmentDashboard = () => {
                                                 >
                                                     {v.status === 'OPEN' ? <FiSlash size={18} /> : <FiCheckCircle size={18} />}
                                                 </button>
+                                                <button
+                                                    onClick={() => setVacancyToDelete(v)}
+                                                    className="p-2.5 bg-white border border-slate-200 hover:bg-red-50 rounded-xl text-slate-400 hover:text-red-600 transition-all shadow-sm"
+                                                    title="Eliminar vacante"
+                                                >
+                                                    <FiTrash2 size={18} />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -163,6 +188,41 @@ const RecruitmentDashboard = () => {
                     </div>
                 )}
             </div>
+
+            {/* Modal Confirmar Eliminación desde Dashboard */}
+            {vacancyToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">
+                        <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                            <FiAlertTriangle size={28} />
+                        </div>
+
+                        <div className="text-center space-y-2">
+                            <h3 className="text-xl font-black text-slate-800">¿Eliminar la vacante "{vacancyToDelete.title}"?</h3>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                Esta acción es irreversible. Se borrará la oferta laboral, todas sus postulaciones y <strong className="text-slate-800">los archivos PDF de las hojas de vida</strong> subidas.
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                disabled={deleting}
+                                onClick={() => setVacancyToDelete(null)}
+                                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-sm"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                disabled={deleting}
+                                onClick={handleDeleteVacancy}
+                                className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-red-100 disabled:opacity-50"
+                            >
+                                {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
