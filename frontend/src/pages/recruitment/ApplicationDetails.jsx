@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getApplicationDetails, updateApplicationStatus, addApplicationNote, scheduleInterview, evaluateCandidate, hireCandidate } from '../../services/recruitment.service';
-import { FiArrowLeft, FiUser, FiMail, FiPhone, FiDownload, FiMessageSquare, FiSend, FiCalendar, FiMapPin, FiStar, FiCheckCircle, FiXCircle, FiBriefcase, FiFileText, FiInfo, FiClock } from 'react-icons/fi';
+import { getApplicationDetails, updateApplicationStatus, deleteApplication, addApplicationNote, scheduleInterview, evaluateCandidate, hireCandidate } from '../../services/recruitment.service';
+import { FiArrowLeft, FiUser, FiMail, FiPhone, FiDownload, FiMessageSquare, FiSend, FiCalendar, FiMapPin, FiStar, FiCheckCircle, FiXCircle, FiBriefcase, FiFileText, FiInfo, FiClock, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 import { toast } from 'react-hot-toast'; // Assuming toast is available, if not fallback to alert
 
 const ApplicationDetails = () => {
@@ -16,6 +16,23 @@ const ApplicationDetails = () => {
     const [showModal, setShowModal] = useState(false); // Interview
     const [showEvaModal, setShowEvaModal] = useState(false); // Evaluation
     const [showHireModal, setShowHireModal] = useState(false); // Hire
+    const [showDeleteModal, setShowDeleteModal] = useState(false); // Delete candidate
+    const [deletingCandidate, setDeletingCandidate] = useState(false);
+
+    const handleDeleteCandidate = async () => {
+        try {
+            setDeletingCandidate(true);
+            await deleteApplication(id);
+            toast?.success("Candidato y sus archivos eliminados correctamente");
+            navigate(app?.vacancyId ? `/recruitment/${app.vacancyId}` : '/recruitment');
+        } catch (error) {
+            console.error(error);
+            toast?.error(error.response?.data?.message || "Error al eliminar el candidato");
+        } finally {
+            setDeletingCandidate(false);
+            setShowDeleteModal(false);
+        }
+    };
 
     const [interviewData, setInterviewData] = useState({ date: '', time: '', type: 'VIRTUAL', location: '', notes: '' });
     const [evaData, setEvaData] = useState({
@@ -283,6 +300,14 @@ const ApplicationDetails = () => {
                                             <FiCheckCircle className="mr-2" /> Contratar Ahora
                                         </button>
                                     )}
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeleteModal(true)}
+                                        className="flex-1 sm:flex-none px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold flex items-center justify-center border border-red-200 transition-all text-sm active:scale-95"
+                                    >
+                                        <FiTrash2 className="mr-2" /> Eliminar Candidato
+                                    </button>
                                 </div>
                             </div>
 
@@ -725,6 +750,42 @@ const ApplicationDetails = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Confirmación de Eliminación de Candidato */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center text-red-600 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-3 shrink-0">
+                                <FiAlertTriangle size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800">¿Eliminar candidato?</h3>
+                                <p className="text-xs text-slate-500">Esta acción no se puede deshacer</p>
+                            </div>
+                        </div>
+                        <p className="text-slate-600 text-sm mb-6">
+                            Se eliminará permanentemente la postulación de <strong>{app?.firstName} {app?.lastName}</strong> y todos sus archivos de currículum (PDF) adjuntos.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                disabled={deletingCandidate}
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleDeleteCandidate}
+                                disabled={deletingCandidate}
+                                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all flex items-center shadow-lg shadow-red-200 disabled:opacity-50"
+                            >
+                                {deletingCandidate ? "Eliminando..." : "Eliminar Definitivamente"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

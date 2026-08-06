@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getApplicationsByVacancy, deleteVacancy } from '../../services/recruitment.service';
+import { getApplicationsByVacancy, deleteVacancy, deleteApplication } from '../../services/recruitment.service';
 import { FiArrowLeft, FiUser, FiMail, FiPhone, FiCalendar, FiFileText, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,10 @@ const VacancyDetails = () => {
     const [loading, setLoading] = useState(true);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleting, setDeleting] = useState(false);
+
+    // Modal state for deleting individual candidate
+    const [appToDelete, setAppToDelete] = useState(null);
+    const [deletingCandidate, setDeletingCandidate] = useState(false);
 
     useEffect(() => {
         loadApplications();
@@ -24,6 +28,22 @@ const VacancyDetails = () => {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteCandidate = async () => {
+        if (!appToDelete) return;
+        try {
+            setDeletingCandidate(true);
+            await deleteApplication(appToDelete.id);
+            toast.success("Candidato y sus archivos eliminados correctamente");
+            setApplications(prev => prev.filter(a => a.id !== appToDelete.id));
+        } catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || "Error al eliminar el candidato");
+        } finally {
+            setDeletingCandidate(false);
+            setAppToDelete(null);
         }
     };
 
@@ -113,8 +133,21 @@ const VacancyDetails = () => {
                                         <span className="flex items-center"><FiCalendar className="mr-2 text-slate-400 shrink-0" /> {new Date(app.createdAt).toLocaleDateString()}</span>
                                     </div>
                                 </div>
-                                <div className="hidden sm:block text-slate-300 group-hover:text-blue-500 transition-colors">
-                                    <FiFileText className="text-2xl" />
+                                <div className="flex items-center gap-3">
+                                    <div className="hidden sm:block text-slate-300 group-hover:text-blue-500 transition-colors">
+                                        <FiFileText className="text-2xl" />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        title="Eliminar Candidato"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setAppToDelete(app);
+                                        }}
+                                        className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                    >
+                                        <FiTrash2 size={18} />
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -122,7 +155,42 @@ const VacancyDetails = () => {
                 )}
             </div>
 
-            {/* Modal Confirmar Eliminación */}
+            {/* Modal Confirmar Eliminación de Candidato Individual */}
+            {appToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">
+                        <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                            <FiAlertTriangle size={28} />
+                        </div>
+
+                        <div className="text-center space-y-2">
+                            <h3 className="text-xl font-black text-slate-800">¿Eliminar candidato?</h3>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                Se eliminará la postulación de <strong className="text-slate-800">{appToDelete.firstName} {appToDelete.lastName}</strong> y todos sus archivos de currículum (PDF) adjuntos.
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                disabled={deletingCandidate}
+                                onClick={() => setAppToDelete(null)}
+                                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-sm"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                disabled={deletingCandidate}
+                                onClick={handleDeleteCandidate}
+                                className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-red-100 disabled:opacity-50"
+                            >
+                                {deletingCandidate ? 'Eliminando...' : 'Sí, Eliminar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Confirmar Eliminación de Vacante Completa */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">

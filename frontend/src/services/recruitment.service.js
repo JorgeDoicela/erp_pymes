@@ -43,6 +43,11 @@ export const updateApplicationStatus = async (id, status, sendEmail) => {
     return response.data;
 };
 
+export const deleteApplication = async (id) => {
+    const response = await api.delete(`/recruitment/applications/${id}`);
+    return response.data;
+};
+
 export const addApplicationNote = async (id, content) => {
     const response = await api.post(`/recruitment/applications/${id}/notes`, { content });
     return response.data;

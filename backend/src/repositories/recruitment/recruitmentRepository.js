@@ -61,6 +61,12 @@ export const recruitmentRepository = {
         });
     },
 
+    async deleteApplication(id) {
+        return prisma.jobApplication.delete({
+            where: { id }
+        });
+    },
+
     // Notes
     async createNote(data) {
         return prisma.applicationNote.create({ data });

@@ -168,6 +168,29 @@ export const recruitmentService = {
         return application;
     },
 
+    async deleteCandidate(id) {
+        const application = await recruitmentRepository.getApplicationById(id);
+        if (!application) {
+            throw new Error("Postulación no encontrada");
+        }
+
+        if (application.resumeUrl) {
+            await deleteFileFromStorage(application.resumeUrl).catch(err => console.error("Error eliminando CV del candidato:", err));
+        }
+
+        await recruitmentRepository.deleteApplication(id);
+
+        auditRepository.createLog({
+            entity: 'JobApplication',
+            entityId: id,
+            action: 'DELETE',
+            performedBy: 'HR/Admin',
+            details: `Candidato ${application.firstName} ${application.lastName} (${application.email}) eliminado junto con sus archivos.`
+        }).catch(err => console.error('Audit Log Error:', err));
+
+        return { success: true, message: "Candidato eliminado exitosamente" };
+    },
+
     async addNote(applicationId, content, userId, userName) {
         return recruitmentRepository.createNote({
             applicationId,

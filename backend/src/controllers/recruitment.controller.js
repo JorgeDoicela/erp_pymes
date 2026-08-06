@@ -111,6 +111,17 @@ export const updateApplicationStatus = async (req, res) => {
     }
 };
 
+export const deleteApplication = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await recruitmentService.deleteCandidate(id);
+        res.json(result);
+    } catch (error) {
+        console.error("Error deleting candidate application:", error);
+        res.status(500).json({ message: error.message || "Error al eliminar la postulación del candidato" });
+    }
+};
+
 export const addApplicationNote = async (req, res) => {
     try {
         const { id } = req.params;
