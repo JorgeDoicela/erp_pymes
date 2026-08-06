@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target_sha:
-        description: 'Commit SHA o Tag de la versión previa a desplegar (ej: 7f8a9b1)'
+        description: 'Commit SHA (completo de 40 caracteres o corto de 7 caracteres, ej: f82caf1... o latest)'
         required: true
         type: string
 

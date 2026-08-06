@@ -108,10 +108,12 @@ jobs:
       - name: Checkout Codigo
         uses: actions/checkout@v4
 
-      - name: Formatear nombre de usuario a minusculas
+      - name: Formatear nombre de usuario y obtener SHA corto
+        id: vars
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "BACKEND_IMAGE_NAME=${OWNER_LOWER}/rh-backend" >> $GITHUB_ENV
+          echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -132,6 +134,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -150,10 +153,12 @@ jobs:
       - name: Checkout Codigo
         uses: actions/checkout@v4
 
-      - name: Formatear nombre de usuario a minusculas
+      - name: Formatear nombre de usuario y obtener SHA corto
+        id: vars
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "FRONTEND_IMAGE_NAME=${OWNER_LOWER}/rh-frontend" >> $GITHUB_ENV
+          echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -174,6 +179,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
