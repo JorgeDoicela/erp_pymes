@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { adminModules, employeeModules, accountingModules, entrepreneurModules } from '../../constants/modules';
+import { getSectionsByRole } from '../../constants/modules';
 import * as intelligenceService from '../../services/intelligenceService';
 
 function AdminDashboard({ user, onLogout }) {
@@ -25,16 +25,7 @@ function AdminDashboard({ user, onLogout }) {
         return 'Buenas noches';
     };
 
-    const getModules = () => {
-        switch (user?.role) {
-            case 'admin': return adminModules;
-            case 'accounting': return accountingModules;
-            case 'entrepreneur': return entrepreneurModules;
-            default: return employeeModules;
-        }
-    };
-
-    const modules = getModules();
+    const sections = getSectionsByRole(user);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -220,29 +211,37 @@ function AdminDashboard({ user, onLogout }) {
                         </div>
                     </section>
 
-                    <motion.section variants={itemVariants}>
-                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-5 flex items-center gap-2">
-                            <FiBriefcase className="text-slate-400" />
-                            Aplicaciones y Módulos
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                            {modules.filter(m => m.path !== '/admin' && m.path !== '/empleado').map((mod, idx) => (
-                                <motion.button
-                                    key={idx}
-                                    variants={itemVariants}
-                                    whileHover={{ y: -5, shadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
-                                    onClick={() => navigate(mod.path)}
-                                    className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all duration-200 group h-40 text-center relative overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                    <div className={`p-3 rounded-xl bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors mb-3 relative z-10 duration-200`}>
-                                        <span className="text-2xl">{mod.icon}</span>
+                    <div className="space-y-8">
+                        {sections.map((section, sIdx) => {
+                            const filteredModules = section.modules.filter(m => m.path !== '/admin' && m.path !== '/empleado' && m.path !== '/superadmin/dashboard');
+                            if (filteredModules.length === 0) return null;
+                            return (
+                                <motion.section key={sIdx} variants={itemVariants}>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                        <FiBriefcase className="text-slate-400" />
+                                        {section.title}
+                                    </h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                                        {filteredModules.map((mod, idx) => (
+                                            <motion.button
+                                                key={idx}
+                                                variants={itemVariants}
+                                                whileHover={{ y: -5, shadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
+                                                onClick={() => navigate(mod.path)}
+                                                className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all duration-200 group h-40 text-center relative overflow-hidden"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                <div className="p-3 rounded-xl bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors mb-3 relative z-10 duration-200">
+                                                    <span className="text-2xl">{mod.icon}</span>
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 relative z-10">{mod.title}</span>
+                                            </motion.button>
+                                        ))}
                                     </div>
-                                    <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 relative z-10">{mod.title}</span>
-                                </motion.button>
-                            ))}
-                        </div>
-                    </motion.section>
+                                </motion.section>
+                            );
+                        })}
+                    </div>
                 </div>
             </motion.div>
         </>

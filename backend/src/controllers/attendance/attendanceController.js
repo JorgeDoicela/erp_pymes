@@ -13,7 +13,14 @@ const markAttendance = async (req, res, next) => {
 
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const start = Date.now();
-        const result = await attendanceService.registerAttendance(employeeId, type, location, ip);
+
+        const isSupervisorOverride = !!(req.user && (
+            req.user.role === 'admin' ||
+            req.user.role === 'superadmin' ||
+            (req.user.id && req.user.id !== employeeId)
+        ));
+
+        const result = await attendanceService.registerAttendance(employeeId, type, location, ip, isSupervisorOverride);
         const duration = Date.now() - start;
 
         res.status(200).json({

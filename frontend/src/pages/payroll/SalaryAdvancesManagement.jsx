@@ -145,32 +145,32 @@ const SalaryAdvancesManagement = () => {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-5 rounded-2xl shadow-sm relative overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-amber-500 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
-                        <p className="text-amber-100 text-xs font-bold uppercase tracking-wider">Solicitudes por Revisar</p>
-                        <h3 className="text-3xl font-black mt-2">{pendingCount}</h3>
-                        <p className="text-xs text-amber-100/90 mt-1">Requieren decisión del administrador</p>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Solicitudes por Revisar</p>
+                        <h3 className="text-3xl font-extrabold mt-2 text-slate-800">{pendingCount}</h3>
+                        <p className="text-xs text-slate-400 mt-1">Requieren decisión del administrador</p>
                     </div>
-                    <ClockIcon className="w-24 h-24 absolute -right-4 -bottom-4 text-white/10" />
+                    <ClockIcon className="w-20 h-20 absolute -right-2 -bottom-2 text-slate-100/60" />
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-blue-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
-                        <p className="text-blue-100 text-xs font-bold uppercase tracking-wider">Monto Total Saldo Activo</p>
-                        <h3 className="text-3xl font-black mt-2">${totalApprovedAmount.toFixed(2)}</h3>
-                        <p className="text-xs text-blue-100/90 mt-1">Pendiente de cobrar en nómina</p>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Monto Total Saldo Activo</p>
+                        <h3 className="text-3xl font-extrabold mt-2 text-slate-800">${totalApprovedAmount.toFixed(2)}</h3>
+                        <p className="text-xs text-slate-400 mt-1">Pendiente de cobrar en nómina</p>
                     </div>
-                    <BanknotesIcon className="w-24 h-24 absolute -right-4 -bottom-4 text-white/10" />
+                    <BanknotesIcon className="w-20 h-20 absolute -right-2 -bottom-2 text-slate-100/60" />
                 </div>
 
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-emerald-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
-                        <p className="text-emerald-100 text-xs font-bold uppercase tracking-wider">Deducción Estimada Mes</p>
-                        <h3 className="text-3xl font-black mt-2">${monthlyDeductionsTotal.toFixed(2)}</h3>
-                        <p className="text-xs text-emerald-100/90 mt-1">Se descontará en el próximo rol de pago</p>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Deducción Estimada Mes</p>
+                        <h3 className="text-3xl font-extrabold mt-2 text-slate-800">${monthlyDeductionsTotal.toFixed(2)}</h3>
+                        <p className="text-xs text-slate-400 mt-1">Se descontará en el próximo rol de pago</p>
                     </div>
-                    <ShieldCheckIcon className="w-24 h-24 absolute -right-4 -bottom-4 text-white/10" />
+                    <ShieldCheckIcon className="w-20 h-20 absolute -right-2 -bottom-2 text-slate-100/60" />
                 </div>
             </div>
 

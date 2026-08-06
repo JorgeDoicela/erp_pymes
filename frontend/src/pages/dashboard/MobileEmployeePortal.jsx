@@ -125,22 +125,22 @@ const MobileEmployeePortal = ({ user }) => {
     return (
         <div className="min-h-screen bg-slate-100 flex flex-col pb-24 font-sans text-slate-800">
             {/* Mobile Header Banner */}
-            <div className="bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900 text-white p-6 rounded-b-3xl shadow-lg relative overflow-hidden">
+            <div className="bg-white text-slate-900 p-6 border-b border-slate-200/80 shadow-xs relative">
                 <div className="relative z-10 flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center font-extrabold text-lg text-white border border-white/20 shadow-inner">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center font-bold text-base text-slate-700 border border-slate-200/80">
                             {user?.firstName?.[0] || 'E'}{user?.lastName?.[0] || 'P'}
                         </div>
                         <div>
-                            <p className="text-xs text-blue-200 font-medium">Portal de Autoservicio</p>
-                            <h2 className="text-lg font-black tracking-tight">{user?.firstName} {user?.lastName}</h2>
-                            <p className="text-[11px] text-blue-200/80">{user?.position || 'Personal Operativo'} • {user?.department || 'General'}</p>
+                            <p className="text-xs text-slate-500 font-medium">Portal de Autoservicio</p>
+                            <h2 className="text-base font-bold tracking-tight text-slate-900">{user?.firstName} {user?.lastName}</h2>
+                            <p className="text-[11px] text-slate-400">{user?.position || 'Personal Operativo'} • {user?.department || 'General'}</p>
                         </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider border backdrop-blur-md ${
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider border ${
                         clockStatus === 'IN' 
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 animate-pulse' 
-                            : 'bg-white/10 text-blue-200 border-white/20'
+                            ? 'bg-slate-900 text-white border-slate-900' 
+                            : 'bg-slate-100 text-slate-600 border-slate-200/80'
                     }`}>
                         {clockStatus === 'IN' ? '● EN TURNO' : '○ FUERA DE TURNO'}
                     </span>
@@ -157,13 +157,13 @@ const MobileEmployeePortal = ({ user }) => {
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => generateCertificatePDF(user || {})}
-                                className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col items-start space-y-2 text-left group"
+                                className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col items-start space-y-2 text-left group"
                             >
-                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                <div className="p-2.5 bg-slate-100 text-slate-700 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-all">
                                     <DocumentTextIcon className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-slate-800 text-xs">Certificado Laboral</h4>
+                                    <h4 className="font-semibold text-slate-900 text-xs">Certificado Laboral</h4>
                                     <p className="text-[10px] text-slate-400 mt-0.5">PDF con Firma y QR</p>
                                 </div>
                             </button>
@@ -176,41 +176,41 @@ const MobileEmployeePortal = ({ user }) => {
                                         alert('No tienes roles de pago generados aún');
                                     }
                                 }}
-                                className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col items-start space-y-2 text-left group"
+                                className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col items-start space-y-2 text-left group"
                             >
-                                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                <div className="p-2.5 bg-slate-100 text-slate-700 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-all">
                                     <DocumentArrowDownIcon className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-slate-800 text-xs">Último Rol de Pago</h4>
+                                    <h4 className="font-semibold text-slate-900 text-xs">Último Rol de Pago</h4>
                                     <p className="text-[10px] text-slate-400 mt-0.5">Descarga 1-Clic PDF</p>
                                 </div>
                             </button>
                         </div>
 
                         {/* Quick Clock-in Card */}
-                        <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-2xl shadow-md space-y-4">
+                        <div className="bg-white text-slate-900 p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Marcación Rápida GPS</p>
-                                    <p className="text-sm font-bold mt-0.5 flex items-center gap-1 text-slate-200">
-                                        <MapPinIcon className="w-4 h-4 text-blue-400" />
+                                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Marcación Rápida GPS</p>
+                                    <p className="text-xs font-semibold mt-0.5 flex items-center gap-1 text-slate-700">
+                                        <MapPinIcon className="w-4 h-4 text-slate-500" />
                                         {gpsLocation ? 'Ubicación GPS Detectada' : 'Obteniendo GPS...'}
                                     </p>
                                 </div>
-                                {clockTime && <span className="text-xs font-mono font-bold bg-white/10 px-3 py-1 rounded-lg">Entrada: {clockTime}</span>}
+                                {clockTime && <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-lg border border-slate-200/60">Entrada: {clockTime}</span>}
                             </div>
 
                             <button
                                 onClick={handleClockAction}
                                 disabled={clockLoading}
-                                className={`w-full py-4 rounded-xl font-extrabold text-sm shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 ${
+                                className={`w-full py-3.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xs ${
                                     clockStatus === 'OUT'
-                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
-                                        : 'bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white'
+                                        ? 'bg-slate-900 hover:bg-slate-800 text-white'
+                                        : 'bg-rose-600 hover:bg-rose-700 text-white'
                                 }`}
                             >
-                                <ClockIcon className="w-5 h-5" />
+                                <ClockIcon className="w-4 h-4" />
                                 {clockLoading ? 'Procesando Marcación...' : clockStatus === 'OUT' ? 'MARCAR ENTRADA AHORA' : 'MARCAR SALIDA AHORA'}
                             </button>
                         </div>

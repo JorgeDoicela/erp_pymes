@@ -77,7 +77,54 @@ export default function AdvancedBusinessAnalytics({ data }) {
                         <p className="text-xs text-slate-500">Relación de horas extras, ausencias y riesgo por departamento</p>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    {/* Tarjetas de Diagnóstico de Burnout Móvil/Tablet (< lg) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:hidden">
+                        {burnout.departmentMetrics.map((dept, idx) => (
+                            <div key={idx} className="bg-white p-4.5 rounded-xl border border-slate-200 shadow-2xs space-y-3.5 hover:border-indigo-200 transition-all duration-300">
+                                <div className="flex items-start justify-between gap-3">
+                                    <h5 className="font-bold text-slate-900 text-sm truncate" title={dept.department}>
+                                        {dept.department}
+                                    </h5>
+                                    <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border
+                                        ${dept.riskLevel.includes('Estable') 
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                                            : 'bg-amber-50 text-amber-700 border-amber-100'}`}
+                                    >
+                                        {dept.riskLevel}
+                                    </span>
+                                </div>
+
+                                <div className="bg-slate-50/80 p-3 rounded-lg border border-slate-100 text-xs grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span className="text-slate-400 font-medium block">Personal:</span>
+                                        <span className="text-sm font-bold text-slate-800 mt-0.5 block">{dept.headcount} colaboradores</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400 font-medium block">Índice Burnout:</span>
+                                        <span className={`text-sm font-bold mt-0.5 block ${dept.burnoutScore > 50 ? 'text-amber-600' : 'text-slate-700'}`}>
+                                            {dept.burnoutScore} / 100
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                                        <span>Eficiencia Operativa:</span>
+                                        <span className="text-emerald-600">{dept.productivityRatio}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-emerald-500"
+                                            style={{ width: `${dept.productivityRatio}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Table for Desktop Only (>= lg) */}
+                    <div className="hidden lg:block overflow-x-auto">
                         <table className="w-full text-xs text-left border border-slate-100 rounded-lg overflow-hidden">
                             <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200/80">
                                 <tr>

@@ -108,8 +108,15 @@ const JournalEntries = () => {
     const totalCredit = formData.lines.reduce((acc, l) => acc + (parseFloat(l.credit) || 0), 0);
     const difference = Math.abs(totalDebit - totalCredit);
 
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isSuperAdmin = currentUser?.role === 'superadmin' || currentUser?.email === 'admin@emplifi.com';
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSuperAdmin) {
+            toast.error('Modo Supervisión: El SuperAdministrador no puede crear ni modificar asientos contables.');
+            return;
+        }
         if (difference > 0.01) {
             toast.error('El asiento debe estar cuadrado (Debe = Haber)');
             return;
@@ -136,6 +143,10 @@ const JournalEntries = () => {
     };
 
     const handlePost = async (id) => {
+        if (isSuperAdmin) {
+            toast.error('Modo Supervisión: El SuperAdministrador no puede mayorizar asientos.');
+            return;
+        }
         if (!window.confirm('¿Mayorizar este asiento? Una vez contabilizado no podrá ser editado ni eliminado.')) return;
         try {
             const response = await postJournalEntry(id);
@@ -148,6 +159,10 @@ const JournalEntries = () => {
     };
 
     const handleDelete = async (id) => {
+        if (isSuperAdmin) {
+            toast.error('Modo Supervisión: El SuperAdministrador no puede eliminar asientos.');
+            return;
+        }
         if (!window.confirm('¿Eliminar este borrador de asiento?')) return;
         try {
             await deleteJournalEntry(id);

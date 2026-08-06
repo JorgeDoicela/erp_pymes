@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    getAnnouncements, 
-    createAnnouncement, 
-    markAnnouncementReadOrAcknowledge, 
-    getAnnouncementStats, 
-    getBirthdays 
+import {
+    getAnnouncements,
+    createAnnouncement,
+    markAnnouncementReadOrAcknowledge,
+    getAnnouncementStats,
+    getBirthdays
 } from '../../services/communication/announcement.service';
-import { 
-    MegaphoneIcon, 
-    SparklesIcon, 
-    CheckCircleIcon, 
-    PlusIcon, 
-    EyeIcon, 
+import {
+    MegaphoneIcon,
+    SparklesIcon,
+    CheckCircleIcon,
+    PlusIcon,
+    EyeIcon,
     ExclamationTriangleIcon,
     GiftIcon,
     DocumentCheckIcon,
@@ -169,11 +169,10 @@ const AnnouncementsBoard = ({ user }) => {
                         <button
                             key={tab.value}
                             onClick={() => setFilterCategory(tab.value)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                                filterCategory === tab.value
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${filterCategory === tab.value
                                     ? 'bg-blue-600 text-white shadow-sm'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
+                                }`}
                         >
                             {tab.label}
                         </button>
@@ -209,9 +208,8 @@ const AnnouncementsBoard = ({ user }) => {
                                 key={ann.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className={`bg-white p-6 rounded-2xl border shadow-sm space-y-4 ${
-                                    ann.priority === 'URGENT' ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-200/80'
-                                }`}
+                                className={`bg-white p-6 rounded-2xl border shadow-sm space-y-4 ${ann.priority === 'URGENT' ? 'border-rose-300 ring-1 ring-rose-300' : 'border-slate-200/80'
+                                    }`}
                             >
                                 <div className="flex justify-between items-start gap-4">
                                     <div className="space-y-1">
@@ -313,7 +311,7 @@ const AnnouncementsBoard = ({ user }) => {
                                             <p className="text-[11px] text-slate-500">{bday.department || 'General'}</p>
                                         </div>
                                         <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full font-bold text-[11px]">
-                                            Día {bday.day} 🎉
+                                            Día {bday.day}
                                         </span>
                                     </div>
                                 ))

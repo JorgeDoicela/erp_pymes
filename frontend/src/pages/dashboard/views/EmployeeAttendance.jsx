@@ -23,7 +23,7 @@ const EmployeeAttendance = ({ user }) => {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="w-full max-w-lg"
             >
-                <DigitalMarker user={user} />
+                <DigitalMarker user={user} autoLoadUser={true} allowSearch={false} />
             </motion.div>
         </div>
     );

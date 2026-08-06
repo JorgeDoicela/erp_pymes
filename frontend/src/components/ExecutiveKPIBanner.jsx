@@ -44,7 +44,7 @@ export default function ExecutiveKPIBanner({ financialImpact }) {
             </div>
 
             {/* Grid de Métricas Ultra-Limpio */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
                 {/* KPI 1: Costo en Riesgo por Rotación */}
                 <div className="bg-slate-50/60 p-4 rounded-lg border border-slate-200/70">
                     <div className="flex items-center justify-between mb-2">

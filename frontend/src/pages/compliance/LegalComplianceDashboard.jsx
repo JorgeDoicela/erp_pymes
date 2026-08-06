@@ -112,29 +112,29 @@ const LegalComplianceDashboard = () => {
             </div>
 
             {/* Top KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div className="bg-gradient-to-br from-rose-600 to-red-700 text-white p-5 rounded-2xl shadow-sm relative overflow-hidden">
-                    <p className="text-rose-100 text-xs font-bold uppercase tracking-wider">Alertas Críticas (&lt;10 días)</p>
-                    <h3 className="text-3xl font-black mt-2">{alertsData.summary?.criticalCount || 0}</h3>
-                    <p className="text-xs text-rose-100/90 mt-1">Vencimientos inmediatos</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-rose-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Alertas Críticas (&lt;10 días)</p>
+                    <h3 className="text-3xl font-extrabold mt-2 text-slate-800">{alertsData.summary?.criticalCount || 0}</h3>
+                    <p className="text-xs text-slate-400 mt-1">Vencimientos inmediatos</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-5 rounded-2xl shadow-sm relative overflow-hidden">
-                    <p className="text-amber-100 text-xs font-bold uppercase tracking-wider">Períodos de Prueba (90d)</p>
-                    <h3 className="text-3xl font-black mt-2">{alertsData.summary?.probationCount || 0}</h3>
-                    <p className="text-xs text-amber-100/90 mt-1">Por evaluar en el mes</p>
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-amber-500 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Períodos de Prueba (90d)</p>
+                    <h3 className="text-3xl font-extrabold mt-2 text-slate-800">{alertsData.summary?.probationCount || 0}</h3>
+                    <p className="text-xs text-slate-400 mt-1">Por evaluar en el mes</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-5 rounded-2xl shadow-sm relative overflow-hidden">
-                    <p className="text-blue-100 text-xs font-bold uppercase tracking-wider">Contratos a Vencer</p>
-                    <h3 className="text-3xl font-black mt-2">{alertsData.summary?.contractCount || 0}</h3>
-                    <p className="text-xs text-blue-100/90 mt-1">Plazo fijo / por obra</p>
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-blue-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Contratos a Vencer</p>
+                    <h3 className="text-3xl font-extrabold mt-2 text-slate-800">{alertsData.summary?.contractCount || 0}</h3>
+                    <p className="text-xs text-slate-400 mt-1">Plazo fijo / por obra</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 rounded-2xl shadow-sm relative overflow-hidden">
-                    <p className="text-emerald-100 text-xs font-bold uppercase tracking-wider">Provisión Patronal Mes</p>
-                    <h3 className="text-3xl font-black mt-2">${(provisionsData.summary?.totalCompanyProvisions || 0).toFixed(2)}</h3>
-                    <p className="text-xs text-emerald-100/90 mt-1">13er, 14to, Reserva y Vacaciones</p>
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-emerald-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Provisión Patronal Mes</p>
+                    <h3 className="text-3xl font-extrabold mt-2 text-slate-800">${(provisionsData.summary?.totalCompanyProvisions || 0).toFixed(2)}</h3>
+                    <p className="text-xs text-slate-400 mt-1">13er, 14to, Reserva y Vacaciones</p>
                 </div>
             </div>
 

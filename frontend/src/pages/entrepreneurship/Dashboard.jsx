@@ -56,14 +56,14 @@ const Dashboard = () => {
         <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-                        <FiCompass className="text-amber-500" /> Incubadora de Startups
+                    <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                        <FiCompass className="text-slate-700" /> Incubadora de Startups
                     </h1>
-                    <p className="text-slate-500 mt-1">Ecosistema de innovación e intraemprendimiento profesional.</p>
+                    <p className="text-slate-500 text-sm mt-1">Ecosistema de innovación e intraemprendimiento profesional.</p>
                 </div>
                 <Link 
                     to="create" 
-                    className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-semibold"
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-xs font-semibold shadow-xs"
                 >
                     <FiPlus /> Lanzar Proyecto
                 </Link>
@@ -72,16 +72,16 @@ const Dashboard = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {[
-                    { label: 'Total Proyectos', val: stats.total, icon: <FiBox />, color: 'text-indigo-600' },
-                    { label: 'Ideación', val: stats.ideation, icon: <FiCompass />, color: 'text-blue-500' },
-                    { label: 'Validación', val: stats.validation, icon: <FiCheckCircle />, color: 'text-purple-500' },
-                    { label: 'MVP', val: stats.mvp, icon: <FiTrendingUp />, color: 'text-amber-500' },
-                    { label: 'Escalamiento', val: stats.scaling, icon: <FiTrendingUp />, color: 'text-emerald-500' },
+                    { label: 'Total Proyectos', val: stats.total, icon: <FiBox /> },
+                    { label: 'Ideación', val: stats.ideation, icon: <FiCompass /> },
+                    { label: 'Validación', val: stats.validation, icon: <FiCheckCircle /> },
+                    { label: 'MVP', val: stats.mvp, icon: <FiTrendingUp /> },
+                    { label: 'Escalamiento', val: stats.scaling, icon: <FiTrendingUp /> },
                 ].map((s, i) => (
-                    <div key={i} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                        <span className={`text-2xl mb-2 ${s.color}`}>{s.icon}</span>
-                        <span className="text-2xl font-bold text-slate-800">{s.val}</span>
-                        <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">{s.label}</span>
+                    <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col items-center text-center hover:border-slate-300 transition-all">
+                        <span className="text-xl mb-2 text-slate-600">{s.icon}</span>
+                        <span className="text-2xl font-bold text-slate-900">{s.val}</span>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{s.label}</span>
                     </div>
                 ))}
             </div>

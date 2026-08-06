@@ -7,14 +7,23 @@ import { updateConsentTracking } from '../../services/employees/employee.service
 import { FiShield, FiMapPin, FiCheckCircle, FiLock, FiX } from 'react-icons/fi';
 import { MdFingerprint } from 'react-icons/md';
 
-const DigitalMarker = ({ user }) => {
+const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
+    const storedUser = (() => {
+        try {
+            return JSON.parse(localStorage.getItem('user') || 'null');
+        } catch {
+            return null;
+        }
+    })();
+    const currentUser = user || storedUser;
+
     const [currentTime, setCurrentTime] = useState(new Date());
-    const [employeeId, setEmployeeId] = useState(user?.id || '');
+    const [employeeId, setEmployeeId] = useState(autoLoadUser ? (currentUser?.id || '') : '');
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showConsent, setShowConsent] = useState(false);
     const [consenting, setConsenting] = useState(false);
-    const [consentStatus, setConsentStatus] = useState(user?.trackingConsent || false);
+    const [consentStatus, setConsentStatus] = useState(currentUser?.trackingConsent || false);
 
     const [message, setMessage] = useState({ type: '', text: '' });
     const [foundEmployee, setFoundEmployee] = useState(null);
@@ -73,17 +82,17 @@ const DigitalMarker = ({ user }) => {
         return () => clearInterval(timer);
     }, []);
 
-    // Fetch status on mount if user exists
+    // Fetch status on mount if autoLoadUser is true and user exists
     useEffect(() => {
-        if (user?.id) {
-            setEmployeeId(user.id);
-            checkStatus(user.id);
+        if (autoLoadUser && currentUser?.id) {
+            setEmployeeId(currentUser.id);
+            checkStatus(currentUser.id);
             // Check if user has consented
-            if (user.trackingConsent === false) {
+            if (currentUser.trackingConsent === false) {
                 setShowConsent(true);
             }
         }
-    }, [user]);
+    }, [user, autoLoadUser]);
 
     // Fetch biometric setting on mount
     useEffect(() => {
@@ -202,10 +211,11 @@ const DigitalMarker = ({ user }) => {
         }
 
         try {
-            const targetId = user?.id || employeeId;
-            // 1. Obtener opciones del servidor
+            // El usuario que valida con su huella/FaceID es la persona autenticada en el dispositivo (ej. Administrador/Supervisor)
+            const biometricUserId = currentUser?.id || foundEmployee?.id || employeeId;
+            // 1. Obtener opciones del servidor para la persona presente en el dispositivo
             const optionsRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/login/options`, {
-                employeeId: targetId
+                employeeId: biometricUserId
             });
 
             const options = optionsRes.data;
@@ -242,7 +252,17 @@ const DigitalMarker = ({ user }) => {
         }
     };
 
+    const isAdminOrSuperAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin' || currentUser?.email === 'admin@emplifi.com';
+    const isSuperAdmin = currentUser?.role === 'superadmin' || currentUser?.email === 'admin@emplifi.com';
+
     const initiateMark = (type) => {
+        if (isSuperAdmin && !foundEmployee) {
+            setMessage({
+                type: 'error',
+                text: 'Modo Supervisión: El SuperAdministrador debe buscar la cédula del empleado para registrar su asistencia.'
+            });
+            return;
+        }
         setPendingAction(type);
         setShowConfirm(true);
     };
@@ -268,7 +288,7 @@ const DigitalMarker = ({ user }) => {
     };
 
     const handleMark = async (type) => {
-        const targetId = user?.id || employeeId;
+        const targetId = foundEmployee?.id || currentUser?.id || employeeId;
 
         if (!targetId) {
             setMessage({ type: 'error', text: 'Por favor ingrese su ID de empleado.' });
@@ -344,19 +364,21 @@ const DigitalMarker = ({ user }) => {
                 )}
             </div>
 
-            {/* Input ID (Solo si no hay usuario) */}
-
-            {!user && (
+            {/* Buscador de Empleado (Público o Modo Administrador) */}
+            {allowSearch && (!user || isAdminOrSuperAdmin) && (
                 <div className="w-full mb-8 relative max-w-md mx-auto">
                     {!foundEmployee ? (
                         <>
-                            <label className="block text-sm text-slate-600 mb-1 ml-1 text-center">Número de Cédula</label>
+                            <label className="block text-sm font-medium text-slate-600 mb-1 ml-1 text-center">
+                                {isAdminOrSuperAdmin ? 'Buscar Empleado por Número de Cédula' : 'Número de Cédula'}
+                            </label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
                                     value={employeeId}
                                     onChange={(e) => setEmployeeId(e.target.value)}
-                                    placeholder="Ingrese su cédula..."
+                                    onKeyDown={(e) => { if (e.key === 'Enter') checkStatus(); }}
+                                    placeholder="Ingrese número de cédula..."
                                     className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-slate-400 text-center text-lg tracking-widest"
                                 />
                                 <button
@@ -382,12 +404,14 @@ const DigitalMarker = ({ user }) => {
                                     <p className="text-xs text-slate-500">{foundEmployee.position} • {foundEmployee.department}</p>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => { setFoundEmployee(null); setEmployeeId(''); setStatus(null); setMessage({ type: '', text: '' }); }}
-                                className="text-slate-500 hover:text-blue-600 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs transition-colors"
-                            >
-                                Cambiar
-                            </button>
+                            {allowSearch && (
+                                <button
+                                    onClick={() => { setFoundEmployee(null); setEmployeeId(''); setStatus(null); setMessage({ type: '', text: '' }); }}
+                                    className="text-slate-500 hover:text-blue-600 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs transition-colors"
+                                >
+                                    Cambiar
+                                </button>
+                            )}
                         </motion.div>
                     )}
                 </div>

@@ -134,8 +134,7 @@ function App() {
     if (role) {
       const allowedRoles = Array.isArray(role) ? role : [role];
 
-      const hasPermission = allowedRoles.includes(userRole) ||
-        (isSuperAdmin && (allowedRoles.includes('superadmin') || allowedRoles.includes('admin')));
+      const hasPermission = isSuperAdmin || allowedRoles.includes(userRole);
 
       if (!hasPermission) {
         // Redirigir según el rol real del usuario a su "home"
@@ -186,7 +185,7 @@ function App() {
           <Route path="/admin/register-employee" element={<RegisterEmployee token={auth.token} />} />
           <Route path="/admin/employees" element={<EmployeeList token={auth.token} />} />
           <Route path="/admin/employees/:id" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
-          <Route path="/attendance" element={<AttendancePage />} />
+          <Route path="/attendance" element={<AttendancePage user={auth.user} />} />
           <Route path="/admin/notifications" element={<NotificationsPage />} />
           <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
           <Route path="/admin/audit" element={<AuditLogsPage />} />

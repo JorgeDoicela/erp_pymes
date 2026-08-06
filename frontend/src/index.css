@@ -83,3 +83,12 @@ textarea:-webkit-autofill:focus {
   background-color: #6366f1;
   color: #ffffff;
 }
+
+/* Utilidad para ocultar barras de scroll manteniendo funcionalidad táctil */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE y Edge */
+  scrollbar-width: none;  /* Firefox */
+}

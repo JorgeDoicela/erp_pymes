@@ -1,0 +1,17 @@
+{
+  "short_name": "Emplifi",
+  "name": "Emplifi - ERP de Recursos Humanos",
+  "icons": [
+    {
+      "src": "/favicon.webp",
+      "type": "image/webp",
+      "sizes": "512x512 192x192 64x64 32x32 16x16",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "any"
+}

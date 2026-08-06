@@ -6,15 +6,18 @@ import { toast } from 'react-hot-toast';
 
 const ProjectForm = () => {
     const navigate = useNavigate();
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isSuperAdmin = currentUser?.role === 'superadmin' || currentUser?.email === 'admin@emplifi.com';
+
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         title: '',
         description: '',
         industry: '',
         stage: 'IDEATION',
-        ownerId: JSON.parse(localStorage.getItem('user'))?.id,
+        ownerId: currentUser?.id,
         budget: '',
         innovationScore: 70,
         pitchNarrative: ''
@@ -26,6 +29,10 @@ const ProjectForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSuperAdmin) {
+            toast.error('Modo Supervisión: El SuperAdministrador no puede crear o modificar proyectos.');
+            return;
+        }
         setLoading(true);
         try {
             await entrepreneurshipService.createProject(formData);
@@ -47,36 +54,33 @@ const ProjectForm = () => {
 
     return (
         <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fadeIn">
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl overflow-hidden">
-                <div className="bg-slate-900 p-10 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-10 opacity-10">
-                        <FiZap size={100} className="text-amber-400" />
-                    </div>
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                <div className="bg-white border-b border-slate-200/80 p-8 text-slate-900 relative">
                     <div className="relative z-10">
-                        <h2 className="text-3xl font-black flex items-center gap-3 tracking-tight">
+                        <h2 className="text-2xl font-bold flex items-center gap-3 tracking-tight text-slate-900">
                              Lanzar Emprendimiento Profesional
                         </h2>
-                        <p className="opacity-60 text-sm mt-2 font-medium">Inicia tu proceso de incubación con estándares de nivel internacional.</p>
+                        <p className="text-slate-500 text-sm mt-1 font-normal">Inicia tu proceso de incubación con estándares de nivel internacional.</p>
                     </div>
                 </div>
 
-                <div className="p-10">
+                <div className="p-8">
                     {/* Stepper */}
-                    <div className="flex items-center gap-6 mb-12">
+                    <div className="flex items-center gap-6 mb-10">
                         {[
                             { s: 1, label: 'Concepto' },
                             { s: 2, label: 'Estrategia & BI' }
                         ].map(stepInfo => (
                             <React.Fragment key={stepInfo.s}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-sm ${step === stepInfo.s ? 'bg-indigo-600 text-white ring-4 ring-indigo-50' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs transition-all ${step === stepInfo.s ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-50 text-slate-400 border border-slate-200/60'}`}>
                                         {stepInfo.s}
                                     </div>
-                                    <span className={`text-sm font-bold uppercase tracking-widest ${step === stepInfo.s ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                    <span className={`text-xs font-semibold uppercase tracking-wider ${step === stepInfo.s ? 'text-slate-900' : 'text-slate-400'}`}>
                                         {stepInfo.label}
                                     </span>
                                 </div>
-                                {stepInfo.s === 1 && <div className="w-16 h-0.5 bg-slate-50 flex-shrink-0" />}
+                                {stepInfo.s === 1 && <div className="w-12 h-0.5 bg-slate-100 flex-shrink-0" />}
                             </React.Fragment>
                         ))}
                     </div>
@@ -193,9 +197,9 @@ const ProjectForm = () => {
                                                 key={s.id}
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, stage: s.id })}
-                                                className={`flex flex-col p-5 rounded-2xl border-2 text-left transition-all ${formData.stage === s.id ? 'border-indigo-600 bg-indigo-50 shadow-lg translate-y-[-2px]' : 'border-slate-50 bg-slate-50/50 hover:bg-white hover:border-slate-100'}`}
+                                                className={`flex flex-col p-5 rounded-2xl border-2 text-left transition-all ${formData.stage === s.id ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-200'}`}
                                             >
-                                                <span className={`font-black text-sm uppercase tracking-wider mb-1 ${formData.stage === s.id ? 'text-indigo-700' : 'text-slate-700'}`}>
+                                                <span className={`font-bold text-xs uppercase tracking-wider mb-1 ${formData.stage === s.id ? 'text-slate-900' : 'text-slate-700'}`}>
                                                     {s.label}
                                                 </span>
                                                 <span className="text-[11px] text-slate-500 leading-tight font-medium">{s.desc}</span>
@@ -208,14 +212,14 @@ const ProjectForm = () => {
                                     <button 
                                         type="button" 
                                         onClick={() => setStep(1)}
-                                        className="flex-1 flex items-center justify-center gap-2 py-5 bg-white border-2 border-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+                                        className="flex-1 flex items-center justify-center gap-2 py-4 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition-all active:scale-95"
                                     >
                                         <FiArrowLeft /> Volver
                                     </button>
                                     <button 
                                         type="submit"
                                         disabled={loading}
-                                        className="flex-[2] flex items-center justify-center gap-2 py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50 active:scale-95 group"
+                                        className="flex-[2] flex items-center justify-center gap-2 py-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all shadow-xs disabled:opacity-50 active:scale-95 group"
                                     >
                                         {loading ? 'Generando Ecosistema...' : <><FiSave /> Lanzar Mi Emprendimiento</>}
                                     </button>

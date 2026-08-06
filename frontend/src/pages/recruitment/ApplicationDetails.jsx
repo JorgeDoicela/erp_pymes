@@ -37,7 +37,6 @@ const ApplicationDetails = () => {
             const baseUrl = apiBase.replace(/\/api\/?$/, '');
             finalUrl = `${baseUrl}/${cleanPath}${tokenParam}`;
         }
-        console.log(`[CV Viewer Debug] Raw resumeUrl: "${url}" => Final URL: "${finalUrl}"`);
         return finalUrl;
     };
 

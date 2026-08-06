@@ -338,84 +338,80 @@ const HelpCenter = () => {
                                         setActiveTab(cat.id);
                                         setSearchTerm('');
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group
-                                        ${isActive
-                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                                            : 'text-slate-600 hover:bg-white hover:text-indigo-600'
-                                        }`}
-                                >
-                                    <Icon size={18} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-500'} />
-                                    <span>{cat.label}</span>
-                                </button>
-                            );
-                        })}
-                    </nav>
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group
+                                    ${isActive
+                                        ? 'bg-slate-900 text-white shadow-xs'
+                                        : 'text-slate-600 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200/60'
+                                    }`}
+                            >
+                                <Icon size={18} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'} />
+                                <span>{cat.label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
 
-                    <main className="flex-1">
-                        <div className="mb-6 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                                {searchTerm ? (
-                                    <>Resultados para <span className="text-indigo-600 italic">"{searchTerm}"</span></>
-                                ) : (
-                                    <>Contenido de {categories.find(c => c.id === activeTab)?.label}</>
-                                )}
-                            </h2>
-                            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">
-                                {filteredSections.length} Artículos
-                            </span>
+                <main className="flex-1">
+                    <div className="mb-6 flex items-center justify-between">
+                        <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                            {searchTerm ? (
+                                <>Resultados para <span className="text-slate-900 italic">"{searchTerm}"</span></>
+                            ) : (
+                                <>Contenido de {categories.find(c => c.id === activeTab)?.label}</>
+                            )}
+                        </h2>
+                        <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full border border-slate-200/60">
+                            {filteredSections.length} Artículos
+                        </span>
+                    </div>
+
+                    {filteredSections.length > 0 ? (
+                        <div className="space-y-4">
+                            {filteredSections.map((item) => (
+                                <HelpSection
+                                    key={item.id}
+                                    title={item.title}
+                                    icon={item.icon}
+                                    isOpen={openSections[item.id]}
+                                    onToggle={() => toggleSection(item.id)}
+                                >
+                                    {item.content}
+                                </HelpSection>
+                            ))}
                         </div>
-
-                        {filteredSections.length > 0 ? (
-                            <div className="space-y-4">
-                                {filteredSections.map((item) => (
-                                    <HelpSection
-                                        key={item.id}
-                                        title={item.title}
-                                        icon={item.icon}
-                                        isOpen={openSections[item.id]}
-                                        onToggle={() => toggleSection(item.id)}
-                                    >
-                                        {item.content}
-                                    </HelpSection>
-                                ))}
+                    ) : (
+                        <div className="text-center py-20 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                                <FiSearch className="text-slate-400" size={24} />
                             </div>
-                        ) : (
-                            <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <FiSearch className="text-slate-300" size={32} />
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-700">No encontramos lo que buscas</h3>
-                                <p className="text-slate-500 mt-2">Prueba con palabras clave más generales o navega por categorías.</p>
-                                <button 
-                                    onClick={() => setSearchTerm('')}
-                                    className="mt-6 text-indigo-600 font-bold hover:underline"
+                            <h3 className="text-lg font-bold text-slate-800">No encontramos lo que buscas</h3>
+                            <p className="text-slate-500 text-xs mt-1">Prueba con palabras clave más generales o navega por categorías.</p>
+                            <button 
+                                onClick={() => setSearchTerm('')}
+                                className="mt-4 text-slate-900 font-semibold text-xs hover:underline"
+                            >
+                                Ver todas las guías
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="mt-8 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-900 shadow-xs relative overflow-hidden group">
+                        <div className="relative z-10">
+                            <h3 className="text-xl font-bold text-slate-900 mb-1">¿Aún tienes dudas?</h3>
+                            <p className="text-slate-500 text-xs mb-5 max-w-md leading-relaxed">Nuestro equipo de soporte técnico está disponible para ayudarte con cualquier inconveniente técnico o duda del sistema.</p>
+                            <div className="flex flex-wrap gap-4">
+                                <a 
+                                    href="https://wa.me/593969677280" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-xs"
                                 >
-                                    Ver todas las guías
-                                </button>
-                            </div>
-                        )}
-
-                        <div className="mt-12 p-8 bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl text-white shadow-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <FiHelpCircle size={120} />
-                            </div>
-                            <div className="relative z-10">
-                                <h3 className="text-2xl font-black mb-2">¿Aún tienes dudas?</h3>
-                                <p className="text-indigo-100/80 mb-6 max-w-md">Nuestro equipo de soporte técnico está disponible para ayudarte con cualquier inconveniente técnico o duda del sistema.</p>
-                                <div className="flex flex-wrap gap-4">
-                                    <a 
-                                        href="https://wa.me/593969677280" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="px-6 py-3 bg-white text-indigo-900 rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-50 transition-colors shadow-lg shadow-white/10"
-                                    >
-                                        Hablar con Soporte <FiArrowRight />
-                                    </a>
-                                </div>
+                                    Hablar con Soporte <FiArrowRight />
+                                </a>
                             </div>
                         </div>
-                    </main>
-                </div>
+                    </div>
+                </main>
             </div>
             
             <footer className="mt-20 text-center pb-12 border-t border-slate-200 pt-8">

@@ -4,7 +4,7 @@ import {
     FiTarget, FiHelpCircle, FiBriefcase, FiCheckCircle, FiActivity
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { employeeModules } from '../../constants/modules';
+import { getSectionsByRole } from '../../constants/modules';
 
 function EmployeeDashboard({ user }) {
     const navigate = useNavigate();
@@ -29,8 +29,7 @@ function EmployeeDashboard({ user }) {
         visible: { opacity: 1, y: 0 }
     };
 
-    // Excluir el item "Dashboard" del grid de módulos (ya estamos en él)
-    const displayModules = employeeModules.filter(m => m.path !== '/empleado');
+    const sections = getSectionsByRole(user);
 
     return (
         <motion.div
@@ -134,29 +133,37 @@ function EmployeeDashboard({ user }) {
                 </section>
 
                 {/* Modules Grid */}
-                <motion.section variants={itemVariants}>
-                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-5 flex items-center gap-2">
-                        <FiBriefcase className="text-slate-400" />
-                        Mi Portal
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {displayModules.map((mod, idx) => (
-                            <motion.button
-                                key={idx}
-                                variants={itemVariants}
-                                whileHover={{ y: -5 }}
-                                onClick={() => navigate(mod.path)}
-                                className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all duration-200 group h-40 text-center relative overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="p-3 rounded-xl bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors mb-3 relative z-10 duration-200">
-                                    <span className="text-2xl">{mod.icon}</span>
+                <div className="space-y-8">
+                    {sections.map((section, sIdx) => {
+                        const filteredModules = section.modules.filter(m => m.path !== '/empleado');
+                        if (filteredModules.length === 0) return null;
+                        return (
+                            <motion.section key={sIdx} variants={itemVariants}>
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <FiBriefcase className="text-slate-400" />
+                                    {section.title}
+                                </h3>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                                    {filteredModules.map((mod, idx) => (
+                                        <motion.button
+                                            key={idx}
+                                            variants={itemVariants}
+                                            whileHover={{ y: -5 }}
+                                            onClick={() => navigate(mod.path)}
+                                            className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all duration-200 group h-40 text-center relative overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            <div className="p-3 rounded-xl bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors mb-3 relative z-10 duration-200">
+                                                <span className="text-2xl">{mod.icon}</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 relative z-10">{mod.title}</span>
+                                        </motion.button>
+                                    ))}
                                 </div>
-                                <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 relative z-10">{mod.title}</span>
-                            </motion.button>
-                        ))}
-                    </div>
-                </motion.section>
+                            </motion.section>
+                        );
+                    })}
+                </div>
             </div>
         </motion.div>
     );

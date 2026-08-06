@@ -171,73 +171,67 @@ export default function IntelligentDashboard({ user, onLogout }) {
                 initial="hidden"
                 animate="visible"
             >
-                {/* Page Controls & Tabs */}
-                <motion.div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4" variants={itemVariants}>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                        <div className="flex items-center gap-4">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                {/* Barra de Control Compacta (sin duplicar título del header global) */}
+                <motion.div
+                    className="flex flex-col gap-3"
+                    variants={itemVariants}
+                >
+                    {/* Fila superior: botón volver + acciones */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-3">
+                            <button
                                 onClick={() => navigate('/admin')}
-                                className="p-2 hover:bg-slate-50 border border-transparent hover:border-slate-200 rounded-lg transition-all text-slate-500 hover:text-slate-700"
+                                className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
+                                title="Volver al panel"
                             >
-                                <FiArrowLeft className="w-5 h-5" />
-                            </motion.button>
+                                <FiArrowLeft className="w-4 h-4" />
+                            </button>
                             <div>
-                                <h1 className="text-xl font-bold text-slate-800 tracking-tight">Centro Predictivo</h1>
-                                <p className="text-sm text-slate-500">Análisis predictivo y recomendaciones</p>
+                                <p className="text-xs text-slate-500">Análisis predictivo y recomendaciones</p>
+                                {lastUpdated && (
+                                    <p className="text-[11px] text-slate-400">
+                                        Actualizado {getRelativeTime(lastUpdated)}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                            <button
                                 onClick={() => setIsReportOpen(true)}
-                                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all text-sm font-semibold flex items-center gap-2 shadow-sm"
+                                className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors shadow-sm"
                             >
-                                <FiPrinter className="w-4 h-4" />
-                                Informe Ejecutivo (PDF)
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                                <FiPrinter size={13} />
+                                <span className="hidden sm:inline">Informe PDF</span>
+                                <span className="sm:hidden">PDF</span>
+                            </button>
+                            <button
                                 onClick={handleRefresh}
                                 disabled={refreshing}
-                                className={`px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-all text-sm font-medium flex items-center gap-2 shadow-sm ${refreshing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg text-xs font-medium cursor-pointer transition-colors disabled:opacity-50"
                             >
-                                <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                                {refreshing ? 'Actualizando...' : 'Actualizar Datos'}
-                            </motion.button>
+                                <FiRefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+                                <span className="hidden sm:inline">{refreshing ? 'Actualizando...' : 'Actualizar'}</span>
+                            </button>
                         </div>
                     </div>
 
-                    {/* Fix #21: Timestamp de última actualización */}
-                    {lastUpdated && (
-                        <p className="text-xs text-slate-400 mt-2 text-right">
-                            Actualizado {getRelativeTime(lastUpdated)}
-                        </p>
-                    )}
-
-                    {/* Navegación por Pestañas */}
-                    <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide border-b border-slate-100">
+                    {/* Pestañas de Navegación */}
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-slate-200">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
                             return (
-                                <motion.button
+                                <button
                                     key={tab.id}
-                                    whileHover={{ y: -1 }}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`
-                                        flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap
+                                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer shrink-0
                                         ${isActive
-                                            ? 'bg-indigo-50 text-indigo-600'
-                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}
-                                    `}
+                                            ? 'bg-indigo-600 text-white shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                                 >
-                                    <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                    <Icon className="w-3.5 h-3.5" />
                                     {tab.label}
-                                </motion.button>
+                                </button>
                             );
                         })}
                     </div>

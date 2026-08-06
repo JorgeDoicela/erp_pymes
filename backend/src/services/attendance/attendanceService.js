@@ -73,7 +73,7 @@ const isVPNDetected = async (ip) => {
 };
 
 export const attendanceService = {
-    async registerAttendance(inputIdentifierRaw, type, location = null, ip = null) {
+    async registerAttendance(inputIdentifierRaw, type, location = null, ip = null, isSupervisorOverride = false) {
         // 1. Pre-process and validate identifier
         const inputIdentifier = inputIdentifierRaw?.toString().trim();
         if (!inputIdentifier) throw new Error('Identificador de empleado es requerido');
@@ -124,11 +124,13 @@ export const attendanceService = {
         const useGlobalGeofence = systemSettings?.globalLatitude && systemSettings?.globalLongitude;
 
         if (!employee.trackingConsent) {
-            if (employee.enforceGeofence || useGlobalGeofence) {
+            if ((employee.enforceGeofence || useGlobalGeofence) && !isSupervisorOverride) {
                 throw new Error('No ha otorgado el consentimiento obligatorio para el tratamiento de datos de ubicación. Por favor acepte los términos de privacidad en su perfil para marcar asistencia.');
             }
-            // Si el consentimiento no fue otorgado y la geocerca no es obligatoria, se ignora cualquier coordenada de ubicación enviada
-            location = null;
+            if (!isSupervisorOverride) {
+                // Si el consentimiento no fue otorgado y no es supervisión directa, se ignora la ubicación
+                location = null;
+            }
         }
 
         if (employee.enforceGeofence || useGlobalGeofence || location) {

@@ -142,7 +142,7 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Metrics Cards Clean Corporate */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
                     <div>
                         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">MRR Estimado</p>
@@ -198,8 +198,237 @@ export default function SuperAdminDashboard() {
                 </div>
             </div>
 
-            {/* Filter Tabs and Directory Container */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            {/* VISTA MÓVIL Y TABLET (< lg) */}
+            <div className="block lg:hidden space-y-4">
+                {/* Filtros */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-4">
+                    <div className="flex flex-col gap-4">
+                        <div>
+                            <h2 className="text-base font-bold text-slate-900">
+                                Directorio Global de Empresas (Tenants)
+                            </h2>
+                            <p className="text-xs text-slate-500">
+                                Administra el estado, plan y vigencia de cada cliente registrado.
+                            </p>
+                        </div>
+
+                        {/* Search Input */}
+                        <div className="relative w-full">
+                            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+                            <input
+                                type="text"
+                                placeholder="Buscar empresa, RUC o email..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800 transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filter Tabs Responsive Horizontal Scroll */}
+                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 overflow-x-auto no-scrollbar pb-1">
+                        <button
+                            onClick={() => setActiveTab('ALL')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ALL' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        >
+                            Todas ({metrics?.totalTenants ?? 0})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('ACTIVE')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ACTIVE' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        >
+                            Activas ({metrics?.activeTenants ?? 0})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('TRIAL')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'TRIAL' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        >
+                            En Trial ({metrics?.trialTenants ?? 0})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('EXPIRING')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'EXPIRING' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        >
+                            Vencen Pronto ({metrics?.expiringTrialsCount ?? 0})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('SUSPENDED')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'SUSPENDED' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        >
+                            Suspendidas ({metrics?.suspendedTenants ?? 0})
+                        </button>
+                    </div>
+                </div>
+
+                {/* Tarjetas de Empresa Directas */}
+                {loading && tenants.length === 0 ? (
+                    <div className="bg-white p-8 text-center text-slate-400 rounded-xl border border-slate-200 shadow-xs">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                            <FiRefreshCw className="animate-spin text-2xl text-slate-600" />
+                            <span className="text-xs font-medium">Cargando directorio...</span>
+                        </div>
+                    </div>
+                ) : tenants.length === 0 ? (
+                    <div className="bg-white p-8 text-center text-slate-400 rounded-xl border border-slate-200 shadow-xs">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                            <FiAlertTriangle className="text-2xl text-slate-400" />
+                            <span className="text-xs font-medium">No se encontraron empresas con los filtros aplicados.</span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {tenants.map((t) => {
+                            const maxCap = PLAN_LIMITS[t.plan] || t.maxEmployees || 25;
+                            const usagePct = Math.min(Math.round(((t.employeeCount || 0) / maxCap) * 100), 100);
+
+                            return (
+                                <div key={t.id} className="bg-white p-5 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between gap-4">
+                                    <div className="space-y-4">
+                                        {/* Company Info Header */}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarGradient(t.name)} flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-xs`}>
+                                                    {t.name.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <h3 className="font-semibold text-slate-900 text-sm leading-snug truncate">
+                                                        {t.name}
+                                                    </h3>
+                                                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                                                        <span className="font-mono text-slate-600">RUC: {t.ruc || 'N/A'}</span> &bull; <span>/{t.slug}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <span className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold
+                                                ${t.subscriptionStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' :
+                                                  t.subscriptionStatus === 'TRIAL' ? 'bg-amber-100 text-amber-800' :
+                                                  t.subscriptionStatus === 'SUSPENDED' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'}`}
+                                            >
+                                                {t.subscriptionStatus === 'ACTIVE' && <FiCheckCircle className="text-emerald-600" />}
+                                                {t.subscriptionStatus === 'TRIAL' && <FiClock className="text-amber-600" />}
+                                                {t.subscriptionStatus === 'SUSPENDED' && <FiAlertTriangle className="text-rose-600" />}
+                                                {t.subscriptionStatus}
+                                            </span>
+                                        </div>
+
+                                        {/* Admin Details */}
+                                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs space-y-1">
+                                            <div className="text-slate-500 font-medium">Administrador:</div>
+                                            {t.admin ? (
+                                                <div className="flex flex-col gap-0.5 text-slate-800">
+                                                    <span className="font-semibold">{t.admin.firstName} {t.admin.lastName}</span>
+                                                    <span className="text-slate-500 text-[11px] truncate">{t.admin.email}</span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-400 italic">Sin admin asignado</span>
+                                            )}
+                                        </div>
+
+                                        {/* Plan Selector and Employee Usage */}
+                                        <div className="space-y-3 pt-1">
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Plan</label>
+                                                <select
+                                                    value={t.plan}
+                                                    disabled={updatingId === t.id}
+                                                    onChange={(e) => handleUpdatePlan(t.id, e.target.value)}
+                                                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer disabled:opacity-50"
+                                                >
+                                                    <option value="ESSENTIAL">ESSENTIAL ($1.50/emp)</option>
+                                                    <option value="GROWTH">GROWTH ($3.00/emp)</option>
+                                                    <option value="ENTERPRISE">ENTERPRISE ($5.00/emp)</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1">
+                                                    <span>Capacidad: {t.employeeCount} colab.</span>
+                                                    <span className="text-slate-400 text-[10px]">{usagePct}%</span>
+                                                </div>
+                                                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full ${usagePct > 85 ? 'bg-rose-500' : 'bg-slate-700'}`}
+                                                        style={{ width: `${usagePct}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons Bar Mobile */}
+                                    <div className="pt-2 flex flex-wrap gap-2 justify-end border-t border-slate-100">
+                                        <button
+                                            onClick={() => openTenantDrawer(t.id)}
+                                            className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 border border-slate-200 cursor-pointer"
+                                        >
+                                            <FiEye /> Detalles
+                                        </button>
+
+                                        {t.subscriptionStatus !== 'ACTIVE' && (
+                                            <button
+                                                onClick={() => handleUpdateStatus(t.id, 'ACTIVE')}
+                                                disabled={updatingId === t.id}
+                                                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                            >
+                                                <FiCheckCircle /> Activar
+                                            </button>
+                                        )}
+
+                                        <button
+                                            onClick={() => handleUpdateStatus(t.id, t.subscriptionStatus, 30)}
+                                            disabled={updatingId === t.id}
+                                            className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                        >
+                                            <FiPlusCircle /> +30d
+                                        </button>
+
+                                        {t.subscriptionStatus !== 'SUSPENDED' && (
+                                            <button
+                                                onClick={() => handleUpdateStatus(t.id, 'SUSPENDED')}
+                                                disabled={updatingId === t.id}
+                                                className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                            >
+                                                <FiAlertTriangle /> Suspender
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Paginar en móvil */}
+                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-center sm:text-left">
+                    <p className="text-xs text-slate-500">
+                        Mostrando <span className="font-semibold text-slate-800">{tenants.length > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0}</span> a <span className="font-semibold text-slate-800">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> de <span className="font-semibold text-slate-800">{pagination.total}</span> empresas
+                    </p>
+
+                    <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                        <button
+                            onClick={() => handlePageChange(pagination.page - 1)}
+                            disabled={pagination.page <= 1 || loading}
+                            className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                            <FiChevronLeft /> Anterior
+                        </button>
+                        <span className="text-xs font-medium text-slate-700 px-2 shrink-0">
+                            Página {pagination.page} de {pagination.totalPages || 1}
+                        </span>
+                        <button
+                            onClick={() => handlePageChange(pagination.page + 1)}
+                            disabled={pagination.page >= pagination.totalPages || loading}
+                            className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                            Siguiente <FiChevronRight />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* VISTA ESCRITORIO (>= lg) */}
+            <div className="hidden lg:block bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 {/* Header Bar with Filters */}
                 <div className="p-4 sm:p-5 border-b border-slate-200 space-y-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -260,155 +489,8 @@ export default function SuperAdminDashboard() {
                     </div>
                 </div>
 
-                {/* Mobile View: Cards Grid (< md) */}
-                <div className="block md:hidden divide-y divide-slate-100">
-                    {loading && tenants.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400">
-                            <div className="flex flex-col items-center justify-center gap-2">
-                                <FiRefreshCw className="animate-spin text-2xl text-slate-600" />
-                                <span className="text-xs font-medium">Cargando directorio...</span>
-                            </div>
-                        </div>
-                    ) : tenants.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400">
-                            <div className="flex flex-col items-center justify-center gap-2">
-                                <FiAlertTriangle className="text-2xl text-slate-400" />
-                                <span className="text-xs font-medium">No se encontraron empresas con los filtros aplicados.</span>
-                            </div>
-                        </div>
-                    ) : (
-                        tenants.map((t) => {
-                            const maxCap = PLAN_LIMITS[t.plan] || t.maxEmployees || 25;
-                            const usagePct = Math.min(Math.round(((t.employeeCount || 0) / maxCap) * 100), 100);
-
-                            return (
-                                <div key={t.id} className="p-4 space-y-3 hover:bg-slate-50/80 transition-colors">
-                                    {/* Company Info Header */}
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarGradient(t.name)} flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-xs`}>
-                                                {t.name.substring(0, 2).toUpperCase()}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <h3 className="font-semibold text-slate-900 text-sm leading-snug truncate">
-                                                    {t.name}
-                                                </h3>
-                                                <p className="text-xs text-slate-500 truncate mt-0.5">
-                                                    <span className="font-mono text-slate-600">RUC: {t.ruc || 'N/A'}</span> &bull; <span>/{t.slug}</span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <span className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold
-                                            ${t.subscriptionStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' :
-                                              t.subscriptionStatus === 'TRIAL' ? 'bg-amber-100 text-amber-800' :
-                                              t.subscriptionStatus === 'SUSPENDED' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'}`}
-                                        >
-                                            {t.subscriptionStatus === 'ACTIVE' && <FiCheckCircle className="text-emerald-600" />}
-                                            {t.subscriptionStatus === 'TRIAL' && <FiClock className="text-amber-600" />}
-                                            {t.subscriptionStatus === 'SUSPENDED' && <FiAlertTriangle className="text-rose-600" />}
-                                            {t.subscriptionStatus}
-                                        </span>
-                                    </div>
-
-                                    {/* Admin Details */}
-                                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs space-y-1">
-                                        <div className="text-slate-500 font-medium">Administrador:</div>
-                                        {t.admin ? (
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-slate-800">
-                                                <span className="font-semibold">{t.admin.firstName} {t.admin.lastName}</span>
-                                                <span className="text-slate-500 text-[11px] truncate">{t.admin.email}</span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-slate-400 italic">Sin admin asignado</span>
-                                        )}
-                                    </div>
-
-                                    {/* Plan Selector and Employee Usage */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                        <div>
-                                            <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Plan</label>
-                                            <select
-                                                value={t.plan}
-                                                disabled={updatingId === t.id}
-                                                onChange={(e) => handleUpdatePlan(t.id, e.target.value)}
-                                                className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer disabled:opacity-50"
-                                            >
-                                                <option value="ESSENTIAL">ESSENTIAL ($1.50/emp)</option>
-                                                <option value="GROWTH">GROWTH ($3.00/emp)</option>
-                                                <option value="ENTERPRISE">ENTERPRISE ($5.00/emp)</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1">
-                                                <span>Capacidad: {t.employeeCount} colab.</span>
-                                                <span className="text-slate-400 text-[10px]">{usagePct}%</span>
-                                            </div>
-                                            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
-                                                <div
-                                                    className={`h-full ${usagePct > 85 ? 'bg-rose-500' : 'bg-slate-700'}`}
-                                                    style={{ width: `${usagePct}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Buttons Bar Mobile */}
-                                    <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                        <button
-                                            onClick={() => openTenantDrawer(t.id)}
-                                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                                        >
-                                            <FiEye /> Detalles
-                                        </button>
-
-                                        {t.subscriptionStatus !== 'ACTIVE' ? (
-                                            <button
-                                                onClick={() => handleUpdateStatus(t.id, 'ACTIVE')}
-                                                disabled={updatingId === t.id}
-                                                className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
-                                            >
-                                                <FiCheckCircle /> Activar
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => handleUpdateStatus(t.id, t.subscriptionStatus, 30)}
-                                                disabled={updatingId === t.id}
-                                                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
-                                            >
-                                                <FiPlusCircle /> +30d
-                                            </button>
-                                        )}
-
-                                        {t.subscriptionStatus === 'ACTIVE' && (
-                                            <button
-                                                onClick={() => handleUpdateStatus(t.id, 'SUSPENDED')}
-                                                disabled={updatingId === t.id}
-                                                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 col-span-2 sm:col-span-1"
-                                            >
-                                                <FiAlertTriangle /> Suspender
-                                            </button>
-                                        )}
-
-                                        {t.subscriptionStatus !== 'ACTIVE' && (
-                                            <button
-                                                onClick={() => handleUpdateStatus(t.id, t.subscriptionStatus, 30)}
-                                                disabled={updatingId === t.id}
-                                                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
-                                            >
-                                                <FiPlusCircle /> +30d
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })
-                    )}
-                </div>
-
-                {/* Desktop View Table (>= md) */}
-                <div className="hidden md:block overflow-x-auto">
+                {/* Desktop View Table (>= lg) */}
+                <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[950px]">
                         <thead>
                             <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider">

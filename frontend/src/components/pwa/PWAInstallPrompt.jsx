@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiDownload, FiX, FiSmartphone, FiCheckCircle } from 'react-icons/fi';
+import { FiDownload, FiX, FiSmartphone, FiMonitor } from 'react-icons/fi';
 
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -8,6 +8,7 @@ export default function PWAInstallPrompt() {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
 
   useEffect(() => {
     // Detectar si ya está instalada o en modo standalone
@@ -17,15 +18,15 @@ export default function PWAInstallPrompt() {
       return;
     }
 
-    // Detectar iOS
+    // Detectar iOS / iPadOS
     const userAgent = window.navigator.userAgent.toLowerCase();
-    const iosDevice = /iphone|ipad|ipod/.test(userAgent);
+    const iosDevice = /iphone|ipad|ipod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     setIsIOS(iosDevice);
 
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Mostrar el prompt solo si el usuario no lo ha descartado recientemente
+      // Mostrar el prompt si no ha sido descartado recientemente
       const dismissedTime = localStorage.getItem('pwa_prompt_dismissed');
       if (!dismissedTime || Date.now() - parseInt(dismissedTime, 10) > 24 * 60 * 60 * 1000) {
         setShowPrompt(true);
@@ -41,7 +42,7 @@ export default function PWAInstallPrompt() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Mostrar instrucción iOS si no está descartada
+    // Mostrar instrucción iOS si aplica
     if (iosDevice && !isStandalone) {
       const dismissedTime = localStorage.getItem('pwa_ios_prompt_dismissed');
       if (!dismissedTime || Date.now() - parseInt(dismissedTime, 10) > 48 * 60 * 60 * 1000) {
@@ -61,20 +62,32 @@ export default function PWAInstallPrompt() {
       return;
     }
 
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      setIsInstalled(true);
+    if (!deferredPrompt) {
+      setShowManualInstructions(true);
+      return;
     }
-    setDeferredPrompt(null);
-    setShowPrompt(false);
+
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+      }
+    } catch (err) {
+      console.warn('Error al activar el prompt de instalación PWA:', err);
+      setShowManualInstructions(true);
+    } finally {
+      setDeferredPrompt(null);
+      if (!showManualInstructions) {
+        setShowPrompt(false);
+      }
+    }
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
+    setShowIOSInstructions(false);
+    setShowManualInstructions(false);
     if (isIOS) {
       localStorage.setItem('pwa_ios_prompt_dismissed', Date.now().toString());
     } else {
@@ -102,7 +115,7 @@ export default function PWAInstallPrompt() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3.5">
                   <div className="w-12 h-12 rounded-xl bg-slate-100 p-0.5 border border-slate-200/60 shadow-sm flex-shrink-0 flex items-center justify-center overflow-hidden">
-                    <img src="/pwa-192x192.png" alt="Emplifi Logo" className="w-full h-full object-cover rounded-lg" />
+                    <img src="/favicon.webp" alt="Emplifi Logo" className="w-full h-full object-cover rounded-lg" />
                   </div>
                   <div>
                     <h4 className="font-bold text-base text-slate-900 tracking-tight flex items-center gap-2">
@@ -112,7 +125,7 @@ export default function PWAInstallPrompt() {
                       </span>
                     </h4>
                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                      Instala la app en tu dispositivo para acceso rápido y sin conexión.
+                      Instala la app en tu dispositivo para un acceso rápido y directo.
                     </p>
                   </div>
                 </div>
@@ -129,11 +142,21 @@ export default function PWAInstallPrompt() {
               {showIOSInstructions ? (
                 <div className="mt-4 p-3.5 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-200/80 space-y-2">
                   <p className="font-semibold text-slate-800 flex items-center gap-1.5">
-                    <FiSmartphone className="text-blue-600" /> Para instalar en iOS / iPhone:
+                    <FiSmartphone className="text-blue-600" /> Para instalar en iOS / iPhone / iPad:
                   </p>
                   <ol className="list-decimal list-inside space-y-1.5 text-slate-600">
                     <li>Toca el botón <span className="font-bold text-slate-900">Compartir</span> (icono con flecha hacia arriba) en Safari.</li>
                     <li>Desplázate hacia abajo y selecciona <span className="font-bold text-blue-600">"Agregar al inicio"</span>.</li>
+                  </ol>
+                </div>
+              ) : showManualInstructions ? (
+                <div className="mt-4 p-3.5 bg-blue-50/70 rounded-xl text-xs text-slate-700 border border-blue-200/80 space-y-2">
+                  <p className="font-semibold text-blue-900 flex items-center gap-1.5">
+                    <FiMonitor className="text-blue-600" /> Instalación desde el Navegador:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-600">
+                    <li>Haz clic en el icono de instalación en la barra de direcciones superior de tu navegador.</li>
+                    <li>O abre el menú del navegador y selecciona <span className="font-bold text-blue-600">"Instalar Emplifi App"</span>.</li>
                   </ol>
                 </div>
               ) : (
@@ -158,20 +181,16 @@ export default function PWAInstallPrompt() {
         )}
       </AnimatePresence>
 
-      {/* Botón Flotante Permanente (Ubicado arriba del botón de la esquina inferior) */}
       <motion.button
-        whileHover={{ scale: 1.03 }}
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setShowPrompt((prev) => !prev)}
-        className="group flex items-center gap-2.5 px-4 py-2.5 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl hover:shadow-2xl shadow-slate-300/50 rounded-full text-slate-800 hover:text-blue-600 transition-all duration-300"
+        className="group flex items-center justify-center w-11 h-11 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl hover:shadow-2xl shadow-slate-300/50 rounded-full transition-all duration-300"
         title="Instalar Emplifi App"
       >
         <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 border border-blue-200/80 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors flex-shrink-0">
           <FiDownload size={14} />
         </div>
-        <span className="text-xs font-semibold tracking-wide text-slate-800 group-hover:text-blue-600 pr-0.5">
-          Instalar App
-        </span>
       </motion.button>
     </div>
   );
