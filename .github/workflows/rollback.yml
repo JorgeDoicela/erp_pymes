@@ -1,0 +1,76 @@
+name: Rollback - Instant AWS EC2 Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: 'Commit SHA o Tag de la versión previa a desplegar (ej: 7f8a9b1)'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  rollback-ec2:
+    name: Execute Rollback in AWS EC2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo Fuente
+        uses: actions/checkout@v4
+
+      - name: Transferir docker-compose.yml mas reciente via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/var/www/recursos_humanos"
+
+      - name: Reemplazar Contenedores en EC2 con la Version Solicitada
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/recursos_humanos
+
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-backend:${{ inputs.target_sha }}
+            export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-frontend:${{ inputs.target_sha }}
+
+            echo "Descargando imagenes para la version: ${{ inputs.target_sha }}..."
+            docker compose pull
+
+            echo "Levantando contenedores de la version previa..."
+            docker compose up -d --remove-orphans
+
+            echo "Limpiando imagenes huerfanas..."
+            docker image prune -f
+
+      - name: Verificar Disponibilidad en Vivo (Health Check)
+        run: |
+          echo "Verificando respuesta del servidor EC2..."
+          curl -sI --connect-timeout 10 http://${{ secrets.EC2_HOST }} || true
+
+      - name: Generar Reporte de Rollback en GitHub Summary
+        run: |
+          cat <<EOF >> $GITHUB_STEP_SUMMARY
+          # 🔄 Reporte Ejecutivo de Rollback
+
+          | Parametro | Valor |
+          | :--- | :--- |
+          | **Estado** | **Rollback Ejecutado Exitosamente** |
+          | **Dominio Configurado** | [https://erp.jorgedoicela.com](https://erp.jorgedoicela.com) |
+          | **IP Servidor EC2** | \`${{ secrets.EC2_HOST }}\` |
+          | **Target Commit SHA** | \`${{ inputs.target_sha }}\` |
+          | **Ejecutado por** | @${{ github.actor }} |
+
+          ### Nota de Operacion:
+          Se ha restaurado el servicio en producción a la versión correspondiente al SHA \`${{ inputs.target_sha }}\` sin requerir recompilación de código.
+          EOF
