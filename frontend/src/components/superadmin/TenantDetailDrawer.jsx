@@ -112,26 +112,26 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                         className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col border-l border-slate-200 overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="p-6 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getAvatarGradient(tenant?.name || 'Empresa')} flex items-center justify-center font-bold text-lg text-white shadow-md border border-white/20`}>
+                        <div className="p-4 sm:p-6 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${getAvatarGradient(tenant?.name || 'Empresa')} flex items-center justify-center font-bold text-base sm:text-lg text-white shadow-md border border-white/20 shrink-0`}>
                                     {tenant?.name?.substring(0, 2).toUpperCase() || 'EM'}
                                 </div>
-                                <div>
-                                    <h2 className="font-bold text-lg text-white leading-tight">{tenant?.name || 'Cargando...'}</h2>
-                                    <p className="text-xs text-indigo-300 font-mono">/{tenant?.slug || 'slug'}</p>
+                                <div className="min-w-0">
+                                    <h2 className="font-bold text-base sm:text-lg text-white leading-tight truncate">{tenant?.name || 'Cargando...'}</h2>
+                                    <p className="text-xs text-indigo-300 font-mono truncate">/{tenant?.slug || 'slug'}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                                className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
                             >
                                 <FiX className="text-xl" />
                             </button>
                         </div>
 
                         {/* Content Body */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
                             {loading ? (
                                 <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-3">
                                     <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
@@ -140,7 +140,7 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                             ) : tenant ? (
                                 <>
                                     {/* Status & Plan Quick Banner */}
-                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex items-center justify-between">
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
                                         <div>
                                             <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Estado de Suscripción</p>
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-1 shadow-xs
@@ -161,7 +161,7 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                                                 value={tenant.plan}
                                                 disabled={updating}
                                                 onChange={(e) => handlePlanChange(e.target.value)}
-                                                className="mt-1 px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-xs"
+                                                className="mt-1 w-full sm:w-auto px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-xs"
                                             >
                                                 <option value="ESSENTIAL">ESSENTIAL ($1.50/emp)</option>
                                                 <option value="GROWTH">GROWTH ($3.00/emp)</option>
@@ -171,10 +171,10 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                                     </div>
 
                                     {/* Employee Capacity Bar */}
-                                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
+                                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
                                         <div className="flex items-center justify-between text-xs font-semibold">
-                                            <span className="text-slate-600 flex items-center gap-1.5"><FiUsers className="text-indigo-600" /> Capacidad de Colaboradores</span>
-                                            <span className="text-slate-900">{tenant.employeeCount} / {maxCapacity} empleados</span>
+                                            <span className="text-slate-600 flex items-center gap-1.5"><FiUsers className="text-indigo-600" /> Capacidad Colaboradores</span>
+                                            <span className="text-slate-900">{tenant.employeeCount} / {maxCapacity} emp.</span>
                                         </div>
                                         <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
                                             <div
@@ -186,23 +186,23 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                                     </div>
 
                                     {/* Administrator Profile Card */}
-                                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+                                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
                                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                             <FiUser className="text-indigo-600" /> Administrador Titular
                                         </h3>
                                         {tenant.admin ? (
-                                            <div className="space-y-2 text-sm">
+                                            <div className="space-y-2 text-xs sm:text-sm">
                                                 <div className="flex items-center gap-2 text-slate-800 font-semibold">
-                                                    <FiUser className="text-slate-400 text-xs" />
-                                                    {tenant.admin.firstName} {tenant.admin.lastName}
+                                                    <FiUser className="text-slate-400 text-xs shrink-0" />
+                                                    <span className="truncate">{tenant.admin.firstName} {tenant.admin.lastName}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-slate-600 text-xs min-w-0">
+                                                    <FiMail className="text-slate-400 shrink-0" />
+                                                    <a href={`mailto:${tenant.admin.email}`} className="text-indigo-600 hover:underline truncate">{tenant.admin.email}</a>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-slate-600 text-xs">
-                                                    <FiMail className="text-slate-400" />
-                                                    <a href={`mailto:${tenant.admin.email}`} className="text-indigo-600 hover:underline">{tenant.admin.email}</a>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-slate-600 text-xs">
-                                                    <FiPhone className="text-slate-400" />
-                                                    {tenant.admin.phone || 'No registrado'}
+                                                    <FiPhone className="text-slate-400 shrink-0" />
+                                                    <span>{tenant.admin.phone || 'No registrado'}</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -211,11 +211,11 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                                     </div>
 
                                     {/* Licensing & Key Metadata */}
-                                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
+                                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
                                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                             <FiCalendar className="text-indigo-600" /> Fechas y Licenciamiento
                                         </h3>
-                                        <div className="grid grid-cols-2 gap-4 text-xs">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
                                             <div>
                                                 <span className="text-slate-400">RUC Fiscal:</span>
                                                 <p className="font-mono text-slate-800 font-bold mt-0.5">{tenant.ruc || 'N/A'}</p>
@@ -238,7 +238,7 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                                     {/* Action Buttons */}
                                     <div className="pt-2 space-y-2">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Acciones de Licencia</p>
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                             {tenant.subscriptionStatus !== 'ACTIVE' && (
                                                 <button
                                                     onClick={() => handleStatusChange('ACTIVE')}
@@ -261,7 +261,7 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                                                 <button
                                                     onClick={() => handleStatusChange('SUSPENDED')}
                                                     disabled={updating}
-                                                    className="w-full py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 col-span-2"
+                                                    className="w-full py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 sm:col-span-2"
                                                 >
                                                     <FiAlertTriangle /> Suspender Empresa por Falta de Pago
                                                 </button>
