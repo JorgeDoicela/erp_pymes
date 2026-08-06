@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getApplicationDetails, updateApplicationStatus, deleteApplication, addApplicationNote, scheduleInterview, evaluateCandidate, hireCandidate } from '../../services/recruitment.service';
-import { FiArrowLeft, FiUser, FiMail, FiPhone, FiDownload, FiMessageSquare, FiSend, FiCalendar, FiMapPin, FiStar, FiCheckCircle, FiXCircle, FiBriefcase, FiFileText, FiInfo, FiClock, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
+import { FiArrowLeft, FiUser, FiMail, FiPhone, FiDownload, FiMessageSquare, FiSend, FiCalendar, FiMapPin, FiStar, FiCheckCircle, FiXCircle, FiBriefcase, FiFileText, FiInfo, FiClock, FiTrash2, FiAlertTriangle, FiEye, FiExternalLink, FiX } from 'react-icons/fi';
 import { toast } from 'react-hot-toast'; // Assuming toast is available, if not fallback to alert
 
 const ApplicationDetails = () => {
@@ -17,7 +17,26 @@ const ApplicationDetails = () => {
     const [showEvaModal, setShowEvaModal] = useState(false); // Evaluation
     const [showHireModal, setShowHireModal] = useState(false); // Hire
     const [showDeleteModal, setShowDeleteModal] = useState(false); // Delete candidate
+    const [showPdfModal, setShowPdfModal] = useState(false); // View PDF Modal
     const [deletingCandidate, setDeletingCandidate] = useState(false);
+
+    const getResumeUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+
+        const token = localStorage.getItem('token') || '';
+        let cleanPath = url;
+        if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+        if (cleanPath.startsWith('resumes/')) cleanPath = `uploads/${cleanPath}`;
+        if (!cleanPath.startsWith('api/')) cleanPath = `api/${cleanPath}`;
+
+        const apiBase = import.meta.env.VITE_API_URL || '/api';
+        if (apiBase.startsWith('http')) {
+            const baseUrl = apiBase.replace(/\/api\/?$/, '');
+            return `${baseUrl}/${cleanPath}?token=${encodeURIComponent(token)}`;
+        }
+        return `/${cleanPath}?token=${encodeURIComponent(token)}`;
+    };
 
     const handleDeleteCandidate = async () => {
         try {
@@ -342,32 +361,22 @@ const ApplicationDetails = () => {
                             </div>
 
                             {app.resumeUrl && (
-                                <button
-                                    onClick={() => {
-                                        if (app.resumeUrl.startsWith('http://') || app.resumeUrl.startsWith('https://')) {
-                                            window.open(app.resumeUrl, '_blank');
-                                        } else {
-                                            const token = localStorage.getItem('token') || '';
-                                            let cleanPath = app.resumeUrl;
-                                            if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
-                                            if (cleanPath.startsWith('resumes/')) cleanPath = `uploads/${cleanPath}`;
-                                            if (!cleanPath.startsWith('api/')) cleanPath = `api/${cleanPath}`;
-
-                                            const apiBase = import.meta.env.VITE_API_URL || '/api';
-                                            let finalUrl;
-                                            if (apiBase.startsWith('http')) {
-                                                const baseUrl = apiBase.replace(/\/api\/?$/, '');
-                                                finalUrl = `${baseUrl}/${cleanPath}?token=${encodeURIComponent(token)}`;
-                                            } else {
-                                                finalUrl = `/${cleanPath}?token=${encodeURIComponent(token)}`;
-                                            }
-                                            window.open(finalUrl, '_blank');
-                                        }
-                                    }}
-                                    className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold transition-all shadow-xl shadow-blue-100 active:scale-95"
-                                >
-                                    <FiDownload className="mr-2" /> Descargar CV (PDF)
-                                </button>
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPdfModal(true)}
+                                        className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold transition-all shadow-lg shadow-blue-100 active:scale-95 text-sm"
+                                    >
+                                        <FiEye className="mr-2 text-base" /> Ver CV (PDF)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => window.open(getResumeUrl(app.resumeUrl), '_blank')}
+                                        className="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold transition-all active:scale-95 text-sm border border-slate-200"
+                                    >
+                                        <FiExternalLink className="mr-2 text-base" /> Abrir en nueva pestaña
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -796,6 +805,52 @@ const ApplicationDetails = () => {
                             >
                                 {deletingCandidate ? "Eliminando..." : "Eliminar Definitivamente"}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Previsualización de CV en PDF dentro del sistema */}
+            {showPdfModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-6 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+                        {/* Header del Modal */}
+                        <div className="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg">
+                                    <FiFileText size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-base text-white leading-tight">
+                                        Currículum - {app?.firstName} {app?.lastName}
+                                    </h3>
+                                    <p className="text-xs text-slate-400">Previsualización de Documento PDF</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                                <button
+                                    onClick={() => window.open(getResumeUrl(app.resumeUrl), '_blank')}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all flex items-center shadow-md active:scale-95"
+                                >
+                                    <FiExternalLink className="mr-1.5" /> Abrir en Pestaña Nueva
+                                </button>
+                                <button
+                                    onClick={() => setShowPdfModal(false)}
+                                    className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all"
+                                    title="Cerrar"
+                                >
+                                    <FiX size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Viewer Body */}
+                        <div className="flex-1 bg-slate-100 p-2 sm:p-4 overflow-hidden relative">
+                            <iframe
+                                src={getResumeUrl(app.resumeUrl)}
+                                className="w-full h-full rounded-xl border border-slate-200 shadow-inner bg-white"
+                                title={`CV - ${app?.firstName} ${app?.lastName}`}
+                            />
                         </div>
                     </div>
                 </div>

@@ -649,15 +649,7 @@ export async function getDepartmentComparison(preloadedData = null) {
 
 // ==================== ALERTAS PROACTIVAS ====================
 
-let alertsCache = null;
-let alertsCacheTime = 0;
-const ALERTS_CACHE_TTL = 30000; // 30 segundos en ms
-
 export async function getProactiveAlerts(preloadedData = null) {
-    if (!preloadedData && alertsCache && (Date.now() - alertsCacheTime < ALERTS_CACHE_TTL)) {
-        return alertsCache;
-    }
-
     const alerts = [];
     const now = new Date();
 
@@ -780,11 +772,6 @@ export async function getProactiveAlerts(preloadedData = null) {
             }
         }
     };
-
-    if (!preloadedData) {
-        alertsCache = result;
-        alertsCacheTime = Date.now();
-    }
 
     return result;
 }
@@ -1097,20 +1084,9 @@ export async function getOrganizationalHealth(preloadedData = null) {
     };
 }
 
-// ==================== DASHBOARD PRINCIPAL (SINGLE-PASS & CACHED) ====================
-
-const DASHBOARD_CACHE_MAP = new Map();
-const DASHBOARD_CACHE_TTL = 300 * 1000; // 5 minutos de cache
+// ==================== DASHBOARD PRINCIPAL (SINGLE-PASS) ====================
 
 export async function getIntelligenceDashboard(tenantId = null, forceRefresh = false) {
-    const cacheKey = tenantId || 'default';
-    const nowMs = Date.now();
-    const cached = DASHBOARD_CACHE_MAP.get(cacheKey);
-
-    if (!forceRefresh && cached && (nowMs - cached.timestamp < DASHBOARD_CACHE_TTL)) {
-        return cached.data;
-    }
-
     const now = new Date();
 
     // Single-Pass Fetching — una sola ronda de consultas filtradas por tenantId
@@ -1212,7 +1188,6 @@ export async function getIntelligenceDashboard(tenantId = null, forceRefresh = f
                 generatedAt: now,
             };
 
-            DASHBOARD_CACHE_MAP.set(cacheKey, { data: result, timestamp: Date.now() });
             return result;
 }
 

@@ -2,12 +2,9 @@ import path from 'path';
 import fs from 'fs';
 
 /**
- * Resuelve la ruta absoluta de almacenamiento según el entorno (Vercel, Docker /app, Local backend)
+ * Resuelve la ruta absoluta de almacenamiento según la ubicación del proceso (Servidor Docker /app o Local backend)
  */
 const resolveUploadPath = (folder) => {
-    if (process.env.VERCEL) {
-        return `/tmp/uploads/${folder}`;
-    }
     const cwd = process.cwd();
     // 1. Si cwd ya contiene carpeta uploads (ej: en Docker /app/uploads o local backend/uploads)
     if (fs.existsSync(path.resolve(cwd, 'uploads'))) {
@@ -24,17 +21,17 @@ const resolveUploadPath = (folder) => {
 };
 
 /**
- * RNF-16: Configuración de Almacenamiento
+ * RNF-16: Configuración de Almacenamiento Local en Servidor
  */
 export const STORAGE_CONFIG = {
-    // Límite individual de archivo: 4MB (Vercel tiene un límite rígido de 4.5MB en su capa de API)
-    MAX_FILE_SIZE: 4 * 1024 * 1024,
+    // Límite individual de archivo: 10MB
+    MAX_FILE_SIZE: 10 * 1024 * 1024,
 
     // Extensiones permitidas por tipo
     ALLOWED_DOCUMENT_TYPES: ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
     ALLOWED_RESUME_TYPES: ['application/pdf'],
 
-    // Rutas de almacenamiento
+    // Rutas de almacenamiento local
     PATHS: {
         DOCUMENTS: resolveUploadPath('documents'),
         RESUMES: resolveUploadPath('resumes'),

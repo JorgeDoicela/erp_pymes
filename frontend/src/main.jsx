@@ -7,6 +7,15 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx'
 
 
 
+// Limpieza activa de caches obsoletos del navegador
+if ('caches' in window) {
+  caches.keys().then((names) => {
+    names.forEach((name) => {
+      caches.delete(name);
+    });
+  }).catch(() => {});
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>

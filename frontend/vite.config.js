@@ -32,27 +32,11 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: true,
         cleanupOutdatedCaches: true,
-        // Red primero (NetworkFirst): Siempre intenta pedir la versión más reciente del servidor
+        globPatterns: [], // No guardar ningún archivo estático en precache para evitar problemas en despliegues
         runtimeCaching: [
           {
-            urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'pages-cache',
-              networkTimeoutSeconds: 3
-            }
-          },
-          {
-            urlPattern: ({ request }) => request.destination === 'script' || request.destination === 'style',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'assets-cache',
-              networkTimeoutSeconds: 3
-            }
-          },
-          {
-            urlPattern: /\/api\/.*$/i,
-            handler: 'NetworkOnly'
+            urlPattern: /.*/i,
+            handler: 'NetworkOnly' // Todo el tráfico va directo a la red sin almacenar nada en cache
           }
         ]
       }

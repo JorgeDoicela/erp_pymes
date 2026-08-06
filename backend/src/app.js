@@ -25,7 +25,7 @@ app.use(helmet({
         preload: true,
     },
     frameguard: {
-        action: 'deny',
+        action: 'sameorigin', // Permite visualizar PDFs en modales iframe dentro del mismo sistema
     },
     referrerPolicy: {
         policy: 'strict-origin-when-cross-origin',
@@ -76,7 +76,7 @@ const __dirname = path.dirname(__filename);
 
 // Ensure uploads directory exists on startup
 import fs from 'fs';
-const uploadsPath = process.env.VERCEL ? '/tmp/uploads' : path.resolve(__dirname, '../uploads');
+const uploadsPath = path.resolve(__dirname, '../uploads');
 if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 
 // Static files served protected below
@@ -95,7 +95,7 @@ app.use(validateBodyNotEmpty);
 app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     // Desactivar totalmente la caché del navegador para prevenir respuestas obsoletas
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -110,7 +110,8 @@ import { protectStaticFiles } from './middleware/security.middleware.js';
 
 // Servir archivos estáticos de forma protegida o mediante controlador (soporta /uploads y /api/uploads)
 app.use(['/uploads', '/api/uploads'], authenticate, protectStaticFiles, (req, res, next) => {
-    // Si es un CV, usamos el controlador para asegurar acceso en Vercel/Local/EC2
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    // Si es un CV, usamos el controlador para asegurar acceso directo en Servidor EC2 / Local
     if (req.path.includes('/resumes/')) {
         const filename = path.basename(req.path);
         const fullPath = path.join(STORAGE_CONFIG.PATHS.RESUMES, filename);

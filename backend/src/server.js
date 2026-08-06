@@ -22,11 +22,7 @@ const server = http.createServer(app);
 // Inicializar Socket.io
 socketService.init(server);
 
-import { getIntelligenceDashboard } from './services/intelligenceService.js';
-
 server.listen(PORT, () => {
   console.log(`Backend EMPLIFI corriendo en http://localhost:${PORT}`);
   console.log("Server updated at " + new Date().toISOString());
-  // Pre-cargar caché de inteligencia de forma asíncrona
-  getIntelligenceDashboard().catch(err => console.error('[Cache Warmup Error]:', err.message));
 });
