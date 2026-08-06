@@ -17,16 +17,16 @@ env:
 
 jobs:
   # =========================================================================
-  # 1. Detección Inteligente de Cambios en Rutas (Path Filtering)
+  # 1. Deteccion Inteligente de Cambios en Rutas (Path Filtering)
   # =========================================================================
   detect-changes:
-    name: 🔍 Detect Changed Paths
+    name: Detect Changed Paths
     runs-on: ubuntu-latest
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
-      - name: Checkout Código Fuente
+      - name: Checkout Codigo Fuente
         uses: actions/checkout@v4
 
       - name: Evaluar Filtros de Rutas
@@ -44,15 +44,15 @@ jobs:
               - '.github/workflows/deploy.yml'
 
   # =========================================================================
-  # 2. Verificación, Pruebas y Auditoría de Código (Backend)
+  # 2. Verificacion, Pruebas y Auditoria de Codigo (Backend)
   # =========================================================================
   backend-qa:
-    name: ⚙️ Backend QA & Audit (API)
+    name: Backend QA & Audit (API)
     needs: detect-changes
     if: needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Código Fuente
+      - name: Checkout Codigo Fuente
         uses: actions/checkout@v4
 
       - name: Configurar Node.js 20
@@ -62,22 +62,22 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package.json
 
-      - name: Instalar Dependencias & Auditoría de Seguridad
+      - name: Instalar Dependencias & Auditoria de Seguridad
         run: |
           cd backend
           npm install
           npm audit --audit-level=high || true
 
   # =========================================================================
-  # 3. Verificación, Compilación y Calidad de Código (Frontend)
+  # 3. Verificacion, Compilacion y Calidad de Codigo (Frontend)
   # =========================================================================
   frontend-qa:
-    name: 🎨 Frontend QA & Build Check (WEB)
+    name: Frontend QA & Build Check (WEB)
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Código Fuente
+      - name: Checkout Codigo Fuente
         uses: actions/checkout@v4
 
       - name: Configurar Node.js 20
@@ -87,7 +87,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package.json
 
-      - name: Instalar Dependencias & Verificar Compilación React
+      - name: Instalar Dependencias & Verificar Compilacion React
         run: |
           cd frontend
           npm install
@@ -97,7 +97,7 @@ jobs:
   # 4. Build, Escaneo de Vulnerabilidades y Push (Backend Docker Image)
   # =========================================================================
   build-backend:
-    name: 🐳 Build & Push API Image (GHCR)
+    name: Build & Push API Image (GHCR)
     needs: [detect-changes, backend-qa]
     if: always() && needs.detect-changes.outputs.backend == 'true' && (needs.backend-qa.result == 'success' || needs.backend-qa.result == 'skipped')
     runs-on: ubuntu-latest
@@ -105,10 +105,10 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Checkout Código
+      - name: Checkout Codigo
         uses: actions/checkout@v4
 
-      - name: Formatear nombre de usuario a minúsculas
+      - name: Formatear nombre de usuario a minusculas
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "BACKEND_IMAGE_NAME=${OWNER_LOWER}/rh-backend" >> $GITHUB_ENV
@@ -116,7 +116,7 @@ jobs:
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Iniciar Sesión en GHCR
+      - name: Iniciar Sesion en GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -139,7 +139,7 @@ jobs:
   # 5. Build, Escaneo de Vulnerabilidades y Push (Frontend Docker Image)
   # =========================================================================
   build-frontend:
-    name: 🐳 Build & Push Web Image (GHCR)
+    name: Build & Push Web Image (GHCR)
     needs: [detect-changes, frontend-qa]
     if: always() && needs.detect-changes.outputs.frontend == 'true' && (needs.frontend-qa.result == 'success' || needs.frontend-qa.result == 'skipped')
     runs-on: ubuntu-latest
@@ -147,10 +147,10 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Checkout Código
+      - name: Checkout Codigo
         uses: actions/checkout@v4
 
-      - name: Formatear nombre de usuario a minúsculas
+      - name: Formatear nombre de usuario a minusculas
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "FRONTEND_IMAGE_NAME=${OWNER_LOWER}/rh-frontend" >> $GITHUB_ENV
@@ -158,7 +158,7 @@ jobs:
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Iniciar Sesión en GHCR
+      - name: Iniciar Sesion en GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -181,12 +181,12 @@ jobs:
   # 6. Despliegue Zero-Downtime en AWS EC2 por SSH
   # =========================================================================
   deploy-ec2:
-    name: 🚀 Deploy to AWS EC2 Production
+    name: Deploy to AWS EC2 Production
     needs: [detect-changes, build-backend, build-frontend]
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Código para transferir docker-compose
+      - name: Checkout Codigo para transferir docker-compose
         uses: actions/checkout@v4
 
       - name: Preparar Directorio en EC2
@@ -199,7 +199,7 @@ jobs:
             sudo mkdir -p /var/www/recursos_humanos
             sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} /var/www/recursos_humanos
 
-      - name: Transferir docker-compose.yml vía SCP
+      - name: Transferir docker-compose.yml via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -229,10 +229,10 @@ jobs:
             docker image prune -f
 
   # =========================================================================
-  # 7. Verificación de Salud en Vivo & Reporte Ejecutivo en GitHub
+  # 7. Verificacion de Salud en Vivo & Reporte Ejecutivo en GitHub
   # =========================================================================
   health-check-report:
-    name: 📊 Post-Deploy Health Check & Summary Report
+    name: Post-Deploy Health Check & Summary Report
     needs: deploy-ec2
     runs-on: ubuntu-latest
     steps:
@@ -244,19 +244,19 @@ jobs:
       - name: Generar Reporte de Despliegue en GitHub Summary
         run: |
           cat <<EOF >> $GITHUB_STEP_SUMMARY
-          # 🚀 Reporte Ejecutivo de Despliegue CI/CD
+          # Reporte Ejecutivo de Despliegue CI/CD
 
-          | Parámetro | Valor |
+          | Parametro | Valor |
           | :--- | :--- |
-          | **Estado** | ✅ **Despliegue Exitoso en Producción** |
+          | **Estado** | **Despliegue Exitoso en Produccion** |
           | **Dominio Configurado** | [https://erp.jorgedoicela.com](https://erp.jorgedoicela.com) |
           | **IP Servidor EC2** | \`${{ secrets.EC2_HOST }}\` |
           | **Commit SHA** | \`${{ github.sha }}\` |
           | **Desplegado por** | @${{ github.actor }} |
 
-          ### 📦 Servicios Desplegados en Docker:
+          ### Servicios Desplegados en Docker:
           - **PostgreSQL 15**: Base de Datos Relacional con almacenamiento persistente.
-          - **Redis 7**: Caché en tiempo real y soporte de WebSockets.
+          - **Redis 7**: Cache en tiempo real y soporte de WebSockets.
           - **Backend Node.js API**: Express, Prisma ORM y Socket.io.
           - **Frontend React**: Servidor Nginx optimizado SPA.
           EOF

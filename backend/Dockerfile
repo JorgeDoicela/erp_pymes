@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# Instalar OpenSSL y librerias necesarias para Prisma ORM en Alpine Linux
+RUN apk add --no-cache openssl libc6-compat
+
 WORKDIR /app
 
 # Copiar archivos de dependencias y schema de Prisma
