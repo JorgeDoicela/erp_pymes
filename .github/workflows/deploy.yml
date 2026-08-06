@@ -14,8 +14,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE_NAME: ${{ github.repository_owner }}/rh-backend
-  FRONTEND_IMAGE_NAME: ${{ github.repository_owner }}/rh-frontend
 
 jobs:
   build-and-push:
@@ -32,6 +30,14 @@ jobs:
     steps:
       - name: Checkout Código Fuente
         uses: actions/checkout@v4
+
+      - name: Formatear nombre de usuario a minúsculas
+        id: prep
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "BACKEND_IMAGE_NAME=${OWNER_LOWER}/rh-backend" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE_NAME=${OWNER_LOWER}/rh-frontend" >> $GITHUB_ENV
+          echo "OWNER_LOWER=${OWNER_LOWER}" >> $GITHUB_ENV
 
       - name: Detectar cambios en Backend y Frontend
         id: filter
@@ -111,9 +117,10 @@ jobs:
             # 2. Autenticar Docker con GHCR en la EC2
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            # 3. Exportar variables con nombres de imágenes de GHCR
-            export BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
-            export FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+            # 3. Exportar variables con nombres de imágenes en minúsculas
+            OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-backend:latest
+            export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-frontend:latest
 
             # 4. Descargar imágenes actualizadas desde GHCR
             docker compose pull
@@ -123,3 +130,4 @@ jobs:
 
             # 6. Limpieza de imágenes antiguas no utilizadas
             docker image prune -f
+
