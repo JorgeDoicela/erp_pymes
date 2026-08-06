@@ -116,7 +116,13 @@ app.use(['/uploads', '/api/uploads'], (req, res, next) => {
     const cleanReqPath = req.path.startsWith('/') ? req.path : `/${req.path}`;
     const fullPath = path.join(uploadsPath, cleanReqPath);
 
-    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+    console.log(`[Uploads Middleware] GET request for: ${req.originalUrl}`);
+    console.log(`[Uploads Middleware] Resolved path: ${fullPath}`);
+
+    const fileExists = fs.existsSync(fullPath) && fs.statSync(fullPath).isFile();
+    console.log(`[Uploads Middleware] File exists on disk: ${fileExists}`);
+
+    if (fileExists) {
         const ext = path.extname(fullPath).toLowerCase();
         const mimeTypes = {
             '.pdf': 'application/pdf',
@@ -130,11 +136,13 @@ app.use(['/uploads', '/api/uploads'], (req, res, next) => {
         const contentType = mimeTypes[ext] || 'application/octet-stream';
         const filename = path.basename(fullPath);
 
+        console.log(`[Uploads Middleware] Serving file inline (${contentType}): ${filename}`);
         res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
         return res.sendFile(fullPath);
     }
 
+    console.warn(`[Uploads Middleware] File NOT FOUND at: ${fullPath}`);
     // Para otros archivos o fallbacks
     express.static(uploadsPath)(req, res, next);
 });

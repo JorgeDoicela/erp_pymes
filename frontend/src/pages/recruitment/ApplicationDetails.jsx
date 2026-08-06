@@ -32,11 +32,13 @@ const ApplicationDetails = () => {
 
         const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
         const apiBase = import.meta.env.VITE_API_URL || '/api';
+        let finalUrl = `/${cleanPath}${tokenParam}`;
         if (apiBase.startsWith('http')) {
             const baseUrl = apiBase.replace(/\/api\/?$/, '');
-            return `${baseUrl}/${cleanPath}${tokenParam}`;
+            finalUrl = `${baseUrl}/${cleanPath}${tokenParam}`;
         }
-        return `/${cleanPath}${tokenParam}`;
+        console.log(`[CV Viewer Debug] Raw resumeUrl: "${url}" => Final URL: "${finalUrl}"`);
+        return finalUrl;
     };
 
     const handleDeleteCandidate = async () => {
