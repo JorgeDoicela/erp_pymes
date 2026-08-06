@@ -425,7 +425,8 @@ const HelpCenter = () => {
                 </div>
             </footer>
         </div>
-    );
+    </div>
+);
 };
 
 export default HelpCenter;
