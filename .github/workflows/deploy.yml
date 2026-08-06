@@ -221,8 +221,8 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-            export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-backend:latest
-            export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-frontend:latest
+            export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-backend:${{ github.sha }}
+            export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-frontend:${{ github.sha }}
 
             docker compose pull
             docker compose up -d --remove-orphans
