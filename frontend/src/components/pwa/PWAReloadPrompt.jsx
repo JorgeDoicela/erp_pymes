@@ -21,7 +21,8 @@ export default function PWAReloadPrompt() {
     setNeedRefresh(false);
   };
 
-  if (!offlineReady && !needRefresh) return null;
+  // Solo mostramos el aviso si hay una nueva versión del sistema para actualizar
+  if (!needRefresh) return null;
 
   return (
     <AnimatePresence>

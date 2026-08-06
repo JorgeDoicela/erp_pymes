@@ -35,7 +35,7 @@ export const recruitmentService = {
     },
 
     async getVacancies(tenantId = null) {
-        const where = tenantId ? { tenantId } : {};
+        const where = tenantId ? { OR: [{ tenantId }, { tenantId: null }] } : {};
         return recruitmentRepository.getVacancies(where, {
             postedBy: { select: { firstName: true, lastName: true } }
         });

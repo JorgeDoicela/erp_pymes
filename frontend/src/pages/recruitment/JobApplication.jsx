@@ -117,12 +117,12 @@ const JobApplication = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                                <input required type="text" className="w-full border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
+                                <input required type="text" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
                                     value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                                <input required type="text" className="w-full border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
+                                <input required type="text" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
                                     value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
                             </div>
                         </div>
@@ -130,12 +130,12 @@ const JobApplication = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input required type="email" className="w-full border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
+                                <input required type="email" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
                                     value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                                <input required type="tel" className="w-full border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
+                                <input required type="tel" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
                                     value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                             </div>
                         </div>
@@ -163,7 +163,7 @@ const JobApplication = () => {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Carta de Presentación (Opcional)</label>
-                            <textarea rows="4" className="w-full border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
+                            <textarea rows="4" className="w-full bg-white text-slate-800 border-gray-300 rounded-lg p-3 border focus:ring-2 focus:ring-blue-500 outline-none"
                                 value={formData.coverLetter} onChange={e => setFormData({ ...formData, coverLetter: e.target.value })}></textarea>
                         </div>
 
