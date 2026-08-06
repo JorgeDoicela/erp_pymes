@@ -2,6 +2,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiRefreshCw, FiX } from 'react-icons/fi';
 
+// Test change for GitHub Actions path detection pipeline
 export default function PWAReloadPrompt() {
   const {
     offlineReady: [offlineReady, setOfflineReady],
