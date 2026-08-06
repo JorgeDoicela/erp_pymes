@@ -40,27 +40,27 @@ export default function OfflineIndicator() {
         className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
       >
         <div
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-full text-xs font-semibold shadow-xl border backdrop-blur-md transition-colors ${
+          className={`flex items-center gap-3 px-4 py-2 rounded-full text-xs font-medium shadow-lg border backdrop-blur-md transition-all ${
             isOnline
-              ? 'bg-emerald-950/90 text-emerald-200 border-emerald-500/40 shadow-emerald-950/30'
-              : 'bg-amber-950/95 text-amber-200 border-amber-500/40 shadow-amber-950/40 animate-pulse'
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80 shadow-emerald-100/50'
+              : 'bg-amber-50 text-amber-800 border-amber-200/80 shadow-amber-100/50 animate-pulse'
           }`}
         >
           {isOnline ? (
             <>
-              <FiWifi className="text-emerald-400 text-sm" />
+              <FiWifi className="text-emerald-600 text-sm" />
               <span>Conexión restablecida. Modo en línea activo.</span>
             </>
           ) : (
             <>
-              <FiWifiOff className="text-amber-400 text-sm" />
+              <FiWifiOff className="text-amber-600 text-sm" />
               <span>Sin conexión a internet. Trabajando en modo Offline.</span>
             </>
           )}
 
           <button
             onClick={() => setShowNotification(false)}
-            className="ml-2 p-0.5 rounded-full hover:bg-white/10 transition-colors"
+            className="ml-1 p-0.5 rounded-full hover:bg-black/5 text-slate-400 hover:text-slate-600 transition-colors"
           >
             <FiX size={14} />
           </button>

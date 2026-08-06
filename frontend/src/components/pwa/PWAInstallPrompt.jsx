@@ -82,77 +82,97 @@ export default function PWAInstallPrompt() {
     }
   };
 
-  if (isInstalled || !showPrompt) return null;
+  if (isInstalled) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 50, scale: 0.95 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="fixed bottom-5 right-5 left-5 md:left-auto md:max-w-md z-50 pointer-events-auto"
+    <div className="fixed bottom-20 right-5 md:right-6 z-50 flex flex-col items-end gap-3 pointer-events-auto">
+      <AnimatePresence>
+        {showPrompt && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="w-full max-w-sm md:max-w-md"
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 p-5 shadow-2xl shadow-slate-400/20 text-slate-800">
+              {/* Línea decorativa superior */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400" />
+              
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 p-0.5 border border-slate-200/60 shadow-sm flex-shrink-0 flex items-center justify-center overflow-hidden">
+                    <img src="/pwa-192x192.png" alt="Emplifi Logo" className="w-full h-full object-cover rounded-lg" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-base text-slate-900 tracking-tight flex items-center gap-2">
+                      Instalar Emplifi App
+                      <span className="text-[10px] bg-blue-50 text-blue-600 border border-blue-200/80 px-2 py-0.5 rounded-full font-semibold">
+                        PWA
+                      </span>
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      Instala la app en tu dispositivo para acceso rápido y sin conexión.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleDismiss}
+                  className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                  title="Cerrar"
+                >
+                  <FiX size={18} />
+                </button>
+              </div>
+
+              {showIOSInstructions ? (
+                <div className="mt-4 p-3.5 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-200/80 space-y-2">
+                  <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                    <FiSmartphone className="text-blue-600" /> Para instalar en iOS / iPhone:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-600">
+                    <li>Toca el botón <span className="font-bold text-slate-900">Compartir</span> (icono con flecha hacia arriba) en Safari.</li>
+                    <li>Desplázate hacia abajo y selecciona <span className="font-bold text-blue-600">"Agregar al inicio"</span>.</li>
+                  </ol>
+                </div>
+              ) : (
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  <button
+                    onClick={handleDismiss}
+                    className="px-3.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                  >
+                    Ahora no
+                  </button>
+                  <button
+                    onClick={handleInstallClick}
+                    className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all transform active:scale-95"
+                  >
+                    <FiDownload size={15} />
+                    Instalar App
+                  </button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Botón Flotante Permanente (Ubicado arriba del botón de la esquina inferior) */}
+      <motion.button
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setShowPrompt((prev) => !prev)}
+        className="group flex items-center gap-2.5 px-4 py-2.5 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl hover:shadow-2xl shadow-slate-300/50 rounded-full text-slate-800 hover:text-blue-600 transition-all duration-300"
+        title="Instalar Emplifi App"
       >
-        <div className="relative overflow-hidden rounded-2xl bg-slate-900/95 backdrop-blur-md border border-blue-500/30 p-5 shadow-2xl shadow-blue-950/50 text-white">
-          {/* Accent glow background */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
-          
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 p-0.5 shadow-lg shadow-blue-500/30 flex-shrink-0 flex items-center justify-center">
-                <img src="/pwa-192x192.png" alt="Emplifi Logo" className="w-full h-full object-cover rounded-[10px]" />
-              </div>
-              <div>
-                <h4 className="font-bold text-base text-white tracking-wide flex items-center gap-1.5">
-                  Instalar Emplifi App
-                  <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded-full font-medium">
-                    PWA
-                  </span>
-                </h4>
-                <p className="text-xs text-slate-300 mt-0.5">
-                  Instala la app en tu dispositivo para acceso rápido y sin conexión.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={handleDismiss}
-              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
-              title="Cerrar"
-            >
-              <FiX size={18} />
-            </button>
-          </div>
-
-          {showIOSInstructions ? (
-            <div className="mt-4 p-3 bg-slate-800/80 rounded-xl text-xs text-slate-300 border border-slate-700 space-y-2">
-              <p className="font-semibold text-white flex items-center gap-1.5">
-                <FiSmartphone className="text-blue-400" /> Para instalar en iOS / iPhone:
-              </p>
-              <ol className="list-decimal list-inside space-y-1 text-slate-300">
-                <li>Toca el botón <span className="font-bold text-white">Compartir</span> (icono con flecha hacia arriba) en Safari.</li>
-                <li>Desplázate hacia abajo y selecciona <span className="font-bold text-blue-400">"Agregar al inicio"</span>.</li>
-              </ol>
-            </div>
-          ) : (
-            <div className="mt-4 flex items-center justify-end gap-2.5">
-              <button
-                onClick={handleDismiss}
-                className="px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white transition-colors"
-              >
-                Ahora no
-              </button>
-              <button
-                onClick={handleInstallClick}
-                className="px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-blue-600/30 flex items-center gap-1.5 transition-all transform active:scale-95"
-              >
-                <FiDownload size={15} />
-                Instalar App
-              </button>
-            </div>
-          )}
+        <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 border border-blue-200/80 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors flex-shrink-0">
+          <FiDownload size={14} />
         </div>
-      </motion.div>
-    </AnimatePresence>
+        <span className="text-xs font-semibold tracking-wide text-slate-800 group-hover:text-blue-600 pr-0.5">
+          Instalar App
+        </span>
+      </motion.button>
+    </div>
   );
 }
