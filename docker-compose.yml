@@ -61,7 +61,7 @@ services:
     networks:
       - rh_network
 
-  # Servidor Frontend React SPA + Reverse Proxy Nginx
+  # Servidor Frontend React SPA + Reverse Proxy Nginx SSL 443
   frontend:
     build:
       context: ./frontend
@@ -71,6 +71,9 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /var/www/recursos_humanos/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
     networks:
