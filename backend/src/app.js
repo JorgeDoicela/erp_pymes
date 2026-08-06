@@ -108,26 +108,34 @@ app.use((req, res, next) => {
 import { authenticate } from './middleware/auth.middleware.js';
 import { protectStaticFiles } from './middleware/security.middleware.js';
 
-// Servir archivos estáticos de forma protegida o mediante controlador (soporta /uploads y /api/uploads)
-app.use(['/uploads', '/api/uploads'], authenticate, protectStaticFiles, (req, res, next) => {
+// Servir archivos estáticos (uploads / CVs / documentos / evidencias / contratos)
+app.use(['/uploads', '/api/uploads'], (req, res, next) => {
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    // Si es un CV, usamos el controlador para asegurar acceso directo en Servidor EC2 / Local
-    if (req.path.includes('/resumes/')) {
-        const filename = path.basename(req.path);
-        const fullPath = path.join(STORAGE_CONFIG.PATHS.RESUMES, filename);
-        
-        if (fs.existsSync(fullPath)) {
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-            return res.sendFile(fullPath);
-        } else {
-            return res.status(404).json({
-                message: 'Archivo no encontrado',
-                detail: `El archivo no existe en el servidor: ${fullPath}`
-            });
-        }
+    
+    // Resolver ruta absoluta del archivo solicitado dentro del directorio de uploads
+    const cleanReqPath = req.path.startsWith('/') ? req.path : `/${req.path}`;
+    const fullPath = path.join(uploadsPath, cleanReqPath);
+
+    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+        const ext = path.extname(fullPath).toLowerCase();
+        const mimeTypes = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.webp': 'image/webp',
+            '.doc': 'application/msword',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        };
+        const contentType = mimeTypes[ext] || 'application/octet-stream';
+        const filename = path.basename(fullPath);
+
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+        return res.sendFile(fullPath);
     }
-    // Para otros archivos, seguimos con static
+
+    // Para otros archivos o fallbacks
     express.static(uploadsPath)(req, res, next);
 });
 

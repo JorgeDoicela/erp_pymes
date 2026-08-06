@@ -30,12 +30,13 @@ const ApplicationDetails = () => {
         if (cleanPath.startsWith('resumes/')) cleanPath = `uploads/${cleanPath}`;
         if (!cleanPath.startsWith('api/')) cleanPath = `api/${cleanPath}`;
 
+        const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
         const apiBase = import.meta.env.VITE_API_URL || '/api';
         if (apiBase.startsWith('http')) {
             const baseUrl = apiBase.replace(/\/api\/?$/, '');
-            return `${baseUrl}/${cleanPath}?token=${encodeURIComponent(token)}`;
+            return `${baseUrl}/${cleanPath}${tokenParam}`;
         }
-        return `/${cleanPath}?token=${encodeURIComponent(token)}`;
+        return `/${cleanPath}${tokenParam}`;
     };
 
     const handleDeleteCandidate = async () => {
