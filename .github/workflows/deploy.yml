@@ -11,17 +11,54 @@ on:
       - 'docker-compose.yml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
+    inputs:
+      restart_only:
+        description: 'Solo reiniciar contenedores en EC2 (fix rápido de 502, sin rebuild)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 env:
   REGISTRY: ghcr.io
 
 jobs:
   # =========================================================================
+  # 0. Reinicio Rapido de Contenedores (Fix 502 sin Rebuild)
+  # =========================================================================
+  quick-restart:
+    name: 🔄 Quick Restart EC2 Containers (Fix 502)
+    runs-on: ubuntu-latest
+    if: github.event.inputs.restart_only == 'true'
+    steps:
+      - name: SSH al EC2 y Reiniciar Contenedores
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/recursos_humanos
+            echo "=== Estado actual de contenedores ==="
+            docker compose ps
+            echo "=== Reiniciando contenedores ==="
+            docker compose restart
+            echo "=== Estado post-reinicio ==="
+            docker compose ps
+            echo "=== Health check del backend ==="
+            sleep 5
+            curl -sf http://localhost:4000/health && echo "✅ Backend OK" || echo "❌ Backend sigue caído"
+
+  # =========================================================================
   # 1. Deteccion Inteligente de Cambios en Rutas (Path Filtering)
   # =========================================================================
   detect-changes:
     name: Detect Changed Paths
     runs-on: ubuntu-latest
+    if: github.event.inputs.restart_only != 'true'
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
