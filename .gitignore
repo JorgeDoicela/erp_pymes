@@ -20,6 +20,10 @@ dist
 build
 coverage
 
+# Uploads & User data
+backend/uploads/
+uploads/
+
 # OS
 .DS_Store
 Thumbs.db
