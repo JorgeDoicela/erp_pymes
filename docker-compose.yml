@@ -58,6 +58,14 @@ services:
       SEED_SECRET: ${SEED_SECRET:-your-seed-secret-here}
       EMAIL_USER: ${EMAIL_USER:-your-email@example.com}
       EMAIL_PASS: ${EMAIL_PASS:-your-app-password}
+    healthcheck:
+      # Docker verifica que el proceso Node responde activamente, no solo que está corriendo
+      # Si el proceso se cuelga o crashea silenciosamente, restart:always lo reinicia sólo
+      test: ["CMD-SHELL", "curl -sf http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     volumes:
       - uploads_data:/app/uploads
     depends_on:
@@ -82,7 +90,9 @@ services:
     volumes:
       - /var/www/recursos_humanos/certs:/etc/nginx/certs:ro
     depends_on:
-      - backend
+      backend:
+        # Nginx arranca solo cuando el backend ya responde — elimina el 502 en cold start
+        condition: service_healthy
     networks:
       - rh_network
 

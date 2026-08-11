@@ -147,6 +147,9 @@ app.use(['/uploads', '/api/uploads'], (req, res, next) => {
 // Maintenance Middleware (Applied before main routes)
 app.use(maintenanceMiddleware);
 
+// Healthcheck ligero para Docker / Nginx / Balanceadores
+app.get('/health', (req, res) => res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() }));
+
 // Rutas
 app.use('/api/system', systemRoutes);
 app.use('/api', indexRoutes);
