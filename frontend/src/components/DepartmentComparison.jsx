@@ -87,23 +87,23 @@ export default function DepartmentComparison({ departments, summary, anova, pair
 
             {/* Banner ANOVA e Inferencia Estadística */}
             {anova && (
-                <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-800">
+                <div className="bg-white text-slate-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-200">
                     <div className="flex items-start gap-3">
-                        <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg shrink-0 mt-0.5">
+                        <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shrink-0 mt-0.5">
                             <FiActivity className="w-5 h-5" />
                         </div>
                         <div>
-                            <span className="text-xs text-indigo-400 font-bold uppercase tracking-wider block">Prueba ANOVA de Un Factor Interdepartamental</span>
-                            <div className="flex items-center gap-4 text-xs mt-1 text-slate-300">
-                                <span>F-Stat: <strong className="text-white font-mono">{anova.F || '2.415'}</strong></span>
-                                <span>Grados Libertad: <strong className="text-white font-mono">({anova.dfBetween || 2}, {anova.dfWithin || 22})</strong></span>
-                                <span>p-value: <strong className={`font-mono ${anova.pValue < 0.05 ? 'text-emerald-400' : 'text-amber-400'}`}>{anova.pValue ?? '0.0412'}</strong></span>
+                            <span className="text-xs text-indigo-600 font-bold uppercase tracking-wider block">Prueba ANOVA de Un Factor Interdepartamental</span>
+                            <div className="flex items-center gap-4 text-xs mt-1 text-slate-500">
+                                <span>F-Stat: <strong className="text-slate-800 font-mono">{anova.F || '2.415'}</strong></span>
+                                <span>Grados Libertad: <strong className="text-slate-800 font-mono">({anova.dfBetween || 2}, {anova.dfWithin || 22})</strong></span>
+                                <span>p-value: <strong className={`font-mono ${anova.pValue < 0.05 ? 'text-emerald-600' : 'text-amber-600'}`}>{anova.pValue ?? '0.0412'}</strong></span>
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 shrink-0">
-                        <FiCheckCircle className={`w-4 h-4 ${anova.isSignificant ? 'text-emerald-400' : 'text-amber-400'}`} />
-                        <span className="text-xs font-medium">
+                    <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 shrink-0">
+                        <FiCheckCircle className={`w-4 h-4 ${anova.isSignificant ? 'text-emerald-600' : 'text-amber-500'}`} />
+                        <span className="text-xs font-medium text-slate-700">
                             {anova.isSignificant ? 'Diferencia Estadísticamente Significativa (α = 0.05)' : 'Sin diferencia significativa entre grupos'}
                         </span>
                     </div>

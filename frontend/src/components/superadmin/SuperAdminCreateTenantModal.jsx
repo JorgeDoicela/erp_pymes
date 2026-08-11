@@ -42,14 +42,14 @@ export default function SuperAdminCreateTenantModal({ isOpen, onClose, onSuccess
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header Modal */}
-                <div className="p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-center justify-between">
+                <div className="p-5 bg-white border-b border-slate-200 text-slate-900 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <FiBriefcase className="w-5 h-5 text-indigo-400" />
-                        <h3 className="text-lg font-bold">Alta Directa de Empresa (Backoffice)</h3>
+                        <FiBriefcase className="w-5 h-5 text-indigo-600" />
+                        <h3 className="text-lg font-bold text-slate-900">Alta Directa de Empresa (Backoffice)</h3>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        className="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                     >
                         <FiX className="w-5 h-5" />
                     </button>

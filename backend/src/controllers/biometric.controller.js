@@ -16,7 +16,15 @@ const __dirname = path.dirname(__filename);
 
 const RP_ID = process.env.RP_ID || 'localhost';
 const RP_NAME = 'Emplifi RR.HH.';
-const ORIGIN = process.env.ORIGIN || (RP_ID === 'localhost' ? 'http://localhost:5173' : `https://${RP_ID}`);
+// Soporta múltiples orígenes separados por coma (útil en dev donde Vite puede usar 5173, 5174, etc.)
+// En producción, ALLOWED_ORIGINS debe contener únicamente el dominio HTTPS del sistema.
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : process.env.ORIGIN
+        ? [process.env.ORIGIN]
+        : RP_ID === 'localhost'
+            ? ['http://localhost:5173', 'http://localhost:5174']
+            : [`https://${RP_ID}`];
 
 export const getBiometricStatus = async (req, res) => {
     try {
@@ -151,7 +159,7 @@ export const verifyRegistration = async (req, res) => {
         const verification = await verifyRegistrationResponse({
             response: body,
             expectedChallenge: user.currentChallenge,
-            expectedOrigin: ORIGIN,
+            expectedOrigin: ALLOWED_ORIGINS,
             expectedRPID: RP_ID,
         });
 
@@ -283,7 +291,7 @@ export const verifyAuthentication = async (req, res) => {
         const verification = await verifyAuthenticationResponse({
             response: body,
             expectedChallenge: user.currentChallenge,
-            expectedOrigin: ORIGIN,
+            expectedOrigin: ALLOWED_ORIGINS,
             expectedRPID: RP_ID,
             credential: {
                 id: cid,

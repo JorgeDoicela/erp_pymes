@@ -25,6 +25,7 @@ import { runSeed } from '../controllers/admin/seedController.js';
 
 
 import biometricRoutes from './biometric/biometric.routes.js';
+import * as biometricPublicController from '../controllers/biometric.controller.js';
 import entrepreneurshipRoutes from './entrepreneurship.routes.js';
 import complianceRoutes from './compliance/compliance.routes.js';
 import announcementRoutes from './communication/announcement.routes.js';
@@ -92,6 +93,10 @@ router.use('/skills', protectedTenant, skillRoutes);
 router.use('/notifications', protectedTenant, notificationRoutes);
 router.use('/audit', protectedTenant, auditRoutes);
 router.use('/export', protectedTenant, exportRoutes);
+// Rutas públicas de autenticación biométrica (login del empleado sin token previo)
+router.post('/biometric/login/options', biometricPublicController.getAuthenticationOptions);
+router.post('/biometric/login/verify', biometricPublicController.verifyAuthentication);
+// Rutas protegidas de biometría (registro, estado — requieren sesión activa)
 router.use('/biometric', protectedTenant, biometricRoutes);
 router.use('/intelligence', protectedTenant, intelligenceRoutes);
 router.use('/accounting', protectedTenant, accountingRoutes);

@@ -7,13 +7,17 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx'
 
 
 
-// Limpieza activa de caches obsoletos del navegador
-if ('caches' in window) {
-  caches.keys().then((names) => {
-    names.forEach((name) => {
-      caches.delete(name);
-    });
-  }).catch(() => {});
+// En desarrollo: desregistrar SW y limpiar caches automáticamente
+// Evita logs de Workbox y conflictos con Vite HMR
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((sw) => sw.unregister());
+  });
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      names.forEach((name) => caches.delete(name));
+    }).catch(() => {});
+  }
 }
 
 createRoot(document.getElementById('root')).render(

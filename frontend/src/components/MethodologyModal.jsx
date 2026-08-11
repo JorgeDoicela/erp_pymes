@@ -1,116 +1,191 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
+import { InlineMath, BlockMath } from 'react-katex';
 import { FiX, FiBookOpen, FiActivity, FiSliders, FiBarChart2, FiDatabase, FiCheckCircle } from 'react-icons/fi';
+import 'katex/dist/katex.min.css';
 
+// ─── Fórmulas LaTeX ───────────────────────────────────────────────────────────
+const FORMULAS = {
+    weibull:
+        'h(t) = \\dfrac{k}{\\lambda}\\left(\\dfrac{t}{\\lambda}\\right)^{k-1} \\cdot \\exp\\!\\left(\\beta_{sal}\\,\\ln\\frac{S_{emp}}{S_{dept}} + \\beta_{abs}\\sum e^{-\\lambda_{decay}\\,\\Delta t} + \\beta_{perf}\\cdot\\text{Deficit}\\right)',
+
+    survival:
+        'R(t) = 1 - e^{-\\Delta H(t)}, \\quad CI_{95\\%} = R(t) \\pm 1.96\\,\\hat{\\sigma}_{R}',
+
+    montecarlo:
+        'ROI_{sim} = \\frac{\\Delta C_{rotación} + \\Delta H_{ahorro} - I_{total}}{I_{total}} \\times 100',
+
+    anova:
+        'F = \\frac{MS_{between}}{MS_{within}} = \\frac{SS_{between}\\,/\\,(k-1)}{SS_{within}\\,/\\,(N-k)}',
+
+    pvalue:
+        'p \\approx 1 - \\Phi\\!\\left(Z_{Wilson\\text{-}Hilferty}\\right)',
+};
+
+// ─── Componente de bloque de fórmula ─────────────────────────────────────────
+function FormulaBlock({ latex, label }) {
+    return (
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50 overflow-x-auto">
+            {label && (
+                <div className="px-4 pt-3 pb-1 text-[10px] font-semibold text-indigo-400 uppercase tracking-widest">
+                    {label}
+                </div>
+            )}
+            <div className="px-4 py-3 flex justify-center">
+                <BlockMath math={latex} />
+            </div>
+        </div>
+    );
+}
+
+FormulaBlock.propTypes = {
+    latex: PropTypes.string.isRequired,
+    label: PropTypes.string,
+};
+
+// ─── Modal principal ──────────────────────────────────────────────────────────
 export default function MethodologyModal({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    initial={{ opacity: 0, scale: 0.95, y: 12 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl overflow-hidden my-8"
+                    exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden my-8"
                 >
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
+                    {/* ── Header ── */}
+                    <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg border border-indigo-500/30">
+                            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg border border-indigo-200">
                                 <FiBookOpen className="w-5 h-5" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold tracking-tight">Ficha Metodológica de Modelos Estadísticos y Econométricos</h3>
-                                <p className="text-xs text-slate-400">Documentación científica y fundamentación matemática del Agente de Inteligencia</p>
+                                <h3 className="text-sm font-bold text-slate-800 tracking-tight">
+                                    Ficha Metodológica — Modelos Estadísticos y Econométricos
+                                </h3>
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                    Fundamentación matemática del Agente de Inteligencia
+                                </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                         >
                             <FiX className="w-5 h-5" />
                         </button>
                     </div>
 
-                    {/* Content Body */}
-                    <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto text-slate-700 text-xs sm:text-sm leading-relaxed">
+                    {/* ── Cuerpo ── */}
+                    <div className="p-5 space-y-5 max-h-[75vh] overflow-y-auto bg-white">
 
-                        {/* Modelo 1: Análisis de Supervivencia de Weibull */}
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2.5">
-                            <div className="flex items-center gap-2 text-indigo-700 font-bold text-base">
-                                <FiActivity className="w-5 h-5 shrink-0" />
-                                <h4>1. Modelo de Análisis de Supervivencia & Regresión Proporcional de Weibull</h4>
+                        {/* Modelo 1 — Weibull */}
+                        <section className="border border-slate-200 rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
+                                <FiActivity className="w-4 h-4 text-indigo-600 shrink-0" />
+                                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                    1. Análisis de Supervivencia — Regresión de Weibull
+                                </h4>
                             </div>
-                            <p>
-                                El cálculo del riesgo de rotación voluntaria (Turnover Risk) no emplea heurísticas lineales simples, sino una función de peligro acumulada h(t) basada en la distribución de Weibull paramétrica generalizada a nivel individual:
-                            </p>
-                            <div className="bg-slate-900 text-indigo-300 p-3 rounded-lg font-mono text-xs overflow-x-auto my-2 border border-slate-800">
-                                {"h(t) = (k / λ) * (t / λ)^(k-1) * exp( β_sal * ln(S_emp / S_dept) + β_abs * Σ exp(-λ_decay * Δt) + β_perf * Deficit )"}
+                            <div className="px-5 py-4 space-y-3 text-xs text-slate-600 leading-relaxed">
+                                <p>
+                                    El riesgo de rotación voluntaria se modela mediante la función de peligro acumulada{' '}
+                                    <InlineMath math="h(t)" /> de la distribución de Weibull paramétrica generalizada:
+                                </p>
+                                <FormulaBlock latex={FORMULAS.weibull} label="Función de peligro" />
+                                <FormulaBlock latex={FORMULAS.survival} label="Probabilidad de supervivencia a 12 meses" />
+                                <ul className="space-y-1.5 mt-1">
+                                    <li className="flex gap-2">
+                                        <span className="text-indigo-300 mt-0.5">▸</span>
+                                        <span><InlineMath math="k = 1.25" />: captura el incremento no lineal del riesgo con la antigüedad.</span>
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <span className="text-indigo-300 mt-0.5">▸</span>
+                                        <span><InlineMath math="\lambda_{decay} = 0.008" /> (≈ 90 días): vida media del decaimiento exponencial de ausencias.</span>
+                                    </li>
+                                </ul>
                             </div>
-                            <ul className="list-disc list-inside space-y-1 text-slate-600 pl-2">
-                                <li><strong>Parámetro de forma k = 1.25:</strong> Captura el incremento no lineal del riesgo con la antigüedad.</li>
-                                <li><strong>Decaimiento Exponencial de Ausencias:</strong> Pondera la recurrencia reciente con vida media λ_decay = 0.008 (aprox. 90 días).</li>
-                                <li><strong>Probabilidad de Rotación a 12 Meses:</strong> R(t) = 1 - exp(-ΔH(t)), con intervalo de confianza del 95% (CI_95%).</li>
-                            </ul>
-                        </div>
+                        </section>
 
-                        {/* Modelo 2: Simulador Monte Carlo What-If */}
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2.5">
-                            <div className="flex items-center gap-2 text-indigo-700 font-bold text-base">
-                                <FiSliders className="w-5 h-5 shrink-0" />
-                                <h4>2. Simulador Estocástico Monte Carlo & Sensibilidad Paramétrica</h4>
+                        {/* Modelo 2 — Monte Carlo */}
+                        <section className="border border-slate-200 rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
+                                <FiSliders className="w-4 h-4 text-indigo-600 shrink-0" />
+                                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                    2. Simulador Monte Carlo — Sensibilidad Paramétrica
+                                </h4>
                             </div>
-                            <p>
-                                Para evaluar escenarios de inversión en retención y optimización de nómina, se ejecutan N = 2,000 iteraciones estocásticas simulando perturbaciones gaussianas (transformada de Box-Muller) en las respuestas elásticas del personal:
-                            </p>
-                            <div className="bg-slate-900 text-indigo-300 p-3 rounded-lg font-mono text-xs overflow-x-auto my-2 border border-slate-800">
-                                {"ROI_sim = [ (Δ CostoRotación_evitado + Δ HorasExtras_ahorro - InversiónTotal) / InversiónTotal ] * 100"}
+                            <div className="px-5 py-4 space-y-3 text-xs text-slate-600 leading-relaxed">
+                                <p>
+                                    Se ejecutan <InlineMath math="N = 2{,}000" /> iteraciones estocásticas con perturbaciones
+                                    gaussianas (Box-Muller) sobre las respuestas elásticas del personal. El ROI simulado es:
+                                </p>
+                                <FormulaBlock latex={FORMULAS.montecarlo} label="ROI simulado por escenario" />
+                                <p>
+                                    Los percentiles empíricos <InlineMath math="P_{2.5}" /> y <InlineMath math="P_{97.5}" /> forman
+                                    el intervalo de confianza al 95%. El índice de Sobol construye el gráfico de Tornado de sensibilidad.
+                                </p>
                             </div>
-                            <p>
-                                Se obtienen percentiles empíricos P_2.5 y P_97.5 para los intervalos de confianza al 95%, junto con el índice de sensibilidad de Sobol para construir el gráfico de Tornado.
-                            </p>
-                        </div>
+                        </section>
 
-                        {/* Modelo 3: ANOVA & t-Student Welch */}
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2.5">
-                            <div className="flex items-center gap-2 text-indigo-700 font-bold text-base">
-                                <FiBarChart2 className="w-5 h-5 shrink-0" />
-                                <h4>3. Inferencia Estadística Interdepartamental (ANOVA de 1 Factor & Prueba t de Welch)</h4>
+                        {/* Modelo 3 — ANOVA */}
+                        <section className="border border-slate-200 rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
+                                <FiBarChart2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                    3. ANOVA de 1 Factor &amp; Prueba t de Welch
+                                </h4>
                             </div>
-                            <p>
-                                La comparación del desempeño y ausentismo interdepartamental se evalúa con Análisis de Varianza de un solo factor (One-Way ANOVA) evaluando el estadístico F:
-                            </p>
-                            <div className="bg-slate-900 text-indigo-300 p-3 rounded-lg font-mono text-xs overflow-x-auto my-2 border border-slate-800">
-                                {"F = MS_between / MS_within = [ SS_between / (k - 1) ] / [ SS_within / (N - k) ],   p ≈ 1 - Φ(Z_Wilson-Hilferty)"}
+                            <div className="px-5 py-4 space-y-3 text-xs text-slate-600 leading-relaxed">
+                                <p>
+                                    La comparación interdepartamental de desempeño y ausentismo emplea el estadístico{' '}
+                                    <InlineMath math="F" /> de varianza:
+                                </p>
+                                <FormulaBlock latex={FORMULAS.anova} label="Estadístico F" />
+                                <FormulaBlock latex={FORMULAS.pvalue} label="Aproximación del p-value" />
+                                <p>
+                                    Para departamentos con varianzas heterocedásticas se aplica la prueba t de Welch post-hoc.
+                                </p>
                             </div>
-                            <p>
-                                Para los departamentos con mayor variabilidad, se aplica la prueba t de Welch post-hoc asumiendo varianzas heterocedásticas.
-                            </p>
-                        </div>
+                        </section>
 
-                        {/* Modelo 4: Gobernanza y Anonimización */}
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2.5">
-                            <div className="flex items-center gap-2 text-indigo-700 font-bold text-base">
-                                <FiDatabase className="w-5 h-5 shrink-0" />
-                                <h4>4. Gobernanza de Datos, Anonimización & Single-Pass Data Fetching</h4>
+                        {/* Modelo 4 — Gobernanza */}
+                        <section className="border border-slate-200 rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
+                                <FiDatabase className="w-4 h-4 text-indigo-600 shrink-0" />
+                                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                    4. Gobernanza de Datos &amp; Single-Pass Fetching
+                                </h4>
                             </div>
-                            <ul className="list-disc list-inside space-y-1 text-slate-600 pl-2">
-                                <li><strong>Exportación Académica:</strong> Sustituye PII (nombres, cédulas) por identificadores disociados (EMP_0001), preservando covariables científicas normalizadas en CSV/JSON.</li>
-                                <li><strong>Horizonte Temporal Ampliado:</strong> Consultas Prisma recuperan hasta 12 meses históricos de ausencias, evaluaciones y nóminas en un único pase optimizado (latencia &lt; 300ms).</li>
-                            </ul>
-                        </div>
+                            <div className="px-5 py-4 space-y-1.5 text-xs text-slate-600 leading-relaxed">
+                                <p>
+                                    <span className="font-semibold text-slate-700">Exportación académica:</span>{' '}
+                                    PII (nombres, cédulas) sustituidos por identificadores disociados <InlineMath math="\text{EMP}_{0001}" />,
+                                    preservando covariables científicas normalizadas en CSV/JSON.
+                                </p>
+                                <p>
+                                    <span className="font-semibold text-slate-700">Horizonte temporal:</span>{' '}
+                                    Consultas Prisma recuperan 12 meses históricos en un único pase optimizado
+                                    (latencia <InlineMath math="< 300\,\text{ms}" />).
+                                </p>
+                            </div>
+                        </section>
 
                     </div>
 
-                    {/* Footer */}
+                    {/* ── Footer ── */}
                     <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-200">
-                        <span className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
-                            <FiCheckCircle className="w-4 h-4 text-emerald-600" /> Modelos Verificados científicamente
+                        <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                            <FiCheckCircle className="w-4 h-4 text-emerald-500" />
+                            Modelos verificados científicamente
                         </span>
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-xs"
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
                         >
                             Entendido y Cerrar
                         </button>

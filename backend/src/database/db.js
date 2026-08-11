@@ -67,6 +67,38 @@ const INDIRECT_RELATION_MAP = {
 };
 
 /**
+ * Expande compound unique keys al convertir findUnique → findFirst.
+ * Prisma genera keys compuestas con formato "field1_field2" cuyo valor es un objeto
+ * con los campos individuales. En findFirst esos no existen, deben ser campos planos.
+ *
+ * Ejemplo: { employeeId_date: { employeeId: 'x', date: new Date() } }
+ *      →   { employeeId: 'x', date: new Date() }
+ */
+function expandCompoundKeys(where) {
+    const PRISMA_OPERATORS = new Set(['AND', 'OR', 'NOT']);
+    for (const key of Object.keys(where)) {
+        if (PRISMA_OPERATORS.has(key)) continue;
+        const val = where[key];
+        if (
+            val !== null &&
+            typeof val === 'object' &&
+            !Array.isArray(val) &&
+            !(val instanceof Date) &&
+            key.includes('_')
+        ) {
+            // Verifica que todos los valores del objeto sean primitivos/Date (no objetos anidados de relación)
+            const isCompoundKey = Object.values(val).every(
+                v => v === null || typeof v !== 'object' || v instanceof Date
+            );
+            if (isCompoundKey) {
+                Object.assign(where, val);
+                delete where[key];
+            }
+        }
+    }
+}
+
+/**
  * Función auxiliar para inyectar filtros de aislamiento relacionales de forma defensiva
  */
 function applyRelationFilter(targetObj, filterPath, tenantId) {
@@ -106,7 +138,8 @@ prisma.$use(async (params, next) => {
     }
 
     params.args = params.args || {};
-    params.args.where = params.args.where || {};
+    // IMPORTANTE: NO inicializar params.args.where aquí de forma global.
+    // Las operaciones create/createMany no tienen 'where' y Prisma lanza error si se inyecta.
 
     const model = params.model;
     const action = params.action;
@@ -117,7 +150,11 @@ prisma.$use(async (params, next) => {
 
     // A. Transformar findUnique / findUniqueOrThrow a findFirst para aplicar scoping de Tenant
     if (['findUnique', 'findUniqueOrThrow'].includes(action)) {
-        params.action = 'findFirst';
+        params.action = action === 'findUniqueOrThrow' ? 'findFirstOrThrow' : 'findFirst';
+        params.args.where = params.args.where || {};
+        // Expandir compound unique keys (ej: employeeId_date) en campos individuales
+        // ya que findFirst no soporta esa sintaxis — es exclusiva de findUnique.
+        expandCompoundKeys(params.args.where);
         if (DIRECT_TENANT_MODELS.has(model)) {
             params.args.where.tenantId = tenantId;
         } else if (EMPLOYEE_RELATION_MODELS.has(model)) {
@@ -129,6 +166,7 @@ prisma.$use(async (params, next) => {
     }
     // B. Consultas masivas y lectura (findMany, findFirst, count, groupBy, aggregate)
     else if (['findMany', 'findFirst', 'count', 'groupBy', 'aggregate'].includes(action)) {
+        params.args.where = params.args.where || {};
         if (DIRECT_TENANT_MODELS.has(model)) {
             if (params.args.where.tenantId === undefined) {
                 params.args.where.tenantId = tenantId;
@@ -169,6 +207,7 @@ prisma.$use(async (params, next) => {
     }
     // D. Actualización y Eliminación Masiva (updateMany, deleteMany)
     else if (['updateMany', 'deleteMany'].includes(action)) {
+        params.args.where = params.args.where || {};
         if (DIRECT_TENANT_MODELS.has(model)) {
             params.args.where.tenantId = tenantId;
         } else if (EMPLOYEE_RELATION_MODELS.has(model)) {

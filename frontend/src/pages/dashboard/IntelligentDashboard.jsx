@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
     FiUsers, FiTrendingUp, FiClock, FiDollarSign, FiBriefcase,
-    FiAlertTriangle, FiArrowLeft, FiRefreshCw, FiSliders, FiCpu, FiPrinter, FiActivity, FiDownload, FiBookOpen
+    FiAlertTriangle, FiArrowLeft, FiRefreshCw, FiSliders, FiCpu, FiPrinter, FiActivity, FiDownload, FiBookOpen,
+    FiFileText, FiPackage
 } from 'react-icons/fi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -229,15 +230,15 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                 <div className="absolute right-0 top-full mt-1 hidden group-hover:flex flex-col bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-50 min-w-[150px]">
                                     <button
                                         onClick={() => handleExportDataset('csv')}
-                                        className="px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
+                                        className="flex items-center gap-2 px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
                                     >
-                                        📄 Descargar CSV (R / Python)
+                                        <FiFileText size={12} className="text-slate-500" /> Descargar CSV (R / Python)
                                     </button>
                                     <button
                                         onClick={() => handleExportDataset('json')}
-                                        className="px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
+                                        className="flex items-center gap-2 px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
                                     >
-                                        📦 Descargar JSON Estructurado
+                                        <FiPackage size={12} className="text-slate-500" /> Descargar JSON Estructurado
                                     </button>
                                 </div>
                             </div>

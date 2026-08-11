@@ -48,7 +48,7 @@ function EmployeeDashboard({ user }) {
             try {
                 const [evalsRes, absencesRes] = await Promise.allSettled([
                     import('../../services/evaluation.service').then(m => m.getMyPendingEvaluations()),
-                    api.get('/attendance/my-absences')
+                    api.get('/absences/my-requests')
                 ]);
 
                 let pendingEvaluationsCount = 0;

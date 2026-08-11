@@ -66,7 +66,7 @@ function AdminDashboard({ user, onLogout }) {
             try {
                 const [analyticsRes, absencesRes] = await Promise.allSettled([
                     api.get('/analytics/dashboard'),
-                    api.get('/attendance/absences', { params: { status: 'PENDING' } })
+                    api.get('/absences', { params: { status: 'PENDING' } })
                 ]);
 
                 let totalEmployees = 0;
