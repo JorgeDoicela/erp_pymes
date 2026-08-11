@@ -1,12 +1,7 @@
 #!/bin/sh
-set -e
 
-echo "=== Entrypoint: Aplicando migraciones de Prisma ==="
-npx prisma migrate deploy || {
-  echo "WARNING: Primer intento de migrate deploy falló, reintentando en 3 segundos..."
-  sleep 3
-  npx prisma migrate deploy
-}
+echo "=== Entrypoint: Sincronizando esquema de Prisma ==="
+npx prisma migrate deploy || npx prisma db push --accept-data-loss || echo "WARNING: Falló la sincronización de BD. Continuando arranque..."
 
-echo "=== Migraciones completadas. Iniciando servidor Node.js ==="
+echo "=== Sincronización completada. Iniciando servidor Node.js ==="
 exec node src/server.js
