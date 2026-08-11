@@ -204,7 +204,7 @@ const DiscoveryLog = () => {
 
                         <button 
                             onClick={handleUpdateMarket}
-                            className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+                            className="app-button-primary w-full py-3"
                         >
                             Actualizar Proyecciones
                         </button>
@@ -214,9 +214,9 @@ const DiscoveryLog = () => {
 
             {/* Modal para añadir entrevista */}
             {showInterviewModal && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl p-8 animate-slideDown max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-2xl font-black text-slate-800 mb-6 tracking-tight">Registro de Discovery</h3>
+                <div className="app-modal-overlay">
+                    <div className="app-modal-content max-w-xl">
+                        <h3 className="text-xl font-bold text-slate-800 mb-4 tracking-tight">Registro de Discovery</h3>
                         <form onSubmit={handleAddInterview} className="space-y-6">
                             <div>
                                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Lead / Cliente Entrevistado</label>

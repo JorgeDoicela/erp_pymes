@@ -21,6 +21,10 @@ export default {
           DEFAULT: '#F8FAFC', // slate-50
           muted: '#F1F5F9',   // slate-100
         }
+      },
+      boxShadow: {
+        '2xs': '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+        'xs': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
       }
     },
   },

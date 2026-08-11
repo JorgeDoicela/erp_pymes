@@ -296,82 +296,147 @@ const JournalEntries = () => {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    {/* VISTA MÓVIL: Tarjetas Apiladas (Responsive UX) */}
+            <div className="block md:hidden space-y-3">
+                {entries.length === 0 ? (
+                    <div className="p-8 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs italic">
+                        No hay asientos registrados aún.
+                    </div>
+                ) : (
+                    entries.map(entry => (
+                        <div key={entry.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-xs">
+                            <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                                <div>
+                                    <h4 className="font-bold text-slate-900 text-xs">{entry.description}</h4>
+                                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">{entry.entryNumber} | {entry.type}</p>
+                                </div>
+                                <div className="shrink-0">
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${entry.status === 'POSTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                        {entry.status === 'POSTED' ? 'Mayorizado' : 'Borrador'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Fecha</span>
+                                    <span className="text-slate-700 font-medium">{new Date(entry.date).toLocaleDateString()}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Monto Total</span>
+                                    <span className="font-mono font-extrabold text-slate-900">${entry.totalDebit.toLocaleString()}</span>
+                                </div>
+                            </div>
+
+                            <div className="pt-2 flex justify-end gap-2 border-t border-slate-50">
+                                <button
+                                    onClick={() => setSelectedEntry(entry)}
+                                    className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                >
+                                    <FiEye /> Detalle
+                                </button>
+                                {entry.status === 'DRAFT' && (
+                                    <>
+                                        <button
+                                            onClick={() => handlePost(entry.id)}
+                                            className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-xs"
+                                        >
+                                            <FiCheckCircle /> Mayorizar
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(entry.id)}
+                                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                            title="Eliminar Borrador"
+                                        >
+                                            <FiTrash2 size={16} />
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* VISTA ESCRITORIO: Tabla Completa */}
+            <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th className="px-6 py-4 border-b">Referencia</th>
+                                <th className="px-6 py-4 border-b">Fecha</th>
+                                <th className="px-6 py-4 border-b text-right">Total ($)</th>
+                                <th className="px-6 py-4 border-b">Estado</th>
+                                <th className="px-6 py-4 border-b text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {entries.length === 0 ? (
                                 <tr>
-                                    <th className="px-6 py-4 border-b">Referencia</th>
-                                    <th className="px-6 py-4 border-b">Fecha</th>
-                                    <th className="px-6 py-4 border-b text-right">Total ($)</th>
-                                    <th className="px-6 py-4 border-b">Estado</th>
-                                    <th className="px-6 py-4 border-b text-right">Acciones</th>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium">
+                                        No hay asientos registrados aún.
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {entries.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium">
-                                            No hay asientos registrados aún.
+                            ) : (
+                                entries.map(entry => (
+                                    <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-slate-800">{entry.description}</div>
+                                            <div className="text-[10px] text-slate-400 font-mono">{entry.entryNumber} | {entry.type}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600">
+                                            {new Date(entry.date).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-mono font-bold text-slate-700">
+                                            ${entry.totalDebit.toLocaleString()}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${entry.status === 'POSTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                {entry.status === 'POSTED' ? 'Mayorizado' : 'Borrador'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => setSelectedEntry(entry)}
+                                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                    title="Ver Detalle"
+                                                >
+                                                    <FiEye size={18} />
+                                                </button>
+                                                {entry.status === 'DRAFT' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handlePost(entry.id)}
+                                                            className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-all border border-emerald-100"
+                                                        >
+                                                            <FiCheckCircle /> Mayorizar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(entry.id)}
+                                                            className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                                            title="Eliminar Borrador"
+                                                        >
+                                                            <FiTrash2 size={18} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
-                                ) : (
-                                    entries.map(entry => (
-                                        <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="font-bold text-slate-800">{entry.description}</div>
-                                                <div className="text-[10px] text-slate-400 font-mono">{entry.entryNumber} | {entry.type}</div>
-                                            </td>
-                                            <td className="px-6 py-4 text-slate-600">
-                                                {new Date(entry.date).toLocaleDateString()}
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-mono font-bold text-slate-700">
-                                                ${entry.totalDebit.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${entry.status === 'POSTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                                                    {entry.status === 'POSTED' ? 'Mayorizado' : 'Borrador'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        onClick={() => setSelectedEntry(entry)}
-                                                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                        title="Ver Detalle"
-                                                    >
-                                                        <FiEye size={18} />
-                                                    </button>
-                                                    {entry.status === 'DRAFT' && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handlePost(entry.id)}
-                                                                className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-all border border-emerald-100"
-                                                            >
-                                                                <FiCheckCircle /> Mayorizar
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(entry.id)}
-                                                                className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                                                title="Eliminar Borrador"
-                                                            >
-                                                                <FiTrash2 size={18} />
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+            </div>
             )}
 
             {/* Modal de Detalle de Asiento */}
             {selectedEntry && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-scale-in">
                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
@@ -441,7 +506,7 @@ const JournalEntries = () => {
                         </div>
 
                         <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-                            <button onClick={() => setSelectedEntry(null)} className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all text-sm">
+                            <button onClick={() => setSelectedEntry(null)} className="app-button-primary">
                                 Cerrar Vista
                             </button>
                         </div>

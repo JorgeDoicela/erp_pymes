@@ -73,7 +73,7 @@ const ProjectForm = () => {
                         ].map(stepInfo => (
                             <React.Fragment key={stepInfo.s}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs transition-all ${step === stepInfo.s ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-50 text-slate-400 border border-slate-200/60'}`}>
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs transition-all ${step === stepInfo.s ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-50 text-slate-400 border border-slate-200/60'}`}>
                                         {stepInfo.s}
                                     </div>
                                     <span className={`text-xs font-semibold uppercase tracking-wider ${step === stepInfo.s ? 'text-slate-900' : 'text-slate-400'}`}>
@@ -131,10 +131,10 @@ const ProjectForm = () => {
                                     />
                                 </div>
 
-                                <button 
+                                 <button 
                                     type="button" 
                                     onClick={() => setStep(2)}
-                                    className="w-full flex items-center justify-center gap-3 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95 group"
+                                    className="app-button-primary w-full py-4 text-xs font-bold uppercase tracking-wider"
                                 >
                                     Configurar Estrategia <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                                 </button>
@@ -197,9 +197,9 @@ const ProjectForm = () => {
                                                 key={s.id}
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, stage: s.id })}
-                                                className={`flex flex-col p-5 rounded-2xl border-2 text-left transition-all ${formData.stage === s.id ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-200'}`}
+                                                className={`flex flex-col p-5 rounded-2xl border-2 text-left transition-all ${formData.stage === s.id ? 'border-indigo-600 bg-indigo-50/50 shadow-xs' : 'border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-200'}`}
                                             >
-                                                <span className={`font-bold text-xs uppercase tracking-wider mb-1 ${formData.stage === s.id ? 'text-slate-900' : 'text-slate-700'}`}>
+                                                <span className={`font-bold text-xs uppercase tracking-wider mb-1 ${formData.stage === s.id ? 'text-indigo-700' : 'text-slate-700'}`}>
                                                     {s.label}
                                                 </span>
                                                 <span className="text-[11px] text-slate-500 leading-tight font-medium">{s.desc}</span>
@@ -212,14 +212,14 @@ const ProjectForm = () => {
                                     <button 
                                         type="button" 
                                         onClick={() => setStep(1)}
-                                        className="flex-1 flex items-center justify-center gap-2 py-4 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition-all active:scale-95"
+                                        className="app-button-secondary flex-1"
                                     >
                                         <FiArrowLeft /> Volver
                                     </button>
                                     <button 
                                         type="submit"
                                         disabled={loading}
-                                        className="flex-[2] flex items-center justify-center gap-2 py-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all shadow-xs disabled:opacity-50 active:scale-95 group"
+                                        className="app-button-primary flex-[2]"
                                     >
                                         {loading ? 'Generando Ecosistema...' : <><FiSave /> Lanzar Mi Emprendimiento</>}
                                     </button>

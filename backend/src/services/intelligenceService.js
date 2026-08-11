@@ -129,7 +129,7 @@ async function fetchRawEmployees(tenantId = null) {
                 where: {
                     createdAt: { gte: twelveMonthsAgo }
                 },
-                select: { finalScore: true, overallScore: true, createdAt: true },
+                select: { finalScore: true, createdAt: true },
                 orderBy: { createdAt: 'desc' }
             },
             contracts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 5 },

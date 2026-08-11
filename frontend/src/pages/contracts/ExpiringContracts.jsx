@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios'; // Use configured axios instance
+import api from '../../api/axios';
 
 const ExpiringContracts = () => {
     const navigate = useNavigate();
@@ -11,8 +11,8 @@ const ExpiringContracts = () => {
     useEffect(() => {
         const fetchContracts = async () => {
             try {
-                const response = await api.get('/contracts/expiring?days=60'); // Get next 60 days to be safe
-                setContracts(response.data.data); // Adjust based on API structure
+                const response = await api.get('/contracts/expiring?days=60');
+                setContracts(response.data.data);
             } catch (err) {
                 console.error(err);
                 setError('Error al cargar contratos por vencer');
@@ -39,17 +39,17 @@ const ExpiringContracts = () => {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
-            <header className="flex justify-between items-center mb-6">
+        <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                         Contratos por Vencer
                     </h2>
-                    <p className="text-slate-500 text-xs mt-1">Gestión de renovaciones y terminaciones próximas</p>
+                    <p className="text-slate-500 text-xs sm:text-sm mt-1">Gestión de renovaciones y terminaciones próximas</p>
                 </div>
                 <button
                     onClick={() => navigate('/admin')}
-                    className="px-4 py-2 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition-colors text-slate-700 text-xs font-semibold shadow-xs"
+                    className="app-button-secondary w-full sm:w-auto"
                 >
                     Volver al Panel
                 </button>
@@ -62,17 +62,17 @@ const ExpiringContracts = () => {
             )}
 
             {loading ? (
-                <div className="text-center py-12 text-slate-400 text-xs">Cargando alertas...</div>
+                <div className="text-center py-12 text-slate-400 text-xs font-semibold">Cargando alertas...</div>
             ) : (
-                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                    <table className="w-full text-left">
+                <div className="app-table-wrapper">
+                    <table className="app-table">
                         <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] font-semibold tracking-wider">
                             <tr>
                                 <th className="px-6 py-3.5">Empleado</th>
                                 <th className="px-6 py-3.5">Departamento</th>
                                 <th className="px-6 py-3.5">Fecha Vencimiento</th>
                                 <th className="px-6 py-3.5">Días Restantes</th>
-                                <th className="px-6 py-3.5">Acciones</th>
+                                <th className="px-6 py-3.5 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -92,16 +92,16 @@ const ExpiringContracts = () => {
                                                 {new Date(contract.endDate).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${getStatusColor(days)}`}>
+                                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusColor(days)}`}>
                                                     {days} días
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 text-right">
                                                 <button
                                                     onClick={() => navigate(`/admin/employees/${contract.employee.id}`)}
-                                                    className="text-xs font-semibold text-slate-900 hover:underline"
+                                                    className="app-button-secondary py-1 px-3 text-xs"
                                                 >
-                                                    Ver Perfil
+                                                    Ver Expediente
                                                 </button>
                                             </td>
                                         </tr>
@@ -109,8 +109,8 @@ const ExpiringContracts = () => {
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-400 text-xs italic">
-                                        No hay contratos próximos a vencer (30 días).
+                                    <td colSpan="5" className="text-center py-12 text-slate-400 text-xs italic">
+                                        No hay contratos próximos a vencer en los siguientes 60 días.
                                     </td>
                                 </tr>
                             )}

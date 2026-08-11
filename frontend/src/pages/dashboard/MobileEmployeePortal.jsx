@@ -139,7 +139,7 @@ const MobileEmployeePortal = ({ user }) => {
                     </div>
                     <span className={`px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider border ${
                         clockStatus === 'IN' 
-                            ? 'bg-slate-900 text-white border-slate-900' 
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' 
                             : 'bg-slate-100 text-slate-600 border-slate-200/80'
                     }`}>
                         {clockStatus === 'IN' ? '● EN TURNO' : '○ FUERA DE TURNO'}
@@ -159,7 +159,7 @@ const MobileEmployeePortal = ({ user }) => {
                                 onClick={() => generateCertificatePDF(user || {})}
                                 className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col items-start space-y-2 text-left group"
                             >
-                                <div className="p-2.5 bg-slate-100 text-slate-700 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-all">
+                                <div className="p-2.5 bg-slate-100 text-slate-700 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                     <DocumentTextIcon className="w-6 h-6" />
                                 </div>
                                 <div>
@@ -178,7 +178,7 @@ const MobileEmployeePortal = ({ user }) => {
                                 }}
                                 className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col items-start space-y-2 text-left group"
                             >
-                                <div className="p-2.5 bg-slate-100 text-slate-700 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-all">
+                                <div className="p-2.5 bg-slate-100 text-slate-700 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                     <DocumentArrowDownIcon className="w-6 h-6" />
                                 </div>
                                 <div>
@@ -206,7 +206,7 @@ const MobileEmployeePortal = ({ user }) => {
                                 disabled={clockLoading}
                                 className={`w-full py-3.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xs ${
                                     clockStatus === 'OUT'
-                                        ? 'bg-slate-900 hover:bg-slate-800 text-white'
+                                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'
                                         : 'bg-rose-600 hover:bg-rose-700 text-white'
                                 }`}
                             >
@@ -354,7 +354,7 @@ const MobileEmployeePortal = ({ user }) => {
             {/* Request Form Modal */}
             <AnimatePresence>
                 {requestModalOpen && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                <div className="app-modal-overlay">
                         <motion.div
                             initial={{ y: 100, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}

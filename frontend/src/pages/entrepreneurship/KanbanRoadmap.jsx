@@ -86,28 +86,27 @@ const KanbanRoadmap = () => {
     const getColumnTasks = (columnId) => milestones.filter(m => (m.kanbanColumn || 'BACKLOG') === columnId);
 
     return (
-        <div className="space-y-8 animate-fadeIn">
-            <div className="flex justify-between items-center">
+        <div className="space-y-8 animate-fadeIn">            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-3">
                         <FiLayout className="text-indigo-600" /> Startup Roadmap
                     </h2>
-                    <p className="text-slate-500 text-sm font-medium">Gestión ágil de hitos críticos y ejecución estratégica.</p>
+                    <p className="text-slate-500 text-xs sm:text-sm font-medium">Gestión ágil de hitos críticos y ejecución estratégica.</p>
                 </div>
-                <button onClick={() => setShowModal(true)} className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-slate-800 transition-all font-bold text-sm shadow-xl shadow-slate-200">
+                <button onClick={() => setShowModal(true)} className="app-button-primary w-full sm:w-auto">
                     <FiPlus /> Nuevo Hito
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[600px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[600px] overflow-x-auto pb-4">
                 {columns.map((col) => (
-                    <div key={col.id} className="bg-slate-50/50 rounded-[32px] p-4 border border-slate-100/50 flex flex-col">
-                        <div className="flex items-center justify-between mb-6 px-2">
+                    <div key={col.id} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col">
+                        <div className="flex items-center justify-between mb-4 px-1">
                             <div className="flex items-center gap-2">
-                                <span className={`w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-${col.color}-500 border border-slate-100`}>{col.icon}</span>
-                                <h3 className="font-black text-slate-700 text-sm uppercase tracking-wider">{col.title}</h3>
+                                <span className={`w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-${col.color}-600 border border-slate-200/60`}>{col.icon}</span>
+                                <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">{col.title}</h3>
                             </div>
-                            <span className="bg-white border border-slate-100 text-slate-400 text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-lg shadow-sm">
+                            <span className="bg-slate-100 border border-slate-200/80 text-slate-600 text-[10px] font-bold w-6 h-6 flex items-center justify-center rounded-lg shadow-2xs">
                                 {getColumnTasks(col.id).length}
                             </span>
                         </div>
@@ -116,7 +115,7 @@ const KanbanRoadmap = () => {
                                 <div
                                     key={task.id}
                                     onClick={() => setDetailModal(task)}
-                                    className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer"
+                                    className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-200 transition-all group cursor-pointer"
                                 >
                                     <div className="flex justify-between items-start mb-3">
                                         <h4 className="font-bold text-slate-800 leading-tight text-sm flex-1 pr-2">{task.title}</h4>
@@ -156,7 +155,7 @@ const KanbanRoadmap = () => {
 
             {/* Modal Detalle de Hito */}
             {detailModal && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDetailModal(null)}>
+                <div className="app-modal-overlay" onClick={() => setDetailModal(null)}>
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 animate-slideDown" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-start mb-6">
                             <div>
@@ -210,7 +209,7 @@ const KanbanRoadmap = () => {
 
             {/* Modal Crear Hito */}
             {showModal && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-black text-slate-800">Nuevo Hito Estratégico</h3>
@@ -239,7 +238,7 @@ const KanbanRoadmap = () => {
                             </div>
                             <div className="flex gap-3 mt-2">
                                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 transition-all text-sm">Cancelar</button>
-                                <button type="submit" disabled={saving} className="flex-1 py-3 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all shadow-lg disabled:opacity-50 text-sm">{saving ? 'Guardando...' : 'Crear Hito'}</button>
+                                <button type="submit" disabled={saving} className="app-button-primary flex-1">{saving ? 'Guardando...' : 'Crear Hito'}</button>
                             </div>
                         </form>
                     </div>

@@ -53,10 +53,10 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
             </AnimatePresence>
 
             {/* Main Content */}
-            <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+            <div className="flex-1 md:ml-64 flex flex-col min-h-screen min-w-0 w-full overflow-x-hidden">
                 <Header user={user} onMenuClick={() => setIsMenuOpen(true)} title={title} />
-                <main className="flex-1 p-3 sm:p-6 overflow-y-auto">
-                    <div className="max-w-7xl mx-auto">
+                <main className="flex-1 p-3 sm:p-6 overflow-y-auto min-w-0 w-full">
+                    <div className="max-w-7xl mx-auto w-full min-w-0">
                         {isSuperAdminSupervising && (
                             <div className="mb-5 bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-start gap-3.5 text-slate-700">
                                 <div className="p-2.5 bg-slate-50 rounded-xl text-slate-500 border border-slate-100 shrink-0">

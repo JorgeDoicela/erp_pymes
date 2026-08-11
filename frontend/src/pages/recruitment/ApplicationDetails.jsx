@@ -778,7 +778,7 @@ const ApplicationDetails = () => {
 
             {/* Modal de Confirmación de Eliminación de Candidato */}
             {showDeleteModal && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center text-red-600 mb-4">
                             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-3 shrink-0">
@@ -814,10 +814,10 @@ const ApplicationDetails = () => {
 
             {/* Modal de Previsualización de CV en PDF dentro del sistema */}
             {showPdfModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-6 animate-in fade-in duration-200">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
                         {/* Header del Modal */}
-                        <div className="px-6 py-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
+                        <div className="px-6 py-4 bg-indigo-950 text-white flex justify-between items-center shrink-0">
                             <div className="flex items-center space-x-3">
                                 <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg">
                                     <FiFileText size={20} />

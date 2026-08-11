@@ -194,7 +194,7 @@ const LegalComplianceDashboard = () => {
                                         {alert.type === 'CONTRACT_EXPIRATION' && (
                                             <button
                                                 onClick={() => navigate('/admin/offboarding')}
-                                                className="px-3.5 py-2 bg-slate-800 text-white hover:bg-slate-900 rounded-xl text-xs font-bold shadow-sm transition-all"
+                                                className="app-button-primary"
                                             >
                                                 Gestionar Salida
                                             </button>

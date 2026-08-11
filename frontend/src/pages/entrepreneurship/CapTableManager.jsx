@@ -201,7 +201,7 @@ const CapTableManager = () => {
 
             {/* Modal para añadir socio */}
             {showEquityModal && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown">
                         <h3 className="text-xl font-bold text-slate-800 mb-6">Añadir Participación</h3>
                         <form onSubmit={handleAddEquity} className="space-y-4">
@@ -257,7 +257,7 @@ const CapTableManager = () => {
 
             {/* Modal Detalle Equity */}
             {detailEquity && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDetailEquity(null)}>
+                <div className="app-modal-overlay" onClick={() => setDetailEquity(null)}>
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center gap-4">
@@ -302,7 +302,7 @@ const CapTableManager = () => {
 
             {/* Modal Detalle Ronda */}
             {detailFunding && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDetailFunding(null)}>
+                <div className="app-modal-overlay" onClick={() => setDetailFunding(null)}>
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-start mb-6">
                             <div>
@@ -336,7 +336,7 @@ const CapTableManager = () => {
 
             {/* Modal Nueva Ronda de Inversión */}
             {showFundingModal && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown">
                         <h3 className="text-xl font-bold text-slate-800 mb-6">Registrar Ronda de Inversión</h3>
                         <form onSubmit={handleAddFunding} className="space-y-4">

@@ -47,9 +47,9 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                         {user?.role === 'admin' ? (
                             <InputField label="Fecha de Nacimiento" name="birthDate" type="date" value={editForm.birthDate} onChange={onChange} error={fieldErrors.birthDate} />
                         ) : (
-                            <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 opacity-70">
+                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
                                 <label className="text-xs text-slate-500 uppercase font-semibold block mb-1">Fecha de Nacimiento</label>
-                                <p className="text-slate-300">{editForm.birthDate}</p>
+                                <p className="text-slate-800 font-medium">{editForm.birthDate || 'No registrada'}</p>
                             </div>
                         )}
 

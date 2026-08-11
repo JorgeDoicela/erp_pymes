@@ -168,7 +168,94 @@ const OffboardingManagement = () => {
                             <ArrowPathIcon className={`w-4 h-4 text-slate-500 ${loading ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
-                    <div className="overflow-x-auto">
+
+                    {/* VISTA MÓVIL: Tarjetas Apiladas (Responsive UX) */}
+                    <div className="block md:hidden p-4 space-y-3">
+                        {loading ? (
+                            <div className="p-8 text-center text-slate-400 text-xs font-semibold">Cargando procesos de salida...</div>
+                        ) : offboardings.length === 0 ? (
+                            <div className="p-8 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs italic">
+                                No hay procesos de salida registrados.
+                            </div>
+                        ) : (
+                            offboardings.map(off => {
+                                const checklist = JSON.parse(off.checklist || '[]');
+                                const completedTasks = checklist.filter(t => t.completed).length;
+                                const totalTasks = checklist.length;
+                                const isComplete = totalTasks > 0 && completedTasks === totalTasks;
+
+                                return (
+                                    <div key={off.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-xs">
+                                        <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                                            <div>
+                                                <h4 className="font-bold text-slate-900 text-xs">{off.employee?.firstName} {off.employee?.lastName}</h4>
+                                                <p className="text-[11px] text-slate-400 font-normal mt-0.5">{off.employee?.department || 'General'}</p>
+                                            </div>
+                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                                off.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                            }`}>
+                                                {off.status === 'COMPLETED' ? 'COMPLETADO' : 'EN PROCESO'}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Causal de Salida</span>
+                                                <span className="font-semibold text-slate-700">{getCausalLabel(off.causal)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Fecha Salida</span>
+                                                <span className="text-slate-600">{new Date(off.exitDate).toLocaleDateString('es-EC')}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-50">
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Total Liquidación</span>
+                                                <span className="font-mono font-extrabold text-emerald-700 text-base">${off.totalSettlement.toFixed(2)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Checklist</span>
+                                                <span className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold ${
+                                                    isComplete ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                                }`}>
+                                                    {completedTasks} / {totalTasks} Tareas
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-2 flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedOffboarding(off);
+                                                    setChecklistModalOpen(true);
+                                                }}
+                                                className="flex-1 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1"
+                                            >
+                                                <ClipboardDocumentCheckIcon className="w-4 h-4" /> Checklist
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    const sim = await simulateSettlement({
+                                                        employeeId: off.employeeId,
+                                                        exitDate: off.exitDate,
+                                                        causal: off.causal
+                                                    });
+                                                    if (sim.success) generateSettlementPDF(sim.data);
+                                                }}
+                                                className="flex-1 py-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition-all text-center"
+                                            >
+                                                PDF Finiquito
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    {/* VISTA ESCRITORIO: Tabla Completa */}
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-sm text-left text-slate-600">
                             <thead className="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200/80">
                                 <tr>
@@ -385,7 +472,7 @@ const OffboardingManagement = () => {
                                         </button>
                                         <button
                                             onClick={handleStartOffboarding}
-                                            className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-sm"
+                                            className="app-button-primary"
                                         >
                                             Iniciar Offboarding Oficial
                                         </button>
@@ -408,7 +495,7 @@ const OffboardingManagement = () => {
             {/* Checklist Offboarding Modal */}
             <AnimatePresence>
                 {checklistModalOpen && selectedOffboarding && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="app-modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}

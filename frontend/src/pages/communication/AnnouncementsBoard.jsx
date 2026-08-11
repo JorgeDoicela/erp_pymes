@@ -190,7 +190,7 @@ const AnnouncementsBoard = ({ user }) => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button type="submit" className="px-3.5 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-all">Buscar</button>
+                    <button type="submit" className="app-button-primary">Buscar</button>
                 </form>
             </div>
 
@@ -324,7 +324,7 @@ const AnnouncementsBoard = ({ user }) => {
             {/* Create Announcement Modal (Admin Only) */}
             <AnimatePresence>
                 {createModalOpen && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="app-modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
@@ -426,7 +426,7 @@ const AnnouncementsBoard = ({ user }) => {
             {/* Read Stats Modal (Admin Only) */}
             <AnimatePresence>
                 {statsModalOpen && selectedStats && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="app-modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}

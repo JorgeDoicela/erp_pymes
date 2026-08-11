@@ -215,15 +215,96 @@ const SalaryAdvancesManagement = () => {
                     </div>
                     <button
                         type="submit"
-                        className="px-3.5 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-all"
+                        className="app-button-primary"
                     >
                         Buscar
                     </button>
                 </form>
             </div>
 
-            {/* Main Table */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            {/* VISTA MÓVIL: Tarjetas Apiladas (Responsive UX) */}
+            <div className="block md:hidden space-y-3">
+                {loading ? (
+                    <div className="p-8 text-center text-slate-400 text-xs font-semibold flex items-center justify-center gap-2">
+                        <ArrowPathIcon className="w-5 h-5 animate-spin text-blue-600" />
+                        Cargando solicitudes de anticipos...
+                    </div>
+                ) : advances.length === 0 ? (
+                    <div className="p-8 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs italic">
+                        No se encontraron registros de anticipos o préstamos.
+                    </div>
+                ) : (
+                    advances.map(adv => (
+                        <div key={adv.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-xs">
+                            <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+                                        {adv.employee?.firstName?.[0]}{adv.employee?.lastName?.[0]}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-xs">{adv.employee?.firstName} {adv.employee?.lastName}</p>
+                                        <p className="text-[11px] text-slate-400">{adv.employee?.department || 'General'}</p>
+                                    </div>
+                                </div>
+                                <div className="shrink-0">{getStatusBadge(adv.status)}</div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Monto Solicitado</span>
+                                    <span className="font-mono font-extrabold text-slate-900 text-base">${adv.amount.toFixed(2)}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Cuota Mensual</span>
+                                    <span className="font-mono font-bold text-rose-600">-${adv.monthlyDeduction.toFixed(2)} / mes</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-50">
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Avance Cuotas</span>
+                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-mono text-[11px] font-bold">
+                                        {adv.paidInstallments} / {adv.installments} cuotas
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Fecha Solicitud</span>
+                                    <span className="text-slate-600 text-[11px]">{new Date(adv.requestDate).toLocaleDateString('es-EC')}</span>
+                                </div>
+                            </div>
+
+                            {adv.status === 'PENDING' ? (
+                                <div className="pt-2 flex gap-2">
+                                    <button
+                                        onClick={() => handleApprove(adv.id)}
+                                        disabled={actionLoading}
+                                        className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1"
+                                    >
+                                        <CheckCircleIcon className="w-4 h-4" /> Aprobar
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedAdvance(adv);
+                                            setRejectModalOpen(true);
+                                        }}
+                                        disabled={actionLoading}
+                                        className="flex-1 py-2 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1"
+                                    >
+                                        <XCircleIcon className="w-4 h-4" /> Rechazar
+                                    </button>
+                                </div>
+                            ) : (
+                                <p className="text-[11px] text-slate-400 italic text-right pt-1">
+                                    {adv.reason ? `Motivo: ${adv.reason}` : 'Sin notas'}
+                                </p>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* VISTA ESCRITORIO: Tabla Completa */}
+            <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-slate-600">
                         <thead className="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200/80">
@@ -351,7 +432,7 @@ const SalaryAdvancesManagement = () => {
             {/* Reject Modal */}
             <AnimatePresence>
                 {rejectModalOpen && selectedAdvance && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="app-modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}

@@ -35,31 +35,31 @@ const EvaluationDashboard = () => {
     return (
         <div className="space-y-6">
             <div className="max-w-7xl mx-auto">
-                <div className="flex justify-between items-center mb-10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight mb-1">
                             Evaluaciones de Desempeño
                         </h1>
-                        <p className="text-slate-500 text-lg">Gestiona las plantillas y ciclos de evaluación.</p>
+                        <p className="text-slate-500 text-sm sm:text-base">Gestiona las plantillas y ciclos de evaluación.</p>
                     </div>
-                    <div className="flex space-x-4">
+                    <div className="flex flex-wrap items-center gap-2.5">
                         <button
                             onClick={() => navigate(-1)}
-                            className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors font-medium"
+                            className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium cursor-pointer"
                         >
                             Volver
                         </button>
                         <button
                             onClick={() => navigate('/performance/assign')}
-                            className="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md font-medium"
+                            className="flex items-center px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-xs text-sm font-medium cursor-pointer"
                         >
-                            <FiPlus className="mr-2" /> Asignar Evaluación
+                            <FiPlus className="mr-1.5" /> Asignar
                         </button>
                         <button
                             onClick={() => navigate('/performance/create')}
-                            className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md font-medium"
+                            className="flex items-center px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-xs text-sm font-medium cursor-pointer"
                         >
-                            <FiPlus className="mr-2" /> Nueva Evaluación
+                            <FiPlus className="mr-1.5" /> Nueva
                         </button>
                     </div>
                 </div>

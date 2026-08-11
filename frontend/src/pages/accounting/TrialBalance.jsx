@@ -83,7 +83,7 @@ const TrialBalance = () => {
                     <button onClick={() => fetchData(selectedPeriod)} className="p-2.5 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors">
                         <FiRefreshCw className={loading ? 'animate-spin' : ''} />
                     </button>
-                    <button onClick={() => window.print()} className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-medium text-sm hover:bg-slate-800 transition-all shadow-sm">
+                    <button onClick={() => window.print()} className="app-button-primary">
                         <FiPrinter /> Imprimir Reporte
                     </button>
                 </div>
@@ -146,7 +146,7 @@ const TrialBalance = () => {
 
             {/* Modal de Mayor Auxiliar (General Ledger) */}
             {ledgerAccount && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden animate-scale-in">
                         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-indigo-600 text-white">
                             <div>
@@ -209,10 +209,8 @@ const TrialBalance = () => {
                             )}
                         </div>
 
-                        <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                            <button onClick={() => setLedgerAccount(null)} className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all text-sm">
-                                Entendido
-                            </button>
+                        <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                            <button onClick={() => setLedgerAccount(null)} className="app-button-primary">Cerrar</button>
                         </div>
                     </div>
                 </div>

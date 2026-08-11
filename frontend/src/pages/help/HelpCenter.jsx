@@ -404,7 +404,7 @@ const HelpCenter = () => {
                                     href="https://wa.me/593969677280" 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-xs"
+                                    className="app-button-primary"
                                 >
                                     Hablar con Soporte <FiArrowRight />
                                 </a>

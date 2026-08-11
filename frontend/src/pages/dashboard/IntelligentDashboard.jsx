@@ -300,7 +300,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
                 >
                     {/* TAB 1: RESUMEN ESTRATÉGICO & ROI */}
                     {activeTab === 'overview' && (
-                        <div className="space-y-6">
+                        <div className="space-y-6 w-full min-w-0">
                             {/* Banner Ejecutivo de Impacto Financiero y ROI */}
                             <ExecutiveKPIBanner financialImpact={dashboard?.financialImpact} />
 

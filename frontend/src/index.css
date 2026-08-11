@@ -92,3 +92,74 @@ textarea:-webkit-autofill:focus {
   -ms-overflow-style: none;  /* IE y Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Sistema de Componentes Clean White Theme */
+@layer components {
+  .app-page-container {
+    @apply min-h-screen bg-slate-50 text-slate-800 px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-7xl mx-auto;
+  }
+
+  .app-card {
+    @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 transition-all duration-200;
+  }
+
+  .app-card-hover {
+    @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-slate-300 p-5 sm:p-6 transition-all duration-200;
+  }
+
+  .app-table-wrapper {
+    @apply w-full overflow-x-auto rounded-xl border border-slate-200/80 bg-white shadow-sm;
+  }
+
+  .app-input {
+    @apply w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none;
+  }
+
+  .app-button-primary {
+    @apply px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer;
+  }
+
+  .app-button-secondary {
+    @apply px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer;
+  }
+
+  .app-badge-neutral {
+    @apply px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full border border-slate-200 inline-flex items-center gap-1;
+  }
+
+  .app-badge-success {
+    @apply px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200/80 inline-flex items-center gap-1;
+  }
+
+  .app-badge-warning {
+    @apply px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-200/80 inline-flex items-center gap-1;
+  }
+
+  .app-badge-danger {
+    @apply px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200/80 inline-flex items-center gap-1;
+  }
+
+  .app-page-header {
+    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
+  }
+
+  .app-modal-overlay {
+    @apply fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto;
+  }
+
+  .app-modal-content {
+    @apply bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto relative;
+  }
+
+  .app-table {
+    @apply w-full text-left text-sm text-slate-700 border-collapse min-w-[600px];
+  }
+
+  .app-th {
+    @apply px-4 py-3 bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap;
+  }
+
+  .app-td {
+    @apply px-4 py-3 border-b border-slate-100 text-sm text-slate-700 whitespace-nowrap;
+  }
+}

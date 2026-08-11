@@ -105,16 +105,16 @@ const NotificationsPage = () => {
                 </div>
             </header>
 
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-6 flex-wrap">
                 <button
                     onClick={() => setFilter('all')}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'all' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80'}`}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80'}`}
                 >
                     Todas
                 </button>
                 <button
                     onClick={() => setFilter('unread')}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'unread' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80'}`}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'unread' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80'}`}
                 >
                     No leídas
                 </button>
@@ -143,7 +143,7 @@ const NotificationsPage = () => {
                                 className={`relative group bg-white border border-slate-200/80 rounded-2xl p-5 hover:border-slate-300 transition-all cursor-pointer shadow-xs ${!notification.isRead ? 'bg-slate-50/60' : ''}`}
                             >
                                 {!notification.isRead && (
-                                    <div className="absolute top-5 right-5 w-2 h-2 rounded-full bg-slate-900"></div>
+                                    <div className="absolute top-5 right-5 w-2 h-2 rounded-full bg-indigo-600"></div>
                                 )}
                                 <div className="flex gap-4 items-start">
                                     {getIcon(notification.type)}

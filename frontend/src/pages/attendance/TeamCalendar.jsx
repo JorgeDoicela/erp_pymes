@@ -45,7 +45,7 @@ const TeamCalendar = () => {
             <div className="grid grid-cols-7 gap-2">
                 {/* Empty slots for start of month */}
                 {Array.from({ length: firstDay }).map((_, i) => (
-                    <div key={`empty-${i}`} className="h-24 bg-slate-900/30 rounded border border-white/5"></div>
+                    <div key={`empty-${i}`} className="h-24 bg-slate-50/50 rounded-xl border border-slate-100"></div>
                 ))}
 
                 {/* Days */}
@@ -53,10 +53,10 @@ const TeamCalendar = () => {
                     const day = i + 1;
                     const dayAbsences = getAbsencesForDay(day);
                     return (
-                        <div key={day} className="h-24 bg-slate-900/50 rounded border border-white/5 p-1 overflow-y-auto">
-                            <p className="text-right text-slate-500 text-xs mb-1">{day}</p>
+                        <div key={day} className="h-24 bg-white rounded-xl border border-slate-200/80 p-1.5 overflow-y-auto shadow-2xs">
+                            <p className="text-right text-slate-400 text-xs font-bold mb-1">{day}</p>
                             {dayAbsences.map(abs => (
-                                <div key={abs.id} className="text-[10px] bg-blue-500/20 text-blue-300 rounded px-1 py-0.5 mb-1 truncate" title={`${abs.employee.firstName}: ${abs.type}`}>
+                                <div key={abs.id} className="text-[10px] bg-blue-50 text-blue-700 font-semibold border border-blue-100 rounded-lg px-1.5 py-0.5 mb-1 truncate" title={`${abs.employee.firstName}: ${abs.type}`}>
                                     {abs.employee.firstName}
                                 </div>
                             ))}

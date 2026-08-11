@@ -134,7 +134,7 @@ export default function SuperAdminDashboard() {
                 <button
                     onClick={() => loadData(pagination.page)}
                     disabled={loading}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                    className="app-button-primary w-full sm:w-auto"
                 >
                     <FiRefreshCw className={`text-sm ${loading ? 'animate-spin' : ''}`} />
                     Actualizar
@@ -229,31 +229,31 @@ export default function SuperAdminDashboard() {
                     <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 overflow-x-auto no-scrollbar pb-1">
                         <button
                             onClick={() => setActiveTab('ALL')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ALL' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ALL' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             Todas ({metrics?.totalTenants ?? 0})
                         </button>
                         <button
                             onClick={() => setActiveTab('ACTIVE')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ACTIVE' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ACTIVE' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             Activas ({metrics?.activeTenants ?? 0})
                         </button>
                         <button
                             onClick={() => setActiveTab('TRIAL')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'TRIAL' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'TRIAL' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             En Trial ({metrics?.trialTenants ?? 0})
                         </button>
                         <button
                             onClick={() => setActiveTab('EXPIRING')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'EXPIRING' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'EXPIRING' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             Vencen Pronto ({metrics?.expiringTrialsCount ?? 0})
                         </button>
                         <button
                             onClick={() => setActiveTab('SUSPENDED')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'SUSPENDED' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'SUSPENDED' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             Suspendidas ({metrics?.suspendedTenants ?? 0})
                         </button>
@@ -455,34 +455,34 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     {/* Filter Tabs Responsive Horizontal Scroll */}
-                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
                         <button
                             onClick={() => setActiveTab('ALL')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ALL' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ALL' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             Todas ({metrics?.totalTenants ?? 0})
                         </button>
                         <button
                             onClick={() => setActiveTab('ACTIVE')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ACTIVE' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ACTIVE' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             Activas ({metrics?.activeTenants ?? 0})
                         </button>
                         <button
                             onClick={() => setActiveTab('TRIAL')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'TRIAL' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'TRIAL' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             En Trial ({metrics?.trialTenants ?? 0})
                         </button>
                         <button
                             onClick={() => setActiveTab('EXPIRING')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'EXPIRING' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'EXPIRING' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             Vencen Pronto ({metrics?.expiringTrialsCount ?? 0})
                         </button>
                         <button
                             onClick={() => setActiveTab('SUSPENDED')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'SUSPENDED' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'SUSPENDED' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
                             Suspendidas ({metrics?.suspendedTenants ?? 0})
                         </button>

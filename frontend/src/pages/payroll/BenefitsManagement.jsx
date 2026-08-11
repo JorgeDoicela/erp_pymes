@@ -310,7 +310,7 @@ const BenefitsManagement = () => {
 
             {/* MODAL ASIGNACIÓN INDIVIDUAL */}
             {modalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="app-modal-overlay">
                     <div className="bg-white p-8 rounded-2xl border border-slate-200 w-full max-w-md shadow-2xl animate-zoomIn">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800">Nuevo Beneficio</h3>
@@ -376,7 +376,7 @@ const BenefitsManagement = () => {
 
             {/* MODAL ASIGNACIÓN MASIVA */}
             {bulkModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="app-modal-overlay">
                     <div className="bg-white p-8 rounded-2xl border border-slate-200 w-full max-w-2xl shadow-2xl animate-zoomIn flex flex-col max-h-[90vh]">
                         <div className="flex justify-between items-center mb-6">
                             <div>

@@ -106,7 +106,7 @@ const PeriodsManagement = () => {
                         <div className="mt-6 pt-6 border-t border-slate-100">
                             <button
                                 onClick={() => handleToggleStatus(p.id)}
-                                className={`w-full py-2 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2 ${p.status === 'OPEN' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+                                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${p.status === 'OPEN' ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100'}`}
                             >
                                 {p.status === 'OPEN' ? (
                                     <><FiLock className="w-4 h-4" /> Realizar Cierre de Mes</>

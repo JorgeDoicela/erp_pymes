@@ -15,7 +15,7 @@ const NotificationSettings = () => {
         { key: 'PAYROLL_REVIEW', label: 'Revisión de Nómina' },
         { key: 'PAYROLL_CONFIRM', label: 'Confirmación de Pago' },
         { key: 'ABSENCE_REQUEST', label: 'Solicitud de Ausencia' },
-        { key: 'ABSENCE_STATUS', label: 'Estado de Ausencia' }, // Check service usage
+        { key: 'ABSENCE_STATUS', label: 'Estado de Ausencia' },
     ];
 
     useEffect(() => {
@@ -25,7 +25,6 @@ const NotificationSettings = () => {
     const fetchPreferences = async () => {
         try {
             const response = await api.get('/notifications/preferences');
-            // Response: { preferences: { KEY: { email: true, inApp: true } } }
             setPreferences(response.data.preferences || {});
         } catch (error) {
             console.error('Error fetching preferences', error);
@@ -37,7 +36,7 @@ const NotificationSettings = () => {
 
     const handleToggle = (type, channel) => {
         setPreferences(prev => {
-            const typePrefs = prev[type] || { email: true, inApp: true }; // Default true
+            const typePrefs = prev[type] || { email: true, inApp: true };
             const newTypePrefs = { ...typePrefs, [channel]: !typePrefs[channel] };
             return { ...prev, [type]: newTypePrefs };
         });
@@ -55,44 +54,43 @@ const NotificationSettings = () => {
         }
     };
 
-    if (loading) return <div className="p-8 text-slate-500 text-sm">Cargando preferencias...</div>;
+    if (loading) return <div className="p-8 text-slate-500 text-sm text-center">Cargando preferencias...</div>;
 
     return (
         <div className="p-6 max-w-3xl mx-auto space-y-6">
             <div>
-                <h2 className="text-2xl font-bold text-slate-900">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                     Configuración de Notificaciones
                 </h2>
-                <p className="text-slate-500 text-xs mt-1">Gestiona los canales por los cuales deseas recibir alertas del sistema.</p>
+                <p className="text-slate-500 text-xs sm:text-sm mt-1">Gestiona los canales por los cuales deseas recibir alertas del sistema.</p>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-4 shadow-xs">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 space-y-4 shadow-xs">
                 {notificationTypes.map(({ key, label }) => {
-                    // Default to true if not set
                     const emailEnabled = preferences[key]?.email !== false;
                     const inAppEnabled = preferences[key]?.inApp !== false;
 
                     return (
-                        <div key={key} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+                        <div key={key} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0 gap-4">
                             <div>
-                                <h3 className="font-semibold text-xs text-slate-900">{label}</h3>
+                                <h3 className="font-semibold text-xs sm:text-sm text-slate-900">{label}</h3>
                                 <p className="text-[11px] text-slate-400">Alertas para {label.toLowerCase()}</p>
                             </div>
-                            <div className="flex gap-4">
+                            <div className="flex gap-4 shrink-0">
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${inAppEnabled ? 'bg-slate-900' : 'bg-slate-200'}`}>
+                                    <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${inAppEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}>
                                         <div className={`w-4 h-4 bg-white rounded-full transition-transform ${inAppEnabled ? 'translate-x-4' : ''}`}></div>
                                     </div>
                                     <input type="checkbox" className="hidden" checked={inAppEnabled} onChange={() => handleToggle(key, 'inApp')} />
-                                    <span className="text-xs font-medium text-slate-600">App</span>
+                                    <span className="text-xs font-semibold text-slate-600">App</span>
                                 </label>
 
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${emailEnabled ? 'bg-slate-900' : 'bg-slate-200'}`}>
+                                    <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${emailEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}>
                                         <div className={`w-4 h-4 bg-white rounded-full transition-transform ${emailEnabled ? 'translate-x-4' : ''}`}></div>
                                     </div>
                                     <input type="checkbox" className="hidden" checked={emailEnabled} onChange={() => handleToggle(key, 'email')} />
-                                    <span className="text-xs font-medium text-slate-600">Email</span>
+                                    <span className="text-xs font-semibold text-slate-600">Email</span>
                                 </label>
                             </div>
                         </div>
@@ -103,7 +101,7 @@ const NotificationSettings = () => {
             <div className="flex justify-end pt-2">
                 <button
                     onClick={savePreferences}
-                    className="px-5 py-2.5 bg-slate-900 text-white rounded-xl font-semibold text-xs hover:bg-slate-800 transition-colors shadow-xs"
+                    className="app-button-primary"
                 >
                     Guardar Preferencias
                 </button>

@@ -205,30 +205,30 @@ const ProjectDetails = () => {
                             </div>
                         </div>
 
-                        <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl shadow-slate-200 flex flex-col">
-                            <h3 className="text-xl font-bold mb-8 flex items-center gap-3">
-                                <div className="p-2 bg-white/10 rounded-lg text-amber-400"><FiZap /></div> Mentores Asignados
+                        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs flex flex-col">
+                            <h3 className="text-lg font-bold mb-6 flex items-center gap-3 text-slate-900">
+                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl"><FiZap /></div> Mentores Asignados
                             </h3>
                             <div className="flex-1 space-y-4">
                                 {project.mentors?.length === 0 ? (
-                                    <div className="bg-white/5 p-8 rounded-3xl border border-dashed border-white/10 text-center text-slate-500 text-sm">
+                                    <div className="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-200 text-center text-slate-400 text-xs">
                                         Aún no hay mentores estratégicos vinculados.
                                     </div>
                                 ) : (
                                     project.mentors.map(m => (
-                                        <div key={m.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
-                                            <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center font-bold">
+                                        <div key={m.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 hover:bg-slate-100/80 transition-colors">
+                                            <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
                                                 {m.mentorName[0]}
                                             </div>
                                             <div>
-                                                <p className="font-bold text-white text-sm">{m.mentorName}</p>
-                                                <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{m.specialty}</p>
+                                                <p className="font-bold text-slate-800 text-sm">{m.mentorName}</p>
+                                                <p className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">{m.specialty}</p>
                                             </div>
                                         </div>
                                     ))
                                 )}
                             </div>
-                            <button className="w-full mt-8 py-4 bg-indigo-600 hover:bg-indigo-700 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95">
+                            <button className="app-button-primary w-full mt-6">
                                 Emparejar Mentor AI
                             </button>
                         </div>
@@ -240,32 +240,32 @@ const ProjectDetails = () => {
                 {activeTab === 'validation' && <DiscoveryLog />}
 
                 {activeTab === 'updates' && (
-                    <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                        <div className="flex justify-between items-center mb-10">
-                            <h3 className="text-2xl font-black text-slate-800">Bitácora de Innovación</h3>
-                            <button onClick={() => setShowUpdateModal(true)} className="px-5 py-2.5 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:scale-105 transition-all">
+                    <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs">
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-xl font-bold text-slate-800">Bitácora de Innovación</h3>
+                            <button onClick={() => setShowUpdateModal(true)} className="app-button-primary">
                                 Nueva Entrada
                             </button>
                         </div>
-                        <div className="space-y-12 relative before:absolute before:left-[19px] before:top-2 before:bottom-0 before:w-0.5 before:bg-slate-50">
+                        <div className="space-y-8 relative before:absolute before:left-[19px] before:top-2 before:bottom-0 before:w-0.5 before:bg-slate-100">
                             {project.updates?.length === 0 ? (
-                                <div className="text-center py-20">
-                                    <FiArchive className="text-slate-100 text-8xl mx-auto mb-6" />
-                                    <p className="text-slate-400 font-medium">No hay registros en la bitácora todavía.</p>
+                                <div className="text-center py-16">
+                                    <FiArchive className="text-slate-200 text-6xl mx-auto mb-4" />
+                                    <p className="text-slate-400 font-medium text-xs">No hay registros en la bitácora todavía.</p>
                                 </div>
                             ) : (
                                 project.updates.map((update) => (
                                     <div key={update.id} onClick={() => setDetailUpdate(update)} className="relative pl-12 group cursor-pointer">
-                                        <div className="absolute left-0 top-1 w-10 h-10 rounded-2xl bg-white border-2 border-indigo-500 z-10 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
+                                        <div className="absolute left-0 top-1 w-10 h-10 rounded-xl bg-white border-2 border-indigo-500 z-10 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
                                             <FiActivity size={14} />
                                         </div>
-                                        <div className="space-y-2 bg-slate-50/50 p-4 rounded-2xl hover:bg-white hover:shadow-md transition-all border border-transparent hover:border-slate-100">
+                                        <div className="space-y-2 bg-slate-50/60 p-4 rounded-xl hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg uppercase">{update.type}</span>
-                                                <span className="text-[11px] font-bold text-slate-400">{new Date(update.createdAt).toLocaleString()}</span>
+                                                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg uppercase">{update.type}</span>
+                                                <span className="text-[11px] font-semibold text-slate-400">{new Date(update.createdAt).toLocaleString()}</span>
                                             </div>
-                                            <h4 className="text-xl font-black text-slate-800 tracking-tight">{update.title}</h4>
-                                            <p className="text-slate-500 font-medium leading-relaxed max-w-4xl line-clamp-2">{update.content}</p>
+                                            <h4 className="text-lg font-bold text-slate-800 tracking-tight">{update.title}</h4>
+                                            <p className="text-slate-500 text-xs leading-relaxed max-w-4xl line-clamp-2">{update.content}</p>
                                         </div>
                                     </div>
                                 ))
@@ -276,18 +276,18 @@ const ProjectDetails = () => {
 
                 {/* Modal Detalle de Entrada */}
                 {detailUpdate && (
-                    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDetailUpdate(null)}>
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 animate-slideDown" onClick={e => e.stopPropagation()}>
-                            <div className="flex justify-between items-start mb-6">
+                    <div className="app-modal-overlay" onClick={() => setDetailUpdate(null)}>
+                        <div className="app-modal-content max-w-lg" onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl uppercase">{detailUpdate.type}</span>
-                                    <h3 className="text-2xl font-black text-slate-800 mt-3">{detailUpdate.title}</h3>
-                                    <p className="text-slate-400 text-sm">{new Date(detailUpdate.createdAt).toLocaleString()}</p>
+                                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl uppercase">{detailUpdate.type}</span>
+                                    <h3 className="text-xl font-bold text-slate-800 mt-2">{detailUpdate.title}</h3>
+                                    <p className="text-slate-400 text-xs">{new Date(detailUpdate.createdAt).toLocaleString()}</p>
                                 </div>
                                 <button onClick={() => setDetailUpdate(null)} className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-all">✕</button>
                             </div>
-                            <p className="text-slate-600 leading-relaxed">{detailUpdate.content}</p>
-                            <button onClick={() => handleDeleteUpdate(detailUpdate.id)} className="mt-6 w-full py-3 border border-red-100 text-red-500 rounded-2xl font-bold text-sm hover:bg-red-50 transition-all">
+                            <p className="text-slate-600 text-sm leading-relaxed">{detailUpdate.content}</p>
+                            <button onClick={() => handleDeleteUpdate(detailUpdate.id)} className="mt-4 w-full py-2.5 border border-red-200 text-red-600 rounded-xl font-bold text-xs hover:bg-red-50 transition-all">
                                 Eliminar Entrada
                             </button>
                         </div>
@@ -296,17 +296,17 @@ const ProjectDetails = () => {
 
                 {/* Modal Nueva Entrada de Bitácora */}
                 {showUpdateModal && (
-                    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 animate-slideDown">
-                            <h3 className="text-2xl font-black text-slate-800 mb-6">Nueva Entrada de Bitácora</h3>
-                            <form onSubmit={handleAddUpdate} className="space-y-5">
+                    <div className="app-modal-overlay">
+                        <div className="app-modal-content max-w-lg">
+                            <h3 className="text-xl font-bold text-slate-800 mb-4">Nueva Entrada de Bitácora</h3>
+                            <form onSubmit={handleAddUpdate} className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Título *</label>
-                                    <input required className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700" value={newUpdate.title} onChange={(e) => setNewUpdate({...newUpdate, title: e.target.value})} placeholder="Ej: Lanzamiento de versión 2.0" />
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1 tracking-wider">Título *</label>
+                                    <input required className="app-input font-semibold" value={newUpdate.title} onChange={(e) => setNewUpdate({...newUpdate, title: e.target.value})} placeholder="Ej: Lanzamiento de versión 2.0" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Tipo</label>
-                                    <select className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700" value={newUpdate.type} onChange={(e) => setNewUpdate({...newUpdate, type: e.target.value})}>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1 tracking-wider">Tipo</label>
+                                    <select className="app-input font-semibold" value={newUpdate.type} onChange={(e) => setNewUpdate({...newUpdate, type: e.target.value})}>
                                         <option value="GENERAL">GENERAL</option>
                                         <option value="MILESTONE">HITO</option>
                                         <option value="TECH">TECNOLOGÍA</option>
@@ -315,12 +315,12 @@ const ProjectDetails = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Contenido *</label>
-                                    <textarea required rows="5" className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none resize-none text-slate-600" value={newUpdate.content} onChange={(e) => setNewUpdate({...newUpdate, content: e.target.value})} placeholder="¿Qué pasó? ¿Qué aprendimos?"/>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1 tracking-wider">Contenido *</label>
+                                    <textarea required rows="4" className="app-input resize-none" value={newUpdate.content} onChange={(e) => setNewUpdate({...newUpdate, content: e.target.value})} placeholder="¿Qué pasó? ¿Qué aprendimos?"/>
                                 </div>
-                                <div className="flex gap-3 mt-2">
-                                    <button type="button" onClick={() => setShowUpdateModal(false)} className="flex-1 py-3 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 transition-all text-sm">Cancelar</button>
-                                    <button type="submit" disabled={savingUpdate} className="flex-1 py-3 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all shadow-lg disabled:opacity-50 text-sm">{savingUpdate ? 'Guardando...' : 'Publicar'}</button>
+                                <div className="flex gap-3 pt-2">
+                                    <button type="button" onClick={() => setShowUpdateModal(false)} className="app-button-secondary flex-1">Cancelar</button>
+                                    <button type="submit" disabled={savingUpdate} className="app-button-primary flex-1">{savingUpdate ? 'Guardando...' : 'Publicar'}</button>
                                 </div>
                             </form>
                         </div>

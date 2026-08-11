@@ -191,7 +191,7 @@ const RecruitmentDashboard = () => {
 
             {/* Modal Confirmar Eliminación desde Dashboard */}
             {vacancyToDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">
                         <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
                             <FiAlertTriangle size={28} />

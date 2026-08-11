@@ -63,7 +63,7 @@ const Dashboard = () => {
                 </div>
                 <Link 
                     to="create" 
-                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-xs font-semibold shadow-xs"
+                    className="app-button-primary"
                 >
                     <FiPlus /> Lanzar Proyecto
                 </Link>

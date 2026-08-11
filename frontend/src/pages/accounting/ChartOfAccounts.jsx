@@ -245,7 +245,7 @@ const ChartOfAccounts = () => {
 
             {/* Modal de Mayor Auxiliar */}
             {viewingLedger && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden animate-scale-in">
                         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-indigo-600 text-white">
                             <div>
@@ -293,7 +293,7 @@ const ChartOfAccounts = () => {
                             )}
                         </div>
                         <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex justify-end">
-                            <button onClick={() => setViewingLedger(null)} className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-all">Cerrar Auditoría</button>
+                            <button onClick={() => setViewingLedger(null)} className="app-button-primary">Cerrar Auditoría</button>
                         </div>
                     </div>
                 </div>
@@ -301,7 +301,7 @@ const ChartOfAccounts = () => {
 
             {/* Modal de Creación / Edición */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-in">
                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <h3 className="text-lg font-bold text-slate-900">

@@ -119,30 +119,30 @@ const GrowthMetrics = () => {
                 </div>
 
                 {/* Units Economics */}
-                <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl flex flex-col justify-between">
+                <div className="bg-white rounded-2xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-xs flex flex-col justify-between">
                     <div>
-                        <h3 className="font-black uppercase tracking-[0.2em] text-indigo-400 text-[10px] mb-8">Economía de Unidad</h3>
-                        <div className="space-y-8">
+                        <h3 className="font-bold uppercase tracking-wider text-indigo-600 text-xs mb-6">Economía de Unidad</h3>
+                        <div className="space-y-6">
                             <div>
                                 <div className="flex justify-between items-end mb-2">
-                                    <span className="text-xs font-bold text-slate-400">LTV / CAC Ratio</span>
-                                    <span className={`text-2xl font-black ${metrics?.isSustainable ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                    <span className="text-xs font-bold text-slate-500">LTV / CAC Ratio</span>
+                                    <span className={`text-2xl font-extrabold ${metrics?.isSustainable ? 'text-emerald-600' : 'text-amber-600'}`}>
                                         {metrics?.unitEconomics || '0.0'}
                                     </span>
                                 </div>
-                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                                     <div 
-                                        className={`h-full rounded-full ${metrics?.isSustainable ? 'bg-emerald-400' : 'bg-amber-400'}`} 
+                                        className={`h-full rounded-full ${metrics?.isSustainable ? 'bg-emerald-500' : 'bg-amber-500'}`} 
                                         style={{ width: `${Math.min((metrics?.unitEconomics || 0) * 10, 100)}%` }}
                                     ></div>
                                 </div>
-                                <p className="text-[10px] text-slate-500 mt-3 font-medium">Un ratio mayor a 3.0 se considera un negocio saludable y escalable.</p>
+                                <p className="text-[11px] text-slate-500 mt-2.5 font-medium">Un ratio mayor a 3.0 se considera un negocio saludable y escalable.</p>
                             </div>
 
-                            <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Sostenibilidad</span>
+                            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block mb-1.5">Sostenibilidad</span>
                                 <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${metrics?.isSustainable ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`}></div>
+                                    <div className={`w-2.5 h-2.5 rounded-full ${metrics?.isSustainable ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`}></div>
                                     <span className="text-xs font-black uppercase">{metrics?.isSustainable ? 'Estructura Saludable' : 'Optimización Requerida'}</span>
                                 </div>
                             </div>

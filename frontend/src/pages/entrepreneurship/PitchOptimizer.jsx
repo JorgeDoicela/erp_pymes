@@ -83,7 +83,7 @@ const PitchOptimizer = () => {
                     <button 
                         onClick={handleAnalyze}
                         disabled={loading || !narrative}
-                        className="w-full mt-6 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+                        className="app-button-primary w-full py-3.5 mt-6"
                     >
                         {loading ? 'Analizando...' : <><FiZap /> Ejecutar Análisis Predictivo</>}
                     </button>
@@ -93,24 +93,24 @@ const PitchOptimizer = () => {
                 <div className="space-y-6">
                     {analysis ? (
                         <>
-                            <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>
+                            <div className="bg-white rounded-2xl border border-indigo-100 p-6 shadow-xs relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 blur-2xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>
                                 <div className="relative z-10">
-                                    <div className="flex justify-between items-center mb-8">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Scorecard Predictivo</span>
-                                        <div className="text-5xl font-black">{analysis.score}<span className="text-lg opacity-30">/100</span></div>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Scorecard Predictivo</span>
+                                        <div className="text-4xl font-extrabold text-slate-900">{analysis.score}<span className="text-base text-slate-400 font-normal">/100</span></div>
                                     </div>
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
-                                            <FiZap className="text-amber-400 shrink-0" />
-                                            <p className="text-sm font-medium">{analysis.analysis}</p>
+                                        <div className="flex items-center gap-3 bg-indigo-50/60 p-4 rounded-xl border border-indigo-100/80">
+                                            <FiZap className="text-indigo-600 shrink-0 text-lg" />
+                                            <p className="text-sm font-medium text-slate-800">{analysis.analysis}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100">
-                                <h3 className="font-black text-slate-700 uppercase tracking-tight mb-6 flex items-center gap-2 text-sm">
+                            <div className="bg-white rounded-2xl p-6 shadow-xs border border-slate-200">
+                                <h3 className="font-bold text-slate-800 uppercase tracking-tight mb-4 flex items-center gap-2 text-xs">
                                     Recomendaciones de Mejora
                                 </h3>
                                 <div className="space-y-3">

@@ -199,12 +199,76 @@ const EmployeeAssetsManagement = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button type="submit" className="px-3.5 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-all">Buscar</button>
+                    <button type="submit" className="app-button-primary">Buscar</button>
                 </form>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            {/* VISTA MÓVIL: Tarjetas Apiladas (Responsive UX) */}
+            <div className="block md:hidden space-y-3">
+                {loading ? (
+                    <div className="p-8 text-center text-slate-400 text-xs font-semibold">Cargando inventario de activos...</div>
+                ) : assets.length === 0 ? (
+                    <div className="p-8 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs italic">
+                        No se encontraron entregas de activos registradas.
+                    </div>
+                ) : (
+                    assets.map(asset => (
+                        <div key={asset.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-xs">
+                            <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                                <div>
+                                    <h4 className="font-bold text-slate-900 text-xs">{asset.name}</h4>
+                                    <p className="text-[11px] text-slate-400 font-normal mt-0.5">Condición: {asset.condition}</p>
+                                </div>
+                                <div className="shrink-0">{getStatusBadge(asset.status)}</div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Empleado</span>
+                                    <span className="font-bold text-slate-800">{asset.employee?.firstName} {asset.employee?.lastName}</span>
+                                    <p className="text-[11px] text-slate-500">{asset.employee?.department || 'General'}</p>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Categoría</span>
+                                    <div className="mt-0.5">{getCategoryBadge(asset.category)}</div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-50">
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Nº Serie</span>
+                                    <span className="font-mono text-slate-600 font-medium">{asset.serialNumber || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Fecha Entrega</span>
+                                    <span className="text-slate-600">{new Date(asset.deliveryDate).toLocaleDateString('es-EC')}</span>
+                                </div>
+                            </div>
+
+                            <div className="pt-2 flex justify-end">
+                                {asset.status === 'DELIVERED' ? (
+                                    <button
+                                        onClick={() => {
+                                            setSelectedAsset(asset);
+                                            setReturnModalOpen(true);
+                                        }}
+                                        className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all text-center"
+                                    >
+                                        Registrar Devolución
+                                    </button>
+                                ) : (
+                                    <span className="text-xs text-slate-400 italic">
+                                        Devuelto el {new Date(asset.returnDate).toLocaleDateString('es-EC')}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* VISTA ESCRITORIO: Tabla Completa */}
+            <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-slate-600">
                         <thead className="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200/80">
@@ -266,7 +330,7 @@ const EmployeeAssetsManagement = () => {
             {/* Deliver Asset Modal */}
             <AnimatePresence>
                 {deliverModalOpen && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="app-modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
@@ -348,7 +412,7 @@ const EmployeeAssetsManagement = () => {
             {/* Return Asset Modal */}
             <AnimatePresence>
                 {returnModalOpen && selectedAsset && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="app-modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}

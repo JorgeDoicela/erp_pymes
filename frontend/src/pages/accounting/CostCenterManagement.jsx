@@ -152,7 +152,7 @@ const CostCenterManagement = () => {
 
             {/* Modal de Detalle de Movimientos del Centro */}
             {viewingDetails && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden animate-scale-in">
                         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <div>
@@ -203,7 +203,7 @@ const CostCenterManagement = () => {
                         </div>
 
                         <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex justify-end">
-                            <button onClick={() => setViewingDetails(null)} className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm">Cerrar</button>
+                            <button onClick={() => setViewingDetails(null)} className="app-button-primary">Cerrar</button>
                         </div>
                     </div>
                 </div>
@@ -211,7 +211,7 @@ const CostCenterManagement = () => {
 
             {/* Modal de Creación / Edición */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                <div className="app-modal-overlay">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-in">
                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <h3 className="text-lg font-bold text-slate-900">{selectedId ? 'Editar' : 'Nuevo'} Centro de Costo</h3>
