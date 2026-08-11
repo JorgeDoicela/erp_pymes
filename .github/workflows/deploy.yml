@@ -260,6 +260,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 10m
           script: |
             set -e
             cd /var/www/recursos_humanos
@@ -270,7 +271,9 @@ jobs:
             export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-backend:${{ github.sha }}
             export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-frontend:${{ github.sha }}
 
-            docker compose pull
+            echo "=== Descargando imágenes Docker actualizadas ==="
+            docker compose pull --quiet
+            echo "=== Levantando servicios ==="
             docker compose up -d --remove-orphans
             docker image prune -f
 

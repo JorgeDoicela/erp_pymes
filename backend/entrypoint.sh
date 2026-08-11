@@ -8,7 +8,7 @@ echo "=== Entrypoint: Iniciando backend ==="
 #  pero este fallback protege ante race conditions en reinicios)
 MAX_RETRIES=15
 RETRY=0
-until npx prisma db execute --stdin <<< "SELECT 1" > /dev/null 2>&1; do
+until echo "SELECT 1;" | npx prisma db execute --stdin > /dev/null 2>&1; do
   RETRY=$((RETRY + 1))
   if [ $RETRY -ge $MAX_RETRIES ]; then
     echo "ERROR: PostgreSQL no respondió tras $MAX_RETRIES intentos. Abortando."
