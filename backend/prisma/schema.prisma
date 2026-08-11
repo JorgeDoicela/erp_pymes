@@ -59,7 +59,7 @@ model Employee {
   civilStatus          String
   contractType         String
   hireDate             DateTime
-  identityCard         String                  @unique
+  identityCard         String
   phone                String
   vacationDays         Int                     @default(15)
   accountNumber        String?
@@ -108,6 +108,7 @@ model Employee {
   @@index([email])
   @@index([department])
   @@index([tenantId])
+  @@unique([tenantId, identityCard])
   @@map("employees")
 }
 
@@ -648,7 +649,7 @@ model AccountingPeriod {
   updatedAt DateTime @updatedAt
 
   @@index([tenantId])
-  @@unique([year, month])
+  @@unique([tenantId, year, month])
   @@map("acc_periods")
 }
 
@@ -656,7 +657,7 @@ model AccountingAccount {
   id           String              @id @default(cuid())
   tenantId     String?
   tenant       Tenant?             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  code         String              @unique
+  code         String
   name         String
   description  String?
   type         String              // ASSET (Activo), LIABILITY (Pasivo), EQUITY (Patrimonio), REVENUE (Ingreso), EXPENSE (Gasto)
@@ -672,6 +673,7 @@ model AccountingAccount {
 
   @@index([tenantId])
   @@index([code])
+  @@unique([tenantId, code])
   @@map("acc_accounts")
 }
 
@@ -679,7 +681,7 @@ model CostCenter {
   id          String        @id @default(cuid())
   tenantId    String?
   tenant      Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  code        String        @unique
+  code        String
   name        String
   description String?
   isActive    Boolean       @default(true)
@@ -688,6 +690,7 @@ model CostCenter {
   updatedAt   DateTime      @updatedAt
 
   @@index([tenantId])
+  @@unique([tenantId, code])
   @@map("acc_cost_centers")
 }
 
@@ -695,7 +698,7 @@ model JournalEntry {
   id              String        @id @default(cuid())
   tenantId        String?
   tenant          Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  entryNumber     String        @unique // Ej: ACC-2026-0001
+  entryNumber     String        // Ej: ACC-2026-0001
   date            DateTime
   description     String
   type            String        // DAILY (Diario), INCOME (Ingreso), EXPENSE (Egreso)
@@ -714,6 +717,7 @@ model JournalEntry {
   @@index([tenantId])
   @@index([date])
   @@index([entryNumber])
+  @@unique([tenantId, entryNumber])
   @@map("acc_journal_entries")
 }
 

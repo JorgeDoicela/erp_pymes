@@ -91,6 +91,34 @@ export const registerTenant = async (req, res) => {
                 }
             });
 
+            // Crear PayrollConfig inicial
+            await tx.payrollConfig.create({
+                data: {
+                    tenantId: tenant.id,
+                    workingDays: 30,
+                    currency: 'USD',
+                    isActive: true,
+                    items: {
+                        create: [
+                            { name: 'Aporte Personal IESS', type: 'DEDUCTION', isMandatory: true, percentage: 9.45 },
+                            { name: 'Impuesto a la Renta', type: 'DEDUCTION', isMandatory: false, percentage: 0 }
+                        ]
+                    }
+                }
+            });
+
+            // Crear Turno inicial por defecto
+            await tx.shift.create({
+                data: {
+                    tenantId: tenant.id,
+                    name: 'Jornada Ordinaria (08:00 - 17:00)',
+                    startTime: '08:00',
+                    endTime: '17:00',
+                    breakMinutes: 60,
+                    toleranceMinutes: 15
+                }
+            });
+
             // Crear Admin de la empresa
             const admin = await tx.employee.create({
                 data: {
@@ -138,10 +166,18 @@ export const registerTenant = async (req, res) => {
                 },
                 user: {
                     id: result.admin.id,
+                    tenantId: result.tenant.id,
                     firstName: result.admin.firstName,
                     lastName: result.admin.lastName,
                     email: result.admin.email,
-                    role: result.admin.role
+                    role: result.admin.role,
+                    tenant: {
+                        id: result.tenant.id,
+                        name: result.tenant.name,
+                        slug: result.tenant.slug,
+                        plan: result.tenant.plan,
+                        subscriptionStatus: result.tenant.subscriptionStatus
+                    }
                 },
                 token
             }

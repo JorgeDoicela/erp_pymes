@@ -45,8 +45,13 @@ class NotificationService {
         // 1. Find Admins (HR)
         // Ideally, we should have a repository method for this. 
         // For now, we query directly or use a known repo method if available.
+        const tenantId = contract.employee?.tenantId;
         const admins = await prisma.employee.findMany({
-            where: { role: 'admin', isActive: true }
+            where: {
+                role: 'admin',
+                isActive: true,
+                ...(tenantId ? { tenantId } : {})
+            }
         });
 
         const subject = `Alerta de Vencimiento de Contrato: ${contract.employee.firstName} ${contract.employee.lastName}`;
@@ -102,10 +107,14 @@ class NotificationService {
         }
     }
 
-    async sendEvaluationExpiredAlert({ employeeName, evaluationId }) {
-        // Find Admins
+    async sendEvaluationExpiredAlert({ employeeName, evaluationId, tenantId }) {
+        // Find Admins of the specific tenant
         const admins = await prisma.employee.findMany({
-            where: { role: 'admin', isActive: true }
+            where: {
+                role: 'admin',
+                isActive: true,
+                ...(tenantId ? { tenantId } : {})
+            }
         });
 
         const title = `Evaluación Vencida: ${employeeName}`;

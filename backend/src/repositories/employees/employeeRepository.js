@@ -181,7 +181,7 @@ export class EmployeeRepository {
    */
   async findByEmail(email) {
     try {
-      const employee = await prisma.employee.findUnique({
+      const employee = await prisma.employee.findFirst({
         where: { email },
       });
 
@@ -203,7 +203,7 @@ export class EmployeeRepository {
    */
   async findByIdentityCard(identityCard) {
     try {
-      const employee = await prisma.employee.findUnique({
+      const employee = await prisma.employee.findFirst({
         where: { identityCard },
       });
 

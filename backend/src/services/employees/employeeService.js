@@ -1,5 +1,6 @@
 import employeeRepository from '../../repositories/employees/employeeRepository.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
+import prisma from '../../database/db.js';
 
 /**
  * EmployeeService
@@ -20,6 +21,22 @@ export class EmployeeService {
   async createEmployee(employeeData) {
     // Validaciones
     this.validateEmployeeData(employeeData);
+
+    // Verificar límite de empleados según Plan del Tenant
+    if (employeeData.tenantId) {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: employeeData.tenantId },
+        select: { maxEmployees: true, name: true, plan: true }
+      });
+      if (tenant) {
+        const currentCount = await prisma.employee.count({
+          where: { tenantId: employeeData.tenantId, isActive: true }
+        });
+        if (currentCount >= tenant.maxEmployees) {
+          throw new Error(`Has alcanzado el límite máximo de empleados activos (${tenant.maxEmployees}) para el plan ${tenant.plan} de '${tenant.name}'. Contacta con administración para ampliar tu plan.`);
+        }
+      }
+    }
 
     // Verificar que el email sea único
     const existingEmployee = await employeeRepository.findByEmail(employeeData.email);

@@ -339,7 +339,7 @@ export const verifyAuthentication = async (req, res) => {
             });
 
             const token = jwt.sign(
-                { id: user.id, role: user.role },
+                { id: user.id, email: user.email, role: user.role, tenantId: user.tenantId },
                 process.env.JWT_SECRET || 'secret_key_change_me',
                 { expiresIn: '1d' }
             );

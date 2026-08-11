@@ -8,10 +8,19 @@ import { runWithTenant } from '../database/tenantContext.js';
  */
 export const requireTenant = async (req, res, next) => {
     try {
-        // Obtenemos tenantId del usuario autenticado (JWT) o del header de la petición
-        const tenantId = req.user?.tenantId || req.headers['x-tenant-id'];
+        const isSuperAdmin = req.user?.role === 'superadmin' || req.user?.email === 'admin@emplifi.com';
+
+        // Seguridad: Para usuarios autenticados normales, forzar req.user.tenantId. 
+        // Solo SuperAdmin o peticiones no autenticadas (ej. biometric) pueden usar x-tenant-id.
+        const tenantId = req.user 
+            ? (isSuperAdmin ? (req.headers['x-tenant-id'] || req.user.tenantId) : req.user.tenantId)
+            : req.headers['x-tenant-id'];
 
         if (!tenantId) {
+            if (isSuperAdmin) {
+                // SuperAdmin sin tenant específico navega en modo global
+                return runWithTenant(null, () => next(), true);
+            }
             return res.status(400).json({
                 success: false,
                 message: 'Contexto de empresa (Tenant) no encontrado en la sesión o petición.',
@@ -19,8 +28,8 @@ export const requireTenant = async (req, res, next) => {
             });
         }
 
-        // Buscar Tenant en base de datos
-        const tenant = await prisma.tenant.findUnique({
+        // Buscar Tenant en base de datos (usando findFirst para evitar recursión de middleware si aplica)
+        const tenant = await prisma.tenant.findFirst({
             where: { id: tenantId },
             select: {
                 id: true,
@@ -31,6 +40,7 @@ export const requireTenant = async (req, res, next) => {
                 maxEmployees: true,
                 isActive: true,
                 subscriptionEndsAt: true,
+                trialEndsAt: true,
             }
         });
 
@@ -42,47 +52,49 @@ export const requireTenant = async (req, res, next) => {
             });
         }
 
-        // Validar Estado de Suscripción Específico
-        if (tenant.subscriptionStatus === 'SUSPENDED') {
-            return res.status(402).json({
-                success: false,
-                message: `La suscripción de la empresa '${tenant.name}' se encuentra suspendida por falta de pago o pago pendiente. Por favor contacta al Administrador de tu empresa o a Soporte para reactivar el servicio.`,
-                code: 'SUBSCRIPTION_SUSPENDED'
-            });
-        }
+        if (!isSuperAdmin) {
+            // Validar Estado de Suscripción Específico para usuarios normales
+            if (tenant.subscriptionStatus === 'SUSPENDED') {
+                return res.status(402).json({
+                    success: false,
+                    message: `La suscripción de la empresa '${tenant.name}' se encuentra suspendida por falta de pago o pago pendiente. Por favor contacta al Administrador de tu empresa o a Soporte para reactivar el servicio.`,
+                    code: 'SUBSCRIPTION_SUSPENDED'
+                });
+            }
 
-        if (tenant.subscriptionStatus === 'CANCELLED') {
-            return res.status(403).json({
-                success: false,
-                message: `La cuenta de la empresa '${tenant.name}' ha sido cancelada.`,
-                code: 'SUBSCRIPTION_CANCELLED'
-            });
-        }
+            if (tenant.subscriptionStatus === 'CANCELLED') {
+                return res.status(403).json({
+                    success: false,
+                    message: `La cuenta de la empresa '${tenant.name}' ha sido cancelada.`,
+                    code: 'SUBSCRIPTION_CANCELLED'
+                });
+            }
 
-        // Validar vencimiento de Prueba Gratuita (Trial)
-        const now = new Date();
-        const expirationDate = tenant.subscriptionEndsAt || tenant.trialEndsAt;
+            // Validar vencimiento de Prueba Gratuita (Trial)
+            const now = new Date();
+            const expirationDate = tenant.subscriptionEndsAt || tenant.trialEndsAt;
 
-        if (tenant.subscriptionStatus === 'TRIAL' && expirationDate && new Date(expirationDate) < now) {
-            prisma.tenant.update({
-                where: { id: tenant.id },
-                data: { subscriptionStatus: 'SUSPENDED', isActive: false }
-            }).catch(err => console.error('Error auto-suspending tenant:', err));
+            if (tenant.subscriptionStatus === 'TRIAL' && expirationDate && new Date(expirationDate) < now) {
+                prisma.tenant.update({
+                    where: { id: tenant.id },
+                    data: { subscriptionStatus: 'SUSPENDED', isActive: false }
+                }).catch(err => console.error('Error auto-suspending tenant:', err));
 
-            return res.status(402).json({
-                success: false,
-                message: `El período de prueba gratuita de 14 días para la empresa '${tenant.name}' ha finalizado. Por favor actualiza la suscripción para continuar.`,
-                code: 'TRIAL_EXPIRED'
-            });
-        }
+                return res.status(402).json({
+                    success: false,
+                    message: `El período de prueba gratuita de 14 días para la empresa '${tenant.name}' ha finalizado. Por favor actualiza la suscripción para continuar.`,
+                    code: 'TRIAL_EXPIRED'
+                });
+            }
 
-        // Validar si la empresa fue marcada inactiva explícitamente
-        if (!tenant.isActive) {
-            return res.status(403).json({
-                success: false,
-                message: `La empresa '${tenant.name}' se encuentra desactivada en la plataforma. Por favor contacta a soporte técnico.`,
-                code: 'TENANT_INACTIVE'
-            });
+            // Validar si la empresa fue marcada inactiva explícitamente
+            if (!tenant.isActive) {
+                return res.status(403).json({
+                    success: false,
+                    message: `La empresa '${tenant.name}' se encuentra desactivada en la plataforma. Por favor contacta a soporte técnico.`,
+                    code: 'TENANT_INACTIVE'
+                });
+            }
         }
 
         // Inyectar en req
@@ -90,7 +102,7 @@ export const requireTenant = async (req, res, next) => {
         req.tenant = tenant;
 
         // Envolver en el contexto asíncrono para Prisma Middleware
-        return runWithTenant(tenant.id, () => next());
+        return runWithTenant(tenant.id, () => next(), isSuperAdmin);
     } catch (error) {
         console.error('[TENANT MIDDLEWARE ERROR]:', error);
         return res.status(500).json({

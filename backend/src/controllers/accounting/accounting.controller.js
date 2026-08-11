@@ -20,9 +20,9 @@ export const createPeriod = async (req, res) => {
     try {
         const { year, month, startDate, endDate } = req.body;
 
-        // Validar si ya existe
-        const existing = await prisma.accountingPeriod.findUnique({
-            where: { year_month: { year: parseInt(year), month: parseInt(month) } }
+        // Validar si ya existe en la empresa actual
+        const existing = await prisma.accountingPeriod.findFirst({
+            where: { year: parseInt(year), month: parseInt(month) }
         });
 
         if (existing) {
@@ -118,7 +118,7 @@ export const createAccount = async (req, res) => {
     try {
         const { code, name, description, type, level, isTransactional, parentId } = req.body;
 
-        const existing = await prisma.accountingAccount.findUnique({ where: { code } });
+        const existing = await prisma.accountingAccount.findFirst({ where: { code } });
         if (existing) return res.status(400).json({ message: 'El código de cuenta ya existe.' });
 
         const account = await prisma.accountingAccount.create({
@@ -212,6 +212,9 @@ export const getCostCenters = async (req, res) => {
 export const createCostCenter = async (req, res) => {
     try {
         const { code, name, description } = req.body;
+        const existing = await prisma.costCenter.findFirst({ where: { code } });
+        if (existing) return res.status(400).json({ message: 'El código de centro de costo ya existe.' });
+
         const center = await prisma.costCenter.create({
             data: { code, name, description }
         });
