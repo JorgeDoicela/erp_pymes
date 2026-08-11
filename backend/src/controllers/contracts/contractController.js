@@ -54,7 +54,8 @@ class ContractController {
     async getExpiring(req, res) {
         try {
             const days = parseInt(req.query.days) || 30;
-            const contracts = await contractService.getExpiringContracts(days);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const contracts = await contractService.getExpiringContracts(days, tenantId);
             res.json({ success: true, data: contracts });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });

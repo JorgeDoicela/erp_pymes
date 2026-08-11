@@ -67,11 +67,42 @@ export class EmployeeService {
   /**
    * Obtener un empleado por ID
    * @param {string} id - ID del empleado
+   * @param {string} tenantId - ID del tenant (opcional)
+   * @param {Object} user - Objeto de usuario autenticado (opcional)
    * @returns {Promise<Object>} Empleado
    */
-  async getEmployee(id) {
-    const employee = await employeeRepository.findById(id);
+  async getEmployee(id, tenantId = null, user = null) {
+    let employee = await employeeRepository.findById(id);
+
+    if (!employee && user?.email) {
+      employee = await employeeRepository.findByEmail(user.email);
+    }
+
+    if (!employee && user) {
+      return {
+        id: user.id || 'system-admin',
+        firstName: user.firstName || user.name || 'Usuario',
+        lastName: user.lastName || 'Administrador',
+        email: user.email || 'admin@emplifi.com',
+        department: 'Administración',
+        position: user.role || 'Administrador',
+        role: user.role || 'admin',
+        identityCard: 'N/A',
+        phone: 'N/A',
+        address: 'N/A',
+        isActive: true,
+        contracts: [],
+        documents: [],
+        skills: [],
+        workHistory: []
+      };
+    }
+
     if (!employee) {
+      throw new Error('Empleado no encontrado');
+    }
+
+    if (tenantId && employee.tenantId && employee.tenantId !== tenantId) {
       throw new Error('Empleado no encontrado');
     }
     return employee;
@@ -85,6 +116,10 @@ export class EmployeeService {
   async getAllEmployees(options = {}) {
     // Aquí se podrían añadir más validaciones o lógica de filtrado si fuera necesario
     return await employeeRepository.findAll(options);
+  }
+
+  async countEmployees(options = {}) {
+    return await employeeRepository.countAll(options);
   }
 
   /**

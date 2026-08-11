@@ -9,15 +9,17 @@ const api = axios.create({
     },
 });
 
-// Interceptor to include token in requests
+// Interceptor to include token and optional superadmin tenant context in requests
 api.interceptors.request.use(
     (config) => {
-        // You might want to get the token from localStorage or context here if not passed directly
-        // But for now, we will assume the service handles passing the token or we rely on the caller
-        // However, a common pattern is to check storage:
-        const token = localStorage.getItem('token'); // Or however you store it
+        const token = localStorage.getItem('token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const selectedTenantId = localStorage.getItem('superadmin_selected_tenant_id');
+        if (selectedTenantId) {
+            config.headers['x-tenant-id'] = selectedTenantId;
         }
         return config;
     },

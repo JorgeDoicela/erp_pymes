@@ -38,9 +38,10 @@ export const generatePayslipPDF = (detail, employee, periodDate) => {
     doc.text(`Sueldo Base: $${detail.baseSalary.toFixed(2)}`, leftX, currentY);
     doc.text(`Días Trabajados: ${detail.workedDays}`, rightX, currentY);
 
-    // Parse items
-    const bonuses = JSON.parse(detail.bonuses || '[]');
-    const deductions = JSON.parse(detail.deductions || '[]');
+    // Parse items de forma segura
+    const parseJSON = (val) => typeof val === 'string' ? JSON.parse(val || '[]') : (Array.isArray(val) ? val : []);
+    const bonuses = parseJSON(detail.bonuses);
+    const deductions = parseJSON(detail.deductions);
 
     // Tables
     const earningsData = [

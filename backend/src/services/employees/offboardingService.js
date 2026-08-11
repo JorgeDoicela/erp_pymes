@@ -49,11 +49,11 @@ class OffboardingService {
 
         // 3. Vacaciones No Gozadas (15 días por año = 1.25 días por mes)
         const earnedVacationDays = monthsWorked * 1.25;
-        // Consultar ausencias por vacaciones ya tomadas
+        // Consultar ausencias por vacaciones ya tomadas (flexible con cadenas en BD)
         const takenVacations = await prisma.absenceRequest.findMany({
             where: {
                 employeeId,
-                type: 'VACATION',
+                type: { in: ['VACATION', 'Vacaciones', 'vacaciones'] },
                 status: 'APPROVED'
             }
         });
@@ -62,7 +62,9 @@ class OffboardingService {
         takenVacations.forEach(v => {
             const start = new Date(v.startDate);
             const end = new Date(v.endDate);
-            const days = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
+            const cleanStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+            const cleanEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+            const days = Math.max(1, Math.round((cleanEnd - cleanStart) / (1000 * 60 * 60 * 24)) + 1);
             takenDays += days;
         });
 
@@ -207,13 +209,42 @@ class OffboardingService {
 
         const allCompleted = checklist.every(t => t.completed);
 
-        const updated = await prisma.offboardingProcess.update({
-            where: { id: offboardingId },
-            data: {
-                checklist: JSON.stringify(checklist),
-                status: allCompleted ? 'COMPLETED' : 'IN_PROGRESS'
-            },
-            include: { employee: true }
+        const updated = await prisma.$transaction(async (tx) => {
+            const proc = await tx.offboardingProcess.update({
+                where: { id: offboardingId },
+                data: {
+                    checklist: JSON.stringify(checklist),
+                    status: allCompleted ? 'COMPLETED' : 'IN_PROGRESS'
+                },
+                include: { employee: true }
+            });
+
+            if (allCompleted) {
+                // Desactivar empleado e ingresar datos de desvinculación
+                await tx.employee.update({
+                    where: { id: proc.employeeId },
+                    data: {
+                        isActive: false,
+                        exitDate: proc.exitDate,
+                        exitReason: proc.notes || proc.causal,
+                        exitType: proc.causal
+                    }
+                });
+
+                // Finalizar contratos activos del empleado
+                await tx.contract.updateMany({
+                    where: {
+                        employeeId: proc.employeeId,
+                        status: 'Active'
+                    },
+                    data: {
+                        status: 'Terminated',
+                        endDate: proc.exitDate
+                    }
+                });
+            }
+
+            return proc;
         });
 
         // Si la tarea era devolución de activo, actualizar estado del activo a RETURNED
@@ -230,12 +261,16 @@ class OffboardingService {
     /**
      * Listar procesos de Offboarding.
      */
-    async getOffboardings({ status, search, page = 1, limit = 20 }) {
+    async getOffboardings({ status, search, page = 1, limit = 20, tenantId = null }) {
         const skip = (page - 1) * limit;
         const where = {};
+        if (tenantId) {
+            where.employee = { tenantId };
+        }
         if (status) where.status = status;
         if (search) {
             where.employee = {
+                ...(where.employee || {}),
                 OR: [
                     { firstName: { contains: search, mode: 'insensitive' } },
                     { lastName: { contains: search, mode: 'insensitive' } },

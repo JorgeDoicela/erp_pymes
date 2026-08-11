@@ -96,12 +96,15 @@ export class EmployeeController {
       const skip = (parseInt(page) - 1) * parseInt(limit);
       const tenantId = req.tenantId || req.user?.tenantId;
 
-      const employees = await employeeService.getAllEmployees({
-        skip,
-        take: parseInt(limit),
-        q,
-        tenantId,
-      });
+      const [employees, total] = await Promise.all([
+        employeeService.getAllEmployees({
+          skip,
+          take: parseInt(limit),
+          q,
+          tenantId,
+        }),
+        employeeService.countEmployees({ q, tenantId })
+      ]);
 
       res.status(200).json({
         success: true,
@@ -110,7 +113,7 @@ export class EmployeeController {
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
-          total: employees.length,
+          total,
         },
       });
     } catch (error) {
@@ -129,12 +132,13 @@ export class EmployeeController {
     try {
       const { id: rawId } = req.params;
       const id = rawId?.trim();
+      const tenantId = req.tenantId || req.user?.tenantId;
 
       if (!id) {
         return res.status(400).json({ success: false, message: 'ID de empleado es requerido' });
       }
 
-      const employee = await employeeService.getEmployee(id);
+      const employee = await employeeService.getEmployee(id, tenantId);
 
       res.status(200).json({
         success: true,
@@ -279,13 +283,14 @@ export class EmployeeController {
   }
 
   /**
-   * GET /employees/me/profile
+   * GET /employees/profile
    * Obtener perfil del usuario autenticado
    */
   async getProfile(req, res) {
     try {
-      const id = req.user.id;
-      const employee = await employeeService.getEmployee(id);
+      const id = req.user?.employeeId || req.user?.id;
+      const tenantId = req.tenantId || req.user?.tenantId;
+      const employee = await employeeService.getEmployee(id, tenantId, req.user);
       res.status(200).json({ success: true, data: employee });
     } catch (error) {
       console.error('[EmployeeController] Profile Error:', error);

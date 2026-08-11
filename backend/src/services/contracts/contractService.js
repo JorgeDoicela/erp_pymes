@@ -56,7 +56,7 @@ class ContractService {
         return await contractRepository.findByEmployeeId(employeeId);
     }
 
-    async getExpiringContracts(days = 30) {
+    async getExpiringContracts(days = 30, tenantId = null) {
         const today = new Date();
         const futureDate = new Date();
         futureDate.setDate(today.getDate() + days);
@@ -69,7 +69,8 @@ class ContractService {
                 endDate: {
                     gte: today,
                     lte: futureDate
-                }
+                },
+                ...(tenantId ? { employee: { tenantId } } : {})
             },
             include: {
                 employee: {

@@ -496,32 +496,32 @@ export async function seedUsers(prisma) {
     try {
         admin = await prisma.employee.upsert({
             where: { email: 'admin@emplifi.com' },
-            update: { password, tenantId },
+            update: { password, tenantId: null, role: 'superadmin' },
             create: {
-                tenantId,
+                tenantId: null,
                 firstName: 'Jorge',
                 lastName: 'Doicela',
                 email: 'admin@emplifi.com',
-                role: 'admin',
-                department: 'Dirección',
-                position: 'Director General',
-                salary: encryptSalary(5000),
+                role: 'superadmin',
+                department: 'Administración Global',
+                position: 'SuperAdmin SaaS',
+                salary: encryptSalary(0),
                 password,
                 identityCard: '0101010101',
                 birthDate: new Date('1980-01-01'),
                 hireDate: new Date('2018-01-01'),
                 isActive: true,
-                address: 'Av. Patria E4-05, Quito',
+                address: 'Plataforma Emplifi',
                 phone: '0999999999',
-                civilStatus: 'Casado',
-                contractType: 'Indefinido',
-                bankName: encrypt('Banco Pichincha'),
-                accountNumber: encrypt('0001234567'),
-                accountType: 'Corriente',
-                vacationDays: 15,
+                civilStatus: 'Soltero',
+                contractType: 'SaaS Platform Owner',
+                bankName: encrypt('N/A'),
+                accountNumber: encrypt('N/A'),
+                accountType: 'N/A',
+                vacationDays: 0,
             }
         });
-        console.log('✅ Admin: admin@emplifi.com / Emplifi2025!');
+        console.log('✅ SuperAdmin: admin@emplifi.com / Emplifi2025!');
     } catch (e) {
         console.log('⚠️ Admin creation failed: ' + e.message);
         admin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });

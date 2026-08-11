@@ -115,7 +115,7 @@ export const getProfile = async (token) => {
         const response = await api.get('/employees/profile', config);
         return response.data;
     } catch (error) {
-        throw new Error('Error al obtener perfil');
+        throw new Error(error.response?.data?.message || 'Error al obtener perfil');
     }
 };
 

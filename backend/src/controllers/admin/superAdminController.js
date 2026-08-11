@@ -290,3 +290,28 @@ export const updateTenantPlan = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+
+export const getTenantsList = async (req, res) => {
+    try {
+        return runWithTenant(null, async () => {
+            const tenants = await prisma.tenant.findMany({
+                where: { isActive: true },
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    plan: true,
+                    subscriptionStatus: true
+                },
+                orderBy: { name: 'asc' }
+            });
+            return res.json({
+                success: true,
+                data: tenants
+            });
+        }, true);
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+

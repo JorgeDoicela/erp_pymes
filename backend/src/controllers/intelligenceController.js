@@ -56,7 +56,8 @@ export async function getDashboard(req, res) {
  */
 export async function getRetentionRisk(req, res) {
     try {
-        const analysis = await intelligenceService.getRetentionRiskAnalysis();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const analysis = await intelligenceService.getRetentionRiskAnalysis(tenantId);
         res.json({
             success: true,
             data: analysis,
@@ -72,7 +73,8 @@ export async function getRetentionRisk(req, res) {
  */
 export async function getPerformanceInsights(req, res) {
     try {
-        const insights = await intelligenceService.getPerformanceInsights();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const insights = await intelligenceService.getPerformanceInsights(tenantId);
         res.json({
             success: true,
             data: insights,
@@ -88,7 +90,8 @@ export async function getPerformanceInsights(req, res) {
  */
 export async function getAttendancePatterns(req, res) {
     try {
-        const patterns = await intelligenceService.getAttendancePatterns();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const patterns = await intelligenceService.getAttendancePatterns(tenantId);
         res.json({
             success: true,
             data: patterns,
@@ -104,7 +107,8 @@ export async function getAttendancePatterns(req, res) {
  */
 export async function getPayrollOptimization(req, res) {
     try {
-        const optimization = await intelligenceService.getPayrollOptimization();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const optimization = await intelligenceService.getPayrollOptimization(tenantId);
         res.json({
             success: true,
             data: optimization,
@@ -121,7 +125,8 @@ export async function getPayrollOptimization(req, res) {
 export async function getRecruitmentMatching(req, res) {
     try {
         const { vacancyId } = req.params;
-        const matching = await intelligenceService.getRecruitmentMatching(vacancyId);
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const matching = await intelligenceService.getRecruitmentMatching(vacancyId, tenantId);
         res.json({
             success: true,
             data: matching,
@@ -137,7 +142,8 @@ export async function getRecruitmentMatching(req, res) {
  */
 export async function getRecommendations(req, res) {
     try {
-        const recommendations = await intelligenceService.getRecommendations();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const recommendations = await intelligenceService.getRecommendations(tenantId);
         res.json({
             success: true,
             data: recommendations,
@@ -153,7 +159,8 @@ export async function getRecommendations(req, res) {
  */
 export async function getDepartmentComparison(req, res) {
     try {
-        const comparison = await intelligenceService.getDepartmentComparison();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const comparison = await intelligenceService.getDepartmentComparison(tenantId);
         res.json({
             success: true,
             data: comparison,

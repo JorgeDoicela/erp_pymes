@@ -3,7 +3,10 @@ import prisma from '../../database/db.js';
 
 export const getNotifications = async (req, res) => {
     try {
-        const userId = req.user.id; // Asumiendo middleware de auth que popula req.user
+        const userId = req.user?.employeeId || req.user?.id;
+        if (!userId) {
+            return res.json([]);
+        }
         const notifications = await prisma.notification.findMany({
             where: { recipientId: userId },
             orderBy: { createdAt: 'desc' },
@@ -19,7 +22,7 @@ export const getNotifications = async (req, res) => {
 export const markAsRead = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const userId = req.user?.employeeId || req.user?.id;
 
         // Verificar propiedad
         const notification = await prisma.notification.findUnique({
@@ -44,7 +47,10 @@ export const markAsRead = async (req, res) => {
 
 export const markAllAsRead = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user?.employeeId || req.user?.id;
+        if (!userId) {
+            return res.json({ message: 'Todas las notificaciones marcadas como leídas' });
+        }
         await prisma.notification.updateMany({
             where: { recipientId: userId, isRead: false },
             data: { isRead: true }

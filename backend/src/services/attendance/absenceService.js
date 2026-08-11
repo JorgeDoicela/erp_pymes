@@ -5,17 +5,34 @@ export const absenceService = {
     async createRequest({ employeeId, type, startDate, endDate, reason, file }) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-        const daysRequested = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        const cleanStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+        const cleanEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+        const daysRequested = Math.max(1, Math.round((cleanEnd - cleanStart) / (1000 * 60 * 60 * 24)) + 1);
+
+        if (end < start) {
+            throw new Error('La fecha de fin de la ausencia no puede ser anterior a la fecha de inicio');
+        }
+
+        // Detección de solapamiento de ausencias
+        const existingOverlap = await prisma.absenceRequest.findFirst({
+            where: {
+                employeeId,
+                status: { in: ['PENDING', 'APPROVED'] },
+                startDate: { lte: end },
+                endDate: { gte: start }
+            }
+        });
+
+        if (existingOverlap) {
+            throw new Error('El empleado ya cuenta con una solicitud de ausencia en este rango de fechas.');
+        }
 
         // Validación de Vacaciones (Robust comparison)
         const cleanType = type.trim();
-        console.log(`[DEBUG] createRequest: Type='${type}', Clean='${cleanType}'`);
 
-        if (cleanType === 'Vacaciones') {
+        if (['Vacaciones', 'VACATION', 'vacaciones'].some(t => t.toLowerCase() === cleanType.toLowerCase())) {
             const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
             if (!employee) throw new Error('Empleado no encontrado');
-
-            console.log(`[DEBUG] Solicito Vacaciones. Balance actual: ${employee.vacationDays}. Días pedidos: ${daysRequested}`);
 
             if (employee.vacationDays < daysRequested) {
                 throw new Error(`Saldo insuficiente. Tienes ${employee.vacationDays} días, solicitaste ${daysRequested}.`);
@@ -48,37 +65,33 @@ export const absenceService = {
         const request = await absenceRepository.getRequestById(id);
         if (!request) throw new Error('Solicitud no encontrada');
 
-        // Si ya estaba aprobado no hacemos nada (o podríamos manejar reversión si rechazamos)
-        if (request.status === 'APPROVED' && status === 'APPROVED') {
+        if (request.status === status) {
             return request;
         }
 
-        // Transacción para aprobar vacaciones
         const requestType = request.type.trim();
-        console.log(`[DEBUG] updateRequestStatus: Status=${status}, Type='${request.type}', Clean='${requestType}'`);
+        const isVacation = ['Vacaciones', 'VACATION', 'vacaciones'].includes(requestType);
 
-        if (status === 'APPROVED' && requestType === 'Vacaciones') {
+        const start = new Date(request.startDate);
+        const end = new Date(request.endDate);
+        const cleanStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+        const cleanEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+        const days = Math.max(1, Math.round((cleanEnd - cleanStart) / (1000 * 60 * 60 * 24)) + 1);
+
+        // Aprobar vacaciones -> Restar días
+        if (status === 'APPROVED' && isVacation && request.status !== 'APPROVED') {
             return prisma.$transaction(async (tx) => {
-                const start = new Date(request.startDate);
-                const end = new Date(request.endDate);
-                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-                // Verificar saldo nuevamente por seguridad
                 const employee = await tx.employee.findUnique({ where: { id: request.employeeId } });
-
-                console.log(`[DEBUG] Aprobando Vacaciones. Balance: ${employee.vacationDays}. Descontando: ${days}`);
 
                 if (employee.vacationDays < days) {
                     throw new Error(`No se puede aprobar: Saldo insuficiente (${employee.vacationDays} días).`);
                 }
 
-                // Restar días
                 await tx.employee.update({
                     where: { id: request.employeeId },
                     data: { vacationDays: { decrement: days } }
                 });
 
-                // Actualizar solicitud
                 return tx.absenceRequest.update({
                     where: { id },
                     data: { status, adminComment }
@@ -86,7 +99,22 @@ export const absenceService = {
             });
         }
 
-        // Flujo normal (sin transacción compleja)
+        // Revertir aprobación previa de vacaciones -> Reintegrar días
+        if (request.status === 'APPROVED' && ['REJECTED', 'CANCELLED'].includes(status) && isVacation) {
+            return prisma.$transaction(async (tx) => {
+                await tx.employee.update({
+                    where: { id: request.employeeId },
+                    data: { vacationDays: { increment: days } }
+                });
+
+                return tx.absenceRequest.update({
+                    where: { id },
+                    data: { status, adminComment }
+                });
+            });
+        }
+
+        // Flujo normal
         return absenceRepository.updateStatus(id, status, adminComment);
     }
 };

@@ -1,5 +1,9 @@
 import prisma from '../../database/db.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
+import { financial } from '../../utils/financialUtils.js';
+
+// Helper para obtener tenantId de la petición
+const getTenantId = (req) => req.tenantId || req.user?.tenantId || null;
 
 // ==========================================
 // 1. Accounting Periods (Periodos Contables)
@@ -7,7 +11,9 @@ import auditRepository from '../../repositories/audit/auditRepository.js';
 
 export const getPeriods = async (req, res) => {
     try {
+        const tenantId = getTenantId(req);
         const periods = await prisma.accountingPeriod.findMany({
+            where: tenantId ? { tenantId } : {},
             orderBy: [{ year: 'desc' }, { month: 'desc' }]
         });
         res.status(200).json(periods);
@@ -19,10 +25,15 @@ export const getPeriods = async (req, res) => {
 export const createPeriod = async (req, res) => {
     try {
         const { year, month, startDate, endDate } = req.body;
+        const tenantId = getTenantId(req);
 
         // Validar si ya existe en la empresa actual
         const existing = await prisma.accountingPeriod.findFirst({
-            where: { year: parseInt(year), month: parseInt(month) }
+            where: {
+                year: parseInt(year),
+                month: parseInt(month),
+                ...(tenantId ? { tenantId } : {})
+            }
         });
 
         if (existing) {
@@ -31,6 +42,7 @@ export const createPeriod = async (req, res) => {
 
         const period = await prisma.accountingPeriod.create({
             data: {
+                tenantId,
                 year: parseInt(year),
                 month: parseInt(month),
                 startDate: new Date(startDate),
@@ -104,7 +116,9 @@ export const deletePeriod = async (req, res) => {
 
 export const getAccounts = async (req, res) => {
     try {
+        const tenantId = getTenantId(req);
         const accounts = await prisma.accountingAccount.findMany({
+            where: tenantId ? { tenantId } : {},
             include: { subAccounts: true },
             orderBy: { code: 'asc' }
         });
@@ -117,12 +131,19 @@ export const getAccounts = async (req, res) => {
 export const createAccount = async (req, res) => {
     try {
         const { code, name, description, type, level, isTransactional, parentId } = req.body;
+        const tenantId = getTenantId(req);
 
-        const existing = await prisma.accountingAccount.findFirst({ where: { code } });
+        const existing = await prisma.accountingAccount.findFirst({
+            where: {
+                code,
+                ...(tenantId ? { tenantId } : {})
+            }
+        });
         if (existing) return res.status(400).json({ message: 'El código de cuenta ya existe.' });
 
         const account = await prisma.accountingAccount.create({
             data: {
+                tenantId,
                 code,
                 name,
                 description,
@@ -200,7 +221,9 @@ export const deleteAccount = async (req, res) => {
 
 export const getCostCenters = async (req, res) => {
     try {
+        const tenantId = getTenantId(req);
         const centers = await prisma.costCenter.findMany({
+            where: tenantId ? { tenantId } : {},
             orderBy: { code: 'asc' }
         });
         res.status(200).json(centers);
@@ -212,11 +235,17 @@ export const getCostCenters = async (req, res) => {
 export const createCostCenter = async (req, res) => {
     try {
         const { code, name, description } = req.body;
-        const existing = await prisma.costCenter.findFirst({ where: { code } });
+        const tenantId = getTenantId(req);
+        const existing = await prisma.costCenter.findFirst({
+            where: {
+                code,
+                ...(tenantId ? { tenantId } : {})
+            }
+        });
         if (existing) return res.status(400).json({ message: 'El código de centro de costo ya existe.' });
 
         const center = await prisma.costCenter.create({
-            data: { code, name, description }
+            data: { tenantId, code, name, description }
         });
         res.status(201).json(center);
     } catch (error) {
@@ -276,10 +305,16 @@ export const deleteCostCenter = async (req, res) => {
 export const getJournalEntries = async (req, res) => {
     try {
         const { periodId } = req.query;
-        const where = {};
+        const tenantId = getTenantId(req);
+        const where = tenantId ? { tenantId } : {};
 
         if (periodId && periodId !== 'undefined') {
-            const period = await prisma.accountingPeriod.findUnique({ where: { id: periodId } });
+            const period = await prisma.accountingPeriod.findFirst({
+                where: {
+                    id: periodId,
+                    ...(tenantId ? { tenantId } : {})
+                }
+            });
             if (period) {
                 where.date = {
                     gte: period.startDate,
@@ -306,14 +341,18 @@ export const getJournalEntries = async (req, res) => {
 export const createJournalEntry = async (req, res) => {
     try {
         const { entryNumber, date, description, type, lines, referenceModule, referenceId } = req.body;
+        const tenantId = getTenantId(req);
 
-        // 1. Validar Cuadratura Perfecta (Debe = Haber)
-        const totalDebit = lines.reduce((acc, line) => acc + (parseFloat(line.debit) || 0), 0);
-        const totalCredit = lines.reduce((acc, line) => acc + (parseFloat(line.credit) || 0), 0);
+        // 1. Validar Cuadratura Perfecta usando la utilidad financiera
+        const totalDebitNum = lines.reduce((acc, line) => acc + (parseFloat(line.debit) || 0), 0);
+        const totalCreditNum = lines.reduce((acc, line) => acc + (parseFloat(line.credit) || 0), 0);
 
-        if (Math.abs(totalDebit - totalCredit) > 0.01) {
+        const totalDebitFin = financial.from(totalDebitNum);
+        const totalCreditFin = financial.from(totalCreditNum);
+
+        if (!totalDebitFin.equals(totalCreditFin)) {
             return res.status(400).json({
-                message: 'El asiento está descuadrado. El total AL DEBE debe ser igual al total AL HABER.'
+                message: `El asiento está descuadrado. El total AL DEBE (${totalDebitFin.toFixed(2)}) debe ser igual al total AL HABER (${totalCreditFin.toFixed(2)}).`
             });
         }
 
@@ -323,7 +362,8 @@ export const createJournalEntry = async (req, res) => {
             where: {
                 year: entryDate.getFullYear(),
                 month: entryDate.getMonth() + 1,
-                status: 'OPEN'
+                status: 'OPEN',
+                ...(tenantId ? { tenantId } : {})
             }
         });
 
@@ -335,13 +375,14 @@ export const createJournalEntry = async (req, res) => {
         const result = await prisma.$transaction(async (tx) => {
             const entry = await tx.journalEntry.create({
                 data: {
+                    tenantId,
                     entryNumber,
                     date: entryDate,
                     description,
                     type,
                     status: 'DRAFT', // Empieza como PENDIENTE/Borrador
-                    totalDebit,
-                    totalCredit,
+                    totalDebit: financial.round(totalDebitFin),
+                    totalCredit: financial.round(totalCreditFin),
                     referenceModule,
                     referenceId,
                     lines: {
@@ -566,11 +607,15 @@ export const getGeneralLedger = async (req, res) => {
 
 export const integratePayroll = async (req, res) => {
     const { payrollId } = req.body;
+    const tenantId = getTenantId(req);
 
     try {
-        // 1. Obtener la nómina con detalles y departamentos de empleados
-        const payroll = await prisma.payroll.findUnique({
-            where: { id: payrollId },
+        // 1. Obtener la nómina con detalles y departamentos de empleados con aislamiento de tenant
+        const payroll = await prisma.payroll.findFirst({
+            where: {
+                id: payrollId,
+                ...(tenantId ? { tenantId } : {})
+            },
             include: {
                 details: {
                     include: {
@@ -587,16 +632,28 @@ export const integratePayroll = async (req, res) => {
 
         // 2. Verificar si ya existe un asiento para esta nómina
         const existingEntry = await prisma.journalEntry.findFirst({
-            where: { referenceModule: 'PAYROLL', referenceId: payrollId }
+            where: {
+                referenceModule: 'PAYROLL',
+                referenceId: payrollId,
+                ...(tenantId ? { tenantId } : {})
+            }
         });
         if (existingEntry) return res.status(400).json({ message: 'Esta nómina ya ha sido contabilizada', entryId: existingEntry.id });
 
-        // 3. Obtener Cuentas Contables y Centros de Costo
+        // 3. Obtener Cuentas Contables y Centros de Costo filtradas por Tenant
         const [accounts, allCostCenters] = await Promise.all([
             prisma.accountingAccount.findMany({
-                where: { code: { in: ['5.1.1', '5.1.2', '2.1.1', '2.1.2'] } }
+                where: {
+                    code: { in: ['5.1.1', '5.1.2', '5.1.3', '2.1.1', '2.1.2'] },
+                    ...(tenantId ? { tenantId } : {})
+                }
             }),
-            prisma.costCenter.findMany({ where: { isActive: true } })
+            prisma.costCenter.findMany({
+                where: {
+                    isActive: true,
+                    ...(tenantId ? { tenantId } : {})
+                }
+            })
         ]);
 
         const accMap = {};
@@ -626,7 +683,7 @@ export const integratePayroll = async (req, res) => {
                 expensesByCC[ccId || 'DEFAULT'] = { ccId, sueldos: 0, extras: 0, bonos: 0 };
             }
 
-            const bonuses = JSON.parse(det.bonuses || '[]');
+            const bonuses = typeof det.bonuses === 'string' ? JSON.parse(det.bonuses || '[]') : (det.bonuses || []);
             const detBonuses = bonuses.reduce((acc, b) => acc + (b.amount || 0), 0);
 
             expensesByCC[ccId || 'DEFAULT'].sueldos += det.baseSalary;
@@ -638,7 +695,7 @@ export const integratePayroll = async (req, res) => {
             totalBonos += detBonuses;
             totalNeto += det.netSalary;
 
-            const deductions = JSON.parse(det.deductions || '[]');
+            const deductions = typeof det.deductions === 'string' ? JSON.parse(det.deductions || '[]') : (det.deductions || []);
             deductions.forEach(d => totalDeducciones += (d.amount || 0));
         });
 
@@ -691,8 +748,13 @@ export const integratePayroll = async (req, res) => {
         }
 
         const dateObj = new Date(payroll.period);
+        // CORRECCIÓN CRÍTICA: totalDebit debe incluir totalSueldos + totalHorasExtras + totalBonos para igualar el haber total
+        const calculatedTotalDebit = Number((totalSueldos + totalHorasExtras + totalBonos).toFixed(2));
+        const calculatedTotalCredit = Number((totalNeto + totalDeducciones).toFixed(2));
+
         const entry = await prisma.journalEntry.create({
             data: {
+                tenantId,
                 entryNumber: `PAY-${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 9000) + 1000}`,
                 date: new Date(),
                 description: `Nexus: Importación de Nómina ${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`,
@@ -700,8 +762,8 @@ export const integratePayroll = async (req, res) => {
                 status: 'DRAFT',
                 referenceModule: 'PAYROLL',
                 referenceId: payrollId,
-                totalDebit: Number((totalSueldos + totalHorasExtras).toFixed(2)),
-                totalCredit: Number((totalNeto + totalDeducciones).toFixed(2)),
+                totalDebit: calculatedTotalDebit,
+                totalCredit: calculatedTotalCredit,
                 lines: { create: lines }
             }
         });

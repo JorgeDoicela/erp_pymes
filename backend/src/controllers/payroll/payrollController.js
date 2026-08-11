@@ -45,11 +45,12 @@ class PayrollController {
 
     async getById(req, res) {
         try {
-            const payroll = await payrollCalculationService.getPayrollById(req.params.id);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const payroll = await payrollCalculationService.getPayrollById(req.params.id, tenantId);
             if (!payroll) return res.status(404).json({ message: 'Nómina no encontrada' });
             res.status(200).json({ success: true, data: payroll });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Error al obtener detalle' });
+            res.status(500).json({ success: false, message: error.message || 'Error al obtener detalle' });
         }
     }
 
@@ -57,16 +58,18 @@ class PayrollController {
         try {
             const { id } = req.params;
             const userId = req.user?.id; // RNF-14 Audit
-            const payroll = await payrollCalculationService.confirmPayroll(id, userId);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const payroll = await payrollCalculationService.confirmPayroll(id, userId, tenantId);
             res.status(200).json({ success: true, data: payroll, message: 'Nómina aprobada' });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Error al confirmar nómina' });
+            res.status(500).json({ success: false, message: error.message || 'Error al confirmar nómina' });
         }
     }
 
     async generateBankFile(req, res) {
         try {
-            const fileContent = await payrollCalculationService.generateBankFile(req.params.id);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const fileContent = await payrollCalculationService.generateBankFile(req.params.id, tenantId);
             res.setHeader('Content-Type', 'text/csv');
             res.setHeader('Content-Disposition', 'attachment; filename=transferencias.csv');
             res.send(fileContent);
@@ -79,7 +82,8 @@ class PayrollController {
         try {
             const { id } = req.params;
             const userId = req.user?.id;
-            const payroll = await payrollCalculationService.markAsPaid(id, userId);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const payroll = await payrollCalculationService.markAsPaid(id, userId, tenantId);
             res.status(200).json({ success: true, data: payroll, message: 'Pago registrado exitosamente' });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -90,7 +94,8 @@ class PayrollController {
         try {
             const { id } = req.params;
             const adminId = req.user?.id;
-            const result = await payrollCalculationService.updatePayrollDetail(id, req.body, adminId);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const result = await payrollCalculationService.updatePayrollDetail(id, req.body, adminId, tenantId);
             res.status(200).json({ success: true, message: 'Detalle de nómina actualizado', data: result });
         } catch (error) {
             console.error(error);
@@ -102,7 +107,8 @@ class PayrollController {
         try {
             const { id } = req.params;
             const adminId = req.user?.id;
-            const result = await payrollCalculationService.deletePayroll(id, adminId);
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const result = await payrollCalculationService.deletePayroll(id, adminId, tenantId);
             res.status(200).json({ success: true, message: 'Nómina eliminada correctamente', data: result });
         } catch (error) {
             console.error(error);

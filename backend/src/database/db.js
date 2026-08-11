@@ -121,7 +121,8 @@ prisma.$use(async (params, next) => {
         if (DIRECT_TENANT_MODELS.has(model)) {
             params.args.where.tenantId = tenantId;
         } else if (EMPLOYEE_RELATION_MODELS.has(model)) {
-            params.args.where.employee = { ...(params.args.where.employee || {}), tenantId };
+            const relField = model === 'Notification' ? 'recipient' : 'employee';
+            params.args.where[relField] = { ...(params.args.where[relField] || {}), tenantId };
         } else if (INDIRECT_RELATION_MAP[model]) {
             applyRelationFilter(params.args.where, INDIRECT_RELATION_MAP[model], tenantId);
         }
@@ -133,7 +134,8 @@ prisma.$use(async (params, next) => {
                 params.args.where.tenantId = tenantId;
             }
         } else if (EMPLOYEE_RELATION_MODELS.has(model)) {
-            params.args.where.employee = { ...(params.args.where.employee || {}), tenantId };
+            const relField = model === 'Notification' ? 'recipient' : 'employee';
+            params.args.where[relField] = { ...(params.args.where[relField] || {}), tenantId };
         } else if (INDIRECT_RELATION_MAP[model]) {
             applyRelationFilter(params.args.where, INDIRECT_RELATION_MAP[model], tenantId);
         }
@@ -149,16 +151,19 @@ prisma.$use(async (params, next) => {
                     item.tenantId = tenantId;
                 });
             }
-        } else if (EMPLOYEE_RELATION_MODELS.has(model) && action === 'create' && params.args.data?.employeeId) {
-            // Validar defensivamente que el employeeId pertenezca al Tenant activo
-            const emp = await runWithoutTenantFilter(() =>
-                prisma.employee.findFirst({
-                    where: { id: params.args.data.employeeId, tenantId },
-                    select: { id: true }
-                })
-            );
-            if (!emp) {
-                throw new Error(`Acceso Denegado (Multi-Tenant): El empleado asociado en '${model}' no pertenece a la empresa activa.`);
+        } else if (EMPLOYEE_RELATION_MODELS.has(model) && action === 'create') {
+            const empId = params.args.data?.employeeId || params.args.data?.recipientId;
+            if (empId) {
+                // Validar defensivamente que el employeeId pertenezca al Tenant activo
+                const emp = await runWithoutTenantFilter(() =>
+                    prisma.employee.findFirst({
+                        where: { id: empId, tenantId },
+                        select: { id: true }
+                    })
+                );
+                if (!emp) {
+                    throw new Error(`Acceso Denegado (Multi-Tenant): El empleado asociado en '${model}' no pertenece a la empresa activa.`);
+                }
             }
         }
     }
@@ -167,7 +172,8 @@ prisma.$use(async (params, next) => {
         if (DIRECT_TENANT_MODELS.has(model)) {
             params.args.where.tenantId = tenantId;
         } else if (EMPLOYEE_RELATION_MODELS.has(model)) {
-            params.args.where.employee = { ...(params.args.where.employee || {}), tenantId };
+            const relField = model === 'Notification' ? 'recipient' : 'employee';
+            params.args.where[relField] = { ...(params.args.where[relField] || {}), tenantId };
         } else if (INDIRECT_RELATION_MAP[model]) {
             applyRelationFilter(params.args.where, INDIRECT_RELATION_MAP[model], tenantId);
         }
@@ -183,7 +189,8 @@ prisma.$use(async (params, next) => {
                 whereCheck.tenantId = tenantId;
                 requiresCheck = true;
             } else if (EMPLOYEE_RELATION_MODELS.has(model)) {
-                whereCheck.employee = { ...(whereCheck.employee || {}), tenantId };
+                const relField = model === 'Notification' ? 'recipient' : 'employee';
+                whereCheck[relField] = { ...(whereCheck[relField] || {}), tenantId };
                 requiresCheck = true;
             } else if (INDIRECT_RELATION_MAP[model]) {
                 applyRelationFilter(whereCheck, INDIRECT_RELATION_MAP[model], tenantId);

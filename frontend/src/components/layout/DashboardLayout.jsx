@@ -14,12 +14,16 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
     const isOperationalOrTenantModule = 
         location.pathname.startsWith('/empleado') ||
         location.pathname.startsWith('/my-') ||
-        location.pathname.includes('/accounting') ||
-        location.pathname.includes('/entrepreneurship') ||
         location.pathname.includes('/performance/my-evaluations') ||
         location.pathname.includes('/performance/goals');
 
     const isSuperAdminSupervising = isSuperAdmin && isOperationalOrTenantModule;
+    const selectedTenantId = isSuperAdmin ? localStorage.getItem('superadmin_selected_tenant_id') : null;
+
+    const handleClearTenantInspection = () => {
+        localStorage.removeItem('superadmin_selected_tenant_id');
+        window.location.reload();
+    };
 
     return (
         <div className="min-h-screen bg-surface flex">
@@ -57,7 +61,28 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
                 <Header user={user} onMenuClick={() => setIsMenuOpen(true)} title={title} />
                 <main className="flex-1 p-3 sm:p-6 overflow-y-auto min-w-0 w-full">
                     <div className="max-w-7xl mx-auto w-full min-w-0">
-                        {isSuperAdminSupervising && (
+                        {isSuperAdmin && selectedTenantId && (
+                            <div className="mb-5 bg-indigo-900 text-white p-3.5 px-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-800 rounded-xl shrink-0 text-indigo-200">
+                                        <FiEye className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-sm">Modo Inspección de Empresa Activo</p>
+                                        <p className="text-indigo-200 text-[11px] mt-0.5">
+                                            Estás auditando los datos aislados de una empresa específica. Las acciones globales afectan a este contexto.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleClearTenantInspection}
+                                    className="px-3 py-1.5 bg-white text-indigo-900 hover:bg-indigo-50 font-bold rounded-lg transition-colors shrink-0 shadow-xs cursor-pointer"
+                                >
+                                    Volver a Modo Global SaaS
+                                </button>
+                            </div>
+                        )}
+                        {isSuperAdminSupervising && !selectedTenantId && (
                             <div className="mb-5 bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-start gap-3.5 text-slate-700">
                                 <div className="p-2.5 bg-slate-50 rounded-xl text-slate-500 border border-slate-100 shrink-0">
                                     <FiEye className="w-4 h-4 text-slate-600" />
@@ -72,7 +97,7 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
                                         </span>
                                     </div>
                                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                                        Estás navegando este módulo en modo supervisión. Las funciones de registro, edición y solicitudes están deshabilitadas para este usuario.
+                                        Estás navegando este módulo en modo supervisión global.
                                     </p>
                                 </div>
                             </div>

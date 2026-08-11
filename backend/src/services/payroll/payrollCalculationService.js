@@ -156,11 +156,21 @@ class PayrollCalculationService {
 
             const baseSalary = financial.from(contract.salary);
 
-            // A. Attendance Data
+            // A. Attendance Data & Contract Active Period Pro-rating
+            const contractStart = new Date(contract.startDate);
+            const contractEnd = contract.endDate ? new Date(contract.endDate) : null;
+
+            const effectiveStart = contractStart > startDate ? contractStart : startDate;
+            const effectiveEnd = (contractEnd && contractEnd < endDate) ? contractEnd : endDate;
+
+            const effectiveDaysInPeriod = Math.max(0, Math.ceil((effectiveEnd - effectiveStart) / (1000 * 60 * 60 * 24)) + 1);
+            const isFullMonth = effectiveStart.getTime() === startDate.getTime() && (!contractEnd || contractEnd >= endDate);
+            const maxEligibleDays = isFullMonth ? config.workingDays : Math.min(config.workingDays, effectiveDaysInPeriod);
+
             const records = attendanceMap.get(emp.id) || [];
             const absences = records.filter(r => r.status === 'Falta').length;
 
-            let workedDays = config.workingDays - absences;
+            let workedDays = maxEligibleDays - absences;
             if (workedDays < 0) workedDays = 0;
 
             let totalOvertimeHours = financial.from(0);
@@ -442,9 +452,12 @@ class PayrollCalculationService {
         });
     }
 
-    async getPayrollById(id) {
-        return await prisma.payroll.findUnique({
-            where: { id },
+    async getPayrollById(id, tenantId = null) {
+        const payroll = await prisma.payroll.findFirst({
+            where: {
+                id,
+                ...(tenantId ? { tenantId } : {})
+            },
             include: {
                 details: {
                     include: {
@@ -460,12 +473,18 @@ class PayrollCalculationService {
                 }
             }
         });
+
+        if (!payroll) throw new Error('Nómina no encontrada');
+        return payroll;
     }
 
-    async confirmPayroll(id, adminId) {
+    async confirmPayroll(id, adminId, tenantId = null) {
         return await prisma.$transaction(async (tx) => {
-            const payroll = await tx.payroll.findUnique({
-                where: { id },
+            const payroll = await tx.payroll.findFirst({
+                where: {
+                    id,
+                    ...(tenantId ? { tenantId } : {})
+                },
                 include: { details: true }
             });
 
@@ -473,8 +492,6 @@ class PayrollCalculationService {
             if (payroll.status === 'APPROVED') throw new Error('Nómina ya está aprobada');
 
             // RNF-20: Validation before confirmation
-            // Note: validatePayrollTotals uses prisma, we need to adapt it or use it carefully.
-            // For now, internal validation:
             const calculatedTotal = payroll.details.reduce((acc, detail) => acc.plus(detail.netSalary), financial.from(0));
             const storedTotal = financial.from(payroll.totalAmount);
 
@@ -484,7 +501,7 @@ class PayrollCalculationService {
 
             // Process One-Time Benefits
             for (const detail of payroll.details) {
-                const bonuses = JSON.parse(detail.bonuses || '[]');
+                const bonuses = typeof detail.bonuses === 'string' ? JSON.parse(detail.bonuses || '[]') : (detail.bonuses || []);
                 for (const bonus of bonuses) {
                     if (bonus.benefitId && bonus.frequency === 'ONE_TIME') {
                         await tx.employeeBenefit.update({
@@ -495,13 +512,13 @@ class PayrollCalculationService {
                 }
 
                 // Process Salary Advances / Loans
-                const deductions = JSON.parse(detail.deductions || '[]');
+                const deductions = typeof detail.deductions === 'string' ? JSON.parse(detail.deductions || '[]') : (detail.deductions || []);
                 for (const ded of deductions) {
                     if (ded.advanceId) {
                         const adv = await tx.salaryAdvance.findUnique({ where: { id: ded.advanceId } });
                         if (adv) {
                             const newPaidInstallments = adv.paidInstallments + 1;
-                            const newPaidAmount = adv.paidAmount + (ded.amount || 0);
+                            const newPaidAmount = financial.from(adv.paidAmount).plus(ded.amount || 0).toNumber();
                             const isFullyPaid = newPaidInstallments >= adv.installments || newPaidAmount >= adv.amount;
 
                             await tx.salaryAdvance.update({
@@ -537,9 +554,12 @@ class PayrollCalculationService {
         });
     }
 
-    async generateBankFile(id) {
-        const payroll = await prisma.payroll.findUnique({
-            where: { id },
+    async generateBankFile(id, tenantId = null) {
+        const payroll = await prisma.payroll.findFirst({
+            where: {
+                id,
+                ...(tenantId ? { tenantId } : {})
+            },
             include: {
                 details: {
                     include: { employee: true }
@@ -579,7 +599,16 @@ class PayrollCalculationService {
         return csv;
     }
 
-    async markAsPaid(id, adminId) {
+    async markAsPaid(id, adminId, tenantId = null) {
+        const payroll = await prisma.payroll.findFirst({
+            where: {
+                id,
+                ...(tenantId ? { tenantId } : {})
+            }
+        });
+
+        if (!payroll) throw new Error('Nómina no encontrada');
+
         const updated = await prisma.payroll.update({
             where: { id },
             data: {
@@ -601,10 +630,13 @@ class PayrollCalculationService {
         return updated;
     }
 
-    async updatePayrollDetail(detailId, data, adminId) {
+    async updatePayrollDetail(detailId, data, adminId, tenantId = null) {
         return await prisma.$transaction(async (tx) => {
-            const detail = await tx.payrollDetail.findUnique({
-                where: { id: detailId },
+            const detail = await tx.payrollDetail.findFirst({
+                where: {
+                    id: detailId,
+                    ...(tenantId ? { payroll: { tenantId } } : {})
+                },
                 include: { payroll: true }
             });
 
@@ -614,8 +646,8 @@ class PayrollCalculationService {
             }
 
             // Recalcular el Neto basado en los nuevos valores o los existentes
-            const bonuses = data.bonuses ? JSON.parse(data.bonuses) : JSON.parse(detail.bonuses);
-            const deductions = data.deductions ? JSON.parse(data.deductions) : JSON.parse(detail.deductions);
+            const bonuses = data.bonuses ? (typeof data.bonuses === 'string' ? JSON.parse(data.bonuses) : data.bonuses) : (typeof detail.bonuses === 'string' ? JSON.parse(detail.bonuses) : detail.bonuses);
+            const deductions = data.deductions ? (typeof data.deductions === 'string' ? JSON.parse(data.deductions) : data.deductions) : (typeof detail.deductions === 'string' ? JSON.parse(detail.deductions) : detail.deductions);
 
             const totalBonuses = bonuses.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
             const totalDeductions = deductions.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
@@ -623,8 +655,6 @@ class PayrollCalculationService {
             const baseSalary = financial.from(data.baseSalary ?? detail.baseSalary);
             const overtimeAmount = financial.from(data.overtimeAmount ?? detail.overtimeAmount);
 
-            // Suponemos que earnedSalary ya viene calculado o lo ajustamos proporcional al baseSalary
-            // Para simplificar esta edición manual, el usuario edita el baseSalary ganado en el mes
             const netSalary = baseSalary.plus(overtimeAmount).plus(totalBonuses).minus(totalDeductions);
 
             const updatedDetail = await tx.payrollDetail.update({
@@ -665,10 +695,13 @@ class PayrollCalculationService {
         });
     }
 
-    async deletePayroll(id, adminId) {
+    async deletePayroll(id, adminId, tenantId = null) {
         return await prisma.$transaction(async (tx) => {
-            const payroll = await tx.payroll.findUnique({
-                where: { id }
+            const payroll = await tx.payroll.findFirst({
+                where: {
+                    id,
+                    ...(tenantId ? { tenantId } : {})
+                }
             });
 
             if (!payroll) throw new Error('Nómina no encontrada');
@@ -676,12 +709,10 @@ class PayrollCalculationService {
                 throw new Error(`No se puede eliminar una nómina en estado ${payroll.status}. Solo se permiten eliminaciones en modo BORRADOR.`);
             }
 
-            // Eliminar detalles primero (Prisma debería hacerlo si hay cascade, pero aseguramos)
             await tx.payrollDetail.deleteMany({
                 where: { payrollId: id }
             });
 
-            // Eliminar cabecera
             const deleted = await tx.payroll.delete({
                 where: { id }
             });

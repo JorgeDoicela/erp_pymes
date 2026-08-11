@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../../database/db.js';
 
 // Obtener todos los proyectos (con filtros opcionales)
 export const getProjects = async (req, res) => {

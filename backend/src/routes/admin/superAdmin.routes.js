@@ -4,6 +4,7 @@ import { requireSuperAdmin } from '../../middleware/superAdmin.middleware.js';
 import {
     getPlatformMetrics,
     getAllTenants,
+    getTenantsList,
     getTenantDetail,
     updateTenantStatus,
     updateTenantPlan
@@ -16,6 +17,7 @@ router.use(authenticate, requireSuperAdmin);
 
 router.get('/metrics', getPlatformMetrics);
 router.get('/tenants', getAllTenants);
+router.get('/tenants-list', getTenantsList);
 router.get('/tenants/:id', getTenantDetail);
 router.patch('/tenants/:id/status', updateTenantStatus);
 router.patch('/tenants/:id/plan', updateTenantPlan);

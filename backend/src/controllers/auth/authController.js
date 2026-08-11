@@ -76,7 +76,8 @@ export const login = async (req, res) => {
             });
         }
 
-        const effectiveRole = user.email === 'admin@emplifi.com' ? 'superadmin' : user.role;
+        const effectiveRole = (user.role === 'superadmin' || user.email === 'admin@emplifi.com') ? 'superadmin' : user.role;
+        const effectiveTenantId = effectiveRole === 'superadmin' ? null : user.tenantId;
 
         // Verificar si la empresa del usuario está suspendida o inactiva (salvo para SuperAdmin)
         if (effectiveRole !== 'superadmin' && user.tenant) {
@@ -105,13 +106,13 @@ export const login = async (req, res) => {
 
         // Generar Token con tenantId y email
         const token = jwt.sign(
-            { id: user.id, email: user.email, role: effectiveRole, tenantId: user.tenantId },
+            { id: user.id, email: user.email, role: effectiveRole, tenantId: effectiveTenantId },
             process.env.JWT_SECRET || 'secret_key_change_me',
             { expiresIn: '1d' }
         );
 
         // Log successful login (Non-blocking)
-        console.log(`[AUTH] Login successful: ${user.email} (Tenant: ${user.tenant?.name || 'N/A'})`);
+        console.log(`[AUTH] Login successful: ${user.email} (Tenant: ${effectiveRole === 'superadmin' ? 'Global SuperAdmin (N/A)' : (user.tenant?.name || 'N/A')})`);
         auditRepository.createLog({
             entity: 'Auth',
             entityId: user.id,
@@ -125,13 +126,13 @@ export const login = async (req, res) => {
             message: 'Login exitoso',
             data: {
                 id: user.id,
-                tenantId: user.tenantId,
+                tenantId: effectiveTenantId,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
                 role: effectiveRole,
                 trackingConsent: user.trackingConsent,
-                tenant: user.tenant ? {
+                tenant: (effectiveRole !== 'superadmin' && user.tenant) ? {
                     id: user.tenant.id,
                     name: user.tenant.name,
                     slug: user.tenant.slug,

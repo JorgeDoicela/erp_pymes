@@ -9,25 +9,25 @@ import {
 
 export const superAdminSections = [
     {
-        title: 'Administración SaaS',
+        title: 'Administración Global SaaS',
         modules: [
-            { title: 'Panel SuperAdmin SaaS', icon: <FiShield />, color: 'bg-rose-600', path: '/superadmin/dashboard' },
+            { title: 'Backoffice SuperAdmin', icon: <FiShield />, color: 'bg-rose-600', path: '/superadmin/dashboard' },
             { title: 'Configuración del Sistema', icon: <FiSettings />, color: 'bg-slate-600', path: '/admin/settings' },
-            { title: 'Auditoría Global', icon: <FiShield />, color: 'bg-slate-500', path: '/admin/audit' },
+            { title: 'Auditoría Global Plataforma', icon: <FiShield />, color: 'bg-slate-500', path: '/admin/audit' },
         ]
     },
     {
-        title: 'Gestión de Personal',
+        title: 'Supervisión de Personal',
         modules: [
-            { title: 'Empleados', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
+            { title: 'Empleados por Empresa', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
             { title: 'Expedientes Digitales', icon: <FiFolder />, color: 'bg-blue-600', path: '/admin/expedientes' },
             { title: 'Equipos y EPPs', icon: <FiPackage />, color: 'bg-purple-600', path: '/admin/assets' },
             { title: 'Offboarding & Liquidaciones', icon: <FiUserMinus />, color: 'bg-rose-600', path: '/admin/offboarding' },
-            { title: 'Cumplimiento y Alertas', icon: <FiShield />, color: 'bg-emerald-700', path: '/admin/compliance' },
+            { title: 'Cumplimiento Legal', icon: <FiShield />, color: 'bg-emerald-700', path: '/admin/compliance' },
         ]
     },
     {
-        title: 'Tiempo y Asistencia',
+        title: 'Supervisión de Asistencia',
         modules: [
             { title: 'Control de Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
             { title: 'Gestión de Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },
@@ -35,7 +35,7 @@ export const superAdminSections = [
         ]
     },
     {
-        title: 'Nómina y Compensaciones',
+        title: 'Supervisión de Nóminas',
         modules: [
             { title: 'Gestión de Nómina', icon: <FiDollarSign />, color: 'bg-green-500', path: '/admin/payroll/generator' },
             { title: 'Configuración de Nómina', icon: <FiSettings />, color: 'bg-emerald-600', path: '/admin/payroll/config' },
@@ -44,35 +44,28 @@ export const superAdminSections = [
         ]
     },
     {
-        title: 'Desempeño y Talento',
+        title: 'Supervisión de Finanzas y Módulos',
         modules: [
-            { title: 'Evaluaciones', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
-            { title: 'Reclutamiento', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
+            { title: 'Contabilidad General', icon: <FiBookOpen />, color: 'bg-blue-800', path: '/admin/accounting' },
+            { title: 'Evaluaciones y Talento', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
+            { title: 'Reclutamiento y Vacantes', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
+            { title: 'Incubadora Emprendimiento', icon: <FiCompass />, color: 'bg-amber-600', path: '/admin/entrepreneurship' },
         ]
     },
     {
-        title: 'Contabilidad y Proyectos',
-        modules: [
-            { title: 'Contabilidad', icon: <FiBookOpen />, color: 'bg-blue-800', path: '/admin/accounting' },
-            { title: 'Asientos Contables', icon: <FiFileText />, color: 'bg-indigo-500', path: '/admin/accounting/journals' },
-            { title: 'Catálogo de Cuentas', icon: <FiList />, color: 'bg-purple-500', path: '/admin/accounting/chart' },
-            { title: 'Gestión Emprendimiento', icon: <FiCompass />, color: 'bg-amber-600', path: '/admin/entrepreneurship' },
-        ]
-    },
-    {
-        title: 'Inteligencia y Reportes',
+        title: 'Inteligencia y Analíticas',
         modules: [
             { title: 'Análisis Predictivo', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
-            { title: 'Reportes', icon: <FiFileText />, color: 'bg-cyan-500', path: '/admin/reports' },
-            { title: 'Analíticas', icon: <FiBarChart2 />, color: 'bg-indigo-500', path: '/analytics' },
+            { title: 'Reportes de Sistema', icon: <FiFileText />, color: 'bg-cyan-500', path: '/admin/reports' },
+            { title: 'Analíticas Avanzadas', icon: <FiBarChart2 />, color: 'bg-indigo-500', path: '/analytics' },
         ]
     },
     {
-        title: 'Comunicación y Soporte',
+        title: 'Plataforma y Soporte',
         modules: [
-            { title: 'Comunicados y Anuncios', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/announcements' },
-            { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
-            { title: 'Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
+            { title: 'Anuncios Globales', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/announcements' },
+            { title: 'Mi Perfil SuperAdmin', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
+            { title: 'Centro de Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
         ]
     }
 ];

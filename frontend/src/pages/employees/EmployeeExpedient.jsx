@@ -125,7 +125,15 @@ const EmployeeExpedient = () => {
         );
     }
 
-    const { employee, completionPercentage, verifiedCount, totalRequired, checklist } = data || {};
+    const { 
+        employee = {}, 
+        completionPercentage = 0, 
+        verifiedCount = 0, 
+        totalRequired = 0, 
+        checklist = [] 
+    } = data || {};
+
+    const safeChecklist = Array.isArray(checklist) ? checklist : [];
 
     return (
         <div className="space-y-6">
@@ -193,79 +201,85 @@ const EmployeeExpedient = () => {
 
             {/* Checklist Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {checklist.map((item, idx) => (
-                    <div 
-                        key={idx} 
-                        className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4 hover:border-blue-200 transition-all"
-                    >
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shrink-0">
-                                    <DocumentIcon className="w-6 h-6" />
+                {safeChecklist.length > 0 ? (
+                    safeChecklist.map((item, idx) => (
+                        <div 
+                            key={idx} 
+                            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4 hover:border-blue-200 transition-all"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                    <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shrink-0">
+                                        <DocumentIcon className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 text-sm">{item.label}</h4>
+                                        <p className="text-xs text-slate-400 mt-0.5">
+                                            {item.required ? 'Documento Obligatorio' : 'Opcional'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-slate-800 text-sm">{item.label}</h4>
-                                    <p className="text-xs text-slate-400 mt-0.5">
-                                        {item.required ? 'Documento Obligatorio' : 'Opcional'}
-                                    </p>
-                                </div>
+                                {getStatusBadge(item.status)}
                             </div>
-                            {getStatusBadge(item.status)}
-                        </div>
 
-                        {item.document ? (
-                            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 text-xs space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-mono font-medium text-slate-700 truncate max-w-[200px]">
-                                        {item.document.originalName || 'DocumentoAdjunto.pdf'}
-                                    </span>
-                                    <a
-                                        href={item.document.documentUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-800 font-bold transition-colors"
-                                    >
-                                        Ver Documento →
-                                    </a>
+                            {item.document ? (
+                                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 text-xs space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-mono font-medium text-slate-700 truncate max-w-[200px]">
+                                            {item.document.originalName || 'DocumentoAdjunto.pdf'}
+                                        </span>
+                                        <a
+                                            href={item.document.documentUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:text-blue-800 font-bold transition-colors"
+                                        >
+                                            Ver Documento →
+                                        </a>
+                                    </div>
+
+                                    {item.document.verificationNotes && (
+                                        <p className="text-rose-600 font-medium italic bg-rose-50 p-2 rounded-lg border border-rose-100">
+                                            Nota de revisión: {item.document.verificationNotes}
+                                        </p>
+                                    )}
+
+                                    <div className="flex justify-between items-center text-slate-400 pt-1 border-t border-slate-200/60 text-[11px]">
+                                        <span>Cargado el {item.document.createdAt ? new Date(item.document.createdAt).toLocaleDateString('es-EC') : 'Recientemente'}</span>
+                                        {/* Action button for admin verification */}
+                                        <button
+                                            onClick={() => {
+                                                setSelectedItem(item);
+                                                setReviewNotes(item.document.verificationNotes || '');
+                                                setReviewModalOpen(true);
+                                            }}
+                                            className="text-slate-600 hover:text-blue-600 font-bold underline"
+                                        >
+                                            Revisar / Validar
+                                        </button>
+                                    </div>
                                 </div>
-
-                                {item.document.verificationNotes && (
-                                    <p className="text-rose-600 font-medium italic bg-rose-50 p-2 rounded-lg border border-rose-100">
-                                        Nota de revisión: {item.document.verificationNotes}
-                                    </p>
-                                )}
-
-                                <div className="flex justify-between items-center text-slate-400 pt-1 border-t border-slate-200/60 text-[11px]">
-                                    <span>Cargado el {new Date(item.document.createdAt).toLocaleDateString('es-EC')}</span>
-                                    {/* Action button for admin verification */}
+                            ) : (
+                                <div className="bg-amber-50/50 p-3.5 rounded-xl border border-amber-200/60 text-xs text-amber-800 flex justify-between items-center">
+                                    <span>Aún no se ha cargado este documento</span>
                                     <button
                                         onClick={() => {
-                                            setSelectedItem(item);
-                                            setReviewNotes(item.document.verificationNotes || '');
-                                            setReviewModalOpen(true);
+                                            setUploadCategory(item.categoryKey);
+                                            setUploadModalOpen(true);
                                         }}
-                                        className="text-slate-600 hover:text-blue-600 font-bold underline"
+                                        className="px-3 py-1 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all"
                                     >
-                                        Revisar / Validar
+                                        Cargar Ahora
                                     </button>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="bg-amber-50/50 p-3.5 rounded-xl border border-amber-200/60 text-xs text-amber-800 flex justify-between items-center">
-                                <span>Aún no se ha cargado este documento</span>
-                                <button
-                                    onClick={() => {
-                                        setUploadCategory(item.categoryKey);
-                                        setUploadModalOpen(true);
-                                    }}
-                                    className="px-3 py-1 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all"
-                                >
-                                    Cargar Ahora
-                                </button>
-                            </div>
-                        )}
+                            )}
+                        </div>
+                    ))
+                ) : (
+                    <div className="col-span-full bg-white p-8 rounded-2xl border border-slate-200/80 shadow-sm text-center text-slate-500 text-sm">
+                        No hay elementos registrados en la lista del expediente.
                     </div>
-                ))}
+                )}
             </div>
 
             {/* Upload Modal */}

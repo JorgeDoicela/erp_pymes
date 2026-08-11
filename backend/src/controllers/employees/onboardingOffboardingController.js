@@ -6,7 +6,7 @@ import offboardingService from '../../services/employees/offboardingService.js';
 export const getEmployeeExpedient = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await expedientService.getEmployeeExpedient(id);
+        const result = await expedientService.getEmployeeExpedient(id, req.user);
         return res.json({ success: true, data: result });
     } catch (error) {
         return res.status(400).json({ success: false, message: error.message });
@@ -15,11 +15,12 @@ export const getEmployeeExpedient = async (req, res) => {
 
 export const uploadExpedientDocument = async (req, res) => {
     try {
-        const employeeId = req.user.employeeId || req.user.id;
+        const employeeId = req.user?.employeeId || req.user?.id;
         const { type, documentCategory, documentUrl, mimeType, originalName } = req.body;
 
         const doc = await expedientService.uploadDocument({
             employeeId,
+            user: req.user,
             type,
             documentCategory,
             documentUrl,
@@ -144,10 +145,12 @@ export const updateChecklistStep = async (req, res) => {
 export const getOffboardings = async (req, res) => {
     try {
         const { status, search, page, limit } = req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
         const result = await offboardingService.getOffboardings({
             status, search,
             page: page ? parseInt(page) : 1,
-            limit: limit ? parseInt(limit) : 20
+            limit: limit ? parseInt(limit) : 20,
+            tenantId
         });
         return res.json({ success: true, ...result });
     } catch (error) {

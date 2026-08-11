@@ -175,6 +175,30 @@ export class EmployeeRepository {
   }
 
   /**
+   * Contar empleados
+   * @param {Object} options - Opciones de búsqueda
+   * @returns {Promise<number>} Conteo total de empleados
+   */
+  async countAll(options = {}) {
+    try {
+      const { q, tenantId } = options;
+      const where = {};
+      if (tenantId) where.tenantId = tenantId;
+      if (q) {
+        where.OR = [
+          { firstName: { contains: q, mode: 'insensitive' } },
+          { lastName: { contains: q, mode: 'insensitive' } },
+          { identityCard: { contains: q } },
+          { email: { contains: q, mode: 'insensitive' } },
+        ];
+      }
+      return await prisma.employee.count({ where });
+    } catch (error) {
+      throw new Error(`Error al contar empleados: ${error.message}`);
+    }
+  }
+
+  /**
    * Buscar empleados por email
    * @param {string} email - Email del empleado
    * @returns {Promise<Object>} Empleado (con salario desencriptado)
