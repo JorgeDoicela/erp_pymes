@@ -18,7 +18,11 @@ COPY . .
 # Generar el cliente de Prisma para Linux Alpine
 RUN npx prisma generate
 
+# Copiar y dar permisos al script de entrada
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 EXPOSE 5000
 
-# Script de inicio: sincroniza el esquema Prisma con la BD y arranca el servidor
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node src/server.js"]
+# Entrypoint: aplica migraciones y arranca el servidor
+ENTRYPOINT ["sh", "./entrypoint.sh"]
