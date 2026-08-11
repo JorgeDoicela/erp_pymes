@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import documentController from '../../controllers/documents/documentController.js';
 import { STORAGE_CONFIG } from '../../config/storage.config.js';
+import { authenticate, authorize } from '../../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -35,9 +36,9 @@ const upload = multer({
 });
 
 // Rutas
-router.post('/', upload.single('document'), documentController.upload);
-router.get('/employee/:employeeId', documentController.getByEmployee);
-router.delete('/:id', documentController.delete);
-router.get('/download/:filename', documentController.download);
+router.post('/', authenticate, authorize(['admin', 'hr', 'employee']), upload.single('document'), documentController.upload);
+router.get('/employee/:employeeId', authenticate, authorize(['admin', 'hr', 'employee']), documentController.getByEmployee);
+router.delete('/:id', authenticate, authorize(['admin', 'hr', 'employee']), documentController.delete);
+router.get('/download/:filename', authenticate, documentController.download);
 
 export default router;

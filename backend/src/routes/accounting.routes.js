@@ -4,8 +4,8 @@ import * as accController from '../controllers/accounting/accounting.controller.
 
 const router = express.Router();
 
-// Todos los endpoints contables requerirán usuario activo y rol Contabilidad
-router.use(authenticate, authorize(['accounting']));
+// Todos los endpoints contables requerirán usuario activo y rol Contabilidad o Administrador
+router.use(authenticate, authorize(['accounting', 'admin']));
 
 // Periodos Fiscales
 router.get('/periods', accController.getPeriods);

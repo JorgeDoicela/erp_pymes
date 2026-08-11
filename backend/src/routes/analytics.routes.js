@@ -4,11 +4,11 @@ import { Router } from 'express';
 
 const router = Router();
 
-router.get('/dashboard', authenticate, authorize(['admin', 'hr']), getDashboardData);
+router.get('/dashboard', authenticate, authorize(['admin', 'hr', 'accounting']), getDashboardData);
 router.get('/turnover', authenticate, authorize(['admin', 'hr']), getTurnoverReport);
 router.get('/performance', authenticate, authorize(['admin', 'hr']), getPerformanceReport);
-router.get('/payroll-costs', authenticate, authorize(['admin', 'hr']), getPayrollCostReport);
+router.get('/payroll-costs', authenticate, authorize(['admin', 'hr', 'accounting']), getPayrollCostReport);
 router.get('/satisfaction', authenticate, authorize(['admin', 'hr']), getSatisfactionReport);
-router.post('/custom-report', authenticate, authorize(['admin', 'hr']), getCustomReport);
+router.post('/custom-report', authenticate, authorize(['admin', 'hr', 'accounting']), getCustomReport);
 
 export default router;

@@ -7,17 +7,16 @@ const router = Router();
 
 // Rutas para gestión de empleados
 router.post('/', authenticate, authorize(['admin', 'hr']), validateEmployeeData, employeeController.create);
-router.get('/', authenticate, authorize(['admin', 'hr']), employeeController.getAll);
+router.get('/', authenticate, authorize(['admin', 'hr', 'accounting']), employeeController.getAll);
 router.get('/profile', authenticate, employeeController.getProfile);
 router.post('/consent', authenticate, employeeController.updateConsent);
-router.get('/departments', authenticate, employeeController.getDepartments);
+router.get('/departments', authenticate, authorize(['admin', 'hr', 'accounting', 'employee']), employeeController.getDepartments);
 router.get('/stats/salary', authenticate, authorize(['admin', 'hr']), employeeController.getSalaryStats);
+router.get('/department/:department', authenticate, authorize(['admin', 'hr']), employeeController.getByDepartment);
 router.get('/:id', authenticate, authorize(['admin', 'hr', 'employee']), employeeController.getById);
-router.get('/department/:department', authenticate, employeeController.getByDepartment);
 router.put('/:id', authenticate, authorize(['admin', 'hr']), validateEmployeeData, employeeController.update);
-router.post('/:id/terminate', authenticate, employeeController.terminate);
-
-router.get('/:id/history', employeeController.getHistory);
-router.delete('/:id', employeeController.delete);
+router.post('/:id/terminate', authenticate, authorize(['admin', 'hr']), employeeController.terminate);
+router.get('/:id/history', authenticate, authorize(['admin', 'hr', 'employee']), employeeController.getHistory);
+router.delete('/:id', authenticate, authorize(['admin', 'hr']), employeeController.delete);
 
 export default router;

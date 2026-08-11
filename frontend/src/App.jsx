@@ -139,9 +139,9 @@ function App() {
       if (!hasPermission) {
         // Redirigir según el rol real del usuario a su "home"
         if (isSuperAdmin) return <Navigate to="/superadmin/dashboard" replace />;
-        if (userRole === 'admin') return <Navigate to="/admin" replace />;
-        if (userRole === 'accounting') return <Navigate to="/admin" replace />;
-        if (userRole === 'entrepreneur') return <Navigate to="/admin" replace />;
+        if (userRole === 'admin' || userRole === 'hr') return <Navigate to="/admin" replace />;
+        if (userRole === 'accounting') return <Navigate to="/admin/accounting" replace />;
+        if (userRole === 'entrepreneur') return <Navigate to="/admin/entrepreneurship" replace />;
         if (userRole === 'employee') return <Navigate to="/empleado" replace />;
         return <Navigate to="/login" replace />;
       }
@@ -165,7 +165,7 @@ function App() {
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* Panel compartido para roles administrativos/especializados */}
-        <Route element={<RequireAuth role={['admin', 'accounting', 'entrepreneur']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route element={<RequireAuth role={['admin', 'hr', 'accounting', 'entrepreneur']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
           <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
         </Route>
@@ -177,8 +177,8 @@ function App() {
           <Route path="/superadmin/metrics" element={<SuperAdminDashboard />} />
         </Route>
 
-        {/* Solo Administrador (RRHH) */}
-        <Route element={<RequireAuth role="admin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        {/* Administrador y Recursos Humanos (RRHH) */}
+        <Route element={<RequireAuth role={['admin', 'hr']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin/shifts" element={<ShiftManagement />} />
           <Route path="/admin/reports" element={<AttendanceReports />} />
           <Route path="/admin/absences" element={<AdminAbsences />} />
@@ -196,10 +196,6 @@ function App() {
           <Route path="/admin/assets" element={<EmployeeAssetsManagement />} />
           <Route path="/admin/offboarding" element={<OffboardingManagement />} />
           <Route path="/admin/compliance" element={<LegalComplianceDashboard />} />
-          <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
-          <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
-          <Route path="/admin/payroll/advances" element={<SalaryAdvancesManagement />} />
-          <Route path="/admin/payroll/generator" element={<PayrollGenerator />} />
           <Route path="/performance" element={<EvaluationDashboard />} />
           <Route path="/performance/create" element={<CreateEvaluation />} />
           <Route path="/performance/assign" element={<AssignEvaluation />} />
@@ -214,8 +210,16 @@ function App() {
           <Route path="/analytics/satisfaction" element={<SatisfactionReport />} />
         </Route>
 
-        {/* Roles Especializados (Contabilidad) */}
-        <Route element={<RequireAuth role="accounting"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        {/* Nómina (Compartido para Admin, HR y Contabilidad) */}
+        <Route element={<RequireAuth role={['admin', 'hr', 'accounting']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+          <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
+          <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
+          <Route path="/admin/payroll/advances" element={<SalaryAdvancesManagement />} />
+          <Route path="/admin/payroll/generator" element={<PayrollGenerator />} />
+        </Route>
+
+        {/* Contabilidad (Compartido para Contabilidad y Admin) */}
+        <Route element={<RequireAuth role={['accounting', 'admin']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin/accounting" element={<AccountingDashboard />} />
           <Route path="/admin/accounting/chart" element={<ChartOfAccounts />} />
           <Route path="/admin/accounting/journals" element={<JournalEntries />} />
@@ -224,8 +228,8 @@ function App() {
           <Route path="/admin/accounting/cost-centers" element={<CostCenterManagement />} />
         </Route>
 
-        {/* Roles Especializados (Emprendimiento) */}
-        <Route element={<RequireAuth role="entrepreneur"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        {/* Emprendimiento (Compartido para Emprendedor y Admin) */}
+        <Route element={<RequireAuth role={['entrepreneur', 'admin']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/admin/entrepreneurship" element={<EntrepreneurshipDashboard />} />
           <Route path="/admin/entrepreneurship/create" element={<EntrepreneurshipForm />} />
           <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />

@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs';
 import contractController from '../../controllers/contracts/contractController.js';
 
+import { authenticate, authorize } from '../../middleware/auth.middleware.js';
+
 const router = Router();
 
 // Configure Multer storage
@@ -34,9 +36,9 @@ const upload = multer({
 });
 
 // Rutas
-router.post('/', upload.single('document'), contractController.create);
-router.get('/expiring', contractController.getExpiring);
-router.get('/employee/:employeeId', contractController.getByEmployee);
-router.get('/download/:filename', contractController.downloadContract);
+router.post('/', authenticate, authorize(['admin', 'hr']), upload.single('document'), contractController.create);
+router.get('/expiring', authenticate, authorize(['admin', 'hr']), contractController.getExpiring);
+router.get('/employee/:employeeId', authenticate, authorize(['admin', 'hr', 'accounting', 'employee']), contractController.getByEmployee);
+router.get('/download/:filename', authenticate, contractController.downloadContract);
 
 export default router;

@@ -17,8 +17,8 @@ router.get('/my', authenticate, getMyAdvances);
 router.delete('/:id/cancel', authenticate, cancelAdvance);
 
 // Administración y Aprobaciones
-router.get('/', authenticate, authorize(['admin', 'hr']), getAdvances);
-router.post('/:id/approve', authenticate, authorize(['admin', 'hr']), approveAdvance);
-router.post('/:id/reject', authenticate, authorize(['admin', 'hr']), rejectAdvance);
+router.get('/', authenticate, authorize(['admin', 'hr', 'accounting']), getAdvances);
+router.post('/:id/approve', authenticate, authorize(['admin', 'hr', 'accounting']), approveAdvance);
+router.post('/:id/reject', authenticate, authorize(['admin', 'hr', 'accounting']), rejectAdvance);
 
 export default router;

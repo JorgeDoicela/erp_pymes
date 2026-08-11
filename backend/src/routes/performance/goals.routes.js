@@ -4,9 +4,9 @@ import { authenticate, authorize } from '../../middleware/auth.middleware.js';
 
 const router = Router();
 
-router.post('/', authenticate, createGoal);
-router.get('/', authenticate, getMyGoals);
-router.put('/:id/progress', authenticate, updateGoalProgress);
-router.delete('/:id', authenticate, deleteGoal);
+router.post('/', authenticate, authorize(['admin', 'hr', 'manager', 'employee']), createGoal);
+router.get('/', authenticate, authorize(['admin', 'hr', 'manager', 'employee']), getMyGoals);
+router.put('/:id/progress', authenticate, authorize(['admin', 'hr', 'manager', 'employee']), updateGoalProgress);
+router.delete('/:id', authenticate, authorize(['admin', 'hr', 'manager']), deleteGoal);
 
 export default router;

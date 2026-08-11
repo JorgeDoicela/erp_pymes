@@ -14,7 +14,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
             case 'admin': return 'Administrador';
             case 'accounting': return 'Contabilidad';
             case 'entrepreneur': return 'Emprendedor';
-            default: return 'Personal (V2)';
+            default: return 'Empleado / Personal';
         }
     };
 
@@ -30,7 +30,10 @@ const Sidebar = ({ user, onLogout, onClose }) => {
         }, null);
 
     const getHomePath = () => {
+        if (isSuperAdmin) return '/superadmin/dashboard';
         if (user?.role === 'employee') return '/empleado';
+        if (user?.role === 'accounting') return '/admin/accounting';
+        if (user?.role === 'entrepreneur') return '/admin/entrepreneurship';
         return '/admin';
     };
 

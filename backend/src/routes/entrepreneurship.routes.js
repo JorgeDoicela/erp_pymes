@@ -24,10 +24,10 @@ router.use(authenticate, authorize(['entrepreneur', 'admin', 'employee']));
 
 // Rutas base de proyectos
 router.get('/', getProjects);
-router.post('/', createProject);
+router.post('/', authorize(['entrepreneur', 'admin']), createProject);
 router.get('/:id', getProjectDetails);
-router.patch('/:id', updateProject);
-router.delete('/:id', deleteProject);
+router.patch('/:id', authorize(['entrepreneur', 'admin']), updateProject);
+router.delete('/:id', authorize(['entrepreneur', 'admin']), deleteProject);
 
 // Inteligencia y BI (NUEVO)
 router.get('/:id/analytics', intelligence.getProjectAnalytics);
@@ -36,29 +36,29 @@ router.get('/:id/growth-metrics', intelligence.getGrowthData);
 
 // Gestión de Capital e Inversión (NUEVO)
 router.get('/:id/captable', capTable.getCapTable);
-router.post('/equity', capTable.addEquityHolder);
-router.patch('/equity/:id', capTable.updateEquityHolder);
-router.delete('/equity/:id', capTable.deleteEquityHolder);
+router.post('/equity', authorize(['entrepreneur', 'admin']), capTable.addEquityHolder);
+router.patch('/equity/:id', authorize(['entrepreneur', 'admin']), capTable.updateEquityHolder);
+router.delete('/equity/:id', authorize(['entrepreneur', 'admin']), capTable.deleteEquityHolder);
 
 router.get('/:id/funding', capTable.getFundingRounds);
-router.post('/funding', capTable.addFundingRound);
-router.patch('/funding/:id', capTable.updateFundingRound);
-router.delete('/funding/:id', capTable.deleteFundingRound);
+router.post('/funding', authorize(['entrepreneur', 'admin']), capTable.addFundingRound);
+router.patch('/funding/:id', authorize(['entrepreneur', 'admin']), capTable.updateFundingRound);
+router.delete('/funding/:id', authorize(['entrepreneur', 'admin']), capTable.deleteFundingRound);
 
 // Validación de Mercado y Clientes (NUEVO)
 router.get('/:id/interviews', validation.getInterviews);
-router.post('/interviews', validation.addInterview);
-router.patch('/interviews/:id', validation.updateInterview);
-router.delete('/interviews/:id', validation.deleteInterview);
-router.post('/market', validation.updateMarketSize);
+router.post('/interviews', authorize(['entrepreneur', 'admin']), validation.addInterview);
+router.patch('/interviews/:id', authorize(['entrepreneur', 'admin']), validation.updateInterview);
+router.delete('/interviews/:id', authorize(['entrepreneur', 'admin']), validation.deleteInterview);
+router.post('/market', authorize(['entrepreneur', 'admin']), validation.updateMarketSize);
 
 // Rutas de hitos (Milestones)
-router.post('/milestones', addMilestone);
-router.patch('/milestones/:id', updateMilestone);
-router.delete('/milestones/:id', deleteMilestone);
+router.post('/milestones', authorize(['entrepreneur', 'admin']), addMilestone);
+router.patch('/milestones/:id', authorize(['entrepreneur', 'admin']), updateMilestone);
+router.delete('/milestones/:id', authorize(['entrepreneur', 'admin']), deleteMilestone);
 
 // Rutas de actualizaciones (Bitácora)
-router.post('/updates', addUpdate);
-router.delete('/updates/:id', deleteUpdate);
+router.post('/updates', authorize(['entrepreneur', 'admin']), addUpdate);
+router.delete('/updates/:id', authorize(['entrepreneur', 'admin']), deleteUpdate);
 
 export default router;
