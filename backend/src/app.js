@@ -39,7 +39,8 @@ const corsOptions = {
         if (!origin) return callback(null, true);
 
         const allowedOrigins = [
-            'http://localhost:5173',  // Vite dev server
+            'http://localhost:5173',  // Vite dev server principal
+            'http://localhost:5174',  // Vite dev server secundario
             'http://localhost:3000',  // Alternativa
             'https://recursoshumanos-eight.vercel.app', // Vercel Frontend
             'https://erp.jorgedoicela.com', // Produccion EC2 HTTPS
@@ -49,7 +50,9 @@ const corsOptions = {
             process.env.ORIGIN,       // Soporte dinamico para ORIGIN
         ].filter(Boolean); // Eliminar undefined
 
-        if (allowedOrigins.indexOf(origin) !== -1 || (origin && origin.endsWith('jorgedoicela.com'))) {
+        const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || (origin && origin.endsWith('jorgedoicela.com')) || isLocalhost) {
             callback(null, true);
         } else {
             console.error(`[CORS] Blocked origin: ${origin}`);

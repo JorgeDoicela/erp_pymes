@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
     FiUsers, FiTrendingUp, FiClock, FiDollarSign, FiBriefcase,
-    FiAlertTriangle, FiArrowLeft, FiRefreshCw, FiSliders, FiCpu, FiPrinter, FiActivity
+    FiAlertTriangle, FiArrowLeft, FiRefreshCw, FiSliders, FiCpu, FiPrinter, FiActivity, FiDownload, FiBookOpen
 } from 'react-icons/fi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -24,6 +24,8 @@ import WhatIfScenarioSimulator from '../../components/WhatIfScenarioSimulator.js
 import StrategicAIAdvisor from '../../components/StrategicAIAdvisor.jsx';
 import ExecutiveReportModal from '../../components/ExecutiveReportModal.jsx';
 import AdvancedBusinessAnalytics from '../../components/AdvancedBusinessAnalytics.jsx';
+import MethodologyModal from '../../components/MethodologyModal.jsx';
+
 
 
 /**
@@ -43,8 +45,25 @@ export default function IntelligentDashboard({ user, onLogout }) {
     const [predictiveInsights, setPredictiveInsights] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null); // Fix #21: timestamp
     const [isReportOpen, setIsReportOpen] = useState(false);
+    const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     // Estado para las pestañas
     const [activeTab, setActiveTab] = useState('overview');
+
+    const handleExportDataset = async (format = 'csv') => {
+        try {
+            setIsExporting(true);
+            toast.loading(`Generando dataset académico anonimizado (${format.toUpperCase()})...`, { id: 'export-toast' });
+            await intelligenceService.exportAcademicDataset(format);
+            toast.success(`Dataset académico (${format.toUpperCase()}) descargado con éxito`, { id: 'export-toast' });
+        } catch (err) {
+            console.error('Error al exportar dataset:', err);
+            toast.error('No se pudo descargar el dataset académico', { id: 'export-toast' });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
 
     const tabs = [
         { id: 'overview', label: 'Resumen Estratégico & ROI', icon: FiTrendingUp },
@@ -195,7 +214,41 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                                onClick={() => setIsMethodologyOpen(true)}
+                                className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition-colors border border-slate-200"
+                                title="Ver Ficha Metodológica de Modelos Estadísticos"
+                            >
+                                <FiBookOpen size={13} className="text-indigo-600" />
+                                <span className="hidden sm:inline">Ficha Metodológica</span>
+                            </button>
+
+                            <div className="relative group">
+                                <button
+                                    disabled={isExporting}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-xs disabled:opacity-50"
+                                >
+                                    <FiDownload size={13} />
+                                    <span className="hidden sm:inline">Exportar Dataset Académico</span>
+                                    <span className="sm:hidden">Dataset</span>
+                                </button>
+                                <div className="absolute right-0 top-full mt-1 hidden group-hover:flex flex-col bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-50 min-w-[150px]">
+                                    <button
+                                        onClick={() => handleExportDataset('csv')}
+                                        className="px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
+                                    >
+                                        📄 Descargar CSV (R / Python)
+                                    </button>
+                                    <button
+                                        onClick={() => handleExportDataset('json')}
+                                        className="px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
+                                    >
+                                        📦 Descargar JSON Estructurado
+                                    </button>
+                                </div>
+                            </div>
+
                             <button
                                 onClick={() => setIsReportOpen(true)}
                                 className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors shadow-sm"
@@ -448,6 +501,8 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                 <DepartmentComparison
                                     departments={departmentComparison.departments}
                                     summary={departmentComparison.summary}
+                                    anova={departmentComparison.anova}
+                                    pairwiseTTest={departmentComparison.pairwiseTTest}
                                 />
                             )}
 
@@ -505,6 +560,12 @@ export default function IntelligentDashboard({ user, onLogout }) {
                 isOpen={isReportOpen}
                 onClose={() => setIsReportOpen(false)}
                 data={dashboard}
+            />
+
+            {/* Modal de Ficha Metodológica de Modelos Estadísticos */}
+            <MethodologyModal
+                isOpen={isMethodologyOpen}
+                onClose={() => setIsMethodologyOpen(false)}
             />
         </>
     );

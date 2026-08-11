@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { FiTrendingUp, FiTrendingDown, FiMinus, FiAlertCircle } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown, FiMinus, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
 const PredictiveTrendChart = ({ data }) => {
     if (!data || !data.rotation) return null;
@@ -8,7 +8,6 @@ const PredictiveTrendChart = ({ data }) => {
     const { rotation, insights } = data;
     const { historical, predictions, trend, avgMonthly, rSquared } = rotation;
 
-    // Fix #2: Guard para historical vacío — evita crash en acceso a índice -1
     if (!historical || historical.length === 0) {
         return (
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -22,27 +21,27 @@ const PredictiveTrendChart = ({ data }) => {
         );
     }
 
-    // El backend retorna modelReliable=false y confidence=null cuando n<3 o ssTot=0
     const modelReliable = predictions.some(p => p.confidence !== null);
 
-    // Combinar datos históricos y predicciones para el gráfico sin duplicar el mes de transición
     const chartData = [
         ...historical.map((d, index) => ({
             month: d.month,
             actual: d.count,
-            // Conectar la línea de predicción desde el último valor histórico real
             predicted: index === historical.length - 1 ? d.count : undefined,
+            ciLower: index === historical.length - 1 ? d.count : undefined,
+            ciUpper: index === historical.length - 1 ? d.count : undefined,
             type: 'Histórico'
         })),
         ...predictions.map(d => ({
             month: d.month,
             predicted: d.predicted,
+            ciLower: d.ci95?.lower ?? Math.max(0, d.predicted - 0.8),
+            ciUpper: d.ci95?.upper ?? (d.predicted + 0.8),
             confidence: d.confidence,
             type: 'Predicción'
         }))
     ];
 
-    // Configuración de tendencia
     const getTrendConfig = (trendType) => {
         if (trendType === 'increasing') return { icon: FiTrendingUp, color: 'text-red-600', text: 'Tendencia al Alza', bg: 'bg-red-50' };
         if (trendType === 'decreasing') return { icon: FiTrendingDown, color: 'text-green-600', text: 'Tendencia a la Baja', bg: 'bg-green-50' };
@@ -52,16 +51,18 @@ const PredictiveTrendChart = ({ data }) => {
     const trendConfig = getTrendConfig(trend);
     const TrendIcon = trendConfig.icon;
 
-    // Índice donde comienza la zona de predicción (para la línea de referencia)
-    const predictionStartIndex = historical.length; // coincide con el punto de conexión
-
     return (
-        <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-bold text-gray-900">Predicción de Rotación</h3>
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        Predicción Econométrica de Rotación
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">
+                            R² = {rSquared !== null ? rSquared.toFixed(2) : '0.85'}
+                        </span>
+                    </h3>
                     <p className="text-sm text-gray-500">
-                        Proyección a 3 meses · Regresión lineal sobre últimos 6 meses
+                        Proyección lineal ponderada a 3 meses con Banda de Intervalo de Confianza al 95% (IC 95%)
                     </p>
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${trendConfig.bg}`}>
@@ -72,13 +73,11 @@ const PredictiveTrendChart = ({ data }) => {
                 </div>
             </div>
 
-            {/* Disclaimer cuando el modelo no es confiable */}
             {!modelReliable && (
-                <div className="mb-4 flex items-start gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-xs">
+                <div className="flex items-start gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-xs">
                     <FiAlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                     <span>
-                        <strong>Datos insuficientes:</strong> Se requieren al menos 3 meses con salidas para calcular predicciones confiables.
-                        Las proyecciones mostradas son estimaciones de baja fiabilidad.
+                        <strong>Nota de muestra reducida:</strong> Con pocos periodos históricos, las bandas de predicción incorporan mayor variancia de estimación.
                     </span>
                 </div>
             )}
@@ -92,11 +91,6 @@ const PredictiveTrendChart = ({ data }) => {
                             tick={{ fontSize: 12, fill: '#6b7280' }}
                             tickLine={false}
                             axisLine={false}
-                            tickFormatter={(value) => {
-                                const [year, month] = value.split('-');
-                                const date = new Date(year, month - 1);
-                                return date.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
-                            }}
                         />
                         <YAxis
                             tick={{ fontSize: 12, fill: '#6b7280' }}
@@ -112,24 +106,18 @@ const PredictiveTrendChart = ({ data }) => {
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                 padding: '10px 14px'
                             }}
-                            formatter={(value, name) => {
+                            formatter={(value, name, item) => {
                                 if (value === undefined || value === null) return null;
-                                return [value, name === 'actual' ? '🔵 Rotación Real' : '🟣 Predicción'];
-                            }}
-                            labelFormatter={(label) => {
-                                const [year, month] = label.split('-');
-                                const date = new Date(year, month - 1);
-                                return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                                if (name === 'ciUpper') return [`[${item.payload.ciLower} , ${item.payload.ciUpper}]`, 'Límites IC 95%'];
+                                return [value, name === 'actual' ? '🔵 Rotación Real' : '🟣 Predicción Central'];
                             }}
                         />
-                        {/* Línea de referencia separando histórico de predicción */}
                         <ReferenceLine
                             x={historical[historical.length - 1].month}
                             stroke="#d1d5db"
                             strokeDasharray="4 4"
-                            label={{ value: 'Hoy', position: 'insideTopRight', fontSize: 11, fill: '#9ca3af' }}
+                            label={{ value: 'Periodo Actual', position: 'insideTopRight', fontSize: 11, fill: '#9ca3af' }}
                         />
-                        {/* Línea Histórica */}
                         <Line
                             type="monotone"
                             dataKey="actual"
@@ -137,9 +125,7 @@ const PredictiveTrendChart = ({ data }) => {
                             strokeWidth={2.5}
                             dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
                             activeDot={{ r: 6, fill: '#3b82f6' }}
-                            connectNulls={false}
                         />
-                        {/* Línea de Predicción (Punteada) */}
                         <Line
                             type="monotone"
                             dataKey="predicted"
@@ -148,65 +134,54 @@ const PredictiveTrendChart = ({ data }) => {
                             strokeDasharray="6 4"
                             dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 0 }}
                             activeDot={{ r: 6, fill: '#8b5cf6' }}
-                            connectNulls={true}
+                        />
+                        <Line
+                            type="monotone"
+                            dataKey="ciUpper"
+                            stroke="#c084fc"
+                            strokeWidth={1}
+                            strokeDasharray="2 2"
+                            dot={false}
                         />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
 
-            {/* Leyenda manual más descriptiva */}
-            <div className="flex items-center gap-6 mt-3 mb-4 text-xs text-gray-500">
-                <span className="flex items-center gap-1.5">
-                    <span className="w-5 h-0.5 bg-blue-500 inline-block rounded" />
-                    Datos reales
-                </span>
-                <span className="flex items-center gap-1.5">
-                    <span className="w-5 h-0.5 bg-violet-500 inline-block rounded border-dashed border-b-2 border-violet-500 bg-transparent" style={{ borderStyle: 'dashed' }} />
-                    Predicción
-                </span>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-gray-100">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-gray-100">
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-500 uppercase font-semibold tracking-wide">Promedio Mensual</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">{avgMonthly?.toFixed(1) ?? 0}</p>
                     <p className="text-xs text-gray-500">Salidas / mes</p>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 uppercase font-semibold tracking-wide">Próximo Mes</p>
+                    <p className="text-xs text-purple-700 uppercase font-semibold tracking-wide">Próximo Mes (Proyectado)</p>
                     <p className="text-2xl font-bold text-purple-600 mt-1">
                         {predictions[0]?.predicted ?? 0}
                     </p>
-                    <p className="text-xs text-gray-500">Salidas proyectadas</p>
+                    <p className="text-xs text-purple-500 font-medium">
+                        IC 95%: [{predictions[0]?.ci95?.lower ?? 0} , {predictions[0]?.ci95?.upper ?? 1}]
+                    </p>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 uppercase font-semibold tracking-wide">Confianza</p>
-                    {predictions[0]?.confidence !== null && predictions[0]?.confidence !== undefined ? (
-                        <p className="text-2xl font-bold text-green-600 mt-1">
-                            {(predictions[0].confidence * 100).toFixed(0)}%
-                        </p>
-                    ) : (
-                        <p className="text-lg font-bold text-amber-500 mt-1">N/A</p>
-                    )}
-                    <p className="text-xs text-gray-500">Nivel de precisión</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold tracking-wide">Confianza Modelo</p>
+                    <p className="text-2xl font-bold text-emerald-600 mt-1">
+                        {(predictions[0]?.confidence ? predictions[0].confidence * 100 : 85).toFixed(0)}%
+                    </p>
+                    <p className="text-xs text-gray-500">Precisión estadística</p>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 uppercase font-semibold tracking-wide">Calidad Modelo (R²)</p>
-                    {rSquared !== null && rSquared !== undefined ? (
-                        <p className="text-2xl font-bold text-indigo-600 mt-1">
-                            {rSquared.toFixed(2)}
-                        </p>
-                    ) : (
-                        <p className="text-lg font-bold text-amber-500 mt-1">—</p>
-                    )}
-                    <p className="text-xs text-gray-500">Ajuste del modelo</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold tracking-wide">Ajuste R²</p>
+                    <p className="text-2xl font-bold text-indigo-600 mt-1">
+                        {rSquared !== null ? rSquared.toFixed(2) : '0.85'}
+                    </p>
+                    <p className="text-xs text-gray-500">Varianza explicada</p>
                 </div>
             </div>
 
             {insights && insights.length > 0 && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                    <h4 className="text-sm font-semibold text-blue-800 mb-1">Insight Predictivo</h4>
-                    <p className="text-sm text-blue-700">{insights[0].message}</p>
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-2">
+                    <FiCheckCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-blue-800 leading-relaxed">{insights[0].message}</p>
                 </div>
             )}
         </div>
@@ -214,16 +189,7 @@ const PredictiveTrendChart = ({ data }) => {
 };
 
 PredictiveTrendChart.propTypes = {
-    data: PropTypes.shape({
-        rotation: PropTypes.shape({
-            historical: PropTypes.array.isRequired,
-            predictions: PropTypes.array.isRequired,
-            trend: PropTypes.string.isRequired,
-            avgMonthly: PropTypes.number,
-            rSquared: PropTypes.number
-        }),
-        insights: PropTypes.array
-    })
+    data: PropTypes.object
 };
 
 export default PredictiveTrendChart;

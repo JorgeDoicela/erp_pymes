@@ -53,4 +53,11 @@ router.get('/organizational-health', intelligenceController.getOrganizationalHea
 // Análisis de patrones
 router.get('/patterns', intelligenceController.getPatternAnalysis);
 
+// Simulación Monte Carlo What-If
+router.post('/what-if-monte-carlo', intelligenceController.runWhatIfMonteCarlo);
+router.get('/what-if-monte-carlo', intelligenceController.runWhatIfMonteCarlo);
+
+// Exportación de Dataset Académico Anonimizado (CSV / JSON)
+router.get('/export-academic', intelligenceController.exportAcademicDataset);
+
 export default router;

@@ -244,3 +244,52 @@ export async function getPatternAnalysis(req, res) {
         return handleError(res, error, 'Error al obtener análisis de patrones');
     }
 }
+
+/**
+ * POST /api/intelligence/what-if-monte-carlo
+ * GET /api/intelligence/what-if-monte-carlo
+ * Ejecuta simulación Monte Carlo estocástica para escenarios What-If
+ */
+export async function runWhatIfMonteCarlo(req, res) {
+    try {
+        const params = req.method === 'POST' ? req.body : req.query;
+        const simulation = await intelligenceService.runWhatIfMonteCarlo({
+            salaryIncreasePercent: Number(params.salaryIncreasePercent || 5),
+            wellnessInvestment: Number(params.wellnessInvestment || 150),
+            overtimeOptimization: Number(params.overtimeOptimization || 20),
+            iterations: Number(params.iterations || 2000),
+        });
+        res.json({
+            success: true,
+            data: simulation,
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al ejecutar simulación Monte Carlo');
+    }
+}
+
+/**
+ * GET /api/intelligence/export-academic
+ * Exporta el dataset anonimizado apto para R / Python / SPSS (CSV o JSON)
+ */
+export async function exportAcademicDataset(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const format = (req.query.format || 'csv').toLowerCase();
+
+        const result = await intelligenceService.generateAcademicDataset(tenantId, format);
+
+        if (format === 'json') {
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Content-Disposition', 'attachment; filename="hr_academic_dataset.json"');
+            return res.json(result);
+        } else {
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', 'attachment; filename="hr_academic_dataset.csv"');
+            return res.send(result);
+        }
+    } catch (error) {
+        return handleError(res, error, 'Error al exportar dataset académico');
+    }
+}
+

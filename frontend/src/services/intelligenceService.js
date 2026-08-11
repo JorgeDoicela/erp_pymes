@@ -111,3 +111,45 @@ export async function getPatternAnalysis() {
     const response = await intelligenceClient.get('/patterns');
     return response.data;
 }
+
+/**
+ * Ejecuta simulación Monte Carlo estocástica para escenarios What-If
+ */
+export async function runWhatIfMonteCarlo(params) {
+    const response = await intelligenceClient.post('/what-if-monte-carlo', params);
+    return response.data;
+}
+
+/**
+ * Exporta el dataset académico anonimizado en CSV o JSON y activa la descarga directa
+ */
+export async function exportAcademicDataset(format = 'csv') {
+    const response = await intelligenceClient.get(`/export-academic?format=${format}`, {
+        responseType: format === 'csv' ? 'blob' : 'json'
+    });
+
+    if (format === 'csv') {
+        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `hr_academic_dataset_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } else {
+        const jsonStr = JSON.stringify(response.data, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `hr_academic_dataset_${Date.now()}.json`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    }
+    return true;
+}
+
