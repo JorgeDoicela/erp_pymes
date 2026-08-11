@@ -1,5 +1,6 @@
 import prisma from '../database/db.js';
 import { runWithTenant } from '../database/tenantContext.js';
+import { isSuperAdminRole } from '../config/roles.js';
 
 /**
  * Middleware para validar e inyectar el contexto de Tenant en las peticiones HTTP.
@@ -8,7 +9,7 @@ import { runWithTenant } from '../database/tenantContext.js';
  */
 export const requireTenant = async (req, res, next) => {
     try {
-        const isSuperAdmin = req.user?.role === 'superadmin' || req.user?.email === 'admin@emplifi.com';
+        const isSuperAdmin = isSuperAdminRole(req.user?.role);
 
         // Seguridad: Para usuarios autenticados normales, forzar req.user.tenantId. 
         // Solo SuperAdmin o peticiones no autenticadas (ej. biometric) pueden usar x-tenant-id.

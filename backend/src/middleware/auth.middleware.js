@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { ROLES, isSuperAdminRole } from '../config/roles.js';
 
 export const authenticate = (req, res, next) => {
     try {
@@ -41,9 +42,12 @@ export const authorize = (roles = []) => {
             return res.status(401).json({ message: 'No autenticado' });
         }
 
-        const isSuperAdmin = req.user.role === 'superadmin' || req.user.email === 'admin@emplifi.com';
+        const userRole = (req.user.role || '').toLowerCase();
+        const isSuperAdmin = isSuperAdminRole(userRole);
 
-        if (roles.length > 0 && !roles.includes(req.user.role) && !isSuperAdmin) {
+        const allowedRoles = roles.map(r => r.toLowerCase());
+
+        if (allowedRoles.length > 0 && !allowedRoles.includes(userRole) && !isSuperAdmin) {
             return res.status(403).json({ message: 'No autorizado: Rol insuficiente' });
         }
 

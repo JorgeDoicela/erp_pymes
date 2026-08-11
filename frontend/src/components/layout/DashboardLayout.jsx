@@ -12,10 +12,13 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
 
     const isSuperAdmin = user?.role === 'superadmin' || user?.email === 'admin@emplifi.com';
     const isOperationalOrTenantModule = 
-        location.pathname.startsWith('/empleado') ||
-        location.pathname.startsWith('/my-') ||
-        location.pathname.includes('/performance/my-evaluations') ||
-        location.pathname.includes('/performance/goals');
+        (location.pathname.startsWith('/admin/') && 
+         !location.pathname.startsWith('/admin/audit') && 
+         !location.pathname.startsWith('/admin/settings')) ||
+        location.pathname.startsWith('/attendance') ||
+        location.pathname.startsWith('/performance') ||
+        location.pathname.startsWith('/recruitment') ||
+        location.pathname.startsWith('/analytics');
 
     const isSuperAdminSupervising = isSuperAdmin && isOperationalOrTenantModule;
     const selectedTenantId = isSuperAdmin ? localStorage.getItem('superadmin_selected_tenant_id') : null;

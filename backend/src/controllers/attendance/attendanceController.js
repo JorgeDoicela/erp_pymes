@@ -14,11 +14,10 @@ const markAttendance = async (req, res, next) => {
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const start = Date.now();
 
-        const isSupervisorOverride = !!(req.user && (
-            req.user.role === 'admin' ||
-            req.user.role === 'superadmin' ||
-            (req.user.id && req.user.id !== employeeId)
-        ));
+        const userRole = (req.user?.role || '').toLowerCase();
+        const isAuthorizedSupervisor = ['admin', 'hr', 'manager', 'superadmin'].includes(userRole);
+
+        const isSupervisorOverride = !!(req.user && isAuthorizedSupervisor && (req.user.id !== employeeId || isAuthorizedSupervisor));
 
         const result = await attendanceService.registerAttendance(employeeId, type, location, ip, isSupervisorOverride);
         const duration = Date.now() - start;
@@ -67,6 +66,18 @@ const markAttendance = async (req, res, next) => {
 const getStatus = async (req, res, next) => {
     try {
         const { employeeId } = req.params;
+        const userRole = (req.user?.role || '').toLowerCase();
+        const currentUserId = req.user?.employeeId || req.user?.id;
+        const isStaff = ['admin', 'hr', 'manager', 'superadmin'].includes(userRole);
+
+        if (req.user && !isStaff && currentUserId !== employeeId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Acceso denegado: Solo puedes consultar tu propio estado de asistencia.',
+                code: 'FORBIDDEN_SELF_ONLY'
+            });
+        }
+
         const status = await attendanceService.getStatus(employeeId);
         res.json({ success: true, data: status });
     } catch (error) {

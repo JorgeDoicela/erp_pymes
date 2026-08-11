@@ -1,5 +1,6 @@
 import employeeService from '../../services/employees/employeeService.js';
 import bcrypt from 'bcryptjs';
+import { isSuperAdminRole } from '../../config/roles.js';
 
 /**
  * EmployeeController
@@ -138,6 +139,17 @@ export class EmployeeController {
         return res.status(400).json({ success: false, message: 'ID de empleado es requerido' });
       }
 
+      const userRole = (req.user?.role || '').toLowerCase();
+      const currentUserId = req.user?.employeeId || req.user?.id;
+
+      if (userRole === 'employee' && currentUserId !== id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Acceso denegado: Solo puedes consultar tu propia información de empleado.',
+          code: 'FORBIDDEN_SELF_ONLY'
+        });
+      }
+
       const employee = await employeeService.getEmployee(id, tenantId);
 
       res.status(200).json({
@@ -267,6 +279,17 @@ export class EmployeeController {
   async getHistory(req, res) {
     try {
       const { id } = req.params;
+      const userRole = (req.user?.role || '').toLowerCase();
+      const currentUserId = req.user?.employeeId || req.user?.id;
+
+      if (userRole === 'employee' && currentUserId !== id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Acceso denegado: Solo puedes consultar tu propio historial.',
+          code: 'FORBIDDEN_SELF_ONLY'
+        });
+      }
+
       const history = await employeeService.getEmployeeHistory(id);
 
       res.status(200).json({
@@ -288,6 +311,15 @@ export class EmployeeController {
    */
   async getProfile(req, res) {
     try {
+      const isSuperAdmin = isSuperAdminRole(req.user?.role);
+      if (isSuperAdmin) {
+        return res.status(200).json({
+          success: true,
+          data: null,
+          isSuperAdmin: true,
+          message: 'Cuenta de SuperAdministrador SaaS Activa'
+        });
+      }
       const id = req.user?.employeeId || req.user?.id;
       const tenantId = req.tenantId || req.user?.tenantId;
       const employee = await employeeService.getEmployee(id, tenantId, req.user);

@@ -1,4 +1,5 @@
 import prisma from '../database/db.js';
+import { isSuperAdminRole } from '../config/roles.js';
 
 /**
  * Middleware para validar permisos de SuperAdministrador (Dueño de la Plataforma EMPLIFI).
@@ -6,22 +7,19 @@ import prisma from '../database/db.js';
 export const requireSuperAdmin = async (req, res, next) => {
     try {
         const userRole = (req.user?.role || '').toLowerCase();
-        const isSuperAdminRole = userRole === 'superadmin';
-        const isSuperAdminEmail = req.user?.email === 'admin@emplifi.com';
 
-        if (isSuperAdminRole || isSuperAdminEmail) {
+        if (isSuperAdminRole(userRole)) {
             return next();
         }
 
-        // Validación de respaldo en BD para tokens de sesión antiguos sin email o rol superadmin
+        // Validación de respaldo en BD por si el token no se ha renovado
         if (req.user?.id) {
             const user = await prisma.employee.findUnique({
                 where: { id: req.user.id },
-                select: { email: true, role: true }
+                select: { role: true }
             });
 
-            if (user && (user.email === 'admin@emplifi.com' || user.role === 'superadmin' || user.role === 'SUPERADMIN')) {
-                req.user.email = user.email;
+            if (user && isSuperAdminRole(user.role)) {
                 req.user.role = 'superadmin';
                 return next();
             }

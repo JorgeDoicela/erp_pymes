@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import emailService from '../../services/notifications/emailService.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
+import { isSuperAdminRole } from '../../config/roles.js';
 
 export const login = async (req, res) => {
     try {
@@ -18,55 +19,38 @@ export const login = async (req, res) => {
         }
 
         // Buscar usuario por Email o Cédula con su Tenant
+        const isEmail = identifier.includes('@');
         const user = await prisma.employee.findFirst({
-            where: {
-                OR: [
-                    { email: identifier },
-                    { identityCard: identifier }
-                ]
-            },
-            include: {
-                tenant: {
-                    select: {
-                        id: true,
-                        name: true,
-                        slug: true,
-                        plan: true,
-                        subscriptionStatus: true
-                    }
-                }
-            }
+            where: isEmail ? { email: identifier } : { identityCard: identifier },
+            include: { tenant: true }
         });
 
         if (!user) {
-            console.log(`[AUTH] Login failed: User not found (${identifier})`);
+            // Log failed attempt (Non-blocking)
             auditRepository.createLog({
                 entity: 'Auth',
-                entityId: 'UNKNOWN',
-                action: 'FAILED_LOGIN',
-                performedBy: 'System',
-                details: { email: identifier, reason: 'User not found' }
+                entityId: 'SYSTEM',
+                action: 'LOGIN_FAILED',
+                performedBy: 'ANONYMOUS',
+                details: { identifier, reason: 'User not found' }
             }).catch(err => console.error('Audit Log Error:', err));
 
             return res.status(401).json({
                 success: false,
-                message: 'Credenciales inválidas',
+                message: 'Credenciales inválidas'
             });
         }
 
-        // Verificar contraseña
-        let isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch && user.email === 'admin@emplifi.com' && (password === 'admin123' || password === 'Emplifi2025!' || password === 'Password123!')) {
-            isMatch = true;
-        }
+        // Validar contraseña
+        const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            console.log(`[AUTH] Login failed: Invalid password for ${user.email}`);
+            // Log failed attempt (Non-blocking)
             auditRepository.createLog({
                 entity: 'Auth',
                 entityId: user.id,
-                action: 'FAILED_LOGIN',
-                performedBy: 'System',
+                action: 'LOGIN_FAILED',
+                performedBy: user.id,
                 details: { email: user.email, reason: 'Invalid password' }
             }).catch(err => console.error('Audit Log Error:', err));
 
@@ -76,7 +60,7 @@ export const login = async (req, res) => {
             });
         }
 
-        const effectiveRole = (user.role === 'superadmin' || user.email === 'admin@emplifi.com') ? 'superadmin' : user.role;
+        const effectiveRole = isSuperAdminRole(user.role) ? 'superadmin' : user.role;
         const effectiveTenantId = effectiveRole === 'superadmin' ? null : user.tenantId;
 
         // Verificar si la empresa del usuario está suspendida o inactiva (salvo para SuperAdmin)

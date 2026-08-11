@@ -7,6 +7,7 @@ import MainLayout from './components/layout/MainLayout.jsx';
 import PWAInstallPrompt from './components/pwa/PWAInstallPrompt.jsx';
 import OfflineIndicator from './components/pwa/OfflineIndicator.jsx';
 import PWAReloadPrompt from './components/pwa/PWAReloadPrompt.jsx';
+import { ROLES, isSuperAdmin as checkIsSuperAdmin } from './constants/roles.js';
 
 // Lazy Load Pages
 // Eager Load Critical Pages
@@ -128,21 +129,22 @@ function App() {
       return <Navigate to="/login" replace />
     }
 
-    const userRole = auth.user.role;
-    const isSuperAdmin = userRole === 'superadmin' || auth.user.email === 'admin@emplifi.com';
+    const userRole = (auth.user.role || '').toLowerCase();
+    const superAdminUser = checkIsSuperAdmin(auth.user);
 
     if (role) {
-      const allowedRoles = Array.isArray(role) ? role : [role];
+      const allowedRoles = Array.isArray(role) ? role.map(r => r.toLowerCase()) : [role.toLowerCase()];
 
-      const hasPermission = isSuperAdmin || allowedRoles.includes(userRole);
+      // SuperAdmin supervisa funciones administrativas, pero no portales de autogestión personal de empleados
+      const isEmployeeOnlyRoute = allowedRoles.length === 1 && allowedRoles[0] === ROLES.EMPLOYEE;
+      const hasPermission = (superAdminUser && !isEmployeeOnlyRoute) || allowedRoles.includes(userRole);
 
       if (!hasPermission) {
         // Redirigir según el rol real del usuario a su "home"
-        if (isSuperAdmin) return <Navigate to="/superadmin/dashboard" replace />;
-        if (userRole === 'admin' || userRole === 'hr') return <Navigate to="/admin" replace />;
-        if (userRole === 'accounting') return <Navigate to="/admin/accounting" replace />;
-        if (userRole === 'entrepreneur') return <Navigate to="/admin/entrepreneurship" replace />;
-        if (userRole === 'employee') return <Navigate to="/empleado" replace />;
+        if (superAdminUser) return <Navigate to="/superadmin/dashboard" replace />;
+        if (userRole === ROLES.ADMIN || userRole === ROLES.HR) return <Navigate to="/admin" replace />;
+        if (userRole === ROLES.ACCOUNTING) return <Navigate to="/admin/accounting" replace />;
+        if (userRole === ROLES.EMPLOYEE) return <Navigate to="/empleado" replace />;
         return <Navigate to="/login" replace />;
       }
     }
@@ -235,12 +237,18 @@ function App() {
           <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
         </Route>
 
-        {/* Employee Routes - Same MainLayout with sidebar */}
+        {/* Employee Self-Service Routes - Solo para rol employee */}
         <Route element={<RequireAuth role="employee"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
-          <Route path="/empleado/portal" element={<MobileEmployeePortal user={auth.user} />} />
+          <Route path="/empleado/portal" element={<Navigate to="/empleado" replace />} />
           <Route path="/empleado/asistencia" element={<EmployeeAttendance user={auth.user} />} />
           <Route path="/empleado/ausencias" element={<EmployeeAbsences />} />
+          <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
+          <Route path="/my-advances" element={<MySalaryAdvances />} />
+          <Route path="/my-expedient" element={<EmployeeExpedient />} />
+          <Route path="/performance/goals" element={<MyGoals />} />
+          <Route path="/performance/my-evaluations" element={<MyEvaluations />} />
+          <Route path="/performance/take/:id" element={<TakeEvaluation />} />
           <Route path="/entrepreneurship" element={<EntrepreneurshipDashboard />} />
           <Route path="/entrepreneurship/create" element={<EntrepreneurshipForm />} />
           <Route path="/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
@@ -248,13 +256,7 @@ function App() {
 
         <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/announcements" element={<AnnouncementsBoard user={auth.user} />} />
-          <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
-          <Route path="/my-advances" element={<MySalaryAdvances />} />
-          <Route path="/my-expedient" element={<EmployeeExpedient />} />
           <Route path="/performance/results/:id" element={<EvaluationResults />} />
-          <Route path="/performance/goals" element={<MyGoals />} />
-          <Route path="/performance/my-evaluations" element={<MyEvaluations />} />
-          <Route path="/performance/take/:id" element={<TakeEvaluation />} />
           <Route path="/profile" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
           <Route path="/help" element={<HelpCenter />} />
         </Route>

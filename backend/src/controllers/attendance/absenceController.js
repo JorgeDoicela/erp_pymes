@@ -34,11 +34,11 @@ const createRequest = async (req, res, next) => {
         // req.body tiene los campos de texto, req.file el archivo
         const { type, startDate, endDate, reason, employeeId } = req.body;
 
-        // Si viene del token (usuario normal) usamos ese, si es admin creando para otro podría venir en body
-        // Por seguridad, si es empleado, forzar su ID.
-        // Asumiremos que el middleware de auth ya puso req.user
+        const userRole = (req.user?.role || '').toLowerCase();
+        const sessionUserId = req.user?.employeeId || req.user?.id;
+        const isAdminOrManager = ['admin', 'hr', 'manager', 'superadmin'].includes(userRole);
 
-        const targetEmployeeId = employeeId || req.user.id;
+        const targetEmployeeId = (isAdminOrManager && employeeId) ? employeeId : sessionUserId;
 
         console.log('Creating Absence Request');
         console.log('Body:', req.body);

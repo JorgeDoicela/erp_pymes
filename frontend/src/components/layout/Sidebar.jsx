@@ -1,22 +1,15 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { getSectionsByRole, getModulesByRole } from '../../constants/modules';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
+import { isSuperAdmin as checkIsSuperAdmin, getRoleLabel as getRoleTitle, ROLES } from '../../constants/roles.js';
 
 const Sidebar = ({ user, onLogout, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const isSuperAdmin = user?.role === 'superadmin' || user?.email === 'admin@emplifi.com';
+    const isSuperAdminUser = checkIsSuperAdmin(user);
 
-    const getRoleLabel = () => {
-        if (isSuperAdmin) return 'SuperAdmin SaaS';
-        switch (user?.role) {
-            case 'admin': return 'Administrador';
-            case 'accounting': return 'Contabilidad';
-            case 'entrepreneur': return 'Emprendedor';
-            default: return 'Empleado / Personal';
-        }
-    };
+    const getRoleLabel = () => getRoleTitle(user);
 
     const sections = getSectionsByRole(user);
     const allModules = getModulesByRole(user);
@@ -30,10 +23,10 @@ const Sidebar = ({ user, onLogout, onClose }) => {
         }, null);
 
     const getHomePath = () => {
-        if (isSuperAdmin) return '/superadmin/dashboard';
-        if (user?.role === 'employee') return '/empleado';
-        if (user?.role === 'accounting') return '/admin/accounting';
-        if (user?.role === 'entrepreneur') return '/admin/entrepreneurship';
+        if (isSuperAdminUser) return '/superadmin/dashboard';
+        const role = (user?.role || '').toLowerCase();
+        if (role === ROLES.EMPLOYEE) return '/empleado';
+        if (role === ROLES.ACCOUNTING) return '/admin/accounting';
         return '/admin';
     };
 

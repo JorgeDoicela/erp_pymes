@@ -527,6 +527,41 @@ export async function seedUsers(prisma) {
         admin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
     }
 
+    // ── Tenant Admin (Administrador de Empresa Demo) ─────────────────────────
+    let tenantAdmin;
+    try {
+        tenantAdmin = await prisma.employee.upsert({
+            where: { email: 'admin.empresa@emplifi.com' },
+            update: { password, tenantId, role: 'admin' },
+            create: {
+                tenantId,
+                firstName: 'Administrador',
+                lastName: 'Empresa',
+                email: 'admin.empresa@emplifi.com',
+                role: 'admin',
+                department: 'Administración',
+                position: 'Gerente General',
+                salary: encryptSalary(3500),
+                password,
+                identityCard: '1711111111',
+                birthDate: new Date('1985-04-12'),
+                hireDate: new Date('2020-01-01'),
+                isActive: true,
+                address: 'Av. República del Salvador, Quito',
+                phone: '0991111111',
+                civilStatus: 'Casado',
+                contractType: 'Indefinido',
+                bankName: encrypt('Banco Pichincha'),
+                accountNumber: encrypt('1111222233'),
+                accountType: 'Corriente',
+                vacationDays: 15,
+            }
+        });
+        console.log('✅ Tenant Admin: admin.empresa@emplifi.com / Emplifi2025!');
+    } catch (e) {
+        console.log('⚠️ Tenant Admin creation failed: ' + e.message);
+    }
+
     // ── 10 Empleados ──────────────────────────────────────────────────────────
     const employees = [];
     for (const emp of EMPLOYEES) {

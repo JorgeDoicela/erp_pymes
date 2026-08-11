@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import { isSuperAdminRole } from '../../config/roles.js';
 
 class SocketService {
     constructor() {
@@ -53,7 +54,7 @@ class SocketService {
             socket.on('join_tenant', (tenantId) => {
                 // Solo permitir unirse si el usuario en socket pertenece a esa empresa o es superadmin
                 if (socket.user) {
-                    if (socket.user.tenantId === tenantId || socket.user.role === 'superadmin' || socket.user.email === 'admin@emplifi.com') {
+                    if (socket.user.tenantId === tenantId || isSuperAdminRole(socket.user.role)) {
                         socket.join(`tenant_${tenantId}`);
                         console.log(`Socket ${socket.id} unido explícitamente a tenant_${tenantId}`);
                     } else {

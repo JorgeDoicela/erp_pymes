@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboardData } from '../../services/analytics.service';
-import { FiUsers, FiUserPlus, FiBriefcase, FiDollarSign, FiPieChart, FiBarChart2, FiUserMinus, FiActivity, FiHeart, FiDatabase } from 'react-icons/fi';
+import { FiUsers, FiUserPlus, FiBriefcase, FiDollarSign, FiPieChart, FiBarChart2, FiUserMinus, FiActivity, FiHeart, FiDatabase, FiFileText } from 'react-icons/fi';
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 const AnalyticsDashboard = () => {
@@ -43,6 +43,12 @@ const AnalyticsDashboard = () => {
             </div>
 
             <div className="flex flex-wrap gap-2.5">
+                <Link to="/intelligence" className="app-button-primary text-xs">
+                    <FiActivity className="text-white" /> Análisis Predictivo AI
+                </Link>
+                <Link to="/admin/reports" className="app-button-secondary text-xs">
+                    <FiFileText className="text-cyan-600" /> Reportes de Asistencia
+                </Link>
                 <Link to="/analytics/turnover" className="app-button-secondary text-xs">
                     <FiUserMinus className="text-rose-500" /> Rotación
                 </Link>
@@ -54,9 +60,6 @@ const AnalyticsDashboard = () => {
                 </Link>
                 <Link to="/analytics/satisfaction" className="app-button-secondary text-xs">
                     <FiHeart className="text-amber-500" /> Clima Laboral
-                </Link>
-                <Link to="/analytics/custom" className="app-button-secondary text-xs">
-                    <FiDatabase className="text-blue-500" /> Reportes Personalizados
                 </Link>
             </div>
 

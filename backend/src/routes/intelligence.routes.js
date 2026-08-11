@@ -1,17 +1,18 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import * as intelligenceController from '../controllers/intelligenceController.js';
+import { ROLES } from '../config/roles.js';
 
 const router = Router();
 
 /**
  * Rutas de Inteligencia
- * Todas las rutas requieren autenticación y rol de administrador
+ * Todas las rutas requieren autenticación y rol de administrador, RRHH o Contabilidad
  */
 
 // Aplicar autenticación y autorización a todas las rutas
 router.use(authenticate);
-router.use(authorize(['admin', 'accounting', 'entrepreneur']));
+router.use(authorize([ROLES.ADMIN, ROLES.HR, ROLES.ACCOUNTING]));
 
 // Dashboard principal con todos los insights
 router.get('/dashboard', intelligenceController.getDashboard);
