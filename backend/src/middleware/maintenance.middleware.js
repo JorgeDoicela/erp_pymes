@@ -8,6 +8,7 @@ export const maintenanceMiddleware = async (req, res, next) => {
     // Always allowed routes
     // NOTE: req.path includes the full path since this middleware is mounted at root
     const publicRoutes = [
+        '/health',
         '/api/system/health',
         '/api/auth/login',
         '/api/recruitment/public',

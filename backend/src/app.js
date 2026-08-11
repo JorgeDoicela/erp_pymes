@@ -144,11 +144,11 @@ app.use(['/uploads', '/api/uploads'], (req, res, next) => {
     express.static(uploadsPath)(req, res, next);
 });
 
+// Healthcheck ligero para Docker / Nginx / Balanceadores (debe responder sin consultar la BD ni middleware)
+app.get('/health', (req, res) => res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() }));
+
 // Maintenance Middleware (Applied before main routes)
 app.use(maintenanceMiddleware);
-
-// Healthcheck ligero para Docker / Nginx / Balanceadores
-app.get('/health', (req, res) => res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() }));
 
 // Rutas
 app.use('/api/system', systemRoutes);
