@@ -465,28 +465,76 @@ const EMPLOYEES = [
 ];
 
 export async function seedUsers(prisma) {
-    console.log('[USERS] Creando Tenant Demo, Admin y 10 Empleados...');
+    console.log('[USERS] Creando Tenants Multi-Empresa, SuperAdmin, Admins de Tenant y Colaboradores...');
     const password = await bcrypt.hash('Emplifi2025!', 10);
 
-    // ── Tenant Demo ────────────────────────────────────────────────────────────
+    // ── Tenants SaaS Variados (Multi-Tenant Ecosystem) ──────────────────────────
+    const TENANTS_TO_SEED = [
+        {
+            name: 'Empresa Demo Ecuador S.A.',
+            slug: 'empresa-demo',
+            ruc: '1792345678001',
+            plan: 'ENTERPRISE',
+            subscriptionStatus: 'ACTIVE',
+            maxEmployees: 100,
+            trialEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        },
+        {
+            name: 'TechSolutions Cía. Ltda.',
+            slug: 'tech-solutions',
+            ruc: '1798765432001',
+            plan: 'GROWTH',
+            subscriptionStatus: 'ACTIVE',
+            maxEmployees: 100,
+            trialEndsAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+        },
+        {
+            name: 'Logística & Transporte EcuaExpress',
+            slug: 'ecua-express',
+            ruc: '1791122334001',
+            plan: 'ESSENTIAL',
+            subscriptionStatus: 'TRIAL',
+            maxEmployees: 25,
+            trialEndsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // Próxima a vencer (< 7 días)
+        },
+        {
+            name: 'Andina Retail Corp',
+            slug: 'andina-retail',
+            ruc: '1795566778001',
+            plan: 'GROWTH',
+            subscriptionStatus: 'SUSPENDED',
+            maxEmployees: 100,
+            trialEndsAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+        },
+        {
+            name: 'Innovación Médica BioSalud',
+            slug: 'biosalud-ec',
+            ruc: '1799988776001',
+            plan: 'ESSENTIAL',
+            subscriptionStatus: 'TRIAL',
+            maxEmployees: 25,
+            trialEndsAt: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000)
+        }
+    ];
+
     let defaultTenant;
-    try {
-        defaultTenant = await prisma.tenant.upsert({
-            where: { slug: 'empresa-demo' },
-            update: {},
-            create: {
-                name: 'Empresa Demo Ecuador S.A.',
-                slug: 'empresa-demo',
-                ruc: '1792345678001',
-                plan: 'ENTERPRISE',
-                subscriptionStatus: 'ACTIVE',
-                maxEmployees: 100,
-                trialEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-            }
-        });
-        console.log(`✅ Tenant Demo listo: ${defaultTenant.name} (${defaultTenant.id})`);
-    } catch (e) {
-        console.log('⚠️ Tenant creation failed: ' + e.message);
+    for (const t of TENANTS_TO_SEED) {
+        try {
+            const created = await prisma.tenant.upsert({
+                where: { slug: t.slug },
+                update: {
+                    plan: t.plan,
+                    subscriptionStatus: t.subscriptionStatus,
+                    maxEmployees: t.maxEmployees,
+                    trialEndsAt: t.trialEndsAt
+                },
+                create: t
+            });
+            if (t.slug === 'empresa-demo') defaultTenant = created;
+            console.log(`✅ Tenant Creado: ${created.name} (${created.slug} - ${created.plan})`);
+        } catch (e) {
+            console.log(`⚠️ Tenant ${t.slug} error: ` + e.message);
+        }
     }
 
     const tenantId = defaultTenant?.id || null;

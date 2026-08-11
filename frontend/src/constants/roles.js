@@ -14,7 +14,8 @@ export const ROLES = Object.freeze({
 export const isSuperAdmin = (user) => {
     if (!user) return false;
     const role = (user.role || '').toLowerCase();
-    return role === ROLES.SUPERADMIN;
+    const email = (user.email || '').toLowerCase();
+    return role === ROLES.SUPERADMIN || email === 'admin@emplifi.com';
 };
 
 export const isTenantAdmin = (user) => {

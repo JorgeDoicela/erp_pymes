@@ -5,9 +5,11 @@ import NotificationBell from '../common/NotificationBell';
 import api from '../../api/axios.js';
 import toast from 'react-hot-toast';
 
+import { isSuperAdmin as checkIsSuperAdmin } from '../../constants/roles.js';
+
 const Header = ({ user, onMenuClick, title = "Panel de Control" }) => {
     const navigate = useNavigate();
-    const isSuperAdmin = user?.role === 'superadmin' || user?.email === 'admin@emplifi.com';
+    const isSuperAdmin = checkIsSuperAdmin(user);
     
     const [tenants, setTenants] = useState([]);
     const [selectedTenantId, setSelectedTenantId] = useState(

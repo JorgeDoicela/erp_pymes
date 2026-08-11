@@ -6,11 +6,13 @@ import DeveloperCard from '../common/DeveloperCard';
 import { useLocation } from 'react-router-dom';
 import { FiShield, FiEye } from 'react-icons/fi';
 
+import { isSuperAdmin as checkIsSuperAdmin } from '../../constants/roles.js';
+
 const DashboardLayout = ({ children, user, onLogout, title }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const location = useLocation();
 
-    const isSuperAdmin = user?.role === 'superadmin' || user?.email === 'admin@emplifi.com';
+    const isSuperAdmin = checkIsSuperAdmin(user);
     const isOperationalOrTenantModule = 
         (location.pathname.startsWith('/admin/') && 
          !location.pathname.startsWith('/admin/audit') && 

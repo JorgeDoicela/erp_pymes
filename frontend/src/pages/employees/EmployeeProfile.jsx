@@ -9,6 +9,7 @@ import { InfoItem, EmptyState } from './components/EmployeeHelpers';
 import BiometricSettings from '../../components/attendance/BiometricSettings';
 import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES } from '../../constants/employeeOptions';
 import { validateEmail, validatePhone, validateSalary, validateDates } from '../../utils/validationUtils';
+import { isSuperAdmin as checkIsSuperAdmin } from '../../constants/roles.js';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -54,6 +55,8 @@ const EmployeeProfile = ({ token, user }) => {
 
             if (data && data.data) {
                 setEmployee(data.data);
+            } else if (data && (data.isSuperAdmin || checkIsSuperAdmin(user))) {
+                setEmployee(null);
             } else {
                 console.error("No employee data received", data);
                 toast.error("No se pudo cargar la información del empleado");
@@ -266,7 +269,7 @@ const EmployeeProfile = ({ token, user }) => {
 
     if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-500">Cargando perfil...</div>;
 
-    const isSuperAdminUser = user?.role === 'superadmin' || user?.email === 'admin@emplifi.com';
+    const isSuperAdminUser = checkIsSuperAdmin(user);
 
     if (!employee && isSuperAdminUser) {
         return (

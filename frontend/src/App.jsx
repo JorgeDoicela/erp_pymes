@@ -174,9 +174,11 @@ function App() {
 
         {/* Solo SuperAdministrador (Backoffice SaaS) */}
         <Route element={<RequireAuth role="superadmin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+          <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
           <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
           <Route path="/superadmin/tenants" element={<SuperAdminDashboard />} />
           <Route path="/superadmin/metrics" element={<SuperAdminDashboard />} />
+          <Route path="/superadmin/audit" element={<SuperAdminDashboard />} />
         </Route>
 
         {/* Administrador y Recursos Humanos (RRHH) */}

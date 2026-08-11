@@ -19,13 +19,30 @@ export const requireTenant = async (req, res, next) => {
 
         if (!tenantId) {
             if (isSuperAdmin) {
-                // SuperAdmin sin tenant específico navega en modo global
+                // SuperAdmin sin tenant específico en peticiones de escritura se bloquea
+                if (req.method !== 'GET') {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Modo Supervisión: El SuperAdministrador solo tiene permisos de lectura y auditoría sobre los módulos de las empresas.',
+                        code: 'SUPERADMIN_READ_ONLY_SUPERVISION'
+                    });
+                }
+                // SuperAdmin sin tenant específico navega en modo global de lectura
                 return runWithTenant(null, () => next(), true);
             }
             return res.status(400).json({
                 success: false,
                 message: 'Contexto de empresa (Tenant) no encontrado en la sesión o petición.',
                 code: 'TENANT_ID_REQUIRED'
+            });
+        }
+
+        // Seguridad Multi-Tenant: SuperAdmin solo tiene permisos de lectura (GET) sobre endpoints operacionales de empresas
+        if (isSuperAdmin && req.method !== 'GET') {
+            return res.status(403).json({
+                success: false,
+                message: 'Modo Supervisión: El SuperAdministrador solo tiene acceso de lectura y auditoría sobre las operaciones internas de la empresa.',
+                code: 'SUPERADMIN_READ_ONLY_SUPERVISION'
             });
         }
 

@@ -13,44 +13,15 @@ export const superAdminSections = [
         title: 'Administración Global SaaS',
         modules: [
             { title: 'Backoffice SuperAdmin', icon: <FiShield />, color: 'bg-rose-600', path: '/superadmin/dashboard' },
-            { title: 'Auditoría Global Plataforma', icon: <FiShield />, color: 'bg-slate-500', path: '/admin/audit' },
+            { title: 'Gestión de Empresas & Tenants', icon: <FiUsers />, color: 'bg-indigo-600', path: '/superadmin/tenants' },
+            { title: 'Analíticas & Métricas SaaS', icon: <FiBarChart2 />, color: 'bg-blue-600', path: '/superadmin/metrics' },
         ]
     },
     {
-        title: 'Supervisión de Personal',
+        title: 'Gobernanza & Seguridad',
         modules: [
-            { title: 'Empleados por Empresa', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
-            { title: 'Expedientes Digitales', icon: <FiFolder />, color: 'bg-blue-600', path: '/admin/expedientes' },
-            { title: 'Equipos y EPPs', icon: <FiPackage />, color: 'bg-purple-600', path: '/admin/assets' },
-            { title: 'Offboarding & Liquidaciones', icon: <FiUserMinus />, color: 'bg-rose-600', path: '/admin/offboarding' },
-            { title: 'Cumplimiento Legal', icon: <FiShield />, color: 'bg-emerald-700', path: '/admin/compliance' },
-        ]
-    },
-    {
-        title: 'Supervisión de Asistencia',
-        modules: [
-            { title: 'Control de Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
-            { title: 'Gestión de Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },
-            { title: 'Ausencias y Permisos', icon: <FiUserX />, color: 'bg-rose-500', path: '/admin/absences' },
-        ]
-    },
-    {
-        title: 'Supervisión de Nóminas y Finanzas',
-        modules: [
-            { title: 'Gestión de Nómina', icon: <FiDollarSign />, color: 'bg-green-500', path: '/admin/payroll/generator' },
-            { title: 'Configuración de Nómina', icon: <FiSettings />, color: 'bg-emerald-600', path: '/admin/payroll/config' },
-            { title: 'Beneficios', icon: <FiGift />, color: 'bg-yellow-500', path: '/admin/payroll/benefits' },
-            { title: 'Anticipos y Préstamos', icon: <FiCreditCard />, color: 'bg-emerald-600', path: '/admin/payroll/advances' },
-            { title: 'Contabilidad General', icon: <FiBookOpen />, color: 'bg-blue-800', path: '/admin/accounting' },
-        ]
-    },
-    {
-        title: 'Talento e Inteligencia de Negocios',
-        modules: [
-            { title: 'Evaluaciones y Talento', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
-            { title: 'Reclutamiento y Vacantes', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
-            { title: 'Análisis Predictivo AI', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
-            { title: 'Analíticas e Indicadores', icon: <FiBarChart2 />, color: 'bg-blue-600', path: '/analytics' },
+            { title: 'Auditoría Global Plataforma', icon: <FiShield />, color: 'bg-slate-500', path: '/superadmin/audit' },
+            { title: 'Analíticas Globales BI', icon: <FiBarChart2 />, color: 'bg-cyan-600', path: '/analytics' },
         ]
     },
     {

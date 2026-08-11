@@ -1,13 +1,24 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FiUser, FiClock, FiCalendar, FiDollarSign, FiClipboard,
-    FiTarget, FiHelpCircle, FiBriefcase, FiCheckCircle, FiActivity
+    FiTarget, FiHelpCircle, FiBriefcase, FiCheckCircle, FiActivity,
+    FiFileText, FiFolder, FiSend, FiVolume2
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { getSectionsByRole } from '../../constants/modules';
+import api from '../../api/axios';
 
 function EmployeeDashboard({ user }) {
     const navigate = useNavigate();
+
+    const [employeeMetrics, setEmployeeMetrics] = useState({
+        vacationDays: user?.vacationDays || 15,
+        todayAttendance: null,
+        pendingAbsencesCount: 0,
+        pendingEvaluationsCount: 0
+    });
+    const [loadingMetrics, setLoadingMetrics] = useState(true);
 
     const getTimeBasedGreeting = () => {
         const hour = new Date().getHours();
@@ -25,114 +36,211 @@ function EmployeeDashboard({ user }) {
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
+        hidden: { opacity: 0, y: 15 },
         visible: { opacity: 1, y: 0 }
     };
 
     const sections = getSectionsByRole(user);
 
-    return (
-        <motion.div
-            className="space-y-8 max-w-[1600px] mx-auto"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-        >
-            {/* Header Section */}
-            <motion.div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4" variants={itemVariants}>
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-                        {getTimeBasedGreeting()}, {user?.firstName || 'Empleado'}
-                    </h2>
-                    <p className="text-slate-500">
-                        Resumen de actividad del {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => navigate('/performance/my-evaluations')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200 flex items-center gap-2"
-                    >
-                        <FiClipboard /> Mis Evaluaciones
-                    </motion.button>
-                </div>
-            </motion.div>
+    useEffect(() => {
+        const fetchEmployeeData = async () => {
+            setLoadingMetrics(true);
+            try {
+                const [evalsRes, absencesRes] = await Promise.allSettled([
+                    import('../../services/evaluation.service').then(m => m.getMyPendingEvaluations()),
+                    api.get('/attendance/my-absences')
+                ]);
 
-            <div className="grid grid-cols-1 gap-8">
-                {/* Novedades Section */}
-                <section className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row overflow-hidden">
-                    <div className="p-6 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50/50 flex flex-col justify-center">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                                <FiActivity size={24} />
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-800">Centro de Actividad</h3>
+                let pendingEvaluationsCount = 0;
+                let pendingAbsencesCount = 0;
+
+                if (evalsRes.status === 'fulfilled' && Array.isArray(evalsRes.value)) {
+                    pendingEvaluationsCount = evalsRes.value.filter(e => e.status !== 'COMPLETED').length;
+                }
+
+                if (absencesRes.status === 'fulfilled' && absencesRes.value.data) {
+                    const absList = absencesRes.value.data.data || absencesRes.value.data;
+                    if (Array.isArray(absList)) {
+                        pendingAbsencesCount = absList.filter(a => a.status === 'PENDING').length;
+                    }
+                }
+
+                setEmployeeMetrics({
+                    vacationDays: user?.vacationDays || 15,
+                    pendingAbsencesCount,
+                    pendingEvaluationsCount
+                });
+            } catch (error) {
+                console.error('Error fetching employee dashboard stats:', error);
+            } finally {
+                setLoadingMetrics(false);
+            }
+        };
+
+        fetchEmployeeData();
+    }, [user]);
+
+    return (
+        <div className="space-y-8 max-w-[1600px] mx-auto">
+            <motion.div
+                className="space-y-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {/* Header Bienvenida Personal */}
+                <motion.div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs" variants={itemVariants}>
+                    <div>
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-600 mb-1">
+                            <FiUser className="w-4 h-4" /> Portal de Autogestión del Empleado
                         </div>
-                        <p className="text-sm text-slate-500 mb-4">Novedades importantes de tu portal personal.</p>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                            {getTimeBasedGreeting()}, {user?.firstName || 'Empleado'}
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-1">
+                            Puesto: <span className="font-semibold text-slate-700">{user?.position || 'Colaborador'}</span> · Departamento: <span className="font-semibold text-slate-700">{user?.department || 'General'}</span>
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
                         <button
-                            onClick={() => navigate('/performance/my-evaluations')}
-                            className="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                            onClick={() => navigate('/empleado/asistencia')}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-xs flex items-center gap-2 cursor-pointer"
                         >
-                            Ver Evaluaciones <span className="text-lg">→</span>
+                            <FiClock className="w-4 h-4" /> Registrar Marcación
+                        </button>
+                        <button
+                            onClick={() => navigate('/empleado/ausencias')}
+                            className="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer"
+                        >
+                            <FiCalendar className="w-4 h-4" /> Solicitar Permiso
                         </button>
                     </div>
-                    <div className="p-6 md:w-2/3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div
+                </motion.div>
+
+                {/* Tarjetas KPI Personales */}
+                <motion.div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" variants={itemVariants}>
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vacaciones Disponibles</p>
+                            <p className="text-2xl font-bold text-slate-900 mt-1">
+                                {employeeMetrics.vacationDays} días
+                            </p>
+                            <p className="text-xs text-emerald-600 font-medium mt-1">Días acumulados pagados</p>
+                        </div>
+                        <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                            <FiCalendar />
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Evaluaciones Pendientes</p>
+                            <p className="text-2xl font-bold text-slate-900 mt-1">
+                                {employeeMetrics.pendingEvaluationsCount}
+                            </p>
+                            <button
                                 onClick={() => navigate('/performance/my-evaluations')}
-                                className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-slate-50 hover:shadow-sm transition-all cursor-pointer group"
+                                className="text-xs text-indigo-600 font-semibold hover:underline mt-1 block"
                             >
-                                <div className="mt-1 text-slate-400 group-hover:text-blue-600 transition-colors">
-                                    <FiClipboard className="text-orange-500" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">Nueva Evaluación Pendiente</p>
-                                    <span className="text-xs font-medium text-slate-400 group-hover:text-blue-500 mt-1 block">Ver detalle</span>
-                                </div>
+                                Responder evaluaciones →
+                            </button>
+                        </div>
+                        <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
+                            <FiClipboard />
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Solicitudes de Permiso</p>
+                            <p className="text-2xl font-bold text-amber-600 mt-1">
+                                {employeeMetrics.pendingAbsencesCount}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1">En revisión por HR</p>
+                        </div>
+                        <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                            <FiSend />
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Expediente Digital</p>
+                            <p className="text-2xl font-bold text-slate-900 mt-1">Activo</p>
+                            <button
+                                onClick={() => navigate('/my-expedient')}
+                                className="text-xs text-indigo-600 font-semibold hover:underline mt-1 block"
+                            >
+                                Ver mi expediente →
+                            </button>
+                        </div>
+                        <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                            <FiFolder />
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Accesos Directos Personales */}
+                <motion.section className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6" variants={itemVariants}>
+                    <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <FiActivity className="text-indigo-600" /> Accesos Rápidos Frecuentes
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div
+                            onClick={() => navigate('/empleado/asistencia')}
+                            className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 hover:border-indigo-200 transition-all cursor-pointer flex items-center gap-3"
+                        >
+                            <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl">
+                                <FiClock className="w-5 h-5" />
                             </div>
-                            <div
-                                onClick={() => navigate('/my-payments')}
-                                className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-slate-50 hover:shadow-sm transition-all cursor-pointer group"
-                            >
-                                <div className="mt-1 text-slate-400 group-hover:text-blue-600 transition-colors">
-                                    <FiCheckCircle className="text-emerald-500" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">Nómina del mes depositada</p>
-                                    <span className="text-xs font-medium text-slate-400 group-hover:text-blue-500 mt-1 block">Ver detalle</span>
-                                </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-900">Marcaciones de Asistencia</p>
+                                <p className="text-xs text-slate-500">Registra entrada y salida</p>
                             </div>
-                            <div
-                                onClick={() => navigate('/empleado/asistencia')}
-                                className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-slate-50 hover:shadow-sm transition-all cursor-pointer group"
-                            >
-                                <div className="mt-1 text-slate-400 group-hover:text-blue-600 transition-colors">
-                                    <FiClock className="text-purple-500" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">Registrar asistencia de hoy</p>
-                                    <span className="text-xs font-medium text-slate-400 group-hover:text-blue-500 mt-1 block">Registrar ahora</span>
-                                </div>
+                        </div>
+
+                        <div
+                            onClick={() => navigate('/my-payments')}
+                            className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 hover:border-indigo-200 transition-all cursor-pointer flex items-center gap-3"
+                        >
+                            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+                                <FiDollarSign className="w-5 h-5" />
                             </div>
-                            <div
-                                onClick={() => navigate('/performance/goals')}
-                                className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-slate-50 hover:shadow-sm transition-all cursor-pointer group"
-                            >
-                                <div className="mt-1 text-slate-400 group-hover:text-blue-600 transition-colors">
-                                    <FiTarget className="text-cyan-500" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-700 group-hover:text-slate-900">Actualiza tus objetivos SMART</p>
-                                    <span className="text-xs font-medium text-slate-400 group-hover:text-blue-500 mt-1 block">Ver objetivos</span>
-                                </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-900">Recibos de Pago</p>
+                                <p className="text-xs text-slate-500">Descarga tu rol de pagos</p>
+                            </div>
+                        </div>
+
+                        <div
+                            onClick={() => navigate('/my-advances')}
+                            className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 hover:border-indigo-200 transition-all cursor-pointer flex items-center gap-3"
+                        >
+                            <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
+                                <FiDollarSign className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-900">Solicitar Anticipo</p>
+                                <p className="text-xs text-slate-500">Solicitud de anticipo de sueldo</p>
+                            </div>
+                        </div>
+
+                        <div
+                            onClick={() => navigate('/announcements')}
+                            className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 hover:border-indigo-200 transition-all cursor-pointer flex items-center gap-3"
+                        >
+                            <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
+                                <FiVolume2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-900">Comunicados Empresa</p>
+                                <p className="text-xs text-slate-500">Notificaciones institucionales</p>
                             </div>
                         </div>
                     </div>
-                </section>
+                </motion.section>
 
-                {/* Modules Grid */}
+                {/* Secciones de Módulos Clasificados */}
                 <div className="space-y-8">
                     {sections.map((section, sIdx) => {
                         const filteredModules = section.modules.filter(m => m.path !== '/empleado');
@@ -148,15 +256,14 @@ function EmployeeDashboard({ user }) {
                                         <motion.button
                                             key={idx}
                                             variants={itemVariants}
-                                            whileHover={{ y: -5 }}
+                                            whileHover={{ y: -4, shadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)" }}
                                             onClick={() => navigate(mod.path)}
-                                            className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all duration-200 group h-40 text-center relative overflow-hidden"
+                                            className="flex flex-col items-center justify-center p-5 bg-white rounded-2xl border border-slate-200 hover:border-indigo-400 transition-all duration-200 group h-36 text-center relative overflow-hidden cursor-pointer shadow-xs"
                                         >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                            <div className="p-3 rounded-xl bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors mb-3 relative z-10 duration-200">
-                                                <span className="text-2xl">{mod.icon}</span>
+                                            <div className="p-3 rounded-xl bg-slate-50 text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors mb-2 text-xl">
+                                                {mod.icon}
                                             </div>
-                                            <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 relative z-10">{mod.title}</span>
+                                            <span className="text-xs font-bold text-slate-800 group-hover:text-slate-900 leading-tight">{mod.title}</span>
                                         </motion.button>
                                     ))}
                                 </div>
@@ -164,8 +271,8 @@ function EmployeeDashboard({ user }) {
                         );
                     })}
                 </div>
-            </div>
-        </motion.div>
+            </motion.div>
+        </div>
     );
 }
 
