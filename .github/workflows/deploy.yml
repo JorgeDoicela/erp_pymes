@@ -29,7 +29,7 @@ jobs:
   # 0. Reinicio Rapido de Contenedores (Fix 502 sin Rebuild)
   # =========================================================================
   quick-restart:
-    name: 🔄 Quick Restart EC2 Containers (Fix 502)
+    name: Quick Restart EC2 Containers (Fix 502)
     runs-on: ubuntu-latest
     if: github.event.inputs.restart_only == 'true'
     steps:
@@ -50,7 +50,7 @@ jobs:
             docker compose ps
             echo "=== Health check del backend ==="
             sleep 5
-            curl -sf http://localhost:4000/health && echo "✅ Backend OK" || echo "❌ Backend sigue caído"
+            curl -sf http://localhost:4000/health && echo "Backend OK" || echo "Backend sigue caído"
 
   # =========================================================================
   # 1. Deteccion Inteligente de Cambios en Rutas (Path Filtering)

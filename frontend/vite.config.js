@@ -38,7 +38,7 @@ export default defineConfig({
                 globPatterns: [], // 0% precache de archivos estáticos
                 navigateFallback: null, // Desactivar la caché de index.html en navegación SPA
                 // Excluir dominios externos del SW para evitar errores no-response
-                navigateDenylist: [
+                navigateFallbackDenylist: [
                     /^https:\/\/static\.cloudflareinsights\.com/,
                     /^https:\/\/cloudflareinsights\.com/,
                 ],
