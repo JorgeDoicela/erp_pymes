@@ -37,10 +37,17 @@ export default defineConfig({
                 cleanupOutdatedCaches: true,
                 globPatterns: [], // 0% precache de archivos estáticos
                 navigateFallback: null, // Desactivar la caché de index.html en navegación SPA
+                // Excluir dominios externos del SW para evitar errores no-response
+                navigateDenylist: [
+                    /^https:\/\/static\.cloudflareinsights\.com/,
+                    /^https:\/\/cloudflareinsights\.com/,
+                ],
                 runtimeCaching: [
                     {
-                        urlPattern: /.*/i,
-                        handler: 'NetworkOnly' // 100% de peticiones van siempre a la red
+                        // Solo interceptar peticiones del mismo origen (erp.jorgedoicela.com)
+                        // Los dominios externos pasan directamente sin pasar por el SW
+                        urlPattern: ({ url }) => url.origin === self.location.origin,
+                        handler: 'NetworkOnly'
                     }
                 ]
             }
