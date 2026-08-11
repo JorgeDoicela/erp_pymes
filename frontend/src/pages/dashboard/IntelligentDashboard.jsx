@@ -9,6 +9,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 import * as intelligenceService from '../../services/intelligenceService.js';
+import useAutoSync from '../../hooks/useAutoSync.js';
 import IntelligentInsightCard from '../../components/IntelligentInsightCard.jsx';
 import RecommendationsList from '../../components/RecommendationsList.jsx';
 import RiskScoreIndicator from '../../components/RiskScoreIndicator.jsx';
@@ -81,8 +82,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
 
     const loadDashboard = async (forceRefresh = false) => {
         try {
-            // Fix #11: solo usar setLoading en la carga inicial, no en refresh
-            if (!forceRefresh) setLoading(true);
+            if (!dashboard) setLoading(true);
             setError(null);
             const dashboardResponse = await intelligenceService.getDashboard(forceRefresh);
 
@@ -94,7 +94,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
                 if (data.organizationalHealth) setOrganizationalHealth(data.organizationalHealth);
                 if (data.employeeScoring) setEmployeeScoring(data.employeeScoring);
                 if (data.predictiveAnalytics) setPredictiveInsights(data.predictiveAnalytics);
-                setLastUpdated(new Date()); // Fix #21
+                setLastUpdated(new Date());
             } else {
                 const errMsg = dashboardResponse?.message || 'Error al obtener los datos del servidor';
                 setError(errMsg);
@@ -110,18 +110,11 @@ export default function IntelligentDashboard({ user, onLogout }) {
         }
     };
 
-    const handleRefresh = async () => {
-        try {
-            setRefreshing(true);
-            // Fix #11: forceRefresh=true, loading queda false para no desmontar el contenido
-            await loadDashboard(true);
-            toast.success('Dashboard actualizado con éxito');
-        } catch (err) {
-            toast.error('Error al actualizar el dashboard');
-        } finally {
-            setRefreshing(false);
-        }
-    };
+    // Auto-sincronización en segundo plano cada 30 segundos y al cambiar de pestaña
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => loadDashboard(true),
+        { intervalMs: 30000 }
+    );
 
     // Fix #21: calcula texto relativo del timestamp
     const getRelativeTime = (date) => {
@@ -256,14 +249,6 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                 <FiPrinter size={13} />
                                 <span className="hidden sm:inline">Informe PDF</span>
                                 <span className="sm:hidden">PDF</span>
-                            </button>
-                            <button
-                                onClick={handleRefresh}
-                                disabled={refreshing}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg text-xs font-medium cursor-pointer transition-colors disabled:opacity-50"
-                            >
-                                <FiRefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
-                                <span className="hidden sm:inline">{refreshing ? 'Actualizando...' : 'Actualizar'}</span>
                             </button>
                         </div>
                     </div>

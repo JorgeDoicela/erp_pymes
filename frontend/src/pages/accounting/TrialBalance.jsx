@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getTrialBalance, getPeriods, getGeneralLedger } from '../../services/accounting.service';
 import { FiFileText, FiPrinter, FiRefreshCw, FiEye, FiX, FiBookOpen, FiArrowRight } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import useAutoSync from '../../hooks/useAutoSync.js';
 
 const TrialBalance = () => {
     const [balance, setBalance] = useState([]);
@@ -32,18 +33,23 @@ const TrialBalance = () => {
         }
     };
 
-    const fetchData = async (periodId) => {
+    const fetchData = async (periodId = selectedPeriod, isSilent = false) => {
         if (!periodId) return;
-        setLoading(true);
+        if (!isSilent && !balance.length) setLoading(true);
         try {
             const data = await getTrialBalance(periodId);
             setBalance(data);
         } catch (error) {
-            toast.error('Error al cargar el Balance de Comprobación');
+            if (!isSilent) toast.error('Error al cargar el Balance de Comprobación');
         } finally {
             setLoading(false);
         }
     };
+
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => fetchData(selectedPeriod, true),
+        { intervalMs: 30000, enabled: !!selectedPeriod }
+    );
 
     const handleViewLedger = async (account) => {
         setLedgerAccount(account);
@@ -71,7 +77,7 @@ const TrialBalance = () => {
                     </h1>
                     <p className="text-slate-500 text-sm mt-1">Niveles de cuenta y saldos acumulados</p>
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <select
                         value={selectedPeriod}
                         onChange={(e) => { setSelectedPeriod(e.target.value); fetchData(e.target.value); }}
@@ -80,9 +86,6 @@ const TrialBalance = () => {
                         <option value="">Seleccionar Periodo</option>
                         {periods.map(p => <option key={p.id} value={p.id}>{p.month}/{p.year} - {p.status}</option>)}
                     </select>
-                    <button onClick={() => fetchData(selectedPeriod)} className="p-2.5 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors">
-                        <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                    </button>
                     <button onClick={() => window.print()} className="app-button-primary">
                         <FiPrinter /> Imprimir Reporte
                     </button>

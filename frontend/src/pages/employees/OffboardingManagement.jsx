@@ -8,6 +8,7 @@ import {
 } from '../../services/employees/onboardingOffboarding.service';
 import { getEmployees } from '../../services/employees/employee.service';
 import { generateSettlementPDF } from '../../utils/generateSettlementPDF';
+import useAutoSync from '../../hooks/useAutoSync.js';
 import { 
     UserMinusIcon, 
     CalculatorIcon, 
@@ -37,25 +38,30 @@ const OffboardingManagement = () => {
     const [selectedOffboarding, setSelectedOffboarding] = useState(null);
     const [checklistModalOpen, setChecklistModalOpen] = useState(false);
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
-        setLoading(true);
+    const loadData = async (isSilent = false) => {
+        if (!isSilent && !offboardings.length) setLoading(true);
         try {
             const [resOff, resEmp] = await Promise.all([
                 getOffboardings(),
                 getEmployees()
             ]);
             if (resOff.success) setOffboardings(resOff.data);
-            if (resEmp) setEmployees(Array.isArray(resEmp) ? resEmp : resEmp.data || []);
+            if (resEmp.success) setEmployees(resEmp.data);
         } catch (error) {
-            console.error('Error al cargar datos de Offboarding:', error);
+            console.error('Error al cargar datos:', error);
         } finally {
             setLoading(false);
         }
     };
+
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => loadData(true),
+        { intervalMs: 30000 }
+    );
+
+    useEffect(() => {
+        loadData();
+    }, []);
 
     const handleSimulate = async (e) => {
         e.preventDefault();
@@ -162,11 +168,8 @@ const OffboardingManagement = () => {
             {/* TAB 1: PROCESOS DE SALIDA */}
             {activeTab === 'OFFBOARDINGS' && (
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+                    <div className="p-5 border-b border-slate-100">
                         <h3 className="font-bold text-slate-800 text-base">Registro de Salidas y Finiquitos</h3>
-                        <button onClick={loadData} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                            <ArrowPathIcon className={`w-4 h-4 text-slate-500 ${loading ? 'animate-spin' : ''}`} />
-                        </button>
                     </div>
 
                     {/* VISTA MÓVIL: Tarjetas Apiladas (Responsive UX) */}

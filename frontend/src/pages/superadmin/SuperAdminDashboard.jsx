@@ -7,6 +7,7 @@ import {
     FiEye, FiDollarSign
 } from 'react-icons/fi';
 import TenantDetailDrawer from '../../components/superadmin/TenantDetailDrawer.jsx';
+import useAutoSync from '../../hooks/useAutoSync.js';
 
 const PLAN_LIMITS = {
     ESSENTIAL: 25,
@@ -41,8 +42,8 @@ export default function SuperAdminDashboard() {
     const [selectedTenantId, setSelectedTenantId] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    const loadData = async (pageToLoad = pagination.page) => {
-        setLoading(true);
+    const loadData = async (pageToLoad = pagination.page, isSilent = false) => {
+        if (!isSilent && !metrics) setLoading(true);
         try {
             const params = {
                 page: pageToLoad,
@@ -63,11 +64,16 @@ export default function SuperAdminDashboard() {
             }
         } catch (error) {
             console.error(error);
-            toast.error('Error al cargar datos del Backoffice SuperAdmin');
+            if (!isSilent) toast.error('Error al cargar datos del Backoffice SuperAdmin');
         } finally {
             setLoading(false);
         }
     };
+
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => loadData(pagination.page, true),
+        { intervalMs: 30000 }
+    );
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -90,7 +96,7 @@ export default function SuperAdminDashboard() {
                 ...(extendDays > 0 ? { extendDays } : {})
             });
             toast.success(res.data.message || 'Empresa actualizada exitosamente');
-            loadData(pagination.page);
+            loadData(pagination.page, true);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Error al actualizar empresa');
         } finally {
@@ -105,7 +111,7 @@ export default function SuperAdminDashboard() {
                 plan: newPlan
             });
             toast.success(res.data.message || 'Plan actualizado exitosamente');
-            loadData(pagination.page);
+            loadData(pagination.page, true);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Error al cambiar plan');
         } finally {
@@ -130,15 +136,6 @@ export default function SuperAdminDashboard() {
                         Gestión global de empresas contratantes, licenciamiento e indicadores de suscripción.
                     </p>
                 </div>
-
-                <button
-                    onClick={() => loadData(pagination.page)}
-                    disabled={loading}
-                    className="app-button-primary w-full sm:w-auto"
-                >
-                    <FiRefreshCw className={`text-sm ${loading ? 'animate-spin' : ''}`} />
-                    Actualizar
-                </button>
             </div>
 
             {/* Metrics Cards Clean Corporate */}

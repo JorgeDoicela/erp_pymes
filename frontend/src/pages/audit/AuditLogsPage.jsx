@@ -10,6 +10,7 @@ import {
     FiGlobe
 } from 'react-icons/fi';
 import axios from 'axios';
+import useAutoSync from '../../hooks/useAutoSync.js';
 
 const translations = {
     actions: {
@@ -48,9 +49,9 @@ const AuditLogsPage = () => {
         limit: 50
     });
 
-    const fetchLogs = async () => {
+    const fetchLogs = async (isSilent = false) => {
         try {
-            setLoading(true);
+            if (!isSilent && !logs.length) setLoading(true);
             const token = localStorage.getItem('token');
             const response = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/audit`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -63,6 +64,11 @@ const AuditLogsPage = () => {
             setLoading(false);
         }
     };
+
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => fetchLogs(true),
+        { intervalMs: 15000 }
+    );
 
     useEffect(() => {
         fetchLogs();
@@ -116,12 +122,6 @@ const AuditLogsPage = () => {
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-500 mt-1">Registro histórico de acciones críticas en el sistema</p>
                 </div>
-                <button
-                    onClick={fetchLogs}
-                    className="app-button-secondary self-start sm:self-auto text-xs"
-                >
-                    <FiActivity className="text-indigo-600" /> Actualizar
-                </button>
             </header>
 
             {/* Filtros Adaptativos */}

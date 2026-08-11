@@ -5,6 +5,7 @@ import {
     approveAdvance, 
     rejectAdvance 
 } from '../../services/payroll/salaryAdvance.service';
+import useAutoSync from '../../hooks/useAutoSync.js';
 import { 
     BanknotesIcon, 
     CheckCircleIcon, 
@@ -30,12 +31,8 @@ const SalaryAdvancesManagement = () => {
     const [rejectionReason, setRejectionReason] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
 
-    useEffect(() => {
-        loadAdvances();
-    }, [filterStatus, pagination.page]);
-
-    const loadAdvances = async () => {
-        setLoading(true);
+    const loadAdvances = async (isSilent = false) => {
+        if (!isSilent && !advances.length) setLoading(true);
         try {
             const res = await getAdvances({
                 page: pagination.page,
@@ -53,6 +50,15 @@ const SalaryAdvancesManagement = () => {
             setLoading(false);
         }
     };
+
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => loadAdvances(true),
+        { intervalMs: 20000 }
+    );
+
+    useEffect(() => {
+        loadAdvances();
+    }, [filterStatus, pagination.page]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -135,13 +141,6 @@ const SalaryAdvancesManagement = () => {
                         Control de solicitudes, aprobaciones y cuotas diferidas de nómina para empleados
                     </p>
                 </div>
-                <button
-                    onClick={loadAdvances}
-                    className="self-start md:self-auto flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium text-sm shadow-sm"
-                >
-                    <ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    Actualizar
-                </button>
             </div>
 
             {/* KPI Cards */}

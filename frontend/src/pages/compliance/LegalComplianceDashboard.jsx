@@ -6,6 +6,7 @@ import {
     getStatutoryProvisions
 } from '../../services/compliance/compliance.service';
 import ExportButtons from '../../components/common/ExportButtons';
+import useAutoSync from '../../hooks/useAutoSync.js';
 import {
     ShieldExclamationIcon,
     ExclamationTriangleIcon,
@@ -31,12 +32,8 @@ const LegalComplianceDashboard = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-    useEffect(() => {
-        loadData();
-    }, [selectedMonth, selectedYear]);
-
-    const loadData = async () => {
-        setLoading(true);
+    const loadData = async (isSilent = false) => {
+        if (!isSilent && !alertsData.alerts.length) setLoading(true);
         try {
             const [resAlerts, resProvisions] = await Promise.all([
                 getComplianceAlerts().catch(() => ({ data: { summary: {}, alerts: [] } })),
@@ -51,6 +48,15 @@ const LegalComplianceDashboard = () => {
             setLoading(false);
         }
     };
+
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => loadData(true),
+        { intervalMs: 20000 }
+    );
+
+    useEffect(() => {
+        loadData();
+    }, [selectedMonth, selectedYear]);
 
     const getUrgencyBadge = (urgency, daysRemaining) => {
         switch (urgency) {
@@ -141,11 +147,8 @@ const LegalComplianceDashboard = () => {
             {/* TAB 1: ALERTAS PREVENTIVAS */}
             {activeTab === 'ALERTS' && (
                 <div className="space-y-4">
-                    <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
                         <h3 className="font-bold text-slate-800 text-sm">Alertas y Notificaciones de Cumplimiento</h3>
-                        <button onClick={loadData} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700">
-                            <ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Actualizar
-                        </button>
                     </div>
 
                     <div className="space-y-3">

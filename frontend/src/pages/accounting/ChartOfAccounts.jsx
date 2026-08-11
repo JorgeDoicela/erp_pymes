@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAccounts, createAccount, updateAccount, deleteAccount, getGeneralLedger } from '../../services/accounting.service';
 import { FiPlus, FiFolder, FiFileText, FiRefreshCw, FiHash, FiEdit2, FiTrash2, FiX, FiEye, FiBookOpen } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import useAutoSync from '../../hooks/useAutoSync.js';
 
 const ChartOfAccounts = () => {
     const [accounts, setAccounts] = useState([]);
@@ -33,21 +34,26 @@ const ChartOfAccounts = () => {
         { id: 'EXPENSE', label: 'GASTO', color: 'text-orange-600 bg-orange-100' }
     ];
 
-    useEffect(() => {
-        fetchAccounts();
-    }, []);
-
-    const fetchAccounts = async () => {
-        setLoading(true);
+    const fetchAccounts = async (isSilent = false) => {
+        if (!isSilent && !accounts.length) setLoading(true);
         try {
             const data = await getAccounts();
             setAccounts(data);
         } catch (error) {
-            toast.error('Error al cargar el catálogo de cuentas');
+            if (!isSilent) toast.error('Error al cargar el catálogo de cuentas');
         } finally {
             setLoading(false);
         }
     };
+
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => fetchAccounts(true),
+        { intervalMs: 30000 }
+    );
+
+    useEffect(() => {
+        fetchAccounts();
+    }, []);
 
     const handleViewLedger = async (acc) => {
         setViewingLedger(acc);
@@ -207,13 +213,6 @@ const ChartOfAccounts = () => {
                     <p className="text-slate-500 text-sm mt-1">Estructura jerárquica financiera y auditoría de saldos</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={fetchAccounts}
-                        className="flex items-center justify-center p-2.5 text-slate-600 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-all"
-                        disabled={loading}
-                    >
-                        <FiRefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                    </button>
                     <button
                         onClick={() => setShowModal(true)}
                         className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm hover:shadow-indigo-200 hover:shadow-lg active:scale-95"

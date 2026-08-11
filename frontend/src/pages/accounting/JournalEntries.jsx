@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { getJournalEntries, createJournalEntry, postJournalEntry, getAccounts, getCostCenters, deleteJournalEntry, getPeriods } from '../../services/accounting.service';
 import { FiBook, FiPlus, FiCheckCircle, FiAlertCircle, FiEye, FiTrash2, FiX, FiInfo, FiRefreshCw } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import useAutoSync from '../../hooks/useAutoSync.js';
 
 const JournalEntries = () => {
     const [entries, setEntries] = useState([]);
@@ -43,13 +44,13 @@ const JournalEntries = () => {
         }
     }, [entries, location]);
 
-    const fetchData = async (periodId) => {
+    const fetchData = async (periodId = selectedPeriod, isSilent = false) => {
         const idToUse = periodId || selectedPeriod;
         if (!idToUse) {
             setLoading(false);
             return;
         }
-        setLoading(true);
+        if (!isSilent && !entries.length) setLoading(true);
         try {
             const [entriesData, accountsData, centersData] = await Promise.all([
                 getJournalEntries(idToUse),
@@ -60,11 +61,16 @@ const JournalEntries = () => {
             setAccounts(accountsData.filter(a => a.isTransactional));
             setCostCenters(centersData);
         } catch (error) {
-            toast.error('Error al cargar datos');
+            if (!isSilent) toast.error('Error al cargar libros contables');
         } finally {
             setLoading(false);
         }
     };
+
+    const { lastSynced, isSyncing, triggerSync } = useAutoSync(
+        () => fetchData(selectedPeriod, true),
+        { intervalMs: 30000, enabled: !!selectedPeriod }
+    );
 
     const fetchPeriods = async () => {
         try {
@@ -183,7 +189,7 @@ const JournalEntries = () => {
                     <p className="text-slate-500 text-sm mt-1">Registro cronológico de transacciones</p>
                 </div>
                 {!showForm && (
-                    <div className="flex gap-3">
+                    <div className="flex items-center gap-3">
                         <select
                             value={selectedPeriod}
                             onChange={(e) => { setSelectedPeriod(e.target.value); fetchData(e.target.value); }}
@@ -194,9 +200,6 @@ const JournalEntries = () => {
                                 <option key={p.id} value={p.id}>{p.month}/{p.year} - {p.status}</option>
                             ))}
                         </select>
-                        <button onClick={() => fetchData()} className="p-2.5 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors">
-                            <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                        </button>
                         <button
                             onClick={() => setShowForm(true)}
                             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-sm transition-all"
