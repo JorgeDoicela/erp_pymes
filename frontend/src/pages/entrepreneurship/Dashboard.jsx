@@ -39,10 +39,10 @@ const Dashboard = () => {
     };
 
     const stageColors = {
-        IDEATION: 'bg-blue-100 text-blue-700',
-        VALIDATION: 'bg-purple-100 text-purple-700',
-        MVP: 'bg-amber-100 text-amber-700',
-        SCALING: 'bg-emerald-100 text-emerald-700'
+        IDEATION: 'bg-blue-50 text-blue-800 border border-blue-200',
+        VALIDATION: 'bg-amber-50 text-amber-800 border border-amber-200',
+        MVP: 'bg-green-50 text-green-800 border border-green-200',
+        SCALING: 'bg-green-50 text-green-800 border border-green-200'
     };
 
     const stageNames = {
@@ -53,87 +53,82 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                        <FiCompass className="text-slate-700" /> Incubadora de Startups
-                    </h1>
-                    <p className="text-slate-500 text-sm mt-1">Ecosistema de innovación e intraemprendimiento profesional.</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Emprendimiento · Incubadora</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Incubadora de Startups</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Ecosistema de innovación e intraemprendimiento.</p>
                 </div>
                 <Link 
                     to="create" 
-                    className="app-button-primary"
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 shrink-0"
                 >
-                    <FiPlus /> Lanzar Proyecto
+                    <FiPlus size={14} /> Lanzar Proyecto
                 </Link>
-            </header>
+            </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {[
-                    { label: 'Total Proyectos', val: stats.total, icon: <FiBox /> },
-                    { label: 'Ideación', val: stats.ideation, icon: <FiCompass /> },
-                    { label: 'Validación', val: stats.validation, icon: <FiCheckCircle /> },
-                    { label: 'MVP', val: stats.mvp, icon: <FiTrendingUp /> },
-                    { label: 'Escalamiento', val: stats.scaling, icon: <FiTrendingUp /> },
-                ].map((s, i) => (
-                    <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col items-center text-center hover:border-slate-300 transition-all">
-                        <span className="text-xl mb-2 text-slate-600">{s.icon}</span>
-                        <span className="text-2xl font-bold text-slate-900">{s.val}</span>
-                        <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{s.label}</span>
+            {/* Resumen de Estados ERP */}
+            <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
+                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Métricas de Incubación</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-gray-100 text-xs">
+                    <div className="p-3.5 text-center">
+                        <p className="text-gray-500 mb-0.5">Total Proyectos</p>
+                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.total}</p>
                     </div>
-                ))}
+                    <div className="p-3.5 text-center">
+                        <p className="text-gray-500 mb-0.5">Ideación</p>
+                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.ideation}</p>
+                    </div>
+                    <div className="p-3.5 text-center">
+                        <p className="text-gray-500 mb-0.5">Validación</p>
+                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.validation}</p>
+                    </div>
+                    <div className="p-3.5 text-center">
+                        <p className="text-gray-500 mb-0.5">MVP</p>
+                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.mvp}</p>
+                    </div>
+                    <div className="p-3.5 text-center">
+                        <p className="text-gray-500 mb-0.5">Escalamiento</p>
+                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.scaling}</p>
+                    </div>
+                </div>
             </div>
 
             {loading ? (
-                <div className="flex justify-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                </div>
+                <div className="p-12 text-center text-gray-400 text-xs">Cargando proyectos de incubación...</div>
             ) : projects.length === 0 ? (
-                <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
-                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                        <FiCompass className="text-3xl text-slate-300" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-700">No hay proyectos activos</h3>
-                    <p className="text-slate-500 mt-2 max-w-sm mx-auto">
-                        ¡Sé el primero en innovar! Sube tu idea y empieza el proceso de incubación hoy mismo.
-                    </p>
+                <div className="p-12 text-center bg-white border border-gray-200 rounded">
+                    <p className="text-sm font-medium text-gray-700">Sin proyectos activos</p>
+                    <p className="text-xs text-gray-400 mt-1">Registra tu idea para comenzar el proceso de incubación.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {projects.map((project) => (
                         <Link 
                             key={project.id} 
                             to={`${project.id}`}
-                            className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all p-5 flex flex-col h-full group"
+                            className="bg-white rounded border border-gray-200 hover:border-gray-300 transition-colors p-4 flex flex-col h-full group"
                         >
-                            <div className="flex items-start justify-between mb-4">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${stageColors[project.stage]}`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <span className={`px-2 py-0.5 rounded text-[11px] font-mono ${stageColors[project.stage]}`}>
                                     {stageNames[project.stage]}
-                                </span>
-                                <span className="text-slate-300 group-hover:text-indigo-500 transition-colors">
-                                    <FiTrendingUp />
                                 </span>
                             </div>
                             
-                            <h3 className="text-lg font-bold text-slate-800 mb-2 truncate group-hover:text-indigo-600">
+                            <h3 className="text-sm font-semibold text-gray-900 mb-1 truncate group-hover:text-blue-600 transition-colors">
                                 {project.title}
                             </h3>
-                            <p className="text-sm text-slate-500 line-clamp-2 mb-6 flex-grow">
+                            <p className="text-xs text-gray-500 line-clamp-2 mb-4 flex-grow">
                                 {project.description}
                             </p>
                             
-                            <div className="pt-4 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200">
-                                        {project.owner?.firstName?.[0] || 'O'}
-                                    </div>
-                                    <span className="font-medium">{project.owner?.firstName} {project.owner?.lastName}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <FiClock /> {new Date(project.createdAt).toLocaleDateString()}
-                                </div>
+                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+                                <span className="font-medium text-gray-600">{project.owner?.firstName} {project.owner?.lastName}</span>
+                                <span className="font-mono">{new Date(project.createdAt).toLocaleDateString()}</span>
                             </div>
                         </Link>
                     ))}

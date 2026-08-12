@@ -127,57 +127,55 @@ const OffboardingManagement = () => {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
-                        <UserMinusIcon className="w-8 h-8 text-rose-600" />
-                        Offboarding y Simulador de Finiquito Legal
-                    </h2>
-                    <p className="text-slate-500 text-sm mt-1">
-                        Gestión de listas de salida, devolución de activos y liquidaciones legales de ley
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Recursos Humanos · Desvinculación</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Offboarding y Finiquito Legal</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        Gestión de listas de salida, devolución de activos y liquidaciones de ley.
                     </p>
                 </div>
+            </div>
 
-                <div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                    <button
-                        onClick={() => setActiveTab('OFFBOARDINGS')}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                            activeTab === 'OFFBOARDINGS'
-                                ? 'bg-white text-slate-800 shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                    >
-                        Procesos de Salida Activos
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('SIMULATOR')}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                            activeTab === 'SIMULATOR'
-                                ? 'bg-blue-600 text-white shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                    >
-                        <CalculatorIcon className="w-4 h-4" />
-                        Simulador de Liquidación
-                    </button>
-                </div>
+            {/* Navegación por Pestañas ERP */}
+            <div className="flex border-b border-gray-200 overflow-x-auto gap-6 text-xs">
+                <button
+                    onClick={() => setActiveTab('OFFBOARDINGS')}
+                    className={`pb-2.5 font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                        activeTab === 'OFFBOARDINGS'
+                            ? 'border-b-2 border-gray-900 text-gray-900 font-semibold'
+                            : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                >
+                    Procesos de Salida Activos
+                </button>
+                <button
+                    onClick={() => setActiveTab('SIMULATOR')}
+                    className={`pb-2.5 font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                        activeTab === 'SIMULATOR'
+                            ? 'border-b-2 border-gray-900 text-gray-900 font-semibold'
+                            : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                >
+                    Simulador de Liquidación
+                </button>
             </div>
 
             {/* TAB 1: PROCESOS DE SALIDA */}
             {activeTab === 'OFFBOARDINGS' && (
-                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div className="p-5 border-b border-slate-100">
-                        <h3 className="font-bold text-slate-800 text-base">Registro de Salidas y Finiquitos</h3>
+                <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                    <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
+                        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Registro de Salidas y Finiquitos</h3>
                     </div>
 
                     {/* VISTA MÓVIL: Tarjetas Apiladas (Responsive UX) */}
                     <div className="block md:hidden p-4 space-y-3">
                         {loading ? (
-                            <div className="p-8 text-center text-slate-400 text-xs font-semibold">Cargando procesos de salida...</div>
+                            <div className="p-8 text-center text-gray-400 text-xs">Cargando procesos de salida...</div>
                         ) : offboardings.length === 0 ? (
-                            <div className="p-8 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs italic">
+                            <div className="p-8 bg-white rounded border border-gray-200 text-center text-gray-400 text-xs">
                                 No hay procesos de salida registrados.
                             </div>
                         ) : (

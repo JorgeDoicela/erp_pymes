@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEvaluationTemplates } from '../../services/evaluation.service';
-import { FiPlus, FiFileText, FiEye } from 'react-icons/fi';
 import EvaluationDetailModal from './components/EvaluationDetailModal';
 
 const EvaluationDashboard = () => {
@@ -33,89 +32,79 @@ const EvaluationDashboard = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight mb-1">
-                            Evaluaciones de Desempeño
-                        </h1>
-                        <p className="text-slate-500 text-sm sm:text-base">Gestiona las plantillas y ciclos de evaluación.</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2.5">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium cursor-pointer"
-                        >
-                            Volver
-                        </button>
-                        <button
-                            onClick={() => navigate('/performance/assign')}
-                            className="flex items-center px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-xs text-sm font-medium cursor-pointer"
-                        >
-                            <FiPlus className="mr-1.5" /> Asignar
-                        </button>
-                        <button
-                            onClick={() => navigate('/performance/create')}
-                            className="flex items-center px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-xs text-sm font-medium cursor-pointer"
-                        >
-                            <FiPlus className="mr-1.5" /> Nueva
-                        </button>
-                    </div>
+        <div className="space-y-5">
+            {/* Header ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Rendimiento · Plantillas</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Evaluaciones de Desempeño</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Gestiona las plantillas de evaluación y ciclos de desempeño del personal.</p>
                 </div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={() => navigate('/performance/assign')}
+                        className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                    >
+                        Asignar Evaluación
+                    </button>
+                    <button
+                        onClick={() => navigate('/performance/create')}
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                    >
+                        + Nueva Plantilla
+                    </button>
+                </div>
+            </div>
 
-                {loading ? (
-                    <div className="text-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                        <p className="text-slate-400">Cargando evaluaciones...</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {templates.length === 0 ? (
-                            <div className="col-span-full text-center py-16 bg-white rounded-2xl border border-slate-200 border-dashed">
-                                <FiFileText className="mx-auto h-16 w-16 text-slate-300 mb-4" />
-                                <h3 className="text-xl font-semibold text-slate-700 mb-2">Sin Evaluaciones</h3>
-                                <p className="text-slate-500">Comienza creando una nueva plantilla de evaluación.</p>
-                            </div>
-                        ) : (
-                            templates.map((t) => (
-                                <div
-                                    key={t.id}
-                                    className="bg-white rounded-xl p-6 border border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer"
-                                    onClick={() => handleViewDetail(t)}
-                                >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-xl font-bold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-1">{t.title}</h3>
-                                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100 whitespace-nowrap">
+            {loading ? (
+                <div className="p-12 text-center text-gray-400 text-xs">Cargando evaluaciones...</div>
+            ) : templates.length === 0 ? (
+                <div className="p-12 text-center bg-white border border-gray-200 rounded">
+                    <p className="text-sm font-medium text-gray-700">Sin plantillas de evaluación</p>
+                    <p className="text-xs text-gray-400 mt-1">Crea una nueva plantilla para iniciar la evaluación de desempeño.</p>
+                </div>
+            ) : (
+                <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                    <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr className="bg-gray-50 border-b border-gray-200">
+                                <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Título de la Evaluación</th>
+                                <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Periodo</th>
+                                <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Descripción</th>
+                                <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">Criterios</th>
+                                <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {templates.map((t) => (
+                                <tr key={t.id} className="hover:bg-gray-50/60 transition-colors cursor-pointer" onClick={() => handleViewDetail(t)}>
+                                    <td className="py-2.5 px-4 font-medium text-gray-900">{t.title}</td>
+                                    <td className="py-2.5 px-4">
+                                        <span className="px-2 py-0.5 rounded text-[11px] font-mono border bg-gray-50 text-gray-700 border-gray-200">
                                             {t.period}
                                         </span>
-                                    </div>
-                                    <p className="text-slate-500 text-sm mb-6 line-clamp-3 h-10">
-                                        {t.description || 'Sin descripción disponible para esta evaluación.'}
-                                    </p>
-
-                                    <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500">
-                                        <div className="flex items-center gap-2">
-                                            <span className="bg-slate-100 px-2 py-0.5 rounded text-xs text-slate-600 font-medium">
-                                                {Array.isArray(t.criteria) ? t.criteria.length : 0} Criterios
-                                            </span>
-                                        </div>
+                                    </td>
+                                    <td className="py-2.5 px-4 text-gray-500 truncate max-w-xs">{t.description || '—'}</td>
+                                    <td className="py-2.5 px-4 text-center font-mono text-gray-700">
+                                        {Array.isArray(t.criteria) ? t.criteria.length : 0}
+                                    </td>
+                                    <td className="py-2.5 px-4 text-right">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleViewDetail(t);
                                             }}
-                                            className="text-blue-600 hover:text-blue-700 flex items-center gap-1 font-medium transition-colors"
+                                            className="border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer"
                                         >
-                                            <FiEye /> Ver Detalles
+                                            Ver detalle →
                                         </button>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                )}
-            </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             <EvaluationDetailModal
                 isOpen={isDetailOpen}

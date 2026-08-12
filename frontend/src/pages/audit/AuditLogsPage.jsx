@@ -90,13 +90,13 @@ const AuditLogsPage = () => {
 
     const getActionBadgeClass = (action) => {
         switch (action) {
-            case 'CREATE': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/80';
-            case 'UPDATE': return 'bg-indigo-50 text-indigo-700 border border-indigo-200/80';
-            case 'DELETE': return 'bg-rose-50 text-rose-700 border border-rose-200/80';
-            case 'FAILED_LOGIN': return 'bg-amber-50 text-amber-700 border border-amber-200/80';
-            case 'GENERATE': return 'bg-purple-50 text-purple-700 border border-purple-200/80';
-            case 'PAYMENT': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/80';
-            default: return 'bg-slate-100 text-slate-700 border border-slate-200/80';
+            case 'CREATE': return 'bg-green-50 text-green-800 border border-green-200';
+            case 'UPDATE': return 'bg-blue-50 text-blue-800 border border-blue-200';
+            case 'DELETE': return 'bg-red-50 text-red-800 border border-red-200';
+            case 'FAILED_LOGIN': return 'bg-amber-50 text-amber-800 border border-amber-200';
+            case 'GENERATE': return 'bg-blue-50 text-blue-800 border border-blue-200';
+            case 'PAYMENT': return 'bg-green-50 text-green-800 border border-green-200';
+            default: return 'bg-gray-100 text-gray-700 border border-gray-200';
         }
     };
 
@@ -113,16 +113,15 @@ const AuditLogsPage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-                        <FiShield className="text-indigo-600 shrink-0" />
-                        Auditoría y Trazabilidad
-                    </h1>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Registro histórico de acciones críticas en el sistema</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Seguridad · Trazabilidad</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Auditoría del Sistema</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Registro de acciones críticas y eventos de seguridad.</p>
                 </div>
-            </header>
+            </div>
 
             {/* Filtros Adaptativos */}
             <div className="bg-white p-4 rounded border border-slate-200/80 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

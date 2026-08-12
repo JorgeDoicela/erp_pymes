@@ -98,23 +98,23 @@ const AdminSettings = () => {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div className="space-y-5">
+            {/* Header ERP Limpio */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
-                        <FiSettings className="text-slate-500" />
-                        Configuración del Sistema
-                    </h2>
-                    <p className="text-slate-500 text-sm">Administra las opciones globales del sistema</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Administración · Parametrización Global</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Configuración del Sistema</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Administra parámetros de geolocalización, mantenimiento y seguridad.</p>
                 </div>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium"
-                >
-                    Volver
-                </button>
-            </header>
+                <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={() => navigate('/admin')}
+                        className="px-3.5 py-2 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                    >
+                        Volver
+                    </button>
+                </div>
+            </div>
 
             {/* Message */}
             {message.text && (

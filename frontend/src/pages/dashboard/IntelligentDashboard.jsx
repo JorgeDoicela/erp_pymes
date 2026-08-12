@@ -211,64 +211,58 @@ export default function IntelligentDashboard({ user, onLogout }) {
                         <div className="flex items-center gap-2 flex-wrap">
                             <button
                                 onClick={() => setIsMethodologyOpen(true)}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition-colors border border-slate-200"
+                                className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 rounded text-xs font-medium cursor-pointer transition-colors"
                                 title="Ver Ficha Metodológica de Modelos Estadísticos"
                             >
-                                <FiBookOpen size={13} className="text-indigo-600" />
                                 <span className="hidden sm:inline">Ficha Metodológica</span>
                             </button>
 
                             <div className="relative group">
                                 <button
                                     disabled={isExporting}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-xs disabled:opacity-50"
+                                    className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 rounded text-xs font-medium cursor-pointer transition-colors disabled:opacity-50"
                                 >
-                                    <FiDownload size={13} />
-                                    <span className="hidden sm:inline">Exportar Dataset Académico</span>
-                                    <span className="sm:hidden">Dataset</span>
+                                    <span>Exportar Dataset</span>
                                 </button>
-                                <div className="absolute right-0 top-full mt-1 hidden group-hover:flex flex-col bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-50 min-w-[150px]">
+                                <div className="absolute right-0 top-full mt-1 hidden group-hover:flex flex-col bg-white border border-gray-200 rounded shadow-xl py-1 z-50 min-w-[160px]">
                                     <button
                                         onClick={() => handleExportDataset('csv')}
-                                        className="flex items-center gap-2 px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
+                                        className="px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-medium cursor-pointer"
                                     >
-                                        <FiFileText size={12} className="text-slate-500" /> Descargar CSV (R / Python)
+                                        Descargar CSV
                                     </button>
                                     <button
                                         onClick={() => handleExportDataset('json')}
-                                        className="flex items-center gap-2 px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 font-medium cursor-pointer"
+                                        className="px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-medium cursor-pointer"
                                     >
-                                        <FiPackage size={12} className="text-slate-500" /> Descargar JSON Estructurado
+                                        Descargar JSON
                                     </button>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => setIsReportOpen(true)}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors shadow-sm"
+                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded cursor-pointer transition-colors"
                             >
-                                <FiPrinter size={13} />
-                                <span className="hidden sm:inline">Informe PDF</span>
-                                <span className="sm:hidden">PDF</span>
+                                Informes PDF
                             </button>
                         </div>
                     </div>
 
-                    {/* Pestañas de Navegación */}
-                    <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-slate-200">
+                    {/* Navegación por pestañas ERP (Tab bar horizontal con borde inferior activo 2px #111827) */}
+                    <div className="flex border-b border-gray-200 overflow-x-auto gap-6 text-xs mt-2">
                         {tabs.map((tab) => {
-                            const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer shrink-0
-                                        ${isActive
-                                            ? 'bg-indigo-600 text-white shadow-sm'
-                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                    className={`pb-2.5 font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                                        isActive
+                                            ? 'border-b-2 border-gray-900 text-gray-900 font-semibold'
+                                            : 'text-gray-500 hover:text-gray-800'
+                                    }`}
                                 >
-                                    <Icon className="w-3.5 h-3.5" />
                                     {tab.label}
                                 </button>
                             );

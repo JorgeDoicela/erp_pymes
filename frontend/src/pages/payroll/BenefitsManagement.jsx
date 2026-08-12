@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getEmployees } from '../../services/employees/employee.service';
 import { createBenefit, getEmployeeBenefits, deactivateBenefit, bulkCreateBenefit } from '../../services/payroll/benefits.service';
-import { FiUsers, FiUser, FiPlus, FiX, FiCheck, FiSettings, FiGift, FiTrello } from 'react-icons/fi';
 
 const BenefitsManagement = () => {
     const [employees, setEmployees] = useState([]);
@@ -60,7 +59,6 @@ const BenefitsManagement = () => {
 
         try {
             await createBenefit({ ...formData, amount: parseFloat(formData.amount), employeeId: selectedEmployee.id });
-            alert('Beneficio asignado exitosamente');
             setModalOpen(false);
             setFormData({ name: '', amount: '', type: 'BONUS', frequency: 'ONE_TIME' });
             loadBenefits(selectedEmployee.id);
@@ -85,7 +83,6 @@ const BenefitsManagement = () => {
             };
 
             await bulkCreateBenefit(payload);
-            alert('Asignación masiva completada');
             setBulkModalOpen(false);
             if (selectedEmployee) loadBenefits(selectedEmployee.id);
         } catch (error) {
@@ -138,7 +135,7 @@ const BenefitsManagement = () => {
                 ...prev,
                 name: 'Fondos de Reserva (Mensual)',
                 isSpecial: false,
-                amount: (selectedEmployee ? (parseFloat(selectedEmployee.salary.replace(/[^0-9.]/g, '')) * 0.0833).toFixed(2) : '38.32'),
+                amount: (selectedEmployee ? (parseFloat(selectedEmployee.salary?.toString().replace(/[^0-9.]/g, '') || '0') * 0.0833).toFixed(2) : '38.32'),
                 type: 'BONUS'
             }));
         } else if (type === 'UTILIDADES') {
@@ -160,174 +157,114 @@ const BenefitsManagement = () => {
         }
     };
 
-    return (
-        <div className="space-y-6 animate-fadeIn">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
-                        <FiGift className="text-pink-500" /> Gestión de Beneficios e Incentivos
-                    </h1>
-                    <p className="text-slate-500">Administra bonos, viáticos y beneficios de ley.</p>
-                </div>
+    const inputClass = "w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors";
+    const labelClass = "block text-xs font-medium text-gray-600 mb-1";
 
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setBulkModalOpen(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all active:scale-95"
-                    >
-                        <FiUsers /> Asignación Masiva
-                    </button>
+    return (
+        <div className="space-y-5">
+            {/* Header ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Nómina · Beneficios e Incentivos</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Gestión de Beneficios e Incentivos</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Administre bonos, viáticos y beneficios de ley para el personal.</p>
                 </div>
+                <button
+                    onClick={() => setBulkModalOpen(true)}
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shrink-0"
+                >
+                    + Asignación Masiva
+                </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
                 {/* Employee List */}
-                <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar">
-                    <div className="flex items-center justify-between mb-4 px-2">
-                        <h3 className="text-lg font-bold text-slate-800">Empleados</h3>
-                        <span className="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded-full font-bold">{employees.length}</span>
+                <div className="bg-white rounded border border-gray-200 overflow-hidden h-[calc(100vh-220px)] flex flex-col">
+                    <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200 flex items-center justify-between">
+                        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Empleados</h3>
+                        <span className="text-[11px] font-mono text-gray-400">{employees.length}</span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="divide-y divide-gray-100 overflow-y-auto flex-grow">
                         {employees.map(emp => (
                             <div
                                 key={emp.id}
                                 onClick={() => setSelectedEmployee(emp)}
-                                className={`p-3 rounded-xl cursor-pointer transition-all border ${selectedEmployee?.id === emp.id
-                                    ? 'bg-blue-600 text-white border-blue-600 shadow-md transform translate-x-1'
-                                    : 'hover:bg-slate-50 text-slate-600 border-transparent hover:border-slate-100'}`}
+                                className={`px-4 py-2.5 cursor-pointer transition-colors text-xs ${
+                                    selectedEmployee?.id === emp.id
+                                        ? 'bg-blue-50 border-l-2 border-blue-500 font-medium text-blue-900'
+                                        : 'hover:bg-gray-50/60 text-gray-700'
+                                }`}
                             >
-                                <p className="font-bold text-sm truncate">{emp.firstName} {emp.lastName}</p>
-                                <p className={`text-[10px] uppercase tracking-wider font-semibold ${selectedEmployee?.id === emp.id ? 'text-blue-100' : 'text-slate-400'}`}>{emp.position}</p>
+                                <p className="font-medium text-gray-900">{emp.firstName} {emp.lastName}</p>
+                                <p className="text-gray-400 text-[11px]">{emp.position}</p>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Benefits Panel */}
-                <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-slate-200 shadow-sm min-h-[500px] flex flex-col">
+                <div className="lg:col-span-3 bg-white rounded border border-gray-200 overflow-hidden flex flex-col min-h-[400px]">
                     {!selectedEmployee ? (
-                        <div className="flex-grow flex flex-col items-center justify-center text-slate-400 py-20">
-                            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                                <FiUser size={48} className="text-slate-200" />
-                            </div>
-                            <p className="text-xl font-bold text-slate-500">Selecciona un empleado</p>
-                            <p className="text-sm">Escoge a alguien de la lista para gestionar sus beneficios.</p>
+                        <div className="flex-grow flex flex-col items-center justify-center p-8 text-center">
+                            <p className="text-sm font-medium text-gray-700">Seleccione un empleado</p>
+                            <p className="text-xs text-gray-400 mt-1">Escoja un colaborador de la lista para gestionar sus beneficios.</p>
                         </div>
                     ) : (
-                        <div className="animate-slideUp">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 pb-6 border-b border-slate-100">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center font-bold text-xl uppercase">
-                                        {selectedEmployee.firstName[0]}{selectedEmployee.lastName[0]}
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-slate-800">{selectedEmployee.firstName} {selectedEmployee.lastName}</h2>
-                                        <div className="flex items-center gap-2 text-sm text-slate-500">
-                                            <span className="font-semibold text-slate-700">{selectedEmployee.department}</span>
-                                            <span>•</span>
-                                            <span>{selectedEmployee.position}</span>
-                                        </div>
-                                    </div>
+                        <div>
+                            <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-gray-900">{selectedEmployee.firstName} {selectedEmployee.lastName}</h3>
+                                    <p className="text-xs text-gray-500">{selectedEmployee.department} · {selectedEmployee.position}</p>
                                 </div>
                                 <button
                                     onClick={() => setModalOpen(true)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all hover:shadow-md active:scale-95"
+                                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shrink-0"
                                 >
-                                    <FiPlus /> Asignar Beneficio
+                                    + Asignar Beneficio
                                 </button>
                             </div>
 
-                            {/* VISTA MÓVIL: Tarjetas Apiladas (Cero scroll horizontal) */}
-                            <div className="block md:hidden divide-y divide-slate-100">
-                                {benefits.map(benefit => (
-                                    <div key={benefit.id} className="p-3.5 space-y-2 bg-white">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <span className="font-bold text-slate-800 text-sm">{benefit.name}</span>
-                                            <span className="font-mono text-emerald-600 font-bold text-base">
-                                                ${benefit.amount.toFixed(2)}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-xs text-slate-500">
-                                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${benefit.type === 'BONUS' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                benefit.type === 'INCENTIVE' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
-                                                    'bg-slate-50 text-slate-600 border-slate-200'
-                                                }`}>
-                                                {benefit.type} • {benefit.frequency === 'ONE_TIME' ? 'Pago Único' : 'Recurrente'}
-                                            </span>
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${benefit.status === 'ACTIVE' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                benefit.status === 'PROCESSED' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                                                {benefit.status === 'ACTIVE' ? 'Pendiente' :
-                                                    benefit.status === 'PROCESSED' ? 'Procesado' : 'Cancelado'}
-                                            </span>
-                                        </div>
-                                        {benefit.status === 'ACTIVE' && (
-                                            <div className="pt-1 flex justify-end">
-                                                <button
-                                                    onClick={() => handleDeactivate(benefit.id)}
-                                                    className="text-red-500 hover:text-red-700 border border-red-200 px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer"
-                                                >
-                                                    Cancelar Beneficio
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                                {benefits.length === 0 && (
-                                    <div className="py-12 text-center text-slate-400 text-xs italic">
-                                        No hay beneficios registrados para este empleado.
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* VISTA ESCRITORIO: Tabla Completa */}
-                            <div className="hidden md:block overflow-x-auto">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="text-xs uppercase font-bold text-slate-400 tracking-widest border-b border-slate-100">
-                                        <tr>
-                                            <th className="px-4 py-3">Concepto</th>
-                                            <th className="px-4 py-3">Tipo</th>
-                                            <th className="px-4 py-3">Frecuencia</th>
-                                            <th className="px-4 py-3">Monto</th>
-                                            <th className="px-4 py-3 text-center">Estado</th>
-                                            <th className="px-4 py-3 text-right">Acciones</th>
+                            {/* Tabla ERP de Beneficios */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                        <tr className="bg-gray-50 border-b border-gray-200">
+                                            <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Concepto</th>
+                                            <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
+                                            <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Frecuencia</th>
+                                            <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-right">Monto</th>
+                                            <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">Estado</th>
+                                            <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-right">Acción</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-50">
+                                    <tbody className="divide-y divide-gray-100">
                                         {benefits.map(benefit => (
-                                            <tr key={benefit.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                <td className="px-4 py-4">
-                                                    <div className="font-bold text-slate-800">{benefit.name}</div>
-                                                    <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Asignado: {new Date(benefit.createdAt).toLocaleDateString()}</div>
-                                                </td>
-                                                <td className="px-4 py-4">
-                                                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${benefit.type === 'BONUS' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                        benefit.type === 'INCENTIVE' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
-                                                            'bg-slate-50 text-slate-600 border-slate-200'
-                                                        }`}>
+                                            <tr key={benefit.id} className="hover:bg-gray-50/60 transition-colors">
+                                                <td className="py-2.5 px-4 font-medium text-gray-900">{benefit.name}</td>
+                                                <td className="py-2.5 px-4">
+                                                    <span className="px-2 py-0.5 rounded text-[11px] font-medium border bg-gray-50 text-gray-700 border-gray-200">
                                                         {benefit.type}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-4 text-slate-500 font-medium">
+                                                <td className="py-2.5 px-4 text-gray-500">
                                                     {benefit.frequency === 'ONE_TIME' ? 'Pago Único' : 'Recurrente'}
                                                 </td>
-                                                <td className="px-4 py-4">
-                                                    <span className="font-mono text-emerald-600 font-bold text-base">
-                                                        ${benefit.amount.toFixed(2)}
+                                                <td className="py-2.5 px-4 text-right font-mono font-medium text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                                    ${benefit.amount.toFixed(2)}
+                                                </td>
+                                                <td className="py-2.5 px-4 text-center">
+                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-mono border ${
+                                                        benefit.status === 'ACTIVE' ? 'bg-green-50 text-green-800 border-green-200' :
+                                                        benefit.status === 'PROCESSED' ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-red-50 text-red-800 border-red-200'
+                                                    }`}>
+                                                        {benefit.status === 'ACTIVE' ? 'PENDIENTE' : benefit.status === 'PROCESSED' ? 'PROCESADO' : 'CANCELADO'}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-4 text-center">
-                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm
-                                                        ${benefit.status === 'ACTIVE' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                            benefit.status === 'PROCESSED' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                                                        {benefit.status === 'ACTIVE' ? 'Pendiente' :
-                                                            benefit.status === 'PROCESSED' ? 'Procesado' : 'Cancelado'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-4 text-right">
+                                                <td className="py-2.5 px-4 text-right">
                                                     {benefit.status === 'ACTIVE' && (
                                                         <button
                                                             onClick={() => handleDeactivate(benefit.id)}
-                                                            className="text-red-500 hover:text-white hover:bg-red-500 px-3 py-1.5 rounded-lg text-xs font-bold transition-all opacity-0 group-hover:opacity-100 border border-red-100 hover:border-red-500 shadow-sm"
+                                                            className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded transition-colors cursor-pointer"
                                                         >
                                                             Cancelar
                                                         </button>
@@ -337,9 +274,8 @@ const BenefitsManagement = () => {
                                         ))}
                                         {benefits.length === 0 && (
                                             <tr>
-                                                <td colSpan="6" className="py-20 text-center text-slate-400 bg-slate-50/20 rounded-b-xl border-t border-slate-50">
-                                                    <FiTrello size={32} className="mx-auto mb-2 opacity-20" />
-                                                    No hay beneficios registrados para este empleado.
+                                                <td colSpan="6" className="p-8 text-center text-gray-400">
+                                                    Sin beneficios asignados a este colaborador.
                                                 </td>
                                             </tr>
                                         )}
@@ -353,38 +289,38 @@ const BenefitsManagement = () => {
 
             {/* MODAL ASIGNACIÓN INDIVIDUAL */}
             {modalOpen && (
-                <div className="app-modal-overlay">
-                    <div className="bg-white p-8 rounded-2xl border border-slate-200 w-full max-w-md shadow-2xl animate-zoomIn">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-slate-800">Nuevo Beneficio</h3>
-                            <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1"><FiX size={20} /></button>
+                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white border border-gray-200 rounded max-w-md w-full overflow-hidden shadow-xl">
+                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="text-base font-semibold text-gray-900">Nuevo Beneficio Individual</h3>
+                            <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer">×</button>
                         </div>
-                        <form onSubmit={handleCreate} className="space-y-4">
+                        <form onSubmit={handleCreate} className="p-5 space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Concepto</label>
+                                <label className={labelClass}>Concepto</label>
                                 <input
                                     type="text" required
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all placeholder:text-slate-300"
+                                    className={inputClass}
                                     placeholder="Ej. Bono de Productividad"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Monto ($)</label>
+                                    <label className={labelClass}>Monto ($)</label>
                                     <input
                                         type="number" step="0.01" required
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all"
+                                        className={inputClass + ' font-mono'}
                                         placeholder="0.00"
                                         value={formData.amount}
                                         onChange={e => setFormData({ ...formData, amount: e.target.value })}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Frecuencia</label>
+                                    <label className={labelClass}>Frecuencia</label>
                                     <select
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all"
+                                        className={inputClass}
                                         value={formData.frequency}
                                         onChange={e => setFormData({ ...formData, frequency: e.target.value })}
                                     >
@@ -394,23 +330,20 @@ const BenefitsManagement = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Tipo</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['BONUS', 'INCENTIVE', 'ALLOWANCE'].map(t => (
-                                        <button
-                                            key={t} type="button"
-                                            onClick={() => setFormData({ ...formData, type: t })}
-                                            className={`py-2 rounded-lg text-xs font-bold border transition-all ${formData.type === t ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
+                                <label className={labelClass}>Tipo</label>
+                                <select
+                                    className={inputClass}
+                                    value={formData.type}
+                                    onChange={e => setFormData({ ...formData, type: e.target.value })}
+                                >
+                                    <option value="BONUS">Bono</option>
+                                    <option value="INCENTIVE">Incentivo</option>
+                                    <option value="ALLOWANCE">Viático / Otros</option>
+                                </select>
                             </div>
-
-                            <div className="mt-8 flex gap-3">
-                                <button type="button" onClick={() => setModalOpen(false)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-colors">Cerrar</button>
-                                <button type="submit" className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-95">Asignar Ahora</button>
+                            <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
+                                <button type="button" onClick={() => setModalOpen(false)} className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer">Cancelar</button>
+                                <button type="submit" className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer">Asignar Beneficio</button>
                             </div>
                         </form>
                     </div>
@@ -419,156 +352,107 @@ const BenefitsManagement = () => {
 
             {/* MODAL ASIGNACIÓN MASIVA */}
             {bulkModalOpen && (
-                <div className="app-modal-overlay">
-                    <div className="bg-white p-8 rounded-2xl border border-slate-200 w-full max-w-2xl shadow-2xl animate-zoomIn flex flex-col max-h-[90vh]">
-                        <div className="flex justify-between items-center mb-6">
+                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white border border-gray-200 rounded max-w-2xl w-full overflow-hidden shadow-xl">
+                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
                             <div>
-                                <h3 className="text-2xl font-bold text-slate-800">Asignación Masiva</h3>
-                                <p className="text-slate-400 text-sm">Crea beneficios para múltiples empleados a la vez.</p>
+                                <h3 className="text-base font-semibold text-gray-900">Asignación Masiva de Beneficios</h3>
+                                <p className="text-xs text-gray-500 mt-0.5">Asigne beneficios a múltiples colaboradores simultáneamente.</p>
                             </div>
-                            <button onClick={() => setBulkModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 bg-slate-50 rounded-full"><FiX size={20} /></button>
+                            <button onClick={() => setBulkModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer">×</button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto pr-2 custom-scrollbar">
-                            {/* Left: Settings */}
-                            <div className="space-y-6">
-                                <section>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Plantillas Legales (Ecuador)</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button onClick={() => applyTemplate('DECIMO_3')} className="p-3 border rounded-xl hover:border-purple-300 hover:bg-purple-50 text-left transition-all group">
-                                            <p className="font-bold text-xs text-purple-700">Décimo Tercero</p>
-                                            <p className="text-[10px] text-purple-400">Bono Navideño Ley</p>
-                                        </button>
-                                        <button onClick={() => applyTemplate('DECIMO_4')} className="p-3 border rounded-xl hover:border-blue-300 hover:bg-blue-50 text-left transition-all group">
-                                            <p className="font-bold text-xs text-blue-700">Décimo Cuarto</p>
-                                            <p className="text-[10px] text-blue-400">Bono Escolar SBU</p>
-                                        </button>
-                                        <button onClick={() => applyTemplate('FONDO_RESERVA')} className="p-3 border rounded-xl hover:border-green-300 hover:bg-green-50 text-left transition-all group">
-                                            <p className="font-bold text-xs text-green-700">Fondo de Reserva</p>
-                                            <p className="text-[10px] text-green-400">8.33% del sueldo</p>
-                                        </button>
-                                        <button onClick={() => applyTemplate('UTILIDADES')} className="p-3 border rounded-xl hover:border-amber-300 hover:bg-amber-50 text-left transition-all group">
-                                            <p className="font-bold text-xs text-amber-700">Utilidades</p>
-                                            <p className="text-[10px] text-amber-400">Participación anual</p>
-                                        </button>
-                                        <button onClick={() => applyTemplate('NAVIDAD')} className="p-3 border rounded-xl hover:border-red-300 hover:bg-red-50 text-left transition-all group col-span-2">
-                                            <p className="font-bold text-xs text-red-700">Extra / Navidad</p>
-                                            <p className="text-[10px] text-red-400">Canasta o bono voluntario</p>
-                                        </button>
-                                    </div>
-                                </section>
-
-                                <form id="bulkForm" onSubmit={handleBulkCreate} className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Nombre del Beneficio</label>
-                                        <input
-                                            type="text" required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 focus:outline-none transition-all shadow-inner"
-                                            placeholder="Nombre de la bonificación"
-                                            value={bulkData.name}
-                                            onChange={e => setBulkData({ ...bulkData, name: e.target.value })}
-                                        />
-                                    </div>
-
-                                    {!bulkData.isSpecial ? (
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Monto Fijo para todos ($)</label>
-                                            <input
-                                                type="number" step="0.01" required
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 focus:outline-none transition-all shadow-inner"
-                                                placeholder="0.00"
-                                                value={bulkData.amount}
-                                                onChange={e => setBulkData({ ...bulkData, amount: e.target.value })}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="p-4 bg-purple-50 border border-purple-100 rounded-xl">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <FiSettings className="text-purple-600 animate-spin-slow" />
-                                                <p className="font-bold text-xs text-purple-700">Cálculo Automático</p>
-                                            </div>
-                                            <p className="text-[11px] text-purple-600">El sistema calculará el monto automáticamente para cada empleado seleccionado (1 sueldo base).</p>
-                                            <button
-                                                type="button"
-                                                onClick={() => setBulkData({ ...bulkData, isSpecial: false, specialType: '' })}
-                                                className="mt-2 text-[10px] font-bold text-purple-700 underline"
-                                            >
-                                                Cambiar a monto fijo
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Categoría</label>
-                                        <select
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 focus:outline-none transition-all"
-                                            value={bulkData.type}
-                                            onChange={e => setBulkData({ ...bulkData, type: e.target.value })}
-                                        >
-                                            <option value="BONUS">Bono</option>
-                                            <option value="INCENTIVE">Incentivo</option>
-                                            <option value="ALLOWANCE">Viático / Otros</option>
-                                        </select>
-                                    </div>
-                                </form>
+                        <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+                            {/* Plantillas */}
+                            <div>
+                                <label className={labelClass}>Plantillas Legales (Ecuador)</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    <button type="button" onClick={() => applyTemplate('DECIMO_3')} className="p-2 border border-gray-200 hover:border-gray-300 rounded text-left hover:bg-gray-50 transition-colors">
+                                        <p className="font-semibold text-xs text-gray-800">Décimo Tercero</p>
+                                        <p className="text-[11px] text-gray-400">Bono Navideño</p>
+                                    </button>
+                                    <button type="button" onClick={() => applyTemplate('DECIMO_4')} className="p-2 border border-gray-200 hover:border-gray-300 rounded text-left hover:bg-gray-50 transition-colors">
+                                        <p className="font-semibold text-xs text-gray-800">Décimo Cuarto</p>
+                                        <p className="text-[11px] text-gray-400">Bono Escolar SBU</p>
+                                    </button>
+                                    <button type="button" onClick={() => applyTemplate('FONDO_RESERVA')} className="p-2 border border-gray-200 hover:border-gray-300 rounded text-left hover:bg-gray-50 transition-colors">
+                                        <p className="font-semibold text-xs text-gray-800">Fondo Reserva</p>
+                                        <p className="text-[11px] text-gray-400">8.33% sueldo</p>
+                                    </button>
+                                    <button type="button" onClick={() => applyTemplate('UTILIDADES')} className="p-2 border border-gray-200 hover:border-gray-300 rounded text-left hover:bg-gray-50 transition-colors">
+                                        <p className="font-semibold text-xs text-gray-800">Utilidades</p>
+                                        <p className="text-[11px] text-gray-400">Participación anual</p>
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Right: Employee Selection */}
-                            <div className="flex flex-col">
-                                <div className="flex items-center justify-between mb-3">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Seleccionar Empleados</label>
-                                    <span className="text-[10px] font-bold text-purple-600">{bulkData.selectedEmployees.length} seleccionados</span>
+                            <form id="bulkForm" onSubmit={handleBulkCreate} className="space-y-3">
+                                <div>
+                                    <label className={labelClass}>Nombre del Beneficio</label>
+                                    <input type="text" required className={inputClass} placeholder="Ej. Bono de Desempeño" value={bulkData.name} onChange={e => setBulkData({ ...bulkData, name: e.target.value })} />
                                 </div>
-                                <div className="flex-grow bg-slate-50 p-2 rounded-xl border border-slate-100 overflow-y-auto h-64 shadow-inner custom-scrollbar">
-                                    <div className="flex flex-col gap-1">
-                                        <label className="p-2 flex items-center gap-3 cursor-pointer hover:bg-white rounded-lg transition-all border border-transparent hover:border-slate-100">
+
+                                {!bulkData.isSpecial ? (
+                                    <div>
+                                        <label className={labelClass}>Monto Fijo ($)</label>
+                                        <input type="number" step="0.01" required className={inputClass + ' font-mono'} placeholder="0.00" value={bulkData.amount} onChange={e => setBulkData({ ...bulkData, amount: e.target.value })} />
+                                    </div>
+                                ) : (
+                                    <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                                        <p className="font-medium">Cálculo Automático por Ley</p>
+                                        <p className="text-[11px] mt-0.5">El sistema calculará el valor según la fórmula legal correspondiente.</p>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className={labelClass}>Categoría</label>
+                                    <select className={inputClass} value={bulkData.type} onChange={e => setBulkData({ ...bulkData, type: e.target.value })}>
+                                        <option value="BONUS">Bono</option>
+                                        <option value="INCENTIVE">Incentivo</option>
+                                        <option value="ALLOWANCE">Viático / Otros</option>
+                                    </select>
+                                </div>
+                            </form>
+
+                            {/* Empleados masivos */}
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className={labelClass}>Selección de Colaboradores</label>
+                                    <span className="text-[11px] font-mono text-gray-500">{bulkData.selectedEmployees.length} seleccionados</span>
+                                </div>
+                                <div className="border border-gray-200 rounded max-h-40 overflow-y-auto divide-y divide-gray-100">
+                                    <label className="p-2.5 flex items-center gap-2 cursor-pointer hover:bg-gray-50 text-xs font-semibold text-gray-800 bg-gray-50/50">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            checked={bulkData.selectedEmployees.length === employees.length}
+                                            onChange={() => setBulkData(prev => ({
+                                                ...prev,
+                                                selectedEmployees: prev.selectedEmployees.length === employees.length ? [] : employees.map(e => e.id)
+                                            }))}
+                                        />
+                                        <span>Seleccionar Todos ({employees.length})</span>
+                                    </label>
+                                    {employees.map(emp => (
+                                        <label key={emp.id} className="p-2 flex items-center gap-2 cursor-pointer hover:bg-gray-50 text-xs text-gray-700">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 rounded-md text-purple-600 focus:ring-purple-500"
-                                                checked={bulkData.selectedEmployees.length === employees.length}
-                                                onChange={() => setBulkData(prev => ({
-                                                    ...prev,
-                                                    selectedEmployees: prev.selectedEmployees.length === employees.length ? [] : employees.map(e => e.id)
-                                                }))}
+                                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                checked={bulkData.selectedEmployees.includes(emp.id)}
+                                                onChange={() => toggleBulkEmployee(emp.id)}
                                             />
-                                            <span className="text-sm font-bold text-slate-700">Seleccionar Todos</span>
+                                            <span>{emp.firstName} {emp.lastName}</span>
+                                            <span className="text-[11px] text-gray-400 ml-auto">{emp.department}</span>
                                         </label>
-                                        <div className="h-px bg-slate-200 my-1 mx-2" />
-                                        {employees.map(emp => (
-                                            <label key={emp.id} className="p-2 flex items-center justify-between cursor-pointer hover:bg-white rounded-lg transition-all group">
-                                                <div className="flex items-center gap-3">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="w-4 h-4 rounded-md text-purple-600 focus:ring-purple-500"
-                                                        checked={bulkData.selectedEmployees.includes(emp.id)}
-                                                        onChange={() => toggleBulkEmployee(emp.id)}
-                                                    />
-                                                    <div>
-                                                        <p className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">{emp.firstName} {emp.lastName}</p>
-                                                        <p className="text-[10px] text-slate-400">{emp.department}</p>
-                                                    </div>
-                                                </div>
-                                                {bulkData.selectedEmployees.includes(emp.id) && <FiCheck className="text-emerald-500" />}
-                                            </label>
-                                        ))}
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="mt-8 pt-6 border-t border-slate-100 flex gap-4">
-                            <button type="button" onClick={() => setBulkModalOpen(false)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3.5 rounded-xl transition-all">Cancelar</button>
-                            <button
-                                form="bulkForm"
-                                type="submit"
-                                disabled={loading || bulkData.selectedEmployees.length === 0}
-                                className={`flex-[2] py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${loading || bulkData.selectedEmployees.length === 0
-                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-200 hover:shadow-purple-300'
-                                    }`}
-                            >
-                                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <FiUsers />}
-                                PROCESAR ASIGNACIÓN
+                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+                            <button type="button" onClick={() => setBulkModalOpen(false)} className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer">Cancelar</button>
+                            <button form="bulkForm" type="submit" disabled={loading || bulkData.selectedEmployees.length === 0} className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50">
+                                {loading ? 'Procesando...' : 'Procesar Asignación'}
                             </button>
                         </div>
                     </div>

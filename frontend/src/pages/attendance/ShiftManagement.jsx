@@ -1,27 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import shiftService from '../../services/attendance/shiftService';
-import * as employeeService from '../../services/employees/employee.service'; // Corrected named import
-import { motion } from 'framer-motion';
+import * as employeeService from '../../services/employees/employee.service';
 
 const ShiftManagement = () => {
-    const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('shifts'); // 'shifts' | 'assign'
+    const [activeTab, setActiveTab] = useState('shifts');
     const [shifts, setShifts] = useState([]);
     const [employees, setEmployees] = useState([]);
-
-    // Create Shift Form
     const [newShift, setNewShift] = useState({ name: '', startTime: '', endTime: '', toleranceMinutes: 15, breakMinutes: 60 });
-
-    // Assign Form
     const [selectedEmployees, setSelectedEmployees] = useState([]);
-    const [assignmentData, setAssignmentData] = useState({
-        shiftId: '',
-        startDate: '',
-        endDate: ''
-    });
-
-    const [message, setMessage] = useState('');
+    const [assignmentData, setAssignmentData] = useState({ shiftId: '', startDate: '', endDate: '' });
+    const [message, setMessage] = useState({ text: '', type: '' });
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -32,14 +20,9 @@ const ShiftManagement = () => {
         try {
             const sRes = await shiftService.getShifts();
             if (sRes.success) setShifts(sRes.data);
-
-            // Corrected function name
             const eRes = await employeeService.getEmployees();
-            // Adjust based on actual employeeService response structure. Usually it returns { success: true, data: [...] } or just [...]
-            // I will assume it returns data directly or check response.
             if (Array.isArray(eRes)) setEmployees(eRes);
             else if (eRes.data) setEmployees(eRes.data);
-
         } catch (e) {
             console.error(e);
         }
@@ -50,19 +33,19 @@ const ShiftManagement = () => {
         try {
             const res = await shiftService.createShift(newShift);
             if (res.success) {
-                setMessage('Turno creado exitosamente');
+                setMessage({ text: 'Turno creado exitosamente.', type: 'success' });
                 loadData();
                 setNewShift({ name: '', startTime: '', endTime: '', toleranceMinutes: 15, breakMinutes: 60 });
             }
-        } catch (err) {
-            setMessage('Error al crear turno');
+        } catch {
+            setMessage({ text: 'Error al crear turno.', type: 'error' });
         }
     };
 
     const handleAssign = async (e) => {
         e.preventDefault();
         if (selectedEmployees.length === 0) {
-            setMessage('Seleccione al menos un empleado');
+            setMessage({ text: 'Seleccione al menos un empleado.', type: 'warning' });
             return;
         }
         try {
@@ -72,215 +55,188 @@ const ShiftManagement = () => {
                 startDate: assignmentData.startDate,
                 endDate: assignmentData.endDate || null
             });
-
             if (res.success) {
                 const successCount = res.data.success.length;
                 const errorCount = res.data.errors.length;
-                setMessage(`Asignación completada. Exitosos: ${successCount}. Errores: ${errorCount}`);
-                if (errorCount > 0) {
-                    console.log("Errores de asignación:", res.data.errors);
-                    alert(`Hubo ${errorCount} errores (posibibles solapamientos). revise consola.`);
-                }
+                setMessage({ text: `Asignación completada. Exitosos: ${successCount}. Errores: ${errorCount}.`, type: errorCount > 0 ? 'warning' : 'success' });
                 setSelectedEmployees([]);
             }
-        } catch (err) {
-            setMessage('Error en asignación masiva');
+        } catch {
+            setMessage({ text: 'Error en asignación masiva.', type: 'error' });
         }
     };
 
     const toggleEmployee = (id) => {
-        if (selectedEmployees.includes(id)) {
-            setSelectedEmployees(selectedEmployees.filter(e => e !== id));
-        } else {
-            setSelectedEmployees([...selectedEmployees, id]);
-        }
+        setSelectedEmployees(prev =>
+            prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
+        );
     };
 
+    const inputClass = "w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors";
+    const labelClass = "block text-xs font-medium text-gray-600 mb-1";
+
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Gestión de Turnos y Horarios</h2>
-                    <p className="text-slate-500 text-sm">Configure los horarios laborales y asigne turnos</p>
-                </div>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium"
-                >
-                    Volver
-                </button>
+        <div className="space-y-5">
+            {/* Header ERP */}
+            <div className="pb-4 border-b border-gray-200">
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Asistencia · Turnos</p>
+                <h1 className="text-xl font-semibold text-gray-900">Gestión de Turnos y Horarios</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Configure los horarios laborales y asigne turnos a los colaboradores.</p>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-4 mb-6 border-b border-slate-200 pb-2">
+            {/* Tabs ERP */}
+            <div className="flex border-b border-gray-200 text-xs">
                 <button
                     onClick={() => setActiveTab('shifts')}
-                    className={`px-4 py-2 font-medium transition-colors border-b-2 -mb-[9px] ${activeTab === 'shifts' ? 'text-blue-600 border-blue-600' : 'text-slate-500 border-transparent hover:text-slate-800'}`}
+                    className={`px-4 py-2.5 font-medium transition-colors border-b-2 -mb-px ${activeTab === 'shifts' ? 'text-gray-900 border-gray-900' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
                 >
                     Configurar Turnos
                 </button>
                 <button
                     onClick={() => setActiveTab('assign')}
-                    className={`px-4 py-2 font-medium transition-colors border-b-2 -mb-[9px] ${activeTab === 'assign' ? 'text-blue-600 border-blue-600' : 'text-slate-500 border-transparent hover:text-slate-800'}`}
+                    className={`px-4 py-2.5 font-medium transition-colors border-b-2 -mb-px ${activeTab === 'assign' ? 'text-gray-900 border-gray-900' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
                 >
                     Asignación Masiva
                 </button>
             </div>
 
-            {message && (
-                <div className="bg-blue-50 text-blue-700 p-4 rounded-xl mb-6 border border-blue-100 shadow-sm">
-                    {message}
+            {message.text && (
+                <div className={`p-3 rounded text-xs border ${
+                    message.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+                    message.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+                    'bg-amber-50 border-amber-200 text-amber-800'
+                }`}>
+                    {message.text}
                 </div>
             )}
 
             {activeTab === 'shifts' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Form Create */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 className="text-xl font-bold text-slate-800 mb-4">Nuevo Turno</h3>
-                        <form onSubmit={handleCreateShift} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Formulario Nuevo Turno */}
+                    <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                        <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Nuevo Turno</h3>
+                        </div>
+                        <form onSubmit={handleCreateShift} className="p-4 space-y-4">
                             <div>
-                                <label className="block text-sm text-slate-600 mb-1">Nombre (ej. Mañana)</label>
-                                <input
-                                    type="text"
-                                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={newShift.name}
-                                    onChange={(e) => setNewShift({ ...newShift, name: e.target.value })}
-                                />
+                                <label className={labelClass}>Nombre del turno (ej. Mañana)</label>
+                                <input type="text" className={inputClass} value={newShift.name} onChange={(e) => setNewShift({ ...newShift, name: e.target.value })} required />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-1">Hora Inicio</label>
-                                    <input
-                                        type="time"
-                                        className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                        value={newShift.startTime}
-                                        onChange={(e) => setNewShift({ ...newShift, startTime: e.target.value })}
-                                    />
+                                    <label className={labelClass}>Hora Inicio</label>
+                                    <input type="time" className={inputClass} value={newShift.startTime} onChange={(e) => setNewShift({ ...newShift, startTime: e.target.value })} required />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-1">Hora Fin</label>
-                                    <input
-                                        type="time"
-                                        className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                        value={newShift.endTime}
-                                        onChange={(e) => setNewShift({ ...newShift, endTime: e.target.value })}
-                                    />
+                                    <label className={labelClass}>Hora Fin</label>
+                                    <input type="time" className={inputClass} value={newShift.endTime} onChange={(e) => setNewShift({ ...newShift, endTime: e.target.value })} required />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-600 mb-1">Tolerancia (minutos)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={newShift.toleranceMinutes}
-                                    onChange={(e) => setNewShift({ ...newShift, toleranceMinutes: parseInt(e.target.value) || 0 })}
-                                />
+                                <label className={labelClass}>Tolerancia (minutos)</label>
+                                <input type="number" min="0" className={inputClass} value={newShift.toleranceMinutes} onChange={(e) => setNewShift({ ...newShift, toleranceMinutes: parseInt(e.target.value) || 0 })} />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-600 mb-1">Tiempo de Almuerzo (minutos)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={newShift.breakMinutes}
-                                    onChange={(e) => setNewShift({ ...newShift, breakMinutes: parseInt(e.target.value) || 0 })}
-                                />
-                                <p className="text-xs text-slate-400 mt-1">Se descontará del total de horas del turno</p>
+                                <label className={labelClass}>Tiempo de Almuerzo (minutos)</label>
+                                <input type="number" min="0" className={inputClass} value={newShift.breakMinutes} onChange={(e) => setNewShift({ ...newShift, breakMinutes: parseInt(e.target.value) || 0 })} />
+                                <p className="text-[11px] text-gray-400 mt-1">Se descontará del total de horas del turno.</p>
                             </div>
-                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-2.5 rounded-lg text-white font-medium shadow-sm transition-all hover:shadow-md">
+                            <button type="submit" className="w-full px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer">
                                 Crear Turno
                             </button>
                         </form>
                     </div>
 
-                    {/* List */}
-                    <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-slate-800">Turnos Existentes</h3>
-                        {shifts.map(shift => (
-                            <div key={shift.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center hover:border-blue-200 transition-colors">
-                                <div>
-                                    <p className="font-bold text-lg text-slate-800">{shift.name}</p>
-                                    <p className="text-slate-500 text-sm">{shift.startTime} - {shift.endTime} <span className="text-xs text-slate-400">({shift.toleranceMinutes}m tol. | {shift.breakMinutes}m break)</span></p>
+                    {/* Lista de Turnos Existentes */}
+                    <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                        <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Turnos Registrados</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            {shifts.length === 0 ? (
+                                <div className="p-8 text-center text-gray-400 text-xs">
+                                    <p className="font-medium text-gray-700">Sin turnos configurados</p>
+                                    <p className="mt-0.5">Crea el primer turno utilizando el formulario.</p>
                                 </div>
-                            </div>
-                        ))}
+                            ) : (
+                                shifts.map(shift => (
+                                    <div key={shift.id} className="px-4 py-3 flex justify-between items-center hover:bg-gray-50/60 transition-colors text-xs">
+                                        <div>
+                                            <p className="font-medium text-gray-900">{shift.name}</p>
+                                            <p className="text-gray-500 font-mono mt-0.5" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                                {shift.startTime} — {shift.endTime}
+                                                <span className="text-gray-400 ml-2">({shift.toleranceMinutes}m tol. · {shift.breakMinutes}m break)</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
 
             {activeTab === 'assign' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Employee List */}
-                    <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 className="text-xl font-bold text-slate-800 mb-4">Seleccionar Empleados ({selectedEmployees.length})</h3>
-                        <div className="h-96 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {/* Lista de Empleados */}
+                    <div className="lg:col-span-2 bg-white border border-gray-200 rounded overflow-hidden">
+                        <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Seleccionar Empleados</h3>
+                            <span className="text-[11px] text-gray-400 font-mono">{selectedEmployees.length} seleccionados</span>
+                        </div>
+                        <div className="h-80 overflow-y-auto divide-y divide-gray-100">
                             {employees.map(emp => (
                                 <div
                                     key={emp.id}
                                     onClick={() => toggleEmployee(emp.id)}
-                                    className={`p-3 rounded-lg border cursor-pointer transition-all flex justify-between items-center group
-                                    ${selectedEmployees.includes(emp.id)
-                                            ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'}
-                                `}
+                                    className={`px-4 py-2.5 flex justify-between items-center cursor-pointer transition-colors text-xs ${
+                                        selectedEmployees.includes(emp.id)
+                                            ? 'bg-blue-50 border-l-2 border-blue-500'
+                                            : 'hover:bg-gray-50/60'
+                                    }`}
                                 >
                                     <div>
-                                        <p className="font-medium">{emp.firstName} {emp.lastName}</p>
-                                        <p className="text-xs text-slate-500 group-hover:text-slate-600">{emp.position}</p>
+                                        <p className={`font-medium ${selectedEmployees.includes(emp.id) ? 'text-blue-800' : 'text-gray-900'}`}>
+                                            {emp.firstName} {emp.lastName}
+                                        </p>
+                                        <p className="text-gray-400 text-[11px]">{emp.position}</p>
                                     </div>
-                                    {selectedEmployees.includes(emp.id) && <span className="text-blue-600 font-bold">✓</span>}
+                                    {selectedEmployees.includes(emp.id) && (
+                                        <span className="text-blue-600 font-bold text-sm">✓</span>
+                                    )}
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Assign Form */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-fit">
-                        <h3 className="text-xl font-bold text-slate-800 mb-4">Parámetros</h3>
-                        <form onSubmit={handleAssign} className="space-y-4">
+                    {/* Formulario de Asignación */}
+                    <div className="bg-white border border-gray-200 rounded overflow-hidden h-fit">
+                        <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Parámetros de Asignación</h3>
+                        </div>
+                        <form onSubmit={handleAssign} className="p-4 space-y-4">
                             <div>
-                                <label className="block text-sm text-slate-600 mb-1">Turno</label>
-                                <select
-                                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={assignmentData.shiftId}
-                                    onChange={(e) => setAssignmentData({ ...assignmentData, shiftId: e.target.value })}
-                                    required
-                                >
-                                    <option value="">Seleccione...</option>
-                                    {shifts.map(s => <option key={s.id} value={s.id}>{s.name} ({s.startTime}-{s.endTime})</option>)}
+                                <label className={labelClass}>Turno a Asignar</label>
+                                <select className={inputClass} value={assignmentData.shiftId} onChange={(e) => setAssignmentData({ ...assignmentData, shiftId: e.target.value })} required>
+                                    <option value="">Seleccione un turno...</option>
+                                    {shifts.map(s => <option key={s.id} value={s.id}>{s.name} ({s.startTime}–{s.endTime})</option>)}
                                 </select>
                             </div>
-
                             <div>
-                                <label className="block text-sm text-slate-600 mb-1">Fecha Inicio</label>
-                                <input
-                                    type="date"
-                                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={assignmentData.startDate}
-                                    onChange={(e) => setAssignmentData({ ...assignmentData, startDate: e.target.value })}
-                                    required
-                                />
+                                <label className={labelClass}>Fecha de Inicio</label>
+                                <input type="date" className={inputClass} value={assignmentData.startDate} onChange={(e) => setAssignmentData({ ...assignmentData, startDate: e.target.value })} required />
                             </div>
-
                             <div>
-                                <label className="block text-sm text-slate-600 mb-1">Fecha Fin (Opcional)</label>
-                                <input
-                                    type="date"
-                                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                    value={assignmentData.endDate}
-                                    onChange={(e) => setAssignmentData({ ...assignmentData, endDate: e.target.value })}
-                                />
-                                <p className="text-xs text-slate-400 mt-1">Dejar vacío para indefinido</p>
+                                <label className={labelClass}>Fecha de Fin (Opcional)</label>
+                                <input type="date" className={inputClass} value={assignmentData.endDate} onChange={(e) => setAssignmentData({ ...assignmentData, endDate: e.target.value })} />
+                                <p className="text-[11px] text-gray-400 mt-1">Dejar vacío para asignación indefinida.</p>
                             </div>
-
                             <button
                                 type="submit"
-                                className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={selectedEmployees.length === 0}
+                                className="w-full px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Asignar a Selección
+                                Asignar a {selectedEmployees.length} empleado{selectedEmployees.length !== 1 ? 's' : ''}
                             </button>
                         </form>
                     </div>

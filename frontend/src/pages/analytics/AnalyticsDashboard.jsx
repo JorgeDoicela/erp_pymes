@@ -31,35 +31,35 @@ const AnalyticsDashboard = () => {
     const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-                        <FiBarChart2 className="text-indigo-600" />
-                        Dashboard de Indicadores RRHH
-                    </h1>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Visión estratégica global y métricas clave de talento.</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analítica · Indicadores de Gestión</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Dashboard de Indicadores RRHH</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Visión estratégica global y métricas clave de talento humano.</p>
                 </div>
             </div>
 
-            <div className="flex flex-wrap gap-2.5">
-                <Link to="/intelligence" className="app-button-primary text-xs">
-                    <FiActivity className="text-white" /> Análisis Predictivo AI
+            {/* Navegación por pestañas/reportes ERP */}
+            <div className="flex border-b border-gray-200 overflow-x-auto gap-4 text-xs pb-1">
+                <Link to="/intelligence" className="px-3 py-1.5 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors">
+                    Análisis Predictivo AI
                 </Link>
-                <Link to="/admin/reports" className="app-button-secondary text-xs">
-                    <FiFileText className="text-cyan-600" /> Reportes de Asistencia
+                <Link to="/admin/reports" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                    Reportes Asistencia
                 </Link>
-                <Link to="/analytics/turnover" className="app-button-secondary text-xs">
-                    <FiUserMinus className="text-rose-500" /> Rotación
+                <Link to="/analytics/turnover" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                    Rotación
                 </Link>
-                <Link to="/analytics/performance" className="app-button-secondary text-xs">
-                    <FiActivity className="text-indigo-600" /> Desempeño
+                <Link to="/analytics/performance" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                    Desempeño
                 </Link>
-                <Link to="/analytics/payroll-costs" className="app-button-secondary text-xs">
-                    <FiDollarSign className="text-emerald-600" /> Costo Nómina
+                <Link to="/analytics/payroll-costs" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                    Costo Nómina
                 </Link>
-                <Link to="/analytics/satisfaction" className="app-button-secondary text-xs">
-                    <FiHeart className="text-amber-500" /> Clima Laboral
+                <Link to="/analytics/satisfaction" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                    Clima Laboral
                 </Link>
             </div>
 

@@ -36,123 +36,110 @@ const AccountingDashboard = () => {
     }, []);
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-                <h1 className="text-2xl font-bold text-slate-900 mb-1">Contabilidad Financiera RRHH</h1>
-                <p className="text-slate-500 max-w-2xl text-sm leading-relaxed">
-                    Gestión contable aislada y profesional orientada al registro de gastos de personal,
-                    liquidaciones, aportes y nómina generados en el sistema.
-                </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-200/80 hover:border-slate-300 transition-all">
-                    <div className="flex gap-4 items-center mb-4">
-                        <div className="bg-slate-100 p-3 rounded-xl text-slate-600">
-                            <FiBookOpen className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Comprobantes</p>
-                            <h3 className="text-2xl font-bold text-slate-900">{stats.entries}</h3>
-                        </div>
-                    </div>
-                    <p className="text-xs text-slate-500">Total de comprobantes generados históricamente en todos los periodos.</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-200/80 hover:border-slate-300 transition-all">
-                    <div className="flex gap-4 items-center mb-4">
-                        <div className="bg-slate-100 p-3 rounded-xl text-slate-600">
-                            <FiTrendingUp className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cuentas con Saldo</p>
-                            <h3 className="text-2xl font-bold text-slate-900">{stats.balanceCount}</h3>
-                        </div>
-                    </div>
-                    <p className="text-xs text-slate-500">Cuentas del catálogo impactadas económicamente por la nómina actual.</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-200/80 hover:border-slate-300 transition-all">
-                    <div className="flex gap-4 items-center mb-4">
-                        <div className="bg-slate-100 p-3 rounded-xl text-slate-600">
-                            <FiBriefcase className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Periodos Fiscales</p>
-                            <h3 className="text-2xl font-bold text-slate-900">{stats.periods}</h3>
-                        </div>
-                    </div>
-                    <p className="text-xs text-slate-500">Años y meses fiscales registrados en el sistema financiero paralelo.</p>
-                </div>
-            </div>
-
-            <div className="bg-slate-50/80 rounded-2xl p-5 border border-slate-200/80 flex items-start gap-4">
-                <FiCheckCircle className="w-5 h-5 text-slate-700 shrink-0 mt-0.5" />
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h4 className="text-slate-900 font-semibold text-sm mb-1">Nexus de Generación Automática Activo</h4>
-                    <p className="text-slate-600 text-xs leading-relaxed">
-                        El sistema ahora cuenta con integración directa. El contador puede importar
-                        automáticamente los diarios de pagos desde el Módulo de Nómina, asegurando que los gastos de
-                        personal se reflejen en la contabilidad sin errores manuales y con total trazabilidad.
-                    </p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Contabilidad · Gestión Financiera</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Consola Contable y Financiera</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Gestión contable orientada al registro de gastos de personal, liquidaciones y nómina.</p>
                 </div>
             </div>
 
-            <div className="pt-6">
-                <h2 className="text-xl font-bold text-slate-800 mb-6">Accesos Rápidos Contables</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Link to="/admin/accounting/chart" className="group p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex justify-center items-center text-indigo-600 group-hover:scale-110 transition-transform">
-                            <FiFolder className="w-8 h-8" />
+            {/* Resumen Contable ERP */}
+            <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
+                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Métricas Financieras</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 text-xs">
+                    <div className="p-4">
+                        <p className="text-gray-500 mb-1">Comprobantes Contables</p>
+                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {stats.entries}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Generados históricamente</p>
+                    </div>
+                    <div className="p-4">
+                        <p className="text-gray-500 mb-1">Cuentas con Saldo</p>
+                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {stats.balanceCount}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Impactadas en el periodo actual</p>
+                    </div>
+                    <div className="p-4">
+                        <p className="text-gray-500 mb-1">Periodos Fiscales</p>
+                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {stats.periods}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Años y meses fiscales</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Alerta / Nota Integración ERP */}
+            <div className="p-3.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-700 flex items-start gap-2.5">
+                <FiCheckCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                    <span className="font-semibold text-gray-900">Integración Automática de Nómina Activa</span>
+                    <p className="text-gray-500 mt-0.5">Los diarios de pagos desde el Módulo de Nómina pueden importarse directamente con validación de doble partida.</p>
+                </div>
+            </div>
+
+            {/* Accesos Rápidos Contables — Grilla ERP */}
+            <div className="space-y-3">
+                <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Módulos de Gestión Contable</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <Link to="/admin/accounting/chart" className="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded transition-colors group flex items-start gap-3">
+                        <div className="p-2 bg-gray-100 text-gray-700 rounded border border-gray-200 shrink-0">
+                            <FiFolder size={18} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">Catálogo de Cuentas</h3>
-                            <p className="text-slate-500 text-sm mt-1">Configura la jerarquía financiera (Activo, Pasivo, Gastos, etc) usando estándares NIIF.</p>
+                            <h4 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Catálogo de Cuentas</h4>
+                            <p className="text-[11px] text-gray-500 mt-0.5">Configura la jerarquía financiera (Activo, Pasivo, Gastos) según NIIF.</p>
                         </div>
                     </Link>
 
-                    <Link to="/admin/accounting/journals" className="group p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg hover:blue-200 transition-all flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-50 flex justify-center items-center text-blue-600 group-hover:scale-110 transition-transform">
-                            <FiFileText className="w-8 h-8" />
+                    <Link to="/admin/accounting/journals" className="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded transition-colors group flex items-start gap-3">
+                        <div className="p-2 bg-gray-100 text-gray-700 rounded border border-gray-200 shrink-0">
+                            <FiFileText size={18} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Libro Diario</h3>
-                            <p className="text-slate-500 text-sm mt-1">Registra y mayoriza comprobantes contables con validación de partida doble.</p>
+                            <h4 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Libro Diario</h4>
+                            <p className="text-[11px] text-gray-500 mt-0.5">Registra y mayoriza comprobantes contables de personal.</p>
                         </div>
                     </Link>
 
-                    <Link to="/admin/accounting/reports/trial-balance" className="group p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg hover:emerald-200 transition-all flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex justify-center items-center text-emerald-600 group-hover:scale-110 transition-transform">
-                            <FiLayers className="w-8 h-8" />
+                    <Link to="/admin/accounting/reports/trial-balance" className="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded transition-colors group flex items-start gap-3">
+                        <div className="p-2 bg-gray-100 text-gray-700 rounded border border-gray-200 shrink-0">
+                            <FiLayers size={18} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Balance de Comprobación</h3>
-                            <p className="text-slate-500 text-sm mt-1">Resumen de saldos débitos y créditos acumulados en el periodo actual.</p>
+                            <h4 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Balance de Comprobación</h4>
+                            <p className="text-[11px] text-gray-500 mt-0.5">Resumen de saldos débitos y créditos del periodo.</p>
                         </div>
                     </Link>
 
-                    <Link to="/admin/accounting/periods" className="group p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg hover:amber-200 transition-all flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-2xl bg-amber-50 flex justify-center items-center text-amber-600 group-hover:scale-110 transition-transform">
-                            <FiCalendar className="w-8 h-8" />
+                    <Link to="/admin/accounting/periods" className="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded transition-colors group flex items-start gap-3">
+                        <div className="p-2 bg-gray-100 text-gray-700 rounded border border-gray-200 shrink-0">
+                            <FiCalendar size={18} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-amber-700 transition-colors">Periodos Fiscales</h3>
-                            <p className="text-slate-500 text-sm mt-1">Configura y cierra los periodos mensuales para bloqueo de asientos.</p>
+                            <h4 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Periodos Fiscales</h4>
+                            <p className="text-[11px] text-gray-500 mt-0.5">Apertura y cierre de periodos para bloqueo de asientos.</p>
                         </div>
                     </Link>
 
-                    <Link to="/admin/accounting/cost-centers" className="group p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg hover:rose-200 transition-all flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-2xl bg-rose-50 flex justify-center items-center text-rose-600 group-hover:scale-110 transition-transform">
-                            <FiPieChart className="w-8 h-8" />
+                    <Link to="/admin/accounting/cost-centers" className="p-4 bg-white border border-gray-200 hover:border-gray-300 rounded transition-colors group flex items-start gap-3">
+                        <div className="p-2 bg-gray-100 text-gray-700 rounded border border-gray-200 shrink-0">
+                            <FiPieChart size={18} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-rose-700 transition-colors">Centros de Costo</h3>
-                            <p className="text-slate-500 text-sm mt-1">Organiza tus gastos por departamentos (Administración, Operaciones, etc).</p>
+                            <h4 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Centros de Costo</h4>
+                            <p className="text-[11px] text-gray-500 mt-0.5">Imputación de gastos por departamento u operación.</p>
                         </div>
                     </Link>
                 </div>
             </div>
-
         </div>
     );
 };

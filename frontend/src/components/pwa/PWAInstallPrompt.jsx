@@ -181,17 +181,14 @@ export default function PWAInstallPrompt() {
         )}
       </AnimatePresence>
 
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <button
         onClick={() => setShowPrompt((prev) => !prev)}
-        className="group flex items-center justify-center w-11 h-11 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl hover:shadow-2xl shadow-slate-300/50 rounded-full transition-all duration-300"
-        title="Instalar Emplifi App"
+        className="border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+        title="Instalar Emplifi App PWA"
       >
-        <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 border border-blue-200/80 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors flex-shrink-0">
-          <FiDownload size={14} />
-        </div>
-      </motion.button>
+        <FiDownload size={13} className="text-blue-600" />
+        <span>Instalar App</span>
+      </button>
     </div>
   );
 }
