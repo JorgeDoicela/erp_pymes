@@ -4,25 +4,22 @@ import { getMyPendingEvaluations, submitAssessment } from '../../services/evalua
 import { FiSave, FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 
 const TakeEvaluation = () => {
-    const { id } = useParams(); // This is the review ID (EvaluationReviewer ID)
+    const { id } = useParams();
     const navigate = useNavigate();
 
     const [review, setReview] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [responses, setResponses] = useState({}); // { criteriaName: value } - Ideally criteria ID if we had IDs, but JSON stores array of objects.
+    const [responses, setResponses] = useState({});
     const [comments, setComments] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchReview = async () => {
             try {
-                // In a real app, we might have a specific endpoint to get ONE review by ID.
-                // Reusing getMyPendingEvaluations for simplicity and finding locally.
                 const data = await getMyPendingEvaluations();
                 const found = data.find(r => r.id === id);
                 if (found) {
                     setReview(found);
-                    // Initialize responses if draft exists (parsed from JSON in backend controller potentially, but currently string in DB, handled by controller map)
                     if (found.responses) {
                         setResponses(JSON.parse(found.responses));
                     }
@@ -50,7 +47,6 @@ const TakeEvaluation = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validation: Check if all criteria have a value?
         const criteriaList = review?.evaluation?.template?.criteria || [];
         const missing = Array.isArray(criteriaList) && criteriaList.some(c => !responses[c.name]);
 
@@ -83,13 +79,11 @@ const TakeEvaluation = () => {
         }
     };
 
-    if (loading) return <div className="p-8 text-white">Cargando evaluación...</div>;
+    if (loading) return <div className="p-8 text-center text-xs text-gray-400 font-mono">Cargando evaluación...</div>;
     if (!review) return null;
 
     const { template } = review.evaluation;
-    // Scale config
     const scale = template.scale;
-    // Example scale: { type: "numeric", min: 1, max: 5 }
 
     const renderInput = (criteria) => {
         const currentVal = responses[criteria.name] || '';
@@ -98,21 +92,19 @@ const TakeEvaluation = () => {
             const max = scale.max || (scale.type === '1-5' ? 5 : 10);
             const min = scale.min || 1;
 
-            // Create array of numbers
             const options = [];
             for (let i = min; i <= max; i++) options.push(i);
 
             return (
-                <div className="grid grid-cols-5 md:flex md:flex-wrap gap-2 md:gap-4 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                     {options.map(num => {
                         const isSelected = currentVal == num;
-                        // Color scale from Red (low) to Green (high) logic could go here, simplified to blue for now but clearer UI
                         return (
                             <label key={num} className={`
-                                relative flex flex-col items-center justify-center cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 group
+                                relative flex items-center justify-center cursor-pointer w-9 h-9 rounded border text-xs font-mono font-semibold transition-colors
                                 ${isSelected
-                                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg transform scale-105'
-                                    : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-600'}
+                                    ? 'bg-blue-600 border-blue-600 text-white'
+                                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}
                             `}>
                                 <input
                                     type="radio"
@@ -122,10 +114,7 @@ const TakeEvaluation = () => {
                                     onChange={() => handleValueChange(criteria.name, num)}
                                     className="hidden"
                                 />
-                                <span className={`text-2xl font-bold mb-1 ${isSelected ? 'text-white' : 'text-slate-300 group-hover:text-slate-500'}`}>{num}</span>
-                                <span className="text-[10px] uppercase font-bold tracking-wider opacity-60">
-                                    {num === min ? 'Bajo' : (num === max ? 'Exc.' : '-')}
-                                </span>
+                                <span>{num}</span>
                             </label>
                         );
                     })}
@@ -133,103 +122,109 @@ const TakeEvaluation = () => {
             );
         } else if (scale.type === 'percentage') {
             return (
-                <div className="mt-2">
+                <div className="mt-2 space-y-1">
                     <input
                         type="range"
                         min="0"
                         max="100"
                         value={currentVal || 0}
                         onChange={(e) => handleValueChange(criteria.name, e.target.value)}
-                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                        className="w-full h-1.5 bg-gray-200 rounded appearance-none cursor-pointer"
                     />
-                    <div className="text-right text-blue-600 font-bold mt-1">{currentVal || 0}%</div>
+                    <div className="text-right text-xs font-mono font-semibold text-gray-900">{currentVal || 0}%</div>
                 </div>
             );
         }
-        return <p className="text-red-500">Tipo de escala no soportado visualmente.</p>;
+        return <p className="text-xs text-red-600 font-medium">Tipo de escala no soportado.</p>;
     };
 
     return (
-        <div className="min-h-screen bg-white text-slate-800 p-6 pb-24">
-            <div className="max-w-4xl mx-auto">
-                <button
-                    onClick={() => navigate('/performance/my-evaluations')}
-                    className="mb-6 flex items-center text-slate-500 hover:text-slate-800 transition-colors font-medium"
-                >
-                    <FiArrowLeft className="mr-2" /> Volver a Mis Evaluaciones
-                </button>
-                <div className="mb-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 border-b border-slate-100 pb-4">
-                        <div>
-                            <h2 className="text-sm text-blue-600 uppercase tracking-wider font-bold mb-1">Evaluación de Desempeño</h2>
-                            <h1 className="text-3xl font-bold text-slate-800">{template.title}</h1>
-                        </div>
-                        <div className="text-right">
-                            <span className="block text-xs text-slate-500 uppercase">Estás evaluando a:</span>
-                            <span className="text-xl font-bold text-slate-800">
-                                {review.evaluation.employee.firstName} {review.evaluation.employee.lastName}
-                            </span>
-                            <span className="block text-sm text-slate-500">{review.evaluation.employee.position}</span>
-                        </div>
-                    </div>
+        <div className="space-y-6 max-w-[1400px] mx-auto pb-20">
+            <button
+                onClick={() => navigate('/performance/my-evaluations')}
+                className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            >
+                <FiArrowLeft className="w-3.5 h-3.5" /> Volver a Mis Evaluaciones
+            </button>
 
-                    <div className="bg-blue-50 rounded-xl p-4 text-blue-800 flex items-start gap-3 border border-blue-100">
-                        <FiAlertCircle className="mt-1 flex-shrink-0 text-blue-600" size={20} />
-                        <div>
-                            <p className="font-medium mb-1">Instrucciones:</p>
-                            <p className="text-sm opacity-90">{template.instructions || 'Por favor evalúa cada competencia objetivamente basándote en el desempeño observado durante el periodo.'}</p>
+            {/* Header */}
+            <div className="bg-white p-5 rounded border border-gray-200">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-gray-100">
+                    <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1">
+                            Evaluación de Desempeño
                         </div>
+                        <h1 className="text-xl font-bold text-gray-900 tracking-tight">{template.title}</h1>
+                    </div>
+                    <div className="text-left md:text-right">
+                        <span className="block text-[11px] text-gray-400 uppercase font-semibold tracking-wider">Evaluando a:</span>
+                        <span className="text-sm font-bold text-gray-900">
+                            {review.evaluation.employee.firstName} {review.evaluation.employee.lastName}
+                        </span>
+                        <span className="block text-xs text-gray-500">{review.evaluation.employee.position}</span>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {template.criteria.map((c, idx) => (
-                        <div key={idx} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-                            <div className="p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row justify-between gap-4">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-600 shadow-sm">{idx + 1}</span>
-                                        <h3 className="text-xl font-bold text-slate-800">{c.name}</h3>
-                                    </div>
-                                    {c.description && <p className="text-slate-500 text-sm pl-11">{c.description}</p>}
-                                </div>
-                                <div className="text-right min-w-[120px]">
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Peso</span>
-                                    <span className="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-xs font-bold shadow-sm">{c.weight ? `${c.weight}%` : 'N/A'}</span>
-                                </div>
-                            </div>
-
-                            <div className="p-6 bg-white">
-                                <p className="text-sm text-slate-500 mb-3 uppercase tracking-wider font-bold">Selecciona una calificación:</p>
-                                {renderInput(c)}
-                            </div>
-                        </div>
-                    ))}
-
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 className="text-lg font-bold text-slate-800 mb-3">Comentarios Generales <span className="text-red-500">*</span></h3>
-                        <textarea
-                            value={comments}
-                            onChange={(e) => setComments(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-300 rounded-lg p-4 text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none h-32 placeholder:text-slate-400"
-                            placeholder="Escribe tus observaciones finales aquí (Obligatorio)..."
-                        ></textarea>
+                <div className="bg-gray-50 rounded p-3 text-xs text-gray-700 border border-gray-200 mt-4 flex items-start gap-2">
+                    <FiAlertCircle className="mt-0.5 text-gray-500 shrink-0" />
+                    <div>
+                        <p className="font-semibold text-gray-900">Instrucciones:</p>
+                        <p className="text-gray-600 mt-0.5">{template.instructions || 'Por favor evalúa cada competencia objetivamente basándote en el desempeño observado durante el periodo.'}</p>
                     </div>
-
-                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-200 flex justify-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className={`w-full max-w-md bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105 flex justify-center items-center ${submitting ? 'opacity-50' : ''}`}
-                        >
-                            <FiSave className="mr-2 text-xl" />
-                            {submitting ? 'Enviando...' : 'Finalizar y Enviar Evaluación'}
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {template.criteria.map((c, idx) => (
+                    <div key={idx} className="bg-white rounded border border-gray-200 overflow-hidden">
+                        <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-mono font-semibold text-gray-500">{idx + 1}.</span>
+                                    <h3 className="font-semibold text-xs text-gray-900">{c.name}</h3>
+                                </div>
+                                {c.description && <p className="text-xs text-gray-500 mt-0.5">{c.description}</p>}
+                            </div>
+                            {c.weight && (
+                                <span className="bg-white border border-gray-200 text-gray-600 px-2 py-0.5 rounded text-[11px] font-mono">
+                                    Peso: {c.weight}%
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="p-4 bg-white">
+                            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Selecciona calificación:</p>
+                            {renderInput(c)}
+                        </div>
+                    </div>
+                ))}
+
+                <div className="bg-white p-4 rounded border border-gray-200 space-y-2">
+                    <label className="block text-xs font-semibold text-gray-700">
+                        Comentarios Generales <span className="text-red-600">*</span>
+                    </label>
+                    <textarea
+                        value={comments}
+                        onChange={(e) => setComments(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded p-3 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 h-28 resize-none"
+                        placeholder="Escribe tus observaciones finales aquí (Obligatorio)..."
+                    ></textarea>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                        <FiSave className="w-3.5 h-3.5" />
+                        {submitting ? 'Enviando...' : 'Finalizar y Enviar Evaluación'}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };
 
 export default TakeEvaluation;
+

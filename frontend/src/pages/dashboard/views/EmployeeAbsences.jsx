@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import absenceService from '../../../services/attendance/absenceService';
 import * as employeeService from '../../../services/employees/employee.service';
-import { motion } from 'framer-motion';
 import { FiCalendar, FiPlus, FiX } from 'react-icons/fi';
 
 const EmployeeAbsences = () => {
@@ -74,7 +73,7 @@ const EmployeeAbsences = () => {
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'APPROVED': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+            case 'APPROVED': return 'text-green-700 bg-green-50 border-green-200';
             case 'REJECTED': return 'text-red-700 bg-red-50 border-red-200';
             default: return 'text-amber-700 bg-amber-50 border-amber-200';
         }
@@ -93,49 +92,56 @@ const EmployeeAbsences = () => {
         : 0;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-[1400px] mx-auto">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-white p-5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Mis Permisos y Ausencias</h2>
-                    <p className="text-slate-500 text-sm mt-1">Gestiona tus solicitudes de permisos y vacaciones</p>
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1">
+                        Tiempo y Permisos
+                    </div>
+                    <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+                        Solicitud y Control de Ausencias
+                    </h1>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                        Gestiona tus solicitudes de permisos, vacaciones y licencias médicas.
+                    </p>
                 </div>
                 <button
                     onClick={() => setIsCreating(!isCreating)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm ${isCreating
-                            ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
-                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded text-xs font-medium transition-colors cursor-pointer ${isCreating
+                            ? 'border border-gray-300 hover:border-gray-400 text-gray-700 bg-white'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
                         }`}
                 >
-                    {isCreating ? <><FiX size={16} /> Cancelar</> : <><FiPlus size={16} /> Nueva Solicitud</>}
+                    {isCreating ? <><FiX className="w-3.5 h-3.5" /> Cancelar</> : <><FiPlus className="w-3.5 h-3.5" /> Nueva Solicitud</>}
                 </button>
             </div>
 
-            {/* Balance Card */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-xl shadow-md max-w-xs">
-                <p className="text-blue-100 text-sm font-medium">Días de Vacaciones Disponibles</p>
-                <div className="flex items-end gap-2 mt-2">
-                    <span className="text-4xl font-bold text-white">{balance}</span>
-                    <span className="text-blue-200 mb-1">días</span>
+            {/* Balance Card (Panel Contable Sobrio) */}
+            <div className="bg-white p-4 rounded border border-gray-200 max-w-sm">
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                    Saldo de Vacaciones Disponibles
+                </p>
+                <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums">{balance}</span>
+                    <span className="text-xs text-gray-500 font-medium">días pagados acumulados</span>
                 </div>
             </div>
 
             {/* Create Form */}
             {isCreating && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm"
-                >
-                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <FiCalendar className="text-blue-600" /> Nueva Solicitud de Permiso
-                    </h3>
+                <div className="bg-white border border-gray-200 rounded p-5">
+                    <div className="border-b border-gray-100 pb-3 mb-4">
+                        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                            <FiCalendar className="text-gray-600" /> Nueva Solicitud de Permiso
+                        </h2>
+                    </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Ausencia</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Ausencia</label>
                                 <select
-                                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all"
+                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                                     value={formData.type}
                                     onChange={e => setFormData({ ...formData, type: e.target.value })}
                                 >
@@ -147,20 +153,20 @@ const EmployeeAbsences = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Desde</label>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Desde</label>
                                     <input
                                         type="date"
-                                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all"
+                                        className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono"
                                         value={formData.startDate}
                                         onChange={e => setFormData({ ...formData, startDate: e.target.value })}
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Hasta</label>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Hasta</label>
                                     <input
                                         type="date"
-                                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all"
+                                        className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono"
                                         value={formData.endDate}
                                         onChange={e => setFormData({ ...formData, endDate: e.target.value })}
                                         required
@@ -171,49 +177,44 @@ const EmployeeAbsences = () => {
 
                         {/* Vacation Impact Feedback */}
                         {formData.startDate && formData.endDate && (
-                            <div className={`p-4 rounded-lg border ${formData.type === 'Vacaciones'
+                            <div className={`p-3 rounded border text-xs ${formData.type === 'Vacaciones'
                                     ? estimatedDays > balance
                                         ? 'bg-red-50 border-red-200 text-red-700'
                                         : 'bg-blue-50 border-blue-200 text-blue-700'
-                                    : 'bg-slate-50 border-slate-200 text-slate-600'
+                                    : 'bg-gray-50 border-gray-200 text-gray-600'
                                 }`}>
                                 <div className="flex justify-between items-center">
-                                    <span className="font-medium text-sm">Duración estimada:</span>
-                                    <span className="font-bold text-lg">{estimatedDays} días</span>
+                                    <span>Duración estimada:</span>
+                                    <span className="font-semibold font-mono tabular-nums">{estimatedDays} días</span>
                                 </div>
                                 {formData.type === 'Vacaciones' && (
-                                    <div className="mt-2 text-sm border-t border-current/10 pt-2 space-y-1">
+                                    <div className="mt-2 text-xs border-t border-current/10 pt-2 space-y-1">
                                         <div className="flex justify-between">
-                                            <span>Tu saldo actual:</span>
-                                            <span className="font-semibold">{balance} días</span>
+                                            <span>Saldo actual:</span>
+                                            <span className="font-semibold font-mono tabular-nums">{balance} días</span>
                                         </div>
-                                        <div className="flex justify-between font-bold">
-                                            <span>Saldo final estimado:</span>
-                                            <span className={balance - estimatedDays < 0 ? 'text-red-600' : 'text-emerald-600'}>
+                                        <div className="flex justify-between font-semibold">
+                                            <span>Saldo proyectado:</span>
+                                            <span className={`font-mono tabular-nums ${balance - estimatedDays < 0 ? 'text-red-600' : 'text-green-700'}`}>
                                                 {balance - estimatedDays} días
                                             </span>
                                         </div>
                                         {estimatedDays > balance && (
-                                            <p className="text-red-600 text-xs mt-1 font-semibold">
-                                                ⚠ Saldo insuficiente para esta solicitud.
+                                            <p className="text-red-600 text-[11px] mt-1 font-semibold">
+                                                Saldo insuficiente para procesar esta solicitud.
                                             </p>
                                         )}
                                     </div>
-                                )}
-                                {formData.type !== 'Vacaciones' && (
-                                    <p className="text-xs mt-2 opacity-70">
-                                        Este tipo de ausencia NO descuenta días de tu saldo de vacaciones.
-                                    </p>
                                 )}
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Motivo / Descripción</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Motivo / Descripción</label>
                             <textarea
-                                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all resize-none"
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 resize-none"
                                 rows="3"
-                                placeholder="Describe el motivo de tu solicitud..."
+                                placeholder="Describe brevemente el motivo..."
                                 value={formData.reason}
                                 onChange={e => setFormData({ ...formData, reason: e.target.value })}
                                 required
@@ -221,82 +222,82 @@ const EmployeeAbsences = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Justificativo (JPG, PNG, PDF)</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Justificativo Adjunto (PDF, Imagen)</label>
                             <input
                                 type="file"
-                                className="block w-full text-sm text-slate-600
-                                  file:mr-4 file:py-2 file:px-4
-                                  file:rounded-lg file:border-0
-                                  file:text-sm file:font-semibold
-                                  file:bg-blue-50 file:text-blue-700
-                                  hover:file:bg-blue-100 transition-all"
+                                className="block w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border file:border-gray-300 file:bg-white file:text-xs file:font-medium hover:file:bg-gray-50 cursor-pointer"
                                 onChange={e => setFormData({ ...formData, file: e.target.files[0] })}
                                 accept="image/*,.pdf"
                             />
                         </div>
 
-                        <div className="flex items-center gap-4 pt-2">
+                        <div className="flex items-center gap-3 pt-2">
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-6 py-2.5 rounded-lg font-bold text-white shadow-md disabled:opacity-50 transition-all"
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded transition-colors cursor-pointer disabled:opacity-50"
                             >
                                 {loading ? 'Enviando...' : 'Enviar Solicitud'}
                             </button>
                             {message && (
-                                <span className="text-sm font-medium text-emerald-600">{message}</span>
+                                <span className="text-xs font-medium text-gray-700">{message}</span>
                             )}
                         </div>
                     </form>
-                </motion.div>
+                </div>
             )}
 
             {/* List */}
-            <div className="space-y-3">
+            <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <h2 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                        Historial de Solicitudes
+                    </h2>
+                </div>
+
                 {requests.length === 0 ? (
-                    <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
-                        <FiCalendar className="mx-auto text-slate-300 mb-3" size={40} />
-                        <p className="text-slate-500 font-medium">No tienes solicitudes registradas</p>
-                        <p className="text-slate-400 text-sm mt-1">Crea una nueva solicitud con el botón de arriba</p>
+                    <div className="p-12 text-center text-gray-400 text-sm">
+                        <p className="text-sm font-medium text-gray-700">No tienes solicitudes registradas</p>
+                        <p className="text-xs text-gray-400 mt-1">Crea una nueva solicitud de ausencia utilizando el botón superior.</p>
                     </div>
                 ) : (
-                    requests.map(req => (
-                        <motion.div
-                            key={req.id}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow"
-                        >
-                            <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h3 className="font-bold text-lg text-slate-800">{req.type}</h3>
-                                    <span className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold ${getStatusStyle(req.status)}`}>
-                                        {getStatusLabel(req.status)}
-                                    </span>
-                                </div>
-                                <p className="text-slate-500 text-sm">
-                                    {new Date(req.startDate).toLocaleDateString('es-ES')} — {new Date(req.endDate).toLocaleDateString('es-ES')}
-                                </p>
-                                <p className="text-slate-600 mt-2 text-sm italic">"{req.reason}"</p>
-                                {req.adminComment && (
-                                    <p className="text-xs text-amber-600 font-medium mt-1 bg-amber-50 px-2 py-1 rounded-md inline-block">
-                                        Admin: {req.adminComment}
+                    <div className="divide-y divide-gray-100">
+                        {requests.map(req => (
+                            <div
+                                key={req.id}
+                                className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 hover:bg-gray-50/60 transition-colors"
+                            >
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-xs text-gray-900">{req.type}</h3>
+                                        <span className={`text-[11px] px-2 py-0.5 rounded border font-medium ${getStatusStyle(req.status)}`}>
+                                            {getStatusLabel(req.status)}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 font-mono tabular-nums">
+                                        {new Date(req.startDate).toLocaleDateString('es-ES')} — {new Date(req.endDate).toLocaleDateString('es-ES')}
                                     </p>
+                                    <p className="text-xs text-gray-600">{req.reason}</p>
+                                    {req.adminComment && (
+                                        <p className="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-block">
+                                            Observación RRHH: {req.adminComment}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {req.evidenceUrl && (
+                                    <a
+                                        href={`${import.meta.env.VITE_API_URL || ''}/uploads/evidence/${req.evidenceUrl}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs px-2.5 py-1 rounded transition-colors whitespace-nowrap"
+                                    >
+                                        Ver Evidencia
+                                    </a>
                                 )}
                             </div>
-
-                            {req.evidenceUrl && (
-                                <a
-                                    href={`${import.meta.env.VITE_API_URL || ''}/uploads/evidence/${req.evidenceUrl}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1 whitespace-nowrap"
-                                >
-                                    Ver Evidencia →
-                                </a>
-                            )}
-                        </motion.div>
-                    ))
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
@@ -304,3 +305,4 @@ const EmployeeAbsences = () => {
 };
 
 export default EmployeeAbsences;
+

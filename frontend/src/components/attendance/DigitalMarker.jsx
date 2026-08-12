@@ -343,22 +343,20 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-white backdrop-blur-sm border border-slate-200 text-slate-900 p-4 sm:p-8 rounded-2xl shadow-sm">
+        <div className="flex flex-col items-center justify-center w-full bg-white border border-gray-200 text-gray-900 p-6 sm:p-8 rounded">
             {/* Clock */}
-            <div className="mb-6 sm:mb-8 text-center">
-                <h2 className="text-sm sm:text-xl text-slate-500 font-light tracking-widest uppercase mb-2">Marcador Digital</h2>
-                <div className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tighter text-blue-600 tabular-nums">
+            <div className="mb-6 text-center">
+                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Marcador Digital de Jornada</div>
+                <div className="text-4xl sm:text-5xl font-bold font-mono tracking-tight text-gray-900 tabular-nums">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </div>
-                <div className="text-slate-500 mt-2 text-base md:text-lg">
+                <div className="text-gray-500 mt-1 text-xs">
                     {currentTime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
                 {/* Biometric badge */}
                 {biometricEnabled && (
-                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-                            <path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
-                        </svg>
+                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-gray-50 border border-gray-200 text-gray-700 text-[11px] font-medium">
+                        <FiLock className="w-3 h-3 text-blue-600" />
                         Verificación biométrica activa
                     </div>
                 )}
@@ -366,10 +364,10 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
 
             {/* Buscador de Empleado (Público o Modo Administrador) */}
             {allowSearch && (!user || isAdminOrSuperAdmin) && (
-                <div className="w-full mb-8 relative max-w-md mx-auto">
+                <div className="w-full mb-6 relative max-w-md mx-auto">
                     {!foundEmployee ? (
                         <>
-                            <label className="block text-sm font-medium text-slate-600 mb-1 ml-1 text-center">
+                            <label className="block text-xs font-medium text-gray-600 mb-1 text-center">
                                 {isAdminOrSuperAdmin ? 'Buscar Empleado por Número de Cédula' : 'Número de Cédula'}
                             </label>
                             <div className="flex gap-2">
@@ -379,67 +377,56 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                                     onChange={(e) => setEmployeeId(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === 'Enter') checkStatus(); }}
                                     placeholder="Ingrese número de cédula..."
-                                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-slate-400 text-center text-lg tracking-widest"
+                                    className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 text-center font-mono"
                                 />
                                 <button
                                     onClick={() => checkStatus()}
-                                    className="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-lg transition-colors font-bold shadow-lg shadow-blue-500/20"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
                                 >
                                     Buscar
                                 </button>
                             </div>
                         </>
                     ) : (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-between"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-white text-xl">
+                        <div className="bg-gray-50 rounded p-3 border border-gray-200 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded bg-gray-200 text-gray-800 font-mono font-semibold text-xs flex items-center justify-center">
                                     {foundEmployee.firstName[0]}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg text-slate-800">{foundEmployee.firstName} {foundEmployee.lastName}</h3>
-                                    <p className="text-xs text-slate-500">{foundEmployee.position} • {foundEmployee.department}</p>
+                                    <h3 className="font-semibold text-xs text-gray-900">{foundEmployee.firstName} {foundEmployee.lastName}</h3>
+                                    <p className="text-[11px] text-gray-500">{foundEmployee.position} • {foundEmployee.department}</p>
                                 </div>
                             </div>
                             {allowSearch && (
                                 <button
                                     onClick={() => { setFoundEmployee(null); setEmployeeId(''); setStatus(null); setMessage({ type: '', text: '' }); }}
-                                    className="text-slate-500 hover:text-blue-600 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs transition-colors"
+                                    className="text-gray-600 hover:text-gray-900 px-2.5 py-1 bg-white border border-gray-200 rounded text-xs transition-colors cursor-pointer"
                                 >
                                     Cambiar
                                 </button>
                             )}
-                        </motion.div>
+                        </div>
                     )}
                 </div>
             )}
 
             {/* Message */}
             {message.text && (
-                <div className="w-full max-w-sm mb-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`px-4 py-3 rounded-lg text-center text-sm font-medium ${message.type === 'error' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : message.type === 'info' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}
-                    >
+                <div className="w-full max-w-md mb-4">
+                    <div className={`px-3.5 py-2 rounded text-center text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : message.type === 'info' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                         {message.text}
-                    </motion.div>
+                    </div>
 
                     {message.showMapLink && (
-                        <div className="mt-2 flex justify-center gap-3">
+                        <div className="mt-1.5 flex justify-center gap-3">
                             <a
                                 href={`https://www.google.com/maps?q=${message.lastCoords.latitude},${message.lastCoords.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[10px] text-blue-400 hover:underline flex items-center gap-1"
+                                className="text-[11px] text-blue-600 hover:underline flex items-center gap-1"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                </svg>
-                                Ver donde estoy según GPS
+                                Ver ubicación en mapa (GPS)
                             </a>
                         </div>
                     )}
@@ -448,101 +435,89 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
 
             {/* Confirmation Modal */}
             {showConfirm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full shadow-xl"
-                    >
-                        <h3 className="text-xl font-bold text-slate-800 mb-4">Confirmar {
+                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-gray-200 rounded p-5 max-w-sm w-full shadow-xl">
+                        <h3 className="text-sm font-bold text-gray-900 mb-2">Confirmar {
                             pendingAction === 'ENTRY' ? 'Entrada' :
                                 pendingAction === 'EXIT' ? 'Salida' :
                                     pendingAction === 'BREAK_START' ? 'Inicio de Almuerzo' : 'Fin de Almuerzo'
                         }</h3>
-                        <p className="text-slate-600 mb-6">
+                        <p className="text-xs text-gray-600 mb-5">
                             ¿Confirmas registrar tu {
                                 pendingAction === 'ENTRY' ? 'entrada' :
                                     pendingAction === 'EXIT' ? 'salida' :
                                         pendingAction === 'BREAK_START' ? 'inicio de almuerzo' : 'fin de almuerzo'
-                            } a las <strong className="text-slate-900">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>?
+                            } a las <strong className="text-gray-900 font-mono">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>?
                         </p>
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex gap-2 justify-end">
                             <button
                                 onClick={() => { setShowConfirm(false); setPendingAction(null); }}
-                                className="px-4 py-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                                className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={confirmMark}
-                                className={`px-4 py-2 rounded-lg font-bold text-white shadow-lg ${pendingAction === 'ENTRY'
-                                    ? 'bg-emerald-600 hover:bg-emerald-500'
-                                    : 'bg-amber-600 hover:bg-amber-500'
-                                    }`}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
                             >
                                 Confirmar
                             </button>
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             )}
 
             {/* GPS Reminder */}
-            <div className="mb-6 flex flex-col sm:flex-row items-center justify-center gap-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                    </svg>
+            <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded border border-gray-200">
+                    <FiMapPin className="w-3 h-3 text-gray-500" />
                     <span>GPS activo para validación</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-medium text-amber-600 bg-amber-50 px-4 py-2 rounded-full border border-amber-100">
-                    <FiShield className="h-3.5 w-3.5" />
-                    <span>Bloqueo de VPN/Proxy activo</span>
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded border border-gray-200">
+                    <FiShield className="w-3 h-3 text-gray-500" />
+                    <span>Protección VPN/Proxy activa</span>
                 </div>
             </div>
 
             {/* Buttons */}
-
-            {/* Buttons */}
-            <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+            <div className="grid grid-cols-2 gap-3 w-full max-w-md">
                 {/* Entry Button */}
                 {(status === 'NOT_STARTED' || status === 'COMPLETED' || status === null) && (
                     <button
                         onClick={() => initiateMark('ENTRY')}
                         disabled={loading || status === 'COMPLETED' || !consentStatus}
                         className={`
-                            col-span-2 py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2
+                            col-span-2 py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer
                             ${(status === 'COMPLETED' || !consentStatus)
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                                : 'bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-emerald-500/20'}
+                                ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white'}
                         `}
                     >
-                        <span className="text-2xl">{!consentStatus && <FiLock className="mb-1" />}</span>
-                        ENTRADA
+                        {!consentStatus && <FiLock className="w-3.5 h-3.5" />}
+                        REGISTRAR ENTRADA
                     </button>
                 )}
 
                 {/* Working Actions */}
                 {status === 'WORKING' && (
                     <>
-                        {/* Only show lunch button if they haven't started lunch yet today */}
                         {!recordData?.breakStart && (
                             <button
                                 onClick={() => initiateMark('BREAK_START')}
                                 disabled={loading || !consentStatus}
-                                className={`py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 ${!consentStatus ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white shadow-blue-500/20'}`}
+                                className={`py-3 rounded font-semibold text-xs border transition-colors flex items-center justify-center gap-2 cursor-pointer ${!consentStatus ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                             >
-                                <span className="text-2xl">{!consentStatus && <FiLock />}</span>
-                                ALMUERZO
+                                {!consentStatus && <FiLock className="w-3.5 h-3.5" />}
+                                INICIAR ALMUERZO
                             </button>
                         )}
                         <button
                             onClick={() => initiateMark('EXIT')}
                             disabled={loading || !consentStatus}
-                            className={`py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 ${!consentStatus ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-amber-500/20'} ${!recordData?.breakStart ? '' : 'col-span-2'}`}
+                            className={`py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${!consentStatus ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' : 'bg-blue-600 hover:bg-blue-700 text-white'} ${!recordData?.breakStart ? '' : 'col-span-2'}`}
                         >
-                            <span className="text-2xl">{!consentStatus && <FiLock />}</span>
-                            SALIDA
+                            {!consentStatus && <FiLock className="w-3.5 h-3.5" />}
+                            REGISTRAR SALIDA
                         </button>
                     </>
                 )}
@@ -552,20 +527,19 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                     <button
                         onClick={() => initiateMark('BREAK_END')}
                         disabled={loading}
-                        className="col-span-2 py-6 rounded-xl font-bold text-lg shadow-lg transition-all transform active:scale-95 flex flex-col items-center gap-2 bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white shadow-indigo-500/20"
+                        className="col-span-2 py-3 rounded font-semibold text-xs bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
-                        <span className="text-2xl">🔙</span>
-                        REGRESAR DEL ALMUERZO
+                        FINALIZAR ALMUERZO
                     </button>
                 )}
             </div>
 
             {/* Status Footer */}
-            <div className="mt-8 flex flex-col items-center gap-4">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${status === 'WORKING' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                    status === 'COMPLETED' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
-                        status === 'ON_BREAK' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
-                            'bg-slate-100 text-slate-500 border border-slate-200'
+            <div className="mt-6 flex flex-col items-center gap-3">
+                <span className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold tracking-wider uppercase border ${status === 'WORKING' ? 'bg-green-50 text-green-700 border-green-200' :
+                    status === 'COMPLETED' ? 'bg-gray-100 text-gray-700 border-gray-200' :
+                        status === 'ON_BREAK' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            'bg-gray-50 text-gray-500 border-gray-200'
                     }`}>
                     {status === 'WORKING' ? 'Actualmente Trabajando' :
                         status === 'ON_BREAK' ? 'En Hora de Almuerzo' :
@@ -575,9 +549,9 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
 
                 <button
                     onClick={() => setShowConsent(true)}
-                    className="flex items-center gap-2 text-[10px] text-slate-400 hover:text-blue-500 transition-colors uppercase tracking-widest font-bold"
+                    className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-900 transition-colors uppercase tracking-wider font-semibold cursor-pointer"
                 >
-                    <FiShield size={12} />
+                    <FiShield className="w-3 h-3" />
                     Privacidad y Consentimiento
                 </button>
             </div>

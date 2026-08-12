@@ -6,42 +6,29 @@ import {
     FiHelpCircle, FiArrowRight, FiUsers,
     FiGift, FiFileText, FiTrendingUp
 } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+
 
 const HelpSection = ({ title, icon: Icon, children, isOpen, onToggle }) => (
-    <div className="border border-gray-200 rounded bg-white hover:border-gray-300 transition-colors mb-2.5 overflow-hidden">
+    <div className="border border-gray-200 rounded bg-white hover:border-gray-300 transition-colors mb-2 overflow-hidden">
         <button
             onClick={onToggle}
-            className="w-full flex items-center justify-between p-3 bg-gray-50/50 hover:bg-gray-50 transition-colors text-left"
+            className="w-full flex items-center justify-between p-3 bg-gray-50/50 hover:bg-gray-50 transition-colors text-left cursor-pointer"
         >
-            <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-white text-blue-600 rounded border border-gray-200 shrink-0">
-                    <Icon size={16} />
+            <div className="flex items-center gap-2.5">
+                <div className="p-1 bg-white text-blue-600 rounded border border-gray-200 shrink-0">
+                    <Icon size={14} />
                 </div>
                 <span className="font-semibold text-gray-900 text-xs">{title}</span>
             </div>
-            <motion.div
-                animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-gray-400"
-            >
-                <FiChevronDown size={16} />
-            </motion.div>
+            <div className="text-gray-400 text-xs font-bold">
+                {isOpen ? '−' : '+'}
+            </div>
         </button>
-        <AnimatePresence initial={false}>
-            {isOpen && (
-                <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2, ease: "easeInOut" }}
-                >
-                    <div className="p-3.5 text-xs text-gray-700 space-y-2 border-t border-gray-100 leading-relaxed bg-white">
-                        {children}
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+        {isOpen && (
+            <div className="p-3.5 text-xs text-gray-700 space-y-2 border-t border-gray-100 leading-relaxed bg-white">
+                {children}
+            </div>
+        )}
     </div>
 );
 
