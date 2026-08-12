@@ -84,6 +84,11 @@ const JobApplication = () => {
         <div className="min-h-screen bg-slate-50 py-6 md:py-12 px-4 sm:px-6">
             <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="bg-white p-6 md:p-8 border-b border-slate-100 text-center sm:text-left">
+                    {vacancy.tenant?.name && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-xs font-bold uppercase tracking-wider mb-3">
+                            <FiCheckCircle size={14} /> Oferta de {vacancy.tenant.name}
+                        </div>
+                    )}
                     <h1 className="text-2xl md:text-3xl font-bold mb-4 text-slate-800">{vacancy.title}</h1>
                     <div className="flex flex-wrap justify-center sm:justify-start gap-4 md:gap-6 text-sm">
                         <span className="flex items-center text-slate-600"><FiMapPin className="mr-2 text-slate-400" /> {vacancy.location}</span>

@@ -1,10 +1,13 @@
 import { recruitmentService } from '../services/recruitment/recruitmentService.js';
 import { uploadFileToStorage } from '../services/storage/blobService.js';
 
+// Helper for tenant extraction
+const getTenantId = (req) => req.tenantId || req.user?.tenantId || null;
+
 // RF-REC-001: Create Vacancy
 export const createVacancy = async (req, res) => {
     try {
-        const tenantId = req.tenantId || req.user?.tenantId;
+        const tenantId = getTenantId(req);
         const vacancy = await recruitmentService.createVacancy(req.body, req.user.id, tenantId);
         res.status(201).json(vacancy);
     } catch (error) {
@@ -15,30 +18,35 @@ export const createVacancy = async (req, res) => {
 
 export const getVacancies = async (req, res) => {
     try {
-        const tenantId = req.tenantId || req.user?.tenantId;
+        const tenantId = getTenantId(req);
         const vacancies = await recruitmentService.getVacancies(tenantId);
         res.json(vacancies);
     } catch (error) {
-        res.status(500).json({ message: "Error al obtener vacantes" });
+        console.error("Error getting vacancies:", error);
+        res.status(500).json({ message: error.message || "Error al obtener vacantes" });
     }
 };
 
 export const getPublicVacancies = async (req, res) => {
     try {
-        const vacancies = await recruitmentService.getPublicVacancies();
+        const { tenantId, companySlug } = req.query;
+        const vacancies = await recruitmentService.getPublicVacancies({ tenantId, companySlug });
         res.json(vacancies);
     } catch (error) {
-        res.status(500).json({ message: "Error al obtener ofertas" });
+        console.error("Error getting public vacancies:", error);
+        res.status(500).json({ message: error.message || "Error al obtener ofertas" });
     }
 };
 
 export const getVacancyById = async (req, res) => {
     try {
         const { id } = req.params;
-        const vacancy = await recruitmentService.getVacancyById(id);
+        const tenantId = getTenantId(req);
+        const vacancy = await recruitmentService.getVacancyById(id, tenantId);
         res.json(vacancy);
     } catch (error) {
-        res.status(404).json({ message: error.message });
+        const status = error.message?.includes("Acceso denegado") ? 403 : 404;
+        res.status(status).json({ message: error.message });
     }
 };
 
@@ -46,22 +54,25 @@ export const updateVacancyStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const vacancy = await recruitmentService.updateVacancyStatus(id, status);
+        const tenantId = getTenantId(req);
+        const vacancy = await recruitmentService.updateVacancyStatus(id, status, tenantId);
         res.json(vacancy);
     } catch (error) {
-        res.status(500).json({ message: "Error al actualizar estado" });
+        const statusCode = error.message?.includes("Acceso denegado") ? 403 : 500;
+        res.status(statusCode).json({ message: error.message || "Error al actualizar estado" });
     }
 };
 
 export const deleteVacancy = async (req, res) => {
     try {
         const { id } = req.params;
-        const tenantId = req.tenantId || req.user?.tenantId;
+        const tenantId = getTenantId(req);
         const result = await recruitmentService.deleteVacancy(id, tenantId);
         res.json(result);
     } catch (error) {
         console.error("Error deleting vacancy:", error);
-        res.status(error.message?.includes("No tienes permisos") ? 403 : 500).json({ message: error.message || "Error al eliminar la vacante" });
+        const status = error.message?.includes("Acceso denegado") || error.message?.includes("permisos") ? 403 : 500;
+        res.status(status).json({ message: error.message || "Error al eliminar la vacante" });
     }
 };
 
@@ -76,27 +87,32 @@ export const applyToVacancy = async (req, res) => {
         res.status(201).json({ message: "Postulación enviada exitosamente", applicationId: application.id });
     } catch (error) {
         console.error("Error submitting application:", error);
-        res.status(error.message?.includes("obligatorio") ? 400 : 500).json({ message: error.message });
+        const status = error.message?.includes("obligatorio") || error.message?.includes("postulado") ? 400 : 500;
+        res.status(status).json({ message: error.message });
     }
 };
 
 export const getApplicationsByVacancy = async (req, res) => {
     try {
         const { id } = req.params;
-        const applications = await recruitmentService.getApplicationsByVacancy(id);
+        const tenantId = getTenantId(req);
+        const applications = await recruitmentService.getApplicationsByVacancy(id, tenantId);
         res.json(applications);
     } catch (error) {
-        res.status(500).json({ message: "Error al obtener postulaciones" });
+        const status = error.message?.includes("Acceso denegado") ? 403 : 500;
+        res.status(status).json({ message: error.message || "Error al obtener postulaciones" });
     }
 };
 
 export const getApplicationDetails = async (req, res) => {
     try {
         const { id } = req.params;
-        const application = await recruitmentService.getApplicationDetails(id);
+        const tenantId = getTenantId(req);
+        const application = await recruitmentService.getApplicationDetails(id, tenantId);
         res.json(application);
     } catch (error) {
-        res.status(404).json({ message: error.message });
+        const status = error.message?.includes("Acceso denegado") ? 403 : 404;
+        res.status(status).json({ message: error.message });
     }
 };
 
@@ -104,21 +120,25 @@ export const updateApplicationStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status, sendEmail } = req.body;
-        const application = await recruitmentService.updateApplicationStatus(id, status, sendEmail);
+        const tenantId = getTenantId(req);
+        const application = await recruitmentService.updateApplicationStatus(id, status, sendEmail, tenantId);
         res.json(application);
     } catch (error) {
-        res.status(500).json({ message: "Error al actualizar estado" });
+        const statusCode = error.message?.includes("Acceso denegado") ? 403 : 500;
+        res.status(statusCode).json({ message: error.message || "Error al actualizar estado" });
     }
 };
 
 export const deleteApplication = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await recruitmentService.deleteCandidate(id);
+        const tenantId = getTenantId(req);
+        const result = await recruitmentService.deleteCandidate(id, tenantId);
         res.json(result);
     } catch (error) {
         console.error("Error deleting candidate application:", error);
-        res.status(500).json({ message: error.message || "Error al eliminar la postulación del candidato" });
+        const status = error.message?.includes("Acceso denegado") ? 403 : 500;
+        res.status(status).json({ message: error.message || "Error al eliminar la postulación del candidato" });
     }
 };
 
@@ -128,47 +148,55 @@ export const addApplicationNote = async (req, res) => {
         const { content } = req.body;
         const userId = req.user.id;
         const userName = `${req.user.firstName} ${req.user.lastName}`;
+        const tenantId = getTenantId(req);
 
-        const note = await recruitmentService.addNote(id, content, userId, userName);
+        const note = await recruitmentService.addNote(id, content, userId, userName, tenantId);
         res.json(note);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Error al agregar nota" });
+        const status = error.message?.includes("Acceso denegado") ? 403 : 500;
+        res.status(status).json({ message: error.message || "Error al agregar nota" });
     }
 };
 
 export const scheduleInterview = async (req, res) => {
     try {
         const { id } = req.params;
-        const interview = await recruitmentService.scheduleInterview(id, req.body, req.user.id);
+        const tenantId = getTenantId(req);
+        const interview = await recruitmentService.scheduleInterview(id, req.body, req.user.id, tenantId);
         res.json(interview);
     } catch (error) {
         console.error("Error scheduling interview:", error);
-        res.status(500).json({ message: "Error al programar entrevista" });
+        const status = error.message?.includes("Acceso denegado") ? 403 : 500;
+        res.status(status).json({ message: error.message || "Error al programar entrevista" });
     }
 };
 
 export const evaluateCandidate = async (req, res) => {
     try {
         const { id } = req.params;
-        const evaluation = await recruitmentService.evaluateCandidate(id, req.body, req.user.id);
+        const tenantId = getTenantId(req);
+        const evaluation = await recruitmentService.evaluateCandidate(id, req.body, req.user.id, tenantId);
         res.json(evaluation);
     } catch (error) {
         console.error("Error evaluating candidate:", error);
-        res.status(500).json({ message: "Error al registrar evaluación" });
+        const status = error.message?.includes("Acceso denegado") ? 403 : 500;
+        res.status(status).json({ message: error.message || "Error al registrar evaluación" });
     }
 };
 
 export const hireCandidate = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await recruitmentService.hireCandidate(id, req.body);
+        const tenantId = getTenantId(req);
+        const result = await recruitmentService.hireCandidate(id, req.body, tenantId);
         res.json({ message: "Candidato contratado exitosamente", employee: result });
     } catch (error) {
         console.error("Error hiring candidate:", error);
         if (error.code === 'P2002') {
             return res.status(400).json({ message: "La cédula o el email ya están registrados en el sistema." });
         }
-        res.status(500).json({ message: "Error al contratar candidato: " + error.message });
+        const status = error.message?.includes("Acceso denegado") ? 403 : (error.message?.includes("18 años") || error.message?.includes("contraseña") ? 400 : 500);
+        res.status(status).json({ message: error.message || "Error al contratar candidato" });
     }
 };

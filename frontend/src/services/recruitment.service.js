@@ -1,8 +1,8 @@
 import api from '../api/axios';
 
-// Public Public
-export const getPublicVacancies = async () => {
-    const response = await api.get('/recruitment/public');
+// Public Vacancies
+export const getPublicVacancies = async (params = {}) => {
+    const response = await api.get('/recruitment/public', { params });
     return response.data;
 };
 

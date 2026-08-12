@@ -57,10 +57,22 @@ const RecruitmentDashboard = () => {
         }
     };
 
-    const copyLink = (id) => {
-        const link = `${window.location.origin}/careers/${id}`;
+    const copyLink = (vacancy) => {
+        const companySlug = vacancy?.tenant?.slug;
+        const link = companySlug 
+            ? `${window.location.origin}/careers/${vacancy.id}?company=${companySlug}`
+            : `${window.location.origin}/careers/${vacancy.id}`;
         navigator.clipboard.writeText(link);
-        toast?.success("Enlace copiado al portapapeles");
+        toast?.success("Enlace de vacante institucional copiado");
+    };
+
+    const copyCompanyPortalLink = () => {
+        const companySlug = vacancies.find(v => v.tenant?.slug)?.tenant?.slug;
+        const link = companySlug 
+            ? `${window.location.origin}/careers?company=${companySlug}`
+            : `${window.location.origin}/careers`;
+        navigator.clipboard.writeText(link);
+        toast?.success("Enlace del Portal de Empleo de la empresa copiado");
     };
 
     const filteredVacancies = vacancies.filter(v =>
@@ -77,12 +89,21 @@ const RecruitmentDashboard = () => {
                     <h1 className="text-xl font-semibold text-gray-900">Talento Humano & Reclutamiento</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Gestiona vacantes abiertas, recepción de postulaciones y candidatos.</p>
                 </div>
-                <button
-                    onClick={() => navigate('/recruitment/create')}
-                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 shrink-0"
-                >
-                    <FiPlus size={14} /> Crear Nueva Vacante
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={copyCompanyPortalLink}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 shrink-0 border border-slate-200"
+                        title="Copiar enlace público del Portal de Empleo de esta empresa"
+                    >
+                        <FiGlobe size={14} /> Portal de Empleo Empresa
+                    </button>
+                    <button
+                        onClick={() => navigate('/recruitment/create')}
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                    >
+                        <FiPlus size={14} /> Crear Nueva Vacante
+                    </button>
+                </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -138,7 +159,7 @@ const RecruitmentDashboard = () => {
                                     </button>
                                     <div className="flex items-center gap-1.5">
                                         <button
-                                            onClick={() => copyLink(v.id)}
+                                            onClick={() => copyLink(v)}
                                             className="app-button-table cursor-pointer"
                                             title="Copiar Enlace Público"
                                         >
@@ -221,7 +242,7 @@ const RecruitmentDashboard = () => {
                                         <td className="app-td text-right">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
-                                                    onClick={() => copyLink(v.id)}
+                                                    onClick={() => copyLink(v)}
                                                     className="app-button-table"
                                                     title="Copiar Enlace Público"
                                                 >

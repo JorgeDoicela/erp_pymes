@@ -25,6 +25,7 @@ export const recruitmentService = {
 
         // Audit Log
         auditRepository.createLog({
+            tenantId: tenantId || null,
             entity: 'JobVacancy',
             entityId: vacancy.id,
             action: 'CREATE',
@@ -36,26 +37,54 @@ export const recruitmentService = {
     },
 
     async getVacancies(tenantId = null) {
-        const where = tenantId ? { OR: [{ tenantId }, { tenantId: null }] } : {};
+        const where = tenantId ? { tenantId } : {};
         return recruitmentRepository.getVacancies(where, {
-            postedBy: { select: { firstName: true, lastName: true } }
+            postedBy: { select: { firstName: true, lastName: true } },
+            tenant: { select: { id: true, name: true, slug: true } }
         });
     },
 
-    async getPublicVacancies() {
-        return recruitmentRepository.getVacancies({ status: 'OPEN' });
+    async getPublicVacancies(filters = {}) {
+        const { tenantId, companySlug } = filters;
+        let targetTenantId = tenantId || null;
+
+        if (!targetTenantId && companySlug) {
+            const tenant = await prisma.tenant.findUnique({
+                where: { slug: companySlug },
+                select: { id: true }
+            });
+            if (tenant) {
+                targetTenantId = tenant.id;
+            }
+        }
+
+        const where = {
+            status: 'OPEN',
+            ...(targetTenantId ? { tenantId: targetTenantId } : {})
+        };
+
+        return recruitmentRepository.getVacancies(where, {
+            tenant: { select: { id: true, name: true, slug: true } }
+        });
     },
 
-    async getVacancyById(id) {
-        const vacancy = await recruitmentRepository.getVacancyById(id);
+    async getVacancyById(id, tenantId = null) {
+        const vacancy = await recruitmentRepository.getVacancyById(id, {
+            tenant: { select: { id: true, name: true, slug: true } }
+        });
         if (!vacancy) throw new Error("Vacante no encontrada");
+        if (tenantId && vacancy.tenantId && vacancy.tenantId !== tenantId) {
+            throw new Error("Acceso denegado: La vacante no pertenece a la empresa activa.");
+        }
         return vacancy;
     },
 
-    async updateVacancyStatus(id, status) {
+    async updateVacancyStatus(id, status, tenantId = null) {
+        await this.getVacancyById(id, tenantId);
         const vacancy = await recruitmentRepository.updateVacancy(id, { status });
         
         auditRepository.createLog({
+            tenantId: vacancy.tenantId || tenantId,
             entity: 'JobVacancy',
             entityId: id,
             action: 'UPDATE',
@@ -67,14 +96,7 @@ export const recruitmentService = {
     },
 
     async deleteVacancy(id, tenantId = null) {
-        const vacancy = await recruitmentRepository.getVacancyById(id);
-        if (!vacancy) {
-            throw new Error("Vacante no encontrada");
-        }
-
-        if (tenantId && vacancy.tenantId && vacancy.tenantId !== tenantId) {
-            throw new Error("No tienes permisos para eliminar esta vacante");
-        }
+        const vacancy = await this.getVacancyById(id, tenantId);
 
         // 1. Obtener postulaciones para borrar sus archivos subidos (CVs en PDF)
         const applications = await recruitmentRepository.getApplications({ vacancyId: id });
@@ -89,6 +111,7 @@ export const recruitmentService = {
 
         // 3. Registrar auditoría
         auditRepository.createLog({
+            tenantId: vacancy.tenantId || tenantId,
             entity: 'JobVacancy',
             entityId: id,
             action: 'DELETE',
@@ -102,6 +125,11 @@ export const recruitmentService = {
     async applyToVacancy(id, applicantData, resumeUrl) {
         if (!resumeUrl) {
             throw new Error("El CV es obligatorio (PDF)");
+        }
+
+        const vacancy = await recruitmentRepository.getVacancyById(id);
+        if (!vacancy || vacancy.status !== 'OPEN') {
+            throw new Error("La vacante no existe o ya no se encuentra abierta para postulaciones.");
         }
 
         const { email } = applicantData;
@@ -122,30 +150,42 @@ export const recruitmentService = {
         });
     },
 
-    async getApplicationsByVacancy(vacancyId) {
+    async getApplicationsByVacancy(vacancyId, tenantId = null) {
+        await this.getVacancyById(vacancyId, tenantId);
         return recruitmentRepository.getApplications(
             { vacancyId },
             { notes: true }
         );
     },
 
-    async getApplicationDetails(id) {
+    async getApplicationDetails(id, tenantId = null) {
         const application = await recruitmentRepository.getApplicationById(id, {
-            vacancy: true,
+            vacancy: {
+                include: {
+                    tenant: { select: { id: true, name: true, slug: true } }
+                }
+            },
             notes: { orderBy: { createdAt: 'desc' } },
             interviews: { orderBy: { date: 'asc' } },
             evaluations: { include: { evaluator: { select: { firstName: true, lastName: true } } } }
         });
 
         if (!application) throw new Error("Postulación no encontrada");
+
+        if (tenantId && application.vacancy?.tenantId && application.vacancy.tenantId !== tenantId) {
+            throw new Error("Acceso denegado: La postulación no pertenece a la empresa activa.");
+        }
+
         return application;
     },
 
-    async updateApplicationStatus(id, status, sendEmail = true) {
+    async updateApplicationStatus(id, status, sendEmail = true, tenantId = null) {
+        await this.getApplicationDetails(id, tenantId);
         const application = await recruitmentRepository.updateApplication(id, { status });
 
         // Audit Log
         auditRepository.createLog({
+            tenantId: tenantId || null,
             entity: 'JobApplication',
             entityId: id,
             action: 'UPDATE',
@@ -168,11 +208,8 @@ export const recruitmentService = {
         return application;
     },
 
-    async deleteCandidate(id) {
-        const application = await recruitmentRepository.getApplicationById(id);
-        if (!application) {
-            throw new Error("Postulación no encontrada");
-        }
+    async deleteCandidate(id, tenantId = null) {
+        const application = await this.getApplicationDetails(id, tenantId);
 
         if (application.resumeUrl) {
             await deleteFileFromStorage(application.resumeUrl).catch(err => console.error("Error eliminando CV del candidato:", err));
@@ -181,6 +218,7 @@ export const recruitmentService = {
         await recruitmentRepository.deleteApplication(id);
 
         auditRepository.createLog({
+            tenantId: tenantId || application.vacancy?.tenantId || null,
             entity: 'JobApplication',
             entityId: id,
             action: 'DELETE',
@@ -191,7 +229,8 @@ export const recruitmentService = {
         return { success: true, message: "Candidato eliminado exitosamente" };
     },
 
-    async addNote(applicationId, content, userId, userName) {
+    async addNote(applicationId, content, userId, userName, tenantId = null) {
+        await this.getApplicationDetails(applicationId, tenantId);
         return recruitmentRepository.createNote({
             applicationId,
             content,
@@ -200,7 +239,8 @@ export const recruitmentService = {
         });
     },
 
-    async scheduleInterview(applicationId, interviewData, interviewerId) {
+    async scheduleInterview(applicationId, interviewData, interviewerId, tenantId = null) {
+        await this.getApplicationDetails(applicationId, tenantId);
         const { date, type, location, notes } = interviewData;
 
         return recruitmentRepository.executeTransaction(async (tx) => {
@@ -224,7 +264,8 @@ export const recruitmentService = {
         });
     },
 
-    async evaluateCandidate(applicationId, evaluationData, evaluatorId) {
+    async evaluateCandidate(applicationId, evaluationData, evaluatorId, tenantId = null) {
+        await this.getApplicationDetails(applicationId, tenantId);
         return recruitmentRepository.createEvaluation({
             ...evaluationData,
             applicationId,
@@ -232,14 +273,14 @@ export const recruitmentService = {
         });
     },
 
-    async hireCandidate(applicationId, hireData) {
+    async hireCandidate(applicationId, hireData, tenantId = null) {
         const {
             identityCard, birthDate, address, civilStatus,
             contractType, salary, startDate, closeVacancy, password
         } = hireData;
 
-        const application = await recruitmentRepository.getApplicationById(applicationId, { vacancy: true });
-        if (!application) throw new Error("Postulación no encontrada");
+        const application = await this.getApplicationDetails(applicationId, tenantId);
+        const candidateTenantId = application.vacancy?.tenantId || tenantId;
 
         // Validar mayoría de edad (18 años)
         const birth = new Date(birthDate);
@@ -261,13 +302,14 @@ export const recruitmentService = {
                 data: { status: 'HIRED' }
             });
 
-            // 2. Create Employee
+            // 2. Create Employee WITH TENANT ID (CRITICAL FOR MULTI-TENANCY ISOLATION)
             if (!password || password.length < 8) {
                 throw new Error("La contraseña es obligatoria y debe tener al menos 8 caracteres.");
             }
             const hashedPassword = await bcrypt.hash(password, 10);
             const newEmployee = await tx.employee.create({
                 data: {
+                    tenantId: candidateTenantId,
                     firstName: application.firstName,
                     lastName: application.lastName,
                     email: application.email,
@@ -280,13 +322,13 @@ export const recruitmentService = {
                     civilStatus,
                     contractType,
                     hireDate: new Date(startDate),
-                    salary: `ENC:${salary}`, // Mock encryption (kept for compatibility with legacy systems)
+                    salary: `ENC:${salary}`,
                     password: hashedPassword,
                     role: 'employee'
                 }
             });
 
-            // 3. Create initial Contract (Critical for payroll system)
+            // 3. Create initial Contract
             await tx.contract.create({
                 data: {
                     employeeId: newEmployee.id,
@@ -306,8 +348,9 @@ export const recruitmentService = {
                 });
             }
 
-            // 5. Audit Log (Inside transaction to ensure atomicity with hiring)
+            // 5. Audit Log (Inside transaction to ensure atomicity)
             await auditRepository.createLog({
+                tenantId: candidateTenantId,
                 entity: 'Employee',
                 entityId: newEmployee.id,
                 action: 'CREATE',
@@ -317,7 +360,7 @@ export const recruitmentService = {
 
             return newEmployee;
         }).then(async (newEmployee) => {
-            // Enviar email de bienvenida fuera de la transacción para no bloquearla
+            // Enviar email de bienvenida fuera de la transacción
             const shouldSendEmail = hireData.sendEmail !== undefined ? hireData.sendEmail : true;
             if (shouldSendEmail) {
                 try {
