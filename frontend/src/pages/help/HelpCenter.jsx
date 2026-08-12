@@ -1,31 +1,31 @@
 import React, { useState, useMemo } from 'react';
 import {
     FiBook, FiUser, FiShield, FiCalendar,
-    FiDollarSign, FiSearch, FiChevronDown, FiChevronUp,
+    FiDollarSign, FiSearch, FiChevronDown,
     FiClock, FiBriefcase, FiBarChart2, FiActivity, FiTarget,
-    FiExternalLink, FiHelpCircle, FiArrowRight, FiUsers,
+    FiHelpCircle, FiArrowRight, FiUsers,
     FiGift, FiFileText, FiTrendingUp
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const HelpSection = ({ title, icon: Icon, children, isOpen, onToggle }) => (
-    <div className="border border-slate-200 rounded-xl overflow-hidden mb-4 shadow-sm bg-white hover:border-indigo-200 transition-colors">
+    <div className="border border-gray-200 rounded bg-white hover:border-gray-300 transition-colors mb-2.5 overflow-hidden">
         <button
             onClick={onToggle}
-            className="w-full flex items-center justify-between p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors"
+            className="w-full flex items-center justify-between p-3 bg-gray-50/50 hover:bg-gray-50 transition-colors text-left"
         >
-            <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-white text-indigo-600 rounded-lg shadow-sm border border-slate-100">
-                    <Icon size={22} />
+            <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-white text-blue-600 rounded border border-gray-200 shrink-0">
+                    <Icon size={16} />
                 </div>
-                <span className="font-bold text-slate-700 text-lg text-left">{title}</span>
+                <span className="font-semibold text-gray-900 text-xs">{title}</span>
             </div>
             <motion.div
                 animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-                className="text-slate-400"
+                transition={{ duration: 0.2 }}
+                className="text-gray-400"
             >
-                <FiChevronDown size={20} />
+                <FiChevronDown size={16} />
             </motion.div>
         </button>
         <AnimatePresence initial={false}>
@@ -34,9 +34,9 @@ const HelpSection = ({ title, icon: Icon, children, isOpen, onToggle }) => (
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
                 >
-                    <div className="p-5 text-slate-600 space-y-4 border-t border-slate-100 leading-relaxed">
+                    <div className="p-3.5 text-xs text-gray-700 space-y-2 border-t border-gray-100 leading-relaxed bg-white">
                         {children}
                     </div>
                 </motion.div>
@@ -70,15 +70,15 @@ const HelpCenter = () => {
         general: [
             {
                 id: 'g1',
-                title: 'Introducción a EMPLIFI',
+                title: 'Introducción a la Plataforma ERP',
                 icon: FiBriefcase,
                 content: (
                     <>
-                        <p><strong>EMPLIFI</strong> es un ecosistema integral de gestión de capital humano. Integra desde el control de asistencia básico hasta contabilidad avanzada y análisis preventivo (Análisis Predictivo).</p>
-                        <ul className="list-disc pl-5 space-y-2 mt-2">
-                            <li><strong>Interfaz Unificada:</strong> Un solo lugar para todas las gestiones administrativas.</li>
-                            <li><strong>Roles Dinámicos:</strong> Los permisos cambian lo que ves en la barra lateral.</li>
-                            <li><strong>Acceso 24/7:</strong> Disponible desde cualquier dispositivo con conexión a internet.</li>
+                        <p><strong>EMPLIFI</strong> es un ecosistema integral de gestión de capital humano y contabilidad operativa para PyMEs.</p>
+                        <ul className="list-disc pl-4 space-y-1 mt-1.5 text-gray-600">
+                            <li><strong>Interfaz Unificada:</strong> Un solo panel centralizado para todas las operaciones administrativas.</li>
+                            <li><strong>Permisos por Rol:</strong> Los menús y funciones se ajustan según tu perfil asignado.</li>
+                            <li><strong>Acceso Web:</strong> Disponible 24/7 desde cualquier navegador.</li>
                         </ul>
                     </>
                 )
@@ -90,10 +90,10 @@ const HelpCenter = () => {
                 content: (
                     <>
                         <p>Garantizamos la integridad de la información sensible del personal:</p>
-                        <ul className="list-disc pl-5 space-y-2 mt-2">
-                            <li><strong>Encriptación:</strong> Datos bancarios y de nómina protegidos.</li>
-                            <li><strong>Geolocalización:</strong> Opcional en marcaciones para validar la presencia en sitio.</li>
-                            <li><strong>Prevención de Fraude:</strong> Detección automática de intentos de marcación vía VPN o cambio de hora manual.</li>
+                        <ul className="list-disc pl-4 space-y-1 mt-1.5 text-gray-600">
+                            <li><strong>Encriptación:</strong> Datos bancarios y de nómina protegidos con estándares AES-256.</li>
+                            <li><strong>Validación Geográfica:</strong> Marcaciones de asistencia verificadas en ubicación autorizada.</li>
+                            <li><strong>Auditoría Forense:</strong> Registro inmutable de cada transacción e inicio de sesión.</li>
                         </ul>
                     </>
                 )
@@ -102,81 +102,50 @@ const HelpCenter = () => {
         employee: [
             {
                 id: 'e1',
-                title: 'Ciclo de Asistencia Diaria',
+                title: 'Registro de Asistencia Diaria',
                 icon: FiClock,
                 content: (
                     <>
-                        <p>Registra tu entrada y salida con un solo clic. El sistema calcula automáticamente:</p>
-                        <ul className="list-disc pl-5 space-y-1 mt-2">
-                            <li>Horas laboradas totales.</li>
-                            <li>Atrasos y entradas anticipadas.</li>
-                            <li>Horas extras (sujeto a aprobación administrativa).</li>
+                        <p>Registra tu jornada laboral de forma rápida:</p>
+                        <ul className="list-disc pl-4 space-y-1 mt-1.5 text-gray-600">
+                            <li>Cálculo automático de horas trabajadas y atrasos.</li>
+                            <li>Sincronización en tiempo real con el panel de administración.</li>
                         </ul>
                     </>
                 )
             },
             {
                 id: 'e2',
-                title: 'Gestión de Permisos y Vacaciones',
+                title: 'Solicitud de Permisos y Vacaciones',
                 icon: FiCalendar,
                 content: (
-                    <>
-                        <p>Solicita tiempo libre de forma digital:</p>
-                        <ol className="list-decimal pl-5 space-y-2 mt-2">
-                            <li>Indica el tipo de permiso (Enfermedad, Calamidad, etc).</li>
-                            <li>Selecciona el rango de fechas.</li>
-                            <li>Adjunta justificantes médicos o fotos de respaldo.</li>
-                            <li>Recibe notificaciones cuando el administrador apruebe o rechace.</li>
-                        </ol>
-                    </>
+                    <p>Gestiona solicitudes de vacaciones o justificantes médicos desde tu portal de empleado adjuntando comprobantes digitales.</p>
                 )
             },
             {
                 id: 'e3',
-                title: 'Roles de Pago y Certificados',
+                title: 'Consulta de Roles de Pago',
                 icon: FiDollarSign,
                 content: (
-                    <p>Accede a tus comprobantes de pago de los últimos 12 meses. Puedes descargar el PDF oficial para trámites externos o verificar el desglose de tus beneficios sociales.</p>
+                    <p>Visualiza y descarga tus comprobantes de pago de nómina con desglose de sueldo base, bonos e impositivos.</p>
                 )
             }
         ],
         management: [
             {
                 id: 'm1',
-                title: 'Administración de Expedientes',
+                title: 'Administración de Expedientes de Empleados',
                 icon: FiUsers,
                 content: (
-                    <>
-                        <p>Control total sobre la información del colaborador:</p>
-                        <ul className="list-disc pl-5 space-y-2 mt-2">
-                            <li><strong>Contratos:</strong> Gestión de fechas de vencimiento y tipos de contrato.</li>
-                            <li><strong>Perfiles:</strong> Actualización de cargos, departamentos y líneas de reporte.</li>
-                            <li><strong>Carga Masiva:</strong> Importa empleados desde archivos CSV para puestas en marcha rápidas.</li>
-                        </ul>
-                    </>
+                    <p>Control de datos personales, cédulas, contratos laborales y distribución por departamento.</p>
                 )
             },
             {
                 id: 'm2',
-                title: 'Reclutamiento y Selección',
+                title: 'Reclutamiento y Vacantes',
                 icon: FiBriefcase,
                 content: (
-                    <>
-                        <p>Centraliza tus procesos de contratación:</p>
-                        <ul className="list-disc pl-5 space-y-2 mt-2">
-                            <li><strong>Vacantes:</strong> Crea publicaciones que se ven en el portal público de empleo.</li>
-                            <li><strong>Candidatos:</strong> Recibe currículums, califica perfiles y mueve a los aplicantes por las etapas del pipeline.</li>
-                            <li><strong>Onboarding:</strong> Convierte a un candidato seleccionado en empleado con un solo clic.</li>
-                        </ul>
-                    </>
-                )
-            },
-            {
-                id: 'm3',
-                title: 'Planificación de Turnos',
-                icon: FiClock,
-                content: (
-                    <p>Crea horarios rotativos, asigna descansos y gestiona turnos de noche. El sistema validará que no existan traslapes de horarios para el mismo empleado.</p>
+                    <p>Publicación de ofertas de trabajo, recepción de postulaciones y seguimiento de procesos de selección.</p>
                 )
             }
         ],
@@ -186,187 +155,116 @@ const HelpCenter = () => {
                 title: 'Generación Masiva de Nómina',
                 icon: FiActivity,
                 content: (
-                    <>
-                        <p>Automatiza el cálculo mensual o quincenal:</p>
-                        <ul className="list-disc pl-5 space-y-2 mt-2">
-                            <li>Sincronización automática de faltas y horas extras desde el módulo de asistencia.</li>
-                            <li>Cálculo de impuestos, aportes al seguro social y fondos de reserva.</li>
-                            <li>Generación de archivos bancarios para pagos masivos.</li>
-                        </ul>
-                    </>
+                    <p>Procesamiento mensual de salarios, cálculo de horas extras, retenciones de ley y exportación bancaria.</p>
                 )
             },
             {
                 id: 'f2',
-                title: 'Contabilidad e Integración Financiera',
+                title: 'Contabilidad e Integración de Asientos',
                 icon: FiDollarSign,
                 content: (
-                    <>
-                        <p>Conecta los gastos de personal con tu libro mayor:</p>
-                        <ul className="list-disc pl-5 space-y-2 mt-2">
-                            <li><strong>Plan de Cuentas:</strong> Personaliza cómo se mapean los rubros de nómina a cuentas contables.</li>
-                            <li><strong>Asientos Automáticos:</strong> Al cerrar la nómina, se genera el asiento de gasto y pasivo.</li>
-                            <li><strong>Centros de Costo:</strong> Distribuye el gasto salarial por departamentos o proyectos específicos.</li>
-                        </ul>
-                    </>
-                )
-            },
-            {
-                id: 'f3',
-                title: 'Beneficios y Descuentos',
-                icon: FiGift,
-                content: (
-                    <p>Gestiona bonos recurrentes, anticipos de sueldo, préstamos de oficina y deducciones externas (comisariatos, asociaciones).</p>
+                    <p>Plan de cuentas, contabilidad por partida doble, asientos automáticos y balance de comprobación de sumas y saldos.</p>
                 )
             }
         ],
         talent: [
             {
                 id: 't1',
-                title: 'Evaluaciones 360 y Desempeño',
+                title: 'Evaluaciones de Desempeño',
                 icon: FiTrendingUp,
                 content: (
-                    <>
-                        <p>Mide el crecimiento de tu equipo:</p>
-                        <ul className="list-disc pl-5 space-y-2 mt-2">
-                            <li><strong>Plantillas:</strong> Crea encuestas personalizadas por competencias o KPIs.</li>
-                            <li><strong>Ciclos:</strong> Configura evaluaciones anuales o trimestrales.</li>
-                            <li><strong>Feedback:</strong> Los empleados pueden ver sus resultados y comentarios de mejora.</li>
-                        </ul>
-                    </>
-                )
-            },
-            {
-                id: 't2',
-                title: 'Seguimiento de Objetivos (OKRs)',
-                icon: FiTarget,
-                content: (
-                    <p>Alinea las metas individuales con la visión de la empresa. Los empleados pueden actualizar el progreso de sus objetivos y los gerentes pueden monitorear el cumplimiento global.</p>
+                    <p>Creación de encuestas por competencias, métricas de cumplimiento y retroalimentación contínua.</p>
                 )
             }
         ],
         analytics: [
             {
                 id: 'a1',
-                title: 'Dashboards de Análisis Predictivo',
-                icon: FiActivity,
-                content: (
-                    <>
-                        <p>Utiliza datos para predecir tendencias:</p>
-                        <ul className="list-disc pl-5 space-y-2 mt-2">
-                            <li><strong>Predictor de Rotación:</strong> Identifica empleados con riesgo de renuncia basado en patrones de comportamiento.</li>
-                            <li><strong>Resumen Gerencial:</strong> Vista consolidada de costos, asistencia y productividad.</li>
-                        </ul>
-                    </>
-                )
-            },
-            {
-                id: 'a2',
-                title: 'Auditoría Forense y Logs',
+                title: 'Auditoría Global y Logs del Sistema',
                 icon: FiShield,
                 content: (
-                    <p>Cada cambio en el sistema queda registrado. Puedes ver quién modificó un salario, quién borró una marcación o quién aprobó un permiso, incluyendo su dirección IP y dispositivo.</p>
-                )
-            },
-            {
-                id: 'a3',
-                title: 'Reportes Personalizados',
-                icon: FiFileText,
-                content: (
-                    <p>Genera archivos Excel o PDF de cualquier módulo. Filtra por fechas, sucursales o cargos para obtener exactamente la información que necesitas.</p>
+                    <p>Historial inmutable de auditoría con dirección IP, timestamp y detalle de cambios por usuario.</p>
                 )
             }
         ]
     };
 
     const filteredSections = useMemo(() => {
-        if (!searchTerm) return helpData[activeTab];
+        if (!searchTerm) return helpData[activeTab] || [];
         
         const term = searchTerm.toLowerCase();
-        // Obtener todos los artículos de todas las categorías dinámicamente
         const allItems = Object.values(helpData).flat();
         return allItems.filter(item => 
-            item.title.toLowerCase().includes(term) || 
-            (typeof item.content === 'string' && item.content.toLowerCase().includes(term))
+            item.title.toLowerCase().includes(term)
         );
     }, [searchTerm, activeTab]);
 
     return (
-        <div className="min-h-screen bg-slate-50/30 p-4 md:p-8 animate-in fade-in duration-500">
-            <div className="max-w-5xl mx-auto">
-                <header className="mb-12 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-sm font-bold mb-4 border border-indigo-100 shadow-sm"
-                    >
-                        <FiHelpCircle />
-                        <span>CENTRO DE CONOCIMIENTO</span>
-                    </motion.div>
-                    <h1 className="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">
-                        ¿Cómo podemos <span className="text-indigo-600">ayudarte</span> hoy?
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Soporte · Documentación</p>
+                    <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                        <FiHelpCircle className="text-blue-600" /> Centro de Ayuda & Guías Operativas
                     </h1>
-                    <p className="text-slate-500 text-lg max-w-2xl mx-auto">
-                        Explora los manuales, guías y preguntas frecuentes para dominar todas las herramientas de <span className="font-bold text-slate-700">EMPLIFI</span>.
-                    </p>
+                    <p className="text-sm text-gray-500 mt-0.5">Manuales de uso, preguntas frecuentes y documentación técnica de la plataforma.</p>
+                </div>
+            </div>
 
-                    <div className="mt-10 relative max-w-2xl mx-auto">
-                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
-                            <FiSearch size={22} />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Busca por módulo o funcionalidad (ej. Nómina, Asistencia...)"
-                            className="w-full pl-14 pr-6 py-5 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-indigo-100/20 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-lg font-medium"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </header>
+            {/* Buscador */}
+            <div className="relative max-w-xl">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                <input
+                    type="text"
+                    placeholder="Buscar tema o guía operativa (ej. Nómina, Asistencia, Asientos...)"
+                    className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors placeholder-gray-400"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
 
-                <div className="flex flex-col md:flex-row gap-8">
-                    {/* Tabs / Navigation sidebar */}
-                    <nav className="md:w-64 space-y-2">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-4">CATEGORÍAS</p>
-                        {categories.map((cat) => {
-                            const Icon = cat.icon;
-                            const isActive = activeTab === cat.id && !searchTerm;
-                            return (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => {
-                                        setActiveTab(cat.id);
-                                        setSearchTerm('');
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group
-                                    ${isActive
-                                        ? 'bg-slate-900 text-white shadow-xs'
-                                        : 'text-slate-600 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200/60'
-                                    }`}
+            {/* Navegación por Categorías + Contenido */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                {/* Menú de categorías */}
+                <div className="space-y-1">
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">Categorías</p>
+                    {categories.map((cat) => {
+                        const Icon = cat.icon;
+                        const isActive = activeTab === cat.id && !searchTerm;
+                        return (
+                            <button
+                                key={cat.id}
+                                onClick={() => {
+                                    setActiveTab(cat.id);
+                                    setSearchTerm('');
+                                }}
+                                className={`w-full flex items-center gap-2 px-3 py-2 rounded text-xs font-medium transition-colors text-left cursor-pointer ${
+                                    isActive
+                                        ? 'bg-blue-50 text-blue-700 font-semibold'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
+                                }`}
                             >
-                                <Icon size={18} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'} />
+                                <Icon size={14} className={isActive ? 'text-blue-600' : 'text-gray-400'} />
                                 <span>{cat.label}</span>
                             </button>
                         );
                     })}
-                </nav>
+                </div>
 
-                <main className="flex-1">
-                    <div className="mb-6 flex items-center justify-between">
-                        <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                            {searchTerm ? (
-                                <>Resultados para <span className="text-slate-900 italic">"{searchTerm}"</span></>
-                            ) : (
-                                <>Contenido de {categories.find(c => c.id === activeTab)?.label}</>
-                            )}
+                {/* Lista de guías / artículos */}
+                <div className="md:col-span-3 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                        <h2 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {searchTerm ? `Resultados para "${searchTerm}"` : categories.find(c => c.id === activeTab)?.label}
                         </h2>
-                        <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full border border-slate-200/60">
-                            {filteredSections.length} Artículos
+                        <span className="text-[11px] font-mono text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded">
+                            {filteredSections.length} guías
                         </span>
                     </div>
 
                     {filteredSections.length > 0 ? (
-                        <div className="space-y-4">
+                        <div>
                             {filteredSections.map((item) => (
                                 <HelpSection
                                     key={item.id}
@@ -380,53 +278,31 @@ const HelpCenter = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-20 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                                <FiSearch className="text-slate-400" size={24} />
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-800">No encontramos lo que buscas</h3>
-                            <p className="text-slate-500 text-xs mt-1">Prueba con palabras clave más generales o navega por categorías.</p>
-                            <button 
-                                onClick={() => setSearchTerm('')}
-                                className="mt-4 text-slate-900 font-semibold text-xs hover:underline"
-                            >
-                                Ver todas las guías
-                            </button>
+                        <div className="py-12 text-center text-gray-400 text-xs bg-white rounded border border-gray-200">
+                            <p className="text-sm font-medium text-gray-700">Sin resultados</p>
+                            <p className="text-xs text-gray-400 mt-1">Prueba con otras palabras clave o selecciona una categoría.</p>
                         </div>
                     )}
 
-                    <div className="mt-8 p-6 bg-white border border-slate-200/80 rounded-2xl text-slate-900 shadow-xs relative overflow-hidden group">
-                        <div className="relative z-10">
-                            <h3 className="text-xl font-bold text-slate-900 mb-1">¿Aún tienes dudas?</h3>
-                            <p className="text-slate-500 text-xs mb-5 max-w-md leading-relaxed">Nuestro equipo de soporte técnico está disponible para ayudarte con cualquier inconveniente técnico o duda del sistema.</p>
-                            <div className="flex flex-wrap gap-4">
-                                <a 
-                                    href="https://wa.me/593969677280" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="app-button-primary"
-                                >
-                                    Hablar con Soporte <FiArrowRight />
-                                </a>
-                            </div>
+                    {/* Banner de contacto a soporte */}
+                    <div className="bg-white border border-gray-200 rounded p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-6">
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-900">¿Requiere asistencia técnica adicional?</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">El canal de atención a empresas está disponible para soporte operativo.</p>
                         </div>
+                        <a 
+                            href="https://wa.me/593969677280" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+                        >
+                            Contactar Soporte Técnico <FiArrowRight size={12} />
+                        </a>
                     </div>
-                </main>
-            </div>
-            
-            <footer className="mt-20 text-center pb-12 border-t border-slate-200 pt-8">
-                <p className="text-slate-400 text-sm font-medium">
-                    © {new Date().getFullYear()} Emplifi · Plataforma ERP para PYMEs
-                </p>
-                <div className="flex justify-center gap-6 mt-4">
-                    <a href="#" className="text-slate-400 hover:text-indigo-600 text-xs font-bold transition-colors">POLÍTICA DE PRIVACIDAD</a>
-                    <a href="#" className="text-slate-400 hover:text-indigo-600 text-xs font-bold transition-colors">TÉRMINOS DE SERVICIO</a>
-                    <a href="#" className="text-slate-400 hover:text-indigo-600 text-xs font-bold transition-colors">DOCUMENTACIÓN API</a>
                 </div>
-            </footer>
+            </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default HelpCenter;

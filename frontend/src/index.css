@@ -1,17 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light;
-  color: #1E293B;
-  background-color: #F8FAFC;
+  color: #111827;
+  background-color: #f9fafb;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,9 +23,9 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  background-color: #F8FAFC;
-  color: #0F172A;
+  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  background-color: #f9fafb;
+  color: #111827;
   overflow-x: hidden;
   letter-spacing: -0.011em;
 }
@@ -35,11 +35,11 @@ button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
-  color: #0f172a;
+  color: #111827;
 }
 
 input, select, textarea {
-  color: #0f172a;
+  color: #111827;
   background-color: #ffffff;
 }
 
@@ -50,20 +50,20 @@ input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 textarea:-webkit-autofill:hover,
 textarea:-webkit-autofill:focus {
-  -webkit-text-fill-color: #0f172a !important;
+  -webkit-text-fill-color: #111827 !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Fix focus ring outline artifacts */
 *:focus-visible {
-  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline: 2px solid rgba(37, 99, 235, 0.5);
   outline-offset: 1px;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar sobrio */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -72,7 +72,7 @@ textarea:-webkit-autofill:focus {
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -80,8 +80,14 @@ textarea:-webkit-autofill:focus {
 }
 
 ::selection {
-  background-color: #6366f1;
+  background-color: #2563eb;
   color: #ffffff;
+}
+
+/* Utilidad para cifras financieras y contables */
+.font-tabular {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 /* Utilidad para ocultar barras de scroll manteniendo funcionalidad táctil */
@@ -89,77 +95,105 @@ textarea:-webkit-autofill:focus {
   display: none;
 }
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE y Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Sistema de Componentes Clean White Theme */
+/* Sistema de Componentes ERP Empresarial (Holded / Xero / Linear) */
 @layer components {
   .app-page-container {
-    @apply min-h-screen bg-slate-50 text-slate-800 px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-7xl mx-auto;
+    @apply min-h-screen bg-gray-50 text-gray-900 px-4 sm:px-6 lg:px-8 py-5 space-y-5 max-w-7xl mx-auto;
   }
 
   .app-card {
-    @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-6 transition-all duration-200;
+    @apply bg-white rounded border border-gray-200 p-4 sm:p-5 transition-colors;
   }
 
   .app-card-hover {
-    @apply bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-slate-300 p-5 sm:p-6 transition-all duration-200;
+    @apply bg-white rounded border border-gray-200 hover:border-gray-300 p-4 sm:p-5 transition-colors;
   }
 
   .app-table-wrapper {
-    @apply w-full overflow-x-auto rounded-xl border border-slate-200/80 bg-white shadow-sm;
+    @apply w-full overflow-x-auto rounded border border-gray-200 bg-white;
   }
 
   .app-input {
-    @apply w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none;
+    @apply w-full px-3 py-1.5 bg-white border border-gray-200 rounded text-gray-800 text-xs focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors;
   }
 
   .app-button-primary {
-    @apply px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer;
+    @apply px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center justify-center gap-2 border border-blue-600;
   }
 
   .app-button-secondary {
-    @apply px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer;
+    @apply px-3.5 py-2 bg-white border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors inline-flex items-center justify-center gap-2 cursor-pointer;
+  }
+
+  .app-button-danger {
+    @apply px-3.5 py-2 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors inline-flex items-center justify-center gap-2 cursor-pointer;
+  }
+
+  .app-button-table {
+    @apply border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer;
   }
 
   .app-badge-neutral {
-    @apply px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full border border-slate-200 inline-flex items-center gap-1;
+    @apply px-2 py-0.5 bg-gray-100 text-gray-700 text-[11px] font-medium rounded border border-gray-200 inline-flex items-center gap-1;
   }
 
   .app-badge-success {
-    @apply px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200/80 inline-flex items-center gap-1;
+    @apply px-2 py-0.5 bg-green-50 text-green-800 text-[11px] font-medium rounded border border-green-200 inline-flex items-center gap-1;
   }
 
   .app-badge-warning {
-    @apply px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-200/80 inline-flex items-center gap-1;
+    @apply px-2 py-0.5 bg-amber-50 text-amber-800 text-[11px] font-medium rounded border border-amber-200 inline-flex items-center gap-1;
   }
 
   .app-badge-danger {
-    @apply px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-full border border-rose-200/80 inline-flex items-center gap-1;
+    @apply px-2 py-0.5 bg-red-50 text-red-800 text-[11px] font-medium rounded border border-red-200 inline-flex items-center gap-1;
   }
 
   .app-page-header {
-    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6;
+    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-200 mb-5;
   }
 
   .app-modal-overlay {
-    @apply fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto;
+    @apply fixed inset-0 z-50 bg-gray-900/50 flex items-center justify-center p-4 overflow-y-auto;
   }
 
   .app-modal-content {
-    @apply bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto relative;
+    @apply bg-white rounded border border-gray-200 shadow-xl max-w-xl w-full p-5 space-y-4 max-h-[85vh] overflow-y-auto relative;
   }
 
   .app-table {
-    @apply w-full text-left text-sm text-slate-700 border-collapse min-w-[600px];
+    @apply w-full text-left text-xs text-gray-700 border-collapse min-w-[600px];
   }
 
   .app-th {
-    @apply px-4 py-3 bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap;
+    @apply px-4 py-2.5 bg-gray-50/80 border-b border-gray-200 text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap;
   }
 
   .app-td {
-    @apply px-4 py-3 border-b border-slate-100 text-sm text-slate-700 whitespace-nowrap;
+    @apply px-4 py-2.5 border-b border-gray-100 text-xs text-gray-700 whitespace-nowrap;
+  }
+}
+
+/* Reglas Globales de Impresión Profesional ERP (@media print) */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print, header, nav, aside, button, .btn {
+    display: none !important;
+  }
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  th, td {
+    border: 1px solid #e5e7eb !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
   }
 }

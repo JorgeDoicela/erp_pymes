@@ -67,41 +67,42 @@ const EmployeeList = ({ token }) => {
     };
 
     return (
-        <div className="space-y-6">
-            <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Directorio de Empleados</h2>
-                    <p className="text-slate-500 text-sm">Gestiona la nómina y visualiza perfiles</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Recursos Humanos · Directorio</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Directorio de Empleados</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Gestiona el personal activo, cargos y expedientes.</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={handleExportCSV}
                         disabled={loading || employees.length === 0}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg shadow-sm hover:shadow-md transition-all text-sm font-medium"
+                        className="px-3.5 py-2 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
                     >
-                        <FiDownload size={16} />
-                        <span className="hidden sm:inline">Exportar CSV</span>
-                        <span className="sm:hidden">CSV</span>
+                        <FiDownload size={14} />
+                        <span>Exportar CSV</span>
                     </button>
                     <button
                         onClick={() => navigate('/admin/register-employee')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all text-sm font-medium flex items-center gap-2"
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer inline-flex items-center gap-1.5"
                     >
-                        <span>+</span> <span className="hidden sm:inline">Nuevo Colaborador</span><span className="sm:hidden">Nuevo</span>
+                        <span>+ Registrar Colaborador</span>
                     </button>
                     <button
                         onClick={() => navigate('/admin')}
-                        className="px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors text-sm font-medium"
+                        className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                     >
                         Volver
                     </button>
                 </div>
-            </header>
+            </div>
 
             {/* Search Bar */}
-            <div className="relative max-w-2xl">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="relative max-w-xl">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
@@ -110,84 +111,75 @@ const EmployeeList = ({ token }) => {
                     placeholder="Buscar por nombre, cédula o ID..."
                     value={searchTerm}
                     onChange={handleSearch}
-                    className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors placeholder-gray-400"
                 />
             </div>
 
             {successMsg && (
-                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 flex justify-between items-center animate-fade-in-down shadow-sm">
-                    <div className="flex items-center gap-3">
-                        <div className="p-1 bg-emerald-100 rounded-full">
-                            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                        </div>
-                        <span className="font-medium">{successMsg}</span>
-                    </div>
-                    <button onClick={() => setSuccessMsg('')} className="text-emerald-500 hover:text-emerald-800 transition-colors">×</button>
+                <div className="p-3 bg-green-50 border border-green-200 rounded text-xs text-green-800 flex justify-between items-center">
+                    <span className="font-medium">{successMsg}</span>
+                    <button onClick={() => setSuccessMsg('')} className="text-green-700 hover:text-green-900">×</button>
                 </div>
             )}
 
             {error && (
-                <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-700 shadow-sm">
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800">
                     {error}
                 </div>
             )}
 
             {loading ? (
-                <div className="text-center py-20">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <div className="text-slate-400 text-sm font-medium">Cargando directorio...</div>
+                <div className="text-center py-16">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+                    <div className="text-gray-400 text-xs font-medium">Cargando directorio de empleados...</div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {employees.length > 0 ? (
                         employees.map((emp) => (
-                            <div key={emp.id} className="bg-white rounded-xl border border-slate-200 p-6 hover:border-blue-300 hover:shadow-lg transition-all group duration-300">
-                                <div className="flex items-start justify-between mb-5">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center font-bold text-lg text-blue-700 shadow-sm border border-blue-50">
-                                        {emp.firstName[0]}
+                            <div key={emp.id} className="bg-white rounded border border-gray-200 p-4 hover:border-gray-300 transition-colors">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="w-9 h-9 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center font-mono font-semibold text-xs shrink-0">
+                                        {emp.firstName?.[0] || 'E'}
                                     </div>
-                                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${emp.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                                    <span className={`text-[11px] px-2 py-0.5 rounded font-medium border ${emp.role === 'admin' ? 'bg-purple-50 text-purple-800 border-purple-200' : 'bg-blue-50 text-blue-800 border-blue-200'}`}>
                                         {emp.role === 'admin' ? 'Administrador' : 'Empleado'}
                                     </span>
                                 </div>
 
-                                <div className="mb-4">
-                                    <h3 className="text-lg font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors truncate" title={`${emp.firstName} ${emp.lastName}`}>
+                                <div className="mb-3">
+                                    <h3 className="text-sm font-semibold text-gray-900 truncate" title={`${emp.firstName} ${emp.lastName}`}>
                                         {emp.firstName} {emp.lastName}
                                     </h3>
-                                    <p className="text-slate-500 text-sm truncate">{emp.position}</p>
-                                    <p className="text-slate-400 text-xs mt-0.5">{emp.department}</p>
+                                    <p className="text-xs text-gray-500 truncate">{emp.position}</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">{emp.department}</p>
                                 </div>
 
-                                <div className="space-y-2.5 text-sm text-slate-500 mb-6 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <div className="space-y-1.5 text-xs text-gray-600 mb-4 bg-gray-50 p-2.5 rounded border border-gray-100">
                                     <p className="flex items-center gap-2 truncate" title={emp.email}>
-                                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                        <span className="truncate">{emp.email}</span>
+                                        <span className="text-gray-400">Email:</span>
+                                        <span className="truncate text-gray-800 font-mono">{emp.email}</span>
                                     </p>
-                                    <p className="flex items-center gap-2 text-sm text-slate-500">
-                                        <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
-                                        <span className="text-slate-400">ID:</span>
-                                        <MaskedText value={emp.identityCard} label="cédula" />
+                                    <p className="flex items-center gap-2 text-xs text-gray-600">
+                                        <span className="text-gray-400">Cédula:</span>
+                                        <span className="font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                            <MaskedText value={emp.identityCard} label="cédula" />
+                                        </span>
                                     </p>
                                 </div>
 
                                 <button
                                     onClick={() => navigate(`/admin/employees/${emp.id}`)}
-                                    className="w-full py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-1.5 rounded bg-white border border-gray-200 text-gray-700 text-xs font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                                 >
-                                    Ver Perfil Completo
+                                    Ver Expediente Completo
                                 </button>
                             </div>
                         ))
                     ) : (
-                        <div className="col-span-full py-16 text-center">
-                            <div className="bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 p-12 max-w-lg mx-auto">
-                                <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                                    <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                                </div>
-                                <h3 className="text-lg font-medium text-slate-900">No se encontraron empleados</h3>
-                                <p className="text-slate-500 mt-1">Intenta con otros términos de búsqueda o agrega un nuevo colaborador.</p>
-                            </div>
+                        <div className="col-span-full py-12 text-center text-gray-400 text-xs">
+                            <p className="text-sm font-medium text-gray-700">No se encontraron empleados</p>
+                            <p className="text-xs text-gray-400 mt-1">Intenta con otros términos de búsqueda o registra un nuevo colaborador.</p>
                         </div>
                     )}
                 </div>

@@ -1,5 +1,7 @@
 import prisma from '../../database/db.js';
 import { runWithTenant } from '../../database/tenantContext.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 /**
  * SuperAdmin Controller - Backoffice de la Plataforma EMPLIFI
@@ -415,9 +417,6 @@ export const getGlobalAuditLogs = async (req, res) => {
 /**
  * Alta Directa de Tenant desde Backoffice SuperAdmin
  */
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-
 export const createTenantBySuperAdmin = async (req, res) => {
     try {
         return runWithTenant(null, async () => {

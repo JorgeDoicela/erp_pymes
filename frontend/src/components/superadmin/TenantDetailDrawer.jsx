@@ -2,31 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../api/axios.js';
 import toast from 'react-hot-toast';
-import { 
-    FiX, FiShield, FiUser, FiMail, FiPhone, FiCalendar, 
-    FiLayers, FiUsers, FiClock, FiCheckCircle, FiAlertTriangle, FiPlusCircle, FiActivity
-} from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 
 const PLAN_LIMITS = {
     ESSENTIAL: 25,
     GROWTH: 100,
     ENTERPRISE: 500
-};
-
-const getAvatarGradient = (name) => {
-    const gradients = [
-        'from-blue-600 to-indigo-600',
-        'from-emerald-600 to-teal-600',
-        'from-violet-600 to-purple-600',
-        'from-amber-500 to-orange-600',
-        'from-rose-600 to-pink-600',
-        'from-cyan-600 to-blue-700'
-    ];
-    let hash = 0;
-    for (let i = 0; i < (name?.length || 0); i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return gradients[Math.abs(hash) % gradients.length];
 };
 
 export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefresh }) {
@@ -49,9 +30,7 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
     };
 
     useEffect(() => {
-        if (isOpen && tenantId) {
-            fetchDetail();
-        }
+        if (isOpen && tenantId) fetchDetail();
     }, [isOpen, tenantId]);
 
     const handleStatusChange = async (newStatus, extendDays = 0) => {
@@ -90,185 +69,174 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
     const maxCapacity = tenant ? (PLAN_LIMITS[tenant.plan] || tenant.maxEmployees || 25) : 25;
     const usagePercentage = tenant ? Math.min(Math.round(((tenant.employeeCount || 0) / maxCapacity) * 100), 100) : 0;
 
+    const statusStyle = (status) => {
+        if (status === 'ACTIVE') return 'bg-green-50 text-green-800 border-green-200';
+        if (status === 'TRIAL') return 'bg-amber-50 text-amber-800 border-amber-200';
+        if (status === 'SUSPENDED') return 'bg-red-50 text-red-800 border-red-200';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Backdrop overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 transition-opacity"
+                        className="fixed inset-0 bg-gray-900/50 z-50"
                     />
 
-                    {/* Drawer Panel */}
                     <motion.aside
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                        className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col border-l border-slate-200 overflow-hidden"
+                        className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-50 flex flex-col border-l border-gray-200 overflow-hidden"
                     >
-                        {/* Header */}
-                        <div className="p-4 sm:p-6 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 gap-3">
+                        {/* Header del Drawer */}
+                        <div className="px-5 py-4 bg-white border-b border-gray-200 flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3 min-w-0">
-                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${getAvatarGradient(tenant?.name || 'Empresa')} flex items-center justify-center font-bold text-base sm:text-lg text-white shadow-md border border-white/20 shrink-0`}>
-                                    {tenant?.name?.substring(0, 2).toUpperCase() || 'EM'}
+                                <div className="w-9 h-9 bg-gray-100 border border-gray-200 rounded flex items-center justify-center font-mono font-semibold text-gray-700 text-sm shrink-0">
+                                    {tenant?.name?.substring(0, 2).toUpperCase() || '--'}
                                 </div>
                                 <div className="min-w-0">
-                                    <h2 className="font-bold text-base sm:text-lg text-white leading-tight truncate">{tenant?.name || 'Cargando...'}</h2>
-                                    <p className="text-xs text-indigo-300 font-mono truncate">/{tenant?.slug || 'slug'}</p>
+                                    <h2 className="font-semibold text-base text-gray-900 leading-tight truncate">{tenant?.name || 'Cargando...'}</h2>
+                                    <p className="text-xs text-gray-400 font-mono truncate">/{tenant?.slug || 'slug'}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
+                                className="p-1.5 text-gray-400 hover:text-gray-700 rounded hover:bg-gray-100 transition-colors shrink-0 cursor-pointer"
                             >
-                                <FiX className="text-xl" />
+                                <FiX className="w-4 h-4" />
                             </button>
                         </div>
 
-                        {/* Content Body */}
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
+                        {/* Contenido */}
+                        <div className="flex-1 overflow-y-auto">
                             {loading ? (
-                                <div className="py-20 flex flex-col items-center justify-center text-slate-400 gap-3">
-                                    <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                                    <span className="text-sm font-medium">Obteniendo expediente completo...</span>
+                                <div className="py-20 flex items-center justify-center text-gray-400 text-sm">
+                                    Obteniendo expediente...
                                 </div>
                             ) : tenant ? (
-                                <>
-                                    {/* Status & Plan Quick Banner */}
-                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
-                                        <div>
-                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Estado de Suscripción</p>
-                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-1 shadow-xs
-                                                ${tenant.subscriptionStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                                                  tenant.subscriptionStatus === 'TRIAL' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                                                  tenant.subscriptionStatus === 'SUSPENDED' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-slate-200 text-slate-700'}`}
-                                            >
-                                                {tenant.subscriptionStatus === 'ACTIVE' && <FiCheckCircle />}
-                                                {tenant.subscriptionStatus === 'TRIAL' && <FiClock />}
-                                                {tenant.subscriptionStatus === 'SUSPENDED' && <FiAlertTriangle />}
-                                                {tenant.subscriptionStatus}
-                                            </span>
-                                        </div>
+                                <div className="divide-y divide-gray-100">
 
-                                        <div>
-                                            <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Plan Contratado</p>
-                                            <select
-                                                value={tenant.plan}
-                                                disabled={updating}
-                                                onChange={(e) => handlePlanChange(e.target.value)}
-                                                className="mt-1 w-full sm:w-auto px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-xs"
-                                            >
-                                                <option value="ESSENTIAL">ESSENTIAL ($1.50/emp)</option>
-                                                <option value="GROWTH">GROWTH ($3.00/emp)</option>
-                                                <option value="ENTERPRISE">ENTERPRISE ($5.00/emp)</option>
-                                            </select>
+                                    {/* Estado y Plan */}
+                                    <div className="px-5 py-4">
+                                        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Estado y Suscripción</p>
+                                        <div className="flex flex-col sm:flex-row gap-4">
+                                            <div className="flex-1">
+                                                <p className="text-[11px] text-gray-400 mb-1">Estado actual</p>
+                                                <span className={`inline-block px-2.5 py-0.5 border rounded text-xs font-mono font-semibold uppercase tracking-wide ${statusStyle(tenant.subscriptionStatus)}`}>
+                                                    {tenant.subscriptionStatus}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-[11px] text-gray-400 mb-1">Plan contratado</p>
+                                                <select
+                                                    value={tenant.plan}
+                                                    disabled={updating}
+                                                    onChange={(e) => handlePlanChange(e.target.value)}
+                                                    className="w-full px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono font-medium text-gray-800 focus:outline-none focus:border-blue-400 cursor-pointer"
+                                                >
+                                                    <option value="ESSENTIAL">ESSENTIAL · $1.50/emp</option>
+                                                    <option value="GROWTH">GROWTH · $3.00/emp</option>
+                                                    <option value="ENTERPRISE">ENTERPRISE · $5.00/emp</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Employee Capacity Bar */}
-                                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-                                        <div className="flex items-center justify-between text-xs font-semibold">
-                                            <span className="text-slate-600 flex items-center gap-1.5"><FiUsers className="text-indigo-600" /> Capacidad Colaboradores</span>
-                                            <span className="text-slate-900">{tenant.employeeCount} / {maxCapacity} emp.</span>
+                                    {/* Uso de Licencias */}
+                                    <div className="px-5 py-4">
+                                        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Capacidad de Licencias</p>
+                                        <div className="flex justify-between text-xs mb-1.5 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                            <span className="font-semibold text-gray-900">{tenant.employeeCount} empleados</span>
+                                            <span className="text-gray-400">/ {maxCapacity} máx.</span>
                                         </div>
-                                        <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                        <div className="w-full bg-gray-100 h-1.5 rounded-sm overflow-hidden">
                                             <div
-                                                className={`h-full transition-all duration-500 ${usagePercentage > 85 ? 'bg-rose-500' : usagePercentage > 60 ? 'bg-amber-500' : 'bg-indigo-600'}`}
+                                                className={`h-full transition-all duration-500 ${usagePercentage > 85 ? 'bg-red-500' : usagePercentage > 60 ? 'bg-amber-400' : 'bg-blue-500'}`}
                                                 style={{ width: `${usagePercentage}%` }}
                                             />
                                         </div>
-                                        <p className="text-xs text-slate-400 text-right">{usagePercentage}% de capacidad utilizada</p>
+                                        <p className="text-[11px] text-gray-400 text-right mt-1 font-mono">{usagePercentage}% utilizado</p>
                                     </div>
 
-                                    {/* Administrator Profile Card */}
-                                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                            <FiUser className="text-indigo-600" /> Administrador Titular
-                                        </h3>
+                                    {/* Administrador */}
+                                    <div className="px-5 py-4">
+                                        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Administrador Titular</p>
                                         {tenant.admin ? (
-                                            <div className="space-y-2 text-xs sm:text-sm">
-                                                <div className="flex items-center gap-2 text-slate-800 font-semibold">
-                                                    <FiUser className="text-slate-400 text-xs shrink-0" />
-                                                    <span className="truncate">{tenant.admin.firstName} {tenant.admin.lastName}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-slate-600 text-xs min-w-0">
-                                                    <FiMail className="text-slate-400 shrink-0" />
-                                                    <a href={`mailto:${tenant.admin.email}`} className="text-indigo-600 hover:underline truncate">{tenant.admin.email}</a>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-slate-600 text-xs">
-                                                    <FiPhone className="text-slate-400 shrink-0" />
-                                                    <span>{tenant.admin.phone || 'No registrado'}</span>
-                                                </div>
+                                            <div className="space-y-1.5 text-xs">
+                                                <p className="font-medium text-gray-900">{tenant.admin.firstName} {tenant.admin.lastName}</p>
+                                                <p className="text-gray-500">
+                                                    <a href={`mailto:${tenant.admin.email}`} className="text-blue-600 hover:text-blue-800">{tenant.admin.email}</a>
+                                                </p>
+                                                <p className="text-gray-500">{tenant.admin.phone || 'Teléfono no registrado'}</p>
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-slate-400 italic">No se encontró usuario administrador directo registrado.</p>
+                                            <p className="text-xs text-gray-400">No se encontró administrador registrado.</p>
                                         )}
                                     </div>
 
-                                    {/* Licensing & Key Metadata */}
-                                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
-                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                            <FiCalendar className="text-indigo-600" /> Fechas y Licenciamiento
-                                        </h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
+                                    {/* Fechas y Metadatos */}
+                                    <div className="px-5 py-4">
+                                        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Fechas y Licenciamiento</p>
+                                        <div className="grid grid-cols-2 gap-3 text-xs">
                                             <div>
-                                                <span className="text-slate-400">RUC Fiscal:</span>
-                                                <p className="font-mono text-slate-800 font-bold mt-0.5">{tenant.ruc || 'N/A'}</p>
+                                                <p className="text-gray-400">RUC Fiscal</p>
+                                                <p className="font-mono font-medium text-gray-800 mt-0.5">{tenant.ruc || '—'}</p>
                                             </div>
                                             <div>
-                                                <span className="text-slate-400">Fecha Registro:</span>
-                                                <p className="text-slate-800 font-medium mt-0.5">{new Date(tenant.createdAt).toLocaleDateString()}</p>
+                                                <p className="text-gray-400">Fecha de registro</p>
+                                                <p className="font-mono text-gray-800 mt-0.5">{new Date(tenant.createdAt).toLocaleDateString()}</p>
                                             </div>
                                             <div>
-                                                <span className="text-slate-400">Vigencia Trial:</span>
-                                                <p className="text-slate-800 font-medium mt-0.5">{tenant.trialEndsAt ? new Date(tenant.trialEndsAt).toLocaleDateString() : 'N/A'}</p>
+                                                <p className="text-gray-400">Vigencia trial</p>
+                                                <p className="font-mono text-gray-800 mt-0.5">{tenant.trialEndsAt ? new Date(tenant.trialEndsAt).toLocaleDateString() : '—'}</p>
                                             </div>
                                             <div>
-                                                <span className="text-slate-400">Vigencia Suscripción:</span>
-                                                <p className="text-slate-800 font-medium mt-0.5">{tenant.subscriptionEndsAt ? new Date(tenant.subscriptionEndsAt).toLocaleDateString() : 'Indefinida'}</p>
+                                                <p className="text-gray-400">Vigencia suscripción</p>
+                                                <p className="font-mono text-gray-800 mt-0.5">{tenant.subscriptionEndsAt ? new Date(tenant.subscriptionEndsAt).toLocaleDateString() : 'Indefinida'}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Action Buttons */}
-                                    <div className="pt-2 space-y-2">
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Acciones de Licencia</p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    {/* Acciones */}
+                                    <div className="px-5 py-4">
+                                        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Acciones de Licencia</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             {tenant.subscriptionStatus !== 'ACTIVE' && (
                                                 <button
                                                     onClick={() => handleStatusChange('ACTIVE')}
                                                     disabled={updating}
-                                                    className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                                    className="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
                                                 >
-                                                    <FiCheckCircle /> Activar Licencia
+                                                    Activar licencia
                                                 </button>
                                             )}
-
                                             <button
                                                 onClick={() => handleStatusChange(tenant.subscriptionStatus, 30)}
                                                 disabled={updating}
-                                                className="w-full py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                                className="py-2 px-4 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
                                             >
-                                                <FiPlusCircle /> Extender +30 Días
+                                                Extender +30 días
                                             </button>
-
                                             {tenant.subscriptionStatus !== 'SUSPENDED' && (
                                                 <button
                                                     onClick={() => handleStatusChange('SUSPENDED')}
                                                     disabled={updating}
-                                                    className="w-full py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 sm:col-span-2"
+                                                    className="py-2 px-4 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 sm:col-span-2"
                                                 >
-                                                    <FiAlertTriangle /> Suspender Empresa por Falta de Pago
+                                                    Suspender por falta de pago
                                                 </button>
                                             )}
                                         </div>
                                     </div>
-                                </>
+
+                                </div>
                             ) : null}
                         </div>
                     </motion.aside>

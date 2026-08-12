@@ -25,20 +25,20 @@ export default function ExecutiveKPIBanner({ financialImpact }) {
     };
 
     return (
-        <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/90 shadow-sm space-y-5">
+        <div className="bg-white rounded p-4 sm:p-5 border border-gray-200 space-y-4">
             {/* Header Limpio */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
                 <div className="min-w-0 flex-1">
-                    <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-snug break-words">
+                    <h2 className="text-sm sm:text-base font-semibold text-gray-900 tracking-tight leading-snug break-words">
                         Resumen Financiero y Retorno de Inversión (ROI)
                     </h2>
-                    <p className="text-xs text-slate-500 font-normal mt-0.5">Indicadores monetarios de retención y productividad</p>
+                    <p className="text-xs text-gray-500 font-normal mt-0.5">Indicadores monetarios de retención y productividad</p>
                 </div>
-                <div className="bg-slate-50 border border-slate-200/80 p-3 sm:px-3.5 sm:py-2 rounded-xl flex items-center gap-2.5 w-full sm:w-auto shrink-0 justify-between sm:justify-start min-w-0">
-                    <FiTrendingUp className="w-4 h-4 text-indigo-600 shrink-0" />
+                <div className="bg-gray-50 border border-gray-200 p-2.5 rounded flex items-center gap-2.5 w-full sm:w-auto shrink-0 justify-between sm:justify-start min-w-0">
+                    <FiTrendingUp className="w-4 h-4 text-blue-600 shrink-0" />
                     <div className="min-w-0">
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block truncate">OPORTUNIDAD DE AHORRO NETO</span>
-                        <span className="text-base font-extrabold text-slate-900 block truncate">{formatCurrency(data.totalFinancialOpportunity)}</span>
+                        <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider block truncate">OPORTUNIDAD DE AHORRO NETO</span>
+                        <span className="text-sm font-semibold text-gray-900 font-mono block truncate" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{formatCurrency(data.totalFinancialOpportunity)}</span>
                     </div>
                 </div>
             </div>

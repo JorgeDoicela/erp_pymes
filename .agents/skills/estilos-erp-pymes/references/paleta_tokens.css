@@ -1,0 +1,157 @@
+/* ==========================================================================
+   ERP PYME - SISTEMA DE DISEÑO Y TOKENS CSS (LIGHT & DARK MODE)
+   ========================================================================== */
+
+/* Importación de Fuentes Recomendadas (Optimizado para Legibilidad) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap');
+
+:root {
+  /* --- Tipografía y Fuentes --- */
+  --font-family-base: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-family-numeric: 'Inter', 'JetBrains Mono', monospace;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Escala Tipográfica (Rem Scale) */
+  --fs-2xs: 0.6875rem; /* 11px - Fechas y Badges diminutos */
+  --fs-xs: 0.75rem;    /* 12px - Labels secundarios y captions */
+  --fs-sm: 0.875rem;   /* 14px - Filas de tabla, inputs, texto base general */
+  --fs-base: 1rem;     /* 16px - Títulos de sección, cards */
+  --fs-lg: 1.125rem;   /* 18px - Subtítulos */
+  --fs-xl: 1.25rem;    /* 20px - Títulos principales */
+  --fs-2xl: 1.5rem;    /* 24px - KPIs destacados */
+  --fs-3xl: 1.875rem;  /* 30px - Métricas del Dashboard */
+
+  /* --- Superficies y Fondos (Light Mode) --- */
+  --color-bg-app: hsl(220, 14%, 96%);
+  --color-bg-surface: hsl(0, 0%, 100%);
+  --color-bg-surface-hover: hsl(220, 14%, 94%);
+  --color-bg-surface-active: hsl(220, 14%, 90%);
+
+  /* --- Bordes y Divisores --- */
+  --color-border-subtle: hsl(220, 13%, 91%);
+  --color-border-strong: hsl(220, 13%, 80%);
+  --color-border-focus: hsl(224, 76%, 48%);
+
+  /* --- Textos --- */
+  --color-text-main: hsl(224, 71%, 4%);
+  --color-text-muted: hsl(220, 9%, 46%);
+  --color-text-disabled: hsl(220, 9%, 68%);
+  --color-text-inverse: hsl(0, 0%, 100%);
+
+  /* --- Módulos ERP (Colores Identificadores) --- */
+  --module-crm-ventas: hsl(160, 84%, 39%);      /* Emerald */
+  --module-crm-ventas-bg: hsl(160, 84%, 96%);
+  
+  --module-finanzas: hsl(224, 76%, 48%);        /* Indigo */
+  --module-finanzas-bg: hsl(224, 76%, 96%);
+  
+  --module-rrhh: hsl(262, 83%, 58%);            /* Violet */
+  --module-rrhh-bg: hsl(262, 83%, 96%);
+  
+  --module-inventario: hsl(38, 92%, 50%);       /* Amber */
+  --module-inventario-bg: hsl(38, 92%, 96%);
+  
+  --module-sistema: hsl(215, 16%, 47%);         /* Slate */
+  --module-sistema-bg: hsl(215, 16%, 96%);
+
+  /* --- Estados Semánticos (Badges & Alertas) --- */
+  --state-success: hsl(142, 71%, 45%);
+  --state-success-bg: hsl(142, 71%, 95%);
+  --state-success-text: hsl(142, 76%, 24%);
+
+  --state-info: hsl(217, 91%, 60%);
+  --state-info-bg: hsl(217, 91%, 95%);
+  --state-info-text: hsl(217, 91%, 28%);
+
+  --state-warning: hsl(38, 92%, 50%);
+  --state-warning-bg: hsl(38, 92%, 95%);
+  --state-warning-text: hsl(38, 92%, 26%);
+
+  --state-danger: hsl(0, 84%, 60%);
+  --state-danger-bg: hsl(0, 84%, 96%);
+  --state-danger-text: hsl(0, 84%, 32%);
+
+  /* --- Sombras / Elevación --- */
+  --shadow-elevation-low: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-elevation-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-elevation-high: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-elevation-overlay: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* --- Radio de Bordes --- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* --- Transiciones --- */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Soporte de Dark Mode (Clase .dark o prefers-color-scheme) --- */
+.dark, [data-theme='dark'] {
+  --color-bg-app: hsl(224, 71%, 4%);
+  --color-bg-surface: hsl(224, 71%, 7%);
+  --color-bg-surface-hover: hsl(220, 13%, 12%);
+  --color-bg-surface-active: hsl(220, 13%, 16%);
+
+  --color-border-subtle: hsl(220, 13%, 18%);
+  --color-border-strong: hsl(220, 13%, 28%);
+
+  --color-text-main: hsl(210, 20%, 98%);
+  --color-text-muted: hsl(217, 10%, 65%);
+  --color-text-disabled: hsl(215, 14%, 40%);
+
+  --state-success-bg: hsl(142, 71%, 12%);
+  --state-success-text: hsl(142, 71%, 70%);
+
+  --state-info-bg: hsl(217, 91%, 14%);
+  --state-info-text: hsl(217, 91%, 75%);
+
+  --state-warning-bg: hsl(38, 92%, 12%);
+  --state-warning-text: hsl(38, 92%, 75%);
+
+  --state-danger-bg: hsl(0, 84%, 14%);
+  --state-danger-text: hsl(0, 84%, 75%);
+
+  --shadow-elevation-low: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-elevation-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-elevation-high: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Utilidades Tipográficas para Finanzas y Tablas --- */
+.font-tabular {
+  font-family: var(--font-family-numeric);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* --- Estilos de Impresión Profesional (@media print) --- */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print, .sidebar, .topbar, .erp-table-toolbar, .btn, .command-palette-backdrop {
+    display: none !important;
+  }
+  .printable-area {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  th, td {
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+  }
+}

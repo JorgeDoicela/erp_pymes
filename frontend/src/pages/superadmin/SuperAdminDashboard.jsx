@@ -2,11 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api/axios.js';
 import toast from 'react-hot-toast';
-import { 
-    FiShield, FiTrendingUp, FiCheckCircle, FiClock, FiAlertTriangle, 
-    FiUsers, FiPlusCircle, FiSearch, FiRefreshCw, FiChevronLeft, FiChevronRight,
-    FiEye, FiDollarSign, FiBarChart2, FiGrid, FiLayers, FiLogIn
-} from 'react-icons/fi';
+import { FiSearch, FiChevronLeft, FiChevronRight, FiLogIn, FiEye } from 'react-icons/fi';
 import TenantDetailDrawer from '../../components/superadmin/TenantDetailDrawer.jsx';
 import SuperAdminOverview from '../../components/superadmin/SuperAdminOverview.jsx';
 import SuperAdminMetricsView from '../../components/superadmin/SuperAdminMetricsView.jsx';
@@ -20,19 +16,7 @@ const PLAN_LIMITS = {
     ENTERPRISE: 500
 };
 
-const getAvatarGradient = (name) => {
-    const gradients = [
-        'from-slate-700 to-slate-900',
-        'from-blue-700 to-indigo-900',
-        'from-emerald-700 to-teal-900',
-        'from-indigo-800 to-slate-900'
-    ];
-    let hash = 0;
-    for (let i = 0; i < (name?.length || 0); i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return gradients[Math.abs(hash) % gradients.length];
-};
+
 
 export default function SuperAdminDashboard() {
     const location = useLocation();
@@ -45,6 +29,7 @@ export default function SuperAdminDashboard() {
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('ALL');
     const [updatingId, setUpdatingId] = useState(null);
+    const [density, setDensity] = useState('compact'); // 'compact' | 'comfortable' (Skill ERP PYME)
 
     // Modal & Drawer state
     const [selectedTenantId, setSelectedTenantId] = useState(null);
@@ -169,194 +154,196 @@ export default function SuperAdminDashboard() {
 
         // Default o '/superadmin/tenants': Vista completa de Gestión de Empresas
         return (
-            <div className="space-y-6">
-                {/* Header Directorio Empresas */}
-                <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-4">
+                {/* Toolbar Directorio */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-200">
                     <div>
-                        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                            Directorio Global de Empresas (Tenants)
-                        </h2>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                            Administra el estado de suscripción, plan contratado y capacidades de cada cliente.
-                        </p>
+                        <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Backoffice · Tenants</p>
+                        <h1 className="text-xl font-semibold text-gray-900">Directorio de Empresas</h1>
                     </div>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shrink-0"
                     >
-                        <FiPlusCircle className="w-4 h-4" /> Registrar Empresa
+                        Registrar empresa
                     </button>
                 </div>
 
-                {/* Filtros de Búsqueda y Estado */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-4">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="relative w-full md:w-96">
-                            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
-                            <input
-                                type="text"
-                                placeholder="Buscar por nombre, RUC o admin..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 text-slate-800 transition-all"
-                            />
-                        </div>
+                {/* Barra de Filtros */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="relative w-full sm:w-72">
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por empresa o RUC..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors"
+                        />
+                    </div>
 
-                        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+                    <div className="flex items-center gap-1 flex-wrap">
+                        {[
+                            { key: 'ALL', label: 'Todas', count: metrics?.totalTenants ?? 0 },
+                            { key: 'ACTIVE', label: 'Activas', count: metrics?.activeTenants ?? 0 },
+                            { key: 'TRIAL', label: 'En prueba', count: metrics?.trialTenants ?? 0 },
+                            { key: 'EXPIRING', label: 'Vencen pronto', count: metrics?.expiringTrialsCount ?? 0 },
+                            { key: 'SUSPENDED', label: 'Suspendidas', count: metrics?.suspendedTenants ?? 0 },
+                        ].map(tab => (
                             <button
-                                onClick={() => setActiveTab('ALL')}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ALL' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                                    activeTab === tab.key
+                                        ? 'bg-blue-600 text-white font-medium'
+                                        : 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900'
+                                }`}
                             >
-                                Todas ({metrics?.totalTenants ?? 0})
+                                {tab.label} <span className={activeTab === tab.key ? 'opacity-70' : 'text-gray-400'}>({tab.count})</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="ml-auto flex items-center gap-2">
+                        <span className="text-[11px] text-gray-400 font-medium hidden sm:block">Densidad:</span>
+                        <div className="inline-flex border border-gray-200 rounded overflow-hidden text-xs">
+                            <button
+                                onClick={() => setDensity('compact')}
+                                className={`px-2.5 py-1 transition-colors cursor-pointer ${
+                                    density === 'compact' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                                }`}
+                            >
+                                Compacta
                             </button>
                             <button
-                                onClick={() => setActiveTab('ACTIVE')}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'ACTIVE' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                onClick={() => setDensity('comfortable')}
+                                className={`px-2.5 py-1 border-l border-gray-200 transition-colors cursor-pointer ${
+                                    density === 'comfortable' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                                }`}
                             >
-                                Activas ({metrics?.activeTenants ?? 0})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('TRIAL')}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'TRIAL' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                            >
-                                En Trial ({metrics?.trialTenants ?? 0})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('EXPIRING')}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'EXPIRING' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                            >
-                                Vencen Pronto ({metrics?.expiringTrialsCount ?? 0})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('SUSPENDED')}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${activeTab === 'SUSPENDED' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                            >
-                                Suspendidas ({metrics?.suspendedTenants ?? 0})
+                                Cómoda
                             </button>
                         </div>
+                        <button
+                            onClick={() => window.print()}
+                            className="px-2.5 py-1 border border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-300 text-xs rounded transition-colors cursor-pointer hidden sm:block"
+                        >
+                            Imprimir
+                        </button>
                     </div>
                 </div>
 
-                {/* Tabla Escritorio / Tarjetas Móvil */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                {/* Tabla principal */}
+                <div className="bg-white border border-gray-200 rounded overflow-hidden">
                     {loading && tenants.length === 0 ? (
-                        <div className="p-12 text-center text-slate-400">
-                            <FiRefreshCw className="animate-spin text-3xl mx-auto mb-2 text-indigo-600" />
-                            <span className="text-sm font-medium">Cargando directorio de empresas...</span>
+                        <div className="p-12 text-center text-gray-400 text-sm">
+                            Cargando directorio...
                         </div>
                     ) : tenants.length === 0 ? (
-                        <div className="p-12 text-center text-slate-400">
-                            <FiAlertTriangle className="text-3xl mx-auto mb-2 text-amber-500" />
-                            <p className="text-sm font-medium text-slate-700">No se encontraron empresas contratantes.</p>
-                            <p className="text-xs text-slate-500 mt-1">Prueba con otros términos de búsqueda o filtros de estado.</p>
+                        <div className="p-12 text-center">
+                            <p className="text-sm font-medium text-gray-600">Sin resultados</p>
+                            <p className="text-xs text-gray-400 mt-1">Prueba con otros términos de búsqueda o filtros.</p>
                         </div>
                     ) : (
                         <>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full text-left border-collapse text-sm">
                                     <thead>
-                                        <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                            <th className="py-3.5 px-4">Empresa</th>
-                                            <th className="py-3.5 px-4">Administrador Primario</th>
-                                            <th className="py-3.5 px-4">Plan SaaS</th>
-                                            <th className="py-3.5 px-4">Uso de Licencias</th>
-                                            <th className="py-3.5 px-4">Estado Suscripción</th>
-                                            <th className="py-3.5 px-4 text-right">Acciones</th>
+                                        <tr className="bg-gray-50 border-b border-gray-200">
+                                            <th className={`${density === 'compact' ? 'py-2.5' : 'py-3.5'} px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider`}>Empresa</th>
+                                            <th className={`${density === 'compact' ? 'py-2.5' : 'py-3.5'} px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider`}>Administrador</th>
+                                            <th className={`${density === 'compact' ? 'py-2.5' : 'py-3.5'} px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider`}>Plan</th>
+                                            <th className={`${density === 'compact' ? 'py-2.5' : 'py-3.5'} px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider`}>Licencias</th>
+                                            <th className={`${density === 'compact' ? 'py-2.5' : 'py-3.5'} px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider`}>Estado</th>
+                                            <th className={`${density === 'compact' ? 'py-2.5' : 'py-3.5'} px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-right`}>Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 text-sm">
-                                        {tenants.map((t) => {
+                                    <tbody>
+                                        {tenants.map((t, idx) => {
                                             const maxCap = PLAN_LIMITS[t.plan] || t.maxEmployees || 25;
                                             const usagePct = Math.min(Math.round(((t.employeeCount || 0) / maxCap) * 100), 100);
 
                                             return (
-                                                <tr key={t.id} className="hover:bg-slate-50/60 transition-colors">
-                                                    <td className="py-3.5 px-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${getAvatarGradient(t.name)} flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-xs`}>
+                                                <tr key={t.id} className={`border-b border-gray-100 hover:bg-gray-50/60 transition-colors ${idx % 2 === 0 ? '' : 'bg-gray-50/30'}`}>
+                                                    <td className={`${density === 'compact' ? 'py-2.5' : 'py-4'} px-4`}>
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="w-7 h-7 bg-gray-100 border border-gray-200 rounded flex items-center justify-center font-mono font-semibold text-gray-700 text-xs shrink-0">
                                                                 {t.name.substring(0, 2).toUpperCase()}
                                                             </div>
                                                             <div>
-                                                                <p className="font-bold text-slate-900 leading-tight">{t.name}</p>
-                                                                <p className="text-xs text-slate-500 font-mono">RUC: {t.ruc || 'N/A'}</p>
+                                                                <p className="font-medium text-gray-900 text-sm leading-tight">{t.name}</p>
+                                                                <p className="text-[11px] text-gray-400 font-mono mt-0.5" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>RUC: {t.ruc || '—'}</p>
                                                             </div>
                                                         </div>
                                                     </td>
 
-                                                    <td className="py-3.5 px-4">
+                                                    <td className={`${density === 'compact' ? 'py-2.5' : 'py-4'} px-4`}>
                                                         {t.admin ? (
                                                             <div>
-                                                                <p className="font-medium text-slate-800 text-xs">{t.admin.firstName} {t.admin.lastName}</p>
-                                                                <p className="text-[11px] text-slate-500">{t.admin.email}</p>
+                                                                <p className="text-xs font-medium text-gray-800">{t.admin.firstName} {t.admin.lastName}</p>
+                                                                <p className="text-[11px] text-gray-400 font-mono mt-0.5">{t.admin.email}</p>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-xs text-slate-400 italic">No asignado</span>
+                                                            <span className="text-xs text-gray-400">No asignado</span>
                                                         )}
                                                     </td>
 
-                                                    <td className="py-3.5 px-4">
+                                                    <td className={`${density === 'compact' ? 'py-2.5' : 'py-4'} px-4`}>
                                                         <select
                                                             value={t.plan}
                                                             disabled={updatingId === t.id}
                                                             onChange={(e) => handleUpdatePlan(t.id, e.target.value)}
-                                                            className="text-xs font-semibold bg-slate-100 border border-slate-200 rounded-lg px-2 py-1 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                                                            className="text-xs font-mono font-medium bg-gray-50 border border-gray-200 rounded px-2 py-1 text-gray-700 focus:outline-none focus:border-gray-400 cursor-pointer"
                                                         >
-                                                            <option value="ESSENTIAL">ESSENTIAL (25 max)</option>
-                                                            <option value="GROWTH">GROWTH (100 max)</option>
-                                                            <option value="ENTERPRISE">ENTERPRISE (500 max)</option>
+                                                            <option value="ESSENTIAL">ESSENTIAL</option>
+                                                            <option value="GROWTH">GROWTH</option>
+                                                            <option value="ENTERPRISE">ENTERPRISE</option>
                                                         </select>
                                                     </td>
 
-                                                    <td className="py-3.5 px-4">
-                                                        <div className="w-36">
-                                                            <div className="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
-                                                                <span>{t.employeeCount || 0} emp</span>
-                                                                <span className="text-slate-400">/ {maxCap} max</span>
+                                                    <td className={`${density === 'compact' ? 'py-2.5' : 'py-4'} px-4`}>
+                                                        <div className="w-28">
+                                                            <div className="flex justify-between text-[11px] text-gray-500 mb-1 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                                                <span className="font-medium text-gray-800">{t.employeeCount || 0}</span>
+                                                                <span className="text-gray-400">/ {maxCap}</span>
                                                             </div>
-                                                            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                                                <div 
-                                                                    className={`h-full rounded-full ${usagePct > 90 ? 'bg-rose-500' : usagePct > 70 ? 'bg-amber-500' : 'bg-indigo-600'}`} 
+                                                            <div className="w-full bg-gray-100 h-1 rounded-sm overflow-hidden">
+                                                                <div
+                                                                    className={`h-full ${usagePct > 90 ? 'bg-red-600' : 'bg-gray-800'}`}
                                                                     style={{ width: `${usagePct}%` }}
-                                                                ></div>
+                                                                />
                                                             </div>
                                                         </div>
                                                     </td>
 
-                                                    <td className="py-3.5 px-4">
+                                                    <td className={`${density === 'compact' ? 'py-2.5' : 'py-4'} px-4`}>
                                                         <select
                                                             value={t.subscriptionStatus}
                                                             disabled={updatingId === t.id}
                                                             onChange={(e) => handleUpdateStatus(t.id, e.target.value)}
-                                                            className={`text-xs font-bold px-2.5 py-1 rounded-full border focus:outline-none cursor-pointer ${
-                                                                t.subscriptionStatus === 'ACTIVE' 
-                                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                                                                    : t.subscriptionStatus === 'TRIAL'
-                                                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                                                    : 'bg-rose-50 text-rose-700 border-rose-200'
-                                                            }`}
+                                                            className="text-[11px] font-mono font-medium px-2 py-1 bg-white border border-gray-200 text-gray-700 rounded focus:outline-none focus:border-gray-400 cursor-pointer uppercase tracking-wide"
                                                         >
-                                                            <option value="ACTIVE">ACTIVE (Activa)</option>
-                                                            <option value="TRIAL">TRIAL (Prueba)</option>
-                                                            <option value="SUSPENDED">SUSPENDED (Suspendida)</option>
-                                                            <option value="CANCELLED">CANCELLED (Cancelada)</option>
+                                                            <option value="ACTIVE">Activa</option>
+                                                            <option value="TRIAL">Prueba</option>
+                                                            <option value="SUSPENDED">Suspendida</option>
+                                                            <option value="CANCELLED">Cancelada</option>
                                                         </select>
                                                     </td>
 
-                                                    <td className="py-3.5 px-4 text-right">
-                                                        <div className="flex items-center justify-end gap-2">
+                                                    <td className={`${density === 'compact' ? 'py-2.5' : 'py-4'} px-4 text-right`}>
+                                                        <div className="flex items-center justify-end gap-1.5">
                                                             <button
                                                                 onClick={() => handleImpersonate(t.id, t.name)}
-                                                                title="Ingresar en Modo Soporte Auditado"
-                                                                className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold text-xs rounded-lg border border-amber-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                                                title="Modo Soporte"
+                                                                className="px-2.5 py-1 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 text-xs rounded transition-colors cursor-pointer"
                                                             >
-                                                                <FiLogIn className="w-3.5 h-3.5" /> Soporte
+                                                                Soporte
                                                             </button>
-
                                                             <button
                                                                 onClick={() => openTenantDrawer(t.id)}
-                                                                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                                                className="px-2.5 py-1 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 text-xs rounded transition-colors cursor-pointer"
                                                             >
-                                                                <FiEye className="w-3.5 h-3.5" /> Detalle
+                                                                Ver detalle
                                                             </button>
                                                         </div>
                                                     </td>
@@ -369,24 +356,24 @@ export default function SuperAdminDashboard() {
 
                             {/* Paginación */}
                             {pagination.totalPages > 1 && (
-                                <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                                    <p className="text-xs text-slate-500">
-                                        Página <span className="font-semibold text-slate-800">{pagination.page}</span> de <span className="font-semibold text-slate-800">{pagination.totalPages}</span> ({pagination.total} empresas)
+                                <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                    <p className="text-xs text-gray-500 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                        Página {pagination.page} de {pagination.totalPages} · {pagination.total} empresas
                                     </p>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1">
                                         <button
                                             disabled={pagination.page <= 1}
                                             onClick={() => handlePageChange(pagination.page - 1)}
-                                            className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors cursor-pointer"
+                                            className="p-1.5 border border-gray-200 rounded text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors cursor-pointer"
                                         >
-                                            <FiChevronLeft className="w-4 h-4" />
+                                            <FiChevronLeft className="w-3.5 h-3.5" />
                                         </button>
                                         <button
                                             disabled={pagination.page >= pagination.totalPages}
                                             onClick={() => handlePageChange(pagination.page + 1)}
-                                            className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors cursor-pointer"
+                                            className="p-1.5 border border-gray-200 rounded text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors cursor-pointer"
                                         >
-                                            <FiChevronRight className="w-4 h-4" />
+                                            <FiChevronRight className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 </div>
@@ -399,56 +386,36 @@ export default function SuperAdminDashboard() {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Nav Tabs SuperAdmin SaaS */}
-            <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-2 overflow-x-auto">
-                <button
-                    onClick={() => navigate('/superadmin/dashboard')}
-                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-                        currentPath === '/superadmin/dashboard'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                >
-                    <FiGrid className="w-4 h-4" /> Resumen General
-                </button>
-
-                <button
-                    onClick={() => navigate('/superadmin/tenants')}
-                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-                        currentPath === '/superadmin/tenants' || currentPath === '/superadmin'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                >
-                    <FiUsers className="w-4 h-4" /> Gestión de Empresas & Tenants
-                </button>
-
-                <button
-                    onClick={() => navigate('/superadmin/metrics')}
-                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-                        currentPath === '/superadmin/metrics'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                >
-                    <FiBarChart2 className="w-4 h-4" /> Analíticas & Métricas SaaS
-                </button>
-
-                <button
-                    onClick={() => navigate('/superadmin/audit')}
-                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-                        currentPath === '/superadmin/audit'
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                >
-                    <FiShield className="w-4 h-4" /> Auditoría Global
-                </button>
+        <div className="space-y-0">
+            {/* Nav Tabs ERP Empresarial */}
+            <div className="bg-white border-b border-gray-200 flex items-center overflow-x-auto px-6">
+                {[
+                    { path: '/superadmin/dashboard', label: 'Resumen' },
+                    { path: '/superadmin/tenants', label: 'Empresas', alt: '/superadmin' },
+                    { path: '/superadmin/metrics', label: 'Analíticas' },
+                    { path: '/superadmin/audit', label: 'Auditoría' },
+                ].map(tab => {
+                    const isActive = currentPath === tab.path || (tab.alt && currentPath === tab.alt);
+                    return (
+                        <button
+                            key={tab.path}
+                            onClick={() => navigate(tab.path)}
+                            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 cursor-pointer shrink-0 -mb-px ${
+                                isActive
+                                    ? 'border-gray-900 text-gray-900'
+                                    : 'border-transparent text-gray-500 hover:text-gray-800'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    );
+                })}
             </div>
+            <div className="px-6 py-6">
 
             {/* Contenido Dinámico de la Subvista */}
             {renderContent()}
+            </div>
 
             {/* Modal de Alta de Empresa Directa */}
             <SuperAdminCreateTenantModal

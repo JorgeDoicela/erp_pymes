@@ -67,43 +67,29 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
                 <main className="flex-1 p-3 sm:p-6 overflow-y-auto min-w-0 w-full">
                     <div className="max-w-7xl mx-auto w-full min-w-0">
                         {isSuperAdmin && selectedTenantId && (
-                            <div className="mb-5 bg-indigo-900 text-white p-3.5 px-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-indigo-800 rounded-xl shrink-0 text-indigo-200">
-                                        <FiEye className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-sm">Modo Inspección de Empresa Activo</p>
-                                        <p className="text-indigo-200 text-[11px] mt-0.5">
-                                            Estás auditando los datos aislados de una empresa específica. Las acciones globales afectan a este contexto.
-                                        </p>
-                                    </div>
+                            <div className="mb-5 bg-gray-900 text-white px-4 py-3 rounded border border-gray-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                                <div>
+                                    <p className="font-semibold text-sm">Modo Inspección de Empresa Activo</p>
+                                    <p className="text-gray-400 text-[11px] mt-0.5">
+                                        Estás auditando los datos aislados de una empresa específica.
+                                    </p>
                                 </div>
                                 <button
                                     onClick={handleClearTenantInspection}
-                                    className="px-3 py-1.5 bg-white text-indigo-900 hover:bg-indigo-50 font-bold rounded-lg transition-colors shrink-0 shadow-xs cursor-pointer"
+                                    className="px-3 py-1.5 bg-white text-gray-900 hover:bg-gray-100 font-medium rounded text-xs transition-colors shrink-0 cursor-pointer"
                                 >
-                                    Volver a Modo Global SaaS
+                                    Volver a Modo Global
                                 </button>
                             </div>
                         )}
                         {isSuperAdminSupervising && !selectedTenantId && (
-                            <div className="mb-5 bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-start gap-3.5 text-slate-700">
-                                <div className="p-2.5 bg-slate-50 rounded-xl text-slate-500 border border-slate-100 shrink-0">
-                                    <FiEye className="w-4 h-4 text-slate-600" />
-                                </div>
+                            <div className="mb-5 bg-white border border-gray-200 px-4 py-3 rounded flex items-start gap-3 text-gray-700">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <h4 className="font-semibold text-xs text-slate-900 tracking-tight">
-                                            Modo Supervisión SuperAdmin
-                                        </h4>
-                                        <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-600 rounded-md border border-slate-200/60">
-                                            Solo Lectura
-                                        </span>
+                                        <h4 className="font-semibold text-xs text-gray-900">Modo Supervisión SuperAdmin</h4>
+                                        <span className="px-2 py-0.5 text-[10px] font-mono font-medium bg-gray-100 text-gray-500 rounded border border-gray-200">Solo Lectura</span>
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                                        Estás navegando este módulo en modo supervisión global.
-                                    </p>
+                                    <p className="text-xs text-gray-400 mt-1">Estás navegando este módulo en modo supervisión global.</p>
                                 </div>
                             </div>
                         )}

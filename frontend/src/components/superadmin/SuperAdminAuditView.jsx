@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../api/axios.js';
 import toast from 'react-hot-toast';
-import { 
-    FiShield, FiSearch, FiRefreshCw, FiChevronLeft, FiChevronRight, 
-    FiAlertTriangle, FiFilter, FiUser, FiCalendar
-} from 'react-icons/fi';
+import { FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 export default function SuperAdminAuditView() {
     const [logs, setLogs] = useState([]);
@@ -17,9 +14,7 @@ export default function SuperAdminAuditView() {
     const fetchTenants = async () => {
         try {
             const res = await api.get('/superadmin/tenants-list');
-            if (res.data.success) {
-                setTenantsList(res.data.data);
-            }
+            if (res.data.success) setTenantsList(res.data.data);
         } catch (error) {
             console.error(error);
         }
@@ -28,10 +23,7 @@ export default function SuperAdminAuditView() {
     const fetchLogs = async (pageToLoad = pagination.page) => {
         setLoading(true);
         try {
-            const params = {
-                page: pageToLoad,
-                limit: pagination.limit
-            };
+            const params = { page: pageToLoad, limit: pagination.limit };
             if (search.trim()) params.search = search.trim();
             if (selectedTenantId) params.tenantId = selectedTenantId;
 
@@ -48,63 +40,54 @@ export default function SuperAdminAuditView() {
         }
     };
 
-    useEffect(() => {
-        fetchTenants();
-    }, []);
+    useEffect(() => { fetchTenants(); }, []);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchLogs(1);
-        }, 300);
+        const timer = setTimeout(() => fetchLogs(1), 300);
         return () => clearTimeout(timer);
     }, [search, selectedTenantId]);
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pagination.totalPages) {
-            fetchLogs(newPage);
-        }
+        if (newPage >= 1 && newPage <= pagination.totalPages) fetchLogs(newPage);
+    };
+
+    const getActionStyle = (action) => {
+        if (action?.includes('IMPERSONATE')) return 'bg-amber-50 text-amber-800 border-amber-200';
+        if (action?.includes('CREATE')) return 'bg-blue-50 text-blue-800 border-blue-200';
+        if (action?.includes('SUSPEND') || action?.includes('DELETE')) return 'bg-red-50 text-red-800 border-red-200';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header Auditoría Global */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-2 text-slate-500 font-semibold text-xs uppercase tracking-wider mb-1">
-                        <FiShield className="w-4 h-4 text-slate-700" /> Gobernanza & Seguridad SaaS
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-                        Auditoría Global de Eventos del Sistema
-                    </h2>
-                    <p className="text-sm text-slate-500 mt-1">
-                        Registro inmutable de actividades administrativas, inicios de sesión, cambios de plan e impersonación de soporte.
-                    </p>
-                </div>
+        <div className="space-y-4">
+            {/* Encabezado */}
+            <div className="pb-4 border-b border-gray-200">
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Backoffice · Gobernanza</p>
+                <h1 className="text-xl font-semibold text-gray-900">Auditoría Global del Sistema</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Registro inmutable de actividades administrativas, inicios de sesión, cambios de plan e impersonación.</p>
             </div>
 
-            {/* Filtros */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="relative w-full sm:w-80">
-                    <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+            {/* Barra de Filtros */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="relative w-full sm:w-72">
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
                     <input
                         type="text"
                         placeholder="Buscar evento, usuario o acción..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 text-slate-800"
+                        className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors"
                     />
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold">
-                        <FiFilter className="w-4 h-4 text-slate-400" /> Empresa:
-                    </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-gray-400 font-medium shrink-0">Empresa:</span>
                     <select
                         value={selectedTenantId}
                         onChange={(e) => setSelectedTenantId(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none cursor-pointer w-full sm:w-64"
+                        className="bg-white border border-gray-200 text-gray-700 text-xs rounded px-3 py-1.5 focus:outline-none focus:border-gray-400 cursor-pointer"
                     >
-                        <option value="">Todas las Empresas (Global)</option>
+                        <option value="">Todas las empresas</option>
                         {tenantsList.map(t => (
                             <option key={t.id} value={t.id}>{t.name} ({t.slug})</option>
                         ))}
@@ -113,60 +96,51 @@ export default function SuperAdminAuditView() {
             </div>
 
             {/* Tabla de Logs */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="bg-white border border-gray-200 rounded overflow-hidden">
                 {loading && logs.length === 0 ? (
-                    <div className="p-12 text-center text-slate-400">
-                        <FiRefreshCw className="animate-spin text-3xl mx-auto mb-2 text-slate-600" />
-                        <span className="text-sm font-medium">Cargando eventos de auditoría...</span>
+                    <div className="p-12 text-center text-gray-400 text-sm">
+                        Cargando registros de auditoría...
                     </div>
                 ) : logs.length === 0 ? (
-                    <div className="p-12 text-center text-slate-400">
-                        <FiAlertTriangle className="text-3xl mx-auto mb-2 text-slate-400" />
-                        <p className="text-sm font-medium text-slate-700">No se registraron eventos para los filtros seleccionados.</p>
+                    <div className="p-12 text-center">
+                        <p className="text-sm font-medium text-gray-600">Sin registros</p>
+                        <p className="text-xs text-gray-400 mt-1">No se encontraron eventos para los filtros seleccionados.</p>
                     </div>
                 ) : (
                     <>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse text-sm">
                                 <thead>
-                                    <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                        <th className="py-3.5 px-4">Fecha & Hora</th>
-                                        <th className="py-3.5 px-4">Empresa / Tenant</th>
-                                        <th className="py-3.5 px-4">Acción Auditoría</th>
-                                        <th className="py-3.5 px-4">Ejecutado Por</th>
-                                        <th className="py-3.5 px-4">Detalles</th>
+                                    <tr className="bg-gray-50 border-b border-gray-200">
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Empresa</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Acción</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Ejecutado por</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Detalles</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
-                                    {logs.map((log) => (
-                                        <tr key={log.id} className="hover:bg-slate-50/60 transition-colors">
-                                            <td className="py-3.5 px-4 text-slate-500 font-mono whitespace-nowrap">
+                                <tbody>
+                                    {logs.map((log, idx) => (
+                                        <tr key={log.id} className={`border-b border-gray-100 hover:bg-gray-50/60 transition-colors ${idx % 2 === 0 ? '' : 'bg-gray-50/30'}`}>
+                                            <td className="py-2.5 px-4 text-gray-400 font-mono text-xs whitespace-nowrap" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
                                                 {new Date(log.timestamp).toLocaleString()}
                                             </td>
-                                            <td className="py-3.5 px-4">
+                                            <td className="py-2.5 px-4">
                                                 {log.tenant ? (
-                                                    <span className="font-bold text-slate-900">
-                                                        {log.tenant.name}
-                                                    </span>
+                                                    <span className="text-xs font-medium text-gray-900">{log.tenant.name}</span>
                                                 ) : (
-                                                    <span className="text-xs text-slate-400 italic">SaaS Global</span>
+                                                    <span className="text-xs text-gray-400">SaaS Global</span>
                                                 )}
                                             </td>
-                                            <td className="py-3.5 px-4">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold ${
-                                                    log.action.includes('IMPERSONATE') 
-                                                        ? 'bg-amber-100 text-amber-800' 
-                                                        : log.action.includes('CREATE')
-                                                        ? 'bg-emerald-100 text-emerald-800'
-                                                        : 'bg-slate-100 text-slate-700'
-                                                }`}>
+                                            <td className="py-2.5 px-4">
+                                                <span className={`inline-block px-2 py-0.5 border rounded text-[10px] font-mono font-semibold uppercase tracking-wide ${getActionStyle(log.action)}`}>
                                                     {log.action}
                                                 </span>
                                             </td>
-                                            <td className="py-3.5 px-4 font-medium text-slate-800">
+                                            <td className="py-2.5 px-4 text-xs font-medium text-gray-700">
                                                 {log.performedBy}
                                             </td>
-                                            <td className="py-3.5 px-4 text-slate-600 max-w-md truncate">
+                                            <td className="py-2.5 px-4 text-xs text-gray-500 max-w-xs truncate">
                                                 {log.details}
                                             </td>
                                         </tr>
@@ -175,26 +149,25 @@ export default function SuperAdminAuditView() {
                             </table>
                         </div>
 
-                        {/* Paginación */}
                         {pagination.totalPages > 1 && (
-                            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                                <p className="text-xs text-slate-500">
-                                    Página <span className="font-semibold text-slate-800">{pagination.page}</span> de <span className="font-semibold text-slate-800">{pagination.totalPages}</span> ({pagination.total} registros)
+                            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                <p className="text-xs text-gray-500 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    Página {pagination.page} de {pagination.totalPages} · {pagination.total} registros
                                 </p>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                     <button
                                         disabled={pagination.page <= 1}
                                         onClick={() => handlePageChange(pagination.page - 1)}
-                                        className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition-colors cursor-pointer"
+                                        className="p-1.5 border border-gray-200 rounded text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors cursor-pointer"
                                     >
-                                        <FiChevronLeft className="w-4 h-4" />
+                                        <FiChevronLeft className="w-3.5 h-3.5" />
                                     </button>
                                     <button
                                         disabled={pagination.page >= pagination.totalPages}
                                         onClick={() => handlePageChange(pagination.page + 1)}
-                                        className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition-colors cursor-pointer"
+                                        className="p-1.5 border border-gray-200 rounded text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors cursor-pointer"
                                     >
-                                        <FiChevronRight className="w-4 h-4" />
+                                        <FiChevronRight className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             </div>

@@ -45,36 +45,30 @@ const Header = ({ user, onMenuClick, title = "Panel de Control" }) => {
     };
 
     return (
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 transition-all duration-300">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
             <div className="flex items-center gap-4">
                 <button
                     onClick={onMenuClick}
-                    className="p-2 -ml-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all md:hidden"
+                    className="p-2 -ml-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors md:hidden"
                 >
                     <FiMenu size={24} />
                 </button>
-                <h2 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h2>
+                <h2 className="text-base font-semibold text-gray-800">{title}</h2>
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
                 {isSuperAdmin && (
-                    <div className="flex items-center gap-2 bg-slate-100/80 px-2.5 py-1 rounded-xl border border-slate-200/80 text-xs text-slate-700">
-                        {selectedTenantId ? (
-                            <FiBriefcase className="text-indigo-600 shrink-0 text-sm" />
-                        ) : (
-                            <FiGlobe className="text-emerald-600 shrink-0 text-sm" />
-                        )}
+                    <div className="flex items-center gap-2 bg-gray-100 px-2.5 py-1 rounded border border-gray-200 text-xs text-gray-700">
+                        <FiBriefcase className="text-gray-400 shrink-0 text-sm" />
                         <select
                             value={selectedTenantId}
                             onChange={handleTenantChange}
-                            className="bg-transparent font-medium focus:outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate py-1 text-slate-800"
+                            className="bg-transparent font-medium focus:outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate py-1 text-gray-800"
                             title="Selector de Empresa (SuperAdmin)"
                         >
-                            <option value="">Modo Global (Todas las Empresas)</option>
+                            <option value="">Modo Global (Todas las empresas)</option>
                             {tenants.map((t) => (
-                                <option key={t.id} value={t.id}>
-                                    {t.name}
-                                </option>
+                                <option key={t.id} value={t.id}>{t.name}</option>
                             ))}
                         </select>
                     </div>
@@ -83,18 +77,18 @@ const Header = ({ user, onMenuClick, title = "Panel de Control" }) => {
                 <NotificationBell />
                 <button
                     onClick={() => navigate('/profile')}
-                    className="hidden sm:flex items-center gap-3 text-right pl-4 border-l border-slate-200 hover:opacity-90 transition-all cursor-pointer group focus:outline-none"
+                    className="hidden sm:flex items-center gap-3 text-right pl-4 border-l border-gray-200 hover:opacity-80 transition-opacity cursor-pointer group focus:outline-none"
                     title="Ver mi perfil"
                 >
                     <div className="text-right">
-                        <p className="text-sm font-semibold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">
+                        <p className="text-sm font-medium text-gray-800 leading-tight">
                             {user?.firstName || 'Admin'}
                         </p>
-                        <p className="text-[11px] font-medium text-indigo-600 leading-tight">
-                            {isSuperAdmin ? 'SuperAdmin SaaS' : (user?.role || 'Usuario')}
+                        <p className="text-[11px] font-medium text-gray-400 leading-tight">
+                            {isSuperAdmin ? 'SuperAdmin' : (user?.role || 'Usuario')}
                         </p>
                     </div>
-                    <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-sm ring-2 ring-white group-hover:ring-indigo-300 transition-all">
+                    <div className="w-8 h-8 rounded bg-gray-900 text-white flex items-center justify-center text-xs font-mono font-semibold shrink-0">
                         {user?.firstName?.[0] || 'A'}
                     </div>
                 </button>

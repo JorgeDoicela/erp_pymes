@@ -22,17 +22,19 @@ import exportRoutes from './export/export.routes.js';
 import intelligenceRoutes from './intelligence.routes.js';
 import accountingRoutes from './accounting.routes.js';
 import { runSeed } from '../controllers/admin/seedController.js';
-
-
 import biometricRoutes from './biometric/biometric.routes.js';
 import * as biometricPublicController from '../controllers/biometric.controller.js';
 import entrepreneurshipRoutes from './entrepreneurship.routes.js';
 import complianceRoutes from './compliance/compliance.routes.js';
 import announcementRoutes from './communication/announcement.routes.js';
-
 import tenantRoutes from './tenant/tenant.routes.js';
+import superAdminRoutes from './admin/superAdmin.routes.js';
+import { rateLimit } from '../middleware/rateLimit.middleware.js';
+import { authenticate } from '../middleware/auth.middleware.js';
+import { requireTenant } from '../middleware/tenant.middleware.js';
 
 const router = Router();
+
 // Ruta de prueba
 router.get('/', (req, res) => {
     res.send('API EMPLIFI funcionando correctamente v1');
@@ -50,13 +52,9 @@ router.post('/migrate', (req, res, next) => {
     });
 });
 
-import superAdminRoutes from './admin/superAdmin.routes.js';
-
 // Onboarding y Gestión de Empresas (Tenants)
 router.use('/tenants', tenantRoutes);
 router.use('/superadmin', superAdminRoutes);
-
-import { rateLimit } from '../middleware/rateLimit.middleware.js';
 
 // Login y Recuperación (Con Rate Limiting: max 10 intentos cada 15 min)
 router.post('/auth/login', rateLimit({ windowMs: 15 * 60 * 1000, maxRequests: 10 }), login);
@@ -65,9 +63,6 @@ router.post('/auth/reset-password', resetPassword);
 
 // Rutas de reclutamiento: las públicas no tienen auth, las admin aplican authenticate+authorize internamente
 router.use('/recruitment', recruitmentRoutes);
-
-import { authenticate } from '../middleware/auth.middleware.js';
-import { requireTenant } from '../middleware/tenant.middleware.js';
 
 // Middleware de Aislamiento Multi-Empresa Protegido
 const protectedTenant = [authenticate, requireTenant];
