@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as reportService from '../../services/reports/reportService';
 import { getEmployees, getDepartments } from '../../services/employees/employee.service';
-import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -11,11 +10,10 @@ const AttendanceReports = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [employees, setEmployees] = useState([]); // List for dropdown
-    const [departments, setDepartments] = useState([]); // Dynamic list
+    const [employees, setEmployees] = useState([]);
+    const [departments, setDepartments] = useState([]);
     const [expandedRow, setExpandedRow] = useState(null);
 
-    // Default: Last 30 days
     const today = new Date();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -79,7 +77,7 @@ const AttendanceReports = () => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `reporte_${filters.startDate}_${filters.endDate}.csv`;
+        a.download = `reporte_asistencia_${filters.startDate}_${filters.endDate}.csv`;
         a.click();
     };
 
@@ -88,20 +86,15 @@ const AttendanceReports = () => {
             if (!stats) return;
             const doc = new jsPDF();
 
-            // Title
-            doc.setFontSize(18);
-            doc.text('Reporte de Asistencia', 14, 20);
+            doc.setFontSize(16);
+            doc.text('Reporte de Asistencia Laboral', 14, 20);
 
             doc.setFontSize(10);
-            doc.text(`Desde: ${filters.startDate}  Hasta: ${filters.endDate}`, 14, 30);
-            doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 35);
+            doc.text(`Período: ${filters.startDate} al ${filters.endDate}`, 14, 28);
+            doc.text(`Fecha de generación: ${new Date().toLocaleDateString('es-EC')}`, 14, 34);
 
-            // Stats Summary
-            doc.text(`Asistencia Global: ${stats.summary.attendanceRate}%`, 14, 45);
-            doc.text(`Total Atrasos: ${stats.summary.late}`, 80, 45);
-            doc.text(`Total Faltas: ${stats.summary.absent}`, 140, 45);
+            doc.text(`Tasa Global: ${stats.summary.attendanceRate}% | Atrasos: ${stats.summary.late} | Faltas: ${stats.summary.absent}`, 14, 44);
 
-            // Table
             const tableColumn = ["Nombre", "Depto", "Asist.", "Atrasos", "Justif.", "Faltas", "Hrs Trab.", "Hrs Extra", "%"];
             const tableRows = [];
 
@@ -123,81 +116,77 @@ const AttendanceReports = () => {
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
-                startY: 55,
-                theme: 'striped',
-                headStyles: { fillColor: [41, 128, 185] }
+                startY: 52,
+                theme: 'plain',
+                headStyles: { fillColor: [240, 240, 240], textColor: [50, 50, 50], fontStyle: 'bold' }
             });
 
-            doc.save(`reporte_${filters.startDate}_${filters.endDate}.pdf`);
+            doc.save(`reporte_asistencia_${filters.startDate}_${filters.endDate}.pdf`);
         } catch (error) {
             console.error("PDF Export Error:", error);
             alert("Error al generar PDF: " + error.message);
         }
     };
 
-    const StatusCard = ({ title, value, color, text }) => (
-        <div className={`p-6 rounded-xl border ${color} bg-white shadow-sm hover:shadow-md transition-shadow`}>
-            <p className="text-slate-500 text-sm mb-1">{title}</p>
-            <p className={`text-3xl font-bold ${text}`}>{value}</p>
-        </div>
-    );
-
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
-                    Reportes de Asistencia
-                </h1>
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-200">
+                <div>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analíticas · Asistencia</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Reporte de Asistencia Laboral</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Informe consolidado de marcaciones, atrasos, faltas y horas laboradas.</p>
+                </div>
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center text-slate-500 hover:text-slate-800 transition-colors bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm text-sm"
+                    className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer shrink-0"
                 >
-                    ← Volver
+                    Volver
                 </button>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            {/* Barra de Filtros Form System ERP */}
+            <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end text-xs">
                     <div>
-                        <label className="block text-sm text-slate-500 mb-1 font-medium">Desde</label>
+                        <label className="block font-medium text-gray-600 mb-1">Desde</label>
                         <input
                             type="date"
-                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                             value={filters.startDate}
                             onChange={e => setFilters({ ...filters, startDate: e.target.value })}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm text-slate-500 mb-1 font-medium">Hasta</label>
+                        <label className="block font-medium text-gray-600 mb-1">Hasta</label>
                         <input
                             type="date"
-                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                             value={filters.endDate}
                             onChange={e => setFilters({ ...filters, endDate: e.target.value })}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm text-slate-500 mb-1 font-medium">Departamento</label>
+                        <label className="block font-medium text-gray-600 mb-1">Departamento</label>
                         <select
-                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                             value={filters.department}
                             onChange={e => setFilters({ ...filters, department: e.target.value })}
                         >
-                            <option value="">Todos</option>
+                            <option value="">Todos los departamentos</option>
                             {departments.map(dept => (
                                 <option key={dept} value={dept}>{dept}</option>
                             ))}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm text-slate-500 mb-1 font-medium">Empleado</label>
+                        <label className="block font-medium text-gray-600 mb-1">Empleado</label>
                         <select
-                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                             value={filters.employeeId}
                             onChange={e => setFilters({ ...filters, employeeId: e.target.value })}
                         >
-                            <option value="">Todos</option>
+                            <option value="">Todos los empleados</option>
                             {employees.map(emp => (
                                 <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
                             ))}
@@ -205,199 +194,175 @@ const AttendanceReports = () => {
                     </div>
                     <button
                         onClick={loadReport}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold h-10 transition-all shadow-md active:scale-95"
+                        disabled={loading}
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer w-full"
                     >
-                        {loading ? 'Generando...' : 'Generar'}
+                        {loading ? 'Generando...' : 'Generar Informe'}
                     </button>
                 </div>
 
                 {stats && (
-                    <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100 justify-end">
                         <button
                             onClick={handleExportCSV}
-                            className="flex-1 sm:flex-none justify-center bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-bold h-10 transition-colors flex items-center gap-2 text-sm"
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                         >
-                            Excel
+                            Exportar CSV
                         </button>
                         <button
                             onClick={handleExportPDF}
-                            className="flex-1 sm:flex-none justify-center bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold h-10 transition-colors flex items-center gap-2 text-sm"
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                         >
-                            PDF
+                            Exportar PDF
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* Results */}
+            {/* Resultados y Métricas ERP */}
             {stats && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                        <StatusCard title="Empleados" value={stats.summary.totalEmployees} color="border-slate-200" text="text-slate-800" />
-                        <StatusCard title="Tasa Asistencia" value={`${stats.summary.attendanceRate}%`} color="border-blue-200" text="text-blue-600" />
-                        <StatusCard title="Atrasos" value={stats.summary.late} color="border-yellow-200" text="text-yellow-600" />
-                        <StatusCard title="Faltas" value={stats.summary.absent} color="border-red-200" text="text-red-600" />
-                        <StatusCard title="Horas Extra Total" value={stats.summary.totalOvertime} color="border-purple-200" text="text-purple-600" />
+                <div className="space-y-5">
+                    {/* Resumen Estilo Informe Contable / Balance */}
+                    <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                        <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Resumen Consolidado de Asistencia</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 text-xs">
+                            <div className="p-3.5 flex flex-col justify-between">
+                                <span className="text-gray-500">Empleados evaluados</span>
+                                <span className="text-sm font-semibold text-gray-900 font-mono mt-1" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    {stats.summary.totalEmployees}
+                                </span>
+                            </div>
+                            <div className="p-3.5 flex flex-col justify-between">
+                                <span className="text-gray-500">Tasa general asistencia</span>
+                                <span className="text-sm font-semibold text-green-700 font-mono mt-1" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    {stats.summary.attendanceRate}%
+                                </span>
+                            </div>
+                            <div className="p-3.5 flex flex-col justify-between">
+                                <span className="text-gray-500">Total atrasos</span>
+                                <span className="text-sm font-semibold text-amber-700 font-mono mt-1" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    {stats.summary.late}
+                                </span>
+                            </div>
+                            <div className="p-3.5 flex flex-col justify-between">
+                                <span className="text-gray-500">Total faltas</span>
+                                <span className="text-sm font-semibold text-red-700 font-mono mt-1" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    {stats.summary.absent}
+                                </span>
+                            </div>
+                            <div className="p-3.5 flex flex-col justify-between">
+                                <span className="text-gray-500">Horas extra total</span>
+                                <span className="text-sm font-semibold text-gray-900 font-mono mt-1" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    {stats.summary.totalOvertime} hrs
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Chart Section */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
-                        <h3 className="font-bold mb-4 text-slate-800">Tendencias de Asistencia</h3>
+                    {/* Gráfico de Tendencias Sobrio */}
+                    <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Tendencias de Marcación</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                     data={stats.details}
-                                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                    margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
                                 >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                    <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickFormatter={(val) => val.split(' ')[0]} />
-                                    <YAxis stroke="#64748b" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                    <XAxis dataKey="name" stroke="#6b7280" fontSize={11} tickFormatter={(val) => val.split(' ')[0]} />
+                                    <YAxis stroke="#6b7280" fontSize={11} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#1e293b' }}
-                                        cursor={{ fill: '#f1f5f9' }}
+                                        contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }}
                                     />
-                                    <Legend />
-                                    <Bar dataKey="present" name="Asistencias" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="late" name="Atrasos" fill="#eab308" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="absent" name="Faltas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                                    <Bar dataKey="present" name="Asistencias" fill="#2563eb" radius={[2, 2, 0, 0]} />
+                                    <Bar dataKey="late" name="Atrasos" fill="#d97706" radius={[2, 2, 0, 0]} />
+                                    <Bar dataKey="absent" name="Faltas" fill="#dc2626" radius={[2, 2, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
-                    {/* Detailed Table */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                            <h3 className="font-bold text-slate-800">Detalle por Empleado</h3>
+                    {/* Tabla Principal Detallada */}
+                    <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Detalle por Empleado</h3>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm min-w-[800px]">
-                                <thead className="text-left text-slate-500 bg-slate-50">
-                                    <tr>
-                                        <th className="p-4 font-semibold">Empleado</th>
-                                        <th className="p-4 font-semibold">Depto</th>
-                                        <th className="p-4 font-semibold text-center">Asist.</th>
-                                        <th className="p-4 font-semibold text-center">Atrasos</th>
-                                        <th className="p-4 font-semibold text-center">Justif.</th>
-                                        <th className="p-4 font-semibold text-center">Faltas</th>
-                                        <th className="p-4 font-semibold text-center">Tasa %</th>
-                                        <th className="p-4 font-semibold text-right">Hrs Trab.</th>
-                                        <th className="p-4 font-semibold text-right text-purple-600">Hrs Extra</th>
+                            <table className="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr className="bg-gray-50 border-b border-gray-200">
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Empleado</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Depto</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">Asist.</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">Atrasos</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">Justif.</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">Faltas</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-center">Tasa %</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-right">Hrs Trab.</th>
+                                        <th className="py-2.5 px-4 text-[11px] font-semibold text-gray-500 uppercase tracking-wider text-right">Hrs Extra</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-gray-100">
                                     {stats.details.map(row => (
                                         <React.Fragment key={row.id}>
-                                            <tr className="hover:bg-blue-50/30 transition-colors border-b border-slate-50">
-                                                <td className="p-4 font-medium text-slate-800">
-                                                    <div className="flex items-center gap-2">
+                                            <tr className="hover:bg-gray-50/60 transition-colors">
+                                                <td className="py-2.5 px-4 font-medium text-gray-900">
+                                                    <div className="flex items-center gap-1.5">
                                                         <button
                                                             onClick={() => setExpandedRow(expandedRow === row.id ? null : row.id)}
-                                                            className="text-slate-400 hover:text-blue-600 transition-colors"
+                                                            className="text-gray-400 hover:text-gray-700 text-[10px] font-mono cursor-pointer"
                                                         >
                                                             {expandedRow === row.id ? '▼' : '▶'}
                                                         </button>
                                                         {row.name}
                                                     </div>
                                                 </td>
-                                                <td className="p-4 text-slate-600">{row.department}</td>
-                                                <td className="p-4 text-center text-blue-600">{row.present}</td>
-                                                <td className="p-4 text-center text-yellow-600 font-bold">{row.late > 0 ? row.late : '-'}</td>
-                                                <td className="p-4 text-center text-slate-500">{row.excused}</td>
-                                                <td className="p-4 text-center text-red-600 font-bold">{row.absent > 0 ? row.absent : '-'}</td>
-                                                <td className="p-4 text-center">
-                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${row.attendanceRate >= 95 ? 'bg-green-100 text-green-700' :
-                                                        row.attendanceRate >= 85 ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-red-100 text-red-700'
-                                                        }`}>
+                                                <td className="py-2.5 px-4 text-gray-600">{row.department}</td>
+                                                <td className="py-2.5 px-4 text-center font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{row.present}</td>
+                                                <td className="py-2.5 px-4 text-center font-mono text-amber-700 font-semibold" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{row.late > 0 ? row.late : '-'}</td>
+                                                <td className="py-2.5 px-4 text-center font-mono text-gray-500" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{row.excused}</td>
+                                                <td className="py-2.5 px-4 text-center font-mono text-red-700 font-semibold" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{row.absent > 0 ? row.absent : '-'}</td>
+                                                <td className="py-2.5 px-4 text-center font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                                    <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${
+                                                        row.attendanceRate >= 95 ? 'bg-green-50 text-green-800 border border-green-200' :
+                                                        row.attendanceRate >= 85 ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+                                                        'bg-red-50 text-red-800 border border-red-200'
+                                                    }`}>
                                                         {(row.attendanceRate || 0).toFixed(0)}%
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-right font-mono text-slate-600">{(row.workedHours || 0).toFixed(1)}</td>
-                                                <td className="p-4 text-right font-mono text-purple-600 font-bold">{row.overtime > 0 ? (row.overtime || 0).toFixed(1) : '-'}</td>
+                                                <td className="py-2.5 px-4 text-right font-mono text-gray-800" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{(row.workedHours || 0).toFixed(1)}</td>
+                                                <td className="py-2.5 px-4 text-right font-mono text-gray-800 font-medium" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{row.overtime > 0 ? (row.overtime || 0).toFixed(1) : '-'}</td>
                                             </tr>
                                             {expandedRow === row.id && (
-                                                <tr className="bg-slate-50/50">
-                                                    <td colSpan="9" className="p-0">
-                                                        <div className="p-6 border-l-4 border-blue-500 bg-white m-4 rounded-xl shadow-inner overflow-hidden">
-                                                            <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
-                                                                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
-                                                                Registros Detallados
-                                                            </h4>
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                <tr className="bg-gray-50/50">
+                                                    <td colSpan="9" className="p-3">
+                                                        <div className="bg-white p-3 rounded border border-gray-200 space-y-2">
+                                                            <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Registros Detallados de Marcación</h4>
+                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                                                 {row.records && row.records.length > 0 ? (
                                                                     row.records.map((rec) => (
-                                                                        <div key={rec.id} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                                                                            <div className="flex justify-between items-center mb-3">
-                                                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                                                    {new Date(rec.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
-                                                                                </span>
-                                                                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${rec.status === 'Present' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                                                                    {rec.status}
-                                                                                </span>
+                                                                        <div key={rec.id} className="bg-gray-50/70 p-2.5 rounded border border-gray-100 text-xs space-y-1">
+                                                                            <div className="flex justify-between items-center text-[11px] text-gray-400 font-mono">
+                                                                                <span>{new Date(rec.date).toLocaleDateString('es-EC')}</span>
+                                                                                <span className="font-semibold text-gray-700">{rec.status}</span>
                                                                             </div>
-                                                                            <div className="space-y-3">
-                                                                                <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono border-b border-slate-50 pb-1">
-                                                                                    <span>IP de Registro:</span>
-                                                                                    <span>{rec.ipAddress || 'Sin registrar'}</span>
-                                                                                </div>
-                                                                                <div className="flex justify-between items-center text-sm">
-                                                                                    <span className="text-slate-500">Entrada:</span>
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        <span className="font-mono font-bold text-slate-700">
-                                                                                            {new Date(rec.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                                        </span>
-                                                                                        {rec.entryLocation ? (
-                                                                                            <a
-                                                                                                href={`https://www.google.com/maps?q=${rec.entryLocation.lat},${rec.entryLocation.lng}`}
-                                                                                                target="_blank"
-                                                                                                rel="noopener noreferrer"
-                                                                                                className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                                                                                title="Ver ubicación de entrada"
-                                                                                                onClick={(e) => e.stopPropagation()}
-                                                                                                aria-label="Ver ubicación de entrada en Google Maps"
-                                                                                            >
-                                                                                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                                                                                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                                                                                                </svg>
-                                                                                            </a>
-                                                                                        ) : (
-                                                                                            <span className="text-[10px] text-slate-300 italic" title="No se capturó ubicación">Sin GPS</span>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div className="flex justify-between items-center text-sm border-t border-slate-50 pt-2">
-                                                                                    <span className="text-slate-500">Salida:</span>
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        <span className="font-mono font-bold text-slate-700">
-                                                                                            {rec.checkOut ? new Date(rec.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                                                                                        </span>
-                                                                                        {rec.exitLocation ? (
-                                                                                            <a
-                                                                                                href={`https://www.google.com/maps?q=${rec.exitLocation.lat},${rec.exitLocation.lng}`}
-                                                                                                target="_blank"
-                                                                                                rel="noopener noreferrer"
-                                                                                                className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
-                                                                                                title="Ver ubicación de salida"
-                                                                                                onClick={(e) => e.stopPropagation()}
-                                                                                                aria-label="Ver ubicación de salida en Google Maps"
-                                                                                            >
-                                                                                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                                                                                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                                                                                                </svg>
-                                                                                            </a>
-                                                                                        ) : rec.checkOut ? (
-                                                                                            <span className="text-[10px] text-slate-300 italic">Sin GPS</span>
-                                                                                        ) : null}
-                                                                                    </div>
-                                                                                </div>
+                                                                            <div className="flex justify-between text-xs font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                                                                <span className="text-gray-500">Entrada:</span>
+                                                                                <span className="font-medium text-gray-900">{new Date(rec.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                                            </div>
+                                                                            <div className="flex justify-between text-xs font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                                                                <span className="text-gray-500">Salida:</span>
+                                                                                <span className="font-medium text-gray-900">{rec.checkOut ? new Date(rec.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
                                                                             </div>
                                                                         </div>
                                                                     ))
                                                                 ) : (
-                                                                    <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                                                                        No se encontraron registros individuales en este periodo.
+                                                                    <div className="col-span-full py-4 text-center text-gray-400 text-xs">
+                                                                        No hay registros detallados en este periodo.
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -411,7 +376,7 @@ const AttendanceReports = () => {
                             </table>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             )}
         </div>
     );

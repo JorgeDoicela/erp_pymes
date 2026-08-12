@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { getSatisfactionReport } from '../../services/analytics.service';
-import { FiSmile, FiMeh, FiFrown, FiHeart, FiMessageSquare } from 'react-icons/fi';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 const SatisfactionReport = () => {
@@ -23,89 +22,84 @@ const SatisfactionReport = () => {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-slate-50 text-slate-800 p-8">Analizando clima laboral...</div>;
+    if (loading) return <div className="p-8 text-center text-gray-400 text-xs">Analizando indicador de clima laboral...</div>;
 
-    // Fallback UI if no data
     if (!data || !data.surveyTitle) return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 p-8">
-            <h1 className="text-3xl font-bold mb-4 text-slate-800">Clima Laboral</h1>
-            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm text-center">
-                <p className="text-slate-500 mb-4 font-medium">No hay encuestas activas o resultados disponibles.</p>
-                <button
-                    onClick={() => alert("Funcionalidad de creación de encuestas en desarrollo. Por ahora, use el seeder para generar datos de prueba.")}
-                    className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white font-bold transition-all shadow-md active:scale-95"
-                >
-                    Lanzar Nueva Encuesta
-                </button>
+        <div className="space-y-5">
+            <div className="pb-4 border-b border-gray-200">
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analíticas · Cultura</p>
+                <h1 className="text-xl font-semibold text-gray-900">Encuesta de Clima Laboral</h1>
+            </div>
+            <div className="bg-white p-12 rounded border border-gray-200 text-center text-xs text-gray-500">
+                <p className="font-medium text-gray-700">No hay encuestas activas o resultados disponibles.</p>
+                <p className="text-xs text-gray-400 mt-1">Configura una nueva evaluación de clima laboral en la sección de gestión.</p>
             </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2 flex flex-wrap items-center text-slate-800">
-                <FiHeart className="mr-3 text-slate-800" /> Clima Laboral: {data.surveyTitle}
-            </h1>
-            <p className="text-slate-500 mb-8 font-medium text-sm md:text-base">Análisis de Satisfacción y Cultura Organizacional</p>
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200">
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analíticas · Cultura & Satisfacción</p>
+                <h1 className="text-xl font-semibold text-gray-900">Clima Laboral: {data.surveyTitle}</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Análisis de satisfacción interna, eNPS y percepción de la cultura organizacional.</p>
+            </div>
 
-            {/* Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center relative overflow-hidden group hover:shadow-md transition-shadow">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
-                    <p className="text-slate-500 text-xs md:text-sm uppercase tracking-wider font-semibold">Índice de Satisfacción</p>
-                    <div className="mt-4 flex justify-center items-end gap-1">
-                        <span className="text-4xl md:text-5xl font-bold text-slate-800">{data.index}</span>
-                        <span className="text-lg md:text-xl text-slate-400 mb-1 font-medium">/100</span>
-                    </div>
+            {/* Resumen Estilo Informe Contable / Balance */}
+            <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
+                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Índices Consolidados de Encuesta</h3>
                 </div>
-
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center relative overflow-hidden group hover:shadow-md transition-shadow">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-purple-500"></div>
-                    <p className="text-slate-500 text-xs md:text-sm uppercase tracking-wider font-semibold">Índice de Recomendación (eNPS)</p>
-                    <div className="mt-4 flex justify-center items-end">
-                        <span className={`text-4xl md:text-5xl font-bold ${data.nps > 0 ? 'text-green-600' : 'text-red-600'}`}>{data.nps}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 text-xs">
+                    <div className="p-4 flex items-center justify-between">
+                        <span className="text-gray-600">Índice de Satisfacción General</span>
+                        <span className="text-sm font-semibold font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {data.index} / 100
+                        </span>
                     </div>
-                    <p className="text-[10px] md:text-xs text-slate-400 mt-2 font-medium">Promotores vs Detractores</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center relative overflow-hidden group hover:shadow-md transition-shadow">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-green-500"></div>
-                    <p className="text-slate-500 text-xs md:text-sm uppercase tracking-wider font-semibold">Participación</p>
-                    <div className="mt-4 flex justify-center items-end gap-1">
-                        <span className="text-4xl md:text-5xl font-bold text-slate-800">{data.participation}</span>
-                        <span className="text-lg md:text-xl text-slate-400 mb-1 font-medium">respuestas</span>
+                    <div className="p-4 flex items-center justify-between">
+                        <span className="text-gray-600">Recomendación eNPS</span>
+                        <span className={`text-sm font-semibold font-mono ${data.nps > 0 ? 'text-green-700' : 'text-red-700'}`} style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {data.nps} ptos
+                        </span>
+                    </div>
+                    <div className="p-4 flex items-center justify-between">
+                        <span className="text-gray-600">Participación de Empleados</span>
+                        <span className="text-sm font-semibold font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {data.participation} respuestas
+                        </span>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                {/* Radar Chart */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 className="font-bold mb-6 text-center text-slate-800">Análisis por Dimensiones</h3>
-                    <div className="h-80 w-full">
+            {/* Gráfico Radar + Feed Comentarios ERP */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Análisis por Dimensiones</h3>
+                    <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data.dimensions}>
-                                <PolarGrid stroke="#e2e8f0" />
-                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} />
+                            <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data.dimensions}>
+                                <PolarGrid stroke="#e5e7eb" />
+                                <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 11 }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
-                                <Radar name="Puntuación" dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.4} />
-                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#1e293b' }} />
+                                <Radar name="Puntuación" dataKey="A" stroke="#2563eb" fill="#2563eb" fillOpacity={0.2} />
+                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
                             </RadarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                {/* Comments Feed */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 className="font-bold mb-6 flex items-center text-slate-800"><FiMessageSquare className="mr-2" /> Comentarios Recientes</h3>
-                    <div className="space-y-4 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Comentarios Recientes de la Plantilla</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                         {data.comments.map((comment, index) => (
-                            <div key={index} className="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                                <p className="text-slate-600 italic mb-2">"{comment.text}"</p>
-                                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full font-medium">{comment.dept}</span>
+                            <div key={index} className="bg-gray-50/70 p-3 rounded border border-gray-100 text-xs space-y-1">
+                                <p className="text-gray-700 italic">"{comment.text}"</p>
+                                <span className="font-mono text-[10px] text-gray-400 block">{comment.dept}</span>
                             </div>
                         ))}
-                        {data.comments.length === 0 && <p className="text-slate-400 text-center py-8 italic">No hay comentarios.</p>}
+                        {data.comments.length === 0 && <div className="text-gray-400 text-center py-8 text-xs italic">No hay comentarios registrados.</div>}
                     </div>
                 </div>
             </div>

@@ -36,7 +36,6 @@ const NotificationsPage = () => {
             }
         }
 
-        // Navigation (Same logic as Bell)
         if (notification.type === 'CONTRACT_EXPIRATION' && notification.relatedEntityId) {
             navigate('/admin/contracts/expiring');
         } else if (notification.type.startsWith('EVALUATION_')) {
@@ -66,73 +65,73 @@ const NotificationsPage = () => {
         return true;
     });
 
-    const getIcon = (type) => {
-        return (
-            <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center border border-slate-200/60 shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-            </div>
-        );
-    };
-
     return (
-        <div className="p-6 max-w-4xl mx-auto space-y-6 font-sans">
-            <header className="flex justify-between items-center mb-6">
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-200">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900">
-                        Centro de Notificaciones
-                    </h2>
-                    <p className="text-slate-500 text-xs mt-1">Historial de alertas y recordatorios</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Sistema · Alertas</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Centro de Notificaciones</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Historial de alertas del sistema, avisos operativos y vencimientos.</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={() => navigate('/admin/notifications/settings')}
-                        className="px-4 py-2 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition-colors text-slate-700 text-xs font-semibold shadow-xs flex items-center gap-2"
+                        className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
                         Configurar
                     </button>
                     <button
                         onClick={() => navigate('/admin')}
-                        className="px-4 py-2 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition-colors text-slate-700 text-xs font-semibold shadow-xs"
+                        className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                     >
                         Volver al Panel
                     </button>
                 </div>
-            </header>
+            </div>
 
-            <div className="flex items-center gap-3 mb-6 flex-wrap">
-                <button
-                    onClick={() => setFilter('all')}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80'}`}
-                >
-                    Todas
-                </button>
-                <button
-                    onClick={() => setFilter('unread')}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${filter === 'unread' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80'}`}
-                >
-                    No leídas
-                </button>
-                <div className="flex-1"></div>
+            {/* Filtros de Notificaciones */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                    <button
+                        onClick={() => setFilter('all')}
+                        className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                            filter === 'all'
+                                ? 'bg-blue-600 text-white font-medium'
+                                : 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900'
+                        }`}
+                    >
+                        Todas
+                    </button>
+                    <button
+                        onClick={() => setFilter('unread')}
+                        className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                            filter === 'unread'
+                                ? 'bg-blue-600 text-white font-medium'
+                                : 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900'
+                        }`}
+                    >
+                        No leídas
+                    </button>
+                </div>
+
                 <button
                     onClick={handleMarkAllRead}
-                    className="text-xs text-slate-700 hover:text-slate-900 font-semibold px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                    className="text-xs text-gray-600 hover:text-gray-900 font-medium px-2.5 py-1 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                     Marcar todas como leídas
                 </button>
             </div>
 
+            {/* Listado de Notificaciones */}
             {loading ? (
-                <div className="text-center py-12 text-slate-400 text-xs">Cargando notificaciones...</div>
+                <div className="p-12 text-center text-gray-400 text-xs bg-white rounded border border-gray-200">
+                    Cargando notificaciones...
+                </div>
             ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {filteredNotifications.length === 0 ? (
-                        <div className="bg-white rounded border border-slate-200/80 p-12 text-center text-slate-400 text-xs italic shadow-xs">
+                        <div className="bg-white rounded border border-gray-200 p-12 text-center text-gray-400 text-xs">
                             No tienes notificaciones {filter === 'unread' ? 'pendientes' : 'en el historial'}.
                         </div>
                     ) : (
@@ -140,53 +139,27 @@ const NotificationsPage = () => {
                             <div
                                 key={notification.id}
                                 onClick={() => handleRead(notification)}
-                                className={`relative group bg-white border border-slate-200/80 rounded p-5 hover:border-slate-300 transition-all cursor-pointer shadow-xs ${!notification.isRead ? 'bg-slate-50/60' : ''}`}
+                                className={`bg-white border border-gray-200 rounded p-3.5 hover:bg-gray-50/70 transition-colors cursor-pointer ${
+                                    !notification.isRead ? 'border-l-4 border-l-blue-600 bg-blue-50/20' : ''
+                                }`}
                             >
-                                {!notification.isRead && (
-                                    <div className="absolute top-5 right-5 w-2 h-2 rounded-full bg-indigo-600"></div>
-                                )}
-                                <div className="flex gap-4 items-start">
-                                    {getIcon(notification.type)}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <h4 className={`text-sm ${!notification.isRead ? 'font-bold text-slate-900' : 'font-semibold text-slate-700'}`}>
+                                <div className="flex justify-between items-start gap-3">
+                                    <div className="space-y-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            {!notification.isRead && (
+                                                <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0"></span>
+                                            )}
+                                            <h4 className={`text-xs ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
                                                 {notification.title}
                                             </h4>
-                                            <span className="text-[11px] text-slate-400 font-medium">
-                                                {new Date(notification.createdAt).toLocaleDateString()} {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
                                         </div>
-                                        <p className="text-slate-500 text-xs leading-relaxed mb-3">
+                                        <p className="text-gray-600 text-xs leading-relaxed">
                                             {notification.message}
                                         </p>
-                                        <div className="flex gap-2">
-                                            {notification.type === 'CONTRACT_EXPIRATION' && (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
-                                                    Contratos
-                                                </span>
-                                            )}
-                                            {notification.type.startsWith('EVALUATION') && (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
-                                                    Evaluaciones
-                                                </span>
-                                            )}
-                                            {notification.type.startsWith('ABSENCE_') && (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
-                                                    Ausencias
-                                                </span>
-                                            )}
-                                            {notification.type.includes('DOCUMENT') && (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
-                                                    Documentos
-                                                </span>
-                                            )}
-                                            {notification.type.startsWith('PAYROLL_') && (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/60">
-                                                    Nómina
-                                                </span>
-                                            )}
-                                        </div>
                                     </div>
+                                    <span className="text-[11px] text-gray-400 font-mono shrink-0" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                        {new Date(notification.createdAt).toLocaleDateString('es-EC')} {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
                                 </div>
                             </div>
                         ))

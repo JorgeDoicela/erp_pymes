@@ -47,61 +47,74 @@ const NotificationSettings = () => {
             await api.put('/notifications/preferences', {
                 preferences
             });
-            toast.success('Preferencias guardadas');
+            toast.success('Preferencias guardadas correctamente');
         } catch (error) {
             console.error('Error updating preferences', error);
-            toast.error('Error al guardar');
+            toast.error('Error al guardar preferencias');
         }
     };
 
-    if (loading) return <div className="p-8 text-slate-500 text-sm text-center">Cargando preferencias...</div>;
+    if (loading) return <div className="p-8 text-gray-400 text-xs text-center">Cargando preferencias...</div>;
 
     return (
-        <div className="p-6 max-w-3xl mx-auto space-y-6">
-            <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                    Configuración de Notificaciones
-                </h2>
-                <p className="text-slate-500 text-xs sm:text-sm mt-1">Gestiona los canales por los cuales deseas recibir alertas del sistema.</p>
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200">
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Sistema · Preferencias</p>
+                <h1 className="text-xl font-semibold text-gray-900">Configuración de Notificaciones</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Gestiona los canales por los cuales deseas recibir alertas del sistema.</p>
             </div>
 
-            <div className="bg-white rounded border border-slate-200/80 p-5 sm:p-6 space-y-4 shadow-xs">
-                {notificationTypes.map(({ key, label }) => {
-                    const emailEnabled = preferences[key]?.email !== false;
-                    const inAppEnabled = preferences[key]?.inApp !== false;
+            {/* Formulario de Canales por Tipo */}
+            <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                    <span>Tipo de Notificación</span>
+                    <div className="flex items-center gap-6">
+                        <span className="w-12 text-center">App</span>
+                        <span className="w-12 text-center">Email</span>
+                    </div>
+                </div>
 
-                    return (
-                        <div key={key} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0 gap-4">
-                            <div>
-                                <h3 className="font-semibold text-xs sm:text-sm text-slate-900">{label}</h3>
-                                <p className="text-[11px] text-slate-400">Alertas para {label.toLowerCase()}</p>
-                            </div>
-                            <div className="flex gap-4 shrink-0">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${inAppEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${inAppEnabled ? 'translate-x-4' : ''}`}></div>
-                                    </div>
-                                    <input type="checkbox" className="hidden" checked={inAppEnabled} onChange={() => handleToggle(key, 'inApp')} />
-                                    <span className="text-xs font-semibold text-slate-600">App</span>
-                                </label>
+                <div className="divide-y divide-gray-100 text-xs">
+                    {notificationTypes.map(({ key, label }) => {
+                        const emailEnabled = preferences[key]?.email !== false;
+                        const inAppEnabled = preferences[key]?.inApp !== false;
 
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${emailEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${emailEnabled ? 'translate-x-4' : ''}`}></div>
-                                    </div>
-                                    <input type="checkbox" className="hidden" checked={emailEnabled} onChange={() => handleToggle(key, 'email')} />
-                                    <span className="text-xs font-semibold text-slate-600">Email</span>
-                                </label>
+                        return (
+                            <div key={key} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                                <div>
+                                    <h3 className="font-medium text-gray-900">{label}</h3>
+                                    <p className="text-[11px] text-gray-400">Alertas automáticas para {label.toLowerCase()}</p>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    <label className="w-12 flex justify-center items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={inAppEnabled}
+                                            onChange={() => handleToggle(key, 'inApp')}
+                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                        />
+                                    </label>
+
+                                    <label className="w-12 flex justify-center items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={emailEnabled}
+                                            onChange={() => handleToggle(key, 'email')}
+                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                        />
+                                    </label>
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
 
             <div className="flex justify-end pt-2">
                 <button
                     onClick={savePreferences}
-                    className="app-button-primary"
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer"
                 >
                     Guardar Preferencias
                 </button>
