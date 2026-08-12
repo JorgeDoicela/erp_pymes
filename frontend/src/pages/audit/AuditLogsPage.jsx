@@ -125,7 +125,7 @@ const AuditLogsPage = () => {
             </header>
 
             {/* Filtros Adaptativos */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bg-white p-4 rounded border border-slate-200/80 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1">Entidad</label>
                     <select
@@ -188,12 +188,12 @@ const AuditLogsPage = () => {
                 {loading ? (
                     <div className="p-8 text-center text-slate-400 text-xs font-semibold">Cargando registros de auditoría...</div>
                 ) : logs.length === 0 ? (
-                    <div className="p-8 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs italic">
+                    <div className="p-8 bg-white rounded border border-slate-200/80 text-center text-slate-400 text-xs italic">
                         No se encontraron registros con los filtros seleccionados.
                     </div>
                 ) : (
                     logs.map((log) => (
-                        <div key={log.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-xs">
+                        <div key={log.id} className="bg-white rounded border border-slate-200/80 p-4 space-y-3 shadow-xs">
                             <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider ${getActionBadgeClass(log.action)}`}>
                                     {translations.actions[log.action] || log.action}

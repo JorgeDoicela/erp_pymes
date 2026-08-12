@@ -38,7 +38,7 @@ const AnalyticsView = () => {
         <div className="space-y-8 animate-fadeIn">
             {/* Resumen Superior */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-2 text-indigo-600">
                         <FiZap className="text-xl" />
                         <span className="font-semibold uppercase tracking-wider text-xs">Puntaje de Éxito</span>
@@ -47,7 +47,7 @@ const AnalyticsView = () => {
                     <div className="text-sm text-slate-500 mt-1">{successScore.level}</div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-2 text-emerald-600">
                         <FiDollarSign className="text-xl" />
                         <span className="font-semibold uppercase tracking-wider text-xs">Runway</span>
@@ -62,7 +62,7 @@ const AnalyticsView = () => {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-2 text-amber-600">
                         <FiActivity className="text-xl" />
                         <span className="font-semibold uppercase tracking-wider text-xs">Burn Rate</span>
@@ -71,7 +71,7 @@ const AnalyticsView = () => {
                     <div className="text-sm text-slate-500 mt-1">Gasto mensual</div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-2 text-purple-600">
                         <FiTrendingUp className="text-xl" />
                         <span className="font-semibold uppercase tracking-wider text-xs">Levantado</span>
@@ -83,7 +83,7 @@ const AnalyticsView = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Radar Chart de Capacidades */}
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                <div className="bg-white p-8 rounded shadow-sm border border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800 mb-6">Radar de Capacidades</h3>
                     <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -105,7 +105,7 @@ const AnalyticsView = () => {
                 </div>
 
                 {/* Composición Financiera */}
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                <div className="bg-white p-8 rounded shadow-sm border border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800 mb-6">Salud Financiera</h3>
                     <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -130,11 +130,11 @@ const AnalyticsView = () => {
             </div>
 
             {/* Mentores Recomendados */}
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+            <div className="bg-white p-8 rounded shadow-sm border border-slate-100">
                 <h3 className="text-lg font-bold text-slate-800 mb-6">Mentores Recomendados (Match AI)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {analytics.recommendedMentors.map((mentor) => (
-                        <div key={mentor.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-all">
+                        <div key={mentor.id} className="p-4 rounded bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-all">
                             <div className="flex justify-between items-start mb-3">
                                 <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
                                     {mentor.name.charAt(0)}

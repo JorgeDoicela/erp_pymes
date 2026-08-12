@@ -65,44 +65,62 @@ const AnalyticsDashboard = () => {
 
             {/* KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="app-card flex items-center justify-between">
+                <div className="app-card flex items-center justify-between border border-gray-200">
                     <div>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Empleados</p>
-                        <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{kpis.totalEmployees}</p>
+                        <p className="text-gray-500 text-[11px] font-medium uppercase tracking-wider">Total Empleados</p>
+                        <p className="text-2xl sm:text-3xl font-semibold text-gray-900 mt-1 font-mono tracking-tight" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {kpis.totalEmployees}
+                        </p>
                     </div>
-                    <div className="bg-indigo-50 text-indigo-600 p-3 rounded-xl"><FiUsers size={22} /></div>
+                    <div className="w-9 h-9 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center text-sm shrink-0">
+                        <FiUsers size={18} />
+                    </div>
                 </div>
 
-                <div className="app-card flex items-center justify-between">
+                <div className="app-card flex items-center justify-between border border-gray-200">
                     <div>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Nuevos (Mes)</p>
-                        <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{kpis.newHires}</p>
+                        <p className="text-gray-500 text-[11px] font-medium uppercase tracking-wider">Nuevos (Mes)</p>
+                        <p className="text-2xl sm:text-3xl font-semibold text-gray-900 mt-1 font-mono tracking-tight" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {kpis.newHires}
+                        </p>
                     </div>
-                    <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl"><FiUserPlus size={22} /></div>
+                    <div className="w-9 h-9 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center text-sm shrink-0">
+                        <FiUserPlus size={18} />
+                    </div>
                 </div>
 
-                <div className="app-card flex items-center justify-between">
+                <div className="app-card flex items-center justify-between border border-gray-200">
                     <div>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Vacantes Abiertas</p>
-                        <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{kpis.openVacancies}</p>
+                        <p className="text-gray-500 text-[11px] font-medium uppercase tracking-wider">Vacantes Abiertas</p>
+                        <p className="text-2xl sm:text-3xl font-semibold text-gray-900 mt-1 font-mono tracking-tight" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            {kpis.openVacancies}
+                        </p>
                     </div>
-                    <div className="bg-purple-50 text-purple-600 p-3 rounded-xl"><FiBriefcase size={22} /></div>
+                    <div className="w-9 h-9 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center text-sm shrink-0">
+                        <FiBriefcase size={18} />
+                    </div>
                 </div>
 
-                <div className="app-card flex items-center justify-between">
+                <div className="app-card flex items-center justify-between border border-gray-200">
                     <div>
-                        <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Nómina Estimada</p>
-                        <p className="text-xl sm:text-2xl font-extrabold text-emerald-700 mt-1 tracking-tight">${kpis.payrollTotal ? kpis.payrollTotal.toLocaleString() : '0'}</p>
+                        <p className="text-gray-500 text-[11px] font-medium uppercase tracking-wider">Nómina Estimada</p>
+                        <p className="text-xl sm:text-2xl font-semibold text-emerald-700 mt-1 font-mono tracking-tight" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                            ${kpis.payrollTotal ? kpis.payrollTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
+                        </p>
                     </div>
-                    <div className="bg-amber-50 text-amber-600 p-3 rounded-xl"><FiDollarSign size={22} /></div>
+                    <div className="w-9 h-9 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center text-sm shrink-0">
+                        <FiDollarSign size={18} />
+                    </div>
                 </div>
             </div>
 
             {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {/* Employees by Department */}
-                <div className="app-card">
-                    <h3 className="text-base font-bold mb-4 flex items-center text-slate-800"><FiPieChart className="mr-2 text-indigo-600" /> Empleados por Departamento</h3>
+                <div className="app-card border border-gray-200">
+                    <h3 className="text-sm font-semibold mb-4 flex items-center text-gray-900">
+                        <FiPieChart className="mr-2 text-blue-600" /> Empleados por Departamento
+                    </h3>
                     <div className="h-72 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -120,7 +138,7 @@ const AnalyticsDashboard = () => {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }} />
+                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '12px' }} />
                                 <Legend />
                             </PieChart>
                         </ResponsiveContainer>
@@ -128,16 +146,18 @@ const AnalyticsDashboard = () => {
                 </div>
 
                 {/* Vacancies by Department */}
-                <div className="app-card">
-                    <h3 className="text-base font-bold mb-4 flex items-center text-slate-800"><FiBarChart2 className="mr-2 text-indigo-600" /> Vacantes Abiertas por Dept.</h3>
+                <div className="app-card border border-gray-200">
+                    <h3 className="text-sm font-semibold mb-4 flex items-center text-gray-900">
+                        <FiBarChart2 className="mr-2 text-blue-600" /> Vacantes Abiertas por Dept.
+                    </h3>
                     <div className="h-72 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={charts.vacancyChartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }} cursor={{ fill: '#f8fafc' }} />
-                                <Bar dataKey="value" fill="#6366f1" radius={[6, 6, 0, 0]}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                <XAxis dataKey="name" stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} />
+                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '12px' }} cursor={{ fill: '#f9fafb' }} />
+                                <Bar dataKey="value" fill="#2563eb" radius={[4, 4, 0, 0]}>
                                     {charts.vacancyChartData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}

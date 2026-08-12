@@ -94,73 +94,123 @@ const TrialBalance = () => {
                 </div>
             </div>
 
-            <div className="app-table-wrapper">
-                <table className="app-table">
-                    <thead>
-                        <tr>
-                            <th className="app-th">Código</th>
-                            <th className="app-th">Cuenta Contable</th>
-                            <th className="app-th text-right">Débitos ($)</th>
-                            <th className="app-th text-right">Créditos ($)</th>
-                            <th className="app-th text-right">Saldo Neto ($)</th>
-                            <th className="app-th text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
+            <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                {/* VISTA MÓVIL: Tarjetas Apiladas (Cero scroll horizontal) */}
+                <div className="block md:hidden divide-y divide-gray-100">
+                    {loading ? (
+                        <div className="p-8 text-center text-xs text-gray-400">
+                            Cargando datos del Balance de Comprobación...
+                        </div>
+                    ) : balance.length === 0 ? (
+                        <div className="p-8 text-center text-xs text-gray-400 italic">
+                            No hay registros de asientos o información para este período.
+                        </div>
+                    ) : (
+                        balance.map((row, idx) => (
+                            <div key={row.code || idx} className="p-3.5 space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div>
+                                        <span className="font-mono font-bold text-gray-900 text-xs mr-2">{row.code}</span>
+                                        <span className="font-medium text-gray-800 text-xs">{row.name}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handleViewLedger(row)}
+                                        className="app-button-table inline-flex items-center gap-1 shrink-0 cursor-pointer"
+                                        title="Ver Mayor Auxiliar"
+                                    >
+                                        <FiEye size={12} /> Mayor
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 text-xs bg-gray-50 p-2 rounded border border-gray-100 font-mono">
+                                    <div>
+                                        <span className="text-[10px] text-gray-400 font-sans font-semibold uppercase block">Débitos</span>
+                                        <span className="text-gray-900">${(row.totalDebits || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-gray-400 font-sans font-semibold uppercase block">Créditos</span>
+                                        <span className="text-gray-900">${(row.totalCredits || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-gray-400 font-sans font-semibold uppercase block">Saldo Neto</span>
+                                        <span className={`font-bold ${(row.balance || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                            ${(row.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* VISTA ESCRITORIO: Tabla Completa */}
+                <div className="hidden md:block overflow-x-auto">
+                    <table className="app-table w-full">
+                        <thead>
                             <tr>
-                                <td colSpan="6" className="app-td text-center py-12 text-gray-400">
-                                    Cargando datos del Balance de Comprobación...
-                                </td>
+                                <th className="app-th">Código</th>
+                                <th className="app-th">Cuenta Contable</th>
+                                <th className="app-th text-right">Débitos ($)</th>
+                                <th className="app-th text-right">Créditos ($)</th>
+                                <th className="app-th text-right">Saldo Neto ($)</th>
+                                <th className="app-th text-center">Acciones</th>
                             </tr>
-                        ) : balance.length === 0 ? (
-                            <tr>
-                                <td colSpan="6" className="app-td text-center py-12 text-gray-400">
-                                    No hay registros de asientos o información para este período.
-                                </td>
-                            </tr>
-                        ) : (
-                            balance.map((row, idx) => (
-                                <tr key={row.code || idx} className="hover:bg-gray-50/60 transition-colors">
-                                    <td className="app-td font-mono font-semibold text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{row.code}</td>
-                                    <td className="app-td font-medium text-gray-800">{row.name}</td>
-                                    <td className="app-td text-right font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                        {row.totalDebits > 0 ? `$${row.totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '-'}
-                                    </td>
-                                    <td className="app-td text-right font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                        {row.totalCredits > 0 ? `$${row.totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '-'}
-                                    </td>
-                                    <td className={`app-td text-right font-mono font-semibold ${(row.balance || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`} style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                        ${(row.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                    </td>
-                                    <td className="app-td text-center">
-                                        <button
-                                            onClick={() => handleViewLedger(row)}
-                                            className="app-button-table inline-flex items-center gap-1"
-                                            title="Ver Mayor Auxiliar"
-                                        >
-                                            <FiEye size={12} /> Mayor
-                                        </button>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="6" className="app-td text-center py-12 text-gray-400">
+                                        Cargando datos del Balance de Comprobación...
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                    <tfoot className="bg-gray-50 border-t-2 border-gray-200">
-                        <tr>
-                            <td colSpan="2" className="px-4 py-3 font-semibold text-gray-900 uppercase text-[11px] tracking-wider">Totales de Control</td>
-                            <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                ${totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </td>
-                            <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                ${totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </td>
-                            <td colSpan="2" className={`px-4 py-3 text-right font-mono font-semibold text-xs ${Math.abs(difference) < 0.01 ? 'text-green-700' : 'text-red-700'}`} style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                Diferencia: ${difference.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
+                            ) : balance.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="app-td text-center py-12 text-gray-400">
+                                        No hay registros de asientos o información para este período.
+                                    </td>
+                                </tr>
+                            ) : (
+                                balance.map((row, idx) => (
+                                    <tr key={row.code || idx} className="hover:bg-gray-50/60 transition-colors">
+                                        <td className="app-td font-mono font-semibold text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{row.code}</td>
+                                        <td className="app-td font-medium text-gray-800">{row.name}</td>
+                                        <td className="app-td text-right font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                            {row.totalDebits > 0 ? `$${row.totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '-'}
+                                        </td>
+                                        <td className="app-td text-right font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                            {row.totalCredits > 0 ? `$${row.totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '-'}
+                                        </td>
+                                        <td className={`app-td text-right font-mono font-semibold ${(row.balance || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`} style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                            ${(row.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="app-td text-center">
+                                            <button
+                                                onClick={() => handleViewLedger(row)}
+                                                className="app-button-table inline-flex items-center gap-1 cursor-pointer"
+                                                title="Ver Mayor Auxiliar"
+                                            >
+                                                <FiEye size={12} /> Mayor
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                        <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+                            <tr>
+                                <td colSpan="2" className="px-4 py-3 font-semibold text-gray-900 uppercase text-[11px] tracking-wider">Totales de Control</td>
+                                <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    ${totalDebits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </td>
+                                <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    ${totalCredits.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </td>
+                                <td colSpan="2" className={`px-4 py-3 text-right font-mono font-semibold text-xs ${Math.abs(difference) < 0.01 ? 'text-green-700' : 'text-red-700'}`} style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                    Diferencia: ${difference.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
 
             {/* Drawer Modal de Mayor Auxiliar */}

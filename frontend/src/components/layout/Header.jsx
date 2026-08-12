@@ -58,12 +58,12 @@ const Header = ({ user, onMenuClick, title = "Panel de Control" }) => {
 
             <div className="flex items-center gap-3 sm:gap-4">
                 {isSuperAdmin && (
-                    <div className="flex items-center gap-2 bg-gray-100 px-2.5 py-1 rounded border border-gray-200 text-xs text-gray-700">
-                        <FiBriefcase className="text-gray-400 shrink-0 text-sm" />
+                    <div className="flex items-center gap-2 bg-gray-50 px-2.5 py-1 rounded border border-gray-200 text-xs text-gray-700 hover:border-gray-300 transition-colors">
+                        <FiBriefcase className="text-gray-400 shrink-0 text-xs" />
                         <select
                             value={selectedTenantId}
                             onChange={handleTenantChange}
-                            className="bg-transparent font-medium focus:outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate py-1 text-gray-800"
+                            className="bg-transparent font-medium focus:outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate py-0.5 text-gray-800"
                             title="Selector de Empresa (SuperAdmin)"
                         >
                             <option value="">Modo Global (Todas las empresas)</option>
@@ -75,20 +75,21 @@ const Header = ({ user, onMenuClick, title = "Panel de Control" }) => {
                 )}
 
                 <NotificationBell />
+
                 <button
                     onClick={() => navigate('/profile')}
-                    className="hidden sm:flex items-center gap-3 text-right pl-4 border-l border-gray-200 hover:opacity-80 transition-opacity cursor-pointer group focus:outline-none"
+                    className="hidden sm:flex items-center gap-2.5 text-right pl-4 border-l border-gray-200 hover:opacity-90 transition-opacity cursor-pointer group focus:outline-none"
                     title="Ver mi perfil"
                 >
                     <div className="text-right">
-                        <p className="text-sm font-medium text-gray-800 leading-tight">
+                        <p className="text-xs font-semibold text-gray-900 leading-tight">
                             {user?.firstName || 'Admin'}
                         </p>
                         <p className="text-[11px] font-medium text-gray-400 leading-tight">
                             {isSuperAdmin ? 'SuperAdmin' : (user?.role || 'Usuario')}
                         </p>
                     </div>
-                    <div className="w-8 h-8 rounded bg-gray-900 text-white flex items-center justify-center text-xs font-mono font-semibold shrink-0">
+                    <div className="w-8 h-8 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center font-mono font-semibold text-xs shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-colors">
                         {user?.firstName?.[0] || 'A'}
                     </div>
                 </button>

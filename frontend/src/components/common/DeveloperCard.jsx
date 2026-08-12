@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { FiCode, FiX } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const DeveloperCard = () => {
     const [showDevModal, setShowDevModal] = useState(false);
@@ -8,72 +7,73 @@ const DeveloperCard = () => {
     return (
         <>
             {/* Floating Button */}
-            <div className="fixed bottom-6 right-6 z-50">
-                <motion.button
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    whileTap={{ scale: 0.9 }}
+            <div className="fixed bottom-4 right-4 z-50">
+                <button
                     onClick={() => setShowDevModal(true)}
-                    className="w-14 h-14 bg-white/95 border border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-700 rounded-full flex items-center justify-center transition-all group backdrop-blur-sm shadow-md hover:shadow-lg"
+                    className="border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium px-3 py-2 rounded transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                     title="Conocer al desarrollador"
                 >
-                    <FiCode size={24} className="group-hover:text-blue-500 transition-colors" />
-                </motion.button>
+                    <FiCode className="w-4 h-4 text-blue-600" />
+                    <span>Desarrollador</span>
+                </button>
             </div>
 
             {/* Developer Modal */}
-            <AnimatePresence>
-                {showDevModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
-                        onClick={() => setShowDevModal(false)}
+            {showDevModal && (
+                <div
+                    className="fixed inset-0 bg-gray-900/50 z-[100] flex items-center justify-center p-4"
+                    onClick={() => setShowDevModal(false)}
+                >
+                    <div
+                        className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl"
+                        onClick={e => e.stopPropagation()}
                     >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-[2.5rem] overflow-hidden max-w-xl w-full shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative mx-auto"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            {/* Content */}
-                            <div className="p-8 md:p-10 bg-white relative">
-                                <button
-                                    onClick={() => setShowDevModal(false)}
-                                    className="absolute top-6 right-6 p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-full transition-all"
-                                >
-                                    <FiX size={20} />
-                                </button>
-                                <div className="space-y-2 pr-8">
-                                    <h4 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">Jorge Doicela</h4>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse" />
-                                        <p className="text-sm text-blue-600 font-bold uppercase tracking-[0.2em]">Software Developer</p>
-                                    </div>
-                                </div>
+                        {/* Header */}
+                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-900">Jorge Doicela</h3>
+                                <p className="text-[11px] font-mono font-medium text-gray-500 uppercase tracking-wider">
+                                    Software Developer
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowDevModal(false)}
+                                className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                            >
+                                <FiX className="w-4 h-4" />
+                            </button>
+                        </div>
 
-                                <div className="mt-8 pt-8 border-t border-slate-100">
-                                    <p className="text-slate-500 text-lg leading-relaxed italic font-medium">
-                                        "Desarrollador de software apasionado por el diseño de soluciones de alto rendimiento. Construyendo sistemas robustos, seguros y eficientes, transformando ideas complejas en productos digitales que aportan valor real."
-                                    </p>
-                                </div>
+                        {/* Body */}
+                        <div className="p-5 space-y-4 text-xs text-gray-600 leading-relaxed">
+                            <p className="italic bg-gray-50 p-3.5 border border-gray-200 rounded text-gray-700">
+                                "Desarrollador de software apasionado por el diseño de soluciones empresariales de alto rendimiento. Construyendo sistemas robustos, seguros y eficientes, transformando ideas complejas en productos digitales que aportan valor real."
+                            </p>
 
-                                <div className="mt-10">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => setShowDevModal(false)}
-                                        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10"
-                                    >
-                                        VOLVER AL PANEL
-                                    </motion.button>
+                            <div className="border border-gray-200 rounded divide-y divide-gray-100 font-mono text-[11px]">
+                                <div className="px-3.5 py-2 flex justify-between">
+                                    <span className="text-gray-500">Especialidad</span>
+                                    <span className="text-gray-900 font-medium">Sistemas ERP & SaaS</span>
+                                </div>
+                                <div className="px-3.5 py-2 flex justify-between">
+                                    <span className="text-gray-500">Estándar Visual</span>
+                                    <span className="text-gray-900 font-medium">estilos-erp-pymes</span>
                                 </div>
                             </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-end">
+                            <button
+                                onClick={() => setShowDevModal(false)}
+                                className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

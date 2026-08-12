@@ -170,7 +170,7 @@ function AdminDashboard({ user, onLogout }) {
                 animate="visible"
             >
                 {/* Header Bienvenida */}
-                <motion.div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs" variants={itemVariants}>
+                <motion.div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded border border-slate-200 shadow-xs" variants={itemVariants}>
                     <div>
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-600 mb-1">
                             <FiBriefcase className="w-4 h-4" /> Consola de Administración de Empresa
@@ -205,7 +205,7 @@ function AdminDashboard({ user, onLogout }) {
 
                 {/* Tarjetas de Métricas Operativas */}
                 <motion.div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" variants={itemVariants}>
-                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div className="bg-white p-5 rounded border border-slate-200 shadow-xs flex items-center justify-between">
                         <div>
                             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Plantilla Activa</p>
                             <p className="text-2xl font-bold text-slate-900 mt-1">
@@ -220,7 +220,7 @@ function AdminDashboard({ user, onLogout }) {
                         </div>
                     </div>
 
-                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div className="bg-white p-5 rounded border border-slate-200 shadow-xs flex items-center justify-between">
                         <div>
                             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nómina Mensual Estimada</p>
                             <p className="text-2xl font-bold text-slate-900 mt-1">
@@ -233,7 +233,7 @@ function AdminDashboard({ user, onLogout }) {
                         </div>
                     </div>
 
-                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div className="bg-white p-5 rounded border border-slate-200 shadow-xs flex items-center justify-between">
                         <div>
                             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Permisos por Aprobar</p>
                             <p className="text-2xl font-bold text-amber-600 mt-1">
@@ -251,7 +251,7 @@ function AdminDashboard({ user, onLogout }) {
                         </div>
                     </div>
 
-                    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div className="bg-white p-5 rounded border border-slate-200 shadow-xs flex items-center justify-between">
                         <div>
                             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vacantes Abiertas</p>
                             <p className="text-2xl font-bold text-slate-900 mt-1">
@@ -271,7 +271,7 @@ function AdminDashboard({ user, onLogout }) {
                 </motion.div>
 
                 {/* Sección Alertas Inteligentes */}
-                <motion.section className="bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row overflow-hidden" variants={itemVariants}>
+                <motion.section className="bg-white rounded border border-slate-200 shadow-xs flex flex-col md:flex-row overflow-hidden" variants={itemVariants}>
                     <div className="p-6 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50/50 flex flex-col justify-center">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl">
@@ -339,7 +339,7 @@ function AdminDashboard({ user, onLogout }) {
                                             variants={itemVariants}
                                             whileHover={{ y: -4, shadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)" }}
                                             onClick={() => navigate(mod.path)}
-                                            className="flex flex-col items-center justify-center p-5 bg-white rounded-2xl border border-slate-200 hover:border-indigo-400 transition-all duration-200 group h-36 text-center relative overflow-hidden cursor-pointer shadow-xs"
+                                            className="flex flex-col items-center justify-center p-5 bg-white rounded border border-slate-200 hover:border-indigo-400 transition-all duration-200 group h-36 text-center relative overflow-hidden cursor-pointer shadow-xs"
                                         >
                                             <div className="p-3 rounded-xl bg-slate-50 text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors mb-2 text-xl">
                                                 {mod.icon}

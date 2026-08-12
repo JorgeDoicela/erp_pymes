@@ -176,45 +176,82 @@ const PayrollConfiguration = () => {
                     </div>
 
                     {/* List */}
-                    <div className="overflow-x-auto rounded-lg border border-slate-200">
-                        <table className="w-full text-sm text-left text-slate-600">
-                            <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-bold border-b border-slate-200">
-                                <tr>
-                                    <th className="p-4">Nombre</th>
-                                    <th className="p-4">Tipo</th>
-                                    <th className="p-4">Valor</th>
-                                    <th className="p-4">Obligatorio</th>
-                                    <th className="p-4 text-right">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {config.items.length === 0 && (
-                                    <tr><td colSpan="5" className="p-6 text-center text-slate-500 bg-slate-50/50">No hay rubros configurados.</td></tr>
-                                )}
-                                {config.items.map((item, index) => (
-                                    <tr key={index} className="hover:bg-slate-50 transition-colors">
-                                        <td className="p-4 font-medium text-slate-800">{item.name}</td>
-                                        <td className="p-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-bold border ${item.type === 'EARNING' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                    <div className="rounded-lg border border-slate-200 overflow-hidden">
+                        {/* VISTA MÓVIL: Tarjetas Apiladas (Cero scroll horizontal) */}
+                        <div className="block md:hidden divide-y divide-slate-100">
+                            {config.items.length === 0 ? (
+                                <div className="p-6 text-center text-slate-500 text-xs italic">
+                                    No hay rubros configurados.
+                                </div>
+                            ) : (
+                                config.items.map((item, index) => (
+                                    <div key={index} className="p-4 space-y-2 bg-white">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="font-bold text-slate-800 text-sm">{item.name}</span>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${item.type === 'EARNING' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                                                 {item.type === 'EARNING' ? 'Ingreso' : 'Deducción'}
                                             </span>
-                                        </td>
-                                        <td className="p-4 font-mono font-medium">
-                                            {item.percentage ? `${item.percentage}%` : `$${item.fixedValue}`}
-                                        </td>
-                                        <td className="p-4">{item.isMandatory ? 'Sí' : 'No'}</td>
-                                        <td className="p-4 text-right">
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs text-slate-600 pt-1">
+                                            <span className="font-mono font-bold">
+                                                Valor: {item.percentage ? `${item.percentage}%` : `$${item.fixedValue}`}
+                                            </span>
+                                            <span className="text-slate-500">
+                                                {item.isMandatory ? 'Obligatorio' : 'Opcional'}
+                                            </span>
                                             <button
                                                 onClick={() => handleRemoveItem(index)}
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors text-xs font-semibold"
+                                                className="text-red-500 hover:text-red-700 border border-red-200 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer"
                                             >
                                                 Eliminar
                                             </button>
-                                        </td>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* VISTA ESCRITORIO: Tabla Completa */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-sm text-left text-slate-600">
+                                <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th className="p-4">Nombre</th>
+                                        <th className="p-4">Tipo</th>
+                                        <th className="p-4">Valor</th>
+                                        <th className="p-4">Obligatorio</th>
+                                        <th className="p-4 text-right">Acción</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {config.items.length === 0 && (
+                                        <tr><td colSpan="5" className="p-6 text-center text-slate-500 bg-slate-50/50">No hay rubros configurados.</td></tr>
+                                    )}
+                                    {config.items.map((item, index) => (
+                                        <tr key={index} className="hover:bg-slate-50 transition-colors">
+                                            <td className="p-4 font-medium text-slate-800">{item.name}</td>
+                                            <td className="p-4">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-bold border ${item.type === 'EARNING' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                                                    {item.type === 'EARNING' ? 'Ingreso' : 'Deducción'}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 font-mono font-medium">
+                                                {item.percentage ? `${item.percentage}%` : `$${item.fixedValue}`}
+                                            </td>
+                                            <td className="p-4">{item.isMandatory ? 'Sí' : 'No'}</td>
+                                            <td className="p-4 text-right">
+                                                <button
+                                                    onClick={() => handleRemoveItem(index)}
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors text-xs font-semibold"
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

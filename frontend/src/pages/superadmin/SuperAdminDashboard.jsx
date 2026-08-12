@@ -246,7 +246,100 @@ export default function SuperAdminDashboard() {
                         </div>
                     ) : (
                         <>
-                            <div className="overflow-x-auto">
+                            {/* Vista Móvil: Tarjetas Apiladas (Cero scroll horizontal) */}
+                            <div className="block md:hidden divide-y divide-gray-100">
+                                {tenants.map((t) => {
+                                    const maxCap = PLAN_LIMITS[t.plan] || t.maxEmployees || 25;
+                                    const usagePct = Math.min(Math.round(((t.employeeCount || 0) / maxCap) * 100), 100);
+
+                                    return (
+                                        <div key={t.id} className="p-4 space-y-3 bg-white">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className="w-8 h-8 bg-gray-100 border border-gray-200 rounded flex items-center justify-center font-mono font-semibold text-gray-700 text-xs shrink-0">
+                                                        {t.name.substring(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-medium text-gray-900 text-sm leading-tight truncate">{t.name}</p>
+                                                        <p className="text-[11px] text-gray-400 font-mono mt-0.5" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                                            RUC: {t.ruc || '—'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <select
+                                                    value={t.subscriptionStatus}
+                                                    disabled={updatingId === t.id}
+                                                    onChange={(e) => handleUpdateStatus(t.id, e.target.value)}
+                                                    className="text-[11px] font-mono font-medium px-2 py-1 bg-white border border-gray-200 text-gray-700 rounded focus:outline-none focus:border-gray-400 cursor-pointer uppercase shrink-0"
+                                                >
+                                                    <option value="ACTIVE">Activa</option>
+                                                    <option value="TRIAL">Prueba</option>
+                                                    <option value="SUSPENDED">Suspendida</option>
+                                                    <option value="CANCELLED">Cancelada</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50/70 p-2.5 rounded border border-gray-100">
+                                                <div>
+                                                    <span className="text-[10px] text-gray-400 font-medium uppercase block mb-0.5">Admin</span>
+                                                    {t.admin ? (
+                                                        <div>
+                                                            <p className="font-medium text-gray-800 truncate">{t.admin.firstName} {t.admin.lastName}</p>
+                                                            <p className="text-[11px] text-gray-400 font-mono truncate">{t.admin.email}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400 italic">No asignado</span>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] text-gray-400 font-medium uppercase block mb-0.5">Plan</span>
+                                                    <select
+                                                        value={t.plan}
+                                                        disabled={updatingId === t.id}
+                                                        onChange={(e) => handleUpdatePlan(t.id, e.target.value)}
+                                                        className="text-xs font-mono font-medium bg-white border border-gray-200 rounded px-2 py-1 text-gray-700 focus:outline-none focus:border-gray-400 cursor-pointer w-full"
+                                                    >
+                                                        <option value="ESSENTIAL">ESSENTIAL</option>
+                                                        <option value="GROWTH">GROWTH</option>
+                                                        <option value="ENTERPRISE">ENTERPRISE</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex justify-between text-[11px] text-gray-500 mb-1 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                                    <span>Licencias en uso</span>
+                                                    <span className="font-medium text-gray-800">{t.employeeCount || 0} / {maxCap}</span>
+                                                </div>
+                                                <div className="w-full bg-gray-100 h-1.5 rounded-sm overflow-hidden">
+                                                    <div
+                                                        className={`h-full ${usagePct > 90 ? 'bg-red-600' : 'bg-gray-800'}`}
+                                                        style={{ width: `${usagePct}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <button
+                                                    onClick={() => handleImpersonate(t.id, t.name)}
+                                                    className="flex-1 py-1.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-medium rounded transition-colors text-center cursor-pointer"
+                                                >
+                                                    Soporte
+                                                </button>
+                                                <button
+                                                    onClick={() => openTenantDrawer(t.id)}
+                                                    className="flex-1 py-1.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-medium rounded transition-colors text-center cursor-pointer"
+                                                >
+                                                    Ver detalle
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Vista Escritorio: Tabla Completa */}
+                            <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-left border-collapse text-sm">
                                     <thead>
                                         <tr className="bg-gray-50 border-b border-gray-200">
@@ -356,7 +449,7 @@ export default function SuperAdminDashboard() {
 
                             {/* Paginación */}
                             {pagination.totalPages > 1 && (
-                                <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2 bg-gray-50/50">
                                     <p className="text-xs text-gray-500 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
                                         Página {pagination.page} de {pagination.totalPages} · {pagination.total} empresas
                                     </p>
@@ -387,34 +480,9 @@ export default function SuperAdminDashboard() {
 
     return (
         <div className="space-y-0">
-            {/* Nav Tabs ERP Empresarial */}
-            <div className="bg-white border-b border-gray-200 flex items-center overflow-x-auto px-6">
-                {[
-                    { path: '/superadmin/dashboard', label: 'Resumen' },
-                    { path: '/superadmin/tenants', label: 'Empresas', alt: '/superadmin' },
-                    { path: '/superadmin/metrics', label: 'Analíticas' },
-                    { path: '/superadmin/audit', label: 'Auditoría' },
-                ].map(tab => {
-                    const isActive = currentPath === tab.path || (tab.alt && currentPath === tab.alt);
-                    return (
-                        <button
-                            key={tab.path}
-                            onClick={() => navigate(tab.path)}
-                            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 cursor-pointer shrink-0 -mb-px ${
-                                isActive
-                                    ? 'border-gray-900 text-gray-900'
-                                    : 'border-transparent text-gray-500 hover:text-gray-800'
-                            }`}
-                        >
-                            {tab.label}
-                        </button>
-                    );
-                })}
-            </div>
-            <div className="px-6 py-6">
-
-            {/* Contenido Dinámico de la Subvista */}
-            {renderContent()}
+            <div className="px-3 sm:px-6 py-4 sm:py-6">
+                {/* Contenido Dinámico de la Subvista */}
+                {renderContent()}
             </div>
 
             {/* Modal de Alta de Empresa Directa */}

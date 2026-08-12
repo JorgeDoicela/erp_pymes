@@ -275,7 +275,55 @@ const LegalComplianceDashboard = () => {
                         <div className="p-4 bg-slate-50 border-b border-slate-200">
                             <h4 className="font-bold text-slate-800 text-sm">Detalle de Provisiones Individuales por Empleado</h4>
                         </div>
-                        <div className="overflow-x-auto">
+
+                        {/* VISTA MÓVIL: Tarjetas Apiladas (Cero scroll horizontal) */}
+                        <div className="block md:hidden divide-y divide-slate-100">
+                            {provisionsData.provisionsList.length === 0 ? (
+                                <div className="p-8 text-center text-slate-400 text-xs italic">
+                                    Sin datos de provisiones para el período seleccionado.
+                                </div>
+                            ) : (
+                                provisionsData.provisionsList.map(prov => (
+                                    <div key={prov.employee.id} className="p-4 space-y-2 bg-white">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div>
+                                                <p className="font-bold text-slate-900 text-sm">
+                                                    {prov.employee.firstName} {prov.employee.lastName}
+                                                </p>
+                                                <p className="text-[11px] text-slate-400">{prov.employee.department || 'General'}</p>
+                                            </div>
+                                            <span className="font-mono font-bold text-emerald-700 text-base">
+                                                ${prov.totalEmpProvision.toFixed(2)}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-mono">
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-sans font-semibold uppercase block">Sueldo Base</span>
+                                                <span className="text-slate-800 font-medium">${prov.baseSalary.toFixed(2)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-sans font-semibold uppercase block">13er Sueldo</span>
+                                                <span className="text-slate-800">${prov.thirteenthProvision.toFixed(2)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-sans font-semibold uppercase block">14to Sueldo</span>
+                                                <span className="text-slate-800">${prov.fourteenthProvision.toFixed(2)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-sans font-semibold uppercase block">Fondos Reserva</span>
+                                                <span className="text-slate-800">
+                                                    {prov.hasReserveFund ? `$${prov.reserveFundProvision.toFixed(2)}` : '<1 Año'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* VISTA ESCRITORIO: Tabla Completa */}
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-sm text-left text-slate-600">
                                 <thead className="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200/80">
                                     <tr>

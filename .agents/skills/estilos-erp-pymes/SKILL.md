@@ -21,6 +21,7 @@ Esta habilidad define el estándar visual para sistemas ERP que se entregan a em
 | Emojis | PROHIBIDOS |
 | Íconos SVG | Únicamente donde el texto solo no es suficiente (buscador, cerrar modal, paginación) |
 | Gradientes | PROHIBIDOS en UI operativa |
+| Colores | RESTRICCIÓN ABSOLUTA. Queda PROHIBIDO usar cualquier color o tono fuera de la paleta autorizada |
 
 ---
 
@@ -39,7 +40,7 @@ Cuerpo:     13px–14px · #374151
 
 ---
 
-## 3. Paleta de Colores
+## 3. Paleta de Colores y Gobernanza Estricta
 
 ```css
 /* Superficie */

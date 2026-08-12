@@ -108,7 +108,37 @@ export default function SuperAdminAuditView() {
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto">
+                        {/* Vista Móvil: Tarjetas Apiladas (Cero scroll horizontal) */}
+                        <div className="block md:hidden divide-y divide-gray-100">
+                            {logs.map((log) => (
+                                <div key={log.id} className="p-3.5 space-y-2 bg-white">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className={`inline-block px-2 py-0.5 border rounded text-[10px] font-mono font-semibold uppercase tracking-wide ${getActionStyle(log.action)}`}>
+                                            {log.action}
+                                        </span>
+                                        <span className="text-[11px] text-gray-400 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                            {new Date(log.timestamp).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="font-medium text-gray-900">
+                                            {log.tenant ? log.tenant.name : 'SaaS Global'}
+                                        </span>
+                                        <span className="text-gray-600 font-medium">
+                                            {log.performedBy}
+                                        </span>
+                                    </div>
+                                    {log.details && (
+                                        <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-100 break-words">
+                                            {log.details}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Vista Escritorio: Tabla Completa */}
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left border-collapse text-sm">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200">
@@ -150,7 +180,7 @@ export default function SuperAdminAuditView() {
                         </div>
 
                         {pagination.totalPages > 1 && (
-                            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                            <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2 bg-gray-50/50">
                                 <p className="text-xs text-gray-500 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
                                     Página {pagination.page} de {pagination.totalPages} · {pagination.total} registros
                                 </p>

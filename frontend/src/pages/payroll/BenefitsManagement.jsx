@@ -237,7 +237,50 @@ const BenefitsManagement = () => {
                                 </button>
                             </div>
 
-                            <div className="overflow-x-auto">
+                            {/* VISTA MÓVIL: Tarjetas Apiladas (Cero scroll horizontal) */}
+                            <div className="block md:hidden divide-y divide-slate-100">
+                                {benefits.map(benefit => (
+                                    <div key={benefit.id} className="p-3.5 space-y-2 bg-white">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="font-bold text-slate-800 text-sm">{benefit.name}</span>
+                                            <span className="font-mono text-emerald-600 font-bold text-base">
+                                                ${benefit.amount.toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs text-slate-500">
+                                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${benefit.type === 'BONUS' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                benefit.type === 'INCENTIVE' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                                                    'bg-slate-50 text-slate-600 border-slate-200'
+                                                }`}>
+                                                {benefit.type} • {benefit.frequency === 'ONE_TIME' ? 'Pago Único' : 'Recurrente'}
+                                            </span>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${benefit.status === 'ACTIVE' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                benefit.status === 'PROCESSED' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                                                {benefit.status === 'ACTIVE' ? 'Pendiente' :
+                                                    benefit.status === 'PROCESSED' ? 'Procesado' : 'Cancelado'}
+                                            </span>
+                                        </div>
+                                        {benefit.status === 'ACTIVE' && (
+                                            <div className="pt-1 flex justify-end">
+                                                <button
+                                                    onClick={() => handleDeactivate(benefit.id)}
+                                                    className="text-red-500 hover:text-red-700 border border-red-200 px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer"
+                                                >
+                                                    Cancelar Beneficio
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                {benefits.length === 0 && (
+                                    <div className="py-12 text-center text-slate-400 text-xs italic">
+                                        No hay beneficios registrados para este empleado.
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* VISTA ESCRITORIO: Tabla Completa */}
+                            <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-left text-sm">
                                     <thead className="text-xs uppercase font-bold text-slate-400 tracking-widest border-b border-slate-100">
                                         <tr>

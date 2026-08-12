@@ -132,7 +132,7 @@ const NotificationsPage = () => {
             ) : (
                 <div className="space-y-3">
                     {filteredNotifications.length === 0 ? (
-                        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-400 text-xs italic shadow-xs">
+                        <div className="bg-white rounded border border-slate-200/80 p-12 text-center text-slate-400 text-xs italic shadow-xs">
                             No tienes notificaciones {filter === 'unread' ? 'pendientes' : 'en el historial'}.
                         </div>
                     ) : (
@@ -140,7 +140,7 @@ const NotificationsPage = () => {
                             <div
                                 key={notification.id}
                                 onClick={() => handleRead(notification)}
-                                className={`relative group bg-white border border-slate-200/80 rounded-2xl p-5 hover:border-slate-300 transition-all cursor-pointer shadow-xs ${!notification.isRead ? 'bg-slate-50/60' : ''}`}
+                                className={`relative group bg-white border border-slate-200/80 rounded p-5 hover:border-slate-300 transition-all cursor-pointer shadow-xs ${!notification.isRead ? 'bg-slate-50/60' : ''}`}
                             >
                                 {!notification.isRead && (
                                     <div className="absolute top-5 right-5 w-2 h-2 rounded-full bg-indigo-600"></div>

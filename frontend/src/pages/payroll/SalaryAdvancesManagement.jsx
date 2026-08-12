@@ -145,7 +145,7 @@ const SalaryAdvancesManagement = () => {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-amber-500 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
+                <div className="bg-white p-5 rounded border-l-4 border-l-amber-500 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
                         <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Solicitudes por Revisar</p>
                         <h3 className="text-3xl font-extrabold mt-2 text-slate-800">{pendingCount}</h3>
@@ -154,7 +154,7 @@ const SalaryAdvancesManagement = () => {
                     <ClockIcon className="w-20 h-20 absolute -right-2 -bottom-2 text-slate-100/60" />
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-blue-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
+                <div className="bg-white p-5 rounded border-l-4 border-l-blue-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
                         <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Monto Total Saldo Activo</p>
                         <h3 className="text-3xl font-extrabold mt-2 text-slate-800">${totalApprovedAmount.toFixed(2)}</h3>
@@ -163,7 +163,7 @@ const SalaryAdvancesManagement = () => {
                     <BanknotesIcon className="w-20 h-20 absolute -right-2 -bottom-2 text-slate-100/60" />
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border-l-4 border-l-emerald-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
+                <div className="bg-white p-5 rounded border-l-4 border-l-emerald-600 border-t border-r border-b border-slate-200/80 shadow-sm relative overflow-hidden">
                     <div className="relative z-10">
                         <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Deducción Estimada Mes</p>
                         <h3 className="text-3xl font-extrabold mt-2 text-slate-800">${monthlyDeductionsTotal.toFixed(2)}</h3>
@@ -174,7 +174,7 @@ const SalaryAdvancesManagement = () => {
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="bg-white p-5 rounded border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
                     <FunnelIcon className="w-5 h-5 text-slate-400 shrink-0" />
                     {[
@@ -229,12 +229,12 @@ const SalaryAdvancesManagement = () => {
                         Cargando solicitudes de anticipos...
                     </div>
                 ) : advances.length === 0 ? (
-                    <div className="p-8 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs italic">
+                    <div className="p-8 bg-white rounded border border-slate-200/80 text-center text-slate-400 text-xs italic">
                         No se encontraron registros de anticipos o préstamos.
                     </div>
                 ) : (
                     advances.map(adv => (
-                        <div key={adv.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-xs">
+                        <div key={adv.id} className="bg-white rounded border border-slate-200/80 p-4 space-y-3 shadow-xs">
                             <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
@@ -303,7 +303,7 @@ const SalaryAdvancesManagement = () => {
             </div>
 
             {/* VISTA ESCRITORIO: Tabla Completa */}
-            <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="hidden md:block bg-white rounded border border-slate-200/80 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-slate-600">
                         <thead className="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200/80">
@@ -436,7 +436,7 @@ const SalaryAdvancesManagement = () => {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden"
+                            className="bg-white rounded border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden"
                         >
                             <div className="p-6 bg-slate-50 border-b border-slate-200">
                                 <h3 className="text-lg font-bold text-slate-800">Rechazar Solicitud de Anticipo</h3>

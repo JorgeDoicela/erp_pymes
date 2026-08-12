@@ -173,7 +173,58 @@ const MySalaryAdvances = () => {
                 <div className="p-5 border-b border-slate-100">
                     <h3 className="font-bold text-slate-800 text-base">Historial de Solicitudes</h3>
                 </div>
-                <div className="overflow-x-auto">
+
+                {/* VISTA MÓVIL: Tarjetas Apiladas (Cero scroll horizontal) */}
+                <div className="block md:hidden divide-y divide-slate-100">
+                    {loading ? (
+                        <div className="p-8 text-center text-slate-400 text-xs">Cargando solicitudes...</div>
+                    ) : advances.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 text-xs italic">
+                            No has realizado ninguna solicitud de anticipo o préstamo aún.
+                        </div>
+                    ) : (
+                        advances.map(adv => (
+                            <div key={adv.id} className="p-4 space-y-3">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-xs text-slate-500 font-medium">
+                                        {new Date(adv.requestDate).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    </span>
+                                    {getStatusBadge(adv.status)}
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                    <div>
+                                        <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Monto</span>
+                                        <span className="font-mono font-bold text-slate-900 text-sm">${adv.amount.toFixed(2)}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Descuento Mensual</span>
+                                        <span className="font-mono font-bold text-rose-600">-${adv.monthlyDeduction.toFixed(2)} / mes</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between text-xs pt-1">
+                                    <span className="text-slate-500 font-mono text-[11px]">
+                                        Progreso: {adv.paidInstallments} / {adv.installments} cuotas
+                                    </span>
+                                    {adv.status === 'PENDING' ? (
+                                        <button
+                                            onClick={() => handleCancel(adv.id)}
+                                            className="text-xs font-bold text-rose-600 hover:text-rose-800 transition-colors cursor-pointer"
+                                        >
+                                            Cancelar
+                                        </button>
+                                    ) : adv.rejectionReason ? (
+                                        <span className="text-xs text-rose-500 italic truncate max-w-[150px]" title={adv.rejectionReason}>
+                                            Nota: {adv.rejectionReason}
+                                        </span>
+                                    ) : null}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* VISTA ESCRITORIO: Tabla Completa */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-sm text-left text-slate-600">
                         <thead className="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200/80">
                             <tr>

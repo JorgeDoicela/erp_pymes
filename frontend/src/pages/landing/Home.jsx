@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     FiUsers, FiClock, FiCalendar, FiDollarSign, FiGift,
-    FiClipboard, FiBriefcase, FiFileText, FiBarChart2,
+    FiBriefcase, FiFileText, FiBarChart2,
     FiTrendingUp, FiCpu, FiArrowRight, FiCheckCircle,
     FiActivity, FiZap
 } from 'react-icons/fi';
@@ -67,17 +67,17 @@ function Home() {
         {
             icon: <FiZap />,
             title: 'Automatización Inteligente',
-            desc: 'Reduce tareas manuales con flujos automatizados de nómina, asistencia y evaluaciones'
+            desc: 'Reduce tareas manuales con flujos automatizados de nómina, asistencia y evaluaciones.'
         },
         {
             icon: <FiCpu />,
             title: 'Asistente Inteligente',
-            desc: 'Dashboard predictivo con alertas proactivas y recomendaciones inteligentes'
+            desc: 'Dashboard predictivo con alertas proactivas y recomendaciones inteligentes.'
         },
         {
             icon: <FiActivity />,
             title: 'Análisis en Tiempo Real',
-            desc: 'Métricas actualizadas y reportes personalizables para tomar mejores decisiones'
+            desc: 'Métricas actualizadas y reportes personalizables para tomar mejores decisiones.'
         }
     ];
 
@@ -85,39 +85,39 @@ function Home() {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
-            transition: { staggerChildren: 0.08 }
+            transition: { staggerChildren: 0.05 }
         }
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
+        hidden: { opacity: 0, y: 10 },
         visible: { opacity: 1, y: 0 }
     };
 
     return (
-        <main className="min-h-screen bg-slate-50">
+        <main className="min-h-screen bg-[#f9fafb] text-[#374151] font-sans antialiased">
             {/* Navbar */}
             <motion.nav
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="sticky top-0 z-50 bg-white border-b border-gray-200"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center">
-                            <img src={logoEmplifi} alt="EMPLIFI" className="h-10 w-auto object-contain" />
-                        </div>
+                    <div className="flex items-center justify-between h-14">
                         <div className="flex items-center gap-3">
+                            <img src={logoEmplifi} alt="EMPLIFI" className="h-8 w-auto object-contain" />
+                        </div>
+                        <div className="flex items-center gap-2">
                             <Link
                                 to="/login"
-                                className="px-5 py-2 rounded-lg text-slate-700 hover:text-blue-600 text-sm font-semibold transition-colors"
+                                className="px-3.5 py-1.5 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
                             >
                                 Iniciar Sesión
                             </Link>
                             <Link
                                 to="/register-company"
-                                className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-colors"
+                                className="px-3.5 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors"
                             >
                                 Crear Cuenta Empresa
                             </Link>
@@ -127,45 +127,45 @@ function Home() {
             </motion.nav>
 
             {/* Hero Section */}
-            <section className="py-20 lg:py-28">
+            <section className="py-16 lg:py-24 bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="text-center max-w-4xl mx-auto"
+                        transition={{ duration: 0.4 }}
+                        className="text-center max-w-3xl mx-auto"
                     >
                         {/* Badge */}
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 border border-blue-100 mb-6">
-                            <FiCpu className="w-4 h-4" />
-                            <span className="text-sm font-medium">SaaS Multi-Empresa con Cumplimiento Legal Ecuador</span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-gray-100 border border-gray-200 text-gray-700 text-xs font-mono font-medium mb-6">
+                            <FiCpu className="w-3.5 h-3.5 text-blue-600" />
+                            <span>SaaS Multi-Empresa con Cumplimiento Legal Ecuador</span>
                         </div>
 
                         {/* Title */}
-                        <h1 className="text-4xl lg:text-6xl font-bold text-slate-800 mb-6 tracking-tight">
+                        <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-5 tracking-tight leading-tight">
                             Gestión de RRHH, Nómina y Asistencia Simple e Inteligente
                         </h1>
 
                         {/* Subtitle */}
-                        <p className="text-lg lg:text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+                        <p className="text-sm sm:text-base text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
                             Plataforma completa para gestionar tu equipo. Automatiza nómina con asientos contables,
                             asistencia por GPS, finiquitos legales y analítica en tiempo real.
                         </p>
 
                         {/* CTA */}
-                        <div className="flex flex-col items-center gap-6">
-                            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 w-full sm:w-auto">
                                 <Link
                                     to="/register-company"
-                                    className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold shadow-lg shadow-blue-200 transition-all"
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors"
                                 >
                                     Registrar Empresa (Prueba 14 Días)
-                                    <FiArrowRight className="w-5 h-5" />
+                                    <FiArrowRight className="w-4 h-4" />
                                 </Link>
 
                                 <Link
                                     to="/login"
-                                    className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-lg font-semibold transition-all"
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
                                 >
                                     Iniciar Sesión
                                 </Link>
@@ -173,9 +173,9 @@ function Home() {
 
                             <Link
                                 to="/careers"
-                                className="text-slate-500 flex items-center gap-2 hover:text-blue-600 font-medium transition-colors text-sm"
+                                className="text-gray-500 flex items-center gap-1.5 hover:text-blue-600 font-medium transition-colors text-xs mt-2"
                             >
-                                <FiBriefcase className="w-4 h-4" />
+                                <FiBriefcase className="w-3.5 h-3.5" />
                                 Ver Vacantes Abiertas
                             </Link>
                         </div>
@@ -184,25 +184,25 @@ function Home() {
             </section>
 
             {/* Features Highlight */}
-            <section className="py-16 bg-white border-y border-slate-200">
+            <section className="py-12 bg-gray-50 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {features.map((feature, idx) => (
                             <motion.div
                                 key={idx}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 10 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="flex flex-col items-center text-center"
+                                transition={{ delay: idx * 0.08 }}
+                                className="bg-white border border-gray-200 rounded p-5 flex flex-col items-start"
                             >
-                                <div className="p-3 rounded-xl bg-blue-50 text-blue-600 mb-4">
-                                    <span className="text-2xl">{feature.icon}</span>
+                                <div className="p-2.5 rounded bg-gray-100 border border-gray-200 text-blue-600 mb-3">
+                                    <span className="text-lg">{feature.icon}</span>
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-800 mb-2">
+                                <h3 className="text-sm font-bold text-gray-900 mb-1.5">
                                     {feature.title}
                                 </h3>
-                                <p className="text-sm text-slate-600 leading-relaxed">
+                                <p className="text-xs text-gray-600 leading-relaxed">
                                     {feature.desc}
                                 </p>
                             </motion.div>
@@ -212,16 +212,21 @@ function Home() {
             </section>
 
             {/* Modules Section */}
-            <section className="py-20">
+            <section className="py-14 bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mb-12">
-                        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                            <FiBriefcase className="text-slate-400" />
-                            Aplicaciones y Módulos
-                        </h2>
-                        <p className="text-2xl font-bold text-slate-800">
-                            Todo lo que necesitas en un solo lugar
-                        </p>
+                    <div className="mb-8 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                <FiBriefcase className="text-gray-400" />
+                                Aplicaciones y Módulos
+                            </h2>
+                            <p className="text-xl font-bold text-gray-900">
+                                Todo lo que necesitas en un solo lugar
+                            </p>
+                        </div>
+                        <span className="hidden sm:inline-block font-mono text-xs text-gray-500">
+                            10 MÓDULOS INTEGRADOS
+                        </span>
                     </div>
 
                     <motion.div
@@ -229,23 +234,21 @@ function Home() {
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true }}
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4"
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"
                     >
                         {modules.map((mod, idx) => (
                             <motion.div
                                 key={idx}
                                 variants={itemVariants}
-                                whileHover={{ y: -5 }}
-                                className="flex flex-col items-center justify-center p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all duration-200 group h-40 text-center relative overflow-hidden"
+                                className="flex flex-col items-center justify-center p-4 bg-white rounded border border-gray-200 hover:border-blue-500 hover:bg-gray-50/60 transition-colors text-center group cursor-pointer"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="p-3 rounded-xl bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors mb-3 relative z-10 duration-200">
-                                    <span className="text-2xl">{mod.icon}</span>
+                                <div className="p-2.5 rounded bg-gray-50 border border-gray-200 text-gray-700 group-hover:text-blue-600 group-hover:bg-blue-50/50 transition-colors mb-2.5 text-xl">
+                                    {mod.icon}
                                 </div>
-                                <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 relative z-10">
+                                <span className="text-xs font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
                                     {mod.title}
                                 </span>
-                                <span className="text-xs text-slate-500 mt-1 relative z-10">
+                                <span className="text-[11px] text-gray-500 mt-1 leading-tight">
                                     {mod.desc}
                                 </span>
                             </motion.div>
@@ -255,68 +258,68 @@ function Home() {
             </section>
 
             {/* Intelligence Panel Highlight */}
-            <section className="py-16 bg-white border-y border-slate-200">
+            <section className="py-14 bg-gray-50 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row overflow-hidden">
-                        <div className="p-8 md:w-1/3 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50/50 flex flex-col justify-center">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                                    <FiActivity size={24} />
+                    <div className="bg-white rounded border border-gray-200 flex flex-col md:flex-row overflow-hidden">
+                        <div className="p-6 md:w-1/3 border-b md:border-b-0 md:border-r border-gray-200 bg-gray-50/80 flex flex-col justify-center">
+                            <div className="flex items-center gap-2.5 mb-3">
+                                <div className="p-2 bg-blue-50 border border-blue-200 text-blue-600 rounded">
+                                    <FiActivity size={20} />
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-800">Panel Inteligente</h3>
+                                <h3 className="text-base font-bold text-gray-900">Panel Inteligente</h3>
                             </div>
-                            <p className="text-slate-600 mb-4 leading-relaxed">
+                            <p className="text-xs text-gray-600 mb-4 leading-relaxed">
                                 Dashboard inteligente que analiza tus datos y te proporciona alertas proactivas,
                                 predicciones de rotación y recomendaciones predictivas.
                             </p>
-                            <div className="flex items-center gap-2 text-sm font-semibold text-blue-600">
-                                <FiCpu />
-                                <span>Análisis Predictivo</span>
+                            <div className="flex items-center gap-1.5 text-xs font-mono font-medium text-blue-600">
+                                <FiCpu className="w-3.5 h-3.5" />
+                                <span>ANÁLISIS PREDICTIVO</span>
                             </div>
                         </div>
 
-                        <div className="p-8 md:w-2/3 flex items-center justify-center">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                                <div className="flex items-start gap-3 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-                                    <FiTrendingUp className="text-blue-600 mt-1" />
+                        <div className="p-6 md:w-2/3 flex items-center justify-center">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full">
+                                <div className="flex items-start gap-3 p-3.5 rounded border border-gray-200 bg-white">
+                                    <FiTrendingUp className="text-blue-600 mt-0.5 w-4 h-4 shrink-0" />
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-700 mb-1">
+                                        <p className="text-xs font-bold text-gray-900 mb-0.5">
                                             Análisis Predictivo
                                         </p>
-                                        <p className="text-xs text-slate-500">
+                                        <p className="text-[11px] text-gray-500">
                                             Anticipa problemas de rotación
                                         </p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-3 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-                                    <FiZap className="text-amber-500 mt-1" />
+                                <div className="flex items-start gap-3 p-3.5 rounded border border-gray-200 bg-white">
+                                    <FiZap className="text-amber-600 mt-0.5 w-4 h-4 shrink-0" />
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-700 mb-1">
+                                        <p className="text-xs font-bold text-gray-900 mb-0.5">
                                             Alertas Proactivas
                                         </p>
-                                        <p className="text-xs text-slate-500">
+                                        <p className="text-[11px] text-gray-500">
                                             Notificaciones inteligentes
                                         </p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-3 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-                                    <FiBarChart2 className="text-emerald-500 mt-1" />
+                                <div className="flex items-start gap-3 p-3.5 rounded border border-gray-200 bg-white">
+                                    <FiBarChart2 className="text-emerald-600 mt-0.5 w-4 h-4 shrink-0" />
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-700 mb-1">
+                                        <p className="text-xs font-bold text-gray-900 mb-0.5">
                                             Métricas Clave
                                         </p>
-                                        <p className="text-xs text-slate-500">
+                                        <p className="text-[11px] text-gray-500">
                                             KPIs en tiempo real
                                         </p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-3 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-                                    <FiCheckCircle className="text-blue-600 mt-1" />
+                                <div className="flex items-start gap-3 p-3.5 rounded border border-gray-200 bg-white">
+                                    <FiCheckCircle className="text-blue-600 mt-0.5 w-4 h-4 shrink-0" />
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-700 mb-1">
+                                        <p className="text-xs font-bold text-gray-900 mb-0.5">
                                             Recomendaciones
                                         </p>
-                                        <p className="text-xs text-slate-500">
+                                        <p className="text-[11px] text-gray-500">
                                             Acciones sugeridas
                                         </p>
                                     </div>
@@ -328,28 +331,25 @@ function Home() {
             </section>
 
             {/* CTA Final */}
-            <section className="py-20">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 mb-6">
+            <section className="py-16 bg-white">
+                <div className="max-w-4xl mx-auto px-4 text-center">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-3">
                         Comienza a gestionar tu equipo de forma inteligente
                     </h2>
-                    <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-6 max-w-xl mx-auto leading-relaxed">
                         Accede a todas las herramientas que necesitas para optimizar
-                        la gestión de recursos humanos en tu empresa
+                        la gestión de recursos humanos en tu empresa.
                     </p>
                     <Link
                         to="/login"
-                        className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold shadow-lg shadow-blue-200 transition-all"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors"
                     >
                         Iniciar Sesión
-                        <FiArrowRight className="w-5 h-5" />
+                        <FiArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="py-8 bg-white border-t border-slate-200">
-            </footer>
             <DeveloperCard />
         </main>
     );

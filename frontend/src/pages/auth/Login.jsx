@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
-import toast from 'react-hot-toast';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
 import DeveloperCard from '../../components/common/DeveloperCard';
 
@@ -184,117 +183,113 @@ function Login({ onLogin }) {
     };
 
     const IconFingerprint = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 10a4 4 0 0 0-4 4c0 1.03.13 2.15.4 3.19"></path><path d="M11 10a4 4 0 0 1 4 4c0 .49-.13.95-.34 1.35"></path><path d="M7 19c1.03 1.23 2.4 2 4 2 3.09 0 6-2.61 6-9a7 7 0 1 0-14 0c0 .99.13 1.94.39 2.85"></path><path d="M11 14a2 2 0 1 0 2 2"></path><path d="M11 2a11 11 0 0 0-11 11c0 1.93.41 3.76 1.15 5.4"></path><path d="M11 5a8 8 0 0 1 8 8c0 2.45-.64 4.74-1.74 6.7"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 10a4 4 0 0 0-4 4c0 1.03.13 2.15.4 3.19"></path><path d="M11 10a4 4 0 0 1 4 4c0 .49-.13.95-.34 1.35"></path><path d="M7 19c1.03 1.23 2.4 2 4 2 3.09 0 6-2.61 6-9a7 7 0 1 0-14 0c0 .99.13 1.94.39 2.85"></path><path d="M11 14a2 2 0 1 0 2 2"></path><path d="M11 2a11 11 0 0 0-11 11c0 1.93.41 3.76 1.15 5.4"></path><path d="M11 5a8 8 0 0 1 8 8c0 2.45-.64 4.74-1.74 6.7"></path></svg>
     );
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-            <div className="w-full max-w-md">
+        <main className="min-h-screen flex items-center justify-center bg-[#f9fafb] text-[#374151] p-4 font-sans antialiased">
+            <div className="w-full max-w-sm sm:max-w-md">
                 {/* Logo y Header */}
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="text-center mb-8"
+                    transition={{ duration: 0.3 }}
+                    className="text-center mb-6"
                 >
                     <img
                         src={logoEmplifi}
-                        alt="EMPLIFI"
-                        className="h-12 w-auto object-contain mx-auto mb-4"
+                        alt="EMPLIFI ERP"
+                        className="h-9 w-auto object-contain mx-auto mb-3"
                     />
-                    <h1 className="text-2xl font-bold text-slate-800 mb-2">
-                        Bienvenido de nuevo
+                    <h1 className="text-xl font-semibold text-gray-900 mb-1 tracking-tight">
+                        Acceso al Sistema ERP
                     </h1>
-                    <p className="text-slate-600 text-sm">
-                        Ingresa tus credenciales para continuar
+                    <p className="text-xs text-gray-500">
+                        Ingrese sus credenciales de usuario para continuar
                     </p>
                 </motion.div>
 
                 {/* Card de Login */}
                 <motion.section
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                    className="bg-white rounded-xl border border-slate-200 shadow-sm p-8"
+                    transition={{ duration: 0.3, delay: 0.05 }}
+                    className="bg-white rounded border border-[#e5e7eb] p-6 sm:p-7 shadow-none"
                 >
                     {view === 'login' ? (
-                        <form className="space-y-5" onSubmit={handleSubmit}>
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             {/* Email */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700">
-                                    Correo electrónico o Cédula
+                            <div className="space-y-1">
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Correo Electrónico o Cédula
                                 </label>
                                 <div className="relative">
-                                    <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                                     <input
                                         type="text"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 placeholder-slate-400 transition-all"
-                                        placeholder="usuario@emplifi o Cédula"
+                                        className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 transition-colors"
+                                        placeholder="usuario@empresa.com o Cédula"
                                     />
                                 </div>
                             </div>
 
                             {/* Password */}
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <label className="block text-sm font-medium text-slate-700">
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="block text-xs font-medium text-gray-700">
                                         Contraseña
                                     </label>
                                     <button
                                         type="button"
                                         onClick={handleBiometricLogin}
-                                        className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md transition-colors"
+                                        className="text-[11px] font-medium text-gray-700 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 bg-white px-2 py-0.5 rounded transition-colors flex items-center gap-1 cursor-pointer"
                                     >
                                         <IconFingerprint />
-                                        Usar Huella
+                                        <span>Biometría</span>
                                     </button>
                                 </div>
                                 <div className="relative">
-                                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-10 pr-12 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 placeholder-slate-400 transition-all"
+                                        className="w-full pl-9 pr-9 py-2 bg-white border border-gray-200 rounded text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 transition-colors"
                                         placeholder="••••••••"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                     >
-                                        {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                                        {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                                     </button>
                                 </div>
                             </div>
 
                             {/* Error Message */}
                             {error && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm"
-                                >
+                                <div className="p-2.5 rounded bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
                                     {error}
-                                </motion.div>
+                                </div>
                             )}
 
                             {/* Submit Button */}
-                            <div className="pt-2">
+                            <div className="pt-1">
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                     {loading ? (
                                         <span className="flex items-center justify-center gap-2">
-                                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Procesando...
+                                            Autenticando...
                                         </span>
                                     ) : (
                                         'Iniciar Sesión'
@@ -303,67 +298,67 @@ function Login({ onLogin }) {
                             </div>
 
                             {/* Links */}
-                            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                            <div className="flex items-center justify-between pt-3.5 border-t border-gray-100">
                                 <button
                                     type="button"
                                     onClick={() => navigate('/')}
-                                    className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
                                 >
-                                    <FiArrowLeft className="w-4 h-4" />
-                                    Volver al inicio
+                                    <FiArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Inicio</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => { setView('forgotPassword'); setError(''); setSuccessMsg(''); }}
-                                    className="text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium"
+                                    className="text-xs text-blue-600 hover:text-blue-700 transition-colors font-medium cursor-pointer"
                                 >
                                     ¿Olvidaste tu contraseña?
                                 </button>
                             </div>
                         </form>
                     ) : (
-                        <form className="space-y-6" onSubmit={handleForgotPassword}>
-                            <div className="space-y-2">
-                                <h2 className="text-xl font-bold text-slate-800">Recuperar acceso</h2>
-                                <p className="text-slate-500 text-sm leading-relaxed">
-                                    Ingresa tu correo electrónico registrado y te enviaremos las instrucciones para restablecer tu contraseña.
+                        <form className="space-y-4" onSubmit={handleForgotPassword}>
+                            <div className="space-y-1">
+                                <h2 className="text-base font-semibold text-gray-900">Recuperar Acceso</h2>
+                                <p className="text-xs text-gray-500 leading-relaxed">
+                                    Ingrese su correo electrónico registrado para recibir las instrucciones de restablecimiento.
                                 </p>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700">
-                                    Correo electrónico
+                            <div className="space-y-1">
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Correo Electrónico
                                 </label>
                                 <div className="relative">
-                                    <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                                     <input
                                         type="email"
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 transition-all"
-                                        placeholder="ejemplo@jorgedoicela.com"
+                                        className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 transition-colors"
+                                        placeholder="usuario@empresa.com"
                                     />
                                 </div>
                             </div>
 
                             {error && (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm italic font-medium">
+                                <div className="p-2.5 rounded bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
                                     {error}
-                                </motion.div>
+                                </div>
                             )}
 
                             {successMsg && (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
+                                <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
                                     {successMsg}
-                                </motion.div>
+                                </div>
                             )}
 
-                            <div className="space-y-3">
+                            <div className="space-y-2 pt-1">
                                 <button
                                     type="submit"
                                     disabled={loading || !!successMsg}
-                                    className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg shadow-blue-100 transition-all disabled:opacity-50"
+                                    className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors disabled:opacity-50 cursor-pointer"
                                 >
                                     {loading ? 'Enviando...' : successMsg ? 'Correo Enviado' : 'Enviar Instrucciones'}
                                 </button>
@@ -371,7 +366,7 @@ function Login({ onLogin }) {
                                 <button
                                     type="button"
                                     onClick={() => { setView('login'); setError(''); setSuccessMsg(''); }}
-                                    className="w-full py-2 text-sm text-slate-500 hover:text-slate-800 font-semibold transition-colors"
+                                    className="w-full py-1.5 text-xs text-gray-500 hover:text-gray-800 font-medium transition-colors cursor-pointer"
                                 >
                                     Volver al Login
                                 </button>

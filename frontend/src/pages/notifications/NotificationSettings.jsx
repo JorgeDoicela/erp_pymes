@@ -65,7 +65,7 @@ const NotificationSettings = () => {
                 <p className="text-slate-500 text-xs sm:text-sm mt-1">Gestiona los canales por los cuales deseas recibir alertas del sistema.</p>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 space-y-4 shadow-xs">
+            <div className="bg-white rounded border border-slate-200/80 p-5 sm:p-6 space-y-4 shadow-xs">
                 {notificationTypes.map(({ key, label }) => {
                     const emailEnabled = preferences[key]?.email !== false;
                     const inAppEnabled = preferences[key]?.inApp !== false;

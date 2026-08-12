@@ -166,33 +166,31 @@ const EmployeeExpedient = () => {
             </div>
 
             {/* Progress Card */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-6 items-center justify-between">
+            <div className="bg-white p-5 rounded border border-slate-200 shadow-xs flex flex-col md:flex-row gap-6 items-center justify-between">
                 <div className="space-y-1.5 w-full md:w-2/3">
-                    <div className="flex justify-between items-center text-sm font-bold text-slate-800">
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-800">
                         <span>Completitud del Expediente de Onboarding</span>
-                        <span className="font-mono text-blue-600 text-base">{completionPercentage}%</span>
+                        <span className="font-mono text-blue-600 text-sm">{completionPercentage}%</span>
                     </div>
-                    <div className="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden border border-slate-200/80 p-0.5">
+                    <div className="w-full bg-slate-100 h-2.5 rounded overflow-hidden border border-slate-200 p-0.5">
                         <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                                completionPercentage === 100
-                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
-                                    : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+                            className={`h-full rounded transition-all duration-500 ${
+                                completionPercentage === 100 ? 'bg-emerald-600' : 'bg-blue-600'
                             }`}
                             style={{ width: `${completionPercentage}%` }}
                         />
                     </div>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-[11px] text-slate-500">
                         {verifiedCount} de {totalRequired} documentos requeridos verificados correctamente.
                     </p>
                 </div>
 
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center w-full md:w-auto shrink-0">
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Estado Onboarding</p>
-                    <span className={`inline-block mt-1 font-extrabold text-sm px-3 py-1 rounded-full ${
+                <div className="bg-slate-50 border border-slate-200 p-3 rounded text-center w-full md:w-auto shrink-0">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Estado Onboarding</p>
+                    <span className={`inline-block mt-1 font-bold text-xs px-2.5 py-0.5 rounded ${
                         completionPercentage === 100
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-800 border border-amber-200'
                     }`}>
                         {completionPercentage === 100 ? '✓ EXPEDIENTE COMPLETO' : 'PENDIENTE VERIFICACIÓN'}
                     </span>
@@ -205,7 +203,7 @@ const EmployeeExpedient = () => {
                     safeChecklist.map((item, idx) => (
                         <div 
                             key={idx} 
-                            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4 hover:border-blue-200 transition-all"
+                            className="bg-white p-5 rounded border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4 hover:border-blue-200 transition-all"
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-start gap-3">
@@ -276,7 +274,7 @@ const EmployeeExpedient = () => {
                         </div>
                     ))
                 ) : (
-                    <div className="col-span-full bg-white p-8 rounded-2xl border border-slate-200/80 shadow-sm text-center text-slate-500 text-sm">
+                    <div className="col-span-full bg-white p-8 rounded border border-slate-200/80 shadow-sm text-center text-slate-500 text-sm">
                         No hay elementos registrados en la lista del expediente.
                     </div>
                 )}
@@ -290,7 +288,7 @@ const EmployeeExpedient = () => {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden"
+                            className="bg-white rounded border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden"
                         >
                             <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                                 <h3 className="text-lg font-bold text-slate-800">Cargar Documento de Expediente</h3>
@@ -358,7 +356,7 @@ const EmployeeExpedient = () => {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden"
+                            className="bg-white rounded border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden"
                         >
                             <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                                 <h3 className="text-lg font-bold text-slate-800">Validar Documento</h3>

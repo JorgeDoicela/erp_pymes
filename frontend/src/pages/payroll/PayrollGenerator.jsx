@@ -302,7 +302,65 @@ const PayrollGenerator = () => {
                     </div>
 
                     <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                        <div className="overflow-x-auto">
+                        {/* VISTA MÓVIL: Tarjetas Apiladas (Cero scroll horizontal) */}
+                        <div className="block md:hidden divide-y divide-slate-100">
+                            {selectedPayroll.details.map(det => {
+                                const bonuses = JSON.parse(det.bonuses || '[]');
+                                const deductions = JSON.parse(det.deductions || '[]');
+                                const totalBonuses = bonuses.reduce((a, b) => a + b.amount, 0);
+                                const totalDeductions = deductions.reduce((a, b) => a + b.amount, 0);
+
+                                return (
+                                    <div key={det.id} className="p-4 space-y-3 bg-white">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div>
+                                                <p className="font-bold text-slate-900 text-sm">
+                                                    {det.employee.firstName} {det.employee.lastName}
+                                                </p>
+                                                <p className="text-[11px] text-slate-400">Días trabajados: {det.workedDays}</p>
+                                            </div>
+                                            <span className="font-bold text-emerald-700 font-mono text-base">
+                                                ${(det.netSalary || 0).toFixed(2)}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-mono">
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-sans font-semibold uppercase block">Ingresos</span>
+                                                <span className="text-emerald-600 font-medium">+${(totalBonuses + det.overtimeAmount).toFixed(2)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 font-sans font-semibold uppercase block">Deducciones</span>
+                                                <span className="text-red-500 font-medium">-${totalDeductions.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-end gap-2 pt-1">
+                                            {selectedPayroll.status === 'DRAFT' && (
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingDetail({ ...det });
+                                                        setEditModalOpen(true);
+                                                    }}
+                                                    className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 rounded text-xs font-bold transition-all cursor-pointer"
+                                                >
+                                                    Editar
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => generatePayslipPDF(det, det.employee, selectedPayroll.period)}
+                                                className="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 px-3 py-1 rounded text-xs font-medium transition-all cursor-pointer"
+                                            >
+                                                PDF Rol
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* VISTA ESCRITORIO: Tabla Completa */}
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-sm text-left text-slate-600">
                                 <thead className="bg-slate-50 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
                                     <tr>
