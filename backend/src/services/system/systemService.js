@@ -3,11 +3,30 @@ import { encryptCoordinate, decryptCoordinate } from '../../utils/encryption.js'
 
 class SystemService {
     async getSettings() {
-        // upsert guarantees the record always exists
-        const settings = await prisma.systemSetting.upsert({
-            where: { id: 'default' },
-            update: {},
-            create: {
+        try {
+            // upsert guarantees the record always exists
+            const settings = await prisma.systemSetting.upsert({
+                where: { id: 'default' },
+                update: {},
+                create: {
+                    id: 'default',
+                    maintenanceMode: false,
+                    biometricEnabled: false,
+                    allowedIPs: null,
+                    globalLatitude: null,
+                    globalLongitude: null,
+                    globalRadius: 200,
+                    maintenanceMessage: 'El sistema estará en mantenimiento brevemente.'
+                }
+            });
+
+            return {
+                ...settings,
+                globalLatitude: decryptCoordinate(settings.globalLatitude),
+                globalLongitude: decryptCoordinate(settings.globalLongitude)
+            };
+        } catch (error) {
+            return {
                 id: 'default',
                 maintenanceMode: false,
                 biometricEnabled: false,
@@ -16,14 +35,8 @@ class SystemService {
                 globalLongitude: null,
                 globalRadius: 200,
                 maintenanceMessage: 'El sistema estará en mantenimiento brevemente.'
-            }
-        });
-
-        return {
-            ...settings,
-            globalLatitude: decryptCoordinate(settings.globalLatitude),
-            globalLongitude: decryptCoordinate(settings.globalLongitude)
-        };
+            };
+        }
     }
 
     async updateSettings(data) {
