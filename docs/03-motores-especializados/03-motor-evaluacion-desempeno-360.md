@@ -1,47 +1,57 @@
-# 03. Motor de Evaluación de Desempeño 360 y Competencias
+# Motor de Evaluación de Desempeño 360° y Medición de Competencias
 
-## 1. Arquitectura del Motor de Evaluación 360
+## 1. Arquitectura del Motor de Evaluaciones
 
-El **Motor de Evaluación de EMPLIFI** permite realizar mediciones integrales del desempeño del personal mediante una arquitectura flexible de cuestionarios, rúbricas y agregadores estadísticos.
+El motor de evaluación recopila y consolida mediciones cualitativas y cuantitativas provenientes de múltiples perspectivas (autoevaluación, supervisor, pares y subalternos).
 
 ```
- ┌──────────────────────────────┐
- │ Plantilla de Evaluación │
- └──────────────┬───────────────┘
- │
- ┌───────────────────────┼───────────────────────┐
- ▼ ▼ ▼
-┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
-│ Autoevaluación │ │ Evaluacion Par │ │ Evaluación Boss │
-└────────┬─────────┘ └────────┬─────────┘ └────────┬─────────┘
- │ │ │
- └──────────────────────┼──────────────────────┘
- ▼
- ┌──────────────────────────────┐
- │ Agregador de Puntajes │
- │ Ponderación por Rol (360) │
- └──────────────┬───────────────┘
- ▼
- ┌──────────────────────────────┐
- │ Informe de Resultados │
- └──────────────────────────────┘
+                      ┌──────────────────────────────┐
+                      │ Plantilla de Evaluación 360° │
+                      └──────────────┬───────────────┘
+                                     │
+       ┌───────────────────────┬─────┴─────────┬───────────────────────┐
+       ▼                       ▼               ▼                       ▼
+┌──────────────┐        ┌─────────────┐  ┌───────────┐        ┌──────────────────┐
+│ Autoevaluado │        │ Jefe Directo│  │ Pares (2) │        │ Subalternos (2)  │
+└──────┬───────┘        └──────┬──────┘  └─────┬─────┘        └────────┬─────────┘
+       │                       │               │                       │
+       └───────────────────────┼───────────────┴───────────────────────┘
+                               ▼
+               ┌──────────────────────────────┐
+               │ Agregador de Puntajes        │
+               │ Ponderación Multidimensional │
+               └──────────────┬───────────────┘
+                              ▼
+               ┌──────────────────────────────┐
+               │ Calificación Consolidada 360  │
+               └──────────────────────────────┘
 ```
 
 ---
 
-## 2. Componentes del Modelo de Evaluación
+## 2. Ponderación por Rol Evaluador
 
-1. **Competencias y Rúbricas**: Evaluación de habilidades técnicas (ej. arquitectura, backend, SQL) y habilidades blandas (ej. liderazgo, comunicación, trabajo en equipo).
-2. **Evaluadores (`EvaluationReviewer`)**: Asignación dinámica de evaluadores múltiples para un mismo colaborador.
-3. **Ponderación Puntuativa**: Matriz de pesos porcentuales por tipo de evaluador:
- - Autoevaluación: 15%
- - Evaluación de Pares: 35%
- - Evaluación del Supervisor Directo: 50%
+La puntuación final consolida los cuestionarios resueltos mediante la siguiente asignación de pesos:
+
+$$\text{Puntaje Final 360} = (w_{\text{jefe}} \cdot \bar{S}_{\text{jefe}}) + (w_{\text{auto}} \cdot S_{\text{auto}}) + (w_{\text{pares}} \cdot \bar{S}_{\text{pares}}) + (w_{\text{sub}} \cdot \bar{S}_{\text{sub}})$$
+
+Donde los pesos estandarizados corresponden a:
+- **Jefe Directo ($w_{\text{jefe}}$)**: $40\%$ ($0.40$)
+- **Autoevaluación ($w_{\text{auto}}$)**: $20\%$ ($0.20$)
+- **Pares ($w_{\text{pares}}$)**: $20\%$ ($0.20$)
+- **Subalternos ($w_{\text{sub}}$)**: $20\%$ ($0.20$)
 
 ---
 
-## 3. Seguimiento de Objetivos Estratégicos (OKRs / KPIs)
+## 3. Integración con Objetivos (KPIs / OKRs)
 
-El motor conecta la evaluación cualitativa con el cumplimiento cuantitativo registrado en `EmployeeGoal`:
-- **Cálculo de Progreso**: $$\text{Progreso (\%)} = \min\left(100, \left(\frac{\text{currentValue}}{\text{targetValue}}\right) \times 100\right)$$
-- **Nivel de Cumplimiento**: Clasificado en `PAGO_EXCEDIDO`, `COMPLETADO`, `EN_PROGRESO` o `RETRASADO`.
+El desempeño cualitativo se complementa con la medición de objetivos individuales registrados en la entidad `EmployeeGoal`:
+
+### 3.1. Cálculo del Porcentaje de Avance
+$$\text{Progreso (\%)} = \min\left(100, \left( \frac{\text{currentValue}}{\text{targetValue}} \right) \times 100 \right)$$
+
+### 3.2. Clasificación de Estado
+- **`COMPLETED`**: Progreso $\ge 100\%$ dentro del plazo límite (`deadline`).
+- **`ON_TRACK`**: Progreso acorde al tiempo transcurrido.
+- **`AT_RISK`**: Quedan menos de 30 días para la fecha límite y el progreso es inferior al $70\%$.
+- **`OVERDUE`**: Fecha límite superada con progreso $< 100\%$.

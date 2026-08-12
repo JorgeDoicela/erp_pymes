@@ -1,42 +1,57 @@
 import prisma from '../../database/db.js';
 
 class PayrollConfigService {
-    async getConfig() {
-        // Return the most recent active configuration
+    async getConfig(tenantId = null) {
+        // Return the most recent active configuration for the tenant
         const config = await prisma.payrollConfig.findFirst({
-            where: { isActive: true },
+            where: {
+                isActive: true,
+                ...(tenantId ? { tenantId } : {})
+            },
             orderBy: { createdAt: 'desc' },
             include: { items: true }
         });
 
-        // If no config exists, return default/empty structure for frontend
+        // If no config exists, return default structure for frontend
         if (!config) {
             return {
+                tenantId,
                 workingDays: 30,
                 currency: 'USD',
-                items: []
+                items: [
+                    {
+                        name: 'Aporte Personal IESS',
+                        type: 'DEDUCTION',
+                        isMandatory: true,
+                        percentage: 9.45,
+                        fixedValue: null
+                    }
+                ]
             };
         }
 
         return config;
     }
 
-    async createConfig(data) {
-        // 1. Deactivate previous active config
+    async createConfig(data, tenantId = null) {
+        const { workingDays, items } = data;
+
+        // 1. Deactivate previous active config FOR THIS TENANT ONLY
         await prisma.payrollConfig.updateMany({
-            where: { isActive: true },
+            where: {
+                isActive: true,
+                ...(tenantId ? { tenantId } : {})
+            },
             data: { isActive: false }
         });
 
-        // 2. Create new config
-        // Data expected: { workingDays, items: [{ name, type, percentage, fixedValue, isMandatory }] }
-        const { workingDays, items } = data;
-
+        // 2. Create new config with tenantId
         const newConfig = await prisma.payrollConfig.create({
             data: {
-                workingDays: parseInt(workingDays),
+                tenantId,
+                workingDays: parseInt(workingDays) || 30,
                 items: {
-                    create: items.map(item => ({
+                    create: (items || []).map(item => ({
                         name: item.name,
                         type: item.type,
                         isMandatory: item.isMandatory || false,

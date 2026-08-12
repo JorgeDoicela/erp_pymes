@@ -1,23 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle, FiClock, FiMapPin, FiExternalLink, FiPlus } from 'react-icons/fi';
+import { FiSettings, FiSave, FiCheckCircle, FiAlertCircle, FiClock, FiMapPin, FiExternalLink, FiPlus, FiBriefcase, FiUsers, FiAward, FiCalendar, FiShield } from 'react-icons/fi';
 import systemService from '../../services/systemService';
+import api from '../../api/axios.js';
 import LocationPickerMap from '../../components/common/LocationPickerMap';
 
 const AdminSettings = () => {
     const navigate = useNavigate();
     const [settings, setSettings] = useState(null);
+    const [tenant, setTenant] = useState(null);
+    const [tenantForm, setTenantForm] = useState({ name: '', ruc: '' });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [savingTenant, setSavingTenant] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
-        const fetchSettings = async () => {
+        const fetchData = async () => {
             try {
-                const res = await systemService.getSettings();
-                if (res.success) {
-                    setSettings(res.data);
+                const [sysRes, tenantRes] = await Promise.all([
+                    systemService.getSettings(),
+                    api.get('/tenants/me').catch(err => ({ data: { success: false } }))
+                ]);
+
+                if (sysRes.success) {
+                    setSettings(sysRes.data);
+                }
+                if (tenantRes.data?.success) {
+                    setTenant(tenantRes.data.data);
+                    setTenantForm({
+                        name: tenantRes.data.data.name || '',
+                        ruc: tenantRes.data.data.ruc || ''
+                    });
                 }
             } catch (err) {
                 setMessage({ type: 'error', text: 'Error al cargar la configuración.' });
@@ -25,8 +40,24 @@ const AdminSettings = () => {
                 setLoading(false);
             }
         };
-        fetchSettings();
+        fetchData();
     }, []);
+
+    const handleSaveTenant = async () => {
+        setSavingTenant(true);
+        try {
+            const res = await api.put('/tenants/me', tenantForm);
+            if (res.data?.success) {
+                setTenant(prev => ({ ...prev, ...res.data.data }));
+                setMessage({ type: 'success', text: 'Datos de la empresa actualizados correctamente.' });
+                setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+            }
+        } catch (err) {
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Error al actualizar la empresa.' });
+        } finally {
+            setSavingTenant(false);
+        }
+    };
 
     const handleToggle = (field) => {
         setSettings(prev => ({ ...prev, [field]: !prev[field] }));
@@ -142,6 +173,90 @@ const AdminSettings = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-4"
                 >
+                    {/* Tenant Profile & Subscription Card */}
+                    {tenant && (
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600">
+                                        <FiBriefcase size={22} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 text-base">Perfil y Suscripción de la Empresa</h3>
+                                        <p className="text-slate-500 text-xs mt-0.5">Gestión de datos fiscales, plan contratado y cuotas del sistema</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                                        tenant.plan === 'ENTERPRISE' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
+                                        tenant.plan === 'GROWTH' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                                        'bg-slate-100 text-slate-700 border border-slate-200'
+                                    }`}>
+                                        Plan {tenant.plan}
+                                    </span>
+                                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                                        tenant.subscriptionStatus === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                                        tenant.subscriptionStatus === 'TRIAL' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                                        'bg-red-100 text-red-700 border border-red-200'
+                                    }`}>
+                                        {tenant.subscriptionStatus === 'ACTIVE' ? 'Suscripción Activa' :
+                                         tenant.subscriptionStatus === 'TRIAL' ? 'Prueba Gratuita' :
+                                         tenant.subscriptionStatus}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">Nombre Comercial de la Empresa</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={tenantForm.name}
+                                        onChange={e => setTenantForm({ ...tenantForm, name: e.target.value })}
+                                        placeholder="Ej. Mi Empresa S.A."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">RUC / Identificación Fiscal</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                                        value={tenantForm.ruc}
+                                        onChange={e => setTenantForm({ ...tenantForm, ruc: e.target.value })}
+                                        placeholder="1790000000001"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Meter indicator for Employee Quota */}
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="space-y-1 flex-1 w-full">
+                                    <div className="flex items-center justify-between text-xs font-medium text-slate-700">
+                                        <span className="flex items-center gap-1.5"><FiUsers className="text-slate-500" /> Capacidad de Colaboradores</span>
+                                        <span className="font-mono">{tenant._count?.employees || 0} / {tenant.maxEmployees} empleados</span>
+                                    </div>
+                                    <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden mt-2">
+                                        <div
+                                            className={`h-full transition-all duration-300 ${
+                                                ((tenant._count?.employees || 0) / tenant.maxEmployees) > 0.9 ? 'bg-red-500' : 'bg-blue-600'
+                                            }`}
+                                            style={{ width: `${Math.min(100, Math.round(((tenant._count?.employees || 0) / tenant.maxEmployees) * 100))}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleSaveTenant}
+                                    disabled={savingTenant}
+                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-lg text-xs font-semibold transition-colors shrink-0 cursor-pointer flex items-center gap-1.5"
+                                >
+                                    {savingTenant ? <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" /> : <FiSave />}
+                                    Guardar Datos Fiscales
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Biometric Card */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                         <div className="flex items-start justify-between gap-4">

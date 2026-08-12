@@ -47,7 +47,7 @@ const JobApplication = () => {
         } catch (error) {
             console.error(error);
             if (error.response?.status === 413) {
-                alert("El archivo es demasiado grande para el servidor (Límite 4MB en Vercel). Por favor intente con uno más pequeño.");
+                alert("El archivo es demasiado grande para el servidor. Por favor intente con uno más pequeño.");
             } else {
                 alert(error.response?.data?.message || "Ocurrió un error al enviar la postulación. Intente de nuevo.");
             }

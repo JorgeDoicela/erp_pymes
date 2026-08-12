@@ -33,6 +33,23 @@ const PayrollConfiguration = () => {
         setConfig({ ...config, items: updated });
     };
 
+    const handleLoadLegalPreset = () => {
+        if (config.items.length > 0 && !confirm('¿Desea cargar la plantilla predeterminada de ley? Esto agregará los rubros estándar.')) return;
+        const legalItems = [
+            { name: 'Aporte Personal IESS', type: 'DEDUCTION', isMandatory: true, percentage: '9.45', fixedValue: '' },
+            { name: 'Aporte Patronal IESS', type: 'DEDUCTION', isMandatory: false, percentage: '12.15', fixedValue: '' }
+        ];
+        // Merge without duplicate names
+        const existingNames = new Set(config.items.map(i => i.name));
+        const newItems = [...config.items];
+        legalItems.forEach(item => {
+            if (!existingNames.has(item.name)) {
+                newItems.push({ ...item, id: Date.now().toString() + Math.random() });
+            }
+        });
+        setConfig({ ...config, items: newItems });
+    };
+
     const handleSave = async () => {
         setLoading(true);
         try {
@@ -58,13 +75,21 @@ const PayrollConfiguration = () => {
                     <h1 className="text-xl font-semibold text-gray-900">Configuración de Nómina</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Defina los rubros, deducciones e ingresos que se aplican en cada rol de pago.</p>
                 </div>
-                <button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 shrink-0"
-                >
-                    {loading ? 'Guardando...' : 'Guardar Configuración'}
-                </button>
+                <div className="flex gap-2 shrink-0">
+                    <button
+                        onClick={handleLoadLegalPreset}
+                        className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                    >
+                        ⚡ Cargar Plantilla IESS / Ley
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={loading}
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                        {loading ? 'Guardando...' : 'Guardar Configuración'}
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

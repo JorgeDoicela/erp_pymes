@@ -1,87 +1,57 @@
-# EMPLIFI — Portal de Documentación del Proyecto
+# Documentación Técnica — Emplifi
 
-Bienvenido al centro principal de documentación de **EMPLIFI** (Sistema de Gestión Integral de Recursos Humanos & Analítica).
+Documentación técnica del sistema de gestión de talento humano Emplifi. Cada sección corresponde a un dominio funcional o capa técnica del sistema.
 
-Este repositorio concentra tanto la especificación técnica modular de ingeniería de software como los artefactos formales de gestión de proyecto (Metodología Scrum).
+## Índice de Secciones
 
----
+### 01 — Arquitectura del Sistema
+- [00 — Arquitectura General](./01-arquitectura/00-arquitectura-general.md)
+- [01 — Clean Architecture y Macro-Estructura](./01-arquitectura/01-macro-arquitectura-clean-arch.md)
+- [02 — Micro-Arquitecturas y Patrones](./01-arquitectura/02-micro-arquitecturas-patrones.md)
 
-## Mapa General de Módulos de Documentación
+### 02 — Backend y Servicios
+- [01 — Especificación de API REST](./02-backend-servicios/01-especificacion-api-rest.md)
+- [02 — Autenticación, SSO y RBAC](./02-backend-servicios/02-autenticacion-sso-y-rbac.md)
+- [03 — Gobernanza, LOPDP y Auditoría](./02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md)
+- [04 — Workflows de Evaluaciones y Nómina](./02-backend-servicios/04-workflow-evaluaciones-y-nomina.md)
+- [05 — Encriptación de Salarios y Seguridad](./02-backend-servicios/05-encriptacion-salarios-y-seguridad.md)
 
-```
-docs/
-├── 01-arquitectura/ # Macro/Micro arquitectura, Clean Arch y patrones
-├── 02-backend-servicios/ # Catálogo API REST, RBAC, SSO, cifrado AES-256 y LOPDP
-├── 03-motores-especializados/ # PDF, Geofencing GPS, Evaluaciones 360°, Biometría y Notificaciones
-├── 04-base-de-datos/ # Esquema relacional Prisma / PostgreSQL y catálogos
-├── 05-frontend-web/ # Arquitectura React + Vite, componentes UI y resiliencia Axios
-├── 06-inteligencia-y-analitica/# Indicadores clave (eNPS, turnover) y analítica predictiva
-├── 07-despliegue-y-operaciones/# Instalación local, auditoría, DRP y guía de testing
-├── 08-artefactos-scrum/ # Requerimientos, Historias de Usuario, Sprints y Backlog (.docx)
-└── README.md # Portal Maestro de Navegación
-```
+### 03 — Motores Especializados
+- [01 — Motor de Cálculo de Nómina](./03-motores-especializados/01-motor-calculo-nomina.md)
+- [02 — Motor de Liquidación Legal (Offboarding)](./03-motores-especializados/02-motor-liquidacion-legal.md)
+- [03 — Motor de Asistencia y Geocerca](./03-motores-especializados/03-motor-asistencia-geocerca.md)
 
----
+### 04 — Base de Datos
+- [01 — Esquema Relacional Emplifi](./04-base-de-datos/01-esquema-relacional-emplifi.md)
+- [02 — Catálogos y Normativa Laboral](./04-base-de-datos/02-catalogos-y-normativa-laboral.md)
 
-## Secciones Principales
+### 05 — Frontend Web
+- [01 — Arquitectura React y Vite](./05-frontend-web/01-arquitectura-react-vite.md)
+- [02 — Componentes UI y Layout](./05-frontend-web/02-componentes-ui-y-layout.md)
+- [03 — Integración API y Resiliencia](./05-frontend-web/03-integracion-api-y-resiliencia.md)
 
-### 1. [01. Arquitectura del Sistema](01-arquitectura/)
-- **[00-arquitectura-general.md](01-arquitectura/00-arquitectura-general.md)**: Visión integral de arquitectura y componentes del sistema.
-- **[01-macro-arquitectura-clean-arch.md](01-arquitectura/01-macro-arquitectura-clean-arch.md)**: Arquitectura en capas (Presentación, Servicios, Persistencia) y secuencias HTTP.
-- **[02-micro-arquitecturas-patrones.md](01-arquitectura/02-micro-arquitecturas-patrones.md)**: Repository Pattern, interceptores middleware y cifrado AES-256-GCM.
+### 06 — Inteligencia y Analítica
+- [01 — Módulo de IA y Analítica Predictiva](./06-inteligencia-y-analitica/01-modulo-ia-y-reportes-predictivos.md)
+- [02 — Scoring Multidimensional de Empleados](./06-inteligencia-y-analitica/02-scoring-multidimensional.md)
+- [03 — Simulador Monte Carlo y ANOVA](./06-inteligencia-y-analitica/03-monte-carlo-y-anova.md)
 
-### 2. [02. Servicios Backend y API REST](02-backend-servicios/)
-- **[01-especificacion-api-rest.md](02-backend-servicios/01-especificacion-api-rest.md)**: Catálogo de 65+ endpoints REST (Autenticación, Nómina, Anticipos, Onboarding/Offboarding, EPPs, Cumplimiento Legal, Comunicados).
-- **[02-autenticacion-sso-y-rbac.md](02-backend-servicios/02-autenticacion-sso-y-rbac.md)**: Matriz de roles y permisos RBAC (`admin`, `hr`, `employee`, `accounting`, `entrepreneur`).
-- **[03-gobernanza-lopdp-y-auditoria.md](02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md)**: Cumplimiento de ley LOPDP, AuditLog y protección de archivos estáticos.
-- **[04-workflow-evaluaciones-y-nomina.md](02-backend-servicios/04-workflow-evaluaciones-y-nomina.md)**: Algoritmos de cálculo de nómina, horas extras, ausencias y finiquitos legales.
-- **[05-encriptacion-salarios-y-seguridad.md](02-backend-servicios/05-encriptacion-salarios-y-seguridad.md)**: Cifrado AES-256-GCM, PBKDF2, Helmet, CORS y variables de entorno.
+### 07 — Despliegue y Operaciones
+- [01 — Instalación y Entorno Local](./07-despliegue-y-operaciones/01-instalacion-entorno-local.md)
+- [02 — Guía de Auditoría y Cumplimiento](./07-despliegue-y-operaciones/02-guia-auditoria-y-cumplimiento.md)
+- [03 — Plan de Recuperación ante Desastres](./07-despliegue-y-operaciones/03-plan-recuperacion-desastres.md)
+- [04 — Guía de Testing](./07-despliegue-y-operaciones/04-guia-testing.md)
+- [05 — Infraestructura Docker y Despliegue AWS](./07-despliegue-y-operaciones/05-infraestructura-docker-aws.md)
 
-### 3. [03. Motores Especializados](03-motores-especializados/)
-- **[01-motor-documental-pdf.md](03-motores-especializados/01-motor-documental-pdf.md)**: Generación dinámica de contratos, roles de pago, actas de finiquito y certificados laborales con QR.
-- **[02-motor-asistencia-y-geofencing.md](03-motores-especializados/02-motor-asistencia-y-geofencing.md)**: Marcación GPS mobile-first y cálculo de geocercas mediante fórmula Haversine.
-- **[03-motor-evaluacion-desempeno-360.md](03-motores-especializados/03-motor-evaluacion-desempeno-360.md)**: Rúbricas cuantitativas, evaluadores par/jefe/auto y ponderaciones.
-- **[04-motor-biometrico-y-seguridad.md](04-motor-biometrico-y-seguridad.md)**: Integración de credenciales biométricas y seguridad de credenciales.
-- **[05-motor-notificaciones-multicanal.md](05-motor-notificaciones-multicanal.md)**: Notificaciones in-app, correos SMTP y acuses de recibo digital.
-
-### 4. [04. Base de Datos](04-base-de-datos/)
-- **[01-esquema-relacional-emplifi.md](04-base-de-datos/01-esquema-relacional-emplifi.md)**: Especificación técnica de 50 entidades del esquema relacional Prisma / PostgreSQL.
-- **[02-catalogos-y-normativa-laboral.md](04-base-de-datos/02-catalogos-y-normativa-laboral.md)**: Catálogos del sistema, enums y coeficientes de cálculo de nómina y provisiones de ley.
-
-### 5. [05. Frontend Web](05-frontend-web/)
-- **[01-arquitectura-react-vite.md](05-frontend-web/01-arquitectura-react-vite.md)**: Single Page Application (SPA), React Router DOM v6 y guardias `RequireAuth`.
-- **[02-componentes-ui-y-layout.md](05-frontend-web/02-componentes-ui-y-layout.md)**: Catálogo técnico de 50+ vistas organizadas por módulos de negocio (incluye Portal Móvil, Expediente Digital, Offboarding, Cumplimiento y Comunicados).
-- **[03-integracion-api-y-resiliencia.md](05-frontend-web/03-integracion-api-y-resiliencia.md)**: Cliente Axios centralizado, interceptor de token, refresco 401 y modo mantenimiento 503.
-
-### 6. [06. Inteligencia y Analítica](06-inteligencia-y-analitica/)
-- **[01-modulo-ia-y-reportes-predictivos.md](06-inteligencia-y-analitica/01-modulo-ia-y-reportes-predictivos.md)**: Indicadores de gestión (rotación, eNPS) y proyecciones.
-
-### 7. [07. Despliegue y Operaciones](07-despliegue-y-operaciones/)
-- **[01-instalacion-entorno-local.md](07-despliegue-y-operaciones/01-instalacion-entorno-local.md)**: Guía paso a paso de instalación local, PostgreSQL, Prisma 7 y seeders.
-- **[02-guia-auditoria-y-cumplimiento.md](07-despliegue-y-operaciones/02-guia-auditoria-y-cumplimiento.md)**: Lista de verificación de auditoría y seguridad.
-- **[03-plan-recuperacion-desastres.md](07-despliegue-y-operaciones/03-plan-recuperacion-desastres.md)**: Plan de Recuperación ante Desastres (DRP) y estrategia RPO/RTO.
-- **[04-guia-testing.md](07-despliegue-y-operaciones/04-guia-testing.md)**: Estrategia de pruebas unitarias e integración de backend/frontend.
-
-### 8. [08. Artefactos de Gestión Scrum](08-artefactos-scrum/)
-Documentos formales elaborados durante las fases de análisis, diseño y ejecución del proyecto:
-1. **[1. Introducción y Modulos.docx](08-artefactos-scrum/1.%20Introducci%C3%B3n%20y%20Modulos.docx)**: Alcance funcional e introducción.
-2. **[2. Requerimientos.docx](08-artefactos-scrum/2.%20Requerimientos.docx)**: Especificación de requerimientos funcionales y no funcionales.
-3. **[3. Roles.docx](08-artefactos-scrum/3.%20Roles.docx)**: Matriz de roles del equipo y del sistema.
-4. **[4. Factibilidad.docx](08-artefactos-scrum/4.%20Factibilidad.docx)**: Estudio de factibilidad técnica, operativa y económica.
-5. **[5. Historias de usuario.docx](08-artefactos-scrum/5.%20Historias%20de%20usuario.docx)** / **[5.1. Historias de usuario.docx](08-artefactos-scrum/5.1.%20Historias%20de%20usuario.docx)**: Historias de usuario detalladas.
-6. **[6. Product Backlog.docx](08-artefactos-scrum/6.%20Product%20Backlog.docx)**: Pila del producto priorizada.
-7. **[7. Sprints.docx](08-artefactos-scrum/7.%20Sprints.docx)** / **[7.1. Sprints.docx](08-artefactos-scrum/7.1.%20Sprints.docx)**: Planificación y revisión de Sprints.
-8. **[8. Tecnologias y arquitectura.docx](08-artefactos-scrum/8.%20Tecnologias%20y%20arquitectura.docx)**: Fundamentación tecnológica.
+### 08 — Artefactos Scrum
+- [Backlog y Épicas](./08-artefactos-scrum/)
 
 ---
 
-## Enlaces de Acceso Rápido
+## Convenciones
 
-- **[Guía de Instalación Local](07-despliegue-y-operaciones/01-instalacion-entorno-local.md)**
-- **[Seguridad y Cifrado AES-256](02-backend-servicios/05-encriptacion-salarios-y-seguridad.md)**
-- **[Arquitectura Frontend React](05-frontend-web/01-arquitectura-react-vite.md)**
-- **[Guía de Testing](07-despliegue-y-operaciones/04-guia-testing.md)**
-- **[Plan de Recuperación DRP](07-despliegue-y-operaciones/03-plan-recuperacion-desastres.md)**
-
----
-&copy; 2026 **Jorge Doicela** — Sistema EMPLIFI
+- Todas las rutas de API tienen el prefijo `/api/`
+- La autenticación se realiza mediante `Authorization: Bearer <JWT>`
+- El contexto de empresa se transmite en `req.user.tenantId` (automático desde el JWT) o mediante la cabecera `x-tenant-id` (solo SuperAdmin)
+- Los identificadores de entidades utilizan CUID (Prisma) o UUID v4 según el modelo
+- Los campos monetarios y los salarios se almacenan encriptados con AES-256-GCM
+- Las coordenadas GPS se truncan a 4 decimales (~11m de precisión) antes de encriptarse

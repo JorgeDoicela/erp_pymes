@@ -104,6 +104,8 @@ export const getDashboardData = async (req, res) => {
 export const getTurnoverReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const tenantWhere = tenantId ? { tenantId } : {};
 
         const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 0, 1);
         const end = endDate ? new Date(endDate) : new Date();
@@ -113,6 +115,7 @@ export const getTurnoverReport = async (req, res) => {
 
         const exits = await prisma.employee.findMany({
             where: {
+                ...tenantWhere,
                 isActive: false,
                 exitDate: {
                     gte: start,
@@ -122,7 +125,10 @@ export const getTurnoverReport = async (req, res) => {
         });
 
         const activeEmployees = await prisma.employee.count({
-            where: { isActive: true }
+            where: {
+                ...tenantWhere,
+                isActive: true
+            }
         });
 
         // Simplified Avg: Existing + Exits (Roughly)
@@ -168,13 +174,14 @@ export const getTurnoverReport = async (req, res) => {
 export const getPerformanceReport = async (req, res) => {
     try {
         const { startDate, endDate, department } = req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
 
         console.log("Analytics: Generating Performance Report", { startDate, endDate, department });
 
         // Filters
         const whereClause = {
             status: 'COMPLETED',
-            // If date range provided, filter by evaluation end date (completion)
+            ...(tenantId ? { employee: { tenantId } } : {}),
             ...(startDate && endDate ? {
                 endDate: {
                     gte: new Date(startDate),
@@ -183,10 +190,9 @@ export const getPerformanceReport = async (req, res) => {
             } : {})
         };
 
-        // If department filtered, we need to filter employees first or use nested check
-        // Prisma doesn't support deep filtering easily in aggregations, so we might fetch and process or use includes
         if (department) {
             whereClause.employee = {
+                ...(whereClause.employee || {}),
                 department: department
             };
         }
@@ -224,7 +230,6 @@ export const getPerformanceReport = async (req, res) => {
         }));
 
         // 2. Rankings (Top & Bottom)
-        // Sort by finalScore
         const sortedEvaluations = [...evaluations].sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
 
         const topPerformers = sortedEvaluations.slice(0, 5).map(ev => ({
@@ -262,8 +267,6 @@ export const getPerformanceReport = async (req, res) => {
             count: distribution[key]
         }));
 
-
-        // 4. Recommendations for List
         const formatRecommendation = (score) => {
             if (score >= 4.5) return 'Promoción / Bono';
             if (score >= 3.5) return 'Felicitar / Mantener';
@@ -298,14 +301,13 @@ export const getPerformanceReport = async (req, res) => {
 export const getPayrollCostReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
         console.log("Analytics: Generating Payroll Cost Report", { startDate, endDate });
 
-        // Filter by Payroll Payment Date (or CreatedAt if not paid yet, but usually we report on Paid)
-        // Adjust status filter as needed (e.g., 'PAID' or 'ISSUED')
         const whereClause = {
-            // status: 'PAID', // Optional: Check if we only want paid
+            ...(tenantId ? { tenantId } : {}),
             ...(startDate && endDate ? {
-                createdAt: { // Using createdAt or paymentDate
+                createdAt: {
                     gte: new Date(startDate),
                     lte: new Date(endDate)
                 }
@@ -424,16 +426,14 @@ export const getPayrollCostReport = async (req, res) => {
 export const getSatisfactionReport = async (req, res) => {
     try {
         console.log("Analytics: Generating Satisfaction Report");
-        // For MVP, we fetch the latest active or most recent survey
+        const tenantId = req.tenantId || req.user?.tenantId;
         const survey = await prisma.climateSurvey.findFirst({
+            where: tenantId ? { tenantId } : {},
             orderBy: { createdAt: 'desc' },
             include: { responses: true }
         });
 
         if (!survey) {
-            // Need to Seed Data if empty?
-            // Let's check count. If 0 surveys, maybe we return empty structure or auto-seed here heavily discouraged but...
-            // Let's just return empty structure. Frontend will handle "No active survey".
             return res.json({
                 index: 0,
                 nps: 0,
@@ -469,7 +469,6 @@ export const getSatisfactionReport = async (req, res) => {
         const comments = [];
 
         responses.forEach(resp => {
-            // Ratings JSON
             try {
                 const ratings = JSON.parse(resp.ratings || '{}');
                 Object.keys(ratings).forEach(dim => {
@@ -482,14 +481,12 @@ export const getSatisfactionReport = async (req, res) => {
                 });
             } catch (e) { }
 
-            // NPS
             if (resp.npsScore !== null) {
                 if (resp.npsScore >= 9) promoters++;
                 else if (resp.npsScore <= 6) detractors++;
                 npsCount++;
             }
 
-            // Comments
             if (resp.comments) {
                 comments.push({
                     text: resp.comments,
@@ -498,18 +495,14 @@ export const getSatisfactionReport = async (req, res) => {
             }
         });
 
-        // Calculate Averages
         const dimensions = Object.keys(dimensionSums).map(dim => ({
             subject: dim,
-            A: parseFloat((dimensionSums[dim] / dimensionCounts[dim]).toFixed(1)), // Radar chart expects value often as A or value
+            A: parseFloat((dimensionSums[dim] / dimensionCounts[dim]).toFixed(1)),
             fullMark: 5
         }));
 
-        // Overall Index (0-100%) based on 5-point scale
         const avgScore = totalScoreCount > 0 ? (totalScoreSum / totalScoreCount) : 0;
         const index = Math.round((avgScore / 5) * 100);
-
-        // NPS
         const nps = npsCount > 0 ? Math.round(((promoters - detractors) / npsCount) * 100) : 0;
 
         res.json({
@@ -518,7 +511,7 @@ export const getSatisfactionReport = async (req, res) => {
             nps,
             dimensions,
             participation: responses.length,
-            comments: comments.slice(0, 10) // Top 10 recent
+            comments: comments.slice(0, 10)
         });
 
     } catch (error) {
@@ -530,9 +523,9 @@ export const getSatisfactionReport = async (req, res) => {
 export const getCustomReport = async (req, res) => {
     try {
         const { module, fields, filters } = req.body;
-        console.log("Analytics: Custom Report Request", { module, fields, filters });
+        const tenantId = req.tenantId || req.user?.tenantId;
+        console.log("Analytics: Custom Report Request", { module, fields, filters, tenantId });
 
-        // Map safe module names to prisma delegates
         const modelMap = {
             'employees': prisma.employee,
             'payrolls': prisma.payroll,
@@ -545,28 +538,26 @@ export const getCustomReport = async (req, res) => {
             return res.status(400).json({ message: "Módulo no válido" });
         }
 
-        // Construct Select
         let select = undefined;
         if (fields && fields.length > 0) {
             select = {};
             fields.forEach(f => select[f] = true);
-            // Always ensure ID is selected to be safe? Or stick to user request.
-            // If fields are nested (e.g. employee.department), Prisma handles it differently.
-            // For MVP, we assume flat fields or handle specific relations manually if needed.
-            // Let's assume fields are top-level for now.
-
-            // Check for relation fields request
-            // e.g. if module is 'evaluations', user wants 'employee.firstName'
-            // This simple builder might struggle with deep relations without sophisticated parsing.
-            // We will stick to flat fields of the main model for V1.
         }
 
-        // Construct Where
         const where = {};
+        if (tenantId) {
+            if (module === 'employees' || module === 'payrolls') {
+                where.tenantId = tenantId;
+            } else if (module === 'evaluations') {
+                where.employee = { tenantId };
+            } else if (module === 'job_applications') {
+                where.vacancy = { tenantId };
+            }
+        }
+
         if (filters) {
             if (filters.department) where.department = filters.department;
             if (filters.status) where.status = filters.status;
-            // Date handling generic path
             if (filters.dateRange && filters.dateField) {
                 where[filters.dateField] = {
                     gte: new Date(filters.dateRange.start),
@@ -575,10 +566,9 @@ export const getCustomReport = async (req, res) => {
             }
         }
 
-        // Execute
         const data = await delegate.findMany({
             where,
-            select: select // undefined means all fields
+            select: select
         });
 
         res.json(data);

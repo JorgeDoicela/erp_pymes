@@ -69,6 +69,7 @@ export const adminSections = [
             { title: 'Reclutamiento y Vacantes', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
         ]
     },
+    /* Se ocultaron Contabilidad y Emprendimiento para la presentación general
     {
         title: 'Contabilidad e Innovación',
         modules: [
@@ -76,6 +77,7 @@ export const adminSections = [
             { title: 'Proyectos e Innovación', icon: <FiCompass />, color: 'bg-amber-600', path: '/admin/entrepreneurship' },
         ]
     },
+    */
     {
         title: 'Inteligencia y Analíticas',
         modules: [
@@ -120,11 +122,11 @@ export const employeeSections = [
         ]
     },
     {
-        title: 'Mi Desempeño e Innovación',
+        title: 'Mi Desempeño',
         modules: [
             { title: 'Mis Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-500', path: '/performance/my-evaluations' },
             { title: 'Mis Objetivos', icon: <FiTarget />, color: 'bg-cyan-500', path: '/performance/goals' },
-            { title: 'Proyectos e Innovación', icon: <FiCompass />, color: 'bg-amber-600', path: '/entrepreneurship' },
+            // { title: 'Proyectos e Innovación', icon: <FiCompass />, color: 'bg-amber-600', path: '/entrepreneurship' },
         ]
     },
     {

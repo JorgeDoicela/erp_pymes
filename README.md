@@ -1,220 +1,105 @@
-# EMPLIFI — Plataforma ERP para PYMEs
+# Emplifi — Sistema de Gestión de Talento Humano
 
-[![Estado del Proyecto](https://img.shields.io/badge/Estado-Producción_Lista-success.svg)](#)
-[![Stack Backend](https://img.shields.io/badge/Backend-Node.js_v20+_|_Express_v5-blue.svg)](#)
-[![ORM](https://img.shields.io/badge/ORM-Prisma_v7.0-indigo.svg)](#)
-[![Base de Datos](https://img.shields.io/badge/Base_de_Datos-PostgreSQL_v14+-blue.svg)](#)
-[![Frontend](https://img.shields.io/badge/Frontend-React_v19_|_Vite_v6-61dafb.svg)](#)
-[![Seguridad](https://img.shields.io/badge/Seguridad-AES--256--GCM_|_PBKDF2_|_RBAC-red.svg)](#)
+Sistema web de gestión del talento humano orientado a PyMEs, construido con arquitectura multi-tenant sobre una pila PERN (PostgreSQL · Express.js · React · Node.js). Incorpora un motor de nómina conforme a la legislación laboral ecuatoriana, un módulo de inteligencia analítica con modelos estadísticos de supervivencia y scoring multidimensional, registro de asistencia con validación geoespacial y biométrica WebAuthn, y un módulo de contabilidad financiera aislado.
 
-> **EMPLIFI** es una solución web empresarial integral para la administración del talento humano, control de asistencia asistido por geocercas GPS, procesamiento automatizado de nómina, evaluación de desempeño 360°, inteligencia de negocios con analítica predictiva de *turnover*, e incubadora de proyectos.
-
----
-
-## Portal de Documentación del Proyecto
-
-Toda la documentación técnica detallada, guías de arquitectura, modelos de datos, APIs y operaciones del sistema han sido organizados en el directorio **[`docs/`](docs/)**:
-
-* **[Centro Principal de Documentación](docs/README.md)** — Portal maestro de navegación del proyecto y artefactos Scrum.
-
-### Módulos Destacados de Documentación
-- **[01. Arquitectura del Sistema](docs/01-arquitectura/)**: Clean Architecture, macro/micro patrones y diagramas de flujo.
-- **[02. Servicios Backend y API REST](docs/02-backend-servicios/)**: Especificación de 50+ endpoints, RBAC, SSO y seguridad.
-- **[03. Motores Especializados](docs/03-motores-especializados/)**: PDF, Geocercas GPS (Haversine), Evaluaciones 360°, Biometría y Notificaciones.
-- **[04. Base de Datos](docs/04-base-de-datos/)**: Esquema relacional Prisma / PostgreSQL y catálogos normativos.
-- **[05. Frontend Web](docs/05-frontend-web/)**: SPA React, Vite, catálogo de 45+ componentes UI e interceptores Axios.
-- **[06. Inteligencia y Analítica](docs/06-inteligencia-y-analitica/)**: Indicadores clave (eNPS, rotación) y analítica predictiva.
-- **[07. Despliegue y Operaciones](docs/07-despliegue-y-operaciones/)**: Guía de instalación, auditoría, testing y DRP.
-- **[08. Artefactos Scrum](docs/08-artefactos-scrum/)**: Requerimientos, Historias de Usuario, Sprints y Product Backlog (.docx).
-
----
-
-## Stack Tecnológico
-
-| Capa | Tecnologías Clave |
-|---|---|
-| **Backend API** | Node.js (v20+), Express (v5.1.0 ES Modules), Helmet, CORS |
-| **Persistencia & ORM** | PostgreSQL 14+, Prisma ORM (v7.0.0 con `prisma.config.ts`) |
-| **Seguridad & Cifrado** | AES-256-GCM (Salarios cifrados), PBKDF2 (100,000 iteraciones), JWT (Bearer), Bcrypt |
-| **Frontend Web** | React 19.2.0, Vite, Tailwind CSS, Lucide Icons, Recharts, Framer Motion |
-| **Comunicación HTTP** | Axios con Interceptores de Auth, 401 Refresh & 503 Maintenance Guard |
-
----
-
-## Requisitos Previos
-
-Asegúrate de contar con los siguientes elementos instalados antes del despliegue:
-
-* **Node.js** v20.x o superior ([Descargar Node.js](https://nodejs.org/))
-* **PostgreSQL** v14.x o superior ([Descargar PostgreSQL](https://www.postgresql.org/download/))
-* **Git** v2.x o superior ([Descargar Git](https://git-scm.com/))
-* **npm** (incluido con Node.js)
-
----
-
-## Guía Rápida de Instalación y Configuración
-
-### 1. Clonar el Repositorio
-```bash
-git clone <URL-DEL-REPOSITORIO>
-cd recursos_humanos
-```
-
-### 2. Configurar la Base de Datos PostgreSQL
-Crea la base de datos principal desde `psql` o pgAdmin:
-```sql
-CREATE DATABASE db_recursos_humanos;
-```
-
-### 3. Configurar e Iniciar el Backend
-```bash
-cd backend
-
-# Instalar dependencias
-npm install
-
-# Generar archivo de variables de entorno
-copy .env.example .env # En Windows
-# cp .env.example .env # En Linux/macOS
-```
-
-Configura tu archivo `backend/.env`:
-```env
-PORT=4000
-DATABASE_URL=postgresql://postgres:tu_password@localhost:5432/db_recursos_humanos?schema=public
-ENCRYPTION_KEY=tu_clave_de_encriptacion_hex_64_caracteres
-JWT_SECRET=tu_jwt_secret_seguro
-FRONTEND_URL=http://localhost:5173
-```
-
-> **Generar ENCRYPTION_KEY Segura (64 hex characters)**:
-> ```bash
-> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-> ```
-
-Ejecutar migraciones de Prisma y poblar la base de datos con datos de prueba:
-```bash
-# Generar cliente de Prisma
-npx prisma generate
-
-# Ejecutar migraciones
-npx prisma migrate dev
-
-# Poblado completo de datos (Seeders)
-node -r dotenv/config prisma/seed.js
-
-# Iniciar servidor backend en desarrollo
-npm run dev
-```
-El servidor backend estará disponible en: `http://localhost:4000`
-
-### 4. Configurar e Iniciar el Frontend Web
-En una nueva ventana de terminal:
-```bash
-cd frontend
-
-# Instalar dependencias
-npm install
-
-# Iniciar servidor de desarrollo Vite
-npm run dev
-```
-El cliente web estará disponible en: `http://localhost:5173`
-
----
-
-## Usuarios de Prueba (Seeders)
-
-Una vez ejecutados los seeders, se activarán las siguientes credenciales predeterminadas para pruebas de roles:
-
-| Rol | Correo Electrónico | Contraseña | Capacidades |
-|---|---|---|---|
-| **Administrador General** | `admin@emplifi.com` | `123456` | Acceso total, auditoría, parámetros, nómina y gestión global |
-| **Empleado de Prueba** | `empleado@test.com` | `123456` | Autogestión, marcación GPS, consulta de roles de pago y permisos |
-
----
-
-## Pruebas Automatizadas & CI/CD Enterprise Pipeline
-
-El proyecto implementa un estándar de pruebas automatizadas con **Vitest**, **Supertest** y **React Testing Library**, integrado en GitHub Actions ([deploy.yml](file:///.github/workflows/deploy.yml)).
-
-### Ejecución de Pruebas Localmente
-
-#### Backend (API Express)
-```bash
-cd backend
-npm test
-```
-* **Pruebas integradas:** Verificación de endpoints (`health.test.js`), middleware de seguridad Helmet, respuestas de error y validación de payload (`security.test.js`).
-
-#### Frontend (React / Vite)
-```bash
-cd frontend
-npm test
-```
-* **Pruebas integradas:** Renderizado de componentes UI, ciclo de vida de React, eventos y simulación de usuario (`ErrorState.test.jsx`).
-
-### Flujo CI/CD en GitHub Actions
-Cada `push` a las ramas `main` o `master` desencadena la validación automática:
-1. **Filtro Inteligente de Rutas:** Evalúa cambios de forma aislada para backend y frontend.
-2. **Backend QA:** Ejecuta `npm install` -> `npm test` -> Auditoría de seguridad `npm audit`.
-3. **Frontend QA:** Ejecuta `npm install` -> Linter `npm run lint` -> `npm test` -> Compilación Vite `npm run build`.
-4. **Construcción y Despliegue:** Generación de imágenes Docker publicadas en GitHub Container Registry (GHCR) y despliegue automatizado en AWS EC2.
-
----
-
-## Estructura del Proyecto
+## Estructura del Repositorio
 
 ```
 recursos_humanos/
-├── backend/ # Servidor de API REST (Express + Prisma ORM)
-│ ├── prisma/ # Esquema relacional (schema.prisma) y seeders
-│ ├── src/
-│ │ ├── controllers/ # Controladores HTTP de la API
-│ │ ├── services/ # Lógica de negocio y algoritmos de cálculo
-│ │ ├── repositories/ # Capa de acceso a datos Prisma
-│ │ ├── middleware/ # Autenticación JWT, RBAC, Helmet y CORS
-│ │ └── database/ # Instancia y configuración del cliente DB
-│ ├── prisma.config.ts # Configuración de Prisma 7
-│ └── package.json
-├── frontend/ # Aplicación Cliente SPA (React + Vite)
-│ ├── src/
-│ │ ├── api/ # Cliente Axios centralizado con interceptores
-│ │ ├── components/ # Componentes UI reutilizables (Sidebar, Cards, Tables)
-│ │ ├── pages/ # 45+ Vistas agrupadas por módulos
-│ │ ├── services/ # Servicios de integración frontend-backend
-│ │ └── App.jsx # Enrutador principal y guards de navegación
-│ └── package.json
-├── docs/ # ÚNICO DIRECTORIO DE DOCUMENTACIÓN DEL PROYECTO
-│ ├── 01-arquitectura/ # Arquitectura, Clean Arch y patrones
-│ ├── 02-backend-servicios/ # API REST, RBAC, SSO, cifrado AES-256 y LOPDP
-│ ├── 03-motores-especializados/ # PDF, Geocercas GPS, Evaluaciones 360 y Biometría
-│ ├── 04-base-de-datos/ # Esquema relacional Prisma / PostgreSQL y catálogos
-│ ├── 05-frontend-web/ # Arquitectura React + Vite y componentes UI
-│ ├── 06-inteligencia-y-analitica/ # Módulo de Analítica Predictiva
-│ ├── 07-despliegue-y-operaciones/ # Guías de instalación, auditoría, DRP y testing
-│ ├── 08-artefactos-scrum/ # Artefactos formales de metodología Scrum (.docx)
-│ └── README.md # Índice y portal maestro de navegación
-└── README.md # Guía ejecutiva y de inicio rápido (Raíz)
+├── backend/          # API REST (Node.js · Express · Prisma ORM)
+│   ├── prisma/       # Esquema de base de datos y migraciones
+│   ├── src/
+│   │   ├── app.js            # Configuración Express y middleware stack
+│   │   ├── server.js         # Punto de entrada (HTTP + Socket.IO)
+│   │   ├── config/           # Variables de entorno y roles
+│   │   ├── controllers/      # Controladores por dominio
+│   │   ├── services/         # Lógica de negocio por dominio
+│   │   ├── repositories/     # Capa de acceso a datos (patrón Repository)
+│   │   ├── routes/           # Definición de rutas REST
+│   │   ├── middleware/       # Auth · Tenant · Error · Rate Limit · Maintenance
+│   │   ├── database/         # Cliente Prisma con interceptor multi-tenant
+│   │   ├── jobs/             # Cron jobs automatizados (node-cron)
+│   │   └── utils/            # Encriptación AES-256-GCM · Utilidades financieras
+│   └── tests/        # Pruebas de integración (Vitest · Supertest)
+├── frontend/         # SPA React (Vite · Tailwind CSS · Recharts · Leaflet)
+│   └── src/
+│       ├── pages/    # 19 secciones de interfaz de usuario
+│       ├── components/  # Componentes reutilizables
+│       ├── api/      # Clientes HTTP por dominio
+│       └── hooks/    # Custom hooks de estado
+├── docs/             # Documentación técnica por secciones
+└── docker-compose.yml  # Orquestación: PostgreSQL · Redis · Backend · Frontend/Nginx
 ```
 
----
+## Módulos Funcionales
 
-## Seguridad y Verificación
+| Módulo | Descripción |
+|--------|-------------|
+| Empleados | CRUD de empleados con perfil, expediente, historial laboral y activos |
+| Asistencia | Registro con validación de geocerca, VPN, biometría WebAuthn y turnos |
+| Contratos | Gestión de tipos contractuales con alertas de vencimiento automáticas |
+| Nómina | Cálculo automatizado con horas extra, recargo nocturno y anticipos |
+| Desempeño | Plantillas de evaluación 360°, objetivos SMART y tracking de progreso |
+| Reclutamiento | Portal de vacantes, aplicaciones y scoring de candidatos |
+| Inteligencia | Modelo Weibull de rotación, Monte Carlo, ANOVA y scoring multidimensional |
+| Contabilidad | Plan de cuentas, asientos contables, centros de costos y balance de comprobación |
+| Cumplimiento Legal | Vencimiento de documentos, checklist de compliance y trazabilidad |
+| Comunicación | Tablón de anuncios con lectura confirmada y reconocimiento |
+| Emprendimiento | Módulo de incubadora con rondas de inversión, hitos y análisis de mercado |
 
-Para validar de forma automatizada que el sistema de cifrado **AES-256-GCM** y las reglas de seguridad operan correctamente:
+## Pila Tecnológica
+
+**Backend:** Node.js 20 · Express 5 · Prisma ORM 5.22 · PostgreSQL 15 · Socket.IO 4 · node-cron 4
+
+**Frontend:** React 19 · Vite 7 · React Router DOM 7 · Recharts 3 · Leaflet 1.9 · Framer Motion 12 · TailwindCSS 3
+
+**Seguridad:** JWT (jsonwebtoken) · bcryptjs · AES-256-GCM (crypto nativo) · Helmet · WebAuthn (@simplewebauthn)
+
+**Infraestructura:** Docker Compose · Nginx (SSL/TLS) · Redis 7 · AWS EC2
+
+## Levantamiento Local
 
 ```bash
-cd backend
-node validate-implementation.js
+# Clonar y levantar con Docker Compose
+docker compose up --build -d
+
+# O levantamiento manual (desarrollo)
+# 1. Backend
+cd backend && cp .env.example .env  # Configurar variables
+npm install
+npx prisma migrate dev
+npm run dev   # Puerto 5000
+
+# 2. Frontend
+cd frontend && npm install
+npm run dev   # Puerto 5173
 ```
-Este comando ejecuta la suite de verificación comprobando 11 controles criticos de seguridad y cifrado de datos salariales.
+
+## Documentación Técnica
+
+La documentación detallada se encuentra en [`/docs`](./docs/README.md), organizada en las siguientes secciones:
+
+- [`01-arquitectura/`](./docs/01-arquitectura/) — Arquitectura general, clean architecture y patrones de diseño
+- [`02-backend-servicios/`](./docs/02-backend-servicios/) — API REST, autenticación, gobernanza, nómina, seguridad
+- [`03-motores-especializados/`](./docs/03-motores-especializados/) — Motor de nómina y motor de liquidación legal
+- [`04-base-de-datos/`](./docs/04-base-de-datos/) — Esquema relacional y catálogos normativos
+- [`05-frontend-web/`](./docs/05-frontend-web/) — Arquitectura React y componentes de UI
+- [`06-inteligencia-y-analitica/`](./docs/06-inteligencia-y-analitica/) — Modelos estadísticos y scoring multidimensional
+- [`07-despliegue-y-operaciones/`](./docs/07-despliegue-y-operaciones/) — Infraestructura Docker y operaciones
+- [`08-artefactos-scrum/`](./docs/08-artefactos-scrum/) — Backlog y épicas funcionales
+
+## Variables de Entorno Requeridas
+
+```env
+DATABASE_URL=postgresql://...
+JWT_SECRET=...                  # Clave de 64 chars mínimo
+ENCRYPTION_KEY=...              # Clave hex de 32 bytes (AES-256-GCM)
+RP_ID=...                       # Relying Party ID para WebAuthn
+FRONTEND_URL=...
+EMAIL_USER=...
+EMAIL_PASS=...
+```
 
 ---
 
-## Autores & Créditos
-
-Desarrollado con estándares de ingeniería de software por **Jorge Doicela**.
-
-&copy; 2026 EMPLIFI — Todos los derechos reservados.
-
+**Autor:** Jorge Doicela — Licencia ISC

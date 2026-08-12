@@ -93,9 +93,25 @@ export const attendanceService = {
             trackingConsent: true
         };
 
-        // Fetch global settings for fallback
-        const systemSettings = await prisma.systemSetting.findUnique({
-            where: { id: 'default' },
+        // 2. Resolve employee record
+        if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
+            employee = await prisma.employee.findUnique({
+                where: { id: inputIdentifier },
+                select: { ...employeeSelect, tenantId: true }
+            });
+            if (!employee) throw new Error(`Empleado no encontrado con ID: ${inputIdentifier}`);
+        } else {
+            employee = await prisma.employee.findUnique({
+                where: { identityCard: inputIdentifier },
+                select: { ...employeeSelect, tenantId: true }
+            });
+            if (!employee) throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
+        }
+        employeeId = employee.id;
+
+        // Fetch company system settings for fallback
+        const systemSettings = await prisma.systemSetting.findFirst({
+            where: employee.tenantId ? { tenantId: employee.tenantId } : {},
             select: {
                 globalLatitude: true,
                 globalLongitude: true,
@@ -103,22 +119,6 @@ export const attendanceService = {
                 allowedIPs: true
             }
         });
-
-        // 2. Resolve employee record
-        if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
-            employee = await prisma.employee.findUnique({
-                where: { id: inputIdentifier },
-                select: employeeSelect
-            });
-            if (!employee) throw new Error(`Empleado no encontrado con ID: ${inputIdentifier}`);
-        } else {
-            employee = await prisma.employee.findUnique({
-                where: { identityCard: inputIdentifier },
-                select: employeeSelect
-            });
-            if (!employee) throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
-        }
-        employeeId = employee.id;
 
         // --- CONSENT & GEOFENCING VALIDATION ---
         const useGlobalGeofence = systemSettings?.globalLatitude && systemSettings?.globalLongitude;

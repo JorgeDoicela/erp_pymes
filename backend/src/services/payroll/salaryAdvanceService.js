@@ -66,7 +66,7 @@ class SalaryAdvanceService {
     /**
      * Obtener listado de anticipos con filtros para Administradores.
      */
-    async getAdvances({ page = 1, limit = 20, status, employeeId, search }) {
+    async getAdvances({ page = 1, limit = 20, status, employeeId, search, tenantId }) {
         const skip = (page - 1) * limit;
         const where = {};
 
@@ -76,14 +76,18 @@ class SalaryAdvanceService {
         if (employeeId) {
             where.employeeId = employeeId;
         }
+
+        const employeeWhere = tenantId ? { tenantId } : {};
         if (search) {
-            where.employee = {
-                OR: [
-                    { firstName: { contains: search, mode: 'insensitive' } },
-                    { lastName: { contains: search, mode: 'insensitive' } },
-                    { identityCard: { contains: search, mode: 'insensitive' } }
-                ]
-            };
+            employeeWhere.OR = [
+                { firstName: { contains: search, mode: 'insensitive' } },
+                { lastName: { contains: search, mode: 'insensitive' } },
+                { identityCard: { contains: search, mode: 'insensitive' } }
+            ];
+        }
+
+        if (Object.keys(employeeWhere).length > 0) {
+            where.employee = employeeWhere;
         }
 
         const [data, total] = await Promise.all([

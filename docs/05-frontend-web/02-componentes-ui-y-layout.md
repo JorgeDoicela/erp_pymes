@@ -1,8 +1,8 @@
-# 02. Catálogo Técnico de Vistas y Componentes UI
+# Catálogo Técnico de Vistas y Componentes UI
 
 ## 1. Estructura de Vistas del Cliente Frontend
 
-El cliente web de EMPLIFI contiene **45+ vistas especializadas** organizadas en módulos dentro de `src/pages/`.
+La aplicación SPA contiene vistas organizadas por módulos en `src/pages/`:
 
 ```
 src/pages/
@@ -14,13 +14,13 @@ src/pages/
 ├── payroll/ # PayrollConfiguration, PayrollGenerator, MyPayments, BenefitsManagement
 ├── performance/ # EvaluationDashboard, CreateEvaluation, AssignEvaluation, MyEvaluations, TakeEvaluation, EvaluationResults, MyGoals
 ├── recruitment/ # RecruitmentDashboard, CreateJobVacancy, CareersPage, JobApplication, VacancyDetails, ApplicationDetails
-├── analytics/ # AnalyticsDashboard
+├── analytics/ # AnalyticsDashboard, IntelligenceDashboard, MonteCarloSimulator, AcademicDatasetExport
 ├── reports/ # TurnoverReport, PerformanceReport, PayrollCostReport, SatisfactionReport, CustomReport, AttendanceReports
 ├── contracts/ # ExpiringContracts
 ├── notifications/ # NotificationsPage, NotificationSettings
 ├── audit/ # AuditLogsPage
 ├── accounting/ # AccountingDashboard, ChartOfAccounts, JournalEntries, TrialBalance, PeriodsManagement, CostCenterManagement
-└── entrepreneurship/ # Dashboard, ProjectForm, ProjectDetails
+└── onboarding-offboarding/ # EmployeeExpedient, EmployeeAssetsManagement, OffboardingManagement, MobileEmployeePortal, LegalComplianceDashboard, AnnouncementsBoard
 ```
 
 ---
@@ -30,11 +30,10 @@ src/pages/
 ### 2.1. Autenticación y Dashboards Principales
 - **`Home.jsx`**: Portada de acceso público e información institucional.
 - **`Login.jsx`**: Formulario de autenticación con `handleLogin`, almacenamiento de JWT en `localStorage` y redirección condicional por rol.
-- **`ResetPassword.jsx`**: Formulario de restablecimiento de contraseña validando el token de URL.
+- **`ResetPassword.jsx`**: Formulario de restablecimiento de contraseña validando el token de la URL.
 - **`AdminDashboard.jsx`**: Tablero general para roles `admin` y `hr` con contadores de personal activo, asistencias del día, contratos por vencer y ausencias pendientes.
-- **`EmployeeDashboard.jsx`**: Tablero de autogestión para rol `employee` con accesos rápidos a marcación GPS, permisos y roles de pago.
-- **`IntelligentDashboard.jsx`**: Tablero de analítica avanzada con predicciones de turnover y métricas financieras.
-- **`AdminSettings.jsx`**: Configuración de parámetros globales del sistema (modo mantenimiento, geocercas globales, ips permitidas).
+- **`EmployeeDashboard.jsx`**: Tablero de autogestión para el rol `employee` con accesos rápidos a marcación GPS, permisos y roles de pago.
+- **`AdminSettings.jsx`**: Configuración de parámetros globales del sistema (modo mantenimiento, geocercas globales, IPs permitidas).
 
 ### 2.2. Gestión de Empleados
 - **`RegisterEmployee.jsx`**: Formulario de alta de personal con campos cifrados (`salary`, `identityCard`, `accountNumber`).
@@ -42,7 +41,7 @@ src/pages/
 - **`EmployeeProfile.jsx`**: Ficha técnica individual con pestañas de Datos Personales, Habilidades (`Skill`), Historial Laboral (`WorkHistory`), Contratos (`Contract`) y Documentos (`Document`).
 
 ### 2.3. Asistencia, Ausencias y Turnos
-- **`AttendancePage.jsx`**: Componente de marcación GPS interactivo que calcula coordenadas del navegador (`navigator.geolocation`) y valida el radio de geocerca contra la API.
+- **`AttendancePage.jsx`**: Componente de marcación GPS interactivo que obtiene las coordenadas del navegador (`navigator.geolocation`) y valida el radio de geocerca contra la API.
 - **`ShiftManagement.jsx`**: Grilla de configuración de turnos de trabajo, horarios de entrada/salida, minutos de descanso y tolerancias.
 - **`AdminAbsences.jsx`**: Panel de revisión de solicitudes de permisos con visualización de evidencias adjuntas y botones de Aprobación/Rechazo.
 
@@ -75,17 +74,17 @@ src/pages/
 - **`PeriodsManagement.jsx`**: Apertura y cierre de períodos contables mensuales/anuales.
 - **`CostCenterManagement.jsx`**: Gestión de centros de costos operativos.
 
-### 2.8. Emprendimiento e Incubadora (Módulo `ent_*`)
-- **`Dashboard.jsx`**: Métrica de proyectos en incubación, valoración total y puntajes de innovación.
-- **`ProjectForm.jsx`**: Formulario de registro de proyectos con narrativa de pitch.
-- **`ProjectDetails.jsx`**: Expediente del proyecto con pestañas de Cap Table (Equity), Rondas de Inversión, Entrevistas de Descubrimiento, Hitos Kanban y Documentos.
+### 2.8. Inteligencia Analítica y Scoring Multidimensional
+- **`IntelligentDashboard.jsx`**: Tablero principal de analítica avanzada con predicción estocástica de rotación (Weibull), scoring multidimensional y salud organizacional.
+- **`MonteCarloSimulator.jsx`**: Interfaz interactiva de simulación "What-If" ($2,000$ iteraciones) con gráficos Tornado de sensibilidad de inversión.
+- **`AcademicDatasetExport.jsx`**: Generador de datasets anonimizados para investigación estadística exportables en CSV o JSON.
 
 ### 2.9. Anticipos, Expediente Digital, EPPs, Offboarding, Cumplimiento y Comunicados
-- **`SalaryAdvancesManagement.jsx`**: Panel de administración para aprobar o rechazar solicitudes de anticipos de sueldo con filtros por estado y cálculo de tope del 50% de cuota mensual.
-- **`MySalaryAdvances.jsx`**: Vista de autoservicio para que el empleado solicite anticipos quincenales/mensuales y consulte la amortización de sus cuotas.
-- **`EmployeeExpedient.jsx`**: Expediente digital del empleado con tarjeta de progreso de onboarding (%), visualizador de documentos requeridos y modal de validación para RRHH.
-- **`EmployeeAssetsManagement.jsx`**: Control de inventario de equipos tecnológicos, herramientas y EPPs asignados a colaboradores con registro de entregas y devoluciones.
-- **`OffboardingManagement.jsx`**: Tablero de desvinculación con simulador de liquidaciones legales (13er, 14to SBU, vacaciones, desahucio Art. 185 e indemnización Art. 188) y control del checklist de salida.
-- **`MobileEmployeePortal.jsx`**: Aplicación de autoservicio estilo App Móvil para personal operativo y de campo con navegación táctil inferior, marcación GPS en 1 toque, emisión de certificado laboral con QR y descarga de roles de pago.
-- **`LegalComplianceDashboard.jsx`**: Tablero de alertas preventivas de cumplimiento laboral (período de prueba 90d, contratos temporales por vencer, documentos caducados) y matriz de provisiones mensuales patronales de ley.
-- **`AnnouncementsBoard.jsx`**: Tablón de noticias y comunicados oficiales con firma digital de acuse de recibo para normas obligatorias, widget automático de cumpleaños del mes y consola de métricas de lectura para administradores.
+- **`SalaryAdvancesManagement.jsx`**: Panel de administración para aprobar o rechazar solicitudes de anticipos de sueldo con filtros por estado.
+- **`MySalaryAdvances.jsx`**: Vista de autoservicio para que el empleado solicite anticipos quincenales y consulte la amortización de cuotas.
+- **`EmployeeExpedient.jsx`**: Expediente digital del empleado con tarjeta de progreso de onboarding (%) y visualizador de documentos.
+- **`EmployeeAssetsManagement.jsx`**: Control de inventario de equipos tecnológicos, herramientas y EPPs asignados.
+- **`OffboardingManagement.jsx`**: Tablero de desvinculación con simulador de liquidaciones legales (13er, 14to SBU, vacaciones, desahucio Art. 185 e indemnización Art. 188).
+- **`MobileEmployeePortal.jsx`**: Aplicación de autoservicio estilo App Móvil para personal operativo con marcación GPS en 1 toque y emisión de certificados laborales con QR.
+- **`LegalComplianceDashboard.jsx`**: Tablero de alertas preventivas de cumplimiento laboral y matriz de provisiones mensuales patronales de ley.
+- **`AnnouncementsBoard.jsx`**: Tablón de comunicados oficiales con firma digital de acuse de recibo y métricas de lectura.

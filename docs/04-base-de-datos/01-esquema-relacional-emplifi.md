@@ -1,97 +1,130 @@
-# 01. Esquema Relacional y Especificación del Modelo de Datos Prisma (PostgreSQL)
+# Esquema Relacional y Especificación del Modelo de Datos Prisma (PostgreSQL)
 
 ## 1. Visión General del Modelo Relacional
 
-La base de datos PostgreSQL de EMPLIFI comprende **45 modelos de datos** administrados mediante **Prisma ORM**. Las tablas utilizan convenciones de nombres en minúsculas en plural configuradas mediante la directiva `@@map`.
+La base de datos relacional PostgreSQL comprende entidades administradas mediante Prisma ORM. Las tablas utilizan convenciones de nombres en minúsculas en plural configuradas mediante la directiva `@@map`. Cada entidad principal posee el atributo `tenantId` para garantizar aislamiento por inquilino en un esquema compartido (*Shared Database, Shared Schema*).
 
 ```mermaid
 erDiagram
- Employee ||--o{ Attendance : "attendance"
- Employee ||--o{ AbsenceRequest : "absences"
- Employee ||--o{ Contract : "contracts"
- Employee ||--o{ Document : "documents"
- Employee ||--o{ EmployeeGoal : "goals"
- Employee ||--o{ EmployeeEvaluation : "evaluations"
- Employee ||--o{ PayrollDetail : "PayrollDetail"
- Employee ||--o{ BiometricCredential : "biometricCredentials"
- Employee ||--o{ Notification : "notifications"
- Employee ||--o{ Skill : "skills"
- Employee ||--o{ WorkHistory : "workHistory"
- Employee ||--o{ Entrepreneurship : "entrepreneurships"
- AccountingAccount ||--o{ JournalLine : "lines"
- JournalEntry ||--o{ JournalLine : "lines"
- Entrepreneurship ||--o{ EntrepreneurshipMember : "members"
- Entrepreneurship ||--o{ EntrepreneurshipMilestone : "milestones"
+    Tenant ||--o{ Employee : "employees"
+    Tenant ||--o{ Payroll : "payrolls"
+    Tenant ||--o{ JobVacancy : "jobVacancies"
+    Tenant ||--o{ AccountingAccount : "accountingAccounts"
+    Tenant ||--o{ Shift : "shifts"
+    Employee ||--o{ Attendance : "attendance"
+    Employee ||--o{ AbsenceRequest : "absences"
+    Employee ||--o{ Contract : "contracts"
+    Employee ||--o{ Document : "documents"
+    Employee ||--o{ EmployeeGoal : "goals"
+    Employee ||--o{ EmployeeEvaluation : "evaluations"
+    Employee ||--o{ PayrollDetail : "PayrollDetail"
+    Employee ||--o{ BiometricCredential : "biometricCredentials"
+    Employee ||--o{ Notification : "notifications"
+    Employee ||--o{ Skill : "skills"
+    Employee ||--o{ WorkHistory : "workHistory"
+    Employee ||--o{ SalaryAdvance : "salaryAdvances"
+    Employee ||--o{ EmployeeAsset : "assets"
+    Employee ||--o{ OffboardingProcess : "offboardings"
+    AccountingAccount ||--o{ JournalLine : "lines"
+    JournalEntry ||--o{ JournalLine : "lines"
 ```
 
 ---
 
-## 2. Catálogo Técnico de los 45 Modelos de Datos
+## 2. Catálogo Técnico de Entidades Relacionales
 
-### 2.1. Núcleo de Empleados e Identidad
-1. **`Employee` (`employees`)**: Registro principal del personal. Atributos: `id` (cuid), `firstName`, `lastName`, `email` (único), `password` (bcrypt), `department`, `position`, `salary` (AES-256-GCM hex), `role` (`admin`, `hr`, `employee`, `accounting`, `entrepreneur`), `identityCard` (único), `address`, `phone`, `birthDate`, `hireDate`, `civilStatus`, `contractType`, `accountNumber`, `accountType`, `bankName`, `vacationDays`, `isActive`, `workLatitude`, `workLongitude`, `geofenceRadius`, `enforceGeofence`, `trackingConsent`, `trackingConsentDate`, `resetPasswordToken`, `resetPasswordExpires`. Índices: `[email]`, `[department]`.
-2. **`Skill` (`skills`)**: Habilidades técnicas del empleado. Atributos: `id`, `name`, `level`, `employeeId`. Relación: `Employee`.
-3. **`WorkHistory` (`work_history`)**: Antecedentes laborales. Atributos: `id`, `company`, `position`, `startDate`, `endDate`, `description`, `employeeId`. Relación: `Employee`.
+### 2.1. Inquilinos y Multitenancy
+1. **`Tenant` (`tenants`)**: Representa la empresa o inquilino en la plataforma SaaS. Atributos: `id` (cuid), `name`, `slug` (único), `ruc` (único), `plan` (`ESSENTIAL`, `GROWTH`, `ENTERPRISE`), `subscriptionStatus` (`TRIAL`, `ACTIVE`, `SUSPENDED`, `CANCELLED`), `maxEmployees`, `trialEndsAt`, `subscriptionEndsAt`, `isActive`, `createdAt`, `updatedAt`.
 
-### 2.2. Control Asistencial, Horarios y Geofencing
-4. **`Attendance` (`attendance`)**: Registro diario de marcación. Atributos: `id`, `date`, `checkIn`, `checkOut`, `workedHours`, `overtimeHours`, `status`, `entryLatitude`, `entryLongitude`, `exitLatitude`, `exitLongitude`, `breakStart`, `breakEnd`, `isLate`, `isEarlyDeparture`, `ipAddress`, `employeeId`. Clave Única: `[employeeId, date]`.
-5. **`Shift` (`shifts`)**: Definición de turnos. Atributos: `id`, `name`, `startTime`, `endTime`, `breakMinutes`, `toleranceMinutes`.
-6. **`EmployeeSchedule` (`employee_schedules`)**: Asignación de turno a empleado. Atributos: `id`, `employeeId`, `shiftId`, `startDate`, `endDate`, `daysOfWeek`, `isActive`.
-7. **`AbsenceRequest` (`absence_requests`)**: Permisos e incidencias. Atributos: `id`, `type`, `startDate`, `endDate`, `reason`, `status` (`PENDING`, `APPROVED`, `REJECTED`), `evidenceUrl`, `adminComment`, `employeeId`.
+### 2.2. Núcleo de Empleados e Identidad
+2. **`Employee` (`employees`)**: Ficha principal del colaborador. Atributos: `id` (cuid), `tenantId`, `firstName`, `lastName`, `email` (único), `password` (bcrypt hash), `department`, `position`, `salary` (cadena AES-256-GCM), `role` (`admin`, `hr`, `employee`, `accounting`), `identityCard`, `address`, `phone`, `birthDate`, `hireDate`, `civilStatus`, `contractType`, `accountNumber`, `accountType`, `bankName`, `vacationDays`, `isActive`, `workLatitude`, `workLongitude`, `geofenceRadius`, `enforceGeofence`, `trackingConsent`, `trackingConsentDate`, `resetPasswordToken`, `resetPasswordExpires`. Clave Única Compuesta: `[tenantId, identityCard]`.
+3. **`Skill` (`skills`)**: Competencias laborales del colaborador. Atributos: `id`, `name`, `level`, `employeeId`.
+4. **`WorkHistory` (`work_history`)**: Trayectoria profesional previa. Atributos: `id`, `company`, `position`, `startDate`, `endDate`, `description`, `employeeId`.
 
-### 2.3. Contratos, Documentos y Nómina
-8. **`Contract` (`contracts`)**: Contratos laborales. Atributos: `id`, `type`, `startDate`, `endDate`, `salary` (Float), `clauses`, `documentUrl`, `status`, `hasDoubleOvertime`, `hasNightSurcharge`, `employeeId`.
-9. **`Document` (`documents`)**: Archivos adjuntos. Atributos: `id`, `type`, `employeeId`, `documentUrl`, `expiryDate`, `mimeType`, `originalName`.
-10. **`PayrollConfig` (`payroll_configs`)**: Configuración global de nómina. Atributos: `id`, `workingDays`, `currency`, `validFrom`, `isActive`.
-11. **`PayrollItem` (`payroll_items`)**: Rubros configurables. Atributos: `id`, `name`, `type`, `isMandatory`, `percentage`, `fixedValue`, `configId`.
-12. **`Payroll` (`payrolls`)**: Cabecera de emisión de nómina. Atributos: `id`, `period`, `endDate`, `status`, `totalAmount`, `paymentDate`.
-13. **`PayrollDetail` (`payroll_details`)**: Detalle individual de pago. Atributos: `id`, `payrollId`, `employeeId`, `baseSalary`, `workedDays`, `overtimeHours`, `overtimeAmount`, `bonuses`, `deductions`, `netSalary`.
-14. **`EmployeeBenefit` (`employee_benefits`)**: Beneficios individuales. Atributos: `id`, `name`, `amount`, `type`, `frequency`, `status`, `employeeId`.
+### 2.3. Control Asistencial, Horarios y Geofencing
+5. **`Attendance` (`attendance`)**: Registro de marcas de entrada y salida con coordenadas GPS. Atributos: `id`, `date`, `checkIn`, `checkOut`, `workedHours`, `overtimeHours`, `status`, `entryLatitude`, `entryLongitude`, `exitLatitude`, `exitLongitude`, `breakStart`, `breakEnd`, `isLate`, `isEarlyDeparture`, `ipAddress`, `employeeId`. Clave Única: `[employeeId, date]`.
+6. **`Shift` (`shifts`)**: Definición de turnos de trabajo. Atributos: `id`, `tenantId`, `name`, `startTime`, `endTime`, `breakMinutes`, `toleranceMinutes`.
+7. **`EmployeeSchedule` (`employee_schedules`)**: Asignación de turnos a empleados. Atributos: `id`, `employeeId`, `shiftId`, `startDate`, `endDate`, `daysOfWeek`, `isActive`.
+8. **`AbsenceRequest` (`absence_requests`)**: Solicitudes de permisos e incidencias. Atributos: `id`, `type`, `startDate`, `endDate`, `reason`, `status` (`PENDING`, `APPROVED`, `REJECTED`), `evidenceUrl`, `adminComment`, `employeeId`.
 
-### 2.4. Evaluaciones de Desempeño y Objetivos
-15. **`EvaluationTemplate` (`evaluation_templates`)**: Plantilla de evaluación. Atributos: `id`, `title`, `description`, `period`, `instructions`, `criteria`, `scale`, `isActive`.
-16. **`EmployeeEvaluation` (`employee_evaluations`)**: Instancia de evaluación asignada. Atributos: `id`, `templateId`, `employeeId`, `startDate`, `endDate`, `status`, `finalScore`, `feedback`.
-17. **`EvaluationReviewer` (`evaluation_reviewers`)**: Evaluador asignado. Atributos: `id`, `evaluationId`, `reviewerId`, `status`, `responses`, `comments`, `score`, `completedAt`.
-18. **`EmployeeGoal` (`employee_goals`)**: Objetivos individuales (OKRs/KPIs). Atributos: `id`, `employeeId`, `title`, `description`, `metric`, `targetValue`, `currentValue`, `unit`, `deadline`, `priority`, `status`, `progress`.
+### 2.4. Contratos, Documentos y Nómina
+9. **`Contract` (`contracts`)**: Registro de contratos de trabajo. Atributos: `id`, `type`, `startDate`, `endDate`, `salary`, `clauses`, `documentUrl`, `status`, `employeeId`.
+10. **`Document` (`documents`)**: Archivos digitales del expediente. Atributos: `id`, `type`, `employeeId`, `documentUrl`, `expiryDate`, `mimeType`, `originalName`.
+11. **`PayrollConfig` (`payroll_configs`)**: Parámetros de nómina por inquilino. Atributos: `id`, `tenantId`, `workingDays`, `currency`, `validFrom`, `isActive`.
+12. **`PayrollItem` (`payroll_items`)**: Rubros imponibles o deducibles. Atributos: `id`, `name`, `type`, `isMandatory`, `percentage`, `fixedValue`, `configId`.
+13. **`Payroll` (`payrolls`)**: Cabecera de emisión de nómina. Atributos: `id`, `tenantId`, `period`, `endDate`, `status`, `totalAmount`, `paymentDate`.
+14. **`PayrollDetail` (`payroll_details`)**: Desglose individual de rol de pago. Atributos: `id`, `payrollId`, `employeeId`, `baseSalary`, `workedDays`, `overtimeHours`, `overtimeAmount`, `bonuses`, `deductions`, `netSalary`.
+15. **`EmployeeBenefit` (`employee_benefits`)**: Beneficios corporativos activos. Atributos: `id`, `name`, `amount`, `type`, `frequency`, `status`, `employeeId`.
 
-### 2.5. Reclutamiento, Selección y Clima Laboral
-19. **`JobVacancy` (`job_vacancies`)**: Ofertas de empleo. Atributos: `id`, `title`, `department`, `description`, `requirements`, `benefits`, `salaryMin`, `salaryMax`, `currency`, `location`, `employmentType`, `deadline`, `status`, `postedById`, `evaluationCriteria`.
-20. **`JobApplication` (`job_applications`)**: Postulantes. Atributos: `id`, `vacancyId`, `firstName`, `lastName`, `email`, `phone`, `resumeUrl`, `coverLetter`, `status`.
-21. **`ApplicationNote` (`application_notes`)**: Notas internas. Atributos: `id`, `applicationId`, `content`, `createdBy`, `createdById`.
-22. **`Interview` (`interviews`)**: Entrevistas programadas. Atributos: `id`, `applicationId`, `date`, `type`, `location`, `interviewerId`, `notes`, `status`.
-23. **`CandidateEvaluation` (`candidate_evaluations`)**: Calificación de candidatos. Atributos: `id`, `applicationId`, `evaluatorId`, `ratings`, `comments`, `recommendation`, `overallScore`.
-24. **`ClimateSurvey` (`climate_surveys`)**: Encuestas de clima laboral. Atributos: `id`, `title`, `startDate`, `endDate`, `isActive`, `description`.
-25. **`ClimateResponse` (`climate_responses`)**: Respuestas anónimas. Atributos: `id`, `surveyId`, `department`, `ratings`, `comments`, `npsScore`.
+### 2.5. Evaluaciones de Desempeño y Objetivos
+16. **`EvaluationTemplate` (`evaluation_templates`)**: Plantilla de evaluación de desempeño. Atributos: `id`, `tenantId`, `title`, `description`, `period`, `instructions`, `criteria`, `scale`, `isActive`.
+17. **`EmployeeEvaluation` (`employee_evaluations`)**: Instancia de evaluación ejecutada. Atributos: `id`, `templateId`, `employeeId`, `startDate`, `endDate`, `status`, `finalScore`, `feedback`.
+18. **`EvaluationReviewer` (`evaluation_reviewers`)**: Asignación de evaluador (Pares, Supervisor). Atributos: `id`, `evaluationId`, `reviewerId`, `status`, `responses`, `comments`, `score`, `completedAt`.
+19. **`EmployeeGoal` (`employee_goals`)**: Objetivos estratégicos (OKRs / KPIs). Atributos: `id`, `employeeId`, `title`, `description`, `metric`, `targetValue`, `currentValue`, `unit`, `deadline`, `priority`, `status`, `progress`.
 
-### 2.6. Seguridad, Sistema y Biometría
-26. **`AuditLog` (`audit_logs`)**: Registro de auditoría inmutable. Atributos: `id`, `entity`, `entityId`, `action`, `performedBy`, `details`, `ip`, `timestamp`.
-27. **`Notification` (`notifications`)**: Notificaciones in-app. Atributos: `id`, `recipientId`, `title`, `message`, `type`, `isRead`, `relatedEntityId`, `relatedEntity`.
-28. **`NotificationPreference` (`notification_preferences`)**: Configuración de alertas. Atributos: `id`, `employeeId`, `preferences` (JSON).
-29. **`SystemSetting` (`system_settings`)**: Parámetros globales. Atributos: `id`, `maintenanceMode`, `maintenanceScheduled`, `maintenanceMessage`, `biometricEnabled`, `allowedIPs`, `globalLatitude`, `globalLongitude`, `globalRadius`.
-30. **`BiometricCredential` (`biometric_credentials`)**: Credencial biométrica (FIDO2/WebAuthn/Hardware). Atributos: `id`, `employeeId`, `credentialId`, `publicKey`, `aaguid`, `counter`, `transports`, `deviceInfo`, `lastVerified`.
+### 2.6. Reclutamiento, Selección y Clima Organizacional
+20. **`JobVacancy` (`job_vacancies`)**: Ofertas de empleo publicadas. Atributos: `id`, `tenantId`, `title`, `department`, `description`, `requirements`, `benefits`, `salaryMin`, `salaryMax`, `currency`, `location`, `employmentType`, `deadline`, `status`, `postedById`.
+21. **`JobApplication` (`job_applications`)**: Postulaciones recibidas. Atributos: `id`, `vacancyId`, `firstName`, `lastName`, `email`, `phone`, `resumeUrl`, `coverLetter`, `status`.
+22. **`ApplicationNote` (`application_notes`)**: Notas internas del proceso de selección. Atributos: `id`, `applicationId`, `content`, `createdBy`, `createdById`.
+23. **`Interview` (`interviews`)**: Entrevistas agendadas. Atributos: `id`, `applicationId`, `date`, `type`, `location`, `interviewerId`, `notes`, `status`.
+24. **`CandidateEvaluation` (`candidate_evaluations`)**: Calificación de la entrevista. Atributos: `id`, `applicationId`, `evaluatorId`, `ratings`, `comments`, `recommendation`, `overallScore`.
+25. **`ClimateSurvey` (`climate_surveys`)**: Encuestas de clima laboral. Atributos: `id`, `tenantId`, `title`, `startDate`, `endDate`, `isActive`, `description`.
+26. **`ClimateResponse` (`climate_responses`)**: Respuestas anónimas recopiladas. Atributos: `id`, `surveyId`, `department`, `ratings`, `comments`, `npsScore`.
 
-### 2.7. Contabilidad Financiera (Módulo `acc_*`)
-31. **`AccountingPeriod` (`acc_periods`)**: Períodos contables. Atributos: `id`, `year`, `month`, `startDate`, `endDate`, `status` (`OPEN`, `CLOSED`). Clave Única: `[year, month]`.
-32. **`AccountingAccount` (`acc_accounts`)**: Plan de cuentas. Atributos: `id`, `code` (único), `name`, `description`, `type` (`ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, `EXPENSE`), `level`, `isTransactional`, `parentId`, `isActive`.
-33. **`CostCenter` (`acc_cost_centers`)**: Centros de costos. Atributos: `id`, `code` (único), `name`, `description`, `isActive`.
-34. **`JournalEntry` (`acc_journal_entries`)**: Libro diario. Atributos: `id`, `entryNumber` (único), `date`, `description`, `type` (`DAILY`, `INCOME`, `EXPENSE`), `status` (`DRAFT`, `POSTED`, `ANNULLED`), `totalDebit`, `totalCredit`, `referenceModule`, `referenceId`.
-35. **`JournalLine` (`acc_journal_lines`)**: Apuntes contables. Atributos: `id`, `journalEntryId`, `accountId`, `costCenterId`, `description`, `debit`, `credit`.
+### 2.7. Seguridad, Auditoría y Biometría
+27. **`AuditLog` (`audit_logs`)**: Registro inmutable de eventos de auditoría. Atributos: `id`, `tenantId`, `entity`, `entityId`, `action`, `userId`, `userEmail`, `details`, `ipAddress`, `createdAt`.
+28. **`Notification` (`notifications`)**: Avisos in-app. Atributos: `id`, `employeeId`, `title`, `message`, `type`, `isRead`, `linkUrl`, `createdAt`.
+29. **`NotificationPreference` (`notification_preferences`)**: Configuración de canales de alerta. Atributos: `id`, `employeeId`, `emailNotifications`, `pushNotifications`, `contractExpiryAlerts`, `payrollAlerts`.
+30. **`SystemSetting` (`system_settings`)**: Parámetros del inquilino. Atributos: `id`, `tenantId`, `maintenanceMode`, `maintenanceMessage`, `biometricEnabled`, `allowedIPs`.
+31. **`BiometricCredential` (`biometric_credentials`)**: Credenciales biométricas registradas. Atributos: `id`, `employeeId`, `biometricId`, `credentialType`, `templateHash`, `isActive`.
 
-### 2.8. Emprendimiento e Incubadora (Módulo `ent_*`)
-36. **`Entrepreneurship` (`ent_projects`)**: Proyectos de innovación. Atributos: `id`, `title`, `description`, `industry`, `stage` (`IDEATION`, `VALIDATION`, `MVP`, `SCALING`), `status`, `valuation`, `currency`, `equityAvailable`, `budget`, `expenses`, `innovationScore`, `logoUrl`, `videoPitchUrl`, `pitchNarrative`, `growthMRR`, `growthUsers`, `growthCAC`, `growthLTV`, `ownerId`.
-37. **`EntrepreneurshipEquity` (`ent_equities`)**: Distribución accionaria. Atributos: `id`, `projectId`, `holderName`, `percentage`, `role`, `vestingTerms`.
-38. **`EntrepreneurshipFundingRound` (`ent_funding_rounds`)**: Rondas de inversión. Atributos: `id`, `projectId`, `roundName`, `amountRaised`, `valuation`, `date`, `investors`.
-39. **`EntrepreneurshipInterview` (`ent_interviews`)**: Entrevistas de descubrimiento de cliente. Atributos: `id`, `projectId`, `customerName`, `feedback`, `sentiment`, `insights`.
-40. **`EntrepreneurshipTargetMarket` (`ent_target_market`)**: Análisis de mercado. Atributos: `id`, `projectId` (único), `tam`, `sam`, `som`.
-41. **`EntrepreneurshipMember` (`ent_members`)**: Integrantes del proyecto. Atributos: `id`, `projectId`, `employeeId`, `externalName`, `externalEmail`, `role`.
-42. **`EntrepreneurshipMentor` (`ent_mentors`)**: Mentores asignados. Atributos: `id`, `projectId`, `employeeId`, `mentorName`, `specialty`, `email`.
-43. **`EntrepreneurshipMilestone` (`ent_milestones`)**: Hitos de avance Kanban. Atributos: `id`, `projectId`, `title`, `description`, `dueDate`, `completedDate`, `status`, `kanbanColumn`.
-44. **`EntrepreneurshipDocument` (`ent_documents`)**: Pitch decks y planes. Atributos: `id`, `projectId`, `title`, `fileUrl`, `fileType`, `version`.
-45. **`EntrepreneurshipUpdate` (`ent_updates`)**: Bitácora de actualizaciones. Atributos: `id`, `projectId`, `title`, `content`, `type`.
+### 2.8. Contabilidad Financiera (Módulo `acc_*`)
+32. **`AccountingPeriod` (`acc_periods`)**: Períodos contables. Atributos: `id`, `tenantId`, `year`, `month`, `startDate`, `endDate`, `status` (`OPEN`, `CLOSED`). Clave Única: `[tenantId, year, month]`.
+33. **`AccountingAccount` (`acc_accounts`)**: Plan de cuentas. Atributos: `id`, `tenantId`, `code`, `name`, `type` (`ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, `EXPENSE`), `level`, `isTransactional`, `parentId`, `isActive`.
+34. **`CostCenter` (`acc_cost_centers`)**: Centros de costo. Atributos: `id`, `tenantId`, `code`, `name`, `description`, `isActive`.
+35. **`JournalEntry` (`acc_journal_entries`)**: Libro diario. Atributos: `id`, `tenantId`, `entryNumber`, `date`, `description`, `type`, `status`, `totalDebit`, `totalCredit`.
+36. **`JournalLine` (`acc_journal_lines`)**: Apuntes contables de débito y crédito. Atributos: `id`, `journalEntryId`, `accountId`, `costCenterId`, `description`, `debit`, `credit`.
 
-### 2.9. Anticipos, Expediente Digital, EPPs, Offboarding y Comunicados
-46. **`SalaryAdvance` (`salary_advances`)**: Solicitudes de anticipos de sueldo y préstamos internos. Atributos: `id`, `employeeId`, `amount`, `installments`, `paidInstallments`, `monthlyQuota`, `reason`, `status` (`PENDING`, `APPROVED`, `REJECTED`, `PAID`), `approvedBy`, `approvedAt`, `rejectionReason`.
-47. **`EmployeeAsset` (`employee_assets`)**: Equipos, herramientas, tarjetas de acceso y EPPs asignados. Atributos: `id`, `employeeId`, `name`, `serialNumber`, `category` (`EQUIPMENT`, `UNIFORM_PPE`, `TOOL`, `ACCESS_CARD`), `condition`, `status` (`DELIVERED`, `RETURNED`, `LOST_DAMAGED`), `deliveryDate`, `returnDate`, `returnNotes`, `receiptSignatureUrl`.
-48. **`OffboardingProcess` (`offboarding_processes`)**: Registro de procesos de salida de personal y liquidaciones legales. Atributos: `id`, `employeeId`, `exitDate`, `causal` (`VOLUNTARY_RESIGNATION`, `UNFAIR_DISMISSAL`, `CONTRACT_END`, `JUST_CAUSE`), `status` (`IN_PROGRESS`, `PENDING_APPROVAL`, `COMPLETED`), `checklist` (JSON), `baseSalary`, `monthsWorked`, `thirteenthProportional`, `fourteenthProportional`, `vacationDaysOwed`, `vacationAmount`, `desahucioAmount`, `severanceAmount`, `totalSettlement`, `notes`.
-49. **`Announcement` (`announcements`)**: Tablón de anuncios y comunicados oficiales. Atributos: `id`, `title`, `content`, `category` (`GENERAL`, `POLICY`, `HOLIDAY`, `BIRTHDAY`), `priority` (`NORMAL`, `URGENT`), `requiresAcknowledgment`, `attachmentUrl`, `createdById`, `createdAt`, `updatedAt`.
-50. **`AnnouncementRead` (`announcement_reads`)**: Registro de lectura y acuse de recibo digital de comunicados. Atributos: `id`, `announcementId`, `employeeId`, `readAt`, `acknowledged`. Clave Única: `[announcementId, employeeId]`.
+### 2.9. Anticipos, Activos, Offboarding y Comunicados
+37. **`SalaryAdvance` (`salary_advances`)**: Solicitudes de anticipos de sueldo. Atributos: `id`, `employeeId`, `amount`, `installments`, `paidInstallments`, `monthlyQuota`, `reason`, `status` (`PENDING`, `APPROVED`, `REJECTED`, `PAID`).
+38. **`EmployeeAsset` (`employee_assets`)**: Equipos y EPPs asignados. Atributos: `id`, `employeeId`, `name`, `serialNumber`, `category`, `condition`, `status` (`DELIVERED`, `RETURNED`, `LOST_DAMAGED`).
+39. **`OffboardingProcess` (`offboarding_processes`)**: Proceso de desvinculación con finiquito calculado. Atributos: `id`, `employeeId`, `exitDate`, `causal` (`VOLUNTARY_RESIGNATION`, `UNFAIR_DISMISSAL`, `CONTRACT_END`, otros), `status` (`IN_PROGRESS`, `COMPLETED`), `checklist` (JSON serializado), `baseSalary`, `monthsWorked`, `thirteenthProportional`, `fourteenthProportional`, `vacationDaysOwed`, `vacationAmount`, `desahucioAmount`, `severanceAmount`, `totalSettlement`, `notes`.
+40. **`Announcement` (`announcements`)**: Tablón de comunicados oficiales. Atributos: `id`, `tenantId`, `title`, `content`, `category`, `priority`, `requiresAcknowledgment`, `attachmentUrl`.
+41. **`AnnouncementRead` (`announcement_reads`)**: Acuses de recibo digital. Atributos: `id`, `announcementId`, `employeeId`, `readAt`, `acknowledged`. Clave Única: `[announcementId, employeeId]`.
+
+---
+
+## 3. Aislamiento Multi-Tenant en la Capa de Datos
+
+El aislamiento entre empresas se implementa mediante un interceptor Prisma (`$use`) en `database/db.js`. Este middleware intercepta **todas** las operaciones de la ORM antes de ejecutarlas en PostgreSQL y agrega automáticamente los filtros correspondientes.
+
+### 3.1 Clasificación de Modelos para el Interceptor
+
+| Categoría | Modelos | Mecanismo de Filtro |
+|-----------|---------|---------------------|
+| Directos | Employee, Shift, Payroll, PayrollConfig, AccountingPeriod, AccountingAccount, CostCenter, JournalEntry, JobVacancy, ClimateSurvey, EvaluationTemplate, Announcement, AuditLog, SystemSetting | `WHERE tenantId = ?` |
+| Relacionales vía Employee | Contract, Attendance, AbsenceRequest, EmployeeBenefit, SalaryAdvance, EmployeeEvaluation, Document, Skill, WorkHistory, EmployeeGoal, EmployeeAsset, OffboardingProcess, BiometricCredential, Notification, NotificationPreference, EmployeeSchedule, AnnouncementRead | `WHERE employee.tenantId = ?` |
+| Indirectos | PayrollDetail, PayrollItem, JobApplication, Interview, CandidateEvaluation, ClimateResponse, JournalLine | Filtro jerárquico (ej: `WHERE payroll.tenantId = ?`) |
+
+### 3.2 Operaciones Interceptadas
+
+| Operación Prisma | Acción del Interceptor |
+|-----------------|----------------------|
+| `findUnique` / `findUniqueOrThrow` | Transforma a `findFirst` con filtro de tenant + expansión de compound keys |
+| `findMany` / `findFirst` / `count` / `groupBy` / `aggregate` | Inyecta `where.tenantId` si no está ya presente |
+| `create` | Inyecta `data.tenantId` en modelos directos; valida ownership del `employeeId` en modelos relacionales |
+| `createMany` | Inyecta `tenantId` en cada elemento del array |
+| `updateMany` / `deleteMany` | Inyecta `where.tenantId` |
+| `update` / `delete` | Verifica existencia del registro con `findFirst` usando filtro de tenant antes de la mutación |
+
+### 3.3 Bypass de Filtro para Verificaciones Internas
+
+La función `runWithoutTenantFilter(callback)` desactiva temporalmente el interceptor dentro de su scope. Se usa exclusivamente para verificaciones de existencia previas a mutaciones, evitando la recursión infinita del interceptor interceptando sus propias consultas de validación.
+
+```javascript
+// En el interceptor — verificación previa a update/delete
+const existing = await runWithoutTenantFilter(() =>
+    prisma[delegateName].findFirst({ where: whereWithTenantFilter })
+);
+if (!existing) throw new Error('Acceso Denegado (Multi-Tenant)');
+```

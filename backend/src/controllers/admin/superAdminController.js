@@ -2,6 +2,7 @@ import prisma from '../../database/db.js';
 import { runWithTenant } from '../../database/tenantContext.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { encrypt } from '../../utils/encryption.js';
 
 /**
  * SuperAdmin Controller - Backoffice de la Plataforma EMPLIFI
@@ -483,6 +484,43 @@ export const createTenantBySuperAdmin = async (req, res) => {
                     }
                 });
 
+                // Crear SystemSetting inicial para el Tenant
+                await tx.systemSetting.create({
+                    data: {
+                        tenantId: tenant.id,
+                        maintenanceMode: false,
+                        biometricEnabled: false
+                    }
+                });
+
+                // Crear PayrollConfig inicial
+                await tx.payrollConfig.create({
+                    data: {
+                        tenantId: tenant.id,
+                        workingDays: 30,
+                        currency: 'USD',
+                        isActive: true,
+                        items: {
+                            create: [
+                                { name: 'Aporte Personal IESS', type: 'DEDUCTION', isMandatory: true, percentage: 9.45 },
+                                { name: 'Impuesto a la Renta', type: 'DEDUCTION', isMandatory: false, percentage: 0 }
+                            ]
+                        }
+                    }
+                });
+
+                // Crear Turno inicial por defecto
+                await tx.shift.create({
+                    data: {
+                        tenantId: tenant.id,
+                        name: 'Jornada Ordinaria (08:00 - 17:00)',
+                        startTime: '08:00',
+                        endTime: '17:00',
+                        breakMinutes: 60,
+                        toleranceMinutes: 15
+                    }
+                });
+
                 const admin = await tx.employee.create({
                     data: {
                         tenantId: tenant.id,
@@ -493,7 +531,7 @@ export const createTenantBySuperAdmin = async (req, res) => {
                         role: 'admin',
                         department: 'Dirección General',
                         position: 'Administrador Principal',
-                        salary: '0',
+                        salary: encrypt('0'),
                         identityCard: ruc || `ADMIN-${Date.now()}`,
                         phone: '0999999999',
                         address: 'Oficina Principal',
@@ -555,7 +593,7 @@ export const impersonateTenant = async (req, res) => {
             }
 
             // Generar token JWT temporal de soporte auditado
-            const JWT_SECRET = process.env.JWT_SECRET || 'emplifi_secret_jwt_key_2026_super_secure';
+            const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_change_me';
             const token = jwt.sign(
                 {
                     id: adminUser.id,

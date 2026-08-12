@@ -28,12 +28,14 @@ export const requestAdvance = async (req, res) => {
 export const getAdvances = async (req, res) => {
     try {
         const { page, limit, status, employeeId, search } = req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
         const result = await salaryAdvanceService.getAdvances({
             page: page ? parseInt(page) : 1,
             limit: limit ? parseInt(limit) : 20,
             status,
             employeeId,
-            search
+            search,
+            tenantId
         });
 
         return res.json({

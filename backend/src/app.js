@@ -42,7 +42,6 @@ const corsOptions = {
             'http://localhost:5173',  // Vite dev server principal
             'http://localhost:5174',  // Vite dev server secundario
             'http://localhost:3000',  // Alternativa
-            'https://recursoshumanos-eight.vercel.app', // Vercel Frontend
             'https://erp.jorgedoicela.com', // Produccion EC2 HTTPS
             'http://erp.jorgedoicela.com',  // Produccion EC2 HTTP
             process.env.FRONTEND_URL, // Produccion
@@ -61,7 +60,7 @@ const corsOptions = {
     },
     credentials: true, // Permitir cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'X-Tenant-Id', 'x-api-key'],
 };
 
 app.use(cors(corsOptions));

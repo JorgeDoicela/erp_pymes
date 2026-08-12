@@ -1,28 +1,50 @@
-# 01. Motor Documental y Generación de PDF
+# Motor Documental y Generación de Archivos PDF
 
-## 1. Descripción del Motor Documental
+## 1. Especificación del Motor de Renderizado PDF
 
-El **Motor Documental de EMPLIFI** se encarga de estructurar, renderizar y gestionar los documentos físicos digitales del personal, como contratos laborales, comprobantes individuales de pago (roles de pago) y certificados de trabajo.
+El motor documental se encarga de transformar datos estructurados desde PostgreSQL en documentos electrónicos PDF formateados. El proceso de conversión se basa en plantillas dinámicas HTML5/CSS3 procesadas en el backend Node.js.
 
 ```
-Datos Estructurados (JSON/DB) ──► Plantilla HTML/CSS (Templates) ──► Motor PDF Engine (PDFKit/Puppeteer) ──► Documento PDF ──► Almacenamiento Protegido
+Datos de Entidad (JSON / Prisma)
+       │
+       ▼
+ Plantilla HTML5 + Estilos CSS (Templates)
+       │
+       ▼
+ Generator Engine (PDFKit / Puppeteer)
+       │
+       ▼
+ Documento Binario (Application/PDF)
+       │
+       ▼
+ Depósito de Archivos Protegido (/uploads/documents/)
 ```
 
 ---
 
-## 2. Tipos de Documentos Soportados y Utilidades del Cliente
+## 2. Tipos de Documentos Generados
 
-1. **Roles de Pago Individuales (`generatePayslipPDF.js`)**:
- - Desglosa ingresos (salario ganado por días trabajados, bonos, horas extras), egresos (descuentos de ley, anticipos de sueldo) y líquido a recibir.
-2. **Acta de Finiquito y Liquidación Legal (`generateSettlementPDF.js`)**:
- - Renderiza el desglose legal completo de haberes al término de la relación laboral: 13er sueldo proporcional, 14to sueldo proporcional (SBU), vacaciones no gozadas, desahucio (Art. 185) e indemnización por despido intempestivo (Art. 188). Incluye declaración de satisfacción y bloques de firma formal para ambas partes.
-3. **Certificados de Trabajo Oficiales (`generateCertificatePDF.js`)**:
- - Certificado laboral emitido en 1 clic desde el portal del empleado. Renderiza membrete oficial, cédula, cargo, departamento, salario base y fecha de ingreso.
- - **Validación de Autenticidad QR:** Genera un recuadro de seguridad con código QR matriz y código hash único de autenticación (`CERT-ID-TIMESTAMP`) para verificación institucional externa.
+### 2.1. Comprobantes Individuales de Pago (Roles de Pago)
+- **Generador**: `generatePayslipPDF.js`
+- **Contenido**: Desglose de ingresos (salario proporcional a días laborados, recargos de horas extras al $50\%$ y $100\%$, comisiones, bonos) y egresos (aporte personal IESS del $9.45\%$, retenciones del Impuesto a la Renta, cuotas de anticipos de sueldo).
+
+### 2.2. Actas de Finiquito y Liquidaciones Legales
+- **Generador**: `generateSettlementPDF.js`
+- **Contenido**: Cómputo de haberes por terminación de la relación laboral conforme al Código del Trabajo (Ecuador):
+  - Proporcional de Décimo Tercer Sueldo (Art. 111).
+  - Proporcional de Décimo Cuarto Sueldo (Art. 113).
+  - Compensación por Vacaciones No Gozadas (Art. 69).
+  - Bonificación por Desahucio ($25\%$ de la última remuneración por año cumplido, Art. 185).
+  - Indemnización por Despido Intempestivo (Art. 188).
+
+### 2.3. Certificados Laborales con Verificación Digital QR
+- **Generador**: `generateCertificatePDF.js`
+- **Contenido**: Membrete oficial de la empresa (`Tenant`), nombres completos del trabajador, número de identificación (`identityCard`), cargo, departamento, salario mensual base y antigüedad acumulada.
+- **Mecanismo de Autenticidad QR**: Incorpora un código QR que codifica una dirección de validación pública con un hash SHA-256 único formado por `hash(tenantId + employeeId + issueTimestamp + SECRET)`.
 
 ---
 
-## 3. Almacenamiento y Seguridad de Documentos
+## 3. Seguridad y Control de Almacenamiento
 
-- Los documentos generados se vinculan a la entidad `Document` en la base de datos con su `mimeType`, `originalName` y `expiryDate`.
-- La ruta física `/uploads/documents/` se encuentra resguardada bajo control de acceso JWT, impidiendo descargas públicas o directas sin previa autorización.
+- **Entidad `Document`**: Almacena los metadatos de cada archivo generado (`id`, `employeeId`, `title`, `type`, `fileUrl`, `mimeType`, `size`, `createdAt`).
+- **Control de Descarga**: Los archivos residentes en `/uploads/documents/` no son accesibles públicamente. Cada descarga requiere autenticación JWT con validación del rol `admin`, `hr` o el usuario propietario del expediente.

@@ -5,7 +5,6 @@ import exportService from '../../services/export/exportService.js';
 class ExportController {
     /**
      * Export employees to CSV (UTF-8 BOM so Excel opens it correctly as a spreadsheet)
-     * ExcelJS was replaced because it fails silently in Vercel serverless environments.
      */
     async exportEmployees(req, res) {
         try {
@@ -100,8 +99,7 @@ class ExportController {
 
     /**
      * Export pay stub to PDF
-     * NOTE: jsPDF references 'fs' which is unavailable in Vercel serverless.
-     * Returns 501 until migrated to a compatible library (e.g. PDFKit).
+     * Returns 501 until migrated to a compatible PDF generation service.
      */
     async exportPayStubPDF(req, res) {
         return res.status(501).json({
