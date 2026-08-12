@@ -304,7 +304,7 @@ export const deleteCostCenter = async (req, res) => {
 
 export const getJournalEntries = async (req, res) => {
     try {
-        const { periodId } = req.query;
+        const { periodId, limit } = req.query;
         const tenantId = getTenantId(req);
         const where = tenantId ? { tenantId } : {};
 
@@ -323,6 +323,8 @@ export const getJournalEntries = async (req, res) => {
             }
         }
 
+        const maxTake = limit ? parseInt(limit) : 150;
+
         const entries = await prisma.journalEntry.findMany({
             where,
             include: {
@@ -330,7 +332,8 @@ export const getJournalEntries = async (req, res) => {
                     include: { account: true, costCenter: true }
                 }
             },
-            orderBy: { date: 'desc' }
+            orderBy: { date: 'desc' },
+            take: maxTake
         });
         res.status(200).json(entries);
     } catch (error) {

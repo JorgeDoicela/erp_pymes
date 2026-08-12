@@ -9,73 +9,60 @@ export const getDashboardData = async (req, res) => {
 
         // --- KPIs ---
 
-        // 1. Total Employees
-        const totalEmployees = await prisma.employee.count({
-            where: tenantWhere
-        });
-        console.log("Analytics: Total Employees:", totalEmployees);
-
-        // 2. New Hires (Current Month)
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const newHires = await prisma.employee.count({
-            where: {
-                ...tenantWhere,
-                hireDate: { gte: startOfMonth }
-            }
-        });
-        console.log("Analytics: New Hires:", newHires);
 
-        // 3. Open Vacancies
-        const openVacancies = await prisma.jobVacancy.count({
-            where: {
-                status: 'OPEN',
-                ...tenantWhere
-            }
-        });
-        console.log("Analytics: Open Vacancies:", openVacancies);
+        // Run independent KPI & Chart queries concurrently via Promise.all
+        const [
+            totalEmployees,
+            newHires,
+            openVacancies,
+            activeContracts,
+            employeesByDept,
+            vacanciesByDept
+        ] = await Promise.all([
+            prisma.employee.count({ where: tenantWhere }),
+            prisma.employee.count({
+                where: {
+                    ...tenantWhere,
+                    hireDate: { gte: startOfMonth }
+                }
+            }),
+            prisma.jobVacancy.count({
+                where: {
+                    status: 'OPEN',
+                    ...tenantWhere
+                }
+            }),
+            prisma.contract.aggregate({
+                where: {
+                    status: 'Active',
+                    ...(tenantId ? { employee: { tenantId } } : {})
+                },
+                _sum: { salary: true }
+            }),
+            prisma.employee.groupBy({
+                by: ['department'],
+                where: tenantWhere,
+                _count: { id: true }
+            }),
+            prisma.jobVacancy.groupBy({
+                by: ['department'],
+                _count: { id: true },
+                where: {
+                    status: 'OPEN',
+                    ...tenantWhere
+                }
+            })
+        ]);
 
-        // 4. Monthly Payroll Estimate — read from active Contracts (salary stored as plain Float)
-        const activeContracts = await prisma.contract.findMany({
-            where: {
-                status: 'Active',
-                ...(tenantId ? { employee: { tenantId } } : {})
-            },
-            select: { salary: true }
-        });
+        const payrollTotal = activeContracts._sum.salary || 0;
 
-        let payrollTotal = financial.from(0);
-        activeContracts.forEach(contract => {
-            const val = parseFloat(contract.salary || 0);
-            if (!isNaN(val) && val > 0) {
-                payrollTotal = payrollTotal.plus(val);
-            }
-        });
-        console.log("Analytics: Payroll Total:", payrollTotal.toString());
-
-
-        // --- CHARTS ---
-
-        // 1. Employees by Department
-        const employeesByDept = await prisma.employee.groupBy({
-            by: ['department'],
-            where: tenantWhere,
-            _count: { id: true }
-        });
         const deptChartData = employeesByDept.map(item => ({
             name: item.department || 'Sin Dept',
             value: item._count.id
         }));
 
-        // 2. Vacancies by Department
-        const vacanciesByDept = await prisma.jobVacancy.groupBy({
-            by: ['department'],
-            _count: { id: true },
-            where: {
-                status: 'OPEN',
-                ...tenantWhere
-            }
-        });
         const vacancyChartData = vacanciesByDept.map(item => ({
             name: item.department || 'Sin Dept',
             value: item._count.id
@@ -113,23 +100,34 @@ export const getTurnoverReport = async (req, res) => {
         // 1. Turnover Rate Calculation
         // Formula: (Exits / Avg Employees) * 100
 
-        const exits = await prisma.employee.findMany({
-            where: {
-                ...tenantWhere,
-                isActive: false,
-                exitDate: {
-                    gte: start,
-                    lte: end
+        // Run turnover queries concurrently with selective column fields
+        const [exits, activeEmployees] = await Promise.all([
+            prisma.employee.findMany({
+                where: {
+                    ...tenantWhere,
+                    isActive: false,
+                    exitDate: {
+                        gte: start,
+                        lte: end
+                    }
+                },
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    department: true,
+                    exitDate: true,
+                    exitType: true,
+                    exitReason: true
                 }
-            }
-        });
-
-        const activeEmployees = await prisma.employee.count({
-            where: {
-                ...tenantWhere,
-                isActive: true
-            }
-        });
+            }),
+            prisma.employee.count({
+                where: {
+                    ...tenantWhere,
+                    isActive: true
+                }
+            })
+        ]);
 
         // Simplified Avg: Existing + Exits (Roughly)
         const totalExits = exits.length;
@@ -316,9 +314,14 @@ export const getPayrollCostReport = async (req, res) => {
 
         const payrolls = await prisma.payroll.findMany({
             where: whereClause,
-            include: {
+            select: {
+                id: true,
+                paymentDate: true,
                 details: {
-                    include: {
+                    select: {
+                        baseSalary: true,
+                        overtimeAmount: true,
+                        bonuses: true,
                         employee: {
                             select: { department: true }
                         }
@@ -566,9 +569,12 @@ export const getCustomReport = async (req, res) => {
             }
         }
 
+        const maxTake = req.body.limit ? parseInt(req.body.limit) : 1000;
+
         const data = await delegate.findMany({
             where,
-            select: select
+            select: select,
+            take: maxTake
         });
 
         res.json(data);

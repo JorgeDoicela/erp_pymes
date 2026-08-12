@@ -47,21 +47,30 @@ const sanitizeCoordinate = (val) => {
     return parseFloat(val.toFixed(4));
 };
 
+const vpnCache = new Map(); // IP -> { result: boolean, expiresAt: number }
+const VPN_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos de caché por IP
+
 const isVPNDetected = async (ip) => {
     if (!ip || ip === '::1' || ip === '127.0.0.1') {
         console.log(`[VPN_CHECK] IP ignored: ${ip}`);
         return false;
     }
 
+    const cached = vpnCache.get(ip);
+    if (cached && Date.now() < cached.expiresAt) {
+        console.log(`[VPN_CHECK] Cache hit for IP ${ip}: ${cached.result}`);
+        return cached.result;
+    }
+
     try {
-        console.log(`[VPN_CHECK] Checking IP: ${ip}`);
+        console.log(`[VPN_CHECK] Checking IP via ip-api: ${ip}`);
         // Use ip-api.com (free for non-commercial use, 45 req/min)
-        // Fields: proxy (mobile/proxy/vpn), hosting (datacenter/cloud)
-        const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`, { timeout: 3000 });
+        const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`, { timeout: 2000 });
         
         if (response.data.status === 'success') {
             const isVPN = response.data.proxy === true || response.data.hosting === true;
             console.log(`[VPN_CHECK] Result for ${ip}: ${isVPN} (Proxy: ${response.data.proxy}, Hosting: ${response.data.hosting})`);
+            vpnCache.set(ip, { result: isVPN, expiresAt: Date.now() + VPN_CACHE_TTL_MS });
             return isVPN;
         }
         console.warn(`[VPN_CHECK] ip-api status: ${response.data.status}, message: ${response.data.message}`);

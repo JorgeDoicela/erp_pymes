@@ -10,6 +10,9 @@ export const checkDocumentExpirations = async () => {
         const future30 = new Date(today); future30.setDate(today.getDate() + 30);
         const future15 = new Date(today); future15.setDate(today.getDate() + 15);
 
+        // Fetch Admins ONCE for the entire check
+        const admins = await prisma.employee.findMany({ where: { role: 'admin', isActive: true } });
+
         // Define function to check specific date
         const checkDate = async (targetDate, days) => {
             const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
@@ -32,7 +35,6 @@ export const checkDocumentExpirations = async () => {
                 });
 
                 // Notify Admins
-                const admins = await prisma.employee.findMany({ where: { role: 'admin', isActive: true } });
                 for (const admin of admins) {
                     await notificationService.createNotification({
                         recipientId: admin.id,
@@ -50,8 +52,7 @@ export const checkDocumentExpirations = async () => {
         await checkDate(future30, 30);
         await checkDate(future15, 15);
 
-        // Check for Expired Yesterday (or Today if we want immediate alert on expiration)
-        // Let's check expired YESTERDAY to mark as 'Overdue' alert
+        // Check for Expired Yesterday
         const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
         const expired = await prisma.document.findMany({
             where: {
@@ -64,7 +65,6 @@ export const checkDocumentExpirations = async () => {
         });
 
         for (const doc of expired) {
-            const admins = await prisma.employee.findMany({ where: { role: 'admin', isActive: true } });
             for (const admin of admins) {
                 await notificationService.createNotification({
                     recipientId: admin.id,

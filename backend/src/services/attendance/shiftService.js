@@ -22,26 +22,31 @@ export const shiftService = {
         const start = new Date(startDate);
         const end = endDate ? new Date(endDate) : null;
 
+        // Cargar todos los solapamientos de la lista de empleados en 1 sola consulta
+        const allOverlaps = await shiftRepository.findOverlappingSchedulesForMany(employeeIds, start, end);
+        const overlapsByEmployee = new Map();
+        allOverlaps.forEach(ov => {
+            if (!overlapsByEmployee.has(ov.employeeId)) overlapsByEmployee.set(ov.employeeId, []);
+            overlapsByEmployee.get(ov.employeeId).push(ov);
+        });
+
+        const newDays = Array.isArray(daysOfWeek) ? daysOfWeek : JSON.parse(daysOfWeek);
+
         for (const empId of employeeIds) {
             try {
-                // Validar solapamiento
-                const overlaps = await shiftRepository.findOverlappingSchedules(empId, start, end);
+                const overlaps = overlapsByEmployee.get(empId) || [];
 
                 if (overlaps.length > 0) {
-                    // Validacion granular: Verificar si los dias especificos chocan
-                    const newDays = Array.isArray(daysOfWeek) ? daysOfWeek : JSON.parse(daysOfWeek);
-
                     const actualConflicts = overlaps.filter(existing => {
                         try {
                             const existingDays = typeof existing.daysOfWeek === 'string'
                                 ? JSON.parse(existing.daysOfWeek)
                                 : existing.daysOfWeek;
 
-                            // Verificar interseccion
                             const hasCommonDay = newDays.some(day => existingDays.includes(day));
                             return hasCommonDay;
                         } catch (e) {
-                            return true; // Si falla el parseo, asumimos conflicto por seguridad
+                            return true;
                         }
                     });
 
@@ -55,7 +60,7 @@ export const shiftService = {
                     shiftId,
                     startDate: start,
                     endDate: end,
-                    daysOfWeek: JSON.stringify(daysOfWeek), // e.g. ["Monday", "Wednesday"]
+                    daysOfWeek: JSON.stringify(daysOfWeek),
                 });
 
                 results.success.push({ employeeId: empId, assignmentId: assignment.id });

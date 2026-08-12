@@ -499,37 +499,55 @@ class PayrollCalculationService {
                 throw new Error(`Inconsistencia detectada: El total de detalles (${calculatedTotal}) no coincide con el total de cabecera (${storedTotal}).`);
             }
 
-            // Process One-Time Benefits
+            // Process One-Time Benefits & Salary Advances in Batch
+            const benefitIdsToProcess = [];
+            const advanceDeductions = [];
+
             for (const detail of payroll.details) {
                 const bonuses = typeof detail.bonuses === 'string' ? JSON.parse(detail.bonuses || '[]') : (detail.bonuses || []);
                 for (const bonus of bonuses) {
                     if (bonus.benefitId && bonus.frequency === 'ONE_TIME') {
-                        await tx.employeeBenefit.update({
-                            where: { id: bonus.benefitId },
-                            data: { status: 'PROCESSED' }
-                        });
+                        benefitIdsToProcess.push(bonus.benefitId);
                     }
                 }
 
-                // Process Salary Advances / Loans
                 const deductions = typeof detail.deductions === 'string' ? JSON.parse(detail.deductions || '[]') : (detail.deductions || []);
                 for (const ded of deductions) {
                     if (ded.advanceId) {
-                        const adv = await tx.salaryAdvance.findUnique({ where: { id: ded.advanceId } });
-                        if (adv) {
-                            const newPaidInstallments = adv.paidInstallments + 1;
-                            const newPaidAmount = financial.from(adv.paidAmount).plus(ded.amount || 0).toNumber();
-                            const isFullyPaid = newPaidInstallments >= adv.installments || newPaidAmount >= adv.amount;
+                        advanceDeductions.push({ advanceId: ded.advanceId, amount: ded.amount || 0 });
+                    }
+                }
+            }
 
-                            await tx.salaryAdvance.update({
-                                where: { id: ded.advanceId },
-                                data: {
-                                    paidInstallments: newPaidInstallments,
-                                    paidAmount: newPaidAmount,
-                                    status: isFullyPaid ? 'PAID' : 'APPROVED'
-                                }
-                            });
-                        }
+            if (benefitIdsToProcess.length > 0) {
+                await tx.employeeBenefit.updateMany({
+                    where: { id: { in: benefitIdsToProcess } },
+                    data: { status: 'PROCESSED' }
+                });
+            }
+
+            if (advanceDeductions.length > 0) {
+                const advanceIds = advanceDeductions.map(a => a.advanceId);
+                const advances = await tx.salaryAdvance.findMany({
+                    where: { id: { in: advanceIds } }
+                });
+                const advanceMap = new Map(advances.map(a => [a.id, a]));
+
+                for (const ded of advanceDeductions) {
+                    const adv = advanceMap.get(ded.advanceId);
+                    if (adv) {
+                        const newPaidInstallments = adv.paidInstallments + 1;
+                        const newPaidAmount = financial.from(adv.paidAmount).plus(ded.amount).toNumber();
+                        const isFullyPaid = newPaidInstallments >= adv.installments || newPaidAmount >= adv.amount;
+
+                        await tx.salaryAdvance.update({
+                            where: { id: ded.advanceId },
+                            data: {
+                                paidInstallments: newPaidInstallments,
+                                paidAmount: newPaidAmount,
+                                status: isFullyPaid ? 'PAID' : 'APPROVED'
+                            }
+                        });
                     }
                 }
             }

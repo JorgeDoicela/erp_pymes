@@ -44,21 +44,27 @@ class EmployeeBenefitController {
                 return res.status(400).json({ success: false, message: 'Se requiere una lista de empleados' });
             }
 
+            let empMap = new Map();
+            if (isSpecialCalculation === 'DECIMO_TERCERO') {
+                const employees = await prisma.employee.findMany({
+                    where: { id: { in: employeeIds } },
+                    select: { id: true, salary: true }
+                });
+                empMap = new Map(employees.map(e => [e.id, e]));
+            }
+
             const benefits = [];
 
             for (const empId of employeeIds) {
                 let finalAmount = parseFloat(amount);
 
-                // If it's a special calculation like "Décimo Tercero" (Simplified)
-                // We'd ideally sum history, but as a shortcut we use (baseSalary / 12)
                 if (isSpecialCalculation === 'DECIMO_TERCERO') {
-                    const emp = await prisma.employee.findUnique({ where: { id: empId }, select: { salary: true } });
-                    if (emp) {
+                    const emp = empMap.get(empId);
+                    if (emp && emp.salary) {
                         const baseSalary = parseFloat(emp.salary.replace(/[^0-9.]/g, '')) || 0;
                         finalAmount = baseSalary;
                     }
                 } else if (isSpecialCalculation === 'DECIMO_CUARTO') {
-                    // Ecuadorian SBU (Salario Básico Unificado) 2024
                     finalAmount = 460.00;
                 }
 

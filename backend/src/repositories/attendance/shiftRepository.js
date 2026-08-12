@@ -52,6 +52,27 @@ export const shiftRepository = {
         });
     },
 
+    async findOverlappingSchedulesForMany(employeeIds, startDate, endDate) {
+        const where = {
+            employeeId: { in: employeeIds },
+            isActive: true,
+            AND: [
+                { startDate: { lte: endDate || new Date(2100, 0, 1) } },
+                {
+                    OR: [
+                        { endDate: null },
+                        { endDate: { gte: startDate } }
+                    ]
+                }
+            ]
+        };
+
+        return prisma.employeeSchedule.findMany({
+            where,
+            include: { shift: true }
+        });
+    },
+
     async getSchedulesByEmployee(employeeId) {
         return prisma.employeeSchedule.findMany({
             where: { employeeId, isActive: true },

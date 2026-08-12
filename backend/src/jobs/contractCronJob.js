@@ -6,36 +6,28 @@ export const checkContractExpirations = async () => {
     console.log('--- Running Contract Expiration Check ---');
     try {
         const today = new Date();
-        const futureDate30 = new Date(); futureDate30.setDate(today.getDate() + 30);
-        const futureDate15 = new Date(); futureDate15.setDate(today.getDate() + 15);
-        const futureDate7 = new Date(); futureDate7.setDate(today.getDate() + 7);
+        const targets = [30, 15, 7];
 
-        // Fetch active contracts
-        const contracts = await prisma.contract.findMany({
-            where: {
-                status: 'Active',
-                endDate: { not: null }
-            },
-            include: { employee: true }
-        });
+        for (const days of targets) {
+            const targetDate = new Date(today);
+            targetDate.setDate(today.getDate() + days);
 
-        for (const contract of contracts) {
-            if (!contract.endDate) continue;
+            const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
 
-            const endDate = new Date(contract.endDate);
+            const contracts = await prisma.contract.findMany({
+                where: {
+                    status: 'Active',
+                    endDate: {
+                        gte: startOfDay,
+                        lte: endOfDay
+                    }
+                },
+                include: { employee: true }
+            });
 
-            // Helper to check if same day (ignoring time)
-            const isSameDay = (d1, d2) =>
-                d1.getFullYear() === d2.getFullYear() &&
-                d1.getMonth() === d2.getMonth() &&
-                d1.getDate() === d2.getDate();
-
-            if (isSameDay(endDate, futureDate30)) {
-                await notificationService.sendContractExpirationAlert(contract, 30);
-            } else if (isSameDay(endDate, futureDate15)) {
-                await notificationService.sendContractExpirationAlert(contract, 15);
-            } else if (isSameDay(endDate, futureDate7)) {
-                await notificationService.sendContractExpirationAlert(contract, 7);
+            for (const contract of contracts) {
+                await notificationService.sendContractExpirationAlert(contract, days);
             }
         }
         console.log('--- Contract Expiration Check Completed ---');

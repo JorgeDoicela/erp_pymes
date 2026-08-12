@@ -374,11 +374,19 @@ export class EmployeeRepository {
    * Nota: Esto es una aproximación - en producción deberías calcular en la BD
    * @returns {Promise<Object>} Estadísticas de salarios
    */
-  async getSalaryStats() {
+  async getSalaryStats(tenantId = null) {
     try {
+      const where = { isActive: true };
+      if (tenantId) where.tenantId = tenantId;
+
       const employees = await prisma.employee.findMany({
+        where,
         select: { salary: true },
       });
+
+      if (employees.length === 0) {
+        return { total: 0, sum: 0, average: 0, min: 0, max: 0 };
+      }
 
       const decryptedSalaries = employees.map((emp) =>
         decryptSalary(emp.salary)

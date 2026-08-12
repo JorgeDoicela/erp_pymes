@@ -18,13 +18,31 @@ class ReportService {
 
         const employees = await prisma.employee.findMany({
             where: whereEmployee,
-            include: {
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                department: true,
                 attendance: {
                     where: {
                         date: {
                             gte: start,
                             lte: end
                         }
+                    },
+                    select: {
+                        id: true,
+                        date: true,
+                        checkIn: true,
+                        checkOut: true,
+                        workedHours: true,
+                        overtimeHours: true,
+                        status: true,
+                        ipAddress: true,
+                        entryLatitude: true,
+                        entryLongitude: true,
+                        exitLatitude: true,
+                        exitLongitude: true
                     }
                 },
                 absences: {
@@ -33,10 +51,23 @@ class ReportService {
                         OR: [
                             { startDate: { lte: end }, endDate: { gte: start } }
                         ]
+                    },
+                    select: {
+                        id: true,
+                        startDate: true,
+                        endDate: true,
+                        type: true
                     }
                 },
                 schedules: {
-                    include: { shift: true }
+                    select: {
+                        shift: {
+                            select: {
+                                startTime: true,
+                                endTime: true
+                            }
+                        }
+                    }
                 }
             }
         });

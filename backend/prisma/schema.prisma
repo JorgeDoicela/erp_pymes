@@ -108,6 +108,11 @@ model Employee {
   @@index([email])
   @@index([department])
   @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@index([tenantId, role])
+  @@index([hireDate])
+  @@index([exitDate])
+  @@index([isActive])
   @@unique([tenantId, identityCard])
   @@map("employees")
 }
@@ -148,6 +153,9 @@ model AbsenceRequest {
   employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
+  @@index([employeeId, status])
+  @@index([status, startDate, endDate])
+  @@index([createdAt])
   @@map("absence_requests")
 }
 
@@ -176,6 +184,8 @@ model Attendance {
   @@unique([employeeId, date])
   @@index([employeeId])
   @@index([date])
+  @@index([employeeId, date, status])
+  @@index([isLate])
   @@map("attendance")
 }
 
@@ -211,6 +221,7 @@ model EmployeeSchedule {
 
   @@index([employeeId])
   @@index([shiftId])
+  @@index([employeeId, isActive, startDate])
   @@map("employee_schedules")
 }
 
@@ -254,6 +265,9 @@ model AuditLog {
   @@index([tenantId])
   @@index([entityId])
   @@index([timestamp])
+  @@index([entity])
+  @@index([action])
+  @@index([tenantId, timestamp])
   @@map("audit_logs")
 }
 
@@ -274,6 +288,10 @@ model Contract {
   employee          Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
+  @@index([status])
+  @@index([employeeId, status])
+  @@index([startDate])
+  @@index([endDate])
   @@map("contracts")
 }
 
@@ -295,6 +313,7 @@ model Document {
 
   @@index([employeeId])
   @@index([status])
+  @@index([expiryDate])
   @@map("documents")
 }
 
@@ -345,6 +364,8 @@ model Payroll {
 
   @@index([tenantId])
   @@index([period])
+  @@index([paymentDate])
+  @@index([createdAt])
   @@map("payrolls")
 }
 
@@ -382,6 +403,8 @@ model EmployeeBenefit {
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
+  @@index([employeeId, status])
+  @@index([status])
   @@map("employee_benefits")
 }
 
@@ -421,6 +444,10 @@ model EmployeeEvaluation {
 
   @@index([templateId])
   @@index([employeeId])
+  @@index([status])
+  @@index([employeeId, status])
+  @@index([endDate])
+  @@index([createdAt])
   @@map("employee_evaluations")
 }
 
@@ -440,6 +467,7 @@ model EvaluationReviewer {
 
   @@index([evaluationId])
   @@index([reviewerId])
+  @@index([status])
   @@map("evaluation_reviewers")
 }
 
@@ -468,6 +496,8 @@ model JobVacancy {
 
   @@index([tenantId])
   @@index([postedById])
+  @@index([status])
+  @@index([department])
   @@map("job_vacancies")
 }
 
@@ -489,6 +519,7 @@ model JobApplication {
   vacancy     JobVacancy            @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
 
   @@index([vacancyId])
+  @@index([status])
   @@map("job_applications")
 }
 
@@ -583,6 +614,7 @@ model Notification {
   recipient       Employee @relation(fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@index([recipientId])
+  @@index([recipientId, isRead])
   @@map("notifications")
 }
 
@@ -673,6 +705,7 @@ model AccountingAccount {
 
   @@index([tenantId])
   @@index([code])
+  @@index([parentId])
   @@unique([tenantId, code])
   @@map("acc_accounts")
 }
@@ -717,6 +750,9 @@ model JournalEntry {
   @@index([tenantId])
   @@index([date])
   @@index([entryNumber])
+  @@index([tenantId, date])
+  @@index([tenantId, status])
+  @@index([referenceModule, referenceId])
   @@unique([tenantId, entryNumber])
   @@map("acc_journal_entries")
 }
@@ -739,6 +775,8 @@ model JournalLine {
 
   @@index([journalEntryId])
   @@index([accountId])
+  @@index([journalEntryId, accountId])
+  @@index([costCenterId])
   @@map("acc_journal_lines")
 }
 
@@ -787,6 +825,8 @@ model Entrepreneurship {
   createdAt       DateTime                 @default(now())
   updatedAt       DateTime                 @updatedAt
 
+  @@index([ownerId])
+  @@index([status])
   @@map("ent_projects")
 }
 

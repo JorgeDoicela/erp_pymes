@@ -9,7 +9,7 @@ class AuditRepository {
      * Crear un nuevo registro de auditoría
      * @param {Object} data - Datos del log
      */
-    async createLog({ entity, entityId, action, performedBy, details, ip }) {
+    async createLog({ entity, entityId, action, performedBy, details, ip, tenantId }) {
         try {
             // Asegurarse de que el performedBy sea un String (puede venir como ID o Nombre)
             const performer = typeof performedBy === 'object' ? JSON.stringify(performedBy) : String(performedBy);
@@ -19,6 +19,7 @@ class AuditRepository {
 
             return await prisma.auditLog.create({
                 data: {
+                    tenantId: tenantId || null,
                     entity,
                     entityId: String(entityId),
                     action,
@@ -39,9 +40,10 @@ class AuditRepository {
      * @param {Object} filters - Filtros de búsqueda
      */
     async getAll(filters = {}) {
-        const { entity, action, performer, limit = 100 } = filters;
+        const { entity, action, performer, tenantId, limit = 100 } = filters;
 
         const where = {};
+        if (tenantId) where.tenantId = tenantId;
         if (entity) where.entity = entity;
         if (action) where.action = action;
         if (performer) where.performedBy = { contains: performer, mode: 'insensitive' };
@@ -56,10 +58,11 @@ class AuditRepository {
     /**
      * Obtener logs específicos de una entidad
      */
-    async getLogsByEntityId(entityId) {
+    async getLogsByEntityId(entityId, limit = 100) {
         return await prisma.auditLog.findMany({
             where: { entityId: String(entityId) },
-            orderBy: { timestamp: 'desc' }
+            orderBy: { timestamp: 'desc' },
+            take: Number(limit)
         });
     }
 }
