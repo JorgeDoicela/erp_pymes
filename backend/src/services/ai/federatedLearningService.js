@@ -55,21 +55,37 @@ class FederatedLearningService {
         };
     }
 
-    /**
-     * Calcula el gradiente local con recorte de norma L2 y ruido Gaussiano (DP-SGD)
-     */
     async computeLocalPrivateGradient(tenantId, globalWeights, clippingNorm = 1.0, noiseScale = 0.5) {
-        const empCount = await prisma.employee.count({ where: { tenantId, isActive: true } });
-        const n = Math.max(1, empCount);
+        const employees = await prisma.employee.findMany({
+            where: { tenantId, isActive: true },
+            include: { absences: true, evaluations: true, contracts: true }
+        });
+        const n = Math.max(1, employees.length);
 
-        // 1. Calcular gradiente local bruto
+        // 1. Calcular gradiente local empírico derivado de la cohorte del tenant
+        let sumSalary = 0, sumAbsence = 0, sumPerf = 0, sumNoPromo = 0, sumK = 0, sumLambda = 0;
+        employees.forEach(emp => {
+            const evals = emp.evaluations || [];
+            const avgPerf = evals.length > 0 ? evals.reduce((s, e) => s + (e.finalScore || 70), 0) / evals.length : 75;
+            const absenceCount = (emp.absences || []).length;
+            const predictedRisk = Math.min(0.9, Math.max(0.05, 0.30 + (absenceCount * 0.05) - (avgPerf / 200)));
+            const residual = predictedRisk - 0.20; // residuo empírico vs baseline de retención
+
+            sumSalary += residual * (-0.15);
+            sumAbsence += residual * (0.10);
+            sumPerf += residual * (0.20);
+            sumNoPromo += residual * (0.05);
+            sumK += residual * (0.02);
+            sumLambda += residual * (-0.01);
+        });
+
         const rawGradient = {
-            beta_salary: (Math.random() - 0.5) * 0.1,
-            beta_absence: (Math.random() - 0.5) * 0.08,
-            beta_perf: (Math.random() - 0.5) * 0.12,
-            beta_no_promo: (Math.random() - 0.5) * 0.05,
-            k_weibull: (Math.random() - 0.5) * 0.02,
-            lambda_weibull: (Math.random() - 0.5) * 0.3
+            beta_salary: Number((sumSalary / n).toFixed(5)),
+            beta_absence: Number((sumAbsence / n).toFixed(5)),
+            beta_perf: Number((sumPerf / n).toFixed(5)),
+            beta_no_promo: Number((sumNoPromo / n).toFixed(5)),
+            k_weibull: Number((sumK / n).toFixed(5)),
+            lambda_weibull: Number((sumLambda / n).toFixed(5))
         };
 
         // 2. Recorte de norma L2 (Gradient Clipping) para acotar la sensibilidad C

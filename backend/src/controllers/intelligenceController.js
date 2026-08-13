@@ -2,6 +2,7 @@ import * as intelligenceService from '../services/intelligenceService.js';
 import rsiService from '../services/ai/rsiService.js';
 import causalInferenceService from '../services/ai/causalInferenceService.js';
 import federatedLearningService from '../services/ai/federatedLearningService.js';
+import morlOptimizationService from '../services/ai/morlOptimizationService.js';
 
 /**
  * Controlador de Inteligencia
@@ -453,6 +454,50 @@ export async function getFederatedRoundsHistory(req, res) {
         return handleError(res, error, 'Error al obtener historial de rondas federadas');
     }
 }
+
+/**
+ * POST /api/intelligence/morl/optimize
+ * Ejecuta una optimización multiobjetivo Q-Learning con Frontera de Pareto
+ */
+export async function runMorlOptimization(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId || 'default-tenant';
+        const { budgetLimit, targetDepartment, customTitle } = req.body || {};
+
+        const result = await morlOptimizationService.runMorlParetoOptimization({
+            tenantId,
+            budgetLimit: budgetLimit !== undefined ? Number(budgetLimit) : 15000,
+            targetDepartment: targetDepartment || 'ALL',
+            customTitle
+        });
+
+        return res.json({
+            success: true,
+            message: 'Optimización Multiobjetivo MORL calculada exitosamente',
+            data: result
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al ejecutar optimización multiobjetivo MORL');
+    }
+}
+
+/**
+ * GET /api/intelligence/morl/history
+ * Obtiene el historial de corridas de optimización MORL
+ */
+export async function getMorlHistory(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId || 'default-tenant';
+        const history = await morlOptimizationService.getMorlHistory(tenantId);
+        return res.json({
+            success: true,
+            data: history
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al obtener historial de optimización MORL');
+    }
+}
+
 
 
 

@@ -68,6 +68,7 @@ const AnalyticsDashboard = lazy(() => import('./pages/analytics/AnalyticsDashboa
 const RsiOptimizationDashboard = lazy(() => import('./pages/analytics/RsiOptimizationDashboard.jsx'));
 const CausalInferenceDashboard = lazy(() => import('./pages/analytics/CausalInferenceDashboard.jsx'));
 const FederatedLearningDashboard = lazy(() => import('./pages/analytics/FederatedLearningDashboard.jsx'));
+const MorlParetoDashboard = lazy(() => import('./pages/analytics/MorlParetoDashboard.jsx'));
 const TurnoverReport = lazy(() => import('./pages/reports/TurnoverReport.jsx'));
 const PerformanceReport = lazy(() => import('./pages/reports/PerformanceReport.jsx'));
 const PayrollCostReport = lazy(() => import('./pages/reports/PayrollCostReport.jsx'));
@@ -214,6 +215,7 @@ function App() {
           <Route path="/analytics/rsi-optimization" element={<RsiOptimizationDashboard />} />
           <Route path="/analytics/causal-inference" element={<CausalInferenceDashboard />} />
           <Route path="/analytics/federated-learning" element={<FederatedLearningDashboard />} />
+          <Route path="/analytics/morl-pareto" element={<MorlParetoDashboard />} />
           <Route path="/analytics/turnover" element={<TurnoverReport />} />
           <Route path="/analytics/performance" element={<PerformanceReport />} />
           <Route path="/analytics/payroll-costs" element={<PayrollCostReport />} />

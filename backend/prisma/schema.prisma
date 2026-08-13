@@ -40,6 +40,7 @@ model Tenant {
   rsiPredictionAudits RsiPredictionAudit[]
   causalInterventions CausalIntervention[]
   privacyBudget       TenantPrivacyBudget?
+  morlPolicyRuns      MorlPolicyRun[]
 
   @@map("tenants")
 }
@@ -1172,6 +1173,41 @@ model TenantPrivacyBudget {
   @@index([tenantId])
   @@map("tenant_privacy_budgets")
 }
+
+model MorlPolicyRun {
+  id                    String                @id @default(cuid())
+  tenantId              String?
+  tenant                Tenant?               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title                 String
+  budgetLimit           Float                 // Presupuesto tope ($)
+  targetDepartment      String                @default("ALL")
+  sampleSize            Int                   @default(0)
+  hyperparametersJson   String                @db.Text // alpha, gamma, epsilon, episodes
+  paretoFrontierJson    String                @db.Text // Puntos no dominados serializados
+  selectedPointIndex    Int                   @default(0)
+  frontierPoints        ParetoFrontierPoint[]
+  createdAt             DateTime              @default(now())
+
+  @@index([tenantId])
+  @@map("morl_policy_runs")
+}
+
+model ParetoFrontierPoint {
+  id                    String        @id @default(cuid())
+  policyRunId           String
+  policyRun             MorlPolicyRun @relation(fields: [policyRunId], references: [id], onDelete: Cascade)
+  weightRetention       Float         // Peso de preferencia w1 (Retención)
+  weightCost            Float         // Peso de preferencia w2 (Costo)
+  totalCostEstimate     Float         // Presupuesto consumido ($)
+  expectedRetentionRate Float         // Tasa de retención esperada (%)
+  retainedEmployeeCount Int           // Empleados retenidos
+  policyActionsJson     String        @db.Text // Acciones recomendadas por categoría de riesgo
+  createdAt             DateTime      @default(now())
+
+  @@index([policyRunId])
+  @@map("pareto_frontier_points")
+}
+
 
 
 

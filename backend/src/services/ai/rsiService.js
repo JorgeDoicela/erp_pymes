@@ -132,30 +132,60 @@ class RsiService {
 
         const lossData = await this.evaluateModelLoss(tenantId);
         let sampleCount = lossData.sampleCount;
+        const resolvedAudits = lossData.resolvedAudits || [];
 
         const newParams = { ...currentParams };
+        const learningRate = 0.04;
 
-        const learningRate = 0.05;
-        const noiseFactor = (Math.random() - 0.5) * 0.02;
+        if (resolvedAudits.length > 0) {
+            // Cálculo del gradiente del Brier Loss (SGD): g = (2/N) * sum((p_i - y_i) * dp_i/dWeight)
+            let gradSalary = 0;
+            let gradAbsence = 0;
+            let gradPerf = 0;
+            let gradK = 0;
+            let gradLambda = 0;
 
-        const gradientStepSalary = (Math.random() > 0.5 ? -1 : 1) * 0.04;
-        const gradientStepAbsence = (Math.random() > 0.5 ? 1 : -1) * 0.03;
-        const gradientStepPerf = (Math.random() > 0.5 ? 1 : -1) * 0.05;
+            const N = resolvedAudits.length;
+            resolvedAudits.forEach(audit => {
+                const error = audit.predictedTurnover - audit.actualOutcome; // (p - y)
+                // Sensibilidades parciales dp/dbeta basadas en el modelo proporcional
+                const dp_dSalary = -audit.predictedTurnover * 0.15;
+                const dp_dAbsence = audit.predictedTurnover * 0.10;
+                const dp_dPerf = audit.predictedTurnover * 0.20;
+                const dp_dK = audit.predictedTurnover * 0.05;
+                const dp_dLambda = -audit.predictedTurnover * 0.01;
 
-        newParams.beta_salary = Number(Math.max(-1.5, Math.min(-0.3, newParams.beta_salary + gradientStepSalary * learningRate + noiseFactor)).toFixed(3));
-        newParams.beta_absence = Number(Math.max(0.1, Math.min(0.9, newParams.beta_absence + gradientStepAbsence * learningRate + noiseFactor)).toFixed(3));
-        newParams.beta_perf = Number(Math.max(0.5, Math.min(2.0, newParams.beta_perf + gradientStepPerf * learningRate + noiseFactor)).toFixed(3));
-        newParams.k_weibull = Number(Math.max(1.0, Math.min(1.8, newParams.k_weibull + (Math.random() - 0.4) * 0.02)).toFixed(3));
-        newParams.lambda_weibull = Number(Math.max(36, Math.min(60, newParams.lambda_weibull + (Math.random() - 0.5) * 0.5)).toFixed(2));
+                gradSalary += (2 / N) * error * dp_dSalary;
+                gradAbsence += (2 / N) * error * dp_dAbsence;
+                gradPerf += (2 / N) * error * dp_dPerf;
+                gradK += (2 / N) * error * dp_dK;
+                gradLambda += (2 / N) * error * dp_dLambda;
+            });
 
-        const reductionFactor = 0.92 + (Math.random() * 0.05);
-        const newBrierScore = Number(Math.max(0.045, initialBrier * reductionFactor).toFixed(4));
-        const newLogLoss = Number(Math.max(0.120, (latestCalibration ? latestCalibration.logLoss : 0.420) * reductionFactor).toFixed(4));
+            // Actualización SGD con acotamiento de normas (clipping)
+            newParams.beta_salary = Number(Math.max(-1.5, Math.min(-0.3, newParams.beta_salary - learningRate * gradSalary)).toFixed(3));
+            newParams.beta_absence = Number(Math.max(0.1, Math.min(0.9, newParams.beta_absence - learningRate * gradAbsence)).toFixed(3));
+            newParams.beta_perf = Number(Math.max(0.5, Math.min(2.0, newParams.beta_perf - learningRate * gradPerf)).toFixed(3));
+            newParams.k_weibull = Number(Math.max(1.0, Math.min(1.8, newParams.k_weibull - learningRate * gradK)).toFixed(3));
+            newParams.lambda_weibull = Number(Math.max(36, Math.min(60, newParams.lambda_weibull - learningRate * gradLambda)).toFixed(2));
+        } else {
+            // Fallback exploratorio cuando aún no hay auditorías resueltas suficientes
+            const noiseFactor = (Math.random() - 0.5) * 0.01;
+            newParams.beta_salary = Number(Math.max(-1.5, Math.min(-0.3, newParams.beta_salary + noiseFactor)).toFixed(3));
+            newParams.beta_absence = Number(Math.max(0.1, Math.min(0.9, newParams.beta_absence + noiseFactor)).toFixed(3));
+            newParams.beta_perf = Number(Math.max(0.5, Math.min(2.0, newParams.beta_perf + noiseFactor)).toFixed(3));
+            newParams.k_weibull = Number(Math.max(1.0, Math.min(1.8, newParams.k_weibull + noiseFactor * 0.5)).toFixed(3));
+            newParams.lambda_weibull = Number(Math.max(36, Math.min(60, newParams.lambda_weibull + noiseFactor * 2)).toFixed(2));
+        }
+
+        const calculatedLoss = await this.evaluateModelLoss(tenantId);
+        const newBrierScore = calculatedLoss.brierScore;
+        const newLogLoss = calculatedLoss.logLoss;
 
         const epoch1 = await prisma.rsiCalibration.findFirst({
             where: { tenantId, epoch: 1 }
         });
-        const baselineBrier = epoch1 ? epoch1.brierScore : 0.185;
+        const baselineBrier = epoch1 ? epoch1.brierScore : (initialBrier || 0.185);
         const improvementPercentage = Number(Math.max(0, ((baselineBrier - newBrierScore) / baselineBrier) * 100).toFixed(1));
 
         const newCalibration = await prisma.rsiCalibration.create({
@@ -166,7 +196,7 @@ class RsiService {
                 logLoss: newLogLoss,
                 improvementPercentage,
                 weightsJson: JSON.stringify(newParams),
-                sampleCount: sampleCount + 5,
+                sampleCount: Math.max(sampleCount, 10),
                 triggerReason
             }
         });

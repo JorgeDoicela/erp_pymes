@@ -75,4 +75,8 @@ router.get('/federated/status', intelligenceController.getFederatedStatus);
 router.post('/federated/round', intelligenceController.executeFederatedRound);
 router.get('/federated/rounds-history', intelligenceController.getFederatedRoundsHistory);
 
+// Motor de Aprendizaje por Refuerzo Multiobjetivo (MORL & Frontera de Pareto)
+router.post('/morl/optimize', intelligenceController.runMorlOptimization);
+router.get('/morl/history', intelligenceController.getMorlHistory);
+
 export default router;

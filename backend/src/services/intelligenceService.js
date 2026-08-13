@@ -272,13 +272,27 @@ function calculateRetentionRiskScore(employee, avgSalary, rsiParams = {}) {
     };
 }
 
-export async function getRetentionRiskAnalysis(preloadedEmployees = null) {
-    const rawEmployees = preloadedEmployees || await fetchRawEmployees();
+export async function getRetentionRiskAnalysis(tenantId = null, preloadedEmployees = null) {
+    let resolvedTenantId = typeof tenantId === 'string' ? tenantId : null;
+    let rawEmployees = null;
+
+    if (Array.isArray(tenantId)) {
+        rawEmployees = tenantId;
+        resolvedTenantId = rawEmployees[0]?.tenantId || null;
+    } else if (preloadedEmployees) {
+        rawEmployees = preloadedEmployees;
+        resolvedTenantId = resolvedTenantId || rawEmployees[0]?.tenantId || null;
+    } else {
+        rawEmployees = await fetchRawEmployees(resolvedTenantId);
+        resolvedTenantId = resolvedTenantId || rawEmployees[0]?.tenantId || null;
+    }
+
+    const rsiParams = resolvedTenantId ? await rsiService.getTenantModelParameters(resolvedTenantId) : {};
     const { employees, departmentAvgSalaries } = prepareEmployeeData(rawEmployees);
 
     const analysis = employees.map(employee => {
         const avgSalary = departmentAvgSalaries[employee.department] || employee._decryptedSalary;
-        const riskData = calculateRetentionRiskScore(employee, avgSalary);
+        const riskData = calculateRetentionRiskScore(employee, avgSalary, rsiParams);
 
         return {
             employeeId: employee.id,

@@ -37,6 +37,7 @@ Documentación técnica del sistema de gestión de talento humano Emplifi. Cada 
 - [04 — Motor de Automejora Recursiva (RSI Engine)](./06-inteligencia-y-analitica/04-motor-automejora-recursiva-rsi.md)
 - [05 — Motor de Inferencia Causal Contrafactual (Causal AI)](./06-inteligencia-y-analitica/05-motor-inferencia-causal-contrafactual.md)
 - [06 — Aprendizaje Federado Multi-Tenant (DP-SGD)](./06-inteligencia-y-analitica/06-aprendizaje-federado-privacidad-diferencial.md)
+- [07 — Motor de Aprendizaje por Refuerzo Multiobjetivo (MORL & Frontera de Pareto)](./06-inteligencia-y-analitica/07-optimizacion-multiobjetivo-frontera-pareto-morl.md)
 
 ### 07 — Despliegue y Operaciones
 - [01 — Instalación y Entorno Local](./07-despliegue-y-operaciones/01-instalacion-entorno-local.md)

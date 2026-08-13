@@ -193,5 +193,22 @@ export async function getCausalHistory() {
     return response.data;
 }
 
+/**
+ * Ejecuta una optimización multiobjetivo por refuerzo MORL (Frontera de Pareto)
+ */
+export async function runMorlOptimization(data) {
+    const response = await intelligenceClient.post('/morl/optimize', data);
+    return response.data;
+}
+
+/**
+ * Obtiene el historial de optimizaciones MORL Pareto
+ */
+export async function getMorlHistory() {
+    const response = await intelligenceClient.get('/morl/history');
+    return response.data;
+}
+
+
 
 

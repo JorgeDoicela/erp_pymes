@@ -85,6 +85,7 @@ export const adminSections = [
             { title: 'Automejora RSI Engine', icon: <FiCpu />, color: 'bg-emerald-600', path: '/analytics/rsi-optimization' },
             { title: 'IA Causal Contrafactual', icon: <FiGitPullRequest />, color: 'bg-blue-600', path: '/analytics/causal-inference' },
             { title: 'Aprendizaje Federado DP', icon: <FiShare2 />, color: 'bg-emerald-600', path: '/analytics/federated-learning' },
+            { title: 'Optimización Pareto MORL', icon: <FiTarget />, color: 'bg-amber-600', path: '/analytics/morl-pareto' },
             { title: 'Analíticas e Indicadores', icon: <FiBarChart2 />, color: 'bg-blue-600', path: '/analytics' },
         ]
     },
