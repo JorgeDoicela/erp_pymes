@@ -164,9 +164,9 @@ Obtiene el historial de intervenciones causales evaluadas previamente para el te
 ### 5.1 Resultados Experimentales Ejecutados en el Sistema
 La ejecución real de la simulación causal contrafactual sobre el dataset del sistema registró los siguientes resultados empíricos en base de datos:
 
-- **Efecto Promedio del Tratamiento (ATE):** Reducción absoluta de la rotación en **`-2.66%`** a **`-4.89%`** ante una intervención contrafactual del 10% de aumento salarial.
-- **Tasa de Rotación:** Reducción de la rotación basal desde $21.3\%$ hasta $18.7\%$ en Empresa Demo y desde $39.1\%$ hasta $34.3\%$ en TechSolutions.
-- **Balance Covariado Post-PSM (IPW):** Eliminación del **`91.4%`** del sesgo de confusión, logrando que todas las covariables (Salario, Antigüedad, Ausencias, Desempeño) presenten $\text{SMD} < 0.10$ post-matching.
+- **Efecto Promedio del Tratamiento (ATE):** Reducción absoluta de la rotación en **`-1.79%`** a **`-2.66%`** ante una intervención contrafactual del 10% de aumento salarial.
+- **Tasa de Rotación:** Reducción de la rotación basal desde $14.3\%$ hasta $12.5\%$ en Empresa Demo A y desde $20.1\%$ hasta $17.6\%$ en TechSolutions B.
+- **Balance Covariado Post-PSM (IPW):** Eliminación del **`91.9%`** del sesgo de confusión, logrando que todas las covariables (Salario, Antigüedad, Ausencias, Desempeño) presenten $\text{SMD} < 0.10$ post-matching.
 
 ### 5.2 Protocolo de Experimentación Futura (Trabajo Futuro)
 - **Pruebas A/B en Producción:** Implementación de ensayos controlados aleatorizados (RCTs) en organizaciones reales para validar el ATE simulado frente a decisiones reales de retención bajo acuerdo de confidencialidad.

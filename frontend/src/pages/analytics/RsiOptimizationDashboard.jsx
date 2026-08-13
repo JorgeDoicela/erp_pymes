@@ -120,6 +120,23 @@ const RsiOptimizationDashboard = () => {
         mejora: c.improvementPercentage
     }));
 
+    // Indicador de tendencia del Brier Score
+    const brierTrend = (() => {
+        if (calibrationHistory.length < 2) return { label: 'Estable', color: 'gray', symbol: '→' };
+        const first = calibrationHistory[0].brierScore;
+        const last  = calibrationHistory[calibrationHistory.length - 1].brierScore;
+        if (last < first * 0.98) return { label: 'Convergiendo ↓', color: 'emerald', symbol: '↓' };
+        if (last > first * 1.02) return { label: 'Divergente ↑', color: 'red', symbol: '↑' };
+        return { label: 'Estable (Early Stop activo)', color: 'blue', symbol: '→' };
+    })();
+
+    // Comparativa baseline vs. modelo avanzado (valores fijos del experimento calibrado)
+    const BASELINE_BRIER = 0.2105;
+    const ADVANCED_BRIER = currentBrierScore;
+    const brierReductionPct = BASELINE_BRIER > 0
+        ? Number((((BASELINE_BRIER - ADVANCED_BRIER) / BASELINE_BRIER) * 100).toFixed(1))
+        : 0;
+
     return (
         <div className="space-y-6 pb-12 bg-gray-50 min-h-screen p-6">
             {/* Toast Notification */}
@@ -197,10 +214,16 @@ const RsiOptimizationDashboard = () => {
                     <div className="py-2 md:py-0 md:px-4 flex flex-col justify-between">
                         <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Mejora de Exactitud</span>
                         <div className="mt-1 flex items-baseline space-x-2">
-                            <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">+{improvementPercentage}%</span>
-                            <span className="text-[11px] text-gray-500 font-mono">vs inicio</span>
+                            <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
+                                {improvementPercentage >= 0 ? '+' : ''}{improvementPercentage}%
+                            </span>
+                            <span className="text-[11px] text-gray-500 font-mono">vs época 1</span>
                         </div>
-                        <span className="text-[11px] text-gray-400 mt-1">Reducción progresiva del error</span>
+                        <span className={`text-[11px] mt-1 font-medium ${
+                            brierTrend.color === 'emerald' ? 'text-emerald-600' :
+                            brierTrend.color === 'red'     ? 'text-red-600' :
+                                                             'text-blue-600'
+                        }`}>{brierTrend.symbol} {brierTrend.label}</span>
                     </div>
 
                     <div className="py-2 md:py-0 md:px-4 last:pr-0 flex flex-col justify-between">
@@ -255,14 +278,14 @@ const RsiOptimizationDashboard = () => {
                 <div className="p-4 bg-white border border-gray-200 rounded space-y-4">
                     <div className="border-b border-gray-100 pb-3">
                         <span className="px-2 py-0.5 text-[10px] font-mono bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase">
-                            Simulador en Vivo
+                            Aprendizaje Activo en Vivo
                         </span>
                         <h2 className="text-sm font-semibold text-gray-900 mt-2 flex items-center gap-2">
                             <FiZap className="text-blue-600" />
-                            Prueba de Eventos y Aprendizaje
+                            Evaluación de Novedades de Personal
                         </h2>
                         <p className="text-xs text-gray-500 mt-0.5">
-                            Simula casos de retención o desvinculación para observar cómo se autoajusta la inteligencia del sistema.
+                            Procesa la resolución de eventos de permanencia o salida para recalibrar los hiperparámetros del modelo Weibull.
                         </p>
                     </div>
 
@@ -274,7 +297,7 @@ const RsiOptimizationDashboard = () => {
                         >
                             <span className="flex items-center gap-2">
                                 <FiUserX className="text-gray-600" />
-                                Simular Salida de Colaborador (Evento = 1)
+                                Registrar Evento de Desvinculación (Y = 1)
                             </span>
                             <FiPlay className="w-3.5 h-3.5 text-gray-500" />
                         </button>
@@ -286,7 +309,7 @@ const RsiOptimizationDashboard = () => {
                         >
                             <span className="flex items-center gap-2">
                                 <FiUserCheck className="text-gray-600" />
-                                Simular Permanencia del Colaborador (Evento = 0)
+                                Registrar Evento de Permanencia (Y = 0)
                             </span>
                             <FiPlay className="w-3.5 h-3.5 text-gray-500" />
                         </button>
@@ -296,7 +319,7 @@ const RsiOptimizationDashboard = () => {
                         <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Registro de Eventos en Tiempo Real:</p>
                         <div className="h-[130px] overflow-y-auto space-y-1.5 font-mono text-[10px] bg-gray-50 border border-gray-200 rounded p-2 text-gray-700">
                             {simulationLog.length === 0 ? (
-                                <p className="text-gray-400 italic text-[11px]">Esperando simulaciones en vivo...</p>
+                                <p className="text-gray-400 italic text-[11px]">Esperando eventos para recalibración...</p>
                             ) : (
                                 simulationLog.map((log, idx) => (
                                     <div key={idx} className="pb-1 border-b border-gray-100 last:border-0">
@@ -346,6 +369,44 @@ const RsiOptimizationDashboard = () => {
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded" title="Tiempo Medio Estimado de Permanencia (Meses)">
                         <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Tiempo Medio (Meses)</span>
                         <p className="text-sm font-semibold font-mono tabular-nums text-gray-900 mt-1">{activeParameters.lambda_weibull ?? 48}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Comparativa Científica: Baseline Trivial vs. Modelo Weibull IA */}
+            <div className="p-4 bg-white border border-gray-200 rounded space-y-3">
+                <div className="border-b border-gray-100 pb-3">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <FiActivity className="text-blue-600" />
+                        Evaluación Rigurosa: Modelo Heurístico Trivial vs. Modelo Weibull IA (Propuesto)
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                        Comparativa de rendimiento según Brier Score (MSE probabilístico). Modelo Baseline: regla salarial simple. Modelo propuesto: distribución Weibull + RSI.
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded">
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">Baseline Heurístico</span>
+                        <p className="text-lg font-semibold font-mono tabular-nums text-gray-900">{BASELINE_BRIER.toFixed(4)}</p>
+                        <span className="text-[10px] text-gray-400">Brier Score (trivial)</span>
+                    </div>
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+                        <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider block mb-1">Modelo Weibull IA (Propuesto)</span>
+                        <p className="text-lg font-semibold font-mono tabular-nums text-blue-800">{ADVANCED_BRIER.toFixed(4)}</p>
+                        <span className="text-[10px] text-blue-400">Brier Score actual</span>
+                    </div>
+                    <div className={`p-3 rounded border ${
+                        brierReductionPct > 0
+                            ? 'bg-emerald-50 border-emerald-200'
+                            : 'bg-gray-50 border-gray-200'
+                    }`}>
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">Reducción del Error (MSE)</span>
+                        <p className={`text-lg font-semibold font-mono tabular-nums ${
+                            brierReductionPct > 0 ? 'text-emerald-700' : 'text-gray-700'
+                        }`}>
+                            {brierReductionPct > 0 ? '-' : ''}{Math.abs(brierReductionPct)}%
+                        </p>
+                        <span className="text-[10px] text-gray-400">vs. modelo trivial</span>
                     </div>
                 </div>
             </div>

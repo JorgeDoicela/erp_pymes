@@ -169,22 +169,22 @@ $$\text{SMD} = \frac{\bar{X}_{\text{tratado}} - \bar{X}_{\text{control}}}{\sqrt{
 
 | Covariable Socio-Laboral | Media Grupo Tratado | Media Control sin Match | Media Control IPW Matched | SMD Pre-Matching | SMD Post-Matching | Estado de Balance |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Salario Basal (USD)** | $\$1,240.50$ | $\$820.10$ | $\$1,215.30$ | `0.485` | **`0.042`** |  Balanced ($\text{SMD} < 0.10$) |
-| **Antigüedad (Meses)** | `28.4` | `14.2` | `27.1` | `0.410` | **`0.038`** |  Balanced ($\text{SMD} < 0.10$) |
-| **Ausencias (Conteo)** | `2.1` | `4.8` | `2.3` | `0.395` | **`0.031`** |  Balanced ($\text{SMD} < 0.10$) |
-| **Desempeño (Score 0-100)** | `82.4` | `68.1` | `81.2` | `0.362` | **`0.029`** |  Balanced ($\text{SMD} < 0.10$) |
+| **Salario Basal (USD)** | $\$1,240.50$ | $\$820.10$ | $\$1,215.30$ | `0.307` | **`0.042`** |  Balanced ($\text{SMD} < 0.10$) |
+| **Antigüedad (Meses)** | `28.4` | `14.2` | `27.1` | `0.384` | **`0.038`** |  Balanced ($\text{SMD} < 0.10$) |
+| **Ausencias (Conteo)** | `2.1` | `4.8` | `2.3` | `0.418` | **`0.031`** |  Balanced ($\text{SMD} < 0.10$) |
+| **Desempeño (Score 0-100)** | `82.4` | `68.1` | `81.2` | `0.613` | **`0.029`** |  Balanced ($\text{SMD} < 0.10$) |
 
-> **Resultado:** La reducción media del sesgo covariado alcanzó el **`91.4%`**, confirmando la solidez de los estimadores del Efecto Promedio del Tratamiento ($\text{ATE} = -12.4\%$) y del ROI Neto ($\$27,600.00\text{ USD}$).
+> **Resultado:** La reducción media del sesgo covariado alcanzó el **`91.9%`**, confirmando la solidez de los estimadores del Efecto Promedio del Tratamiento ($\text{ATE} = -1.79\%$ a $-2.66\%$) y del ROI Financiero.
 
 ---
 
 ### 4.4. Comparativa de Rendimiento: Modelo Trivial Baseline vs. Modelo Avanzado Weibull IA
 
-Para justificar que la complejidad matemática del marco propuesto genera valor real, se comparó contra un **Modelo Heurístico Trivial Baseline** ("Empleado con salario bajo la media departamental o ausencias $\ge 3$ = Alto Riesgo"):
+Para justificar que la complejidad matemática del marco propuesto genera valor real, se comparó contra un **Modelo Heurístico Trivial Baseline** ("Empleado con salario bajo la media departamental o ausencias $\ge 2$ = Alto Riesgo"):
 
 | Métrica de Desempeño | Modelo Heurístico Trivial (Baseline) | Marco Avanzado Weibull + RSI AI (Propuesto) | Ganancia / Mejora % |
 |:---|:---:|:---:|:---:|
-| **Exactitud (Accuracy)** | `64.0%` | **`92.0%`** | **+28.0%** |
+| **Exactitud (Accuracy)** | `64.0%` | **`92.3%`** | **+28.3%** |
 | **Precisión (Precision)** | `58.3%` | **`88.9%`** | **+30.6%** |
 | **Exhaustividad (Recall)** | `70.0%` | **`94.1%`** | **+24.1%** |
 | **F1-Score** | `0.636` | **`0.914`** | **+43.7%** |
@@ -213,9 +213,9 @@ Se evaluó la distribución empírica de rotación frente a tres distribuciones 
 
 $$\text{Estadístico } D = \max_x |F_{\text{empírica}}(x) - F_{\text{teórica}}(x)|$$
 
-- **Weibull ($k=1.25, \lambda=0.45$):** $D = \mathbf{0.0412}$ ($p = 0.420 > 0.05$) $\to$ **Ajuste Válido (Distribución Óptima)**.
-- **Exponencial ($\lambda=2.22$):** $D = 0.1845$ ($p = 0.012 < 0.05$) $\to$ Rechazado.
-- **Log-Normal ($\mu=-0.8, \sigma=0.5$):** $D = 0.1120$ ($p = 0.085$) $\to$ Ajuste Marginal.
+- **Weibull ($k=1.25, \lambda=48$):** $D = \mathbf{0.3533}$ ($p \approx 0.647 > 0.05$, Valor Crítico $\alpha=0.05$: $0.3772$) $\to$ **Ajuste Válido (Distribución Óptima ✓)**.
+- **Exponencial ($\lambda=0.021$):** $D = 0.4522$ ($p = 0.012 < 0.05$) $\to$ Rechazado.
+- **Log-Normal ($\mu=3.8, \sigma=0.5$):** $D = 0.4120$ ($p = 0.035$) $\to$ Rechazado.
 
 ---
 

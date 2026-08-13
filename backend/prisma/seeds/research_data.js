@@ -28,12 +28,18 @@ export async function seedResearchData(prisma) {
             await prisma.rsiCalibration.create({
                 data: {
                     tenantId,
-                    brierScore: 0.045,
-                    logLoss: 0.185,
-                    improvementPercentage: 12.5,
-                    weightsJson: JSON.stringify({ beta_salary: 0.25, beta_absence: 0.35, beta_perf: -0.40, k_weibull: 1.2, lambda_weibull: 0.05 }),
-                    sampleCount: 150,
-                    triggerReason: 'INITIAL_SEED'
+                    epoch: 1,
+                    brierScore: 0.0450,  // Baseline calibrado del modelo Weibull propuesto
+                    logLoss: 0.1560,
+                    improvementPercentage: 0,
+                    weightsJson: JSON.stringify({
+                        beta_salary: -0.85, beta_absence: 0.35, beta_perf: 1.10,
+                        beta_no_promo: 0.25, k_weibull: 1.25, lambda_weibull: 48,
+                        weight_retention: 0.25, weight_performance: 0.25,
+                        weight_attendance: 0.20, weight_growth: 0.15, weight_engagement: 0.15
+                    }),
+                    sampleCount: 0,
+                    triggerReason: 'INITIALIZATION'
                 }
             });
         }
@@ -72,19 +78,19 @@ export async function seedResearchData(prisma) {
             await prisma.causalIntervention.create({
                 data: {
                     tenantId,
-                    title: 'Ajuste Salarial Preventivo del 10%',
+                    title: 'Ajuste Salarial Preventivo del 10% (Experimento Inicial)',
                     treatmentType: 'SALARY_INCREASE',
                     treatmentValue: 10.0,
-                    targetDepartment: 'Tecnología',
-                    sampleSize: tenantEmployees.length,
-                    ate: -0.18,
-                    baselineTurnoverRate: 0.28,
-                    counterfactualTurnoverRate: 0.10,
-                    costEstimate: 2400.0,
-                    savingsEstimate: 8500.0,
-                    netRoi: 6100.0,
-                    confidenceIntervalLower: -0.25,
-                    confidenceIntervalUpper: -0.11
+                    targetDepartment: 'ALL',
+                    sampleSize: Math.max(tenantEmployees.length, 1),
+                    ate: -0.0271,          // ATE de -2.71% (reducción de rotación)
+                    baselineTurnoverRate: 0.216,
+                    counterfactualTurnoverRate: 0.189,
+                    costEstimate: 32820.0,
+                    savingsEstimate: 2594.15,
+                    netRoi: -30225.85,
+                    confidenceIntervalLower: -0.0316,
+                    confidenceIntervalUpper: -0.0226
                 }
             });
         }

@@ -44,8 +44,9 @@ const CausalInferenceDashboard = () => {
             const resHistory = await getCausalHistory();
             if (resHistory.success && resHistory.data.length > 0) {
                 setHistory(resHistory.data);
+                // Cargar la simulación más reciente del historial (no ejecutar una nueva)
+                setActiveSimulation(resHistory.data[0]);
             }
-            await handleRunSimulation('Aumento Salarial 10% en IT', 'SALARY_INCREASE', 10, 'ALL');
         } catch (error) {
             console.error('Error al cargar datos causales:', error);
         } finally {
@@ -80,11 +81,11 @@ const CausalInferenceDashboard = () => {
         return new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount || 0);
     };
 
-    if (loading && !activeSimulation) {
+    if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3 bg-gray-50">
                 <FiGitPullRequest className="w-6 h-6 text-gray-500 animate-spin" />
-                <p className="text-xs font-medium text-gray-500">Inicializando Motor de Inferencia Causal (Do-Calculus & PSM)...</p>
+                <p className="text-xs font-medium text-gray-500">Cargando historial de análisis causales...</p>
             </div>
         );
     }
@@ -115,18 +116,18 @@ const CausalInferenceDashboard = () => {
                 <div>
                     <div className="flex items-center space-x-2 mb-1">
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
-                            Simulación de Decisiones en Vivo
+                            Evaluación Contrafactual do(T)
                         </span>
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded uppercase tracking-wider font-mono">
-                            Análisis Comparativo Causal
+                            Análisis Causal de Impacto
                         </span>
                     </div>
                     <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
                         <FiGitPullRequest className="text-blue-600" />
-                        Simulador de Decisiones e Impacto de Políticas (¿Qué pasaría si...?)
+                        Centro de Inferencia Causal y Evaluación de Políticas (Do-Calculus)
                     </h1>
                     <p className="text-xs text-gray-500 mt-1">
-                        Evalúa con precisión matemática las consecuencias económicas y de personal antes de implementar un cambio en la empresa.
+                        Evalúa causalmente sobre los datos reales del personal el impacto económico y de retención antes de implementar una política.
                     </p>
                 </div>
 
@@ -218,7 +219,7 @@ const CausalInferenceDashboard = () => {
                             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer w-full flex items-center justify-center gap-1.5 disabled:opacity-50 mt-2"
                         >
                             <FiPlay className={`w-3.5 h-3.5 ${simulating ? 'animate-spin' : ''}`} />
-                            {simulating ? 'Calculando Escenarios...' : 'Simular Impacto de la Medida'}
+                            {simulating ? 'Calculando Impacto Causal...' : 'Calcular Impacto Causal de la Política'}
                         </button>
                     </div>
                 </div>
@@ -320,7 +321,7 @@ const CausalInferenceDashboard = () => {
                         <tbody className="divide-y divide-gray-100 text-gray-700">
                             {history.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="py-4 px-4 text-center text-gray-400 italic">No hay intervenciones simuladas aún.</td>
+                                    <td colSpan="7" className="py-4 px-4 text-center text-gray-400 italic">No hay evaluaciones causales registradas aún.</td>
                                 </tr>
                             ) : (
                                 history.map((item, idx) => (

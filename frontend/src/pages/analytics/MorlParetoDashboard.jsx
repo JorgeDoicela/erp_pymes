@@ -46,8 +46,11 @@ const MorlParetoDashboard = () => {
             const resHistory = await getMorlHistory();
             if (resHistory.success && resHistory.data.length > 0) {
                 setHistory(resHistory.data);
+                // Mostrar el último run del historial sin ejecutar uno nuevo
+                const last = resHistory.data[0];
+                setActiveRun(last);
+                setSelectedPointIndex(last.selectedPointIndex || 0);
             }
-            await handleRunOptimization('Optimización MORL Presupuestaria IT', 15000, 'ALL');
         } catch (error) {
             console.error('Error al cargar datos MORL:', error);
         } finally {
@@ -82,11 +85,31 @@ const MorlParetoDashboard = () => {
         return new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount || 0);
     };
 
-    if (loading && !activeRun) {
+    if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3 bg-gray-50">
                 <FiTarget className="w-6 h-6 text-gray-500 animate-spin" />
-                <p className="text-xs font-medium text-gray-500">Calculando Frontera de Pareto (Vector Q-Learning)...</p>
+                <p className="text-xs font-medium text-gray-500">Cargando historial de optimización MORL...</p>
+            </div>
+        );
+    }
+
+    if (!activeRun) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 bg-gray-50 rounded">
+                <FiTarget className="w-8 h-8 text-gray-300" />
+                <div className="text-center">
+                    <p className="text-sm font-semibold text-gray-700">Sin optimizaciones ejecutadas</p>
+                    <p className="text-xs text-gray-500 mt-1">Configura los parámetros y ejecuta tu primera optimización Pareto</p>
+                </div>
+                <button
+                    onClick={() => handleRunOptimization()}
+                    disabled={optimizing}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                    <FiPlay className="w-3.5 h-3.5" />
+                    Ejecutar Primera Optimización
+                </button>
             </div>
         );
     }
@@ -201,7 +224,7 @@ const MorlParetoDashboard = () => {
                             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer w-full flex items-center justify-center gap-1.5 disabled:opacity-50"
                         >
                             <FiPlay className={`w-3.5 h-3.5 ${optimizing ? 'animate-spin' : ''}`} />
-                            {optimizing ? 'Entrenando Q-Learning...' : 'Calcular Frontera de Pareto'}
+                            {optimizing ? 'Optimizando Política MORL...' : 'Optimizar Política Presupuestaria'}
                         </button>
                     </div>
                 </div>

@@ -67,7 +67,7 @@ export default function WhatIfScenarioSimulator({ initialData }) {
                 <div>
                     <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
                         <FiActivity className="text-indigo-600 animate-pulse" />
-                        Simulador Financiero de Escenarios de Personal
+                        Evaluación Monte Carlo de Escenarios Estratégicos
                     </h3>
                     <p className="text-xs text-slate-500">Proyección del ahorro esperado e inversión en personal con 95% de nivel de certeza.</p>
                 </div>

@@ -84,7 +84,7 @@ export const adminSections = [
         modules: [
             { title: 'Centro de Inteligencia de Negocio', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
             { title: 'Mejora Automática de Precisión', icon: <FiCpu />, color: 'bg-emerald-600', path: '/analytics/rsi-optimization' },
-            { title: 'Simulador de Decisiones (¿Qué pasaría si...?)', icon: <FiGitPullRequest />, color: 'bg-blue-600', path: '/analytics/causal-inference' },
+            { title: 'Inferencia Causal (Evaluación do(T))', icon: <FiGitPullRequest />, color: 'bg-blue-600', path: '/analytics/causal-inference' },
             { title: 'Red Colaborativa de Inteligencia Segura', icon: <FiShare2 />, color: 'bg-emerald-600', path: '/analytics/federated-learning' },
             { title: 'Balance Costo vs. Retención', icon: <FiTarget />, color: 'bg-amber-600', path: '/analytics/morl-pareto' },
             { title: 'Exportación Personalizada', icon: <FiDatabase />, color: 'bg-cyan-600', path: '/analytics/custom' },
