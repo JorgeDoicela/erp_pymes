@@ -30,7 +30,7 @@ import announcementRoutes from './communication/announcement.routes.js';
 import tenantRoutes from './tenant/tenant.routes.js';
 import superAdminRoutes from './admin/superAdmin.routes.js';
 import { rateLimit } from '../middleware/rateLimit.middleware.js';
-import { authenticate } from '../middleware/auth.middleware.js';
+import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { requireTenant } from '../middleware/tenant.middleware.js';
 
 const router = Router();
