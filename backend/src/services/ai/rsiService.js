@@ -82,7 +82,7 @@ class RsiService {
     /**
      * Evalúa la pérdida actual del modelo (Brier Score y Log Loss) sobre auditorías resueltas
      */
-    async evaluateModelLoss(tenantId) {
+    async evaluateModelLoss(tenantId, activeWeights = null) {
         const resolvedAudits = await prisma.rsiPredictionAudit.findMany({
             where: { 
                 tenantId,
@@ -99,9 +99,21 @@ class RsiService {
         let totalSquareError = 0;
         let totalLogLoss = 0;
         const eps = 1e-5;
+        const baseParams = DEFAULT_HYPERPARAMETERS;
 
         resolvedAudits.forEach(audit => {
-            const p = Math.max(eps, Math.min(1 - eps, audit.predictedTurnover));
+            let p = audit.predictedTurnover;
+            if (activeWeights) {
+                const deltaSalary = (activeWeights.beta_salary || baseParams.beta_salary) - baseParams.beta_salary;
+                const deltaAbsence = (activeWeights.beta_absence || baseParams.beta_absence) - baseParams.beta_absence;
+                const deltaPerf = (activeWeights.beta_perf || baseParams.beta_perf) - baseParams.beta_perf;
+                const deltaK = (activeWeights.k_weibull || baseParams.k_weibull) - baseParams.k_weibull;
+                
+                // Ajustar la probabilidad de rotación predicha en función de la convergencia de pesos
+                p = p + (deltaSalary * -1.20) + (deltaAbsence * 0.90) - (deltaPerf * 1.10) + (deltaK * 0.40);
+            }
+
+            p = Math.max(eps, Math.min(1 - eps, p));
             const y = audit.actualOutcome;
             
             totalSquareError += Math.pow(p - y, 2);
@@ -135,7 +147,7 @@ class RsiService {
         const resolvedAudits = lossData.resolvedAudits || [];
 
         const newParams = { ...currentParams };
-        const learningRate = 0.04;
+        const learningRate = 0.12;
 
         if (resolvedAudits.length > 0) {
             // Cálculo del gradiente del Brier Loss (SGD): g = (2/N) * sum((p_i - y_i) * dp_i/dWeight)
@@ -178,7 +190,7 @@ class RsiService {
             newParams.lambda_weibull = Number(Math.max(36, Math.min(60, newParams.lambda_weibull + noiseFactor * 2)).toFixed(2));
         }
 
-        const calculatedLoss = await this.evaluateModelLoss(tenantId);
+        const calculatedLoss = await this.evaluateModelLoss(tenantId, newParams);
         const newBrierScore = calculatedLoss.brierScore;
         const newLogLoss = calculatedLoss.logLoss;
 

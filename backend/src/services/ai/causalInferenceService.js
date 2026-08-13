@@ -1,5 +1,6 @@
 import prisma from '../../database/db.js';
 import { decryptSalary } from '../../utils/encryption.js';
+import rsiService from './rsiService.js';
 
 /**
  * Motor de Inferencia Causal Contrafactual (Causal AI Engine)
@@ -62,7 +63,7 @@ class CausalInferenceService {
     }) {
         if (!tenantId) throw new Error('TenantID es requerido para la simulación causal');
 
-        // 1. Cargar empleados del tenant con relaciones de covariables
+        // 1. Cargar empleados del tenant con relaciones de covariables y parámetros rsi
         const rawEmployees = await prisma.employee.findMany({
             where: {
                 tenantId,
@@ -79,6 +80,10 @@ class CausalInferenceService {
         if (rawEmployees.length === 0) {
             throw new Error(`No se encontraron empleados activos para el departamento '${targetDepartment}'`);
         }
+
+        const rsiParams = await rsiService.getTenantModelParameters(tenantId);
+        const beta_absence = rsiParams.beta_absence !== undefined ? rsiParams.beta_absence : 0.35;
+        const beta_salary = rsiParams.beta_salary !== undefined ? rsiParams.beta_salary : -0.85;
 
         // 2. Calcular Propensity Scores
         const scoredEmployees = this.calculatePropensityScores(rawEmployees, treatmentType);
@@ -106,8 +111,8 @@ class CausalInferenceService {
         let treatedTurnoverSum = 0;
 
         scoredEmployees.forEach(emp => {
-            // Estimación de probabilidad de rotación basal
-            const baseProb = Math.max(0.05, Math.min(0.85, 0.30 - (emp.decryptedSalaryVal / 3000) * 0.15 + (emp.absenceCount * 0.04) - (emp.avgPerf / 100) * 0.10));
+            // Estimación de probabilidad de rotación basal usando hiperparámetros calibrados por RSI Engine
+            const baseProb = Math.max(0.05, Math.min(0.85, 0.30 - (emp.decryptedSalaryVal / 3000) * Math.abs(beta_salary * 0.2) + (emp.absenceCount * beta_absence * 0.1) - (emp.avgPerf / 100) * 0.10));
             baselineTurnoverSum += baseProb;
 
             // Simulación del impacto contrafactual de la intervención do(T)
