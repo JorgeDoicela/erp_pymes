@@ -6,12 +6,12 @@ vi.mock('../src/database/db.js', () => ({
     default: {
         rsiCalibration: {
             findFirst: vi.fn(),
-            findMany: vi.fn(),
+            findMany: vi.fn().mockResolvedValue([]),
             create: vi.fn()
         },
         rsiPredictionAudit: {
             create: vi.fn(),
-            findMany: vi.fn(),
+            findMany: vi.fn().mockResolvedValue([]),
             count: vi.fn()
         }
     }

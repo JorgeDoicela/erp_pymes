@@ -124,9 +124,10 @@ class RsiService {
      * @param {number} currentLR   - LR activo en la época actual
      * @returns {{ newLR: number, metaTrigger: string, slope: number }}
      */
-    _computeMetaLearningRate(epochHistory, currentLR = META_LR_DEFAULT) {
+    _computeMetaLearningRate(epochHistory = [], currentLR = META_LR_DEFAULT) {
         // Solo podemos calcular tendencia con al menos 3 épocas SGD (no baseline)
-        const sgdHistory = epochHistory.filter(e => e.epoch > 0);
+        const historyArray = Array.isArray(epochHistory) ? epochHistory : [];
+        const sgdHistory = historyArray.filter(e => e && e.epoch > 0);
         if (sgdHistory.length < 3) {
             return { newLR: currentLR, metaTrigger: 'RSI_WARMUP', slope: 0 };
         }
@@ -337,11 +338,11 @@ class RsiService {
         const resolvedAudits = lossData.resolvedAudits || [];
 
         // ── NIVEL META: recuperar historial de épocas para calcular tendencia ──
-        const epochHistory = await prisma.rsiCalibration.findMany({
+        const epochHistory = (await prisma.rsiCalibration.findMany({
             where: { tenantId },
             orderBy: { epoch: 'asc' },
             select: { epoch: true, brierScore: true }
-        });
+        })) || [];
 
         // Recuperar meta-state de la época anterior
         const prevWeightsJson = latestCalibration?.weightsJson;
