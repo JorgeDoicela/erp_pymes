@@ -61,4 +61,18 @@ router.get('/what-if-monte-carlo', intelligenceController.runWhatIfMonteCarlo);
 // Exportación de Dataset Académico Anonimizado (CSV / JSON)
 router.get('/export-academic', intelligenceController.exportAcademicDataset);
 
+// Motor de Automejora Recursiva (RSI Engine)
+router.get('/rsi/metrics', intelligenceController.getRsiMetrics);
+router.post('/rsi/calibrate', intelligenceController.calibrateRsiModel);
+router.post('/rsi/simulate', intelligenceController.simulateRsiOutcome);
+
+// Motor de Inferencia Causal Contrafactual (Causal AI)
+router.post('/causal/simulate', intelligenceController.runCausalSimulation);
+router.get('/causal/history', intelligenceController.getCausalHistory);
+
+// Motor de Aprendizaje Federado Multi-Tenant (DP-SGD)
+router.get('/federated/status', intelligenceController.getFederatedStatus);
+router.post('/federated/round', intelligenceController.executeFederatedRound);
+router.get('/federated/rounds-history', intelligenceController.getFederatedRoundsHistory);
+
 export default router;

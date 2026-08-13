@@ -2,7 +2,7 @@ import {
     FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift,
     FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle,
     FiTrendingUp, FiShield, FiSettings, FiTarget, FiActivity, FiCompass,
-    FiBookOpen, FiList, FiPlus, FiCreditCard, FiFolder, FiPackage, FiUserMinus, FiVolume2, FiLayers
+    FiBookOpen, FiList, FiPlus, FiCreditCard, FiFolder, FiPackage, FiUserMinus, FiVolume2, FiLayers, FiCpu, FiGitPullRequest, FiShare2
 } from 'react-icons/fi';
 import { isSuperAdmin as checkIsSuperAdmin, ROLES } from './roles.js';
 
@@ -82,6 +82,9 @@ export const adminSections = [
         title: 'Inteligencia y Analíticas',
         modules: [
             { title: 'Análisis Predictivo AI', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
+            { title: 'Automejora RSI Engine', icon: <FiCpu />, color: 'bg-emerald-600', path: '/analytics/rsi-optimization' },
+            { title: 'IA Causal Contrafactual', icon: <FiGitPullRequest />, color: 'bg-blue-600', path: '/analytics/causal-inference' },
+            { title: 'Aprendizaje Federado DP', icon: <FiShare2 />, color: 'bg-emerald-600', path: '/analytics/federated-learning' },
             { title: 'Analíticas e Indicadores', icon: <FiBarChart2 />, color: 'bg-blue-600', path: '/analytics' },
         ]
     },

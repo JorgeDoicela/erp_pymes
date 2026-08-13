@@ -153,3 +153,45 @@ export async function exportAcademicDataset(format = 'csv') {
     return true;
 }
 
+/**
+ * Obtiene métricas e historial de automejora del motor RSI
+ */
+export async function getRsiMetrics() {
+    const response = await intelligenceClient.get('/rsi/metrics');
+    return response.data;
+}
+
+/**
+ * Dispara una calibración manual del motor RSI
+ */
+export async function calibrateRsiModel() {
+    const response = await intelligenceClient.post('/rsi/calibrate');
+    return response.data;
+}
+
+/**
+ * Simula la resolución de un desenlace de empleado (Permanencia / Renuncia)
+ */
+export async function simulateRsiOutcome(data) {
+    const response = await intelligenceClient.post('/rsi/simulate', data);
+    return response.data;
+}
+
+/**
+ * Ejecuta una simulación de intervención contrafactual (Causal AI)
+ */
+export async function runCausalSimulation(data) {
+    const response = await intelligenceClient.post('/causal/simulate', data);
+    return response.data;
+}
+
+/**
+ * Obtiene el historial de intervenciones causales simuladas
+ */
+export async function getCausalHistory() {
+    const response = await intelligenceClient.get('/causal/history');
+    return response.data;
+}
+
+
+

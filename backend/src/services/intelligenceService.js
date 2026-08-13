@@ -1,5 +1,6 @@
 import prisma from '../database/db.js';
 import { decryptSalary } from '../utils/encryption.js';
+import rsiService from './ai/rsiService.js';
 
 /**
  * Servicio de Inteligencia para Análisis de RRHH (Grado Científico & Producción)
@@ -176,7 +177,7 @@ function prepareEmployeeData(employees) {
  * Modelo Estocástico de Supervivencia de Weibull (Hazard Rate Proporcional)
  * S(t) = exp( - (t / lambda)^k * exp(beta * X) )
  */
-function calculateRetentionRiskScore(employee, avgSalary) {
+function calculateRetentionRiskScore(employee, avgSalary, rsiParams = {}) {
     const factors = [];
 
     const hireDate = employee.hireDate ? new Date(employee.hireDate) : new Date();
@@ -211,10 +212,11 @@ function calculateRetentionRiskScore(employee, avgSalary) {
         return monthsAgo <= 12;
     });
 
-    const beta_salary = -0.85;
-    const beta_absence = 0.35;
-    const beta_perf = 1.10;
-    const beta_no_promo = 0.25;
+    // Hiperparámetros calibrados por RSI Engine (con fallback basal)
+    const beta_salary = rsiParams.beta_salary !== undefined ? rsiParams.beta_salary : -0.85;
+    const beta_absence = rsiParams.beta_absence !== undefined ? rsiParams.beta_absence : 0.35;
+    const beta_perf = rsiParams.beta_perf !== undefined ? rsiParams.beta_perf : 1.10;
+    const beta_no_promo = rsiParams.beta_no_promo !== undefined ? rsiParams.beta_no_promo : 0.25;
 
     const logHazardMultiplier = (beta_salary * logSalaryRatio) +
         (beta_absence * weightedAbsenceImpact) +
@@ -223,8 +225,8 @@ function calculateRetentionRiskScore(employee, avgSalary) {
 
     const hazardMultiplier = Math.exp(logHazardMultiplier);
 
-    const k_weibull = 1.25;
-    const lambda_weibull = 48;
+    const k_weibull = rsiParams.k_weibull !== undefined ? rsiParams.k_weibull : 1.25;
+    const lambda_weibull = rsiParams.lambda_weibull !== undefined ? rsiParams.lambda_weibull : 48;
 
     const t_projected = monthsInCompany + 12;
     const cumulativeHazardNow = Math.pow(monthsInCompany / lambda_weibull, k_weibull) * hazardMultiplier;

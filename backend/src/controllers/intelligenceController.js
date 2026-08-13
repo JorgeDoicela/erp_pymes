@@ -1,4 +1,7 @@
 import * as intelligenceService from '../services/intelligenceService.js';
+import rsiService from '../services/ai/rsiService.js';
+import causalInferenceService from '../services/ai/causalInferenceService.js';
+import federatedLearningService from '../services/ai/federatedLearningService.js';
 
 /**
  * Controlador de Inteligencia
@@ -299,4 +302,158 @@ export async function exportAcademicDataset(req, res) {
         return handleError(res, error, 'Error al exportar dataset académico');
     }
 }
+
+/**
+ * GET /api/intelligence/rsi/metrics
+ * Obtiene el estado, las épocas y el historial de automejora RSI
+ */
+export async function getRsiMetrics(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId || 'default-tenant';
+        const metrics = await rsiService.getRsiMetrics(tenantId);
+        return res.json({
+            success: true,
+            data: metrics
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al obtener métricas del motor RSI');
+    }
+}
+
+/**
+ * POST /api/intelligence/rsi/calibrate
+ * Dispara una época de calibración del motor RSI
+ */
+export async function calibrateRsiModel(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId || 'default-tenant';
+        const calibration = await rsiService.runRecursiveCalibration(tenantId, 'MANUAL_TRIGGER');
+        return res.json({
+            success: true,
+            message: 'Motor RSI calibrado exitosamente',
+            data: calibration
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al ejecutar calibración RSI');
+    }
+}
+
+/**
+ * POST /api/intelligence/rsi/simulate
+ * Simula la resolución de un desenlace de empleado (Permanencia / Renuncia)
+ */
+export async function simulateRsiOutcome(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId || 'default-tenant';
+        const { employeeId, actualOutcome } = req.body;
+        const outcomeVal = actualOutcome !== undefined ? Number(actualOutcome) : 1;
+        const result = await rsiService.simulateOutcomeEvent(tenantId, employeeId, outcomeVal);
+        return res.json({
+            success: true,
+            message: 'Simulación de desenlace procesada con automejora RSI',
+            data: result
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al procesar simulación RSI');
+    }
+}
+
+/**
+ * POST /api/intelligence/causal/simulate
+ * Ejecuta una simulación de intervención contrafactual do(T) mediante PSM e IPW
+ */
+export async function runCausalSimulation(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId || 'default-tenant';
+        const { treatmentType, treatmentValue, targetDepartment, minTenureMonths, customTitle } = req.body;
+
+        const simulation = await causalInferenceService.runCausalInterventionSimulation({
+            tenantId,
+            treatmentType: treatmentType || 'SALARY_INCREASE',
+            treatmentValue: treatmentValue !== undefined ? Number(treatmentValue) : 10,
+            targetDepartment: targetDepartment || 'ALL',
+            minTenureMonths: minTenureMonths !== undefined ? Number(minTenureMonths) : 0,
+            customTitle
+        });
+
+        return res.json({
+            success: true,
+            message: 'Simulación de Inferencia Causal procesada exitosamente',
+            data: simulation
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al ejecutar simulación de inferencia causal');
+    }
+}
+
+/**
+ * GET /api/intelligence/causal/history
+ * Obtiene el historial de intervenciones causales simuladas para el tenant
+ */
+export async function getCausalHistory(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId || 'default-tenant';
+        const history = await causalInferenceService.getInterventionHistory(tenantId);
+        return res.json({
+            success: true,
+            data: history
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al obtener historial de inferencia causal');
+    }
+}
+
+/**
+ * GET /api/intelligence/federated/status
+ * Obtiene el presupuesto de privacidad DP (epsilon) y estado del tenant
+ */
+export async function getFederatedStatus(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId || 'default-tenant';
+        const status = await federatedLearningService.getTenantPrivacyStatus(tenantId);
+        return res.json({
+            success: true,
+            data: status
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al obtener estado de privacidad federada');
+    }
+}
+
+/**
+ * POST /api/intelligence/federated/round
+ * Dispara una ronda global de entrenamiento federado (FedAvg + DP-SGD)
+ */
+export async function executeFederatedRound(req, res) {
+    try {
+        const { participatingTenantIds } = req.body || {};
+        const roundResult = await federatedLearningService.executeFederatedRound(participatingTenantIds);
+        return res.json({
+            success: true,
+            message: 'Ronda de Aprendizaje Federado procesada exitosamente',
+            data: roundResult
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al ejecutar ronda de entrenamiento federado');
+    }
+}
+
+/**
+ * GET /api/intelligence/federated/rounds-history
+ * Obtiene el historial de rondas federadas globales y evolución del meta-modelo
+ */
+export async function getFederatedRoundsHistory(req, res) {
+    try {
+        const history = await federatedLearningService.getRoundsHistory();
+        return res.json({
+            success: true,
+            data: history
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al obtener historial de rondas federadas');
+    }
+}
+
+
+
 

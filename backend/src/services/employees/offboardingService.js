@@ -1,6 +1,7 @@
 import prisma from '../../database/db.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
 import { financial } from '../../utils/financialUtils.js';
+import rsiService from '../ai/rsiService.js';
 
 class OffboardingService {
     /**
@@ -253,6 +254,12 @@ class OffboardingService {
                 where: { id: task.assetId },
                 data: { status: 'RETURNED', returnDate: new Date(), returnNotes: 'Devuelto durante Offboarding' }
             }).catch(err => console.error('Asset status update error:', err));
+        }
+
+        // Disparar ciclo de automejora RSI si el offboarding se completó
+        if (allCompleted && updated?.employee?.tenantId) {
+            rsiService.simulateOutcomeEvent(updated.employee.tenantId, updated.employeeId, 1)
+                .catch(err => console.error('Error al disparar automejora RSI post-offboarding:', err));
         }
 
         return updated;

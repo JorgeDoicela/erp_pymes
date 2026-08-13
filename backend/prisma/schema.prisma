@@ -36,6 +36,10 @@ model Tenant {
   evaluationTemplates EvaluationTemplate[]
   shifts             Shift[]
   auditLogs          AuditLog[]
+  rsiCalibrations    RsiCalibration[]
+  rsiPredictionAudits RsiPredictionAudit[]
+  causalInterventions CausalIntervention[]
+  privacyBudget       TenantPrivacyBudget?
 
   @@map("tenants")
 }
@@ -1079,4 +1083,96 @@ model AnnouncementRead {
   @@index([employeeId])
   @@map("announcement_reads")
 }
+
+model RsiCalibration {
+  id                    String   @id @default(cuid())
+  tenantId              String?
+  tenant                Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  epoch                 Int      @default(1)
+  brierScore            Float    // Pérdida cuadrática media (MSE)
+  logLoss               Float    // Log Loss
+  improvementPercentage Float    @default(0)
+  weightsJson           String   @db.Text // Hiperparámetros calibrados (beta_salary, beta_absence, beta_perf, beta_no_promo, k_weibull, lambda_weibull, etc.)
+  sampleCount           Int      @default(0)
+  triggerReason         String   @default("MANUAL") // MANUAL, OFFBOARDING_EVENT, AUTOMATIC_SCHEDULE
+  createdAt             DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([epoch])
+  @@map("rsi_calibrations")
+}
+
+model RsiPredictionAudit {
+  id                String    @id @default(cuid())
+  tenantId          String?
+  tenant            Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employeeId        String
+  predictedScore    Float     // Score predicho (0-100)
+  predictedTurnover Float     // Probabilidad de rotación predicha (0.0 - 1.0)
+  actualOutcome     Int?      // 0 = Permaneció, 1 = Renunció/Desvinculado (null si aún no resuelto)
+  resolvedAt        DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([actualOutcome])
+  @@map("rsi_prediction_audits")
+}
+
+model CausalIntervention {
+  id                      String   @id @default(cuid())
+  tenantId                String?
+  tenant                  Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title                   String
+  treatmentType           String   // SALARY_INCREASE, REMOTE_WORK, CAREER_PROMOTION, TRAINING_PROGRAM
+  treatmentValue          Float    // e.g. 10.0 for 10% salary increase or 2.0 for 2 days remote
+  targetDepartment        String   @default("ALL")
+  sampleSize              Int      @default(0)
+  ate                     Float    // Average Treatment Effect (ej. -0.12 para 12% menos de rotación)
+  baselineTurnoverRate    Float    // Probabilidad de fuga promedio antes de intervención
+  counterfactualTurnoverRate Float // Probabilidad de fuga predicha tras intervención
+  costEstimate            Float    // Costo estimado de la intervención ($)
+  savingsEstimate         Float    // Ahorro estimado por retención de talento ($)
+  netRoi                  Float    // Ahorro Neto ($) = savingsEstimate - costEstimate
+  confidenceIntervalLower Float    // IC 95% Inferior
+  confidenceIntervalUpper Float    // IC 95% Superior
+  createdAt               DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([treatmentType])
+  @@map("causal_interventions")
+}
+
+model FederatedRound {
+  id                        String   @id @default(cuid())
+  round                     Int      @unique
+  participatingTenantsCount Int      @default(0)
+  globalWeightsJson         String   @db.Text // Pesos agregados por FedAvg (theta_global)
+  globalBrierScore          Float    // Brier score global del meta-modelo
+  epsilonUsed               Float    @default(0.5) // Épsilon utilizado en esta ronda por participante
+  noiseScale                Float    @default(0.5) // Escala de ruido Gaussiano inyectado (sigma)
+  status                    String   @default("COMPLETED")
+  createdAt                 DateTime @default(now())
+
+  @@index([round])
+  @@map("federated_rounds")
+}
+
+model TenantPrivacyBudget {
+  id                  String    @id @default(cuid())
+  tenantId            String    @unique
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  epsilonBudgetMax    Float     @default(10.0) // Límite máximo de épsilon (presupuesto de privacidad)
+  epsilonSpent        Float     @default(0.0)  // Épsilon acumulado gastado
+  delta               Float     @default(0.00001) // Delta (1e-5)
+  roundsParticipated  Int       @default(0)
+  lastContributionAt  DateTime?
+  updatedAt           DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@map("tenant_privacy_budgets")
+}
+
+
+
 
