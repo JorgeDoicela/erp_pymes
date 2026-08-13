@@ -19,6 +19,22 @@ export const getNotifications = async (req, res) => {
     }
 };
 
+export const getUnreadCount = async (req, res) => {
+    try {
+        const userId = req.user?.employeeId || req.user?.id;
+        if (!userId) {
+            return res.json({ count: 0 });
+        }
+        const count = await prisma.notification.count({
+            where: { recipientId: userId, isRead: false }
+        });
+        res.json({ count });
+    } catch (error) {
+        console.error('Error fetching unread count:', error);
+        res.status(500).json({ message: 'Error al obtener conteo de no leídas' });
+    }
+};
+
 export const markAsRead = async (req, res) => {
     try {
         const { id } = req.params;

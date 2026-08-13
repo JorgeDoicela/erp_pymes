@@ -30,11 +30,13 @@ export const checkPayrollReminders = async () => {
         const daysToClosing = diffDays(closingDate);
         const daysToPayment = diffDays(paymentDate);
 
-        // Find Admins
-        const admins = await prisma.employee.findMany({ where: { role: 'admin', isActive: true } });
+        // Find Admins grouped by Tenant
+        const admins = await prisma.employee.findMany({ 
+            where: { role: 'admin', isActive: true },
+            select: { id: true, tenantId: true }
+        });
 
         // Logic 1: Closing Warning (5 days before Closing)
-        // If Closing is 25th, 5 days before is 20th. (daysToClosing === 5)
         if (daysToClosing === 5) {
             for (const admin of admins) {
                 await notificationService.sendPayrollAlert({
@@ -48,7 +50,6 @@ export const checkPayrollReminders = async () => {
         }
 
         // Logic 2: Review Alert (3 days before Payment)
-        // If Payment is 30th, 3 days before is 27th. (daysToPayment === 3)
         if (daysToPayment === 3) {
             for (const admin of admins) {
                 await notificationService.sendPayrollAlert({
@@ -62,7 +63,6 @@ export const checkPayrollReminders = async () => {
         }
 
         // Logic 3: Confirmation (1 day before Payment)
-        // If Payment is 30th, 1 day before is 29th. (daysToPayment === 1)
         if (daysToPayment === 1) {
             for (const admin of admins) {
                 await notificationService.sendPayrollAlert({

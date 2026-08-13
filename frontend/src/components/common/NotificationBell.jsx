@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import notificationService from '../../services/notifications/notification.service';
 import { useNavigate } from 'react-router-dom';
+import useNotificationSocket from '../../hooks/useNotificationSocket';
+import { toast } from 'react-hot-toast';
 
 const NotificationBell = () => {
     const [notifications, setNotifications] = useState([]);
@@ -9,22 +11,40 @@ const NotificationBell = () => {
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
 
-    const fetchNotifications = async () => {
+    const fetchNotificationsData = async () => {
         try {
-            const data = await notificationService.getNotifications();
-            // Show only top 5 in dropdown
+            const [data, unreadRes] = await Promise.all([
+                notificationService.getNotifications(),
+                notificationService.getUnreadCount()
+            ]);
             setNotifications(data.slice(0, 5));
-            // Count total unread (assuming API returns all or we count locally from top 5 - ideally API returns count)
-            // For now, simple count from list (limitation: if >50 unread, might be inaccurate without dedicated endpoint)
-            setUnreadCount(data.filter(n => !n.isRead).length);
+            setUnreadCount(unreadRes.count || 0);
         } catch (error) {
-            console.error('Error fetching notifications', error);
+            console.error('Error fetching notifications:', error);
         }
     };
 
+    // Callback when real-time WebSocket notification arrives
+    const handleNewWebSocketNotification = useCallback((newNotif) => {
+        setNotifications(prev => [newNotif, ...prev.slice(0, 4)]);
+        setUnreadCount(prev => prev + 1);
+        toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-slate-900 text-white shadow-xl rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4 border border-slate-700`}>
+                <div className="flex-1 w-0">
+                    <p className="text-xs font-semibold text-blue-400">🔔 Nueva Notificación</p>
+                    <p className="text-xs font-medium text-white mt-0.5">{newNotif.title}</p>
+                    <p className="text-[11px] text-slate-300 line-clamp-2 mt-1">{newNotif.message}</p>
+                </div>
+            </div>
+        ), { duration: 4000 });
+    }, []);
+
+    // Connect WebSocket
+    useNotificationSocket(handleNewWebSocketNotification);
+
     useEffect(() => {
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000);
+        fetchNotificationsData();
+        const interval = setInterval(fetchNotificationsData, 60000);
         return () => clearInterval(interval);
     }, []);
 
@@ -38,6 +58,16 @@ const NotificationBell = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const getCategoryBadge = (type) => {
+        if (!type) return { label: 'Sistema', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+        if (type.startsWith('PAYROLL_')) return { label: 'Nómina', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+        if (type.startsWith('ABSENCE_')) return { label: 'Ausencia', color: 'bg-rose-50 text-rose-700 border-rose-200' };
+        if (type.startsWith('EVALUATION_')) return { label: 'Evaluación', color: 'bg-amber-50 text-amber-700 border-amber-200' };
+        if (type.includes('CONTRACT')) return { label: 'Contrato', color: 'bg-blue-50 text-blue-700 border-blue-200' };
+        if (type.includes('DOCUMENT')) return { label: 'Documento', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
+        return { label: 'Sistema', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+    };
+
     const handleRead = async (notification) => {
         if (!notification.isRead) {
             try {
@@ -47,17 +77,14 @@ const NotificationBell = () => {
                 ));
                 setUnreadCount(prev => Math.max(0, prev - 1));
             } catch (error) {
-                console.error('Error marking as read', error);
+                console.error('Error marking as read:', error);
             }
         }
 
-        // Navigation Logic
         setIsOpen(false);
         if (notification.type === 'CONTRACT_EXPIRATION' && notification.relatedEntityId) {
             navigate('/admin/contracts/expiring');
-        } else if (notification.type === 'EVALUATION_REMINDER' || notification.type === 'EVALUATION_EXPIRED' || notification.type === 'EVALUATION_ASSIGNED') {
-            // For now, redirect to employees list or assessments if page exists.
-            // Best to have a "My Pending Evaluations" page. 
+        } else if (notification.type.startsWith('EVALUATION_')) {
             navigate('/performance');
         } else if (notification.type.startsWith('ABSENCE_')) {
             navigate('/admin/absences');
@@ -68,7 +95,6 @@ const NotificationBell = () => {
         } else if (notification.type.startsWith('PAYROLL_')) {
             navigate('/admin/payroll/generator');
         } else {
-            // Default redirection if generic
             navigate('/admin/notifications');
         }
     };
@@ -79,7 +105,7 @@ const NotificationBell = () => {
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
         } catch (error) {
-            console.error('Error marking all as read', error);
+            console.error('Error marking all as read:', error);
         }
     };
 
@@ -92,27 +118,39 @@ const NotificationBell = () => {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`relative p-1.5 transition-colors rounded ${isOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}
-                title="Notificaciones"
+                className={`relative p-2 transition-all rounded-lg ${isOpen ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
+                title="Centro de Notificaciones"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-mono font-bold leading-none text-white bg-blue-600 rounded-full border border-white">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                    <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-mono font-bold text-white bg-blue-600 rounded-full border-2 border-white animate-pulse">
+                        {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                 )}
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-3 w-96 origin-top-right bg-white border border-gray-200 rounded shadow-lg z-[100] overflow-hidden text-gray-800 animate-fade-in-down">
-                    <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div className="absolute right-0 mt-2 w-96 origin-top-right bg-white border border-slate-200/80 rounded-xl shadow-xl z-[100] overflow-hidden text-slate-800 transition-all duration-200">
+                    <div className="p-3.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 backdrop-blur-sm">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-slate-900 text-sm">Notificaciones</h3>
+                            <h3 className="font-semibold text-slate-900 text-xs tracking-tight">Notificaciones</h3>
+                            {unreadCount > 0 && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-700 rounded-full">
+                                    {unreadCount} nuevas
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {unreadCount > 0 && (
+                                <button onClick={handleMarkAllRead} className="text-[11px] text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer">
+                                    Marcar leídas
+                                </button>
+                            )}
                             <button
                                 onClick={() => { setIsOpen(false); navigate('/admin/notifications/settings'); }}
-                                className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                                className="p-1 rounded-md hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 transition-colors"
                                 title="Configuración"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,64 +159,58 @@ const NotificationBell = () => {
                                 </svg>
                             </button>
                         </div>
-                        {unreadCount > 0 && (
-                            <button onClick={handleMarkAllRead} className="text-xs text-slate-600 hover:text-slate-900 font-medium transition-colors">
-                                Marcar todas leídas
-                            </button>
-                        )}
                     </div>
 
-                    <div className="max-h-[28rem] overflow-y-auto custom-scrollbar">
+                    <div className="max-h-[26rem] overflow-y-auto custom-scrollbar">
                         {notifications.length === 0 ? (
-                            <div className="p-8 text-center text-slate-400 text-sm flex flex-col items-center gap-2">
+                            <div className="p-8 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                 </svg>
-                                <span>No tienes notificaciones</span>
+                                <span className="font-medium text-slate-500">No tienes notificaciones recientes</span>
                             </div>
                         ) : (
                             <ul className="divide-y divide-slate-100">
-                                {notifications.map(notification => (
-                                    <li
-                                        key={notification.id}
-                                        onClick={() => handleRead(notification)}
-                                        className={`group p-4 hover:bg-slate-50 cursor-pointer transition-colors relative ${!notification.isRead ? 'bg-slate-50/70' : ''}`}
-                                    >
-                                        <div className="flex gap-4">
-                                            <div className="flex-shrink-0 mt-1">
-                                                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center border border-slate-200/60">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <p className={`text-xs ${!notification.isRead ? 'text-slate-900 font-bold' : 'text-slate-600 font-medium'}`}>
+                                {notifications.map(notification => {
+                                    const badge = getCategoryBadge(notification.type);
+                                    return (
+                                        <li
+                                            key={notification.id}
+                                            onClick={() => handleRead(notification)}
+                                            className={`p-3.5 hover:bg-slate-50/80 cursor-pointer transition-colors relative ${!notification.isRead ? 'bg-blue-50/30' : ''}`}
+                                        >
+                                            <div className="flex gap-3 items-start">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-center gap-2 mb-1">
+                                                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge.color}`}>
+                                                            {badge.label}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400 font-mono">
+                                                            {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                    <p className={`text-xs ${!notification.isRead ? 'text-slate-900 font-semibold' : 'text-slate-700 font-medium'}`}>
                                                         {notification.title}
                                                     </p>
-                                                    {!notification.isRead && (
-                                                        <span className="w-2 h-2 rounded-full bg-slate-900 flex-shrink-0 mt-1"></span>
-                                                    )}
+                                                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed mt-0.5">
+                                                        {notification.message}
+                                                    </p>
                                                 </div>
-                                                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                                                    {notification.message}
-                                                </p>
-                                                <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
-                                                    {new Date(notification.createdAt).toLocaleDateString()} • {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </p>
+                                                {!notification.isRead && (
+                                                    <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0 mt-1"></span>
+                                                )}
                                             </div>
-                                        </div>
-                                    </li>
-                                ))}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         )}
                     </div>
 
-                    <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+                    <div className="p-2.5 border-t border-slate-100 bg-slate-50/50">
                         <button
                             onClick={handleViewAll}
-                            className="w-full py-2 text-xs text-center text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors font-semibold"
+                            className="w-full py-1.5 text-xs text-center text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors font-medium cursor-pointer"
                         >
                             Ver todas las notificaciones
                         </button>

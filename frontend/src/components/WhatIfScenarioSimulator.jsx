@@ -67,9 +67,9 @@ export default function WhatIfScenarioSimulator({ initialData }) {
                 <div>
                     <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
                         <FiActivity className="text-indigo-600 animate-pulse" />
-                        Simulador Monte Carlo de Escenarios Estratégicos (N=2,000)
+                        Simulador Financiero de Escenarios de Personal
                     </h3>
-                    <p className="text-xs text-slate-500">Estimación estocástica con intervalos de confianza al 95% (IC 95%) y sensibilidad paramétrica</p>
+                    <p className="text-xs text-slate-500">Proyección del ahorro esperado e inversión en personal con 95% de nivel de certeza.</p>
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-auto">
                     <span className="text-xs text-slate-500 font-medium flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-md border border-slate-200/70">
@@ -77,7 +77,7 @@ export default function WhatIfScenarioSimulator({ initialData }) {
                     </span>
                     {simulating && (
                         <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md animate-pulse">
-                            Calculando Monte Carlo...
+                            Procesando Escenarios...
                         </span>
                     )}
                 </div>
@@ -87,7 +87,7 @@ export default function WhatIfScenarioSimulator({ initialData }) {
                 {/* Panel de Sliders (5 Cols) */}
                 <div className="lg:col-span-5 bg-slate-50/70 p-4.5 rounded-lg border border-slate-200/70 space-y-5">
                     <h4 className="font-semibold text-slate-800 text-xs flex items-center gap-2 uppercase tracking-wider">
-                        <FiSliders className="text-slate-500" /> Parámetros Estocásticos
+                        <FiSliders className="text-slate-500" /> Factores de Ajuste Salarial y Beneficios
                     </h4>
 
                     {/* Slider 1: Ajuste Salarial */}

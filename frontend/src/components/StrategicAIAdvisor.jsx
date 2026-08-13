@@ -84,7 +84,7 @@ export default function StrategicAIAdvisor({ dashboardData }) {
         setTimeout(() => {
             setActiveAdvice({
                 title: `Análisis Estratégico: "${query}"`,
-                executiveSummary: 'El algoritmo predictivo analizó los datos de asistencia, desempeño y estructura salarial de la empresa para responder a esta consulta estratégica.',
+                executiveSummary: 'El asistente virtual analizó los datos de asistencia, desempeño y salarios de la empresa para sugerir la mejor decisión de negocio.',
                 actions: [
                     { step: '1. Diagnóstico Directo', detail: 'Revisar la coherencia salarial y asistencial de los equipos impactados.' },
                     { step: '2. Implementación Focalizada', detail: 'Establecer metas claras de desempeño con revisión mensual.' },
@@ -106,13 +106,13 @@ export default function StrategicAIAdvisor({ dashboardData }) {
                         <FiCpu className="w-6 h-6 animate-pulse" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Asistente IA Consultor Estratégico</h3>
-                        <p className="text-xs text-slate-500 mt-0.5">Recomendaciones y Planes de Acción para Ejecutivos</p>
+                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Asistente Virtual de Decisiones de Negocio</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">Recomendaciones prácticas y planes de acción para la administración</p>
                     </div>
                 </div>
                 <div className="self-start sm:self-center">
                     <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-full flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" /> Motor Activo
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" /> Asistente en Línea
                     </span>
                 </div>
             </div>

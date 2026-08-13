@@ -61,6 +61,9 @@ const AnalyticsDashboard = () => {
                 <Link to="/analytics/satisfaction" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
                     Clima Laboral
                 </Link>
+                <Link to="/analytics/custom" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors flex items-center gap-1.5">
+                    <FiDatabase className="w-3.5 h-3.5 text-cyan-600" /> Exportación Personalizada
+                </Link>
             </div>
 
             {/* KPIs */}

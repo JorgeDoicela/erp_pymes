@@ -110,19 +110,19 @@ const MorlParetoDashboard = () => {
             <div className="pb-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center space-x-2 mb-1">
-                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
-                            MORL Reinforcement Learning
+                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded uppercase tracking-wider font-mono">
+                            Optimización Financiera Inteligente
                         </span>
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
-                            Frontera Eficiente de Pareto
+                            Equilibrio Costo-Beneficio
                         </span>
                     </div>
                     <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
                         <FiTarget className="text-blue-600" />
-                        Motor de Optimización Multiobjetivo MORL
+                        Balance Óptimo Costo vs. Retención
                     </h1>
                     <p className="text-xs text-gray-500 mt-1">
-                        Equilibrio económico exacto entre inversión en compensaciones ($) y tasa de retención esperada (%) mediante Q-Learning.
+                        Encuentra el punto exacto de inversión que maximiza la retención de tus colaboradores sin exceder tu presupuesto.
                     </p>
                 </div>
 
@@ -132,7 +132,7 @@ const MorlParetoDashboard = () => {
                         className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer bg-white flex items-center gap-1.5"
                     >
                         <FiDownload className="w-3.5 h-3.5" />
-                        Exportar Dataset
+                        Exportar Reporte
                     </button>
                 </div>
             </div>
@@ -144,14 +144,14 @@ const MorlParetoDashboard = () => {
                     <div className="border-b border-gray-100 pb-3">
                         <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                             <FiSliders className="text-blue-600" />
-                            Configurador Presupuestario MORL
+                            Configuración de Presupuesto
                         </h2>
                     </div>
 
                     <div className="space-y-4">
                         <div>
                             <div className="flex justify-between text-xs font-medium text-gray-600 mb-1">
-                                <span>Límite Presupuestario ($)</span>
+                                <span>Presupuesto Máximo de Inversión ($)</span>
                                 <span className="font-mono font-semibold text-gray-900">{formatMoney(budgetLimit)}</span>
                             </div>
                             <input

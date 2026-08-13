@@ -40,13 +40,13 @@ router.get('/', (req, res) => {
     res.send('API EMPLIFI funcionando correctamente v1');
 });
 
-// Seed Remoto (Protegido)
-router.post('/seed', (req, res, next) => {
+// Seed Remoto (Protegido para SuperAdmin)
+router.post('/seed', authenticate, authorize(['superadmin']), (req, res, next) => {
     runSeed(req, res).catch(next);
 });
 
-// Migración Remota (Fallback)
-router.post('/migrate', (req, res, next) => {
+// Migración Remota (Protegido para SuperAdmin)
+router.post('/migrate', authenticate, authorize(['superadmin']), (req, res, next) => {
     import('../controllers/admin/seedController.js').then(ctrl => {
         ctrl.runMigration(req, res).catch(next);
     });

@@ -88,10 +88,13 @@ export default function MethodologyModal({ isOpen, onClose }) {
                             <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
                                 <FiActivity className="w-4 h-4 text-indigo-600 shrink-0" />
                                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                                    1. Análisis de Supervivencia — Regresión de Weibull
+                                    1. Análisis de Estabilidad y Tiempo de Permanencia (Modelo de Weibull)
                                 </h4>
                             </div>
                             <div className="px-5 py-4 space-y-3 text-xs text-slate-600 leading-relaxed">
+                                <div className="p-3 bg-indigo-50/60 rounded-lg border border-indigo-100 text-indigo-900 font-medium text-[11px] mb-2">
+                                    💡 <strong>¿Qué significa para tu empresa?</strong> Calcula el tiempo estimado que un colaborador permanecerá en la empresa evaluando factores clave como salario relativo, ausencias y desempeño.
+                                </div>
                                 <p>
                                     El riesgo de rotación voluntaria se modela mediante la función de peligro acumulada{' '}
                                     <InlineMath math="h(t)" /> de la distribución de Weibull paramétrica generalizada:
@@ -116,10 +119,13 @@ export default function MethodologyModal({ isOpen, onClose }) {
                             <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
                                 <FiSliders className="w-4 h-4 text-indigo-600 shrink-0" />
                                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                                    2. Simulador Monte Carlo — Sensibilidad Paramétrica
+                                    2. Simulador de Riesgos Financieros y ROI (Simulación Monte Carlo)
                                 </h4>
                             </div>
                             <div className="px-5 py-4 space-y-3 text-xs text-slate-600 leading-relaxed">
+                                <div className="p-3 bg-blue-50/60 rounded-lg border border-blue-100 text-blue-900 font-medium text-[11px] mb-2">
+                                    💡 <strong>¿Qué significa para tu empresa?</strong> Prueba miles de escenarios posibles de aumento salarial o beneficios para estimar el retorno económico real (ROI) y el rango de ahorro probable.
+                                </div>
                                 <p>
                                     Se ejecutan <InlineMath math="N = 2{,}000" /> iteraciones estocásticas con perturbaciones
                                     gaussianas (Box-Muller) sobre las respuestas elásticas del personal. El ROI simulado es:
@@ -137,10 +143,13 @@ export default function MethodologyModal({ isOpen, onClose }) {
                             <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
                                 <FiBarChart2 className="w-4 h-4 text-indigo-600 shrink-0" />
                                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                                    3. ANOVA de 1 Factor &amp; Prueba t de Welch
+                                    3. Comparativa entre Áreas y Departamentos (Análisis de Varianza ANOVA)
                                 </h4>
                             </div>
                             <div className="px-5 py-4 space-y-3 text-xs text-slate-600 leading-relaxed">
+                                <div className="p-3 bg-amber-50/60 rounded-lg border border-amber-100 text-amber-900 font-medium text-[11px] mb-2">
+                                    💡 <strong>¿Qué significa para tu empresa?</strong> Determina si las diferencias de rotación o desempeño entre departamentos (ej. Ventas vs. Operaciones) son estadísticamente significativas o fruto del azar.
+                                </div>
                                 <p>
                                     La comparación interdepartamental de desempeño y ausentismo emplea el estadístico{' '}
                                     <InlineMath math="F" /> de varianza:
@@ -158,19 +167,19 @@ export default function MethodologyModal({ isOpen, onClose }) {
                             <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
                                 <FiDatabase className="w-4 h-4 text-indigo-600 shrink-0" />
                                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                                    4. Gobernanza de Datos &amp; Single-Pass Fetching
+                                    4. Protección de Privacidad y Consulta Eficiente
                                 </h4>
                             </div>
                             <div className="px-5 py-4 space-y-1.5 text-xs text-slate-600 leading-relaxed">
                                 <p>
-                                    <span className="font-semibold text-slate-700">Exportación académica:</span>{' '}
-                                    PII (nombres, cédulas) sustituidos por identificadores disociados <InlineMath math="\text{EMP}_{0001}" />,
-                                    preservando covariables científicas normalizadas en CSV/JSON.
+                                    <span className="font-semibold text-slate-700">Exportación anonimizada:</span>{' '}
+                                    Los datos personales (nombres, cédulas) son sustituidos por códigos disociados <InlineMath math="\text{EMP}_{0001}" />,
+                                    protegiendo la identidad de los colaboradores.
                                 </p>
                                 <p>
-                                    <span className="font-semibold text-slate-700">Horizonte temporal:</span>{' '}
-                                    Consultas Prisma recuperan 12 meses históricos en un único pase optimizado
-                                    (latencia <InlineMath math="< 300\,\text{ms}" />).
+                                    <span className="font-semibold text-slate-700">Velocidad de respuesta:</span>{' '}
+                                    Las consultas recuperan el histórico anual en un único pase optimizado
+                                    (respuesta instantánea en <InlineMath math="< 300\,\text{ms}" />).
                                 </p>
                             </div>
                         </section>

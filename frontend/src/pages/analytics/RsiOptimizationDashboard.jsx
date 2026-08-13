@@ -135,18 +135,18 @@ const RsiOptimizationDashboard = () => {
                 <div>
                     <div className="flex items-center space-x-2 mb-1">
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
-                            RSI Engine v2.4
+                            Calibración Continua v2.4
                         </span>
-                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
-                            Closed-Loop Calibration Active
+                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded uppercase tracking-wider font-mono">
+                            Aprendizaje Activo en Vivo
                         </span>
                     </div>
                     <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
                         <FiCpu className="text-blue-600" />
-                        Motor de Automejora Recursiva (RSI Engine)
+                        Centro de Mejora y Calibración Automática
                     </h1>
                     <p className="text-xs text-gray-500 mt-1">
-                        Bucle dinámico de auto-calibración y optimización estocástica de modelos de riesgo laboral en tiempo real.
+                        El sistema recalibra y perfecciona continuamente la precisión de sus proyecciones basándose en los datos reales de tu empresa.
                     </p>
                 </div>
 
@@ -156,7 +156,7 @@ const RsiOptimizationDashboard = () => {
                         className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer bg-white flex items-center gap-1.5"
                     >
                         <FiDownload className="w-3.5 h-3.5" />
-                        Exportar Dataset
+                        Exportar Datos
                     </button>
                     <button
                         onClick={handleCalibrate}
@@ -164,7 +164,7 @@ const RsiOptimizationDashboard = () => {
                         className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                     >
                         <FiRefreshCw className={`w-3.5 h-3.5 ${actionLoading ? 'animate-spin' : ''}`} />
-                        Ejecutar Época RSI
+                        Actualizar Precisión del Modelo
                     </button>
                 </div>
             </div>
@@ -172,44 +172,44 @@ const RsiOptimizationDashboard = () => {
             {/* Resumen Métricas Estilo Informe Contable / Estado Financiero */}
             <div className="bg-white border border-gray-200 rounded p-4">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-3 pb-2 border-b border-gray-100">
-                    Resumen de Calibración de Modelo RSI
+                    Resumen de Precisión y Estado de Calibración
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-100">
                     <div className="py-2 md:py-0 md:px-4 first:pl-0 flex flex-col justify-between">
-                        <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Época de Calibración</span>
+                        <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Ciclo de Ajuste Actual</span>
                         <div className="mt-1 flex items-baseline space-x-2">
-                            <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">Época {currentEpoch}</span>
+                            <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">Ciclo #{currentEpoch}</span>
                         </div>
-                        <span className="text-[11px] text-gray-400 mt-1">Auto-calibración dinámica</span>
+                        <span className="text-[11px] text-gray-400 mt-1">Calibración automática en tiempo real</span>
                     </div>
 
                     <div className="py-2 md:py-0 md:px-4 flex flex-col justify-between">
-                        <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Pérdida Brier (MSE)</span>
+                        <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Margen de Error (Brier Loss)</span>
                         <div className="mt-1 flex items-baseline space-x-2">
                             <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">{currentBrierScore}</span>
-                            <span className="text-[10px] font-mono font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
-                                Log-Loss: {currentLogLoss}
+                            <span className="text-[10px] font-mono font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200" title="Desviación de incertidumbre">
+                                Incertidumbre: {currentLogLoss}
                             </span>
                         </div>
-                        <span className="text-[11px] text-gray-400 mt-1">Margen de error cuadrático</span>
+                        <span className="text-[11px] text-gray-400 mt-1">Cuanto más bajo, mayor es la certeza</span>
                     </div>
 
                     <div className="py-2 md:py-0 md:px-4 flex flex-col justify-between">
-                        <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Mejora Acumulada</span>
+                        <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Mejora de Exactitud</span>
                         <div className="mt-1 flex items-baseline space-x-2">
                             <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">+{improvementPercentage}%</span>
-                            <span className="text-[11px] text-gray-500 font-mono">vs Época 1</span>
+                            <span className="text-[11px] text-gray-500 font-mono">vs inicio</span>
                         </div>
-                        <span className="text-[11px] text-gray-400 mt-1">Reducción continua de error</span>
+                        <span className="text-[11px] text-gray-400 mt-1">Reducción progresiva del error</span>
                     </div>
 
                     <div className="py-2 md:py-0 md:px-4 last:pr-0 flex flex-col justify-between">
-                        <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Muestras Auditadas</span>
+                        <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Casos Evaluados</span>
                         <div className="mt-1 flex items-baseline space-x-2">
                             <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">{totalAuditedPredictions}</span>
-                            <span className="text-[11px] text-gray-500 font-mono">({resolvedOutcomeCount} resueltas)</span>
+                            <span className="text-[11px] text-gray-500 font-mono">({resolvedOutcomeCount} confirmados)</span>
                         </div>
-                        <span className="text-[11px] text-gray-400 mt-1">Registro de predicciones</span>
+                        <span className="text-[11px] text-gray-400 mt-1">Histórico de predicciones analizadas</span>
                     </div>
                 </div>
             </div>
@@ -222,10 +222,10 @@ const RsiOptimizationDashboard = () => {
                         <div>
                             <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                                 <FiActivity className="text-blue-600" />
-                                Curva de Aprendizaje de Automejora (Reducción de Brier Loss)
+                                Historial de Precisión (Evolución de Reducción del Margen de Error)
                             </h2>
                             <p className="text-xs text-gray-500 mt-0.5">
-                                Minimización estocástica del error a lo largo de las épocas RSI.
+                                Gráfica que muestra cómo el error del modelo disminuye a medida que el sistema aprende de las novedades de personal.
                             </p>
                         </div>
                     </div>
@@ -245,7 +245,7 @@ const RsiOptimizationDashboard = () => {
                                 <Tooltip 
                                     contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '4px', color: '#ffffff', fontSize: '12px' }}
                                 />
-                                <Area type="monotone" dataKey="brierScore" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#brierGrad)" name="Brier Score (MSE)" />
+                                <Area type="monotone" dataKey="brierScore" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#brierGrad)" name="Margen de Error (Brier Loss)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -255,14 +255,14 @@ const RsiOptimizationDashboard = () => {
                 <div className="p-4 bg-white border border-gray-200 rounded space-y-4">
                     <div className="border-b border-gray-100 pb-3">
                         <span className="px-2 py-0.5 text-[10px] font-mono bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase">
-                            Workbench Operativo
+                            Simulador en Vivo
                         </span>
                         <h2 className="text-sm font-semibold text-gray-900 mt-2 flex items-center gap-2">
                             <FiZap className="text-blue-600" />
-                            Banco de Simulación en Vivo
+                            Prueba de Eventos y Aprendizaje
                         </h2>
                         <p className="text-xs text-gray-500 mt-0.5">
-                            Simula desenlaces reales de empleados y observa la automejora del modelo.
+                            Simula casos de retención o desvinculación para observar cómo se autoajusta la inteligencia del sistema.
                         </p>
                     </div>
 
@@ -274,7 +274,7 @@ const RsiOptimizationDashboard = () => {
                         >
                             <span className="flex items-center gap-2">
                                 <FiUserX className="text-gray-600" />
-                                Simular Renuncia / Fuga (Outcome = 1)
+                                Simular Salida de Colaborador (Evento = 1)
                             </span>
                             <FiPlay className="w-3.5 h-3.5 text-gray-500" />
                         </button>
@@ -286,14 +286,14 @@ const RsiOptimizationDashboard = () => {
                         >
                             <span className="flex items-center gap-2">
                                 <FiUserCheck className="text-gray-600" />
-                                Simular Permanencia Exitosa (Outcome = 0)
+                                Simular Permanencia del Colaborador (Evento = 0)
                             </span>
                             <FiPlay className="w-3.5 h-3.5 text-gray-500" />
                         </button>
                     </div>
 
                     <div className="pt-3 border-t border-gray-100">
-                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Logs de Automejora en Tiempo Real:</p>
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Registro de Eventos en Tiempo Real:</p>
                         <div className="h-[130px] overflow-y-auto space-y-1.5 font-mono text-[10px] bg-gray-50 border border-gray-200 rounded p-2 text-gray-700">
                             {simulationLog.length === 0 ? (
                                 <p className="text-gray-400 italic text-[11px]">Esperando simulaciones en vivo...</p>
@@ -315,36 +315,36 @@ const RsiOptimizationDashboard = () => {
                 <div className="border-b border-gray-100 pb-3">
                     <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <FiSliders className="text-blue-600" />
-                        Matriz de Hiperparámetros Calibrados (Vector β & Parámetros Weibull)
+                        Variables de Impacto en la Permanencia del Personal (Ponderaciones Calibradas)
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
-                        Pesos recalculados automáticamente por el optimizador estocástico en la última época.
+                        Importancia de cada factor estimada automáticamente por el motor predictivo para determinar el nivel de retención.
                     </p>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div className="p-3 bg-gray-50 border border-gray-200 rounded">
-                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">β_salary</span>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded" title="Impacto del Nivel Salarial">
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Impacto Salario</span>
                         <p className="text-sm font-semibold font-mono tabular-nums text-gray-900 mt-1">{activeParameters.beta_salary ?? -0.85}</p>
                     </div>
-                    <div className="p-3 bg-gray-50 border border-gray-200 rounded">
-                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">β_absence</span>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded" title="Impacto de Ausencias e Inasistencias">
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Impacto Ausencias</span>
                         <p className="text-sm font-semibold font-mono tabular-nums text-gray-900 mt-1">{activeParameters.beta_absence ?? 0.35}</p>
                     </div>
-                    <div className="p-3 bg-gray-50 border border-gray-200 rounded">
-                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">β_perf</span>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded" title="Impacto de Evaluaciones de Desempeño">
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Impacto Desempeño</span>
                         <p className="text-sm font-semibold font-mono tabular-nums text-gray-900 mt-1">{activeParameters.beta_perf ?? 1.10}</p>
                     </div>
-                    <div className="p-3 bg-gray-50 border border-gray-200 rounded">
-                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">β_no_promo</span>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded" title="Impacto de Tiempo sin Promociones">
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Sin Ascensos</span>
                         <p className="text-sm font-semibold font-mono tabular-nums text-gray-900 mt-1">{activeParameters.beta_no_promo ?? 0.25}</p>
                     </div>
-                    <div className="p-3 bg-gray-50 border border-gray-200 rounded">
-                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">k_weibull</span>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded" title="Factor de Escala Temporal">
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Escala Temporal</span>
                         <p className="text-sm font-semibold font-mono tabular-nums text-gray-900 mt-1">{activeParameters.k_weibull ?? 1.25}</p>
                     </div>
-                    <div className="p-3 bg-gray-50 border border-gray-200 rounded">
-                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">λ_weibull</span>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded" title="Tiempo Medio Estimado de Permanencia (Meses)">
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Tiempo Medio (Meses)</span>
                         <p className="text-sm font-semibold font-mono tabular-nums text-gray-900 mt-1">{activeParameters.lambda_weibull ?? 48}</p>
                     </div>
                 </div>

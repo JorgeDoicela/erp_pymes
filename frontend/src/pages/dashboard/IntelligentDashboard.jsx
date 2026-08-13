@@ -69,9 +69,9 @@ export default function IntelligentDashboard({ user, onLogout }) {
 
     const tabs = [
         { id: 'overview', label: 'Resumen Estratégico & ROI', icon: FiTrendingUp },
-        { id: 'analytics', label: 'Proyección & Algoritmos', icon: FiActivity },
+        { id: 'analytics', label: 'Proyecciones & Tendencias de Negocio', icon: FiActivity },
         { id: 'simulator', label: 'Simulador de Escenarios', icon: FiSliders },
-        { id: 'ai_advisor', label: 'Asistente IA Consultor', icon: FiCpu },
+        { id: 'ai_advisor', label: 'Asistente Virtual de Decisiones', icon: FiCpu },
         { id: 'talent', label: 'Talento y Desempeño', icon: FiUsers },
         { id: 'alerts', label: 'Alertas y Acciones', icon: FiAlertTriangle },
         { id: 'organization', label: 'Organización', icon: FiBriefcase },

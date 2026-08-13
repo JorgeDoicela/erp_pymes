@@ -8,10 +8,10 @@ export const runSeed = async (req, res) => {
         const seedSecret = process.env.SEED_SECRET;
 
         // Security Check
-        if (!seedSecret || secret !== seedSecret) {
+        if (!seedSecret || typeof secret !== 'string' || secret.trim() === '' || secret !== seedSecret) {
             return res.status(403).json({
                 success: false,
-                message: 'Acceso Denegado. Secreto inválido.'
+                message: 'Acceso Denegado. Secreto inválido o no configurado.'
             });
         }
 
@@ -65,8 +65,8 @@ export const runMigration = async (req, res) => {
         const { secret } = req.body;
         const seedSecret = process.env.SEED_SECRET;
 
-        if (!seedSecret || secret !== seedSecret) {
-            return res.status(403).json({ success: false, message: 'Acceso Denegado' });
+        if (!seedSecret || typeof secret !== 'string' || secret.trim() === '' || secret !== seedSecret) {
+            return res.status(403).json({ success: false, message: 'Acceso Denegado. Secreto inválido o no configurado.' });
         }
 
         console.log('--- Iniciando Migración Remota ---');

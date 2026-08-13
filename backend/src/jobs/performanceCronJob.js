@@ -63,7 +63,8 @@ export const checkPerformanceReminders = async () => {
                 if (isSameDay(endDate, yesterday)) {
                     await notificationService.sendEvaluationExpiredAlert({
                         employeeName: `${evaluation.employee.firstName} ${evaluation.employee.lastName}`,
-                        evaluationId: evaluation.id
+                        evaluationId: evaluation.id,
+                        tenantId: evaluation.employee?.tenantId
                     });
                 }
             }

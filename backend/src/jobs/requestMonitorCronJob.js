@@ -12,21 +12,22 @@ export const checkRequestReminders = async () => {
             include: { employee: true }
         });
 
-        const admins = await prisma.employee.findMany({
-            where: { role: 'admin', isActive: true },
-            select: { id: true, email: true }
-        });
-
         for (const req of pendingRequests) {
+            const tenantId = req.employee?.tenantId;
+            const admins = await prisma.employee.findMany({
+                where: {
+                    role: 'admin',
+                    isActive: true,
+                    ...(tenantId ? { tenantId } : {})
+                },
+                select: { id: true, email: true }
+            });
+
             const created = new Date(req.createdAt);
             const diffMs = now - created;
             const diffHours = diffMs / (1000 * 60 * 60);
 
             // 1. Reminder after 24 hours (Allowing a 1h window: 24 <= h < 25)
-            // In production, we might store 'lastNotificationLevel' to act exactly once. 
-            // For now, relies on cron running hourly or handling slightly looser logic.
-            // Requirement: "Si no hay respuesta en 24h, envía recordatorio"
-            // Let's assume this runs hourly.
             if (diffHours >= 24 && diffHours < 25) {
                 console.log(`[CRON] Sending 24h Reminder for Request ${req.id}`);
                 for (const admin of admins) {

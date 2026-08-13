@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import notificationService from '../../services/notifications/notification.service';
+import useNotificationSocket from '../../hooks/useNotificationSocket';
 
 const NotificationsPage = () => {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all'); // all, unread
+    const [filter, setFilter] = useState('all'); // all, unread, absence, evaluation, contract, payroll
 
     const fetchNotifications = async () => {
         setLoading(true);
@@ -19,6 +20,13 @@ const NotificationsPage = () => {
             setLoading(false);
         }
     };
+
+    // WebSocket real-time listener
+    const handleNewWebSocketNotification = useCallback((newNotif) => {
+        setNotifications(prev => [newNotif, ...prev]);
+    }, []);
+
+    useNotificationSocket(handleNewWebSocketNotification);
 
     useEffect(() => {
         fetchNotifications();
@@ -60,10 +68,33 @@ const NotificationsPage = () => {
         }
     };
 
+    const getCategoryBadge = (type) => {
+        if (!type) return { label: 'Sistema', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+        if (type.startsWith('PAYROLL_')) return { label: 'Nómina', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+        if (type.startsWith('ABSENCE_')) return { label: 'Ausencia', color: 'bg-rose-50 text-rose-700 border-rose-200' };
+        if (type.startsWith('EVALUATION_')) return { label: 'Evaluación', color: 'bg-amber-50 text-amber-700 border-amber-200' };
+        if (type.includes('CONTRACT')) return { label: 'Contrato', color: 'bg-blue-50 text-blue-700 border-blue-200' };
+        if (type.includes('DOCUMENT')) return { label: 'Documento', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
+        return { label: 'Sistema', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+    };
+
     const filteredNotifications = notifications.filter(n => {
         if (filter === 'unread') return !n.isRead;
+        if (filter === 'absence') return n.type?.startsWith('ABSENCE_');
+        if (filter === 'evaluation') return n.type?.startsWith('EVALUATION_');
+        if (filter === 'contract') return n.type?.includes('CONTRACT') || n.type?.includes('DOCUMENT');
+        if (filter === 'payroll') return n.type?.startsWith('PAYROLL_');
         return true;
     });
+
+    const categoryFilters = [
+        { id: 'all', label: 'Todas' },
+        { id: 'unread', label: 'No leídas' },
+        { id: 'absence', label: 'Ausencias' },
+        { id: 'evaluation', label: 'Evaluaciones' },
+        { id: 'contract', label: 'Contratos / Docs' },
+        { id: 'payroll', label: 'Nómina' }
+    ];
 
     return (
         <div className="space-y-5">
@@ -72,7 +103,7 @@ const NotificationsPage = () => {
                 <div>
                     <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Sistema · Alertas</p>
                     <h1 className="text-xl font-semibold text-gray-900">Centro de Notificaciones</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Historial de alertas del sistema, avisos operativos y vencimientos.</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Historial de alertas del sistema, avisos operativos y vencimientos en tiempo real.</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     <button
@@ -92,27 +123,20 @@ const NotificationsPage = () => {
 
             {/* Filtros de Notificaciones */}
             <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-1.5">
-                    <button
-                        onClick={() => setFilter('all')}
-                        className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
-                            filter === 'all'
-                                ? 'bg-blue-600 text-white font-medium'
-                                : 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900'
-                        }`}
-                    >
-                        Todas
-                    </button>
-                    <button
-                        onClick={() => setFilter('unread')}
-                        className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
-                            filter === 'unread'
-                                ? 'bg-blue-600 text-white font-medium'
-                                : 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900'
-                        }`}
-                    >
-                        No leídas
-                    </button>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                    {categoryFilters.map(f => (
+                        <button
+                            key={f.id}
+                            onClick={() => setFilter(f.id)}
+                            className={`px-3 py-1.5 text-xs rounded transition-colors cursor-pointer ${
+                                filter === f.id
+                                    ? 'bg-blue-600 text-white font-medium shadow-sm'
+                                    : 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900 bg-white'
+                            }`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
                 </div>
 
                 <button
@@ -132,37 +156,43 @@ const NotificationsPage = () => {
                 <div className="space-y-2">
                     {filteredNotifications.length === 0 ? (
                         <div className="bg-white rounded border border-gray-200 p-12 text-center text-gray-400 text-xs">
-                            No tienes notificaciones {filter === 'unread' ? 'pendientes' : 'en el historial'}.
+                            No tienes notificaciones {filter === 'unread' ? 'pendientes' : 'en esta categoría'}.
                         </div>
                     ) : (
-                        filteredNotifications.map(notification => (
-                            <div
-                                key={notification.id}
-                                onClick={() => handleRead(notification)}
-                                className={`bg-white border border-gray-200 rounded p-3.5 hover:bg-gray-50/70 transition-colors cursor-pointer ${
-                                    !notification.isRead ? 'border-l-4 border-l-blue-600 bg-blue-50/20' : ''
-                                }`}
-                            >
-                                <div className="flex justify-between items-start gap-3">
-                                    <div className="space-y-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            {!notification.isRead && (
-                                                <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0"></span>
-                                            )}
-                                            <h4 className={`text-xs ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
-                                                {notification.title}
-                                            </h4>
+                        filteredNotifications.map(notification => {
+                            const badge = getCategoryBadge(notification.type);
+                            return (
+                                <div
+                                    key={notification.id}
+                                    onClick={() => handleRead(notification)}
+                                    className={`bg-white border border-gray-200 rounded p-3.5 hover:bg-gray-50/70 transition-colors cursor-pointer ${
+                                        !notification.isRead ? 'border-l-4 border-l-blue-600 bg-blue-50/20' : ''
+                                    }`}
+                                >
+                                    <div className="flex justify-between items-start gap-3">
+                                        <div className="space-y-1.5 min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                                {!notification.isRead && (
+                                                    <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0"></span>
+                                                )}
+                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge.color}`}>
+                                                    {badge.label}
+                                                </span>
+                                                <h4 className={`text-xs ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                                                    {notification.title}
+                                                </h4>
+                                            </div>
+                                            <p className="text-gray-600 text-xs leading-relaxed">
+                                                {notification.message}
+                                            </p>
                                         </div>
-                                        <p className="text-gray-600 text-xs leading-relaxed">
-                                            {notification.message}
-                                        </p>
+                                        <span className="text-[11px] text-gray-400 font-mono shrink-0" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                            {new Date(notification.createdAt).toLocaleDateString('es-EC')} {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
                                     </div>
-                                    <span className="text-[11px] text-gray-400 font-mono shrink-0" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                        {new Date(notification.createdAt).toLocaleDateString('es-EC')} {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
             )}

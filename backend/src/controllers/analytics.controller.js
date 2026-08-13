@@ -5,6 +5,16 @@ export const getDashboardData = async (req, res) => {
     console.log("Analytics: Request received for dashboard data");
     try {
         const tenantId = req.tenantId || req.user?.tenantId;
+        const isSuperAdmin = req.user?.role === 'superadmin' || req.user?.role === 'SUPERADMIN';
+
+        if (!tenantId && !isSuperAdmin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Contexto de empresa (tenantId) no especificado.',
+                code: 'TENANT_ID_REQUIRED'
+            });
+        }
+
         const tenantWhere = tenantId ? { tenantId } : {};
 
         // --- KPIs ---

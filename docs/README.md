@@ -15,6 +15,7 @@ Documentación técnica del sistema de gestión de talento humano Emplifi. Cada 
 - [03 — Gobernanza, LOPDP y Auditoría](./02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md)
 - [04 — Workflows de Evaluaciones y Nómina](./02-backend-servicios/04-workflow-evaluaciones-y-nomina.md)
 - [05 — Encriptación de Salarios y Seguridad](./02-backend-servicios/05-encriptacion-salarios-y-seguridad.md)
+- [06 — Sistema de Notificaciones y Gobernanza de Seguridad Tenant](./02-backend-servicios/06-sistema-notificaciones-y-seguridad-tenant.md)
 
 ### 03 — Motores Especializados
 - [01 — Motor de Cálculo de Nómina](./03-motores-especializados/01-motor-calculo-nomina.md)

@@ -220,6 +220,7 @@ function App() {
           <Route path="/analytics/performance" element={<PerformanceReport />} />
           <Route path="/analytics/payroll-costs" element={<PayrollCostReport />} />
           <Route path="/analytics/satisfaction" element={<SatisfactionReport />} />
+          <Route path="/analytics/custom" element={<CustomReport />} />
         </Route>
 
         {/* Nómina (Compartido para Admin, HR y Contabilidad) */}

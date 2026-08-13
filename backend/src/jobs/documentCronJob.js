@@ -10,8 +10,16 @@ export const checkDocumentExpirations = async () => {
         const future30 = new Date(today); future30.setDate(today.getDate() + 30);
         const future15 = new Date(today); future15.setDate(today.getDate() + 15);
 
-        // Fetch Admins ONCE for the entire check
-        const admins = await prisma.employee.findMany({ where: { role: 'admin', isActive: true } });
+        // Function to get admins for a specific tenant
+        const getTenantAdmins = async (tenantId) => {
+            return await prisma.employee.findMany({
+                where: {
+                    role: 'admin',
+                    isActive: true,
+                    ...(tenantId ? { tenantId } : {})
+                }
+            });
+        };
 
         // Define function to check specific date
         const checkDate = async (targetDate, days) => {
@@ -34,7 +42,8 @@ export const checkDocumentExpirations = async () => {
                     documentId: doc.id
                 });
 
-                // Notify Admins
+                // Notify Admins of the SAME Tenant
+                const admins = await getTenantAdmins(doc.employee?.tenantId);
                 for (const admin of admins) {
                     await notificationService.createNotification({
                         recipientId: admin.id,
@@ -65,6 +74,7 @@ export const checkDocumentExpirations = async () => {
         });
 
         for (const doc of expired) {
+            const admins = await getTenantAdmins(doc.employee?.tenantId);
             for (const admin of admins) {
                 await notificationService.createNotification({
                     recipientId: admin.id,
