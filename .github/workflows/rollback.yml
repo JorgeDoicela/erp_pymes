@@ -38,6 +38,10 @@ jobs:
             set -e
             cd /var/www/recursos_humanos
 
+            echo "=== Liberando espacio en disco en EC2 ==="
+            docker system prune -af || true
+            sudo journalctl --vacuum-size=100M 2>/dev/null || true
+
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
