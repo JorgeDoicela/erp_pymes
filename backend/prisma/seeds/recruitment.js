@@ -98,6 +98,6 @@ export async function seedRecruitment(prisma) {
                 console.error(`Error reclutamiento ${tenant.name}: ${e.message}`);
             }
         }
-        console.log(`✅ Vacantes y candidatos creados para ${tenant.name}.`);
+        console.log(`Vacantes y candidatos creados para ${tenant.name}.`);
     }
 }

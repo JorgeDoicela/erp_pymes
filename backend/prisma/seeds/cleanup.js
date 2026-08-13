@@ -10,11 +10,11 @@ export async function seedCleanup(prisma) {
         if (Array.isArray(tablenames) && tablenames.length > 0) {
             const tables = tablenames.map(({ tablename }) => `"${tablename}"`).join(', ');
             await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`);
-            console.log('✅ Base de datos truncada y limpiada completamente (TRUNCATE CASCADE).');
+            console.log('Base de datos truncada y limpiada completamente (TRUNCATE CASCADE).');
             return;
         }
     } catch (e) {
-        console.log('⚠️ TRUNCATE CASCADE no se pudo ejecutar directamente:', e.message);
+        console.log('TRUNCATE CASCADE no se pudo ejecutar directamente:', e.message);
         console.log('🔄 Ejecutando borrado relacional exhaustivo vía Prisma...');
     }
 
@@ -107,13 +107,13 @@ export async function seedCleanup(prisma) {
             tablesInOrder.map(t => prisma[t]?.deleteMany()).filter(Boolean),
             { timeout: 30000 }
         );
-        console.log('✅ Base de datos limpiada correctamente.');
+        console.log('Base de datos limpiada correctamente.');
     } catch (e) {
-        console.log('⚠️ Transacción en lote falló. Ejecutando limpieza secuencial por tabla...');
+        console.log('Transacción en lote falló. Ejecutando limpieza secuencial por tabla...');
         for (const table of tablesInOrder) {
             await cleanTable(table);
         }
-        console.log('✅ Limpieza secuencial completada.');
+        console.log('Limpieza secuencial completada.');
     }
 }
 

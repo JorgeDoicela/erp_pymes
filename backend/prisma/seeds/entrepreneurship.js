@@ -147,5 +147,5 @@ export async function seedEntrepreneurship(prisma) {
         });
     }
 
-    console.log(`✅ ${projects.length} proyectos de emprendimiento creados.`);
+    console.log(`${projects.length} proyectos de emprendimiento creados.`);
 }

@@ -561,7 +561,7 @@ export async function seedUsers(prisma) {
         });
         if (t.slug === 'empresa-demo') tenant1 = created;
         if (t.slug === 'tech-solutions') tenant2 = created;
-        console.log(`✅ Tenant Creado/Actualizado: ${created.name} (${created.slug})`);
+        console.log(`Tenant Creado/Actualizado: ${created.name} (${created.slug})`);
     }
 
     // ── 2. SUPERADMIN GLOBAL ──────────────────────────────────────────────────
@@ -594,7 +594,7 @@ export async function seedUsers(prisma) {
                 vacationDays: 0,
             }
         });
-        console.log('✅ SuperAdmin Global: admin@emplifi.com / Emplifi2025!');
+        console.log('SuperAdmin Global: admin@emplifi.com / Emplifi2025!');
     } catch (e) {
         superAdmin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
     }
@@ -724,7 +724,7 @@ export async function seedUsers(prisma) {
         });
         tenant1Employees.push(created);
     }
-    console.log(`✅ Empresa 1 (${tenant1.name}): ${tenant1Employees.length} colaboradores creados.`);
+    console.log(`Empresa 1 (${tenant1.name}): ${tenant1Employees.length} colaboradores creados.`);
 
     // ── 4. EMPRESA 2: Ecosistema de Usuarios y Roles ─────────────────────────
     const tenant2Employees = [];
@@ -851,7 +851,7 @@ export async function seedUsers(prisma) {
         });
         tenant2Employees.push(created);
     }
-    console.log(`✅ Empresa 2 (${tenant2.name}): ${tenant2Employees.length} colaboradores creados.`);
+    console.log(`Empresa 2 (${tenant2.name}): ${tenant2Employees.length} colaboradores creados.`);
 
     // ── System Settings por Tenant ───────────────────────────────────────────
     await prisma.systemSetting.deleteMany({ where: { tenantId: { in: [tenant1.id, tenant2.id] } } });

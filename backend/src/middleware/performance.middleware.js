@@ -35,7 +35,7 @@ export const performanceMiddleware = (req, res, next) => {
         const logMsg = `[PERFORMANCE] ${method} ${url} - ${duration}ms (${type})`;
 
         if (duration > threshold) {
-            console.warn(`⚠️ ALERTA DE RENDIMIENTO (SLA ${threshold}ms excedido): ${logMsg}`);
+            console.warn(`ALERTA DE RENDIMIENTO (SLA ${threshold}ms excedido): ${logMsg}`);
         } else {
             console.log(logMsg);
         }

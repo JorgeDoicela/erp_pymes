@@ -4,7 +4,7 @@ async function fixSlugs() {
     try {
         console.log('Buscando empresas con slugs corruptos o excesivamente largos...');
         const tenants = await prisma.tenant.findMany();
-        
+
         for (const tenant of tenants) {
             if (tenant.slug && tenant.slug.length > 50) {
                 const cleanSlug = tenant.name
@@ -13,7 +13,7 @@ async function fixSlugs() {
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/^-+|-+$/g, '')
                     .slice(0, 50);
-                
+
                 console.log(`Corrigiendo slug para '${tenant.name}':`);
                 console.log(`  Anterior: ${tenant.slug.slice(0, 40)}...`);
                 console.log(`  Nuevo: ${cleanSlug}`);
@@ -24,7 +24,7 @@ async function fixSlugs() {
                 });
             }
         }
-        console.log('✅ Slugs corregidos con éxito.');
+        console.log('Slugs corregidos con éxito.');
     } catch (err) {
         console.error('Error al corregir slugs:', err);
     } finally {

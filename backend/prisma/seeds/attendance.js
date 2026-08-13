@@ -118,5 +118,5 @@ export async function seedAttendance(prisma, employees) {
             console.error(`❌ Error insertando chunk de asistencia ${i}: ${e.message}`);
         }
     }
-    console.log('✅ Marcaciones de asistencia creadas.');
+    console.log('Marcaciones de asistencia creadas.');
 }

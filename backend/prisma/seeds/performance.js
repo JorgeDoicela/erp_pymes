@@ -100,6 +100,6 @@ export async function seedPerformance(prisma, employees) {
             }
         }
 
-        console.log(`✅ Evaluaciones 360° generadas en lote para ${tenant.name}.`);
+        console.log(`Evaluaciones 360° generadas en lote para ${tenant.name}.`);
     }
 }

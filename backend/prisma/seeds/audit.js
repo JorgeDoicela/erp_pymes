@@ -50,8 +50,8 @@ export async function seedAudit(prisma, employees = []) {
                 tenantId: admin.tenantId || null
             }))
         });
-        console.log(`✅ ${sampleLogs.length} logs de auditoría inmutables creados.`);
+        console.log(`${sampleLogs.length} logs de auditoría inmutables creados.`);
     } catch (e) {
-        console.error('⚠️ Error generando logs de auditoría:', e.message);
+        console.error('Error generando logs de auditoría:', e.message);
     }
 }

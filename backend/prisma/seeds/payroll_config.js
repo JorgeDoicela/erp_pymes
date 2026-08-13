@@ -51,7 +51,7 @@ export async function seedPayrollConfig(prisma) {
                     });
                 }
             }
-            console.log(`✅ Configuración de nómina lista para ${tenant.name}.`);
+            console.log(`Configuración de nómina lista para ${tenant.name}.`);
         }
     } catch (e) {
         console.error(`❌ Error en PayrollConfig: ${e.message}`);

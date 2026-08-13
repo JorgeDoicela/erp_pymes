@@ -62,5 +62,5 @@ export async function seedCoreRecords(prisma, employees) {
         await prisma.workHistory.createMany({ data: historyBatch, skipDuplicates: true });
     }
 
-    console.log('✅ Registros core optimizados creados.');
+    console.log('Registros core optimizados creados.');
 }

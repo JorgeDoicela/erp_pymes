@@ -101,7 +101,7 @@ export async function seedAccounting(prisma) {
             });
         }
 
-        console.log(`✅ Catálogo contable y periodo cargados para ${tenant.name}.`);
+        console.log(`Catálogo contable y periodo cargados para ${tenant.name}.`);
     }
 }
 
@@ -180,6 +180,6 @@ export async function seedJournalEntries(prisma) {
                 });
             }
         }
-        console.log(`✅ Asientos contables generados para ${tenant.name}.`);
+        console.log(`Asientos contables generados para ${tenant.name}.`);
     }
 }

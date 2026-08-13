@@ -86,6 +86,6 @@ export async function seedPayroll(prisma, employees) {
                 data: { totalAmount: parseFloat(payrollTotal.toFixed(2)) }
             });
         }
-        console.log(`✅ Nómina de 6 meses generada en lote para ${tenant.name}.`);
+        console.log(`Nómina de 6 meses generada en lote para ${tenant.name}.`);
     }
 }

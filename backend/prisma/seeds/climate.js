@@ -56,7 +56,7 @@ export async function seedClimate(prisma) {
                     });
                 }
             }
-            console.log(`✅ Encuesta de clima y respuestas listas para ${tenant.name}.`);
+            console.log(`Encuesta de clima y respuestas listas para ${tenant.name}.`);
         } catch (e) {
             console.error(`Error en clima ${tenant.name}: ${e.message}`);
         }

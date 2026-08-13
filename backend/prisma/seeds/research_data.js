@@ -76,9 +76,9 @@ export async function seedResearchData(prisma) {
                     // Tecnología: salarios altos (~1500-1900 USD) → menor riesgo
                     // Operaciones: salarios medios (~1200-1500 USD) → riesgo bajo
                     const salaryRanges = {
-                        'Ventas':      800 + Math.floor(Math.random() * 300),
+                        'Ventas': 800 + Math.floor(Math.random() * 300),
                         'Tecnología': 1500 + Math.floor(Math.random() * 400),
-                        'Operaciones':1200 + Math.floor(Math.random() * 300)
+                        'Operaciones': 1200 + Math.floor(Math.random() * 300)
                     };
                     const salaryVal = salaryRanges[deptSpec.name] || 1200;
                     const email = `emp.${empIndex}.${tenant.slug}@emplifi.com`;
@@ -122,8 +122,8 @@ export async function seedResearchData(prisma) {
                         // Ausencias diferenciadas por riesgo departamental (alimentan beta_absence del modelo Weibull)
                         // Ventas: 4-8 ausencias → score alto | Tecnología: 0-2 | Operaciones: 0-1
                         const absenceCountByDept = {
-                            'Ventas':      4 + Math.floor(Math.random() * 5),
-                            'Tecnología':  Math.floor(Math.random() * 3),
+                            'Ventas': 4 + Math.floor(Math.random() * 5),
+                            'Tecnología': Math.floor(Math.random() * 3),
                             'Operaciones': Math.floor(Math.random() * 2)
                         };
                         const numAbsences = absenceCountByDept[deptSpec.name] || 0;
@@ -299,6 +299,6 @@ export async function seedResearchData(prisma) {
             });
         }
 
-        console.log(`✅ Motor IA y datos de investigación configurados para ${tenant.name}.`);
+        console.log(`Motor IA y datos de investigación configurados para ${tenant.name}.`);
     }
 }

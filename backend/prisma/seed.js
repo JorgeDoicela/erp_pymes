@@ -46,7 +46,7 @@ async function withRetry(label, fn, maxRetries = 5) {
 
             if (isConnError && attempt < maxRetries) {
                 const waitMs = attempt * 2000;
-                console.log(`⚠️  [${label}] Error de conexión (intento ${attempt}/${maxRetries}). Reintentando en ${waitMs / 1000}s...`);
+                console.log(` [${label}] Error de conexión (intento ${attempt}/${maxRetries}). Reintentando en ${waitMs / 1000}s...`);
                 await sleep(waitMs);
             } else {
                 console.error(`❌ [${label}] Falló después de ${attempt} intento(s): ${e.message}`);
@@ -66,7 +66,7 @@ async function main() {
     console.log('\n🔌 Verificando conexión a la base de datos...');
     await withRetry('TEST_CONN', async (prisma) => {
         await prisma.$queryRaw`SELECT 1`;
-        console.log('✅ Conexión establecida correctamente.');
+        console.log('Conexión establecida correctamente.');
     });
 
     // 1. Limpieza
@@ -82,7 +82,7 @@ async function main() {
     });
 
     const { tenant1, tenant2, admin1, admin2, allEmployees } = seedUsersResult;
-    console.log(`\n✅ Total colaboradores cargados en base de datos: ${allEmployees.length}`);
+    console.log(`\nTotal colaboradores cargados en base de datos: ${allEmployees.length}`);
     await sleep(1000);
 
     // 3. Core Records y Documentos
@@ -149,7 +149,7 @@ async function main() {
     await withRetry('RESEARCH_DATA', (prisma) => seedResearchData(prisma));
 
     console.log('\n╔════════════════════════════════════════════════════════════╗');
-    console.log('║           SEED DE 2 EMPRESAS COMPLETADO ✅                  ║');
+    console.log('║           SEED DE 2 EMPRESAS COMPLETADO                  ║');
     console.log('╠════════════════════════════════════════════════════════════╣');
     console.log('║  Empresa 1: Empresa Demo Ecuador S.A.                      ║');
     console.log('║    Admin:   admin.empresa@emplifi.com (Pass: Emplifi2025!)  ║');
