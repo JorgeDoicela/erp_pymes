@@ -1,5 +1,22 @@
 export async function seedCleanup(prisma) {
-    console.log('[CLEANUP] Limpiando base de datos (con manejo de relaciones e incubadora)...');
+    console.log('[CLEANUP] Limpieza destructiva total de base de datos PostgreSQL...');
+
+    try {
+        // En PostgreSQL (Neon/AWS), realizar TRUNCATE TABLE ... RESTART IDENTITY CASCADE
+        const tablenames = await prisma.$queryRaw`
+            SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename NOT LIKE '_prisma_migrations';
+        `;
+
+        if (Array.isArray(tablenames) && tablenames.length > 0) {
+            const tables = tablenames.map(({ tablename }) => `"${tablename}"`).join(', ');
+            await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`);
+            console.log('✅ Base de datos truncada y limpiada completamente (TRUNCATE CASCADE).');
+            return;
+        }
+    } catch (e) {
+        console.log('⚠️ TRUNCATE CASCADE no se pudo ejecutar directamente:', e.message);
+        console.log('🔄 Ejecutando borrado relacional exhaustivo vía Prisma...');
+    }
 
     const cleanTable = async (modelName) => {
         try {
@@ -31,31 +48,39 @@ export async function seedCleanup(prisma) {
         'accountingAccount',
         'accountingPeriod',
 
-        // 3. Clima y Evaluaciones
+        // 3. IA / Investigacion
+        'paretoFrontierPoint',
+        'morlPolicyRun',
+        'causalIntervention',
+        'rsiPredictionAudit',
+        'rsiCalibration',
+        'tenantPrivacyBudget',
+
+        // 4. Clima y Evaluaciones
         'climateResponse',
         'climateSurvey',
         'evaluationReviewer',
         'employeeEvaluation',
         'evaluationTemplate',
 
-        // 4. Reclutamiento
+        // 5. Reclutamiento
         'candidateEvaluation',
         'interview',
         'applicationNote',
         'jobApplication',
         'jobVacancy',
 
-        // 5. Nómina
+        // 6. Nómina
         'payrollDetail',
         'payrollItem',
         'payrollConfig',
         'payroll',
 
-        // 6. Asistencia y Ausencias
+        // 7. Asistencia y Ausencias
         'attendance',
         'absenceRequest',
 
-        // 7. Horarios, Metas y Registros Core
+        // 8. Horarios, Metas y Registros Core
         'employeeGoal',
         'employeeSchedule',
         'shift',
@@ -63,16 +88,18 @@ export async function seedCleanup(prisma) {
         'skill',
         'workHistory',
 
-        // 8. Documentos, Notificaciones y Auditoría
+        // 9. Documentos, Notificaciones, Ajustes y Auditoría
         'document',
         'auditLog',
         'employeeBenefit',
         'notificationPreference',
         'notification',
         'biometricCredential',
+        'systemSetting',
 
-        // 9. Empleados y Usuarios
-        'employee'
+        // 10. Empleados y Tenants
+        'employee',
+        'tenant'
     ];
 
     try {
@@ -89,3 +116,4 @@ export async function seedCleanup(prisma) {
         console.log('✅ Limpieza secuencial completada.');
     }
 }
+

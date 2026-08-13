@@ -1,60 +1,52 @@
-import { firstNames, lastNames, getRandomElement } from './utils.js';
+export async function seedRecruitment(prisma) {
+    console.log('[RECRUITMENT] Generando Procesos de Reclutamiento para ambas empresas...');
 
-export async function seedRecruitment(prisma, adminId) {
-    if (!adminId) {
-        console.log("⚠️ No admin ID provided for recruitment seed. Skipping.");
-        return;
-    }
-    console.log('[RECRUITMENT] Creando Vacantes, Candidatos y Evaluaciones...');
-
-    const admin = await prisma.employee.findUnique({
-        where: { id: adminId },
-        select: { tenantId: true }
+    const tenants = await prisma.tenant.findMany({
+        where: { slug: { in: ['empresa-demo', 'tech-solutions'] } }
     });
-    const tenantId = admin?.tenantId || null;
 
-    const titles = ['Desarrollador React Senior', 'Asistente de RRHH', 'Gerente de Ventas'];
+    for (const tenant of tenants) {
+        const adminUser = await prisma.employee.findFirst({
+            where: { tenantId: tenant.id, role: { in: ['admin', 'employee'] } }
+        });
 
-    for (const title of titles) {
-        try {
-            let vacancy = await prisma.jobVacancy.findFirst({ where: { title } });
-            if (!vacancy) {
-                vacancy = await prisma.jobVacancy.create({
+        if (!adminUser) continue;
+
+        const vacancyTemplates = tenant.slug === 'empresa-demo' ? [
+            { title: 'Desarrollador Fullstack Senior', department: 'Tecnología', location: 'Quito' },
+            { title: 'Coordinador de Selección y RRHH', department: 'Recursos Humanos', location: 'Quito' },
+            { title: 'Ejecutivo Comercial B2B', department: 'Ventas', location: 'Guayaquil' }
+        ] : [
+            { title: 'Ingeniero Cloud & DevOps', department: 'Infraestructura', location: 'Remoto - Ecuador' },
+            { title: 'QA Automation Lead', department: 'Calidad', location: 'Quito' },
+            { title: 'Product Manager SaaS', department: 'Producto', location: 'Remoto' }
+        ];
+
+        for (const vData of vacancyTemplates) {
+            try {
+                const vacancy = await prisma.jobVacancy.create({
                     data: {
-                        title,
-                        tenantId,
-                        department: title.includes('React') ? 'Tecnología' : title.includes('RRHH') ? 'Recursos Humanos' : 'Ventas',
-                        description: 'Buscamos personas con talento y pasión por la excelencia para unirse a nuestro equipo en crecimiento.',
-                        requirements: '- Experiencia sólida en el área\n- Excelentes habilidades de comunicación\n- Proactividad y compromiso',
+                        tenantId: tenant.id,
+                        title: vData.title,
+                        department: vData.department,
+                        description: `Buscamos el mejor talento para sumarse a ${tenant.name} en nuestro equipo de ${vData.department}.`,
+                        requirements: '- Al menos 3 años de experiencia comprobada\n- Proactividad y pensamiento analítico\n- Excelente trabajo en equipo',
                         status: 'OPEN',
-                        postedById: adminId,
-                        deadline: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-                        location: 'Quito',
+                        postedById: adminUser.id,
+                        deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                        location: vData.location,
                         employmentType: 'Tiempo completo'
                     }
                 });
-            } else if (!vacancy.tenantId && tenantId) {
-                vacancy = await prisma.jobVacancy.update({
-                    where: { id: vacancy.id },
-                    data: { tenantId }
-                });
-            }
 
-            // Seed 3-4 Candidates per Vacancy
-            const sampleCandidates = [
-                { firstName: 'Carlos', lastName: 'Mendoza', email: `carlos.${vacancy.id.slice(-4)}@gmail.com`, phone: '0991112223', status: 'INTERVIEW' },
-                { firstName: 'Sofía', lastName: 'Benítez', email: `sofia.${vacancy.id.slice(-4)}@gmail.com`, phone: '0982223334', status: 'REVIEWING' },
-                { firstName: 'Martín', lastName: 'Guerrero', email: `martin.${vacancy.id.slice(-4)}@gmail.com`, phone: '0973334445', status: 'OFFER' },
-                { firstName: 'Elena', lastName: 'Ríos', email: `elena.${vacancy.id.slice(-4)}@gmail.com`, phone: '0964445556', status: 'PENDING' },
-            ];
+                const sampleCandidates = [
+                    { firstName: 'David', lastName: 'Cevallos', email: `david.${vacancy.id.slice(-4)}@gmail.com`, phone: '0991118888', status: 'INTERVIEW' },
+                    { firstName: 'María José', lastName: 'Paredes', email: `mariajose.${vacancy.id.slice(-4)}@gmail.com`, phone: '0982227777', status: 'OFFER' },
+                    { firstName: 'Gabriel', lastName: 'Moncayo', email: `gabriel.${vacancy.id.slice(-4)}@gmail.com`, phone: '0973336666', status: 'REVIEWING' }
+                ];
 
-            for (const cand of sampleCandidates) {
-                let app = await prisma.jobApplication.findFirst({
-                    where: { vacancyId: vacancy.id, email: cand.email }
-                });
-
-                if (!app) {
-                    app = await prisma.jobApplication.create({
+                for (const cand of sampleCandidates) {
+                    const app = await prisma.jobApplication.create({
                         data: {
                             vacancyId: vacancy.id,
                             firstName: cand.firstName,
@@ -63,60 +55,49 @@ export async function seedRecruitment(prisma, adminId) {
                             phone: cand.phone,
                             status: cand.status,
                             resumeUrl: 'https://example.com/cv.pdf',
-                            coverLetter: 'Estimado equipo, me postulo con mucho entusiasmo a esta vacante.'
+                            coverLetter: `Estimado equipo de ${tenant.name}, me postulo con gran interés.`
                         }
                     });
-                }
 
-                // 1. Interviews
-                if (['INTERVIEW', 'OFFER', 'HIRED'].includes(app.status)) {
-                    const existingInterview = await prisma.interview.findFirst({ where: { applicationId: app.id } });
-                    if (!existingInterview) {
+                    if (['INTERVIEW', 'OFFER'].includes(app.status)) {
                         await prisma.interview.create({
                             data: {
                                 applicationId: app.id,
-                                date: new Date(Date.now() + 86400000),
+                                date: new Date(Date.now() + 48 * 60 * 60 * 1000),
                                 type: 'VIRTUAL',
-                                interviewerId: adminId,
+                                interviewerId: adminUser.id,
                                 status: 'COMPLETED',
-                                notes: 'Entrevista técnica excelente. Candidato recomendado.'
+                                notes: 'Entrevista técnica completada satisfactoriamente.'
                             }
                         }).catch(() => { });
                     }
-                }
 
-                // 2. Notes
-                const existingNote = await prisma.applicationNote.findFirst({ where: { applicationId: app.id } });
-                if (!existingNote) {
                     await prisma.applicationNote.create({
                         data: {
                             applicationId: app.id,
-                            content: 'Candidato destacado con perfil alineado al puesto.',
-                            createdBy: 'Sistema Admin',
-                            createdById: adminId
+                            content: 'Candidato con perfil sólido y alta recomendación.',
+                            createdBy: 'Sistema Reclutamiento',
+                            createdById: adminUser.id
                         }
                     }).catch(() => { });
-                }
 
-                // 3. Candidate Evaluations
-                if (['OFFER', 'HIRED'].includes(app.status)) {
-                    const existingEval = await prisma.candidateEvaluation.findFirst({ where: { applicationId: app.id } });
-                    if (!existingEval) {
+                    if (app.status === 'OFFER') {
                         await prisma.candidateEvaluation.create({
                             data: {
                                 applicationId: app.id,
-                                evaluatorId: adminId,
-                                ratings: JSON.stringify({ "Técnica": 9, "Cultura": 9 }),
-                                comments: 'Excelente desempeño en la prueba técnica.',
+                                evaluatorId: adminUser.id,
+                                ratings: JSON.stringify({ "Técnica": 9, "Soft Skills": 9 }),
+                                comments: 'Cumple con creces el perfil requerido.',
                                 recommendation: 'HIRE',
-                                overallScore: 90
+                                overallScore: 92
                             }
                         }).catch(() => { });
                     }
                 }
+            } catch (e) {
+                console.error(`Error reclutamiento ${tenant.name}: ${e.message}`);
             }
-        } catch (e) {
-            console.log("Recruitment seed step error: " + e.message);
         }
+        console.log(`✅ Vacantes y candidatos creados para ${tenant.name}.`);
     }
 }

@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import { seedResearchData, RESEARCH_TENANTS } from './seeds/research_data.js';
+import { seedResearchData } from './seeds/research_data.js';
 import rsiService from '../src/services/ai/rsiService.js';
 import causalInferenceService from '../src/services/ai/causalInferenceService.js';
 import morlOptimizationService from '../src/services/ai/morlOptimizationService.js';
@@ -16,23 +16,27 @@ async function main() {
     console.log('SCRIPT DE EXPERIMENTACIÓN Y INVESTIGACIÓN CIENTÍFICA (MARCO DE IA)');
     console.log('========================================================================\n');
 
-    // 1. Poblar el dataset de 3 tenants x 25 empleados
+    // 1. Poblar el dataset de las 2 empresas
     await seedResearchData(prisma);
+
+    const tenants = await prisma.tenant.findMany({
+        where: { slug: { in: ['empresa-demo', 'tech-solutions'] } }
+    });
 
     console.log('\n------------------------------------------------------------------------');
     console.log('EJECUTANDO EXPERIMENTO 1: CONVERGENCIA DEL MOTOR RSI (12 ÉPOCAS)');
     console.log('------------------------------------------------------------------------');
 
-    for (const tConfig of RESEARCH_TENANTS) {
-        console.log(`\n* Tenant: ${tConfig.name} (${tConfig.id})`);
+    for (const tenant of tenants) {
+        console.log(`\n* Tenant: ${tenant.name} (${tenant.id})`);
         
         // Epoch 1 (Inicialización)
-        const initCalib = await rsiService.runRecursiveCalibration(tConfig.id, 'INITIALIZATION');
+        const initCalib = await rsiService.runRecursiveCalibration(tenant.id, 'INITIALIZATION');
         console.log(`   Epoca 1  | Brier Score: ${initCalib.brierScore.toFixed(4)} | LogLoss: ${initCalib.logLoss.toFixed(4)} | Mejora: ${initCalib.improvementPercentage}%`);
 
         // Épocas 2 a 12 (Calibración SGD estocástica recursiva)
         for (let ep = 2; ep <= 12; ep++) {
-            const calib = await rsiService.runRecursiveCalibration(tConfig.id, `RESEARCH_EPOCH_${ep}`);
+            const calib = await rsiService.runRecursiveCalibration(tenant.id, `RESEARCH_EPOCH_${ep}`);
             if (ep % 3 === 0 || ep === 12) {
                 console.log(`   Epoca ${ep < 10 ? ' ' + ep : ep} | Brier Score: ${calib.brierScore.toFixed(4)} | LogLoss: ${calib.logLoss.toFixed(4)} | Mejora: ${calib.improvementPercentage}%`);
             }
@@ -43,14 +47,14 @@ async function main() {
     console.log('EJECUTANDO EXPERIMENTO 2: INFERENCIA CAUSAL CONTRAFACTUAL (DO-CALCULUS)');
     console.log('------------------------------------------------------------------------');
 
-    for (const tConfig of RESEARCH_TENANTS) {
-        console.log(`\n* Intervención en ${tConfig.name}: Incremento Salarial 10%`);
+    for (const tenant of tenants) {
+        console.log(`\n* Intervención en ${tenant.name}: Incremento Salarial 10%`);
         const result = await causalInferenceService.runCausalInterventionSimulation({
-            tenantId: tConfig.id,
+            tenantId: tenant.id,
             treatmentType: 'SALARY_INCREASE',
             treatmentValue: 10,
             targetDepartment: 'ALL',
-            customTitle: `Experimento Causal Salarios +10% (${tConfig.id})`
+            customTitle: `Experimento Causal Salarios +10% (${tenant.name})`
         });
 
         console.log(`   ATE (Efecto Promedio del Tratamiento): ${(result.impact.ate * 100).toFixed(2)}% de reducción de rotación`);
@@ -62,13 +66,13 @@ async function main() {
     console.log('EJECUTANDO EXPERIMENTO 3: OPTIMIZACIÓN MORL PARETO');
     console.log('------------------------------------------------------------------------');
 
-    for (const tConfig of RESEARCH_TENANTS) {
-        console.log(`\n* Curva de Pareto para ${tConfig.name} (Tope Presupuestario: $12,000)`);
+    for (const tenant of tenants) {
+        console.log(`\n* Curva de Pareto para ${tenant.name} (Tope Presupuestario: $12,000)`);
         const morlResult = await morlOptimizationService.runMorlParetoOptimization({
-            tenantId: tConfig.id,
+            tenantId: tenant.id,
             budgetLimit: 12000,
             targetDepartment: 'ALL',
-            customTitle: `Experimento MORL Pareto (${tConfig.id})`
+            customTitle: `Experimento MORL Pareto (${tenant.name})`
         });
 
         console.log(`   Puntos en la Frontera de Pareto: ${morlResult.paretoFrontier.length}`);
@@ -81,15 +85,15 @@ async function main() {
     console.log('EJECUTANDO EXPERIMENTO 4: ENTRENAMIENTO FEDERADO (FEDAVG + DP-SGD)');
     console.log('------------------------------------------------------------------------');
 
-    const researchTenantIds = RESEARCH_TENANTS.map(t => t.id);
-    const fedRound1 = await federatedLearningService.executeFederatedRound(researchTenantIds);
+    const tenantIds = tenants.map(t => t.id);
+    const fedRound1 = await federatedLearningService.executeFederatedRound(tenantIds);
     console.log(`\n* Ronda Federada Global 1 Ejecutada:`);
     console.log(`   Tenants Participantes: ${fedRound1.participatingTenantsCount}`);
     console.log(`   Brier Score Global: ${fedRound1.globalBrierScore.toFixed(4)}`);
     console.log(`   Epsilon Gastado por Tenant: ${fedRound1.epsilonUsed} (DP-SGD Noise Scale: ${fedRound1.noiseScale})`);
     console.log(`   Pesos Globales Agregados:`, fedRound1.globalWeights);
 
-    console.log('\n================================----------------------------------------');
+    console.log('\n========================================================================');
     console.log('TODOS LOS EXPERIMENTOS SE COMPLETARON CON ÉXITO Y LOS DATOS ESTÁN LISTOS');
     console.log('========================================================================\n');
 }

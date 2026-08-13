@@ -1,81 +1,66 @@
 import { getRandomElement } from './utils.js';
-import { encryptSalary, decryptSalary } from '../../src/utils/encryption.js';
+import { decryptSalary } from '../../src/utils/encryption.js';
 
 export async function seedCoreRecords(prisma, employees) {
-    console.log('[CORE] Generando Registros Core (Contratos, Skills, Horarios)...');
+    console.log('[CORE] Generando Registros Core en Lote (Contratos, Skills, Horarios)...');
 
-    // Create Shifts
     let shiftMorning = await prisma.shift.findFirst({ where: { name: 'Matutino' } });
     if (!shiftMorning) {
         shiftMorning = await prisma.shift.create({ data: { name: 'Matutino', startTime: '08:00', endTime: '17:00' } });
     }
 
-    let shiftEvening = await prisma.shift.findFirst({ where: { name: 'Vespertino' } });
-    if (!shiftEvening) {
-        shiftEvening = await prisma.shift.create({ data: { name: 'Vespertino', startTime: '14:00', endTime: '22:00' } });
-    }
+    const contractsBatch = [];
+    const schedulesBatch = [];
+    const skillsBatch = [];
+    const historyBatch = [];
 
     for (const emp of employees) {
-        if (!emp.isActive) continue; // Basic records mostly for active, though terminated had them too.
+        if (!emp.isActive) continue;
 
-        try {
-            // 1. Contract
-            const existingContract = await prisma.contract.findFirst({ where: { employeeId: emp.id } });
-            if (!existingContract) {
-                const decSal = decryptSalary(emp.salary) || 1500;
-                await prisma.contract.create({
-                    data: {
-                        employeeId: emp.id,
-                        type: emp.contractType || 'Indefinido',
-                        startDate: emp.hireDate || new Date('2020-01-01'),
-                        salary: decSal,
-                        status: 'Active'
-                    }
-                });
-            }
+        const decSal = decryptSalary(emp.salary) || 1500;
+        contractsBatch.push({
+            employeeId: emp.id,
+            type: emp.contractType || 'Indefinido',
+            startDate: emp.hireDate || new Date('2020-01-01'),
+            salary: decSal,
+            status: 'Active'
+        });
 
-            // 2. Schedule
-            const existingSchedule = await prisma.employeeSchedule.findFirst({ where: { employeeId: emp.id } });
-            if (!existingSchedule) {
-                await prisma.employeeSchedule.create({
-                    data: {
-                        employeeId: emp.id,
-                        shiftId: shiftMorning.id,
-                        startDate: emp.hireDate || new Date('2020-01-01'), // Set to past date
-                        daysOfWeek: JSON.stringify(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"])
-                    }
-                });
-            }
+        schedulesBatch.push({
+            employeeId: emp.id,
+            shiftId: shiftMorning.id,
+            startDate: emp.hireDate || new Date('2020-01-01'),
+            daysOfWeek: JSON.stringify(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"])
+        });
 
-            // 3. Skills
-            const countSkills = await prisma.skill.count({ where: { employeeId: emp.id } });
-            if (countSkills === 0) {
-                await prisma.skill.createMany({
-                    data: [
-                        { employeeId: emp.id, name: 'Trabajo en Equipo', level: 'Advanced' },
-                        { employeeId: emp.id, name: 'Comunicación', level: 'Intermediate' },
-                        { employeeId: emp.id, name: 'Resolución de Problemas', level: getRandomElement(['Intermediate', 'Advanced']) }
-                    ]
-                });
-            }
+        skillsBatch.push(
+            { employeeId: emp.id, name: 'Trabajo en Equipo', level: 'Advanced' },
+            { employeeId: emp.id, name: 'Comunicación Efectiva', level: 'Intermediate' },
+            { employeeId: emp.id, name: 'Resolución de Problemas', level: getRandomElement(['Intermediate', 'Advanced']) }
+        );
 
-            // 4. Work History
-            const countHistory = await prisma.workHistory.count({ where: { employeeId: emp.id } });
-            if (countHistory === 0) {
-                await prisma.workHistory.create({
-                    data: {
-                        employeeId: emp.id,
-                        company: 'Tech Corp Anterior',
-                        position: 'Junior Dev',
-                        startDate: new Date('2020-01-01'),
-                        endDate: new Date('2022-01-01'),
-                        description: 'Desarrollo backend básico.'
-                    }
-                });
-            }
-
-        } catch (e) {
-            console.log(`Core records error for ${emp.email}: ${e.message}`);
-        }
+        historyBatch.push({
+            employeeId: emp.id,
+            company: 'Experiencia Previa Corporativa',
+            position: emp.position || 'Especialista',
+            startDate: new Date('2018-01-01'),
+            endDate: new Date('2020-01-01'),
+            description: 'Desempeño en proyectos previos del sector.'
+        });
     }
+
+    if (contractsBatch.length > 0) {
+        await prisma.contract.createMany({ data: contractsBatch, skipDuplicates: true });
+    }
+    if (schedulesBatch.length > 0) {
+        await prisma.employeeSchedule.createMany({ data: schedulesBatch, skipDuplicates: true });
+    }
+    if (skillsBatch.length > 0) {
+        await prisma.skill.createMany({ data: skillsBatch, skipDuplicates: true });
+    }
+    if (historyBatch.length > 0) {
+        await prisma.workHistory.createMany({ data: historyBatch, skipDuplicates: true });
+    }
+
+    console.log('✅ Registros core optimizados creados.');
 }

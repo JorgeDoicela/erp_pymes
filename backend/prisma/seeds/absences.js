@@ -1,8 +1,6 @@
 export async function seedAbsences(prisma, employees) {
     console.log('[ABSENCES] Generando Solicitudes de Ausencia Narrativas...');
 
-    const currentYear = new Date().getFullYear();
-
     const ABSENCE_PROFILES = [
         {
             email: 'kevin.arismendi@emplifi.com',
@@ -13,7 +11,7 @@ export async function seedAbsences(prisma, employees) {
             ]
         },
         {
-            email: 'lucia.paz@emplifi.com',
+            email: 'lucia.paz@techsolutions.ec',
             requests: [
                 { type: 'Personal', daysAgo: 60, duration: 2, status: 'APPROVED', reason: 'Asuntos familiares', comment: 'Aprobado' },
                 { type: 'Vacaciones', daysAgo: 30, duration: 3, status: 'REJECTED', reason: 'Vacaciones cortas', comment: 'Superposición con entregable de departamento' },
@@ -47,64 +45,58 @@ export async function seedAbsences(prisma, employees) {
             ]
         },
         {
-            email: 'roberto.guzman@emplifi.com',
+            email: 'roberto.guzman@techsolutions.ec',
             requests: [
                 { type: 'Vacaciones', daysAgo: 70, duration: 4, status: 'APPROVED', reason: 'Descanso de mitad de año', comment: 'Disfruta tus vacaciones' },
             ]
         }
     ];
 
+    const absencesBatch = [];
+
     for (const emp of employees) {
         if (!emp.isActive) continue;
 
-        try {
-            const count = await prisma.absenceRequest.count({ where: { employeeId: emp.id } });
-            if (count > 0) continue;
+        const profile = ABSENCE_PROFILES.find(p => p.email === emp.email);
 
-            const profile = ABSENCE_PROFILES.find(p => p.email === emp.email);
-
-            if (profile) {
-                for (const req of profile.requests) {
-                    const startDate = new Date();
-                    startDate.setDate(startDate.getDate() - req.daysAgo);
-                    const endDate = new Date(startDate);
-                    endDate.setDate(startDate.getDate() + req.duration - 1);
-
-                    await prisma.absenceRequest.create({
-                        data: {
-                            employeeId: emp.id,
-                            type: req.type,
-                            startDate: startDate,
-                            endDate: endDate,
-                            reason: req.reason,
-                            status: req.status,
-                            adminComment: req.comment
-                        }
-                    });
-                }
-            } else {
-                // Empleados estándar: 1 solicitud de vacaciones aprobada hace un par de meses
+        if (profile) {
+            for (const req of profile.requests) {
                 const startDate = new Date();
-                const offset = String(emp.id).charCodeAt(0) % 30;
-                startDate.setDate(startDate.getDate() - (40 + offset));
+                startDate.setDate(startDate.getDate() - req.daysAgo);
                 const endDate = new Date(startDate);
-                endDate.setDate(startDate.getDate() + 3);
+                endDate.setDate(startDate.getDate() + req.duration - 1);
 
-                await prisma.absenceRequest.create({
-                    data: {
-                        employeeId: emp.id,
-                        type: 'Vacaciones',
-                        startDate: startDate,
-                        endDate: endDate,
-                        reason: 'Vacaciones reglamentarias de descanso',
-                        status: 'APPROVED',
-                        adminComment: 'Disfruta tus vacaciones'
-                    }
+                absencesBatch.push({
+                    employeeId: emp.id,
+                    type: req.type,
+                    startDate: startDate,
+                    endDate: endDate,
+                    reason: req.reason,
+                    status: req.status,
+                    adminComment: req.comment
                 });
             }
-        } catch (e) {
-            console.error(`Error en seedAbsences para ${emp.email}: ${e.message}`);
+        } else {
+            const startDate = new Date();
+            const offset = String(emp.id).charCodeAt(0) % 30;
+            startDate.setDate(startDate.getDate() - (40 + offset));
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 3);
+
+            absencesBatch.push({
+                employeeId: emp.id,
+                type: 'Vacaciones',
+                startDate: startDate,
+                endDate: endDate,
+                reason: 'Vacaciones reglamentarias de descanso',
+                status: 'APPROVED',
+                adminComment: 'Disfruta tus vacaciones'
+            });
         }
     }
-    console.log('[ABSENCES] Solicitudes de ausencia narrativas generadas.');
+
+    if (absencesBatch.length > 0) {
+        await prisma.absenceRequest.createMany({ data: absencesBatch, skipDuplicates: true });
+    }
+    console.log('[ABSENCES] Solicitudes de ausencia narrativas generadas en lote.');
 }

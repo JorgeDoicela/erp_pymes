@@ -1,11 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { encrypt, encryptSalary } from '../../src/utils/encryption.js';
 
-// 10 empleados reales ecuatorianos + 1 admin
-// Contraseña de todos: Emplifi2025!
-// Correos: nombre.apellido@emplifi.com
-
-const EMPLOYEES = [
+// ── EMPRESA 1: Empresa Demo Ecuador S.A. (@emplifi.com) ──────────────────────
+const EMPLOYEES_EMPRESA_1 = [
     {
         firstName: 'Andrés',
         lastName: 'Morales',
@@ -178,25 +175,6 @@ const EMPLOYEES = [
         vacationDays: 15,
     },
     {
-        firstName: 'Paola',
-        lastName: 'Mendoza',
-        email: 'paola.mendoza@emplifi.com',
-        identityCard: '1701234567',
-        department: 'Finanzas',
-        position: 'Contadora General',
-        salary: 2000,
-        phone: '0901234567',
-        address: 'Calle Roca E4-25, Quito',
-        civilStatus: 'Casada',
-        contractType: 'Indefinido',
-        birthDate: new Date('1989-02-28'),
-        hireDate: new Date('2019-04-15'),
-        bankName: 'Banco Pichincha',
-        accountNumber: '1101234567',
-        accountType: 'Ahorros',
-        vacationDays: 15,
-    },
-    {
         firstName: 'Kevin',
         lastName: 'Arismendi',
         email: 'kevin.arismendi@emplifi.com',
@@ -209,70 +187,13 @@ const EMPLOYEES = [
         civilStatus: 'Soltero',
         contractType: 'Temporal',
         birthDate: new Date('2000-05-10'),
-        hireDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // 2 meses de antigüedad (Riesgo)
+        hireDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
         bankName: 'Produbanco',
         accountNumber: '1212121212',
         accountType: 'Ahorros',
         vacationDays: 15,
     },
-    {
-        firstName: 'Lucía',
-        lastName: 'Pazmiño',
-        email: 'lucia.paz@emplifi.com',
-        identityCard: '1788877766',
-        department: 'Marketing',
-        position: 'Asistente Creativo',
-        salary: 850,
-        phone: '0988877766',
-        address: 'Valle de los Chillos, Quito',
-        civilStatus: 'Soltera',
-        contractType: 'Indefinido',
-        birthDate: new Date('1992-10-12'),
-        hireDate: new Date('2018-01-01'), // > 5 años (Sin promoción = Riesgo)
-        bankName: 'Banco Pichincha',
-        accountNumber: '3434343434',
-        accountType: 'Ahorros',
-        vacationDays: 15,
-    },
-    {
-        firstName: 'Roberto',
-        lastName: 'Guzmán',
-        email: 'roberto.guzman@emplifi.com',
-        identityCard: '1777766655',
-        department: 'Ventas',
-        position: 'Gerente de Ventas',
-        salary: 3200,
-        phone: '0977766655',
-        address: 'Av. González Suárez, Quito',
-        civilStatus: 'Casado',
-        contractType: 'Indefinido',
-        birthDate: new Date('1984-11-20'),
-        hireDate: new Date('2021-03-01'),
-        bankName: 'Banco Guayaquil',
-        accountNumber: '5566778899',
-        accountType: 'Corriente',
-        vacationDays: 20,
-    },
-    {
-        firstName: 'Isabel',
-        lastName: 'Fuentes',
-        email: 'isabel.fuentes@emplifi.com',
-        identityCard: '1766655544',
-        department: 'Recursos Humanos',
-        position: 'Analista de Capacitación y Desarrollo',
-        salary: 1750,
-        phone: '0966655544',
-        address: 'Av. Eloy Alfaro, Quito',
-        civilStatus: 'Soltera',
-        contractType: 'Indefinido',
-        birthDate: new Date('1994-05-14'),
-        hireDate: new Date('2022-09-15'),
-        bankName: 'Produbanco',
-        accountNumber: '6677889900',
-        accountType: 'Ahorros',
-        vacationDays: 15,
-    },
-    // Ex-empleados desvinculados para generar tendencia de rotación histórica real en los últimos 6 meses
+    // Ex-empleados Empresa 1
     {
         firstName: 'Carlos',
         lastName: 'Pérez',
@@ -287,7 +208,7 @@ const EMPLOYEES = [
         contractType: 'Temporal',
         birthDate: new Date('1993-01-10'),
         hireDate: new Date('2023-01-01'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 10), // Hace 5 meses (1 salida)
+        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 10),
         isActive: false,
         bankName: 'Banco Pichincha',
         accountNumber: '1111222233',
@@ -308,7 +229,7 @@ const EMPLOYEES = [
         contractType: 'Indefinido',
         birthDate: new Date('1995-06-12'),
         hireDate: new Date('2022-04-01'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 4, 15), // Hace 4 meses (1 salida)
+        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 4, 15),
         isActive: false,
         bankName: 'Produbanco',
         accountNumber: '2222333344',
@@ -329,7 +250,7 @@ const EMPLOYEES = [
         contractType: 'Temporal',
         birthDate: new Date('1997-09-05'),
         hireDate: new Date('2023-05-01'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 3, 20), // Hace 3 meses (2 salidas)
+        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 3, 20),
         isActive: false,
         bankName: 'Banco Guayaquil',
         accountNumber: '3333444455',
@@ -350,20 +271,196 @@ const EMPLOYEES = [
         contractType: 'Temporal',
         birthDate: new Date('1998-03-22'),
         hireDate: new Date('2023-06-01'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 3, 28), // Hace 3 meses (2 salidas)
+        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 3, 28),
         isActive: false,
         bankName: 'Produbanco',
         accountNumber: '4444555566',
         accountType: 'Ahorros',
         vacationDays: 0,
+    }
+];
+
+// ── EMPRESA 2: TechSolutions Cía. Ltda. (@techsolutions.ec) ──────────────────
+const EMPLOYEES_EMPRESA_2 = [
+    {
+        firstName: 'Francisco',
+        lastName: 'Jaramillo',
+        email: 'francisco.jaramillo@techsolutions.ec',
+        identityCard: '1791112233',
+        department: 'Desarrollo',
+        position: 'Tech Lead Backend',
+        salary: 2800,
+        phone: '0995551122',
+        address: 'Calle La Niña y Eloy Alfaro, Quito',
+        civilStatus: 'Casado',
+        contractType: 'Indefinido',
+        birthDate: new Date('1987-10-10'),
+        hireDate: new Date('2020-02-01'),
+        bankName: 'Banco Pichincha',
+        accountNumber: '9988112233',
+        accountType: 'Corriente',
+        vacationDays: 18,
     },
+    {
+        firstName: 'Andrea',
+        lastName: 'Benítez',
+        email: 'andrea.benitez@techsolutions.ec',
+        identityCard: '1792223344',
+        department: 'Producto',
+        position: 'Product Owner',
+        salary: 2400,
+        phone: '0984442233',
+        address: 'Av. Orellana E4-12, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Indefinido',
+        birthDate: new Date('1991-05-18'),
+        hireDate: new Date('2021-04-15'),
+        bankName: 'Produbanco',
+        accountNumber: '8877223344',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Ricardo',
+        lastName: 'Andrade',
+        email: 'ricardo.andrade@techsolutions.ec',
+        identityCard: '1793334455',
+        department: 'Calidad',
+        position: 'Lead QA Engineer',
+        salary: 2100,
+        phone: '0973332211',
+        address: 'Av. 12 de Octubre, Quito',
+        civilStatus: 'Casado',
+        contractType: 'Indefinido',
+        birthDate: new Date('1989-12-03'),
+        hireDate: new Date('2020-11-01'),
+        bankName: 'Banco Guayaquil',
+        accountNumber: '7766334455',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Lucía',
+        lastName: 'Pazmiño',
+        email: 'lucia.paz@techsolutions.ec',
+        identityCard: '1788877766',
+        department: 'Marketing',
+        position: 'Marketing Specialist',
+        salary: 1750,
+        phone: '0988877766',
+        address: 'Valle de los Chillos, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Indefinido',
+        birthDate: new Date('1992-10-12'),
+        hireDate: new Date('2018-01-01'),
+        bankName: 'Banco Pichincha',
+        accountNumber: '3434343434',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Isabel',
+        lastName: 'Fuentes',
+        email: 'isabel.fuentes@techsolutions.ec',
+        identityCard: '1766655544',
+        department: 'Recursos Humanos',
+        position: 'Talent Acquisition Specialist',
+        salary: 1850,
+        phone: '0966655544',
+        address: 'Av. Eloy Alfaro, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Indefinido',
+        birthDate: new Date('1994-05-14'),
+        hireDate: new Date('2022-09-15'),
+        bankName: 'Produbanco',
+        accountNumber: '6677889900',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Miguel',
+        lastName: 'Cueva',
+        email: 'miguel.cueva@techsolutions.ec',
+        identityCard: '1794445566',
+        department: 'Desarrollo',
+        position: 'Frontend Senior',
+        salary: 2300,
+        phone: '0951112233',
+        address: 'Av. Granda Centeno, Quito',
+        civilStatus: 'Soltero',
+        contractType: 'Indefinido',
+        birthDate: new Date('1993-02-24'),
+        hireDate: new Date('2021-08-01'),
+        bankName: 'Banco Internacional',
+        accountNumber: '5544332211',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Cristina',
+        lastName: 'Solano',
+        email: 'cristina.solano@techsolutions.ec',
+        identityCard: '1795556677',
+        department: 'Ventas Tech',
+        position: 'Account Executive',
+        salary: 1950,
+        phone: '0942223344',
+        address: 'Cumbayá, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Indefinido',
+        birthDate: new Date('1995-09-08'),
+        hireDate: new Date('2022-03-01'),
+        bankName: 'Banco del Pacífico',
+        accountNumber: '4433221100',
+        accountType: 'Corriente',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Santiago',
+        lastName: 'Vaca',
+        email: 'santiago.vaca@techsolutions.ec',
+        identityCard: '1796667788',
+        department: 'Infraestructura',
+        position: 'Cloud Architect',
+        salary: 2700,
+        phone: '0938889900',
+        address: 'Tumbaco, Quito',
+        civilStatus: 'Casado',
+        contractType: 'Indefinido',
+        birthDate: new Date('1986-07-14'),
+        hireDate: new Date('2019-11-15'),
+        bankName: 'Banco Pichincha',
+        accountNumber: '3322110099',
+        accountType: 'Corriente',
+        vacationDays: 18,
+    },
+    {
+        firstName: 'Roberto',
+        lastName: 'Guzmán',
+        email: 'roberto.guzman@techsolutions.ec',
+        identityCard: '1777766655',
+        department: 'Ventas Tech',
+        position: 'Gerente Comercial Tech',
+        salary: 3200,
+        phone: '0977766655',
+        address: 'Av. González Suárez, Quito',
+        civilStatus: 'Casado',
+        contractType: 'Indefinido',
+        birthDate: new Date('1984-11-20'),
+        hireDate: new Date('2021-03-01'),
+        bankName: 'Banco Guayaquil',
+        accountNumber: '5566778899',
+        accountType: 'Corriente',
+        vacationDays: 20,
+    },
+    // Ex-empleados Empresa 2
     {
         firstName: 'Esteban',
         lastName: 'Ríos',
-        email: 'esteban.rios.ex@emplifi.com',
+        email: 'esteban.rios.ex@techsolutions.ec',
         identityCard: '1711100099',
-        department: 'Ventas',
-        position: 'Ejecutivo de Ventas Senior',
+        department: 'Ventas Tech',
+        position: 'Ejecutivo Senior Ex',
         salary: 1800,
         phone: '0911100099',
         address: 'Quito',
@@ -371,7 +468,7 @@ const EMPLOYEES = [
         contractType: 'Indefinido',
         birthDate: new Date('1990-11-30'),
         hireDate: new Date('2021-08-01'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 12), // Hace 2 meses (2 salidas)
+        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 12),
         isActive: false,
         bankName: 'Banco Pichincha',
         accountNumber: '5555666677',
@@ -381,10 +478,10 @@ const EMPLOYEES = [
     {
         firstName: 'Diana',
         lastName: 'Mejía',
-        email: 'diana.mejia.ex@emplifi.com',
+        email: 'diana.mejia.ex@techsolutions.ec',
         identityCard: '1700099988',
-        department: 'Tecnología',
-        position: 'QA Tester',
+        department: 'Calidad',
+        position: 'QA Tester Ex',
         salary: 1500,
         phone: '0900099988',
         address: 'Quito',
@@ -392,7 +489,7 @@ const EMPLOYEES = [
         contractType: 'Indefinido',
         birthDate: new Date('1994-08-18'),
         hireDate: new Date('2022-11-01'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 25), // Hace 2 meses (2 salidas)
+        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 25),
         isActive: false,
         bankName: 'Banco Internacional',
         accountNumber: '6666777788',
@@ -400,54 +497,12 @@ const EMPLOYEES = [
         vacationDays: 0,
     },
     {
-        firstName: 'Gonzalo',
-        lastName: 'Alvarado',
-        email: 'gonzalo.alvarado.ex@emplifi.com',
-        identityCard: '1799900011',
-        department: 'Marketing',
-        position: 'Analista SEO',
-        salary: 1600,
-        phone: '0999900011',
-        address: 'Quito',
-        civilStatus: 'Soltero',
-        contractType: 'Indefinido',
-        birthDate: new Date('1992-04-14'),
-        hireDate: new Date('2022-01-15'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 5), // Hace 1 mes (3 salidas)
-        isActive: false,
-        bankName: 'Banco Pichincha',
-        accountNumber: '7777888899',
-        accountType: 'Ahorros',
-        vacationDays: 0,
-    },
-    {
-        firstName: 'Elena',
-        lastName: 'Salgado',
-        email: 'elena.salgado.ex@emplifi.com',
-        identityCard: '1788800022',
-        department: 'Ventas',
-        position: 'Asistente Comercial',
-        salary: 1200,
-        phone: '0988800022',
-        address: 'Quito',
-        civilStatus: 'Soltera',
-        contractType: 'Temporal',
-        birthDate: new Date('1996-07-28'),
-        hireDate: new Date('2023-04-01'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 18), // Hace 1 mes (3 salidas)
-        isActive: false,
-        bankName: 'Produbanco',
-        accountNumber: '8888999900',
-        accountType: 'Ahorros',
-        vacationDays: 0,
-    },
-    {
         firstName: 'Víctor',
         lastName: 'Paredes',
-        email: 'victor.paredes.ex@emplifi.com',
+        email: 'victor.paredes.ex@techsolutions.ec',
         identityCard: '1777700033',
-        department: 'Tecnología',
-        position: 'Junior Frontend',
+        department: 'Desarrollo',
+        position: 'Junior Frontend Ex',
         salary: 1000,
         phone: '0977700033',
         address: 'Quito',
@@ -455,20 +510,20 @@ const EMPLOYEES = [
         contractType: 'Temporal',
         birthDate: new Date('1999-12-05'),
         hireDate: new Date('2023-09-01'),
-        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 28), // Hace 1 mes (3 salidas)
+        exitDate: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 28),
         isActive: false,
         bankName: 'Banco Guayaquil',
         accountNumber: '9999000011',
         accountType: 'Ahorros',
         vacationDays: 0,
-    },
+    }
 ];
 
 export async function seedUsers(prisma) {
-    console.log('[USERS] Creando Tenants Multi-Empresa, SuperAdmin, Admins de Tenant y Colaboradores...');
+    console.log('[USERS] Configurando exactamente 2 Empresas SaaS con sus equipos completos...');
     const password = await bcrypt.hash('Emplifi2025!', 10);
 
-    // ── Tenants SaaS Variados (Multi-Tenant Ecosystem) ──────────────────────────
+    // ── 1. EXACTAMENTE 2 TENANTS / EMPRESAS ───────────────────────────────────
     const TENANTS_TO_SEED = [
         {
             name: 'Empresa Demo Ecuador S.A.',
@@ -485,64 +540,34 @@ export async function seedUsers(prisma) {
             ruc: '1798765432001',
             plan: 'GROWTH',
             subscriptionStatus: 'ACTIVE',
-            maxEmployees: 100,
+            maxEmployees: 50,
             trialEndsAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
-        },
-        {
-            name: 'Logística & Transporte EcuaExpress',
-            slug: 'ecua-express',
-            ruc: '1791122334001',
-            plan: 'ESSENTIAL',
-            subscriptionStatus: 'TRIAL',
-            maxEmployees: 25,
-            trialEndsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // Próxima a vencer (< 7 días)
-        },
-        {
-            name: 'Andina Retail Corp',
-            slug: 'andina-retail',
-            ruc: '1795566778001',
-            plan: 'GROWTH',
-            subscriptionStatus: 'SUSPENDED',
-            maxEmployees: 100,
-            trialEndsAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
-        },
-        {
-            name: 'Innovación Médica BioSalud',
-            slug: 'biosalud-ec',
-            ruc: '1799988776001',
-            plan: 'ESSENTIAL',
-            subscriptionStatus: 'TRIAL',
-            maxEmployees: 25,
-            trialEndsAt: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000)
         }
     ];
 
-    let defaultTenant;
+    let tenant1, tenant2;
     for (const t of TENANTS_TO_SEED) {
-        try {
-            const created = await prisma.tenant.upsert({
-                where: { slug: t.slug },
-                update: {
-                    plan: t.plan,
-                    subscriptionStatus: t.subscriptionStatus,
-                    maxEmployees: t.maxEmployees,
-                    trialEndsAt: t.trialEndsAt
-                },
-                create: t
-            });
-            if (t.slug === 'empresa-demo') defaultTenant = created;
-            console.log(`✅ Tenant Creado: ${created.name} (${created.slug} - ${created.plan})`);
-        } catch (e) {
-            console.log(`⚠️ Tenant ${t.slug} error: ` + e.message);
-        }
+        const created = await prisma.tenant.upsert({
+            where: { slug: t.slug },
+            update: {
+                name: t.name,
+                ruc: t.ruc,
+                plan: t.plan,
+                subscriptionStatus: t.subscriptionStatus,
+                maxEmployees: t.maxEmployees,
+                trialEndsAt: t.trialEndsAt
+            },
+            create: t
+        });
+        if (t.slug === 'empresa-demo') tenant1 = created;
+        if (t.slug === 'tech-solutions') tenant2 = created;
+        console.log(`✅ Tenant Creado/Actualizado: ${created.name} (${created.slug})`);
     }
 
-    const tenantId = defaultTenant?.id || null;
-
-    // ── Admin ──────────────────────────────────────────────────────────────────
-    let admin;
+    // ── 2. SUPERADMIN GLOBAL ──────────────────────────────────────────────────
+    let superAdmin;
     try {
-        admin = await prisma.employee.upsert({
+        superAdmin = await prisma.employee.upsert({
             where: { email: 'admin@emplifi.com' },
             update: { password, tenantId: null, role: 'superadmin' },
             create: {
@@ -562,192 +587,310 @@ export async function seedUsers(prisma) {
                 address: 'Plataforma Emplifi',
                 phone: '0999999999',
                 civilStatus: 'Soltero',
-                contractType: 'SaaS Platform Owner',
+                contractType: 'SaaS Owner',
                 bankName: encrypt('N/A'),
                 accountNumber: encrypt('N/A'),
                 accountType: 'N/A',
                 vacationDays: 0,
             }
         });
-        console.log('✅ SuperAdmin: admin@emplifi.com / Emplifi2025!');
+        console.log('✅ SuperAdmin Global: admin@emplifi.com / Emplifi2025!');
     } catch (e) {
-        console.log('⚠️ Admin creation failed: ' + e.message);
-        admin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
+        superAdmin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
     }
 
-    // ── Tenant Admin (Administrador de Empresa Demo) ─────────────────────────
-    let tenantAdmin;
-    try {
-        tenantAdmin = await prisma.employee.upsert({
-            where: { email: 'admin.empresa@emplifi.com' },
-            update: { password, tenantId, role: 'admin' },
-            create: {
-                tenantId,
-                firstName: 'Administrador',
-                lastName: 'Empresa',
-                email: 'admin.empresa@emplifi.com',
-                role: 'admin',
-                department: 'Administración',
-                position: 'Gerente General',
-                salary: encryptSalary(3500),
-                password,
-                identityCard: '1711111111',
-                birthDate: new Date('1985-04-12'),
-                hireDate: new Date('2020-01-01'),
-                isActive: true,
-                address: 'Av. República del Salvador, Quito',
-                phone: '0991111111',
-                civilStatus: 'Casado',
-                contractType: 'Indefinido',
-                bankName: encrypt('Banco Pichincha'),
-                accountNumber: encrypt('1111222233'),
-                accountType: 'Corriente',
-                vacationDays: 15,
-            }
-        });
-        console.log('✅ Tenant Admin: admin.empresa@emplifi.com / Emplifi2025!');
-    } catch (e) {
-        console.log('⚠️ Tenant Admin creation failed: ' + e.message);
-    }
+    // ── 3. EMPRESA 1: Ecosistema de Usuarios y Roles ─────────────────────────
+    const tenant1Employees = [];
 
-    // ── 10 Empleados ──────────────────────────────────────────────────────────
-    const employees = [];
-    for (const emp of EMPLOYEES) {
-        try {
-            const created = await prisma.employee.upsert({
-                where: { email: emp.email },
-                update: { password, tenantId },
-                create: {
-                    tenantId,
-                    firstName: emp.firstName,
-                    lastName: emp.lastName,
-                    email: emp.email,
-                    password,
-                    role: 'employee',
-                    department: emp.department,
-                    position: emp.position,
-                    salary: encryptSalary(emp.salary),
-                    identityCard: emp.identityCard,
-                    birthDate: emp.birthDate,
-                    hireDate: emp.hireDate,
-                    exitDate: emp.exitDate || null,
-                    isActive: emp.isActive !== undefined ? emp.isActive : true,
-                    address: emp.address,
-                    phone: emp.phone,
-                    civilStatus: emp.civilStatus,
-                    contractType: emp.contractType,
-                    bankName: encrypt(emp.bankName),
-                    accountNumber: encrypt(emp.accountNumber),
-                    accountType: emp.accountType,
-                    vacationDays: emp.vacationDays,
-                }
-            });
-            employees.push(created);
-            console.log(`✅ ${emp.firstName} ${emp.lastName}: ${emp.email} / Emplifi2025!`);
-        } catch (e) {
-            console.log(`⚠️ Error creando ${emp.email}: ${e.message}`);
+    // Admin Empresa 1
+    const admin1 = await prisma.employee.upsert({
+        where: { email: 'admin.empresa@emplifi.com' },
+        update: { password, tenantId: tenant1.id, role: 'admin' },
+        create: {
+            tenantId: tenant1.id,
+            firstName: 'Carlos',
+            lastName: 'Mendoza',
+            email: 'admin.empresa@emplifi.com',
+            role: 'admin',
+            department: 'Administración',
+            position: 'Gerente General',
+            salary: encryptSalary(3500),
+            password,
+            identityCard: '1711111111',
+            birthDate: new Date('1985-04-12'),
+            hireDate: new Date('2020-01-01'),
+            isActive: true,
+            address: 'Av. República del Salvador, Quito',
+            phone: '0991111111',
+            civilStatus: 'Casado',
+            contractType: 'Indefinido',
+            bankName: encrypt('Banco Pichincha'),
+            accountNumber: encrypt('1111222233'),
+            accountType: 'Corriente',
+            vacationDays: 15,
         }
-    }
+    });
+    tenant1Employees.push(admin1);
 
-    // ── Contador ─────────────────────────────────────────────────────────────
-    let accountant;
-    try {
-        accountant = await prisma.employee.upsert({
-            where: { email: 'contabilidad@emplifi.com' },
-            update: { password, tenantId },
+    // Contador Empresa 1
+    const accountant1 = await prisma.employee.upsert({
+        where: { email: 'contabilidad@emplifi.com' },
+        update: { password, tenantId: tenant1.id, role: 'accounting' },
+        create: {
+            tenantId: tenant1.id,
+            firstName: 'Ana',
+            lastName: 'Torres',
+            email: 'contabilidad@emplifi.com',
+            role: 'accounting',
+            department: 'Finanzas',
+            position: 'Contadora Senior',
+            salary: encryptSalary(2500),
+            password,
+            identityCard: '1799999999',
+            birthDate: new Date('1985-05-20'),
+            hireDate: new Date('2019-01-15'),
+            isActive: true,
+            address: 'Av. Gran Colombia, Quito',
+            phone: '0988888888',
+            civilStatus: 'Casada',
+            contractType: 'Indefinido',
+            bankName: encrypt('Banco Guayaquil'),
+            accountNumber: encrypt('9988776655'),
+            accountType: 'Corriente',
+            vacationDays: 15,
+        }
+    });
+    tenant1Employees.push(accountant1);
+
+    // Emprendedor Empresa 1
+    const entrepreneur1 = await prisma.employee.upsert({
+        where: { email: 'emprendedor@emplifi.com' },
+        update: { password, tenantId: tenant1.id, role: 'entrepreneur' },
+        create: {
+            tenantId: tenant1.id,
+            firstName: 'Gabriel',
+            lastName: 'Silva',
+            email: 'emprendedor@emplifi.com',
+            role: 'entrepreneur',
+            department: 'Innovación',
+            position: 'Gestor de Incubadora',
+            salary: encryptSalary(2800),
+            password,
+            identityCard: '1788888888',
+            birthDate: new Date('1988-08-08'),
+            hireDate: new Date('2023-01-01'),
+            isActive: true,
+            address: 'Cumbayá, Quito',
+            phone: '0977777777',
+            civilStatus: 'Soltero',
+            contractType: 'Indefinido',
+            bankName: encrypt('Banco del Pacífico'),
+            accountNumber: encrypt('1122334455'),
+            accountType: 'Ahorros',
+            vacationDays: 15,
+        }
+    });
+    tenant1Employees.push(entrepreneur1);
+
+    // Empleados Empresa 1
+    for (const emp of EMPLOYEES_EMPRESA_1) {
+        const created = await prisma.employee.upsert({
+            where: { email: emp.email },
+            update: { password, tenantId: tenant1.id },
             create: {
-                tenantId,
-                firstName: 'Ana',
-                lastName: 'Contadora',
-                email: 'contabilidad@emplifi.com',
-                role: 'accounting',
-                department: 'Finanzas',
-                position: 'Contadora Senior',
-                salary: encryptSalary(2500),
+                tenantId: tenant1.id,
+                firstName: emp.firstName,
+                lastName: emp.lastName,
+                email: emp.email,
                 password,
-                identityCard: '1799999999',
-                birthDate: new Date('1985-05-20'),
-                hireDate: new Date('2019-01-15'),
-                isActive: true,
-                address: 'Av. Gran Colombia, Quito',
-                phone: '0988888888',
-                civilStatus: 'Casada',
-                contractType: 'Indefinido',
-                bankName: encrypt('Banco Guayaquil'),
-                accountNumber: encrypt('9988776655'),
-                accountType: 'Corriente',
-                vacationDays: 15,
+                role: 'employee',
+                department: emp.department,
+                position: emp.position,
+                salary: encryptSalary(emp.salary),
+                identityCard: emp.identityCard,
+                birthDate: emp.birthDate,
+                hireDate: emp.hireDate,
+                exitDate: emp.exitDate || null,
+                isActive: emp.isActive !== undefined ? emp.isActive : true,
+                address: emp.address,
+                phone: emp.phone,
+                civilStatus: emp.civilStatus,
+                contractType: emp.contractType,
+                bankName: encrypt(emp.bankName),
+                accountNumber: encrypt(emp.accountNumber),
+                accountType: emp.accountType,
+                vacationDays: emp.vacationDays,
             }
         });
-        console.log('✅ Contabilidad: contabilidad@emplifi.com / Emplifi2025!');
-    } catch (e) {
-        console.log('⚠️ Accountant creation failed: ' + e.message);
+        tenant1Employees.push(created);
     }
+    console.log(`✅ Empresa 1 (${tenant1.name}): ${tenant1Employees.length} colaboradores creados.`);
 
-    // ── Emprendedor ──────────────────────────────────────────────────────────
-    let entrepreneur;
-    try {
-        entrepreneur = await prisma.employee.upsert({
-            where: { email: 'emprendedor@emplifi.com' },
-            update: { password, tenantId },
+    // ── 4. EMPRESA 2: Ecosistema de Usuarios y Roles ─────────────────────────
+    const tenant2Employees = [];
+
+    // Admin Empresa 2
+    const admin2 = await prisma.employee.upsert({
+        where: { email: 'admin.tech@techsolutions.ec' },
+        update: { password, tenantId: tenant2.id, role: 'admin' },
+        create: {
+            tenantId: tenant2.id,
+            firstName: 'Roberto',
+            lastName: 'Guzmán',
+            email: 'admin.tech@techsolutions.ec',
+            role: 'admin',
+            department: 'Administración',
+            position: 'Director Ejecutivo',
+            salary: encryptSalary(3800),
+            password,
+            identityCard: '1722222222',
+            birthDate: new Date('1984-02-14'),
+            hireDate: new Date('2019-06-01'),
+            isActive: true,
+            address: 'Av. González Suárez, Quito',
+            phone: '0992222222',
+            civilStatus: 'Casado',
+            contractType: 'Indefinido',
+            bankName: encrypt('Banco Pichincha'),
+            accountNumber: encrypt('2222333344'),
+            accountType: 'Corriente',
+            vacationDays: 20,
+        }
+    });
+    tenant2Employees.push(admin2);
+
+    // Contador Empresa 2
+    const accountant2 = await prisma.employee.upsert({
+        where: { email: 'contabilidad.tech@techsolutions.ec' },
+        update: { password, tenantId: tenant2.id, role: 'accounting' },
+        create: {
+            tenantId: tenant2.id,
+            firstName: 'Paola',
+            lastName: 'Mendoza',
+            email: 'contabilidad.tech@techsolutions.ec',
+            role: 'accounting',
+            department: 'Finanzas',
+            position: 'Contadora General Tech',
+            salary: encryptSalary(2600),
+            password,
+            identityCard: '1733333333',
+            birthDate: new Date('1989-03-28'),
+            hireDate: new Date('2020-08-15'),
+            isActive: true,
+            address: 'Calle Roca E4-25, Quito',
+            phone: '0983333333',
+            civilStatus: 'Casada',
+            contractType: 'Indefinido',
+            bankName: encrypt('Produbanco'),
+            accountNumber: encrypt('3333444455'),
+            accountType: 'Corriente',
+            vacationDays: 15,
+        }
+    });
+    tenant2Employees.push(accountant2);
+
+    // Emprendedor Empresa 2
+    const entrepreneur2 = await prisma.employee.upsert({
+        where: { email: 'innovacion.tech@techsolutions.ec' },
+        update: { password, tenantId: tenant2.id, role: 'entrepreneur' },
+        create: {
+            tenantId: tenant2.id,
+            firstName: 'Patricio',
+            lastName: 'Villarreal',
+            email: 'innovacion.tech@techsolutions.ec',
+            role: 'entrepreneur',
+            department: 'Innovación',
+            position: 'Líder Lab de Innovación',
+            salary: encryptSalary(2900),
+            password,
+            identityCard: '1744444444',
+            birthDate: new Date('1987-11-11'),
+            hireDate: new Date('2022-01-10'),
+            isActive: true,
+            address: 'Tumbaco, Quito',
+            phone: '0974444444',
+            civilStatus: 'Soltero',
+            contractType: 'Indefinido',
+            bankName: encrypt('Banco Guayaquil'),
+            accountNumber: encrypt('4444555566'),
+            accountType: 'Ahorros',
+            vacationDays: 15,
+        }
+    });
+    tenant2Employees.push(entrepreneur2);
+
+    // Empleados Empresa 2
+    for (const emp of EMPLOYEES_EMPRESA_2) {
+        const created = await prisma.employee.upsert({
+            where: { email: emp.email },
+            update: { password, tenantId: tenant2.id },
             create: {
-                tenantId,
-                firstName: 'Carlos',
-                lastName: 'Emprendedor',
-                email: 'emprendedor@emplifi.com',
-                role: 'entrepreneur',
-                department: 'Innovación',
-                position: 'Gestor de Incuadora',
-                salary: encryptSalary(2800),
+                tenantId: tenant2.id,
+                firstName: emp.firstName,
+                lastName: emp.lastName,
+                email: emp.email,
                 password,
-                identityCard: '1788888888',
-                birthDate: new Date('1988-08-08'),
-                hireDate: new Date('2023-01-01'),
-                isActive: true,
-                address: 'Cumbayá, Quito',
-                phone: '0977777777',
-                civilStatus: 'Soltero',
-                contractType: 'Indefinido',
-                bankName: encrypt('Banco del Pacífico'),
-                accountNumber: encrypt('1122334455'),
-                accountType: 'Ahorros',
-                vacationDays: 15,
+                role: 'employee',
+                department: emp.department,
+                position: emp.position,
+                salary: encryptSalary(emp.salary),
+                identityCard: emp.identityCard,
+                birthDate: emp.birthDate,
+                hireDate: emp.hireDate,
+                exitDate: emp.exitDate || null,
+                isActive: emp.isActive !== undefined ? emp.isActive : true,
+                address: emp.address,
+                phone: emp.phone,
+                civilStatus: emp.civilStatus,
+                contractType: emp.contractType,
+                bankName: encrypt(emp.bankName),
+                accountNumber: encrypt(emp.accountNumber),
+                accountType: emp.accountType,
+                vacationDays: emp.vacationDays,
             }
         });
-        console.log('✅ Emprendimiento: emprendedor@emplifi.com / Emplifi2025!');
-    } catch (e) {
-        console.log('⚠️ Entrepreneur creation failed: ' + e.message);
+        tenant2Employees.push(created);
     }
+    console.log(`✅ Empresa 2 (${tenant2.name}): ${tenant2Employees.length} colaboradores creados.`);
 
-    // ── System Settings ───────────────────────────────────────────────────────
-    try {
-        await prisma.systemSetting.upsert({
-            where: { id: 'default' },
-            update: { tenantId },
-            create: {
-                id: 'default',
-                tenantId,
-                maintenanceMode: false,
-                biometricEnabled: false,
-                maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
-            }
-        });
-    } catch (e) {
-        console.log('⚠️ System Settings failed: ' + e.message);
-    }
+    // ── System Settings por Tenant ───────────────────────────────────────────
+    await prisma.systemSetting.deleteMany({ where: { tenantId: { in: [tenant1.id, tenant2.id] } } });
+    await prisma.systemSetting.create({
+        data: {
+            id: 'setting-empresa-demo',
+            tenantId: tenant1.id,
+            maintenanceMode: false,
+            biometricEnabled: true,
+            maintenanceMessage: 'Empresa Demo Ecuador S.A. - Operativo',
+        }
+    });
 
-    // Obtener la lista real y actualizada de todos los empleados en BD
+    await prisma.systemSetting.create({
+        data: {
+            id: 'setting-tech-solutions',
+            tenantId: tenant2.id,
+            maintenanceMode: false,
+            biometricEnabled: true,
+            maintenanceMessage: 'TechSolutions Cía. Ltda. - Operativo',
+        }
+    });
+
     const allUsers = await prisma.employee.findMany();
-    const freshAdmin = allUsers.find(e => e.role === 'admin') || admin;
-    const freshAccountant = allUsers.find(e => e.role === 'accounting') || accountant;
-    const freshEntrepreneur = allUsers.find(e => e.role === 'entrepreneur') || entrepreneur;
-    const freshEmployees = allUsers.filter(e => e.role === 'employee');
 
     return {
-        admin: freshAdmin,
-        employees: freshEmployees,
-        accountant: freshAccountant,
-        entrepreneur: freshEntrepreneur,
-        allUsers
+        tenant1,
+        tenant2,
+        superAdmin,
+        admin1,
+        admin2,
+        accountant1,
+        accountant2,
+        entrepreneur1,
+        entrepreneur2,
+        tenant1Employees,
+        tenant2Employees,
+        allEmployees: allUsers,
+        admin: admin1,
+        employees: tenant1Employees
     };
 }

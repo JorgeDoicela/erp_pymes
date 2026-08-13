@@ -17,8 +17,7 @@ import { seedPayrollConfig } from './seeds/payroll_config.js';
 import { seedNotifications } from './seeds/notifications.js';
 import { seedAccounting, seedJournalEntries } from './seeds/accounting.js';
 import { seedEntrepreneurship } from './seeds/entrepreneurship.js';
-
-// ─── Utilidades de conexión ───────────────────────────────────────────────────
+import { seedResearchData } from './seeds/research_data.js';
 
 function createPrisma() {
     return new PrismaClient({
@@ -31,10 +30,6 @@ function createPrisma() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/**
- * Ejecuta una función con reintentos automáticos en caso de error de conexión.
- * Crea un Prisma fresco en cada intento.
- */
 async function withRetry(label, fn, maxRetries = 5) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         const prisma = createPrisma();
@@ -50,7 +45,7 @@ async function withRetry(label, fn, maxRetries = 5) {
                 e.message?.includes('Connection terminated');
 
             if (isConnError && attempt < maxRetries) {
-                const waitMs = attempt * 2000; // 2s, 4s, 6s, 8s...
+                const waitMs = attempt * 2000;
                 console.log(`⚠️  [${label}] Error de conexión (intento ${attempt}/${maxRetries}). Reintentando en ${waitMs / 1000}s...`);
                 await sleep(waitMs);
             } else {
@@ -63,125 +58,109 @@ async function withRetry(label, fn, maxRetries = 5) {
     }
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 async function main() {
-    console.log('╔══════════════════════════════════════╗');
-    console.log('║       EMPLIFI — SEED COMPLETO        ║');
-    console.log('╚══════════════════════════════════════╝');
+    console.log('╔════════════════════════════════════════════════════════════╗');
+    console.log('║   EMPLIFI — SEED COMPLETO (2 EMPRESAS REALES CON DATOS)    ║');
+    console.log('╚════════════════════════════════════════════════════════════╝');
 
-    // Verificar conexión inicial
     console.log('\n🔌 Verificando conexión a la base de datos...');
     await withRetry('TEST_CONN', async (prisma) => {
         await prisma.$queryRaw`SELECT 1`;
         console.log('✅ Conexión establecida correctamente.');
     });
 
-    // 1. Limpiar TODA la BD antes de recrear
-    console.log('\n[1/9] Limpiando base de datos...');
+    // 1. Limpieza
+    console.log('\n[1/12] Limpiando base de datos...');
     await withRetry('CLEANUP', (prisma) => seedCleanup(prisma));
+    await sleep(1000);
 
-    // Pausa entre fases para que el pooler no cierre la conexión
-    await sleep(1500);
-
-    // 2. Crear Admin + 10 Empleados reales + System Settings
-    console.log('\n[2/9] Creando usuarios...');
-    let admin, employees, accountant, entrepreneur, allEmployees;
+    // 2. Usuarios y Tenants (2 Empresas)
+    console.log('\n[2/12] Creando 2 Empresas y sus Colaboradores...');
+    let seedUsersResult;
     await withRetry('USERS', async (prisma) => {
-        const result = await seedUsers(prisma);
-        admin = result.admin;
-        employees = result.employees;
-        accountant = result.accountant;
-        entrepreneur = result.entrepreneur;
-        allEmployees = result.allUsers || [admin, ...employees, accountant, entrepreneur].filter(Boolean);
+        seedUsersResult = await seedUsers(prisma);
     });
 
-    if (!admin) {
-        console.error('❌ Admin no encontrado. Abortando seed.');
-        process.exit(1);
-    }
-
-    console.log(`\n✅ Total de empleados para seed (Admin, Staff, Contabilidad, Emprendimiento): ${allEmployees.length}`);
-    await sleep(1500);
-
-    // 3. Core Records (Contratos, Habilidades, Horarios, Documentos)
-    console.log('\n[3/9] Creando registros base (contratos, horarios, habilidades)...');
-    await withRetry('CORE_RECORDS', (prisma) => seedCoreRecords(prisma, allEmployees));
+    const { tenant1, tenant2, admin1, admin2, allEmployees } = seedUsersResult;
+    console.log(`\n✅ Total colaboradores cargados en base de datos: ${allEmployees.length}`);
     await sleep(1000);
+
+    // 3. Core Records y Documentos
+    console.log('\n[3/12] Creando registros base (contratos, horarios, habilidades, documentos)...');
+    await withRetry('CORE_RECORDS', (prisma) => seedCoreRecords(prisma, allEmployees));
+    await sleep(800);
     await withRetry('DOCUMENTS', (prisma) => seedDocuments(prisma, allEmployees));
-    await sleep(1500);
+    await sleep(800);
 
     // 4. Reclutamiento
-    console.log('\n[4/9] Creando datos de reclutamiento...');
-    await withRetry('RECRUITMENT', (prisma) => seedRecruitment(prisma, admin.id))
-        .catch((e) => console.error('❌ Error en seedRecruitment:', e.message));
-    await sleep(1500);
+    console.log('\n[4/12] Creando procesos de reclutamiento para ambas empresas...');
+    await withRetry('RECRUITMENT', (prisma) => seedRecruitment(prisma));
+    await sleep(800);
 
     // 5. Metas y Beneficios
-    console.log('\n[5/9] Creando metas y beneficios...');
-    await withRetry('GOALS', (prisma) => seedGoals(prisma, allEmployees))
-        .catch((e) => console.error('❌ Error en seedGoals:', e.message));
-    await sleep(1000);
-    await withRetry('BENEFITS', (prisma) => seedBenefits(prisma, allEmployees))
-        .catch((e) => console.error('❌ Error en seedBenefits:', e.message));
-    await sleep(1500);
+    console.log('\n[5/12] Creando metas SMART y beneficios corporativos...');
+    await withRetry('GOALS', (prisma) => seedGoals(prisma, allEmployees));
+    await sleep(800);
+    await withRetry('BENEFITS', (prisma) => seedBenefits(prisma, allEmployees));
+    await sleep(800);
 
     // 6. Asistencia y Ausencias
-    console.log('\n[6/9] Creando asistencia y ausencias...');
-    await withRetry('ATTENDANCE', (prisma) => seedAttendance(prisma, allEmployees))
-        .catch((e) => console.error('❌ Error en seedAttendance:', e.message));
-    await sleep(1000);
-    await withRetry('ABSENCES', (prisma) => seedAbsences(prisma, allEmployees))
-        .catch((e) => console.error('❌ Error en seedAbsences:', e.message));
-    await sleep(1500);
+    console.log('\n[6/12] Creando marcaciones de asistencia y solicitudes de ausencia...');
+    await withRetry('ATTENDANCE', (prisma) => seedAttendance(prisma, allEmployees));
+    await sleep(800);
+    await withRetry('ABSENCES', (prisma) => seedAbsences(prisma, allEmployees));
+    await sleep(800);
 
-    // 7. Desempeño
-    console.log('\n[7/9] Creando evaluaciones de desempeño...');
-    await withRetry('PERFORMANCE', (prisma) => seedPerformance(prisma, allEmployees))
-        .catch((e) => console.error('❌ Error en seedPerformance:', e.message));
-    await sleep(1500);
+    // 7. Evaluaciones de Desempeño
+    console.log('\n[7/12] Creando evaluaciones de desempeño 360°...');
+    await withRetry('PERFORMANCE', (prisma) => seedPerformance(prisma, allEmployees));
+    await sleep(800);
 
     // 8. Nómina
-    console.log('\n[8/9] Creando nómina...');
-    await withRetry('PAYROLL_CONFIG', (prisma) => seedPayrollConfig(prisma))
-        .catch((e) => console.error('❌ Error en seedPayrollConfig:', e.message));
-    await sleep(1000);
-    await withRetry('PAYROLL', (prisma) => seedPayroll(prisma, allEmployees))
-        .catch((e) => console.error('❌ Error en seedPayroll:', e.message));
-    await sleep(1500);
+    console.log('\n[8/12] Configurando y generando nómina de 6 meses para ambas empresas...');
+    await withRetry('PAYROLL_CONFIG', (prisma) => seedPayrollConfig(prisma));
+    await sleep(800);
+    await withRetry('PAYROLL', (prisma) => seedPayroll(prisma, allEmployees));
+    await sleep(800);
 
-    // 9. Clima, Auditoría y Notificaciones
-    console.log('\n[9/9] Creando clima, auditoría y notificaciones...');
-    await withRetry('CLIMATE', (prisma) => seedClimate(prisma))
-        .catch((e) => console.error('❌ Error en seedClimate:', e.message));
-    await sleep(1000);
-    await withRetry('AUDIT', (prisma) => seedAudit(prisma, allEmployees))
-        .catch((e) => console.error('❌ Error en seedAudit:', e.message));
-    await sleep(1000);
-    await withRetry('NOTIFICATIONS', (prisma) => seedNotifications(prisma, admin, allEmployees))
-        .catch((e) => console.error('❌ Error en seedNotifications:', e.message));
+    // 9. Clima Laboral, Auditoría y Notificaciones
+    console.log('\n[9/12] Creando encuestas de clima, logs de auditoría y notificaciones...');
+    await withRetry('CLIMATE', (prisma) => seedClimate(prisma));
+    await sleep(800);
+    await withRetry('AUDIT', (prisma) => seedAudit(prisma, allEmployees));
+    await sleep(800);
+    await withRetry('NOTIFICATIONS', (prisma) => seedNotifications(prisma, admin1, allEmployees));
+    await sleep(800);
 
-    // 10. Contabilidad (NUEVO)
-    console.log('\n[10/10] Configurando Contabilidad y Nexus...');
-    await withRetry('ACCOUNTING', (prisma) => seedAccounting(prisma))
-        .catch((e) => console.error('❌ Error en seedAccounting:', e.message));
-    await sleep(1000);
-    await withRetry('JOURNAL_ENTRIES', (prisma) => seedJournalEntries(prisma))
-        .catch((e) => console.error('❌ Error en seedJournalEntries:', e.message));
+    // 10. Contabilidad PUG
+    console.log('\n[10/12] Configurando Contabilidad (Centros de Costo, PUG y Asientos)...');
+    await withRetry('ACCOUNTING', (prisma) => seedAccounting(prisma));
+    await sleep(800);
+    await withRetry('JOURNAL_ENTRIES', (prisma) => seedJournalEntries(prisma));
+    await sleep(800);
 
-    // 11. Emprendimiento (AISLADO)
-    console.log('\n[11/11] Configurando Incubadora de Startups...');
-    await withRetry('ENTREPRENEURSHIP', (prisma) => seedEntrepreneurship(prisma))
-        .catch((e) => console.error('❌ Error en seedEntrepreneurship:', e.message));
+    // 11. Incubadora / Emprendimiento
+    console.log('\n[11/12] Configurando Incubadora de Startups...');
+    await withRetry('ENTREPRENEURSHIP', (prisma) => seedEntrepreneurship(prisma));
+    await sleep(800);
 
-    console.log('\n╔══════════════════════════════════════╗');
-    console.log('║        SEED COMPLETADO ✅            ║');
-    console.log('╠══════════════════════════════════════╣');
-    console.log('║  Admin:  admin@emplifi.com           ║');
-    console.log('║  Contab: contabilidad@emplifi.com    ║');
-    console.log('║  Pass:   Emplifi2025!                ║');
-    console.log('║  Empleados: 10 (ver consola arriba)  ║');
-    console.log('╚══════════════════════════════════════╝');
+    // 12. Motor Científico de IA
+    console.log('\n[12/12] Configurando Módulos de IA (RSI, Causal, MORL, Privacidad Diferencial)...');
+    await withRetry('RESEARCH_DATA', (prisma) => seedResearchData(prisma));
+
+    console.log('\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║           SEED DE 2 EMPRESAS COMPLETADO ✅                  ║');
+    console.log('╠════════════════════════════════════════════════════════════╣');
+    console.log('║  Empresa 1: Empresa Demo Ecuador S.A.                      ║');
+    console.log('║    Admin:   admin.empresa@emplifi.com (Pass: Emplifi2025!)  ║');
+    console.log('║    Contab:  contabilidad@emplifi.com   (Pass: Emplifi2025!)  ║');
+    console.log('║                                                            ║');
+    console.log('║  Empresa 2: TechSolutions Cía. Ltda.                       ║');
+    console.log('║    Admin:   admin.tech@techsolutions.ec (Pass: Emplifi2025!)║');
+    console.log('║    Contab:  contabilidad.tech@techsolutions.ec (Emplifi2025!)║');
+    console.log('║                                                            ║');
+    console.log('║  SuperAdmin Global: admin@emplifi.com (Pass: Emplifi2025!) ║');
+    console.log('╚════════════════════════════════════════════════════════════╝');
 }
 
 main().catch((e) => {
