@@ -22,11 +22,11 @@ describe('RSI Engine (Recursive Self-Improvement) Unit Tests', () => {
         vi.clearAllMocks();
     });
 
-    it('should return default hyperparameters when no calibration exists and initialize epoch 1', async () => {
+    it('should return default hyperparameters when no calibration exists and initialize epoch 0 baseline', async () => {
         prisma.rsiCalibration.findFirst.mockResolvedValue(null);
         prisma.rsiCalibration.create.mockResolvedValue({
-            epoch: 1,
-            brierScore: 0.185,
+            epoch: 0,
+            brierScore: 0.165,
             logLoss: 0.420,
             weightsJson: JSON.stringify({ beta_salary: -0.85 })
         });
@@ -51,12 +51,12 @@ describe('RSI Engine (Recursive Self-Improvement) Unit Tests', () => {
 
     it('should run recursive calibration and generate a new epoch with improved Brier Score', async () => {
         prisma.rsiCalibration.findFirst.mockResolvedValueOnce({
-            epoch: 1,
+            epoch: 0,
             brierScore: 0.185,
             logLoss: 0.420,
             weightsJson: JSON.stringify({ beta_salary: -0.85, beta_absence: 0.35, beta_perf: 1.10, k_weibull: 1.25, lambda_weibull: 48 })
         }).mockResolvedValueOnce({
-            epoch: 1,
+            epoch: 0,
             brierScore: 0.185
         });
 
@@ -72,7 +72,7 @@ describe('RSI Engine (Recursive Self-Improvement) Unit Tests', () => {
 
         const result = await rsiService.runRecursiveCalibration('tenant_test', 'MANUAL_TEST');
         
-        expect(result.epoch).toBe(2);
+        expect(result.epoch).toBe(1);
         expect(result.brierScore).toBeLessThan(0.185);
         expect(result.weights).toBeDefined();
         expect(result.triggerReason).toBe('MANUAL_TEST');

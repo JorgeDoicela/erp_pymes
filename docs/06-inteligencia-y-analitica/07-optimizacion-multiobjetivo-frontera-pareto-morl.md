@@ -155,12 +155,13 @@ Ejecuta la optimización multiobjetivo por Q-Learning y genera la Frontera de Pa
 ## 5. Resultados Empíricos Ejecutados y Validación Experimental
 
 ### 5.1 Resultados Experimentales Ejecutados en el Sistema
-La ejecución real de Vector Q-Learning sobre los tenants de investigación registró los siguientes resultados empíricos en base de datos:
+La ejecución real de Vector Q-Learning sobre los 3 tenants de investigación registró los siguientes resultados empíricos en base de datos:
 
-- **Frontera Eficiente de Pareto Extraída:** Generación de 4 puntos óptimos no dominados bajo un tope presupuestario de $\$12,000.00\text{ USD}$.
-- **Rendimiento de Retención vs. Costo:**
-  - **Empresa Demo Ecuador S.A.:** El punto óptimo P2 ($w_{\text{ret}} = 0.15$) alcanza una retención esperada del **`87.7%`** (11 de 12 empleados retenidos) consumiendo únicamente $\$2,340.00\text{ USD}$.
-  - **TechSolutions Cía. Ltda.:** El punto óptimo P2 ($w_{\text{ret}} = 0.15$) alcanza una retención esperada del **`88.8%`** (11 de 12 empleados retenidos) consumiendo apenas $\$2,160.00\text{ USD}$.
+- **Frontera Eficiente de Pareto Extraída:** Generación de **4 puntos óptimos no dominados** bajo un tope presupuestario de $\$12,000.00\text{ USD}$ por tenant:
+  - **Punto 1 ($w_{\text{ret}} = 0.00$):** Costo $\$0.00$ | Retención $76.2\% - 77.1\%$ | Acción predominante: `NO_ACTION`.
+  - **Punto 2 ($w_{\text{ret}} = 0.10$):** Costo $\$4,500.00 - \$6,660.00$ | Retención $94.2\% - 95.1\%$ | Acción predominante: `REMOTE_WORK_2D`.
+  - **Punto 3 ($w_{\text{ret}} = 0.45$):** Costo $\$5,342.40 - \$10,018.80$ | Retención $94.7\% - 95.6\%$ | Acción predominante: `REMOTE_WORK_2D`.
+  - **Punto 4 ($w_{\text{ret}} = 0.60$):** Costo $\$60,000.00 - \$88,800.00$ | Retención $100.0\%$ | Acción predominante: `PROMOTION_BONUS`.
 
 ### 5.2 Protocolo de Experimentación Futura (Trabajo Futuro)
 - **Deep MORL (Deep Q-Networks Multiobjetivo):** Implementación de redes neuronales profundas para aproximar la frontera de Pareto continua en organizaciones con más de 10,000 empleados y combinaciones complejas de beneficios.

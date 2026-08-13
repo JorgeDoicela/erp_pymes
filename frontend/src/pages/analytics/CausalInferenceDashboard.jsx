@@ -124,10 +124,10 @@ const CausalInferenceDashboard = () => {
                     </div>
                     <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
                         <FiGitPullRequest className="text-blue-600" />
-                        Centro de Inferencia Causal y Evaluación de Políticas (Do-Calculus)
+                        Centro de Inferencia Causal y Evaluación de Políticas (Do-Calculus / G-Computation)
                     </h1>
                     <p className="text-xs text-gray-500 mt-1">
-                        Evalúa causalmente sobre los datos reales del personal el impacto económico y de retención antes de implementar una política.
+                        Evalúa causalmente mediante la fórmula de ajuste backdoor (Pearl 2009) y el estimador doblemente robusto AIPW el impacto real antes de implementar una política.
                     </p>
                 </div>
 
@@ -245,21 +245,25 @@ const CausalInferenceDashboard = () => {
                             <div className="py-2 sm:py-0 sm:px-4 flex flex-col justify-between">
                                 <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Beneficio Neto Estimado</span>
                                 <div className="mt-1 flex items-baseline space-x-2">
-                                    <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
+                                    <span className={`text-xl font-semibold font-mono tabular-nums ${financials.netRoi < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                         {formatMoney(financials.netRoi)}
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-gray-400 mt-1">ROI Est.: +{financials.roiPercentage}% retorno</span>
+                                <span className={`text-[11px] mt-1 font-mono ${financials.netRoi < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                    ROI Est.: {financials.roiPercentage > 0 ? `+${financials.roiPercentage}` : financials.roiPercentage}% retorno
+                                </span>
                             </div>
 
                             <div className="py-2 sm:py-0 sm:px-4 last:pr-0 flex flex-col justify-between">
-                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Retención Estimada</span>
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Retención Estimada (ATE)</span>
                                 <div className="mt-1 flex items-baseline space-x-2">
                                     <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
                                         {impact.preventedTurnoverCount} Empleados
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-gray-400 mt-1">Muestra: {sampleSize} casos</span>
+                                <span className="text-[11px] text-gray-400 mt-1">
+                                    IC95%: [{impact.confidenceInterval95 ? (impact.confidenceInterval95[0]*100).toFixed(1) : '0'}%, {impact.confidenceInterval95 ? (impact.confidenceInterval95[1]*100).toFixed(1) : '0'}%]
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -272,7 +276,7 @@ const CausalInferenceDashboard = () => {
                                 Comparativa Contrafactual: Tasa de Fuga (%) Basal vs. Tras Intervención
                             </h3>
                             <p className="text-xs text-gray-500 mt-0.5">
-                                Eliminación del sesgo mediante Inverse Probability Weighting (IPW).
+                                Identificación del ATE vía G-Computation (Pearl 2009) y verificación de consistencia AIPW.
                             </p>
                         </div>
 
@@ -338,7 +342,7 @@ const CausalInferenceDashboard = () => {
                                         </td>
                                         <td className="py-2.5 px-4 font-mono tabular-nums">{formatMoney(item.costEstimate)}</td>
                                         <td className="py-2.5 px-4 font-mono tabular-nums text-gray-900">{formatMoney(item.savingsEstimate)}</td>
-                                        <td className="py-2.5 px-4 font-semibold font-mono tabular-nums text-blue-600">
+                                        <td className={`py-2.5 px-4 font-semibold font-mono tabular-nums ${item.netRoi < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                             {formatMoney(item.netRoi)}
                                         </td>
                                     </tr>

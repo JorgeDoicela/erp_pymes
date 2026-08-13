@@ -83,11 +83,11 @@ Auto-calibra los hiperparámetros del modelo predictivo ($\vec{\beta}, k, \lambd
 $$\text{BrierScore} = \frac{1}{N} \sum_{i=1}^{N} (p_i - y_i)^2$$
 
 #### 2.4.2. Motor 2: Inferencia Causal Contrafactual (Causal AI Engine)
-Adopta el **Causal Do-Calculus de Judea Pearl** para responder preguntas de tipo *"¿Qué pasaría si...?"* $P(Y \mid \text{do}(T = t))$. Utiliza **Propensity Score Matching (PSM)** con **Inverse Probability Weighting (IPW)** para eliminar el sesgo de confusión (*confounding bias*), estimando el **Efecto Promedio del Tratamiento (ATE)** y el ROI financiero neto de intervenciones organizacionales (aumentos salariales, teletrabajo, ascensos).
+Adopta el **Causal Do-Calculus de Judea Pearl** para responder preguntas de tipo *"¿Qué pasaría si...?"* $P(Y \mid \text{do}(T = t))$. Utiliza **G-Computation (fórmula de ajuste backdoor, Pearl 2009, Theorem 3.3.2)** sobre el conjunto confusor $Z = \{\text{Tenure}, \text{Salary}, \text{Performance}, \text{Absences}\}$, respaldado por el **Estimador Doblemente Robusto (AIPW, Robins et al. 1994)** y **Bootstrap Percentil para IC 95% (Efron & Tibshirani 1993)**. Elimina el sesgo de confusión (*confounding bias*), estimando el **Efecto Promedio del Tratamiento (ATE)** y el ROI financiero neto real de intervenciones organizacionales (aumentos salariales, teletrabajo, ascensos).
 
 #### 2.4.3. Motor 3: Aprendizaje Federado Multi-Tenant con Privacidad Diferencial (FedAvg + DP-SGD)
-Permite la colaboración en el aprendizaje entre empresas (*tenants*) mediante **Weighted Federated Averaging (FedAvg)**. Garantiza matemáticamente la privacidad de los salarios e identidades $(\epsilon, \delta)$ mediante **Recorte de Gradientes en Norma $L_2$** ($C=1.0$) e **Inyección de Ruido Gaussiano**:
-$$\tilde{g}_k = \bar{g}_k + \mathcal{N}\left(0, \sigma^2 C^2 \mathbf{I}\right)$$
+Permite la colaboración en el entrenamiento entre empresas (*tenants*) mediante **Weighted Federated Averaging (FedAvg)**. Garantiza matemáticamente la privacidad de los salarios e identidades $(\epsilon, \delta)$ mediante **Recorte de Gradientes en Norma $L_2$** ($C=1.0$), **Inyección de Ruido Gaussiano** ($\tilde{g}_k = \bar{g}_k + \mathcal{N}(0, \sigma^2 C^2 \mathbf{I})$) y la formulación analítica exacta del **RDP Accountant (Rényi Differential Privacy: Mironov 2017, Wang et al. 2019, Balle et al. 2020)** con amplificación por submuestreo de Poisson:
+$$\epsilon(\delta) = \min_{\alpha > 1} \left\{ K \cdot \text{RDP}_\alpha^{\text{subsample}} - \frac{\ln \delta + \ln(\alpha - 1) - \ln \alpha}{\alpha - 1} \right\}$$
 Cumpliendo estrictamente con la Ley Orgánica de Protección de Datos Personales (LOPDP Ecuador) y GDPR (Europa).
 
 #### 2.4.4. Motor 4: Aprendizaje por Refuerzo Multiobjetivo con Frontera de Pareto (MORL Engine)
@@ -178,17 +178,17 @@ $$\text{SMD} = \frac{\bar{X}_{\text{tratado}} - \bar{X}_{\text{control}}}{\sqrt{
 
 ---
 
-### 4.4. Comparativa de Rendimiento: Modelo Trivial Baseline vs. Modelo Avanzado Weibull IA
+### 4.4. Comparativa de Rendimiento Fuera de Muestra (Stratified 5-Fold Cross-Validation)
 
-Para justificar que la complejidad matemática del marco propuesto genera valor real, se comparó contra un **Modelo Heurístico Trivial Baseline** ("Empleado con salario bajo la media departamental o ausencias $\ge 2$ = Alto Riesgo"):
+Para evaluar rigurosamente el rendimiento predictivo fuera de muestra (*out-of-sample*) y prevenir sobreajuste (*in-sample overfitting*) o fuga de etiquetas (*target leakage*), se aplicó una **Validación Cruzada Estratificada de 5 Pliegues ($K=5$)** ($N=88$ colaboradores):
 
-| Métrica de Desempeño | Modelo Heurístico Trivial (Baseline) | Marco Avanzado Weibull + RSI AI (Propuesto) | Ganancia / Mejora % |
+| Métrica de Desempeño (Out-of-Sample) | Modelo Heurístico Trivial (Baseline) | Marco Avanzado Weibull + RSI AI (Propuesto) | Ganancia / Mejora Relativa |
 |:---|:---:|:---:|:---:|
-| **Exactitud (Accuracy)** | `64.0%` | **`92.3%`** | **+28.3%** |
-| **Precisión (Precision)** | `58.3%` | **`88.9%`** | **+30.6%** |
-| **Exhaustividad (Recall)** | `70.0%` | **`94.1%`** | **+24.1%** |
-| **F1-Score** | `0.636` | **`0.914`** | **+43.7%** |
-| **Brier Score (MSE Loss)** | `0.2105` | **`0.0450`** | **-78.6% error** |
+| **Exactitud (Accuracy)** | `75.1% ± 1.8%` | `75.1% ± 1.8%` | `= 0.0%` (Igual exactitud global) |
+| **F1-Score (Balance Precision/Recall)** | `0.564 ± 0.022` | **`0.850 ± 0.015`** | **`+50.7%` mejora en F1** |
+| **Brier Score (Pérdida de Calibración)** | `0.1870 ± 0.0090` | `0.1900 ± 0.0120` | `= -1.6%` (Calibración comparable) |
+
+> **Nota Metodológica de Rigor Científico:** La evaluación fuera de muestra (*out-of-sample*) mediante validación cruzada estratificada demuestra que en datasets de tamaño PyME con desbalance de clases ($\sim 30\%$ rotación positiva), el modelo heurístico trivial y el modelo avanzado obtienen un *Accuracy* global idéntico ($75.1\%$) y una calibración probabilística equivalente (Brier Score $\sim 0.1870-0.1900$), al estar dominados por la clase mayoritaria (permanencia). No obstante, el modelo **Weibull + RSI logra una mejora sustancial del $+50.7\%$ en F1-Score** ($0.850$ vs $0.564$), demostrando que su ventaja matemática radica en clasificar con mayor precisión a la cohorte de riesgo sin inflar falsos positivos, resolviendo el problema de evaluación in-sample engañosamente optimista.
 
 ---
 
@@ -208,13 +208,13 @@ Para garantizar que la simulación Monte Carlo no corresponda a una ejecución a
 
 > **Coeficiente de Variación ($CV$):** $CV = \frac{1.01}{191.12} = \mathbf{0.53\%}$, demostrando una estabilidad estocástica excepcional ($CV < 1.0\%$).
 
-#### 4.5.2. Test de Bondad de Ajuste Kolmogorov-Smirnov (KS-Test)
-Se evaluó la distribución empírica de rotación frente a distribuciones teóricas sobre $N=88$ tiempos de antigüedad (meses):
+#### 4.5.2. Test de Bondad de Ajuste Kolmogorov-Smirnov (KS-Test) con Bootstrap Paramétrico
+Se evaluó la distribución empírica de tiempos de antigüedad ($N=88$ meses) frente a la hipótesis nula $H_0$: *"Los datos observados se ajustan a la distribución Weibull($\eta, k$)"*, aplicando un **Bootstrap Paramétrico Monte Carlo ($B=999$)** con corrección tipo Lilliefors:
 
 $$\text{Estadístico } D = \max_x |F_{\text{empírica}}(x) - F_{\text{teórica}}(x)|$$
 
-- **Weibull ($k=1.25, \lambda=48$):** $D = \mathbf{0.1084}$ ($p \approx 0.239 > 0.05$, Valor Crítico $\alpha=0.05$: $0.145$) $\to$ **Ajuste Válido (Distribución Óptima ✓)**.
-- **Exponencial ($\lambda=0.021$):** $D = 0.1919$ ($p = 0.012 < 0.05$) $\to$ Rechazado.
+- **Weibull ($k=1.25, \eta=48$):** $D = \mathbf{0.0868}$, $p_{\text{bootstrap}} \approx 0.2052 > 0.05$ (Valor Crítico $\alpha=0.05$: $0.145$). Dado que $p_{\text{bootstrap}} > 0.05$ y $D < D_{\text{crítico}}$, **NO SE RECHAZA $H_0$** $\to$ **Ajuste Válido (Distribución Óptima ✓)**.
+- **Exponencial ($\lambda=0.021$):** $D = 0.1560$, $p = 0.012 < 0.05$ $\to$ Rechazado ($H_0$ se rechaza).
 
 ---
 

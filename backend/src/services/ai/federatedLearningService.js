@@ -1,4 +1,5 @@
 import prisma from '../../database/db.js';
+import { computeEpsilonPerRound, computePrivacyAccountant } from '../../utils/rdpAccountant.js';
 
 const DEFAULT_GLOBAL_WEIGHTS = {
     beta_salary: -0.85,
@@ -55,7 +56,7 @@ class FederatedLearningService {
         };
     }
 
-    async computeLocalPrivateGradient(tenantId, globalWeights, clippingNorm = 1.0, noiseScale = 0.5) {
+    async computeLocalPrivateGradient(tenantId, globalWeights, clippingNorm = 1.0, noiseScale = 0.5, totalCohortSize = null) {
         const employees = await prisma.employee.findMany({
             where: { tenantId, isActive: true },
             include: { absences: true, evaluations: true, contracts: true }
@@ -111,7 +112,14 @@ class FederatedLearningService {
         });
 
         // 4. Actualizar contabilidad de presupuesto de privacidad del tenant
-        const epsilonIncrement = 0.35;
+        // epsilon calculado mediante RDP Accountant formal (Mironov 2017; Balle et al. 2020)
+        // sigma_M = noiseScale / clippingNorm; q = n / cohortSize (submuestreo Poisson)
+        const noiseMultiplier = noiseScale / clippingNorm;
+        const cohort = totalCohortSize || n; // sin submuestreo si no se especifica el total
+        const samplingRate = Math.min(1.0, n / cohort);
+        const delta = 1e-5;
+        const epsilonIncrement = computeEpsilonPerRound(noiseMultiplier, delta, samplingRate);
+
         await prisma.tenantPrivacyBudget.update({
             where: { tenantId },
             data: {
@@ -124,7 +132,10 @@ class FederatedLearningService {
         return {
             tenantId,
             sampleSize: n,
-            noisyGradient
+            noisyGradient,
+            epsilonThisRound: Number(epsilonIncrement.toFixed(4)),
+            noiseMultiplier: Number(noiseMultiplier.toFixed(4)),
+            samplingRate: Number(samplingRate.toFixed(4))
         };
     }
 
@@ -162,13 +173,23 @@ class FederatedLearningService {
 
         const noiseScale = 0.45;
         const clippingNorm = 1.0;
+        const noiseMultiplierGlobal = noiseScale / clippingNorm; // sigma_M = 0.45
+        const delta = 1e-5;
 
         // 3. Recopilar gradientes ruidosos anonimizados de cada tenant (FedAvg)
         const localGradients = [];
-        for (const t of tenants) {
+        // Estimar cohort total para submuestreo (suma de todos los tenants activos)
+        const cohortCounts = await Promise.all(
+            tenants.map(t => prisma.employee.count({ where: { tenantId: t.id, isActive: true } }))
+        );
+        const totalCohort = cohortCounts.reduce((s, c) => s + c, 0) || 1;
+
+        for (let i = 0; i < tenants.length; i++) {
             // Asegurar que el tenant posea registro de presupuesto
-            await this.getTenantPrivacyStatus(t.id);
-            const grad = await this.computeLocalPrivateGradient(t.id, currentGlobalWeights, clippingNorm, noiseScale);
+            await this.getTenantPrivacyStatus(tenants[i].id);
+            const grad = await this.computeLocalPrivateGradient(
+                tenants[i].id, currentGlobalWeights, clippingNorm, noiseScale, totalCohort
+            );
             localGradients.push(grad);
         }
 
@@ -203,16 +224,27 @@ class FederatedLearningService {
         // 6. Calcular pérdida global mejorada
         const previousBrier = latestRound ? latestRound.globalBrierScore : 0.185;
         const newGlobalBrier = Number(Math.max(0.042, previousBrier * (0.91 + Math.random() * 0.04)).toFixed(4));
-        const epsilonUsed = 0.35;
 
-        // 7. Persistir nueva ronda global federada
+        // epsilon por ronda de esta ejecucion: promedio ponderado de los gradientes locales
+        const avgSamplingRate = localGradients.reduce((s, g) => s + (g.samplingRate || 1.0), 0) / Math.max(1, localGradients.length);
+        const epsilonUsed = Number(computeEpsilonPerRound(noiseMultiplierGlobal, delta, avgSamplingRate).toFixed(4));
+
+        // Accountant acumulado para esta ronda (K=nextRoundNumber rondas en total)
+        const accountant = computePrivacyAccountant({
+            rounds: nextRoundNumber,
+            noiseMultiplier: noiseMultiplierGlobal,
+            delta,
+            samplingRate: avgSamplingRate
+        });
+
+        // 7. Persistir nueva ronda global federada (epsilonUsed guarda el epsilonAccumulated del RDP Accountant)
         const createdRound = await prisma.federatedRound.create({
             data: {
                 round: nextRoundNumber,
                 participatingTenantsCount: tenants.length,
                 globalWeightsJson: JSON.stringify(newGlobalWeights),
                 globalBrierScore: newGlobalBrier,
-                epsilonUsed,
+                epsilonUsed: accountant.epsilonAccumulated,
                 noiseScale,
                 status: 'COMPLETED'
             }
@@ -225,6 +257,7 @@ class FederatedLearningService {
             epsilonUsed: createdRound.epsilonUsed,
             noiseScale: createdRound.noiseScale,
             globalWeights: newGlobalWeights,
+            privacyAccountant: accountant,
             createdAt: createdRound.createdAt
         };
     }

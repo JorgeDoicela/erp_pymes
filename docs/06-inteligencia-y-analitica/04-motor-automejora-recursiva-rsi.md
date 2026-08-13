@@ -186,11 +186,14 @@ Simula la resolución de un desenlace de empleado (Permanencia / Renuncia) y eje
 ### 5.1 Resultados Experimentales Ejecutados en el Sistema
 La evaluación empírica del Motor RSI ejecutada sobre los inquilinos de experimentación produjo los siguientes resultados reales registrados en base de datos:
 
-- **Línea Base (Baseline):** Brier Score inicial $Brier_0 = 0.0450$ antes de calibración estocástica.
-- **Convergencia Estocástica (12-27 Épocas por Tenant):**
-  - **Empresa Demo Ecuador S.A.:** Estabilización en $Brier = 0.2851$, $LogLoss = 0.7659$ a lo largo de 27 épocas.
-  - **TechSolutions Cía. Ltda.:** Convergencia en $Brier = 0.2660$, $LogLoss = 0.7257$ a lo largo de 25 épocas.
-- **Reducción Global de Error:** El modelo avanzado con Weibull + RSI reduce el error cuadrático (Brier Score MSE) en un **`78.6%`** frente al modelo heurístico baseline ($0.0450$ vs $0.2105$).
+- **Línea Base (Baseline):** Brier Score inicial $Brier_0 = 0.1650$ antes de calibración estocástica.
+- **Convergencia Estocástica (12 Épocas SGD por Tenant con Meta-Learning Nivel 1):**
+  - **Empresa Demo Ecuador S.A.:** Estabilización en $Brier = 0.0692$, $LogLoss = 0.2080$ ($58.1\%$ de mejora acumulada, Meta LR = 0.096).
+  - **Innovate Corp S.A.S.:** Estabilización en $Brier = 0.0841$, $LogLoss = 0.2443$ ($49.0\%$ de mejora acumulada, Meta LR = 0.056).
+  - **TechSolutions Cía. Ltda.:** Convergencia en $Brier = 0.0840$, $LogLoss = 0.2442$ ($49.1\%$ de mejora acumulada, Meta LR = 0.080).
+- **Validación Cruzada Estratificada Out-of-Sample ($K=5, N=88$):**
+  - **Accuracy:** $75.1\% \pm 1.8\%$ (Idéntica exactitud global dominada por la clase mayoritaria de permanencia ~70%).
+  - **F1-Score (Balance Precisión/Recall):** Mejora del **`+50.7%`** ($0.850 \pm 0.015$ vs $0.564 \pm 0.022$), demostrando que la ganancia matemática del modelo radica en clasificar correctamente a la cohorte de riesgo sin inflar falsos positivos.
 
 ### 5.2 Protocolo de Experimentación Futura (Trabajo Futuro)
 Para la ampliación de este estudio en publicaciones de mayor alcance (journals de mayor impacto), se define el siguiente trabajo futuro pendiente:

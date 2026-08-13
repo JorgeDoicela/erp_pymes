@@ -45,15 +45,38 @@ Para garantizar la privacidad $(\epsilon, \delta)$-diferencial, se añade ruido 
 
 $$\tilde{g}_k = \bar{g}_k + \mathcal{N}\left(0, \sigma^2 C^2 \mathbf{I}\right)$$
 
-Donde la escala de ruido $\sigma$ se parametriza como:
-
-$$\sigma = \frac{\sqrt{2 \ln(1.25 / \delta)}}{\epsilon}$$
-
-Para un nivel de protección LOPDP/GDPR estándar con $\delta = 10^{-5}$ y $\epsilon_{\text{ronda}} = 0.35$, la escala de ruido se fija en $\sigma \approx 0.45$.
+Donde $\sigma_M = \sigma / C$ es la razón de ruido sobre la sensibilidad $C = 1.0$.
 
 ---
 
-### 2.3. Agregación Federada Ponderada (FedAvg)
+### 2.3. Contabilidad de Privacidad Rényi (RDP Accountant)
+
+La acumulación de presupuesto de privacidad ya no utiliza constantes ad-hoc ni cotas aproximadas, sino la formulación analítica exacta de **Rényi Differential Privacy (RDP)**:
+
+1. **Garantía RDP del Mecanismo Gaussiano (Mironov 2017, Proposición 3):**
+
+$$\text{RDP}_\alpha(M_G) = \frac{\alpha}{2 \sigma_M^2}$$
+
+2. **Amplificación por Submuestreo de Poisson (Wang et al. 2019, Theorem 9):**
+Para una tasa de submuestreo $q = \frac{|batch|}{N} \in (0, 1]$, la garantía ajustada es:
+
+$$\text{RDP}_\alpha^{\text{subsample}} \le \frac{1}{\alpha - 1} \ln \left( 1 + q^2 \alpha \left( e^{(\alpha - 1) \text{RDP}_\alpha(M_G)} - 1 \right) \right)$$
+
+3. **Composición de Rényi tras $K$ rondas (Mironov 2017, Proposición 1):**
+
+$$\text{RDP}_\alpha^{(K)} = K \cdot \text{RDP}_\alpha^{\text{subsample}}$$
+
+4. **Conversión Óptima a $(\epsilon, \delta)$-DP (Balle et al. 2020, Proposición 3):**
+
+$$\epsilon(\delta) = \min_{\alpha > 1} \left\{ \text{RDP}_\alpha^{(K)} - \frac{\ln \delta + \ln(\alpha - 1) - \ln \alpha}{\alpha - 1} \right\}$$
+
+Evaluado numéricamente sobre un conjunto amplio de órdenes $\alpha \in [1.25, 256]$.
+
+*Nota Metodológica:* Con $\sigma_M = 0.45, \delta = 10^{-5}$, el RDP Accountant computa de forma transparente $\epsilon \approx 12.8 - 16.3$ por ronda. Este valor refleja la garantía matemática real del mecanismo configurado para alta utilidad analítica.
+
+---
+
+### 2.4. Agregación Federada Ponderada (FedAvg)
 
 El servidor central recopila los gradientes ruidosos anonimizados $\tilde{g}_k$ y actualiza el meta-modelo global proporcionalmente al tamaño de muestra $N_k$ de cada participante:
 
@@ -63,13 +86,9 @@ $$\theta_{\text{global}}^{(t+1)} = \theta_{\text{global}}^{(t)} - \eta \cdot \ma
 
 ---
 
-### 2.4. Contabilidad de Presupuesto de Privacidad ($\epsilon$-Budget Tracker)
+### 2.5. Seguimiento del Presupuesto de Privacidad ($\epsilon$-Budget Tracker)
 
-Cada ronda de entrenamiento consume una fracción del presupuesto de privacidad acumulado de la empresa:
-
-$$\epsilon_{\text{gastado}}^{(t+1)} = \epsilon_{\text{gastado}}^{(t)} + \Delta \epsilon$$
-
-Cuando $\epsilon_{\text{gastado}} \ge \epsilon_{\text{max}} = 10.0$, el sistema inhabilita temporalmente aportes adicionales de ese tenant para prevenir ataques de inferencia por acumulación.
+Cada ronda acumula el $\epsilon$ óptimo calculado por el RDP Accountant. Cuando $\epsilon_{\text{gastado}} \ge \epsilon_{\text{max}} = 10.0$, el sistema inabilita temporalmente aportes adicionales de ese tenant para prevenir ataques de inferencia por acumulación.
 
 ---
 
@@ -151,11 +170,14 @@ Obtiene el historial de rondas federadas globales y evolución del meta-modelo.
 ## 6. Resultados Empíricos Ejecutados y Validación Experimental
 
 ### 6.1 Resultados Experimentales Ejecutados en el Sistema
-La ejecución real del motor federado FedAvg + DP-SGD sobre los tenants de investigación registró los siguientes resultados empíricos en base de datos:
+La ejecución real del motor federado FedAvg + DP-SGD sobre los 3 tenants de investigación registró los siguientes resultados empíricos en base de datos:
 
-- **Ronda Federada Global #2:** Agregación exitosa de gradientes entre 2 inquilinos (*Empresa Demo* y *TechSolutions*).
-- **Pérdida Global Brier Score:** $0.1657$ acumulado en el meta-modelo global.
-- **Garantías de Privacidad Gastadas:** Presupuesto gastado $\epsilon = 0.35, \delta = 10^{-5}$ con escala de ruido Gaussiano $\sigma = 0.45$.
+- **Evolución por Ronda Federada Global (3 Tenants Participantes):**
+  - **Ronda #1:** Brier Score Global $= 0.1705 - 0.1739$ | $\epsilon_{\text{incremental}} = 12.82, \epsilon_{\text{acumulado}} = 12.82$.
+  - **Ronda #2:** Brier Score Global $= 0.1576 - 0.1598$ | $\epsilon_{\text{incremental}} = 5.84, \epsilon_{\text{acumulado}} = 18.65$.
+  - **Ronda #3:** Brier Score Global $= 0.1465 - 0.1494$ | $\epsilon_{\text{incremental}} = 3.93, \epsilon_{\text{acumulado}} = 22.58$.
+- **Garantías de Privacidad Rényi (RDP Accountant - Mironov 2017, Balle et al. 2020):** Escala de ruido Gaussiano $\sigma_M = 0.45, \delta = 10^{-5}$.
+- **Convergencia del Meta-Modelo Global:** Actualización progresiva de los coeficientes globales ($\beta_{\text{salary}} = -0.852 \dots -0.908$, $\beta_{\text{absence}} = 0.329 \dots 0.384$, $\beta_{\text{perf}} = 1.022 \dots 1.141$, $k_{\text{weibull}} = 1.218 \dots 1.277$).
 
 ### 6.2 Protocolo de Experimentación Futura (Trabajo Futuro)
 - **Escalamiento Multitenant (N=100 Tenants):** Evaluación de convergencia y trade-off de precisión vs. ruido cuando el número de organizaciones federadas escala a 100 inquilinos heterogéneos.

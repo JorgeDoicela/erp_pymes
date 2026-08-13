@@ -101,9 +101,10 @@ class MorlOptimizationService {
         const rawParetoCandidates = [];
 
         // 2. Barrido de pesos de preferencia w1 (Retención) vs w2 (Costo)
-        const weightSteps = [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.0];
+        // 11 pasos para explorar mejor el espacio multiobjetivo y producir más puntos Pareto genuinos
+        const weightSteps = [0.0, 0.05, 0.10, 0.15, 0.20, 0.30, 0.45, 0.60, 0.75, 0.90, 1.0];
 
-        weightSteps.forEach((w1, idx) => {
+        weightSteps.forEach((w1) => {
             const w2 = 1.0 - w1;
             let totalCost = 0;
             let totalPreventedTurnover = 0;
@@ -118,18 +119,25 @@ class MorlOptimizationService {
             };
 
             employees.forEach(emp => {
-                // Seleccionar mejor acción greedy bajo escalarización w1*R_retention - w2*Cost_normalized
                 let bestAction = actions[0];
                 let maxReward = -Infinity;
 
                 actions.forEach(act => {
-                    const actCost = act.costFactor !== undefined 
-                        ? act.costFactor 
+                    const actCost = act.costFactor !== undefined
+                        ? act.costFactor
                         : (emp.salary * (act.costFactorPercent || 0) * 12);
 
                     const retentionGain = act.retentionGain;
-                    // Recompensa escalarizada multiobjetivo
-                    const reward = w1 * (retentionGain * 100) - w2 * (actCost / 100);
+                    
+                    // Escalarización multiobjetivo adaptada al riesgo del empleado:
+                    // Empleados de mayor riesgo (baseTurnoverProb) se benefician más de acciones de mayor impacto
+                    const effectiveGain = retentionGain * (1.0 + emp.baseTurnoverProb);
+                    
+                    // Normalización de costo (proporción sobre $3,000/año)
+                    const normalizedCost = actCost / 3000;
+                    
+                    // Recompensa escalarizada multiobjetivo: w1 * Retención - w2 * Costo
+                    const reward = w1 * (effectiveGain * 100) - w2 * (normalizedCost * 25);
 
                     if (reward > maxReward) {
                         maxReward = reward;
@@ -137,8 +145,8 @@ class MorlOptimizationService {
                     }
                 });
 
-                const finalCost = bestAction.costFactor !== undefined 
-                    ? bestAction.costFactor 
+                const finalCost = bestAction.costFactor !== undefined
+                    ? bestAction.costFactor
                     : (emp.salary * (bestAction.costFactorPercent || 0) * 12);
 
                 totalCost += finalCost;
@@ -146,25 +154,33 @@ class MorlOptimizationService {
                 actionBreakdown[bestAction.id] = (actionBreakdown[bestAction.id] || 0) + 1;
             });
 
-            // Respetar tope presupuestario si aplica
-            if (totalCost <= budgetLimit * 1.35 || idx === 0) {
-                const baselineTurnoverCount = employees.reduce((s, e) => s + e.baseTurnoverProb, 0);
-                const counterfactualTurnoverCount = Math.max(0, baselineTurnoverCount - totalPreventedTurnover);
-                const retentionRate = Number((((sampleSize - counterfactualTurnoverCount) / sampleSize) * 100).toFixed(1));
+            const baselineTurnoverCount = employees.reduce((s, e) => s + e.baseTurnoverProb, 0);
+            const counterfactualTurnoverCount = Math.max(0, baselineTurnoverCount - totalPreventedTurnover);
+            const retentionRate = Number((((sampleSize - counterfactualTurnoverCount) / sampleSize) * 100).toFixed(1));
 
-                rawParetoCandidates.push({
-                    weightRetention: Number(w1.toFixed(2)),
-                    weightCost: Number(w2.toFixed(2)),
-                    totalCostEstimate: Number(totalCost.toFixed(2)),
-                    expectedRetentionRate: retentionRate,
-                    retainedEmployeeCount: Math.min(sampleSize, Math.round(sampleSize - counterfactualTurnoverCount)),
-                    policyActionsJson: JSON.stringify(actionBreakdown)
-                });
-            }
+            rawParetoCandidates.push({
+                weightRetention: Number(w1.toFixed(2)),
+                weightCost: Number(w2.toFixed(2)),
+                totalCostEstimate: Number(totalCost.toFixed(2)),
+                expectedRetentionRate: retentionRate,
+                retainedEmployeeCount: Math.min(sampleSize, Math.round(sampleSize - counterfactualTurnoverCount)),
+                policyActionsJson: JSON.stringify(actionBreakdown),
+                exceedsBudget: totalCost > budgetLimit
+            });
         });
 
-        // 3. Filtrar puntos no dominados de la Frontera de Pareto
-        const paretoFrontier = this.filterNonDominatedParetoPoints(rawParetoCandidates);
+        // 3. Deduplicar candidatos por espacio objetivo (costo, retención) antes del filtro de dominancia
+        // Mismo costo + misma retención = mismo punto en el espacio objetivo, aunque w_ret difiera
+        const seen = new Map();
+        const deduplicated = rawParetoCandidates.filter(pt => {
+            const key = `${pt.totalCostEstimate}_${pt.expectedRetentionRate}`;
+            if (seen.has(key)) return false;
+            seen.set(key, true);
+            return true;
+        });
+
+        // 4. Filtrar puntos no dominados de la Frontera de Pareto
+        const paretoFrontier = this.filterNonDominatedParetoPoints(deduplicated);
 
         const title = customTitle || `Optimización MORL (Tope: $${budgetLimit}) - Dept '${targetDepartment}'`;
 

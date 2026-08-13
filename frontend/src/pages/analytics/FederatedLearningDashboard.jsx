@@ -229,7 +229,7 @@ const FederatedLearningDashboard = () => {
                         <div className="mt-1 flex items-baseline space-x-2">
                             <span className="text-xl font-bold text-gray-900 font-mono">Escala {latestRound.noiseScale}</span>
                         </div>
-                        <span className="text-[11px] text-gray-500 mt-1">Protección por ruido matemático (DP-SGD)</span>
+                        <span className="text-[11px] text-gray-500 mt-1">RDP Accountant (Mironov 2017; Balle et al. 2020)</span>
                     </div>
                 </div>
             </div>
