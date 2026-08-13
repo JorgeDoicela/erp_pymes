@@ -247,21 +247,21 @@ El módulo de comparativa departamental entrega:
     }
   ],
   "anova": {
-    "F": 4.832,
-    "pValue": 0.0312,
+    "F": 5.443,
+    "pValue": 0.0064,
     "isSignificant": true,
-    "etaSquared": 0.185,
-    "effectSizeLabel": "Large (Grande)",
-    "dfBetween": 3,
-    "dfWithin": 16,
+    "etaSquared": 0.131,
+    "effectSizeLabel": "Medium (Mediano)",
+    "dfBetween": 2,
+    "dfWithin": 72,
     "grandMean": 73.5
   },
   "pairwiseTTest": {
-    "deptA": "Tecnología",
+    "deptA": "Ventas",
     "deptB": "Operaciones",
-    "tStat": 2.41,
-    "df": 12.3,
-    "cohensD": 0.842,
+    "tStat": -3.103,
+    "df": 48.9,
+    "cohensD": 0.867,
     "effectSizeLabel": "Large (Grande)"
   },
   "ksTest": {

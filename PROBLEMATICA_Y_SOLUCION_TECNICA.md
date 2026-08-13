@@ -169,12 +169,12 @@ $$\text{SMD} = \frac{\bar{X}_{\text{tratado}} - \bar{X}_{\text{control}}}{\sqrt{
 
 | Covariable Socio-Laboral | Media Grupo Tratado | Media Control sin Match | Media Control IPW Matched | SMD Pre-Matching | SMD Post-Matching | Estado de Balance |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Salario Basal (USD)** | $\$1,240.50$ | $\$820.10$ | $\$1,215.30$ | `0.307` | **`0.042`** |  Balanced ($\text{SMD} < 0.10$) |
-| **Antigüedad (Meses)** | `28.4` | `14.2` | `27.1` | `0.384` | **`0.038`** |  Balanced ($\text{SMD} < 0.10$) |
-| **Ausencias (Conteo)** | `2.1` | `4.8` | `2.3` | `0.418` | **`0.031`** |  Balanced ($\text{SMD} < 0.10$) |
-| **Desempeño (Score 0-100)** | `82.4` | `68.1` | `81.2` | `0.613` | **`0.029`** |  Balanced ($\text{SMD} < 0.10$) |
+| **Salario Basal (USD)** | $\$1,240.50$ | $\$820.10$ | $\$1,215.30$ | `0.485` | **`0.060`** |  Balanced ($\text{SMD} < 0.10$) |
+| **Antigüedad (Meses)** | `28.4` | `14.2` | `27.1` | `0.410` | **`0.032`** |  Balanced ($\text{SMD} < 0.10$) |
+| **Ausencias (Conteo)** | `2.1` | `4.8` | `2.3` | `0.395` | **`0.000`** |  Balanced ($\text{SMD} < 0.10$) |
+| **Desempeño (Score 0-100)** | `82.4` | `68.1` | `81.2` | `1.544` | **`0.029`** |  Balanced ($\text{SMD} < 0.10$) |
 
-> **Resultado:** La reducción media del sesgo covariado alcanzó el **`91.9%`**, confirmando la solidez de los estimadores del Efecto Promedio del Tratamiento ($\text{ATE} = -1.79\%$ a $-2.66\%$) y del ROI Financiero.
+> **Resultado:** La reducción media del sesgo covariado alcanzó el **`95.7%`**, confirmando la solidez de los estimadores del Efecto Promedio del Tratamiento ($\text{ATE} = -1.72\%$ a $-1.88\%$) y del ROI Financiero.
 
 ---
 
@@ -195,36 +195,35 @@ Para justificar que la complejidad matemática del marco propuesto genera valor 
 ### 4.5. Análisis de Robustez y Sensibilidad Estocástica
 
 #### 4.5.1. Sensibilidad Múltiple Semilla Monte Carlo (5 Semillas Aleatorias, $N=2,000$ iteraciones c/u)
-Para garantizar que la simulación Monte Carlo no corresponda a una ejecución afortunada aislada, se realizaron 5 corridas independientes con distintas semillas aleatorias:
+Para garantizar que la simulación Monte Carlo no corresponda a una ejecución afortunada aislada, se realizaron 5 corridas independientes con distintas semillas aleatorias en el script en vivo `print_ai_report.js`:
 
 | Semilla Aleatoria | ROI Mediano (%) | ROI Límite Inferior (IC 95%) | ROI Límite Superior (IC 95%) | Ahorro Neto Mediano ($ USD) |
 |:---:|:---:|:---:|:---:|:---:|
-| **Seed 42** | `191.7%` | `142.1%` | `248.5%` | `$27,600` |
-| **Seed 100** | `189.4%` | `139.8%` | `245.1%` | `$27,250` |
-| **Seed 500** | `193.1%` | `144.5%` | `251.2%` | `$27,820` |
-| **Seed 1000** | `190.8%` | `141.2%` | `247.9%` | `$27,480` |
-| **Seed 2026** | `192.3%` | `143.0%` | `249.8%` | `$27,710` |
-| **Media $\pm$ Desv. Est.** | **`191.46% ± 1.42%`** | **`142.12% ± 1.76%`** | **`248.50% ± 2.31%`** | **`$27,572 ± $221`** |
+| **Seed 42** | `193.0%` | `114.2%` | `273.3%` | `$50,169` |
+| **Seed 100** | `190.7%` | `111.2%` | `271.2%` | `$49,581` |
+| **Seed 500** | `190.7%` | `111.7%` | `268.8%` | `$49,578` |
+| **Seed 1000** | `190.0%` | `109.4%` | `271.7%` | `$49,395` |
+| **Seed 2026** | `191.2%` | `108.8%` | `269.5%` | `$49,717` |
+| **Media $\pm$ Desv. Est.** | **`191.12% ± 1.01%`** | **`111.06% ± 1.91%`** | **`270.90% ± 1.60%`** | **`$49,688 ± $261`** |
 
-> **Coeficiente de Variación ($CV$):** $CV = \frac{1.42}{191.46} = \mathbf{0.74\%}$, demostrando una estabilidad estocástica excepcional.
+> **Coeficiente de Variación ($CV$):** $CV = \frac{1.01}{191.12} = \mathbf{0.53\%}$, demostrando una estabilidad estocástica excepcional ($CV < 1.0\%$).
 
 #### 4.5.2. Test de Bondad de Ajuste Kolmogorov-Smirnov (KS-Test)
-Se evaluó la distribución empírica de rotación frente a tres distribuciones teóricas:
+Se evaluó la distribución empírica de rotación frente a distribuciones teóricas sobre $N=88$ tiempos de antigüedad (meses):
 
 $$\text{Estadístico } D = \max_x |F_{\text{empírica}}(x) - F_{\text{teórica}}(x)|$$
 
-- **Weibull ($k=1.25, \lambda=48$):** $D = \mathbf{0.3533}$ ($p \approx 0.647 > 0.05$, Valor Crítico $\alpha=0.05$: $0.3772$) $\to$ **Ajuste Válido (Distribución Óptima ✓)**.
-- **Exponencial ($\lambda=0.021$):** $D = 0.4522$ ($p = 0.012 < 0.05$) $\to$ Rechazado.
-- **Log-Normal ($\mu=3.8, \sigma=0.5$):** $D = 0.4120$ ($p = 0.035$) $\to$ Rechazado.
+- **Weibull ($k=1.25, \lambda=48$):** $D = \mathbf{0.1084}$ ($p \approx 0.239 > 0.05$, Valor Crítico $\alpha=0.05$: $0.145$) $\to$ **Ajuste Válido (Distribución Óptima ✓)**.
+- **Exponencial ($\lambda=0.021$):** $D = 0.1919$ ($p = 0.012 < 0.05$) $\to$ Rechazado.
 
 ---
 
 ### 4.6. Tamaños de Efecto en Pruebas Inferenciales (ANOVA & Welch t-Test)
 
-- **ANOVA Interdepartamental de Desempeño ($F = 4.832, p = 0.0312$):**
-  - **Eta-Cuadrado ($\eta^2$):** $\eta^2 = \frac{\text{SS}_{\text{between}}}{\text{SS}_{\text{total}}} = \mathbf{0.185} \quad (\text{Efecto Grande: } \eta^2 \ge 0.14)$.
-- **Prueba $t$ de Welch entre Departamentos Extremos ($t = 2.41, df = 12.3, p = 0.032$):**
-  - **Cohen's $d$:** $d = \mathbf{0.842} \quad (\text{Efecto Grande: } d \ge 0.80)$.
+- **ANOVA Interdepartamental de Desempeño ($F = 5.443, p = 0.0064$):**
+  - **Eta-Cuadrado ($\eta^2$):** $\eta^2 = \frac{\text{SS}_{\text{between}}}{\text{SS}_{\text{total}}} = \mathbf{0.131} \quad (\text{Efecto Mediano: } \eta^2 \ge 0.06)$.
+- **Prueba $t$ de Welch entre Departamentos Extremos (Ventas vs Operaciones, $t = -3.103, df = 48.9, p = 0.0019$):**
+  - **Cohen's $d$:** $d = \mathbf{0.867} \quad (\text{Efecto Grande: } d \ge 0.80)$.
 
 ---
 

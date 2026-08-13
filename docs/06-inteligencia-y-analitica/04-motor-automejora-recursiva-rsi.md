@@ -196,3 +196,17 @@ La evaluación empírica del Motor RSI ejecutada sobre los inquilinos de experim
 Para la ampliación de este estudio en publicaciones de mayor alcance (journals de mayor impacto), se define el siguiente trabajo futuro pendiente:
 1. **Bucle Extendido a Largo Plazo:** Ejecución del bucle de automejora a lo largo de 500 épocas continuas en producción real con acuerdos de confidencialidad.
 2. **Prueba de Hipótesis Infranqueable:** Test de rangos con signo de Wilcoxon entre las distribuciones de error de predicción del modelo baseline vs. modelo RSI continuo con nivel de significancia $\alpha = 0.01$.
+
+---
+
+## 6. Instrucciones de Verificación y Ejecución de Experimentos
+
+Para reproducir la ejecución de los experimentos y comprobar los resultados del motor RSI y de la suite de investigación en la consola del backend:
+
+```bash
+# 1. Ejecución del pipeline de investigación (seeding y simulación de 12 épocas)
+cd backend && node prisma/seed_research.js
+
+# 2. Impresión del reporte científico consolidado
+cd backend && node src/scripts/print_ai_report.js
+```

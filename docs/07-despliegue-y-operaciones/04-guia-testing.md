@@ -58,7 +58,29 @@ El sistema implementa una arquitectura de pruebas automatizadas con **Vitest**, 
 
 ---
 
-## 4. Pipeline de CI/CD en GitHub Actions
+## 4. Pruebas del Marco Científico de IA (Experimentos y Reportes)
+
+Para validar la convergencia de los motores de IA (RSI, Causal AI, MORL, Privacidad Diferencial) y generar el reporte estadístico de investigación:
+
+### 4.1. Pasos para la Ejecución de Experimentos
+
+1. **Poblado de datos y simulación de épocas SGD (3 Tenants, N=75):**
+   ```bash
+   cd backend
+   node prisma/seed_research.js
+   ```
+   *Este comando configura los 3 tenants de investigación, genera los 75 colaboradores con varianza interdepartamental y ejecuta la calibración SGD de 12 épocas para el motor RSI.*
+
+2. **Generación del Reporte Estadístico Científico:**
+   ```bash
+   cd backend
+   node src/scripts/print_ai_report.js
+   ```
+   *Imprime las métricas consolidadas: convergencia de Brier Score, ATE e IC95% causal, frontera de Pareto MORL, ronda federada, ANOVA interdepartamental y test de Kolmogorov-Smirnov.*
+
+---
+
+## 5. Pipeline de CI/CD en GitHub Actions
 
 El flujo de integración continua (`.github/workflows/deploy.yml`) ejecuta de forma automática los siguientes pasos en cada `push` o `pull_request`:
 
