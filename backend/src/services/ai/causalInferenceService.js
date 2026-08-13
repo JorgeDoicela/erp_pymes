@@ -185,6 +185,9 @@ class CausalInferenceService {
             }
         });
 
+        // 8. Balance Covariado Post-PSM (Standardized Mean Difference - SMD)
+        const balanceTable = this.calculateCovariateBalance(finalTreated, finalControl);
+
         return {
             id: record.id,
             title: record.title,
@@ -210,10 +213,61 @@ class CausalInferenceService {
                 treatedCount: finalTreated.length,
                 controlCount: finalControl.length,
                 avgPropensityTreated: Number((finalTreated.reduce((s, e) => s + e.propensityScore, 0) / (finalTreated.length || 1)).toFixed(3)),
-                avgPropensityControl: Number((finalControl.reduce((s, e) => s + e.propensityScore, 0) / (finalControl.length || 1)).toFixed(3))
+                avgPropensityControl: Number((finalControl.reduce((s, e) => s + e.propensityScore, 0) / (finalControl.length || 1)).toFixed(3)),
+                covariateBalanceTable: balanceTable,
+                overallBiasReductionPercent: Number((
+                    (1 - (balanceTable.reduce((s, row) => s + row.smdPostMatching, 0) / (balanceTable.reduce((s, row) => s + row.smdPreMatching, 0) || 1))) * 100
+                ).toFixed(1))
             },
             createdAt: record.createdAt
         };
+    }
+
+    /**
+     * Calcula el Balance Covariado antes y después del Propensity Score Matching (IPW)
+     */
+    calculateCovariateBalance(treated, control) {
+        const covariates = [
+            { key: 'decryptedSalaryVal', label: 'Salario (USD)' },
+            { key: 'tenureMonths', label: 'Antigüedad (Meses)' },
+            { key: 'absenceCount', label: 'Ausencias (Conteo)' },
+            { key: 'avgPerf', label: 'Desempeño (Score)' }
+        ];
+
+        return covariates.map(cov => {
+            const treatedVals = treated.map(e => e[cov.key] || 0);
+            const controlVals = control.map(e => e[cov.key] || 0);
+
+            const meanTreated = treatedVals.reduce((a, b) => a + b, 0) / (treatedVals.length || 1);
+            const meanControlRaw = controlVals.reduce((a, b) => a + b, 0) / (controlVals.length || 1);
+
+            const varTreated = treatedVals.reduce((s, x) => s + Math.pow(x - meanTreated, 2), 0) / Math.max(1, treatedVals.length - 1);
+            const varControlRaw = controlVals.reduce((s, x) => s + Math.pow(x - meanControlRaw, 2), 0) / Math.max(1, controlVals.length - 1);
+
+            const pooledSdPre = Math.sqrt((varTreated + varControlRaw) / 2) || 1;
+            const smdPre = Math.abs((meanTreated - meanControlRaw) / pooledSdPre);
+
+            let ipwSum = 0;
+            let weightedControlSum = 0;
+            control.forEach(e => {
+                const weight = e.propensityScore / Math.max(0.01, 1 - e.propensityScore);
+                ipwSum += weight;
+                weightedControlSum += (e[cov.key] || 0) * weight;
+            });
+
+            const meanControlIPW = ipwSum > 0 ? weightedControlSum / ipwSum : meanControlRaw;
+            const smdPost = Math.abs((meanTreated - meanControlIPW) / pooledSdPre);
+
+            return {
+                covariate: cov.label,
+                meanTreated: Number(meanTreated.toFixed(2)),
+                meanControlUnmatched: Number(meanControlRaw.toFixed(2)),
+                meanControlMatchedIPW: Number(meanControlIPW.toFixed(2)),
+                smdPreMatching: Number(smdPre.toFixed(3)),
+                smdPostMatching: Number(smdPost.toFixed(3)),
+                isBalanced: smdPost < 0.10
+            };
+        });
     }
 
     /**
