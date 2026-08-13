@@ -64,15 +64,15 @@ export const getPlatformMetrics = async (req, res) => {
             });
 
             const PLAN_PRICE_PER_EMPLOYEE = {
-                'ESSENTIAL': 1.50,
-                'GROWTH': 3.00,
-                'ENTERPRISE': 5.00
+                'ESSENTIAL': 0.50,
+                'GROWTH': 1.00,
+                'ENTERPRISE': 2.00
             };
 
             let estimatedMRR = 0;
             activeTenantDetails.forEach(t => {
                 const empCount = t._count.employees || 1;
-                const price = PLAN_PRICE_PER_EMPLOYEE[t.plan] || 1.50;
+                const price = PLAN_PRICE_PER_EMPLOYEE[t.plan] || 0.50;
                 estimatedMRR += empCount * price;
             });
 
@@ -468,7 +468,7 @@ export const createTenantBySuperAdmin = async (req, res) => {
             }
 
             const hashedPassword = await bcrypt.hash(adminPassword, 10);
-            const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+            const trialEndsAt = new Date(Date.now() + 45 * 24 * 60 * 60 * 1000);
 
             const result = await prisma.$transaction(async (tx) => {
                 const tenant = await tx.tenant.create({
@@ -558,7 +558,7 @@ export const createTenantBySuperAdmin = async (req, res) => {
 
             return res.status(201).json({
                 success: true,
-                message: `Empresa '${result.tenant.name}' creada exitosamente con trial de 14 días.`,
+                message: `Empresa '${result.tenant.name}' creada exitosamente con trial de 45 días.`,
                 data: result
             });
         }, true);

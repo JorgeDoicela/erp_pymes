@@ -180,3 +180,21 @@ docker compose logs --tail=50 backend
 ```
 
 Las migraciones de Prisma se aplican automáticamente al iniciar el contenedor del backend mediante `prisma migrate deploy`.
+
+## 9. Optimización de Carga, Resiliencia y Protección de Recursos (SaaS PyME)
+
+Gracias a una arquitectura eficiente, modular y de baja huella de cómputo, la plataforma puede permitirse ofrecer **precios sumamente económicos y accesibles (\$0.50/emp) con 45 días de prueba gratuita**, democratizando el software para pequeñas y medianas empresas (PyMEs) sin comprometer la rentabilidad ni la estabilidad del servidor.
+
+Esta infraestructura optimizada garantiza el rendimiento durante campañas masivas o presentaciones en congresos mediante los siguientes mecanismos:
+
+1. **Aislamiento Multi-Tenant y Licenciamiento:**
+   - Interceptor de datos Prisma que fuerza el aislamiento lógico por `tenantId`.
+   - Control de cuotas de empleados (`maxEmployees`) por plan (Essential: 25, Growth: 100), previniendo el acaparamiento de memoria o CPU por un solo inquilino.
+2. **Limitación de Tasa (Rate Limiting Anti-DDoS):**
+   - Middleware `rateLimit.middleware.js` aplicado en los endpoints de autenticación, recuperación y registro público (`/auth/login`, `/tenants/register`).
+3. **Gestión de Memoria y Rendimiento:**
+   - Límite estricto de payload HTTP (`express.json({ limit: '20mb' })`) para evitar ataques por agotamiento de RAM.
+   - Middleware de métricas en tiempo real `performance.middleware.js` para monitorear tiempos de respuesta.
+4. **Caché y Re-autosanación:**
+   - Redis 7 gestiona el estado y WebSockets en memoria sin impactar el almacenamiento en disco de PostgreSQL.
+   - Contenedores Docker configurados con `restart: always` y `healthcheck` activo para reinicios transparentes en milisegundos ante picos de uso inusuales.

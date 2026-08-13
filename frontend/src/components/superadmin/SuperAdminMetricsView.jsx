@@ -71,7 +71,7 @@ export default function SuperAdminMetricsView({ metrics, loading }) {
                         <div className="px-5 py-3 flex items-center justify-between">
                             <div>
                                 <span className="font-medium text-gray-900">Essential Tier</span>
-                                <span className="text-gray-400 ml-2">($1.50 / emp.)</span>
+                                <span className="text-gray-400 ml-2">($0.50 / emp.)</span>
                             </div>
                             <span className="font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
                                 {essentialCount} empresas <span className="text-gray-400">({Math.round((essentialCount / totalTenants) * 100)}%)</span>
@@ -80,7 +80,7 @@ export default function SuperAdminMetricsView({ metrics, loading }) {
                         <div className="px-5 py-3 flex items-center justify-between">
                             <div>
                                 <span className="font-medium text-gray-900">Growth Tier</span>
-                                <span className="text-gray-400 ml-2">($3.00 / emp.)</span>
+                                <span className="text-gray-400 ml-2">($1.00 / emp.)</span>
                             </div>
                             <span className="font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
                                 {growthCount} empresas <span className="text-gray-400">({Math.round((growthCount / totalTenants) * 100)}%)</span>
@@ -89,7 +89,7 @@ export default function SuperAdminMetricsView({ metrics, loading }) {
                         <div className="px-5 py-3 flex items-center justify-between">
                             <div>
                                 <span className="font-medium text-gray-900">Enterprise Tier</span>
-                                <span className="text-gray-400 ml-2">($5.00 / emp.)</span>
+                                <span className="text-gray-400 ml-2">($2.00 / emp.)</span>
                             </div>
                             <span className="font-mono text-gray-900" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
                                 {enterpriseCount} empresas <span className="text-gray-400">({Math.round((enterpriseCount / totalTenants) * 100)}%)</span>

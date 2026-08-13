@@ -83,15 +83,18 @@ Petición HTTP
 Base de datos PostgreSQL
 ```
 
-### 3.2 Planes de Suscripción
+### 3.2 Planes de Suscripción y Período de Prueba
 
-| Plan | Descripción | Max. Empleados |
-|------|-------------|----------------|
-| ESSENTIAL | Plan base para PyMEs pequeñas | 50 |
-| GROWTH | Plan en crecimiento | Configurable |
-| ENTERPRISE | Sin límite de empleados | Ilimitado |
+El sistema cuenta con un esquema de precios de impacto social orientado al apoyo de pequeñas y medianas empresas (PyMEs) e Inclusión Tecnológica:
 
-El campo `maxEmployees` en el modelo `Tenant` es validado en tiempo de creación de cada empleado por el `EmployeeService`.
+| Plan | Descripción | Precio / Emp / Mes | Max. Empleados | Prueba Gratuita |
+|------|-------------|--------------------|----------------|-----------------|
+| ESSENTIAL | Plan base para microempresas | $0.50 / emp | 25 | 45 días completos |
+| GROWTH | Plan en crecimiento para PyMEs | $1.00 / emp | 100 | 45 días completos |
+| ENTERPRISE | Plan corporativo sin límites | $2.00 / emp | Ilimitado | 45 días completos |
+
+* **Período de Prueba (Trial):** 45 días naturales sin necesidad de tarjeta de crédito. Este plazo está diseñado para permitir a las empresas completar un ciclo mensual integro de gestión de asistencia, solicitudes y cálculo/cierre de nómina.
+* Validaciones: El campo `maxEmployees` en el modelo `Tenant` es validado en tiempo de registro de empleados y gestión de licencias.
 
 ### 3.3 Roles del Sistema
 

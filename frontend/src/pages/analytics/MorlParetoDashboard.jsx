@@ -6,16 +6,11 @@ import {
 } from '../../services/intelligenceService';
 import { 
     FiTarget, 
-    FiDollarSign, 
-    FiTrendingUp, 
-    FiCheckCircle, 
     FiPlay, 
     FiDownload, 
     FiLayers, 
     FiSliders, 
     FiPieChart, 
-    FiZap,
-    FiAward,
     FiActivity
 } from 'react-icons/fi';
 import { 
@@ -52,7 +47,6 @@ const MorlParetoDashboard = () => {
             if (resHistory.success && resHistory.data.length > 0) {
                 setHistory(resHistory.data);
             }
-            // Ejecutar simulación inicial por defecto
             await handleRunOptimization('Optimización MORL Presupuestaria IT', 15000, 'ALL');
         } catch (error) {
             console.error('Error al cargar datos MORL:', error);
@@ -90,9 +84,9 @@ const MorlParetoDashboard = () => {
 
     if (loading && !activeRun) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
-                <FiTarget className="w-8 h-8 text-amber-500 animate-spin" />
-                <p className="text-sm font-medium text-slate-400">Calculando Frontera de Pareto (Vector Q-Learning)...</p>
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3 bg-gray-50">
+                <FiTarget className="w-6 h-6 text-gray-500 animate-spin" />
+                <p className="text-xs font-medium text-gray-500">Calculando Frontera de Pareto (Vector Q-Learning)...</p>
             </div>
         );
     }
@@ -111,24 +105,23 @@ const MorlParetoDashboard = () => {
     }));
 
     return (
-        <div className="space-y-6 pb-12">
+        <div className="space-y-6 pb-12 bg-gray-50 min-h-screen p-6">
             {/* Header ERP */}
-            <div className="pb-4 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="pb-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center space-x-2 mb-1">
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 rounded uppercase tracking-wider">
-                            Multi-Objective Reinforcement Learning (MORL)
+                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
+                            MORL Reinforcement Learning
                         </span>
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 rounded uppercase tracking-wider flex items-center gap-1">
-                            <FiAward className="w-3 h-3 text-indigo-400" />
-                            Frontera Eficiente de Pareto (Soluciones No Dominadas)
+                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
+                            Frontera Eficiente de Pareto
                         </span>
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                        <FiTarget className="text-amber-600 dark:text-amber-400" />
+                    <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                        <FiTarget className="text-blue-600" />
                         Motor de Optimización Multiobjetivo MORL
                     </h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                         Equilibrio económico exacto entre inversión en compensaciones ($) y tasa de retención esperada (%) mediante Q-Learning.
                     </p>
                 </div>
@@ -136,10 +129,10 @@ const MorlParetoDashboard = () => {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => exportAcademicDataset('csv')}
-                        className="px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1.5"
+                        className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer bg-white flex items-center gap-1.5"
                     >
                         <FiDownload className="w-3.5 h-3.5" />
-                        Exportar Dataset Paper
+                        Exportar Dataset
                     </button>
                 </div>
             </div>
@@ -147,19 +140,19 @@ const MorlParetoDashboard = () => {
             {/* Workbench & Active Results */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Form: MORL Configurator */}
-                <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            <FiSliders className="text-amber-500" />
+                <div className="p-4 bg-white border border-gray-200 rounded space-y-4">
+                    <div className="border-b border-gray-100 pb-3">
+                        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                            <FiSliders className="text-blue-600" />
                             Configurador Presupuestario MORL
                         </h2>
                     </div>
 
-                    <div className="space-y-4 text-xs">
+                    <div className="space-y-4">
                         <div>
-                            <div className="flex justify-between font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <div className="flex justify-between text-xs font-medium text-gray-600 mb-1">
                                 <span>Límite Presupuestario ($)</span>
-                                <span className="font-bold text-amber-600 dark:text-amber-400">{formatMoney(budgetLimit)}</span>
+                                <span className="font-mono font-semibold text-gray-900">{formatMoney(budgetLimit)}</span>
                             </div>
                             <input
                                 type="range"
@@ -168,18 +161,18 @@ const MorlParetoDashboard = () => {
                                 step="1000"
                                 value={budgetLimit}
                                 onChange={(e) => setBudgetLimit(Number(e.target.value))}
-                                className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                className="w-full h-1.5 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-600"
                             />
                         </div>
 
                         <div>
-                            <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
                                 Departamento Objetivo
                             </label>
                             <select
                                 value={targetDepartment}
                                 onChange={(e) => setTargetDepartment(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-medium"
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                             >
                                 <option value="ALL">Todos los Departamentos (Global)</option>
                                 <option value="Tecnología">Tecnología / IT</option>
@@ -190,14 +183,14 @@ const MorlParetoDashboard = () => {
                         </div>
 
                         <div>
-                            <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
                                 Título Personalizado (Opcional)
                             </label>
                             <input
                                 type="text"
                                 value={customTitle}
                                 onChange={(e) => setCustomTitle(e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-medium"
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                                 placeholder="Ej. Plan Anual Retención Q4"
                             />
                         </div>
@@ -205,89 +198,83 @@ const MorlParetoDashboard = () => {
                         <button
                             onClick={() => handleRunOptimization()}
                             disabled={optimizing}
-                            className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 text-xs"
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer w-full flex items-center justify-center gap-1.5 disabled:opacity-50"
                         >
                             <FiPlay className={`w-3.5 h-3.5 ${optimizing ? 'animate-spin' : ''}`} />
-                            {optimizing ? 'Entrenando Q-Learning Vectorial...' : 'Calcular Frontera de Pareto'}
+                            {optimizing ? 'Entrenando Q-Learning...' : 'Calcular Frontera de Pareto'}
                         </button>
                     </div>
                 </div>
 
                 {/* Right (2 cols): Selected Pareto Point & Interactive Chart */}
                 <div className="lg:col-span-2 space-y-4">
-                    {/* KPI Cards Banner */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs space-y-1">
-                            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                <span>Costo de Política Selección</span>
-                                <FiDollarSign className="w-4 h-4 text-amber-500" />
-                            </div>
-                            <div className="flex items-baseline space-x-2">
-                                <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                                    {formatMoney(selectedPoint.totalCostEstimate)}
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-slate-400">Peso Costo w₂ = {selectedPoint.weightCost}</p>
+                    {/* KPI Resumen Contable */}
+                    <div className="bg-white border border-gray-200 rounded p-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-3 pb-2 border-b border-gray-100">
+                            Resumen de Solución Seleccionada (Punto Pareto #{selectedPointIndex + 1})
                         </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                            <div className="py-2 sm:py-0 sm:px-4 first:pl-0 flex flex-col justify-between">
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Costo de Política</span>
+                                <div className="mt-1 flex items-baseline space-x-2">
+                                    <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
+                                        {formatMoney(selectedPoint.totalCostEstimate)}
+                                    </span>
+                                </div>
+                                <span className="text-[11px] text-gray-400 mt-1">Peso Costo w₂ = {selectedPoint.weightCost}</span>
+                            </div>
 
-                        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs space-y-1">
-                            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                <span>Tasa Retención Esperada</span>
-                                <FiTrendingDown className="w-4 h-4 text-emerald-500" />
+                            <div className="py-2 sm:py-0 sm:px-4 flex flex-col justify-between">
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Tasa Retención Esperada</span>
+                                <div className="mt-1 flex items-baseline space-x-2">
+                                    <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
+                                        {selectedPoint.expectedRetentionRate}%
+                                    </span>
+                                </div>
+                                <span className="text-[11px] text-gray-400 mt-1">Peso Retención w₁ = {selectedPoint.weightRetention}</span>
                             </div>
-                            <div className="flex items-baseline space-x-2">
-                                <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                                    {selectedPoint.expectedRetentionRate}%
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-slate-400">Peso Retención w₁ = {selectedPoint.weightRetention}</p>
-                        </div>
 
-                        <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs space-y-1">
-                            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                <span>Empleados Retenidos</span>
-                                <FiCheckCircle className="w-4 h-4 text-indigo-500" />
+                            <div className="py-2 sm:py-0 sm:px-4 last:pr-0 flex flex-col justify-between">
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Empleados Retenidos</span>
+                                <div className="mt-1 flex items-baseline space-x-2">
+                                    <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
+                                        {selectedPoint.retainedEmployeeCount} Empleados
+                                    </span>
+                                </div>
+                                <span className="text-[11px] text-gray-400 mt-1">Solución No Dominada</span>
                             </div>
-                            <div className="flex items-baseline space-x-2">
-                                <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                    {selectedPoint.retainedEmployeeCount} Empleados
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-slate-400">Solución No Dominada de Pareto</p>
                         </div>
                     </div>
 
                     {/* Interactive Pareto Scatter Chart */}
-                    <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <FiActivity className="text-amber-500" />
-                                    Curva de la Frontera Eficiente de Pareto (Presupuesto $ vs. Retención %)
-                                </h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    Haz clic en cualquier punto de la curva para cargar la política de intervenciones correspondiente.
-                                </p>
-                            </div>
+                    <div className="p-4 bg-white border border-gray-200 rounded space-y-3">
+                        <div className="border-b border-gray-100 pb-3">
+                            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                                <FiActivity className="text-blue-600" />
+                                Curva de la Frontera Eficiente de Pareto (Presupuesto $ vs. Retención %)
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                                Haz clic en cualquier punto de la curva para seleccionar una combinación de la frontera.
+                            </p>
                         </div>
 
                         <div className="h-[220px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
-                                    <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                                    <XAxis type="number" dataKey="x" name="Costo Presupuestario" unit="$" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                                    <YAxis type="number" dataKey="y" name="Tasa Retención" unit="%" domain={[50, 100]} tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                    <XAxis type="number" dataKey="x" name="Costo Presupuestario" unit="$" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                                    <YAxis type="number" dataKey="y" name="Tasa Retención" unit="%" domain={[50, 100]} tick={{ fontSize: 11, fill: '#6b7280' }} />
                                     <Tooltip 
                                         cursor={{ strokeDasharray: '3 3' }}
                                         content={({ payload }) => {
                                             if (payload && payload.length) {
                                                 const data = payload[0].payload;
                                                 return (
-                                                    <div className="bg-slate-900 text-white p-2.5 rounded-lg border border-slate-700 text-xs space-y-1">
-                                                        <p className="font-bold text-amber-400">Punto Pareto #{data.index + 1}</p>
-                                                        <p>Costo: {formatMoney(data.x)}</p>
-                                                        <p>Retención: {data.y}%</p>
-                                                        <p className="text-[10px] text-slate-400">Preferencia w₁ (Retención) = {data.w1}</p>
+                                                    <div className="bg-gray-900 text-white p-2.5 rounded border border-gray-800 text-xs space-y-1">
+                                                        <p className="font-semibold text-gray-200">Punto Pareto #{data.index + 1}</p>
+                                                        <p className="font-mono">Costo: {formatMoney(data.x)}</p>
+                                                        <p className="font-mono">Retención: {data.y}%</p>
+                                                        <p className="text-[10px] text-gray-400 font-mono">w₁ (Retención) = {data.w1}</p>
                                                     </div>
                                                 );
                                             }
@@ -298,8 +285,8 @@ const MorlParetoDashboard = () => {
                                         {scatterData.map((entry, index) => (
                                             <Cell 
                                                 key={`cell-${index}`} 
-                                                fill={index === selectedPointIndex ? '#f59e0b' : '#3b82f6'} 
-                                                r={index === selectedPointIndex ? 8 : 5} 
+                                                fill={index === selectedPointIndex ? '#2563eb' : '#9ca3af'} 
+                                                r={index === selectedPointIndex ? 7 : 4} 
                                             />
                                         ))}
                                     </Scatter>
@@ -311,86 +298,84 @@ const MorlParetoDashboard = () => {
             </div>
 
             {/* Action Matrix Breakdown */}
-            <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs space-y-4">
-                <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <FiPieChart className="text-amber-500" />
-                        Desglose de Acciones Recomendadas para el Punto Pareto Seleccionado
+            <div className="p-4 bg-white border border-gray-200 rounded space-y-3">
+                <div className="border-b border-gray-100 pb-3">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <FiPieChart className="text-blue-600" />
+                        Desglose de Acciones Recomendadas (Punto Pareto #{selectedPointIndex + 1})
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-gray-500 mt-0.5">
                         Acciones óptimas aprendidas por la política greedy de Q-Learning según categoría de riesgo.
                     </p>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-center text-xs">
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg space-y-1">
-                        <span className="text-lg font-bold text-slate-700 dark:text-slate-300">{actionBreakdown.NO_ACTION || 0}</span>
-                        <p className="text-[10px] text-slate-500">Sin Intervención</p>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
+                        <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.NO_ACTION || 0}</span>
+                        <p className="text-[10px] text-gray-500">Sin Intervención</p>
                     </div>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg space-y-1">
-                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{actionBreakdown.TRAINING_GRANT || 0}</span>
-                        <p className="text-[10px] text-slate-500">Beca Capacitación</p>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
+                        <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.TRAINING_GRANT || 0}</span>
+                        <p className="text-[10px] text-gray-500">Beca Capacitación</p>
                     </div>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg space-y-1">
-                        <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{actionBreakdown.REMOTE_WORK_2D || 0}</span>
-                        <p className="text-[10px] text-slate-500">Teletrabajo 2d/sem</p>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
+                        <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.REMOTE_WORK_2D || 0}</span>
+                        <p className="text-[10px] text-gray-500">Teletrabajo 2d/sem</p>
                     </div>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg space-y-1">
-                        <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{actionBreakdown.SALARY_BUMP_5 || 0}</span>
-                        <p className="text-[10px] text-slate-500">Aumento 5%</p>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
+                        <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.SALARY_BUMP_5 || 0}</span>
+                        <p className="text-[10px] text-gray-500">Aumento 5%</p>
                     </div>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg space-y-1">
-                        <span className="text-lg font-bold text-amber-700 dark:text-amber-300">{actionBreakdown.SALARY_BUMP_10 || 0}</span>
-                        <p className="text-[10px] text-slate-500">Aumento 10%</p>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
+                        <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.SALARY_BUMP_10 || 0}</span>
+                        <p className="text-[10px] text-gray-500">Aumento 10%</p>
                     </div>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg space-y-1">
-                        <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{actionBreakdown.PROMOTION_BONUS || 0}</span>
-                        <p className="text-[10px] text-slate-500">Ascenso + Bono</p>
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
+                        <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.PROMOTION_BONUS || 0}</span>
+                        <p className="text-[10px] text-gray-500">Ascenso + Bono</p>
                     </div>
                 </div>
             </div>
 
             {/* History Table */}
-            <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            <FiLayers className="text-amber-500" />
-                            Historial de Corridas de Optimización MORL
-                        </h2>
-                    </div>
+            <div className="p-4 bg-white border border-gray-200 rounded space-y-4">
+                <div className="border-b border-gray-100 pb-3">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <FiLayers className="text-blue-600" />
+                        Historial de Corridas de Optimización MORL
+                    </h2>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-semibold">
-                                <th className="p-3">Título Corrida</th>
-                                <th className="p-3">Dept. Objetivo</th>
-                                <th className="p-3">Presupuesto Límite</th>
-                                <th className="p-3">Muestra</th>
-                                <th className="p-3">Puntos Pareto No Dominados</th>
-                                <th className="p-3">Fecha Ejecución</th>
+                            <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                                <th className="py-2.5 px-4">Título Corrida</th>
+                                <th className="py-2.5 px-4">Dept. Objetivo</th>
+                                <th className="py-2.5 px-4">Presupuesto Límite</th>
+                                <th className="py-2.5 px-4">Muestra</th>
+                                <th className="py-2.5 px-4">Puntos Pareto No Dominados</th>
+                                <th className="py-2.5 px-4">Fecha Ejecución</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
+                        <tbody className="divide-y divide-gray-100 text-gray-700">
                             {history.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="p-4 text-center text-slate-400 italic">No hay ejecuciones MORL registradas.</td>
+                                    <td colSpan="6" className="py-4 px-4 text-center text-gray-400 italic">No hay ejecuciones MORL registradas.</td>
                                 </tr>
                             ) : (
                                 history.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors">
-                                        <td className="p-3 font-semibold text-slate-900 dark:text-white">{item.title}</td>
-                                        <td className="p-3">
-                                            <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[10px]">
+                                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
+                                        <td className="py-2.5 px-4 font-semibold text-gray-900">{item.title}</td>
+                                        <td className="py-2.5 px-4">
+                                            <span className="bg-gray-100 border border-gray-200 text-gray-700 font-mono text-[10px] px-2 py-0.5 rounded">
                                                 {item.targetDepartment}
                                             </span>
                                         </td>
-                                        <td className="p-3 font-mono">{formatMoney(item.budgetLimit)}</td>
-                                        <td className="p-3 font-mono">{item.sampleSize} emp.</td>
-                                        <td className="p-3 font-bold font-mono text-amber-600 dark:text-amber-400">{item.paretoPointsCount} puntos</td>
-                                        <td className="p-3 text-slate-400 font-mono text-[11px]">{new Date(item.createdAt).toLocaleDateString()}</td>
+                                        <td className="py-2.5 px-4 font-mono tabular-nums">{formatMoney(item.budgetLimit)}</td>
+                                        <td className="py-2.5 px-4 font-mono tabular-nums">{item.sampleSize} emp.</td>
+                                        <td className="py-2.5 px-4 font-semibold font-mono tabular-nums text-gray-900">{item.paretoPointsCount} puntos</td>
+                                        <td className="py-2.5 px-4 text-gray-400 font-mono text-[11px]">{new Date(item.createdAt).toLocaleDateString()}</td>
                                     </tr>
                                 ))
                             )}

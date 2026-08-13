@@ -100,7 +100,7 @@ export const requireTenant = async (req, res, next) => {
 
                 return res.status(402).json({
                     success: false,
-                    message: `El período de prueba gratuita de 14 días para la empresa '${tenant.name}' ha finalizado. Por favor actualiza la suscripción para continuar.`,
+                    message: `El período de prueba gratuita de 45 días para la empresa '${tenant.name}' ha finalizado. Por favor actualiza la suscripción para continuar.`,
                     code: 'TRIAL_EXPIRED'
                 });
             }

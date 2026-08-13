@@ -141,9 +141,9 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                                                     onChange={(e) => handlePlanChange(e.target.value)}
                                                     className="w-full px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono font-medium text-gray-800 focus:outline-none focus:border-blue-400 cursor-pointer"
                                                 >
-                                                    <option value="ESSENTIAL">ESSENTIAL · $1.50/emp</option>
-                                                    <option value="GROWTH">GROWTH · $3.00/emp</option>
-                                                    <option value="ENTERPRISE">ENTERPRISE · $5.00/emp</option>
+                                                     <option value="ESSENTIAL">ESSENTIAL · $0.50/emp</option>
+                                                     <option value="GROWTH">GROWTH · $1.00/emp</option>
+                                                     <option value="ENTERPRISE">ENTERPRISE · $2.00/emp</option>
                                                 </select>
                                             </div>
                                         </div>

@@ -65,7 +65,7 @@ export const registerTenant = async (req, res) => {
         }
 
         const passwordHash = await bcrypt.hash(adminPassword, 10);
-        const trialDays = 14;
+        const trialDays = 45;
         const trialEndsAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
 
         // Crear Tenant y Admin en una transacción atómica
@@ -154,7 +154,7 @@ export const registerTenant = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'Empresa registrada exitosamente. Período de prueba de 14 días activado.',
+            message: 'Empresa registrada exitosamente. Período de prueba de 45 días activado.',
             data: {
                 tenant: {
                     id: result.tenant.id,

@@ -159,7 +159,7 @@ function Home() {
                                     to="/register-company"
                                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors"
                                 >
-                                    Registrar Empresa (Prueba 14 Días)
+                                    Registrar Empresa (Prueba 45 Días)
                                     <FiArrowRight className="w-4 h-4" />
                                 </Link>
 

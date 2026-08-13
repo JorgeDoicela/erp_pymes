@@ -26,11 +26,6 @@ export default function PWAInstallPrompt() {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Mostrar el prompt si no ha sido descartado recientemente
-      const dismissedTime = localStorage.getItem('pwa_prompt_dismissed');
-      if (!dismissedTime || Date.now() - parseInt(dismissedTime, 10) > 24 * 60 * 60 * 1000) {
-        setShowPrompt(true);
-      }
     };
 
     const handleAppInstalled = () => {
@@ -41,14 +36,6 @@ export default function PWAInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
-
-    // Mostrar instrucción iOS si aplica
-    if (iosDevice && !isStandalone) {
-      const dismissedTime = localStorage.getItem('pwa_ios_prompt_dismissed');
-      if (!dismissedTime || Date.now() - parseInt(dismissedTime, 10) > 48 * 60 * 60 * 1000) {
-        setShowPrompt(true);
-      }
-    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -109,8 +96,7 @@ export default function PWAInstallPrompt() {
             className="w-full max-w-sm md:max-w-md"
           >
             <div className="relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 p-5 shadow-2xl shadow-slate-400/20 text-slate-800">
-              {/* Línea decorativa superior */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400" />
+
               
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3.5">

@@ -45,7 +45,7 @@ export default function RegisterTenant() {
                 throw new Error(data.message || 'Error al registrar la empresa');
             }
 
-            toast.success('Empresa registrada con éxito. Prueba de 14 días activa.');
+            toast.success('Empresa registrada con éxito. Prueba de 45 días activa.');
 
             if (data.token) {
                 localStorage.setItem('token', data.token);
@@ -80,7 +80,7 @@ export default function RegisterTenant() {
                         Registro de Empresa ERP
                     </h1>
                     <p className="text-xs text-gray-500 mt-1">
-                        Active su prueba gratuita de 14 días sin necesidad de tarjeta de crédito
+                        Active su prueba gratuita de 45 días sin necesidad de tarjeta de crédito
                     </p>
                 </motion.div>
 

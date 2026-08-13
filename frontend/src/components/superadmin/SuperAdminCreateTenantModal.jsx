@@ -92,9 +92,9 @@ export default function SuperAdminCreateTenantModal({ isOpen, onClose, onSuccess
                                     onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
                                     className="w-full px-3 py-2 bg-white border border-gray-200 rounded text-xs text-gray-800 focus:outline-none focus:border-blue-400 cursor-pointer"
                                 >
-                                    <option value="ESSENTIAL">ESSENTIAL · $1.50/emp</option>
-                                    <option value="GROWTH">GROWTH · $3.00/emp</option>
-                                    <option value="ENTERPRISE">ENTERPRISE · $5.00/emp</option>
+                                    <option value="ESSENTIAL">ESSENTIAL · $0.50/emp</option>
+                                    <option value="GROWTH">GROWTH · $1.00/emp</option>
+                                    <option value="ENTERPRISE">ENTERPRISE · $2.00/emp</option>
                                 </select>
                             </div>
                             {field('Capacidad máxima de licencias', {
