@@ -165,10 +165,10 @@ Para la evaluación cuantitativa de los 4 motores de Inteligencia Artificial, se
 - **Garantías de Privacidad:** Presupuesto gastado $\epsilon = 0.35$, $\delta = 10^{-5}$ con escala de ruido Gaussiano $\sigma = 0.45$.
 
 ### 4.3. Protocolo de Validación por Encuestas e Instrumentos
-La metodología se complementa con 3 instrumentos de evaluación estructurados:
-1. **Formulario Pre-Sistema:** Diagnóstico baseline de ineficiencias operativas y subjetividad en PyMEs (19 ítems, escala Likert 1-5).
-2. **Formulario Post-Sistema (UAT):** Evaluación de la usabilidad de la IA explicable y precisión percibida tras interactuar con la plataforma (22 ítems, escala Likert 1-5).
-3. **Formulario de Evaluación de Expertos:** Validación metodológica y científica de los 4 motores por docentes e investigadores del área (16 ítems).
+La metodología se complementa con 3 instrumentos de evaluación estructurados y detallados en el archivo [FORMULARIOS_INVESTIGACION.md](file:///home/jorge/Proyectos/recursos_humanos/FORMULARIOS_INVESTIGACION.md):
+1. **Formulario 1 — PRE-SISTEMA:** Diagnóstico baseline de ineficiencias operativas, suplantación asistencial, subjetividad y cumplimiento legal en PyMEs (20 ítems, Secciones A a E).
+2. **Formulario 2 — POST-SISTEMA (UAT):** Evaluación de usabilidad (SUS), Scoring 5D, simulación causal de ROI (*What-If*), optimización MORL Pareto, privacidad federada y actas de finiquito (19 ítems, Secciones A a F).
+3. **Formulario 3 — EVALUACIÓN DE EXPERTOS:** Validación metodológica y científica por docentes e investigadores de la Cuatrilogía de Motores de IA (Weibull/SGD, Pearl Do-Calculus/PSM/IPW, FedAvg/DP-SGD y Vector Q-Learning MORL) (18 ítems, Secciones A a D).
 
 ### 4.4. Herramientas de Inspección CLI y Exportación de Dataset Académico (LOPDP / GDPR)
 - **Script CLI de Inspección en Consola (`print_ai_report.js`):** Permite la verificación inmediata de las métricas cuantitativas de los 4 motores mediante la ejecución en consola (`node src/scripts/print_ai_report.js`).

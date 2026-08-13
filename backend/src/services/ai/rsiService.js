@@ -194,11 +194,14 @@ class RsiService {
         const newBrierScore = calculatedLoss.brierScore;
         const newLogLoss = calculatedLoss.logLoss;
 
-        const epoch1 = await prisma.rsiCalibration.findFirst({
-            where: { tenantId, epoch: 1 }
+        const firstEpoch = await prisma.rsiCalibration.findFirst({
+            where: { tenantId },
+            orderBy: { epoch: 'asc' }
         });
-        const baselineBrier = epoch1 ? epoch1.brierScore : (initialBrier || 0.185);
-        const improvementPercentage = Number(Math.max(0, ((baselineBrier - newBrierScore) / baselineBrier) * 100).toFixed(1));
+        const baselineBrier = (firstEpoch && firstEpoch.brierScore > 0) ? firstEpoch.brierScore : (initialBrier || 0.185);
+        const improvementPercentage = baselineBrier > newBrierScore 
+            ? Number((((baselineBrier - newBrierScore) / baselineBrier) * 100).toFixed(1))
+            : 0;
 
         const newCalibration = await prisma.rsiCalibration.create({
             data: {

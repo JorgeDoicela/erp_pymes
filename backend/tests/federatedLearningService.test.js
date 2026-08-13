@@ -8,6 +8,10 @@ vi.mock('../src/database/db.js', () => ({
             findMany: vi.fn()
         },
         employee: {
+            findMany: vi.fn().mockResolvedValue([
+                { id: 'emp_1', absences: [], evaluations: [{ finalScore: 85 }] },
+                { id: 'emp_2', absences: [{ id: 'a1' }], evaluations: [{ finalScore: 70 }] }
+            ]),
             count: vi.fn()
         },
         tenantPrivacyBudget: {
@@ -54,7 +58,7 @@ describe('Federated Meta-Learning with Differential Privacy (DP-SGD) Unit Tests'
         const localGrad = await federatedLearningService.computeLocalPrivateGradient('tenant_1', {}, 1.0, 0.5);
 
         expect(localGrad.tenantId).toBe('tenant_1');
-        expect(localGrad.sampleSize).toBe(25);
+        expect(localGrad.sampleSize).toBe(2);
         expect(localGrad.noisyGradient).toBeDefined();
         expect(localGrad.noisyGradient.beta_salary).toBeDefined();
     });

@@ -10,6 +10,12 @@ vi.mock('../src/database/db.js', () => ({
         causalIntervention: {
             create: vi.fn(),
             findMany: vi.fn()
+        },
+        rsiCalibration: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn().mockResolvedValue({
+                weightsJson: JSON.stringify({ beta_salary: -0.85, beta_absence: 0.35 })
+            })
         }
     }
 }));

@@ -60,7 +60,10 @@ describe('RSI Engine (Recursive Self-Improvement) Unit Tests', () => {
             brierScore: 0.185
         });
 
-        prisma.rsiPredictionAudit.findMany.mockResolvedValue([]);
+        prisma.rsiPredictionAudit.findMany.mockResolvedValue([
+            { predictedTurnover: 0.95, actualOutcome: 1 },
+            { predictedTurnover: 0.05, actualOutcome: 0 }
+        ]);
         prisma.rsiCalibration.create.mockImplementation(({ data }) => Promise.resolve({
             id: 'calib_123',
             ...data,
