@@ -1,6 +1,7 @@
 ---
 name: estilos-erp-pymes
-description: Activa esta skill para aplicar el estándar de diseño de ERPs empresariales de referencia (estilo Holded, Xero, Linear): limpio, funcional, de alto contraste y confiable.
+description: >-
+  Activa esta skill para aplicar el estándar de diseño de ERPs empresariales de referencia (estilo Holded, Xero, Linear): limpio, funcional, de alto contraste y confiable.
 ---
 
 # Estándar de Diseño ERP Empresarial (Holded / Xero / Linear)
@@ -167,6 +168,6 @@ Footer:    px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center jus
 
 ## 11. Recursos
 
-- [references/paleta_tokens.css](file:///home/jorge/Proyectos/recursos_humanos/.agents/skills/estilos-erp-pymes/references/paleta_tokens.css)
-- [references/componentes_ejemplos.md](file:///home/jorge/Proyectos/recursos_humanos/.agents/skills/estilos-erp-pymes/references/componentes_ejemplos.md)
-- [references/plantilla_impresion.md](file:///home/jorge/Proyectos/recursos_humanos/.agents/skills/estilos-erp-pymes/references/plantilla_impresion.md)
+- [references/paleta_tokens.css](./references/paleta_tokens.css)
+- [references/componentes_ejemplos.md](./references/componentes_ejemplos.md)
+- [references/plantilla_impresion.md](./references/plantilla_impresion.md)
