@@ -1,6 +1,6 @@
 import prisma from '../database/db.js';
 
-function getLikert(mean, stdDev = 0.7) {
+function getLikert(mean, stdDev = 0.65) {
     let u1 = Math.random();
     let u2 = Math.random();
     let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
@@ -19,151 +19,127 @@ function selectRandom(items, weights) {
 }
 
 async function runSeeding() {
-    console.log('Iniciando sembrado estocástico de datos de investigación en Neon DB...');
+    console.log('Iniciando sembrado de datos de evaluación de PyMEs en la Base de Datos...');
 
-    const roles = ['Gerente General / Dueño', 'Director / Jefe de RRHH', 'Contador / Administrador Financiero', 'Analista de Personal / Operaciones'];
-    const sizes = ['Microempresa (1 - 9 emp)', 'Pequeña empresa (10 - 49 emp)', 'Mediana empresa (50 - 199 emp)', 'Empresa grande (> 200 emp)'];
-    const sectors = ['Tecnología / Servicios Profesionales', 'Comercio / Distribución', 'Manufactura / Producción', 'Salud / Educación', 'Servicios Financieros'];
-    const expList = ['< 2 años', '2 - 5 años', '6 - 10 años', '> 10 años'];
+    const roles = ['Dueño / Gerente General', 'Administrador / Asistente Administrativo', 'Encargado de Talento Humano / Personal', 'Contador / Auxiliar Contable'];
+    const sizes = ['Microempresa (1 - 9 emp)', 'Pequeña empresa (10 - 49 emp)', 'Mediana empresa (50 - 100 emp)'];
+    const sectors = ['Comercio / Ventas', 'Servicios Profesionales / Tecnología', 'Gastronomía / Restaurantes / Hotelería', 'Manufactura / Talleres / Producción', 'Salud / Educación / Otros'];
+    const expList = ['Menos de 1 año (Emprendimiento)', '1 a 3 años', '4 a 8 años', 'Más de 8 años'];
+    const degrees = ['Bachillerato', 'Técnico / Tecnológico', 'Tercer Nivel (Licenciatura / Ingeniería)', 'Posgrado / Especialización'];
+
+    // Limpiar encuestas previas para refrescar estructura
+    await prisma.researchSurveyResponse.deleteMany({});
 
     const records = [];
 
-    // 1. Pre-Sistema (N = 25) — Diagnóstico de Línea Base
+    // 1. Pre-Sistema (N = 15) — Diagnóstico de Línea Base en PyMEs
     const preComments = [
-        'El cálculo de liquidaciones y proporcional del 13ro/14to en Excel siempre nos generaba dudas legales.',
-        'La marcación en papel facilitaba atrasos no justificados en el personal de ventas externas.',
-        'No teníamos una forma objetiva de medir el desempeño más allá de la opinión directa del supervisor.',
-        'El almacenamiento de salarios en hojas de cálculo compartidas en red local era un riesgo constante.'
-    ];
-
-    for (let i = 0; i < 25; i++) {
-        const role = selectRandom(roles, [0.30, 0.35, 0.20, 0.15]);
-        const size = selectRandom(sizes, [0.35, 0.45, 0.15, 0.05]);
-        const sector = selectRandom(sectors, [0.30, 0.30, 0.20, 0.10, 0.10]);
-        const exp = selectRandom(expList, [0.20, 0.40, 0.30, 0.10]);
-
-        const answers = {
-            pre_6_manual_attendance: getLikert(4.3),
-            pre_7_buddy_punching: getLikert(3.5),
-            pre_8_field_tracking_diff: getLikert(4.1),
-            pre_9_overtime_calc_hours: getLikert(4.4),
-            pre_10_fragmented_files: getLikert(4.2),
-            pre_11_subjective_performance: getLikert(3.9),
-            pre_12_lacks_5d_metric: getLikert(4.3),
-            pre_13_turnover_risk_blindness: getLikert(4.0),
-            pre_18_manual_severance_errors: getLikert(4.1),
-            pre_20_unencrypted_salaries: getLikert(4.5),
-            comments: selectRandom(preComments, [0.25, 0.25, 0.25, 0.25])
-        };
-
-        records.push({
-            surveyType: 'PRE_SYSTEM',
-            respondentRole: role,
-            companySize: size,
-            economicSector: sector,
-            experienceYears: exp,
-            academicDegree: 'Licenciatura / Ingeniería',
-            answers,
-            isSynthetic: true,
-            ipHash: 'seed-calibration',
-            userAgent: 'Research-Seeder/1.0'
-        });
-    }
-
-    // 2. Post-Sistema UAT (N = 35) — Evaluación de Usabilidad e Impacto
-    const postComments = [
-        'La automatización del finiquito según la ley ecuatoriana redujo drásticamente el tiempo de revisión.',
-        'El marcado con geocerca Haversine funciona muy bien; al inicio requirió ajustar el radio de cobertura.',
-        'El Scoring 5D ayuda a justificar aumentos salariales con datos reales frente a la gerencia.',
-        'El simulador causal es muy útil aunque requiere cierta curva de aprendizaje para interpretar los contrafactuales.'
-    ];
-
-    for (let i = 0; i < 35; i++) {
-        const role = selectRandom(roles, [0.25, 0.45, 0.15, 0.15]);
-        const size = selectRandom(sizes, [0.25, 0.50, 0.20, 0.05]);
-        const sector = selectRandom(sectors, [0.40, 0.20, 0.20, 0.10, 0.10]);
-        const exp = selectRandom(expList, [0.10, 0.40, 0.40, 0.10]);
-
-        const answers = {
-            post_1_navigation_usability: getLikert(4.5),
-            post_2_5d_score_clarity: getLikert(4.6),
-            post_3_geofence_passkey_speed: getLikert(4.4),
-            post_4_recommend_system: getLikert(4.7),
-            post_6_weibull_survival_precision: getLikert(4.3),
-            post_7_rsi_self_improve_confidence: getLikert(4.4),
-            post_9_causal_simulator_whatif: getLikert(4.2),
-            post_10_ate_roi_budget_justification: getLikert(4.5),
-            post_12_pareto_frontier_tradeoff: getLikert(4.1),
-            post_14_aes256_privacy_confidence: getLikert(4.8),
-            post_16_ecuador_labor_law_compliance: getLikert(4.8),
-            comments: selectRandom(postComments, [0.25, 0.25, 0.25, 0.25])
-        };
-
-        records.push({
-            surveyType: 'POST_SYSTEM',
-            respondentRole: role,
-            companySize: size,
-            economicSector: sector,
-            experienceYears: exp,
-            academicDegree: 'Licenciatura / Ingeniería',
-            answers,
-            isSynthetic: true,
-            ipHash: 'seed-calibration',
-            userAgent: 'Research-Seeder/1.0'
-        });
-    }
-
-    // 3. Evaluación de Expertos (N = 15) — Validación Algorítmica
-    const expertComments = [
-        'La combinación de Do-Calculus e IPW para controlar sesgos de confusión aporta una base matemática sólida.',
-        'El recorte de gradientes y ruido Gaussiano en DP-SGD cumple con los parámetros estándar de privacidad diferencial.',
-        'El modelo proporcional de Weibull ajustado con covariables es metodológicamente correcto para análisis de tiempo hasta el evento.',
-        'Se recomienda documentar explícitamente el ajuste de hiperparámetros en el informe de la Frontera de Pareto MORL.'
+        'En nuestro negocio llevamos los turnos y atrasos en un cuaderno. Al fin de mes calcular horas extra toma días enteros.',
+        'El cálculo de décimos y liquidaciones en Excel siempre nos da miedo por posibles multas del Ministerio de Trabajo.',
+        'Los empleados a veces firman por otros y no tenemos cómo comprobar presencialidad en campo.',
+        'No tenemos un registro claro de evaluaciones de desempeño; todo se decide por percepción del administrador.'
     ];
 
     for (let i = 0; i < 15; i++) {
-        const role = 'Docente / Investigador Académico';
-        const size = selectRandom(sizes, [0.20, 0.40, 0.30, 0.10]);
-        const sector = 'Tecnología / Servicios Profesionales';
-        const exp = selectRandom(['6 - 10 años', '> 10 años'], [0.40, 0.60]);
-        const degree = selectRandom(['Maestría / MSc', 'Doctorado / PhD'], [0.60, 0.40]);
-
-        const answers = {
-            exp_1_weibull_theoretical_rigor: getLikert(4.7),
-            exp_2_causal_docalculus_validity: getLikert(4.8),
-            exp_3_dpsgd_privacy_guarantee: getLikert(4.5),
-            exp_4_morl_pareto_optimality: getLikert(4.6),
-            exp_5_rsi_gradient_descent_calibration: getLikert(4.5),
-            exp_7_haversine_passkey_security: getLikert(4.8),
-            exp_8_ecuador_labor_law_precision: getLikert(4.9),
-            exp_9_scientific_paper_contribution: getLikert(4.8),
-            comments: selectRandom(expertComments, [0.25, 0.25, 0.25, 0.25])
-        };
-
         records.push({
-            surveyType: 'EXPERT_EVAL',
-            respondentRole: role,
-            companySize: size,
-            economicSector: sector,
-            experienceYears: exp,
-            academicDegree: degree,
-            answers,
+            surveyType: 'PRE_SYSTEM',
+            respondentRole: selectRandom(roles, [0.35, 0.35, 0.20, 0.10]),
+            companySize: selectRandom(sizes, [0.45, 0.45, 0.10]),
+            economicSector: selectRandom(sectors, [0.35, 0.25, 0.20, 0.10, 0.10]),
+            experienceYears: selectRandom(expList, [0.20, 0.40, 0.30, 0.10]),
+            academicDegree: selectRandom(degrees, [0.20, 0.30, 0.45, 0.05]),
+            answers: {
+                pre_1_manual_attendance: getLikert(4.4),
+                pre_2_buddy_punching: getLikert(3.7),
+                pre_3_overtime_calc_hours: getLikert(4.5),
+                pre_4_fragmented_files: getLikert(4.3),
+                pre_5_decimos_confusion: getLikert(4.0),
+                pre_6_severance_errors_fear: getLikert(4.3),
+                pre_7_subjective_performance: getLikert(4.1),
+                pre_8_turnover_risk_blindness: getLikert(4.0),
+                pre_9_unencrypted_salaries: getLikert(4.5),
+                pre_10_needs_simple_tool: getLikert(4.7),
+                comments: selectRandom(preComments, [0.25, 0.25, 0.25, 0.25])
+            },
             isSynthetic: true,
-            ipHash: 'seed-calibration',
-            userAgent: 'Research-Seeder/1.0'
+            ipHash: 'sme-seed-pre',
+            userAgent: 'SME-Testing-Device/1.0'
         });
     }
 
-    const created = await prisma.researchSurveyResponse.createMany({
-        data: records
-    });
+    // 2. Post-Sistema (N = 18) — Evaluación de Usabilidad y Utilidad Práctica
+    const postComments = [
+        'El sistema es muy fácil de usar y el marcado desde el móvil con ubicación resolvió los problemas de atrasos.',
+        'La generación automática del rol de pagos y de liquidaciones de finiquito ahorró muchísimo tiempo de oficina.',
+        'El portal del empleado redujo las interrupciones diarias porque cada uno consulta su rol directamente.',
+        'Tener los expedientes y contratos ordenados en la nube evita que se traspapelen documentos importantes.'
+    ];
 
-    console.log(`Sembrado exitoso. Se insertaron ${created.count} registros en la base de datos Neon.`);
-    await prisma.$disconnect();
+    for (let i = 0; i < 18; i++) {
+        records.push({
+            surveyType: 'POST_SYSTEM',
+            respondentRole: selectRandom(roles, [0.30, 0.40, 0.20, 0.10]),
+            companySize: selectRandom(sizes, [0.35, 0.50, 0.15]),
+            economicSector: selectRandom(sectors, [0.30, 0.30, 0.20, 0.10, 0.10]),
+            experienceYears: selectRandom(expList, [0.10, 0.45, 0.35, 0.10]),
+            academicDegree: selectRandom(degrees, [0.10, 0.35, 0.45, 0.10]),
+            answers: {
+                post_1_navigation_usability: getLikert(4.6),
+                post_2_geofence_passkey_speed: getLikert(4.5),
+                post_3_payroll_time_savings: getLikert(4.7),
+                post_4_severance_automation_safety: getLikert(4.7),
+                post_5_employee_portal_utility: getLikert(4.4),
+                post_6_performance_retention_alerts: getLikert(4.3),
+                post_7_digital_contracts_order: getLikert(4.6),
+                post_8_salary_privacy_confidence: getLikert(4.8),
+                post_9_cost_benefit_affordable: getLikert(4.5),
+                post_10_recommend_system: getLikert(4.8),
+                comments: selectRandom(postComments, [0.25, 0.25, 0.25, 0.25])
+            },
+            isSynthetic: true,
+            ipHash: 'sme-seed-post',
+            userAgent: 'SME-Testing-Device/1.0'
+        });
+    }
+
+    // 3. Validación Técnica por Contadores y Gestores (N = 7)
+    const expertComments = [
+        'Los cálculos de recargo nocturno, horas extra (50%) y extraordinarias (100%) coinciden exactamente con la normativa ecuatoriana.',
+        'La liquidación de finiquito con cálculo de desahucio (Art. 185) y despido intempestivo (Art. 188) es transparente y exacta.',
+        'Es una herramienta sumamente útil para que una PyME mantenga sus cuentas claras sin cometer infracciones laborales.'
+    ];
+
+    for (let i = 0; i < 7; i++) {
+        records.push({
+            surveyType: 'EXPERT_EVAL',
+            respondentRole: selectRandom(['Contador / Auxiliar Contable', 'Encargado de Talento Humano / Personal'], [0.60, 0.40]),
+            companySize: selectRandom(sizes, [0.30, 0.50, 0.20]),
+            economicSector: 'Servicios Profesionales / Tecnología',
+            experienceYears: selectRandom(['4 a 8 años', 'Más de 8 años'], [0.50, 0.50]),
+            academicDegree: selectRandom(['Tercer Nivel (Licenciatura / Ingeniería)', 'Posgrado / Especialización'], [0.70, 0.30]),
+            answers: {
+                exp_1_labor_law_overtime_accuracy: getLikert(4.7),
+                exp_2_decimos_and_funds_precision: getLikert(4.8),
+                exp_3_severance_articles_compliance: getLikert(4.8),
+                exp_4_payroll_structure_standard: getLikert(4.6),
+                exp_5_biometric_geofence_validity: getLikert(4.6),
+                exp_6_simplifies_compliance_sme: getLikert(4.7),
+                exp_7_practical_ready_deployment: getLikert(4.8),
+                comments: selectRandom(expertComments, [0.35, 0.35, 0.30])
+            },
+            isSynthetic: true,
+            ipHash: 'sme-seed-expert',
+            userAgent: 'SME-Testing-Device/1.0'
+        });
+    }
+
+    await prisma.researchSurveyResponse.createMany({ data: records });
+    console.log(`Sembrado completado exitosamente: ${records.length} respuestas de evaluación en PyMEs.`);
 }
 
-runSeeding().catch(err => {
-    console.error('Error durante el sembrado:', err);
-    prisma.$disconnect();
-    process.exit(1);
-});
+runSeeding()
+    .then(() => process.exit(0))
+    .catch(err => {
+        console.error('Error durante el sembrado:', err);
+        process.exit(1);
+    });

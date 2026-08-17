@@ -9,11 +9,11 @@ export default function PublicResearchPage() {
     const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
 
     const [demographics, setDemographics] = useState({
-        respondentRole: 'Director / Jefe de RRHH',
+        respondentRole: 'Administrador / Asistente Administrativo',
         companySize: 'Pequeña empresa (10 - 49 emp)',
-        economicSector: 'Tecnología / Servicios Profesionales',
-        experienceYears: '2 - 5 años',
-        academicDegree: 'Licenciatura / Ingeniería'
+        economicSector: 'Comercio / Ventas',
+        experienceYears: '1 a 3 años',
+        academicDegree: 'Tercer Nivel (Licenciatura / Ingeniería)'
     });
 
     const [answers, setAnswers] = useState({});
@@ -30,7 +30,7 @@ export default function PublicResearchPage() {
         e.preventDefault();
         
         if (!demographics.respondentRole || !demographics.companySize || !demographics.economicSector) {
-            toast.error('Por favor complete los datos demográficos iniciales.');
+            toast.error('Por favor complete los datos del negocio.');
             return;
         }
 
@@ -48,7 +48,7 @@ export default function PublicResearchPage() {
                 answers
             });
 
-            toast.success('Respuesta registrada correctamente en el estudio científico.');
+            toast.success('Respuesta registrada correctamente.');
             setIsSubmittedSuccess(true);
         } catch (error) {
             const msg = error.response?.data?.message || 'Error al enviar la encuesta.';
@@ -60,21 +60,21 @@ export default function PublicResearchPage() {
 
     const formsMetadata = {
         PRE_SYSTEM: {
-            title: 'Formulario 1 — Diagnóstico Pre-Sistema (Línea Base)',
-            description: 'Medición de problemas operativos, marcación manual, costos de rotación y salarios en texto plano en PyMEs antes de usar Emplifi.',
-            badge: 'Pre-Sistema / Línea Base',
+            title: 'Formulario 1 — Diagnóstico de Gestión Actual (Línea Base)',
+            description: 'Identificación de problemas con hojas de cálculo, cuadernos, atrasos y cálculo manual de nómina en pequeños negocios.',
+            badge: 'Diagnóstico PyME Actual',
             badgeBg: 'bg-amber-50 text-amber-800 border-amber-200'
         },
         POST_SYSTEM: {
-            title: 'Formulario 2 — Evaluación Post-Sistema (UAT e Inteligencia Causal)',
-            description: 'Medición de usabilidad (SUS), impacto en reducción de tiempos de RRHH, confianza en el simulador Causal ATE y Scoring 5D.',
-            badge: 'Post-Sistema / UAT & IA',
+            title: 'Formulario 2 — Evaluación de Usabilidad y Utilidad (Prueba de Usuarios)',
+            description: 'Facilidad de uso, rapidez de marcación, ahorro de tiempo en nómina y utilidad del portal del empleado en Emplifi.',
+            badge: 'Evaluación de Emplifi',
             badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-200'
         },
         EXPERT_EVAL: {
-            title: 'Formulario 3 — Evaluación de Expertos e Investigadores',
-            description: 'Validación del rigor científico, Do-Calculus, privacidad diferencial DP-SGD, algoritmo Weibull y Frontera de Pareto MORL.',
-            badge: 'Evaluación Científica / Expertos',
+            title: 'Formulario 3 — Validación Técnica (Contadores y Gestores de Talento)',
+            description: 'Revisión técnica de cálculos de décimos, liquidaciones de finiquito y cumplimiento del Código de Trabajo de Ecuador.',
+            badge: 'Validación Técnica / Legal',
             badgeBg: 'bg-blue-50 text-blue-800 border-blue-200'
         }
     };
@@ -90,13 +90,13 @@ export default function PublicResearchPage() {
                         </div>
                         <div>
                             <h1 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-                                Emplifi Research Portal
+                                Encuesta de Evaluación Emplifi
                                 <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
-                                    Artículo Científico
+                                    Estudio PyMEs
                                 </span>
                             </h1>
                             <p className="text-xs text-gray-500">
-                                Estudio de Analítica Causal, Automejora Recursiva y Privacidad Diferencial en SaaS PyMEs
+                                Validación práctica de gestión de recursos humanos y nómina para pequeños y medianos negocios
                             </p>
                         </div>
                     </div>
@@ -112,7 +112,7 @@ export default function PublicResearchPage() {
                             to="/investigacion/resultados"
                             className="px-3.5 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
                         >
-                            Resultados & Estadísticas Públicas
+                            Ver Resultados
                         </Link>
                         <Link
                             to="/login"
@@ -130,30 +130,30 @@ export default function PublicResearchPage() {
                         <div className="w-12 h-12 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-xs font-bold mb-3">
                             OK
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900 mb-1">Respuesta Registrada con Éxito</h2>
+                        <h2 className="text-lg font-semibold text-gray-900 mb-1">¡Gracias por su colaboración!</h2>
                         <p className="text-xs text-gray-600 max-w-xl mx-auto leading-relaxed mb-6">
-                            Su aporte ha sido integrado en la base de datos anonimizada del proyecto de investigación científica sobre Emplifi.
+                            Su respuesta ha sido registrada exitosamente y nos ayuda a seguir mejorando la plataforma para los negocios del país.
                         </p>
                         <div className="flex justify-center gap-3">
                             <Link
                                 to="/investigacion/resultados"
                                 className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition-colors"
                             >
-                                Ver Resultados Públicos y Estadísticas en Vivo
+                                Ver Resultados Consolidados
                             </Link>
                             <button
                                 onClick={() => { setIsSubmittedSuccess(false); setAnswers({}); }}
                                 className="px-4 py-2 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-medium text-xs transition-colors"
                             >
-                                Llenar otra respuesta
+                                Llenar otra encuesta
                             </button>
                         </div>
                     </div>
                 ) : (
                     <>
-                        {/* Selector de Formulario ERP */}
+                        {/* Selector de Formulario */}
                         <div className="mb-6">
-                            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2">Seleccione el Instrumento de Investigación</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2">Seleccione la Encuesta a Responder</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 {Object.keys(formsMetadata).map(key => {
                                     const meta = formsMetadata[key];
@@ -187,9 +187,8 @@ export default function PublicResearchPage() {
                             </div>
                         </div>
 
-                        {/* Formulario Principal Estilo ERP */}
+                        {/* Formulario Principal */}
                         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-md p-6">
-                            {/* Header del Formulario */}
                             <div className="border-b border-gray-200 pb-4 mb-6">
                                 <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold border mb-1.5 ${formsMetadata[selectedForm].badgeBg}`}>
                                     {formsMetadata[selectedForm].badge}
@@ -198,31 +197,30 @@ export default function PublicResearchPage() {
                                 <p className="text-xs text-gray-500 mt-0.5">{formsMetadata[selectedForm].description}</p>
                             </div>
 
-                            {/* Sección 1: Datos Demográficos */}
+                            {/* Sección 1: Perfil del Negocio */}
                             <div className="mb-6">
                                 <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
-                                    1. Caracterización Demográfica y Organizacional
+                                    1. Datos del Negocio y Encuestado
                                 </h3>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Cargo u Ocupación Principal</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Cargo o Rol en el Negocio</label>
                                         <select
                                             value={demographics.respondentRole}
                                             onChange={e => setDemographics({ ...demographics, respondentRole: e.target.value })}
                                             className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                                         >
-                                            <option value="Gerente General / Dueño">Gerente General / Dueño</option>
-                                            <option value="Director / Jefe de RRHH">Director / Jefe de RRHH</option>
-                                            <option value="Contador / Administrador Financiero">Contador / Administrador Financiero</option>
-                                            <option value="Analista de Personal / Operaciones">Analista de Personal / Operaciones</option>
-                                            <option value="Docente / Investigador Académico">Docente / Investigador Académico</option>
-                                            <option value="Otro Profesional">Otro Profesional</option>
+                                            <option value="Dueño / Gerente General">Dueño / Gerente General</option>
+                                            <option value="Administrador / Asistente Administrativo">Administrador / Asistente Administrativo</option>
+                                            <option value="Encargado de Talento Humano / Personal">Encargado de Talento Humano / Personal</option>
+                                            <option value="Contador / Auxiliar Contable">Contador / Auxiliar Contable</option>
+                                            <option value="Empleado / Colaborador Operativo">Empleado / Colaborador Operativo</option>
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Tamaño de la Empresa</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Tamaño del Negocio</label>
                                         <select
                                             value={demographics.companySize}
                                             onChange={e => setDemographics({ ...demographics, companySize: e.target.value })}
@@ -230,65 +228,62 @@ export default function PublicResearchPage() {
                                         >
                                             <option value="Microempresa (1 - 9 emp)">Microempresa (1 - 9 empleados)</option>
                                             <option value="Pequeña empresa (10 - 49 emp)">Pequeña empresa (10 - 49 empleados)</option>
-                                            <option value="Mediana empresa (50 - 199 emp)">Mediana empresa (50 - 199 empleados)</option>
-                                            <option value="Empresa grande (> 200 emp)">Empresa grande (&gt; 200 empleados)</option>
+                                            <option value="Mediana empresa (50 - 100 emp)">Mediana empresa (50 - 100 empleados)</option>
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Sector Económico</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Actividad o Sector</label>
                                         <select
                                             value={demographics.economicSector}
                                             onChange={e => setDemographics({ ...demographics, economicSector: e.target.value })}
                                             className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                                         >
-                                            <option value="Tecnología / Servicios Profesionales">Tecnología / Servicios Profesionales</option>
-                                            <option value="Comercio / Distribución">Comercio / Distribución</option>
-                                            <option value="Manufactura / Producción">Manufactura / Producción</option>
-                                            <option value="Salud / Educación">Salud / Educación</option>
-                                            <option value="Servicios Financieros">Servicios Financieros / Banca</option>
-                                            <option value="Otro Sector">Otro Sector</option>
+                                            <option value="Comercio / Ventas">Comercio / Ventas</option>
+                                            <option value="Servicios Profesionales / Tecnología">Servicios Profesionales / Tecnología</option>
+                                            <option value="Gastronomía / Restaurantes / Hotelería">Gastronomía / Restaurantes / Hotelería</option>
+                                            <option value="Manufactura / Talleres / Producción">Manufactura / Talleres / Producción</option>
+                                            <option value="Salud / Educación / Otros">Salud / Educación / Otros</option>
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Experiencia Profesional</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Tiempo de Funcionamiento</label>
                                         <select
                                             value={demographics.experienceYears}
                                             onChange={e => setDemographics({ ...demographics, experienceYears: e.target.value })}
                                             className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                                         >
-                                            <option value="< 2 años">&lt; 2 años</option>
-                                            <option value="2 - 5 años">2 - 5 años</option>
-                                            <option value="6 - 10 años">6 - 10 años</option>
-                                            <option value="> 10 años">&gt; 10 años</option>
+                                            <option value="Menos de 1 año (Emprendimiento)">Menos de 1 año (Emprendimiento)</option>
+                                            <option value="1 a 3 años">1 a 3 años</option>
+                                            <option value="4 a 8 años">4 a 8 años</option>
+                                            <option value="Más de 8 años">Más de 8 años</option>
                                         </select>
                                     </div>
 
-                                    {selectedForm === 'EXPERT_EVAL' && (
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-600 mb-1">Grado Académico Máximo</label>
-                                            <select
-                                                value={demographics.academicDegree}
-                                                onChange={e => setDemographics({ ...demographics, academicDegree: e.target.value })}
-                                                className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                            >
-                                                <option value="Licenciatura / Ingeniería">Licenciatura / Ingeniería</option>
-                                                <option value="Maestría / MSc">Maestría / MSc</option>
-                                                <option value="Doctorado / PhD">Doctorado / PhD</option>
-                                            </select>
-                                        </div>
-                                    )}
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Nivel de Formación</label>
+                                        <select
+                                            value={demographics.academicDegree}
+                                            onChange={e => setDemographics({ ...demographics, academicDegree: e.target.value })}
+                                            className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                                        >
+                                            <option value="Bachillerato">Bachillerato</option>
+                                            <option value="Técnico / Tecnológico">Técnico / Tecnológico</option>
+                                            <option value="Tercer Nivel (Licenciatura / Ingeniería)">Tercer Nivel (Licenciatura / Ingeniería)</option>
+                                            <option value="Posgrado / Especialización">Posgrado / Especialización</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Sección 2: Preguntas Escala Likert (1 a 5) */}
+                            {/* Sección 2: Preguntas Escala Likert */}
                             <div className="mb-6 border-t border-gray-200 pt-5">
                                 <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                                    2. Valoración de Afirmaciones (Escala Likert 1-5)
+                                    2. Valoración de Afirmaciones (Escala del 1 al 5)
                                 </h3>
                                 <p className="text-[11px] text-gray-500 mb-4">
-                                    Responda marcando de 1 (Muy en desacuerdo / Nunca) a 5 (Muy de acuerdo / Siempre).
+                                    Indique su nivel de acuerdo de 1 (Totalmente en desacuerdo / Nunca) a 5 (Totalmente de acuerdo / Siempre).
                                 </p>
 
                                 <div className="space-y-4">
@@ -326,21 +321,21 @@ export default function PublicResearchPage() {
                             {/* Sección 3: Observaciones Abiertas */}
                             <div className="mb-6 border-t border-gray-200 pt-5">
                                 <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                                    Comentarios o Sugerencias Adicionales (Opcional)
+                                    Comentarios, dudas o sugerencias adicionales (Opcional)
                                 </label>
                                 <textarea
                                     rows="3"
-                                    placeholder="Escriba sus comentarios..."
+                                    placeholder="Cuéntenos su experiencia o alguna necesidad específica de su negocio..."
                                     value={answers.comments || ''}
                                     onChange={e => handleTextChange('comments', e.target.value)}
                                     className="w-full bg-white border border-gray-200 rounded p-2.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                                 ></textarea>
                             </div>
 
-                            {/* Acciones del Formulario */}
+                            {/* Acciones */}
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-200 pt-4">
                                 <p className="text-[11px] text-gray-500">
-                                    Respuestas 100% confidenciales y anonimizadas para fines estrictamente académicos.
+                                    Información confidencial para la validación y mejora del sistema Emplifi.
                                 </p>
 
                                 <button
@@ -348,7 +343,7 @@ export default function PublicResearchPage() {
                                     disabled={isSubmitting}
                                     className="w-full sm:w-auto px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors disabled:opacity-50"
                                 >
-                                    {isSubmitting ? 'Enviando respuestas...' : 'Enviar Respuesta a Investigación'}
+                                    {isSubmitting ? 'Enviando...' : 'Enviar Respuesta'}
                                 </button>
                             </div>
                         </form>
@@ -362,43 +357,41 @@ export default function PublicResearchPage() {
 function getQuestionsForForm(formType) {
     if (formType === 'PRE_SYSTEM') {
         return [
-            { id: 'pre_6_manual_attendance', text: 'El registro de asistencia y tardanzas en su empresa se realiza manualmente o en listas en papel/Excel.' },
-            { id: 'pre_7_buddy_punching', text: 'Se han registrado casos de marcación por terceros o falsificación de presencialidad.' },
-            { id: 'pre_8_field_tracking_diff', text: 'Es difícil verificar el cumplimiento geográfico del personal de campo o teletrabajo.' },
-            { id: 'pre_9_overtime_calc_hours', text: 'La consolidación de horas extra (50%), extraordinarias (100%) y recargos insume horas de trabajo manual.' },
-            { id: 'pre_10_fragmented_files', text: 'La información de contratos, expedientes y asistencias está dispersa en archivos independientes.' },
-            { id: 'pre_11_subjective_performance', text: 'Las evaluaciones de desempeño se basan en la percepción intuitiva del evaluador sin métricas unificadas.' },
-            { id: 'pre_12_lacks_5d_metric', text: 'Se carece de un índice sintético que consolide Desempeño, Asistencia, Retención y Objetivos SMART.' },
-            { id: 'pre_13_turnover_risk_blindness', text: 'Es difícil anticipar con precisión la renuncia inesperada de colaboradores clave antes de su salida.' },
-            { id: 'pre_18_manual_severance_errors', text: 'Los cálculos de liquidación laboral (desahucio, despido intempestivo, 13ro/14to) son propensos a error manual.' },
-            { id: 'pre_20_unencrypted_salaries', text: 'Los datos salariales y cuentas bancarias se almacenan sin encriptación de grado bancario.' }
+            { id: 'pre_1_manual_attendance', text: 'El registro diario de asistencia y atrasos se lleva en hojas de papel, cuadernos o plantillas de Excel.' },
+            { id: 'pre_2_buddy_punching', text: 'Resulta difícil evitar que los empleados firmen por otros compañeros o justifiquen atrasos sin sustento.' },
+            { id: 'pre_3_overtime_calc_hours', text: 'El cálculo manual de horas extra (50%), extraordinarias (100%) y atrasos toma mucho tiempo a fin de mes.' },
+            { id: 'pre_4_fragmented_files', text: 'Los contratos, expedientes de empleados y permisos están dispersos en carpetas físicas o archivos sueltos.' },
+            { id: 'pre_5_decimos_confusion', text: 'Se han presentado confusiones o dudas al calcular décimos (13ro y 14to sueldo) o fondos de reserva.' },
+            { id: 'pre_6_severance_errors_fear', text: 'El cálculo de liquidaciones y actas de finiquito genera temor a cometer errores frente al Ministerio de Trabajo.' },
+            { id: 'pre_7_subjective_performance', text: 'Las evaluaciones del personal se hacen al "ojo" o por intuición, sin un registro claro de su rendimiento.' },
+            { id: 'pre_8_turnover_risk_blindness', text: 'Cuesta anticipar cuándo un empleado clave piensa renunciar debido a la falta de seguimiento continuo.' },
+            { id: 'pre_9_unencrypted_salaries', text: 'Los sueldos y datos personales se guardan en computadoras compartidas sin contraseñas seguras.' },
+            { id: 'pre_10_needs_simple_tool', text: 'El negocio necesita una herramienta sencilla y económica para organizar todo el personal en un solo lugar.' }
         ];
     }
 
     if (formType === 'POST_SYSTEM') {
         return [
-            { id: 'post_1_navigation_usability', text: 'La navegación entre los 19 módulos de Emplifi es fluida, estructurada e intuitiva.' },
-            { id: 'post_2_5d_score_clarity', text: 'El Scoring Multidimensional 5D ofrece una visión objetiva del desempeño y potencial del colaborador.' },
-            { id: 'post_3_geofence_passkey_speed', text: 'El fichaje con geocerca Haversine y biometría Passkey (WebAuthn) es rápido y elimina suplantaciones.' },
-            { id: 'post_4_recommend_system', text: 'Recomendaría este sistema para la gestión integral del talento humano y nómina en PyMEs.' },
-            { id: 'post_6_weibull_survival_precision', text: 'La curva de supervivencia de Weibull ayuda a identificar horizontes temporales de riesgo de deserción.' },
-            { id: 'post_7_rsi_self_improve_confidence', text: 'El motor de automejora recursiva (RSI Engine) genera confianza al reducir el error predictivo automáticamente.' },
-            { id: 'post_9_causal_simulator_whatif', text: 'El simulador Causal (Do-Calculus) permite proyectar el impacto de aumentos salariales o teletrabajo de forma clara.' },
-            { id: 'post_10_ate_roi_budget_justification', text: 'El cálculo del Efecto Promedio del Tratamiento (ATE) y ROI financiero en USD facilita justificar presupuesto.' },
-            { id: 'post_12_pareto_frontier_tradeoff', text: 'La Frontera de Pareto (MORL) permite balancear eficazmente el costo de presupuesto vs la retención lograda.' },
-            { id: 'post_14_aes256_privacy_confidence', text: 'El cifrado AES-256-GCM de datos sensibles y salarios satisface requerimientos de privacidad LOPDP.' },
-            { id: 'post_16_ecuador_labor_law_compliance', text: 'La generación automática de finiquitos conforme al Código del Trabajo de Ecuador elimina errores de liquidación.' }
+            { id: 'post_1_navigation_usability', text: 'El sistema es fácil de entender y usar sin necesidad de capacitaciones complejas o manuales largos.' },
+            { id: 'post_2_geofence_passkey_speed', text: 'El marcado de asistencia desde el celular o computadora es rápido y ayuda a controlar atrasos reales.' },
+            { id: 'post_3_payroll_time_savings', text: 'El cálculo automático del rol de pagos ahorra horas de trabajo en comparación con hacerlo en Excel.' },
+            { id: 'post_4_severance_automation_safety', text: 'La generación automática de liquidaciones de finiquito da seguridad y ahorra consultas legales costosas.' },
+            { id: 'post_5_employee_portal_utility', text: 'El portal del empleado permite que el personal revise sus roles de pago y solicitudes sin interrumpir al jefe.' },
+            { id: 'post_6_performance_retention_alerts', text: 'La evaluación de desempeño y alertas de retención ayudan a reconocer al buen trabajador a tiempo.' },
+            { id: 'post_7_digital_contracts_order', text: 'Tener los expedientes y contratos digitales ordenados en la nube evita pérdidas de documentos.' },
+            { id: 'post_8_salary_privacy_confidence', text: 'La protección con clave y permisos resguarda la privacidad de los sueldos en la empresa.' },
+            { id: 'post_9_cost_benefit_affordable', text: 'El costo y los beneficios del sistema son accesibles y rentables para el presupuesto de un pequeño negocio.' },
+            { id: 'post_10_recommend_system', text: 'Recomendaría Emplifi a otros dueños de negocios o administradores de mi sector.' }
         ];
     }
 
     return [
-        { id: 'exp_1_weibull_theoretical_rigor', text: 'El modelo proporcional de Weibull con covariables es teóricamente adecuado para modelar la tasa de riesgo de deserción.' },
-        { id: 'exp_2_causal_docalculus_validity', text: 'La implementación de Do-Calculus e Inverse Probability Weighting (IPW) proporciona estimaciones no sesgadas del ATE.' },
-        { id: 'exp_3_dpsgd_privacy_guarantee', text: 'El recorte de gradientes y la adición de ruido Gaussiano (DP-SGD) garantizan la privacidad diferencial entre tenants.' },
-        { id: 'exp_4_morl_pareto_optimality', text: 'La aproximación de la Frontera de Pareto por Aprendizaje por Refuerzo Multiobjetivo resuelve el trade-off costo-retención.' },
-        { id: 'exp_5_rsi_gradient_descent_calibration', text: 'La calibración recursiva por descenso de gradiente disminuye el Brier Score sobre eventos reales de rotación.' },
-        { id: 'exp_7_haversine_passkey_security', text: 'La combinación de Haversine truncado y biometría FIDO2 ofrece un esquema robusto de no-repudio de presencia.' },
-        { id: 'exp_8_ecuador_labor_law_precision', text: 'La parametrización de las leyes laborales del Ecuador en los motores de liquidación es precisa y rigurosa.' },
-        { id: 'exp_9_scientific_paper_contribution', text: 'Este marco integrado posee un valor científico e innovador apto para publicación en revistas internacionales indexadas.' }
+        { id: 'exp_1_labor_law_overtime_accuracy', text: 'La parametrización de horas suplementarias (50%), extraordinarias (100%) y aportes al IESS es correcta.' },
+        { id: 'exp_2_decimos_and_funds_precision', text: 'La fórmula de cálculo del 13ro, 14to sueldo y fondos de reserva se ajusta al Código del Trabajo ecuatoriano.' },
+        { id: 'exp_3_severance_articles_compliance', text: 'El cálculo de desahucio (Art. 185) y despido intempestivo (Art. 188) genera liquidaciones transparentes y precisas.' },
+        { id: 'exp_4_payroll_structure_standard', text: 'La estructura de los roles de pago y comprobantes cumple con los estándares exigidos para PyMEs.' },
+        { id: 'exp_5_biometric_geofence_validity', text: 'El control biométrico/geolocalizado ofrece un soporte válido y confiable para justificar la jornada laboral.' },
+        { id: 'exp_6_simplifies_compliance_sme', text: 'El sistema simplifica el cumplimiento laboral de una pequeña empresa sin requerir personal contable dedicado.' },
+        { id: 'exp_7_practical_ready_deployment', text: 'Considero que Emplifi es una solución viable, práctica y lista para implementarse en negocios reales.' }
     ];
 }

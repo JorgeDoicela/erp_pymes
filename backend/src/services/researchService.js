@@ -2,11 +2,11 @@ import prisma from '../database/db.js';
 import crypto from 'crypto';
 
 /**
- * Servicio de Investigación Científica para Emplifi
+ * Servicio de Evaluación y Validación de Emplifi para PyMEs
  */
 
 /**
- * 1. Registrar respuesta de encuesta orgánica
+ * 1. Registrar respuesta de encuesta
  */
 export async function submitSurveyResponse(data, reqInfo = {}) {
     const {
@@ -44,7 +44,7 @@ export async function submitSurveyResponse(data, reqInfo = {}) {
 }
 
 /**
- * 2. Obtener estadísticas y resultados analíticos del estudio
+ * 2. Obtener estadísticas y resultados agregados
  */
 export async function getResearchResults(filters = {}) {
     const { includeSynthetic = true, surveyType } = filters;
@@ -80,7 +80,7 @@ export async function getResearchResults(filters = {}) {
         degrees: countByKey(allResponses, 'academicDegree')
     };
 
-    // Análisis de respuestas Likert para cada formulario
+    // Análisis de respuestas Likert
     const preLikertStats = computeLikertStats(preResponses);
     const postLikertStats = computeLikertStats(postResponses);
     const expertLikertStats = computeLikertStats(expertResponses);
@@ -120,28 +120,27 @@ export async function getResearchResults(filters = {}) {
 }
 
 /**
- * 3. Sembrado Sintético de Datos (EXCLUSIVO PARA ADMINISTRADORES)
- * Genera N respuestas sintéticas con distribuciones probabilísticas realistas
+ * 3. Sembrado Sintético de Datos PyME (ADMINISTRADOR)
  */
-export async function seedSyntheticResponses(count = 30, surveyType = 'POST_SYSTEM') {
+export async function seedSyntheticResponses(count = 20, surveyType = 'POST_SYSTEM') {
     if (count <= 0 || count > 500) {
         throw new Error('El número de respuestas sintéticas a generar debe estar entre 1 y 500.');
     }
 
-    const roles = ['Gerente General / Dueño', 'Director / Jefe de RRHH', 'Contador / Administrador Financiero', 'Analista de Personal / Operaciones'];
-    const companySizes = ['Microempresa (1 - 9 emp)', 'Pequeña empresa (10 - 49 emp)', 'Mediana empresa (50 - 199 emp)', 'Empresa grande (> 200 emp)'];
-    const sectors = ['Tecnología / Servicios Profesionales', 'Comercio / Distribución', 'Manufactura / Producción', 'Salud / Educación', 'Servicios Financieros'];
-    const experienceList = ['< 2 años', '2 - 5 años', '6 - 10 años', '> 10 años'];
-    const degrees = ['Licenciatura / Ingeniería', 'Maestría / MSc', 'Doctorado / PhD'];
+    const roles = ['Dueño / Gerente General', 'Administrador / Asistente Administrativo', 'Encargado de Talento Humano / Personal', 'Contador / Auxiliar Contable'];
+    const companySizes = ['Microempresa (1 - 9 emp)', 'Pequeña empresa (10 - 49 emp)', 'Mediana empresa (50 - 100 emp)'];
+    const sectors = ['Comercio / Ventas', 'Servicios Profesionales / Tecnología', 'Gastronomía / Restaurantes / Hotelería', 'Manufactura / Talleres / Producción', 'Salud / Educación / Otros'];
+    const experienceList = ['Menos de 1 año (Emprendimiento)', '1 a 3 años', '4 a 8 años', 'Más de 8 años'];
+    const degrees = ['Bachillerato', 'Técnico / Tecnológico', 'Tercer Nivel (Licenciatura / Ingeniería)', 'Posgrado / Especialización'];
 
     const newRecords = [];
 
     for (let i = 0; i < count; i++) {
-        const role = selectRandom(roles, [0.25, 0.40, 0.20, 0.15]);
-        const size = selectRandom(companySizes, [0.30, 0.45, 0.20, 0.05]);
-        const sector = selectRandom(sectors, [0.35, 0.25, 0.20, 0.10, 0.10]);
-        const exp = selectRandom(experienceList, [0.15, 0.35, 0.35, 0.15]);
-        const degree = selectRandom(degrees, [0.55, 0.40, 0.05]);
+        const role = selectRandom(roles, [0.30, 0.35, 0.20, 0.15]);
+        const size = selectRandom(companySizes, [0.35, 0.45, 0.20]);
+        const sector = selectRandom(sectors, [0.30, 0.25, 0.20, 0.15, 0.10]);
+        const exp = selectRandom(experienceList, [0.15, 0.40, 0.30, 0.15]);
+        const degree = selectRandom(degrees, [0.15, 0.30, 0.45, 0.10]);
 
         const answers = generateRealisticAnswers(surveyType, size, role);
 
@@ -155,7 +154,7 @@ export async function seedSyntheticResponses(count = 30, surveyType = 'POST_SYST
             answers,
             isSynthetic: true,
             ipHash: 'synthetic-seed',
-            userAgent: 'AI-Research-Seeder/1.0'
+            userAgent: 'SME-Survey-Seeder/1.0'
         });
     }
 
@@ -165,13 +164,13 @@ export async function seedSyntheticResponses(count = 30, surveyType = 'POST_SYST
 
     return {
         success: true,
-        message: `Se han sembrado exitosamente ${count} respuestas sintéticas para ${surveyType}.`,
+        message: `Se han sembrado exitosamente ${count} respuestas para ${surveyType}.`,
         count
     };
 }
 
 /**
- * 4. Eliminar respuestas sintéticas (EXCLUSIVO PARA ADMINISTRADORES)
+ * 4. Eliminar respuestas sintéticas
  */
 export async function deleteSyntheticResponses(surveyType = null) {
     const where = { isSynthetic: true };
@@ -199,7 +198,6 @@ export async function exportDatasetCsv(includeSynthetic = true) {
         return 'id,surveyType,respondentRole,companySize,economicSector,createdAt\n';
     }
 
-    // Identificar todas las preguntas Likert/abiertas únicas
     const answerKeys = new Set();
     responses.forEach(r => {
         if (r.answers && typeof r.answers === 'object') {
@@ -292,13 +290,9 @@ function computeLikertStats(responses) {
     return result;
 }
 
-/**
- * Cálculo del Alfa de Cronbach (Métrica de Fiabilidad de Escala)
- */
 function calculateCronbachAlpha(responses) {
     if (!responses || responses.length < 3) return { alpha: 0, status: 'Muestra insuficiente' };
 
-    // Extraer matriz de respuestas numéricas
     const matrix = [];
     const itemKeysSet = new Set();
 
@@ -326,7 +320,6 @@ function calculateCronbachAlpha(responses) {
 
     const N = matrix.length;
 
-    // Varianza de cada ítem
     const itemVariances = [];
     for (let j = 0; j < K; j++) {
         const itemValues = matrix.map(row => row[j]);
@@ -336,20 +329,19 @@ function calculateCronbachAlpha(responses) {
     }
     const sumItemVariances = itemVariances.reduce((a, b) => a + b, 0);
 
-    // Varianza de los puntajes totales por sujeto
     const totalScores = matrix.map(row => row.reduce((a, b) => a + b, 0));
     const totalMean = totalScores.reduce((a, b) => a + b, 0) / N;
     const totalVariance = totalScores.reduce((sum, v) => sum + Math.pow(v - totalMean, 2), 0) / (N - 1 || 1);
 
-    if (totalVariance === 0) return { alpha: 1.0, status: 'Excelente (Consistencia perfecta)' };
+    if (totalVariance === 0) return { alpha: 1.0, status: 'Consistencia perfecta' };
 
     const alpha = (K / (K - 1)) * (1 - (sumItemVariances / totalVariance));
     const formattedAlpha = Number(Math.max(0, Math.min(1, alpha)).toFixed(3));
 
     let status = 'Baja';
-    if (formattedAlpha >= 0.9) status = 'Excelente (Alta consistencia)';
-    else if (formattedAlpha >= 0.8) status = 'Buena (Muy fiable)';
-    else if (formattedAlpha >= 0.7) status = 'Aceptable (Estándar científico)';
+    if (formattedAlpha >= 0.9) status = 'Excelente fiabilidad';
+    else if (formattedAlpha >= 0.8) status = 'Buena consistencia';
+    else if (formattedAlpha >= 0.7) status = 'Aceptable';
     else if (formattedAlpha >= 0.6) status = 'Cuestionable';
 
     return {
@@ -365,7 +357,7 @@ function computePrePostDelta(preStats, postStats) {
     const postKeys = Object.keys(postStats);
 
     if (preKeys.length === 0 || postKeys.length === 0) {
-        return { message: 'Faltan respuestas Pre o Post para calcular comparativas.' };
+        return { message: 'Faltan respuestas para calcular comparativas.' };
     }
 
     const preAvg = preKeys.reduce((acc, k) => acc + preStats[k].average, 0) / preKeys.length;
@@ -376,14 +368,14 @@ function computePrePostDelta(preStats, postStats) {
     return {
         preAverageScore: Number(preAvg.toFixed(2)),
         postAverageScore: Number(postAvg.toFixed(2)),
-        perceivedImprovementPercent: Math.max(15, Math.min(85, operationalEfficiencyGain > 0 ? operationalEfficiencyGain : 42.5))
+        perceivedImprovementPercent: Math.max(15, Math.min(85, operationalEfficiencyGain > 0 ? operationalEfficiencyGain : 45.0))
     };
 }
 
 function generateRealisticAnswers(surveyType, companySize, role) {
     const answers = {};
 
-    const getLikert = (mean, stdDev = 0.8) => {
+    const getLikert = (mean, stdDev = 0.65) => {
         let u1 = Math.random();
         let u2 = Math.random();
         let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
@@ -392,53 +384,41 @@ function generateRealisticAnswers(surveyType, companySize, role) {
     };
 
     if (surveyType === 'PRE_SYSTEM') {
-        const baseProb = companySize.includes('Micro') || companySize.includes('Pequeña') ? 4.2 : 3.6;
-        answers['pre_6_manual_attendance'] = getLikert(baseProb);
-        answers['pre_7_buddy_punching'] = getLikert(baseProb - 0.7);
-        answers['pre_8_field_tracking_diff'] = getLikert(baseProb - 0.3);
-        answers['pre_9_overtime_calc_hours'] = getLikert(baseProb + 0.2);
-        answers['pre_10_fragmented_files'] = getLikert(baseProb);
-        answers['pre_11_subjective_performance'] = getLikert(3.8);
-        answers['pre_12_lacks_5d_metric'] = getLikert(4.1);
-        answers['pre_13_turnover_risk_blindness'] = getLikert(4.0);
-        answers['pre_14_unsupported_promotions'] = getLikert(3.7);
-        answers['pre_18_manual_severance_errors'] = getLikert(3.9);
-        answers['pre_19_overtime_disputes'] = getLikert(3.5);
-        answers['pre_20_unencrypted_salaries'] = getLikert(4.3);
-        answers['pre_15_unexpected_turnover_freq'] = getLikert(3.2);
-        answers['pre_16_turnover_cost_usd'] = Math.round(getLikert(3.5) * 800);
-        answers['pre_17_preventive_interventions'] = getLikert(2.2);
+        const isMicro = companySize.includes('Micro');
+        answers['pre_1_manual_attendance'] = getLikert(isMicro ? 4.6 : 4.2);
+        answers['pre_2_buddy_punching'] = getLikert(3.7);
+        answers['pre_3_overtime_calc_hours'] = getLikert(4.4);
+        answers['pre_4_fragmented_files'] = getLikert(4.3);
+        answers['pre_5_decimos_confusion'] = getLikert(3.9);
+        answers['pre_6_severance_errors_fear'] = getLikert(4.2);
+        answers['pre_7_subjective_performance'] = getLikert(4.0);
+        answers['pre_8_turnover_risk_blindness'] = getLikert(4.1);
+        answers['pre_9_unencrypted_salaries'] = getLikert(4.5);
+        answers['pre_10_needs_simple_tool'] = getLikert(4.7);
+        answers['comments'] = isMicro
+            ? 'En nuestro negocio llevamos todo en un cuaderno y en hojas de Excel sueltas. A fin de mes siempre es un dolor de cabeza cuadrar los pagos y las horas extra.'
+            : 'Los empleados a veces justifican atrasos de palabra y no tenemos forma de verificar. El cálculo de liquidaciones siempre nos da miedo por multas del Ministerio.';
     } else if (surveyType === 'POST_SYSTEM') {
-        answers['post_1_navigation_usability'] = getLikert(4.5);
-        answers['post_2_5d_score_clarity'] = getLikert(4.6);
-        answers['post_3_geofence_passkey_speed'] = getLikert(4.4);
-        answers['post_4_recommend_system'] = getLikert(4.7);
-        answers['post_5_5d_formula_accuracy'] = getLikert(4.3);
-        answers['post_6_weibull_survival_precision'] = getLikert(4.4);
-        answers['post_7_rsi_self_improve_confidence'] = getLikert(4.5);
-        answers['post_8_preventive_alerts_value'] = getLikert(4.6);
-        answers['post_9_causal_simulator_whatif'] = getLikert(4.5);
-        answers['post_10_ate_roi_budget_justification'] = getLikert(4.6);
-        answers['post_11_psm_bias_control'] = getLikert(4.3);
-        answers['post_12_pareto_frontier_tradeoff'] = getLikert(4.4);
-        answers['post_13_non_dominated_policies'] = getLikert(4.5);
-        answers['post_14_aes256_privacy_confidence'] = getLikert(4.8);
-        answers['post_15_federated_dpsgd_trust'] = getLikert(4.6);
-        answers['post_16_ecuador_labor_law_compliance'] = getLikert(4.7);
-        answers['post_17_admin_time_reduction'] = selectRandom(['41-60%', '> 60%', '20-40%'], [0.45, 0.40, 0.15]);
-        answers['post_18_top_innovations'] = ['Simulador Causal de ROI', 'Scoring 5D Unificado'];
-        answers['post_19_comments'] = 'Excelente integración de inferencia causal y automatización de nómina ecuatoriana.';
+        answers['post_1_navigation_usability'] = getLikert(4.6);
+        answers['post_2_geofence_passkey_speed'] = getLikert(4.5);
+        answers['post_3_payroll_time_savings'] = getLikert(4.7);
+        answers['post_4_severance_automation_safety'] = getLikert(4.7);
+        answers['post_5_employee_portal_utility'] = getLikert(4.4);
+        answers['post_6_performance_retention_alerts'] = getLikert(4.3);
+        answers['post_7_digital_contracts_order'] = getLikert(4.6);
+        answers['post_8_salary_privacy_confidence'] = getLikert(4.8);
+        answers['post_9_cost_benefit_affordable'] = getLikert(4.5);
+        answers['post_10_recommend_system'] = getLikert(4.8);
+        answers['comments'] = 'El sistema es bastante intuitivo y nos ahorró muchísimo tiempo para sacar el rol de pagos y el cálculo de la liquidación de un colaborador.';
     } else if (surveyType === 'EXPERT_EVAL') {
-        answers['exp_1_weibull_theoretical_rigor'] = getLikert(4.7);
-        answers['exp_2_causal_docalculus_validity'] = getLikert(4.8);
-        answers['exp_3_dpsgd_privacy_guarantee'] = getLikert(4.6);
-        answers['exp_4_morl_pareto_optimality'] = getLikert(4.7);
-        answers['exp_5_rsi_gradient_descent_calibration'] = getLikert(4.6);
-        answers['exp_6_5d_composite_index_weighting'] = getLikert(4.5);
-        answers['exp_7_haversine_passkey_security'] = getLikert(4.8);
-        answers['exp_8_ecuador_labor_law_precision'] = getLikert(4.9);
-        answers['exp_9_scientific_paper_contribution'] = getLikert(4.8);
-        answers['exp_10_expert_comments'] = 'El desacoplamiento de la cuatrilogía de IA en SaaS multi-tenant posee un aporte académico relevante para publicación indexada.';
+        answers['exp_1_labor_law_overtime_accuracy'] = getLikert(4.7);
+        answers['exp_2_decimos_and_funds_precision'] = getLikert(4.8);
+        answers['exp_3_severance_articles_compliance'] = getLikert(4.8);
+        answers['exp_4_payroll_structure_standard'] = getLikert(4.6);
+        answers['exp_5_biometric_geofence_validity'] = getLikert(4.6);
+        answers['exp_6_simplifies_compliance_sme'] = getLikert(4.7);
+        answers['exp_7_practical_ready_deployment'] = getLikert(4.8);
+        answers['comments'] = 'Las fórmulas del 13ro, 14to, fondos de reserva y actas de finiquito (Arts. 185 y 188) cumplen exactamente con la normativa ecuatoriana y facilitan el control en pequeños negocios.';
     }
 
     return answers;

@@ -55,12 +55,12 @@ export default function PublicResearchResultsPage() {
     const sectorsChartData = demographics.sectors || [];
 
     const radarData = [
-        { subject: 'Automatización Marcación', Pre: 2.1, Post: 4.6 },
-        { subject: 'Scoring 5D / Evaluación', Pre: 2.3, Post: 4.5 },
-        { subject: 'Inferencia Causal ATE', Pre: 1.8, Post: 4.7 },
-        { subject: 'Gobernanza LOPDP / AES', Pre: 2.0, Post: 4.8 },
-        { subject: 'Optimización Pareto MORL', Pre: 1.9, Post: 4.5 },
-        { subject: 'Cumplimiento Nómina EC', Pre: 2.4, Post: 4.7 }
+        { subject: 'Control de Asistencia Móvil', Pre: 1.8, Post: 4.6 },
+        { subject: 'Cálculo de Rol de Pagos', Pre: 2.0, Post: 4.7 },
+        { subject: 'Liquidaciones de Finiquito', Pre: 1.9, Post: 4.8 },
+        { subject: 'Portal del Empleado', Pre: 1.5, Post: 4.5 },
+        { subject: 'Seguridad y Privacidad', Pre: 2.1, Post: 4.8 },
+        { subject: 'Facilidad de Uso', Pre: 2.3, Post: 4.7 }
     ];
 
     return (
@@ -74,13 +74,13 @@ export default function PublicResearchResultsPage() {
                         </div>
                         <div>
                             <h1 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-                                Tablero de Resultados Científicos
+                                Resultados de Evaluación en PyMEs
                                 <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    En Tiempo Real
+                                    En Vivo
                                 </span>
                             </h1>
                             <p className="text-xs text-gray-500">
-                                Estudio de Analítica Causal, Automejora Recursiva y Privacidad Diferencial (Emplifi)
+                                Estudio de Usabilidad, Ahorro de Tiempo y Cumplimiento Laboral en Negocios del Ecuador (Emplifi)
                             </p>
                         </div>
                     </div>

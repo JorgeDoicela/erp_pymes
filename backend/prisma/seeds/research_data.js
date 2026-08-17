@@ -302,16 +302,17 @@ export async function seedResearchData(prisma) {
         console.log(`Motor IA y datos de investigación configurados para ${tenant.name}.`);
     }
 
-    // 6. Sembrar respuestas de encuestas de investigación (N=75) si no existen
+    // 6. Sembrar respuestas de evaluación de PyMEs (N=40) si no existen
     const existingSurveysCount = await prisma.researchSurveyResponse.count();
     if (existingSurveysCount === 0) {
-        console.log('[RESEARCH_DATA] Inicializando 75 encuestas de investigación (Pre, Post, Experto)...');
-        const roles = ['Gerente General / Dueño', 'Director / Jefe de RRHH', 'Contador / Administrador Financiero', 'Analista de Personal / Operaciones'];
-        const sizes = ['Microempresa (1 - 9 emp)', 'Pequeña empresa (10 - 49 emp)', 'Mediana empresa (50 - 199 emp)', 'Empresa grande (> 200 emp)'];
-        const sectors = ['Tecnología / Servicios Profesionales', 'Comercio / Distribución', 'Manufactura / Producción', 'Salud / Educación', 'Servicios Financieros'];
-        const expList = ['< 2 años', '2 - 5 años', '6 - 10 años', '> 10 años'];
+        console.log('[RESEARCH_DATA] Inicializando 40 encuestas de evaluación para PyMEs (Diagnóstico, Usabilidad, Validación Técnica)...');
+        const roles = ['Dueño / Gerente General', 'Administrador / Asistente Administrativo', 'Encargado de Talento Humano / Personal', 'Contador / Auxiliar Contable'];
+        const sizes = ['Microempresa (1 - 9 emp)', 'Pequeña empresa (10 - 49 emp)', 'Mediana empresa (50 - 100 emp)'];
+        const sectors = ['Comercio / Ventas', 'Servicios Profesionales / Tecnología', 'Gastronomía / Restaurantes / Hotelería', 'Manufactura / Talleres / Producción', 'Salud / Educación / Otros'];
+        const expList = ['Menos de 1 año (Emprendimiento)', '1 a 3 años', '4 a 8 años', 'Más de 8 años'];
+        const degrees = ['Bachillerato', 'Técnico / Tecnológico', 'Tercer Nivel (Licenciatura / Ingeniería)', 'Posgrado / Especialización'];
 
-        const getLikert = (mean, stdDev = 0.7) => {
+        const getLikert = (mean, stdDev = 0.65) => {
             let u1 = Math.random();
             let u2 = Math.random();
             let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
@@ -329,92 +330,108 @@ export async function seedResearchData(prisma) {
             return items[items.length - 1];
         };
 
+        const preComments = [
+            'En nuestro negocio llevamos los turnos y atrasos en un cuaderno. Al fin de mes calcular horas extra toma días enteros.',
+            'El cálculo de décimos y liquidaciones en Excel siempre nos da miedo por posibles multas del Ministerio de Trabajo.',
+            'Los empleados a veces firman por otros y no tenemos cómo comprobar presencialidad en campo.',
+            'No tenemos un registro claro de evaluaciones de desempeño; todo se decide por percepción del administrador.'
+        ];
+        const postComments = [
+            'El sistema es muy fácil de usar y el marcado desde el móvil con ubicación resolvió los problemas de atrasos.',
+            'La generación automática del rol de pagos y de liquidaciones de finiquito ahorró muchísimo tiempo de oficina.',
+            'El portal del empleado redujo las interrupciones diarias porque cada uno consulta su rol directamente.',
+            'Tener los expedientes y contratos ordenados en la nube evita que se traspapelen documentos importantes.'
+        ];
+        const expertComments = [
+            'Los cálculos de recargo nocturno, horas extra (50%) y extraordinarias (100%) coinciden exactamente con la normativa ecuatoriana.',
+            'La liquidación de finiquito con cálculo de desahucio (Art. 185) y despido intempestivo (Art. 188) es transparente y exacta.',
+            'Es una herramienta sumamente útil para que una PyME mantenga sus cuentas claras sin cometer infracciones laborales.'
+        ];
+
         const surveyRecords = [];
 
-        // Pre-Sistema N=25
-        for (let i = 0; i < 25; i++) {
-            surveyRecords.push({
-                surveyType: 'PRE_SYSTEM',
-                respondentRole: selectRandom(roles, [0.30, 0.35, 0.20, 0.15]),
-                companySize: selectRandom(sizes, [0.35, 0.45, 0.15, 0.05]),
-                economicSector: selectRandom(sectors, [0.30, 0.30, 0.20, 0.10, 0.10]),
-                experienceYears: selectRandom(expList, [0.20, 0.40, 0.30, 0.10]),
-                academicDegree: 'Licenciatura / Ingeniería',
-                answers: {
-                    pre_6_manual_attendance: getLikert(4.3),
-                    pre_7_buddy_punching: getLikert(3.5),
-                    pre_8_field_tracking_diff: getLikert(4.1),
-                    pre_9_overtime_calc_hours: getLikert(4.4),
-                    pre_10_fragmented_files: getLikert(4.2),
-                    pre_11_subjective_performance: getLikert(3.9),
-                    pre_12_lacks_5d_metric: getLikert(4.3),
-                    pre_13_turnover_risk_blindness: getLikert(4.0),
-                    pre_18_manual_severance_errors: getLikert(4.1),
-                    pre_20_unencrypted_salaries: getLikert(4.5),
-                    comments: 'Línea base pre-sistema: marcado manual en listas e inconsistencias en horas extra.'
-                },
-                isSynthetic: true,
-                ipHash: 'seed-calibration',
-                userAgent: 'Research-Seeder/1.0'
-            });
-        }
-
-        // Post-Sistema N=35
-        for (let i = 0; i < 35; i++) {
-            surveyRecords.push({
-                surveyType: 'POST_SYSTEM',
-                respondentRole: selectRandom(roles, [0.25, 0.45, 0.15, 0.15]),
-                companySize: selectRandom(sizes, [0.25, 0.50, 0.20, 0.05]),
-                economicSector: selectRandom(sectors, [0.40, 0.20, 0.20, 0.10, 0.10]),
-                experienceYears: selectRandom(expList, [0.10, 0.40, 0.40, 0.10]),
-                academicDegree: 'Licenciatura / Ingeniería',
-                answers: {
-                    post_1_navigation_usability: getLikert(4.5),
-                    post_2_5d_score_clarity: getLikert(4.6),
-                    post_3_geofence_passkey_speed: getLikert(4.4),
-                    post_4_recommend_system: getLikert(4.7),
-                    post_6_weibull_survival_precision: getLikert(4.3),
-                    post_7_rsi_self_improve_confidence: getLikert(4.4),
-                    post_9_causal_simulator_whatif: getLikert(4.2),
-                    post_10_ate_roi_budget_justification: getLikert(4.5),
-                    post_12_pareto_frontier_tradeoff: getLikert(4.1),
-                    post_14_aes256_privacy_confidence: getLikert(4.8),
-                    post_16_ecuador_labor_law_compliance: getLikert(4.8),
-                    comments: 'La automatización de finiquito y el Scoring 5D redujeron los tiempos de nómina significativamente.'
-                },
-                isSynthetic: true,
-                ipHash: 'seed-calibration',
-                userAgent: 'Research-Seeder/1.0'
-            });
-        }
-
-        // Experto N=15
+        // Grupo 1: Diagnóstico Línea Base N=15
         for (let i = 0; i < 15; i++) {
             surveyRecords.push({
-                surveyType: 'EXPERT_EVAL',
-                respondentRole: 'Docente / Investigador Académico',
-                companySize: selectRandom(sizes, [0.20, 0.40, 0.30, 0.10]),
-                economicSector: 'Tecnología / Servicios Profesionales',
-                experienceYears: selectRandom(['6 - 10 años', '> 10 años'], [0.40, 0.60]),
-                academicDegree: selectRandom(['Maestría / MSc', 'Doctorado / PhD'], [0.60, 0.40]),
+                surveyType: 'PRE_SYSTEM',
+                respondentRole: selectRandom(roles, [0.35, 0.35, 0.20, 0.10]),
+                companySize: selectRandom(sizes, [0.45, 0.45, 0.10]),
+                economicSector: selectRandom(sectors, [0.35, 0.25, 0.20, 0.10, 0.10]),
+                experienceYears: selectRandom(expList, [0.20, 0.40, 0.30, 0.10]),
+                academicDegree: selectRandom(degrees, [0.20, 0.30, 0.45, 0.05]),
                 answers: {
-                    exp_1_weibull_theoretical_rigor: getLikert(4.7),
-                    exp_2_causal_docalculus_validity: getLikert(4.8),
-                    exp_3_dpsgd_privacy_guarantee: getLikert(4.5),
-                    exp_4_morl_pareto_optimality: getLikert(4.6),
-                    exp_5_rsi_gradient_descent_calibration: getLikert(4.5),
-                    exp_7_haversine_passkey_security: getLikert(4.8),
-                    exp_8_ecuador_labor_law_precision: getLikert(4.9),
-                    exp_9_scientific_paper_contribution: getLikert(4.8),
-                    comments: 'El marco desacoplado de Do-Calculus y DP-SGD posee rigor y valor académico relevante.'
+                    pre_1_manual_attendance: getLikert(4.4),
+                    pre_2_buddy_punching: getLikert(3.7),
+                    pre_3_overtime_calc_hours: getLikert(4.5),
+                    pre_4_fragmented_files: getLikert(4.3),
+                    pre_5_decimos_confusion: getLikert(4.0),
+                    pre_6_severance_errors_fear: getLikert(4.3),
+                    pre_7_subjective_performance: getLikert(4.1),
+                    pre_8_turnover_risk_blindness: getLikert(4.0),
+                    pre_9_unencrypted_salaries: getLikert(4.5),
+                    pre_10_needs_simple_tool: getLikert(4.7),
+                    comments: selectRandom(preComments, [0.25, 0.25, 0.25, 0.25])
                 },
                 isSynthetic: true,
-                ipHash: 'seed-calibration',
-                userAgent: 'Research-Seeder/1.0'
+                ipHash: 'sme-seed-pre',
+                userAgent: 'SME-Testing-Device/1.0'
+            });
+        }
+
+        // Grupo 2: Evaluación Post-Sistema N=18
+        for (let i = 0; i < 18; i++) {
+            surveyRecords.push({
+                surveyType: 'POST_SYSTEM',
+                respondentRole: selectRandom(roles, [0.30, 0.40, 0.20, 0.10]),
+                companySize: selectRandom(sizes, [0.35, 0.50, 0.15]),
+                economicSector: selectRandom(sectors, [0.30, 0.30, 0.20, 0.10, 0.10]),
+                experienceYears: selectRandom(expList, [0.10, 0.45, 0.35, 0.10]),
+                academicDegree: selectRandom(degrees, [0.10, 0.35, 0.45, 0.10]),
+                answers: {
+                    post_1_navigation_usability: getLikert(4.6),
+                    post_2_geofence_passkey_speed: getLikert(4.5),
+                    post_3_payroll_time_savings: getLikert(4.7),
+                    post_4_severance_automation_safety: getLikert(4.7),
+                    post_5_employee_portal_utility: getLikert(4.4),
+                    post_6_performance_retention_alerts: getLikert(4.3),
+                    post_7_digital_contracts_order: getLikert(4.6),
+                    post_8_salary_privacy_confidence: getLikert(4.8),
+                    post_9_cost_benefit_affordable: getLikert(4.5),
+                    post_10_recommend_system: getLikert(4.8),
+                    comments: selectRandom(postComments, [0.25, 0.25, 0.25, 0.25])
+                },
+                isSynthetic: true,
+                ipHash: 'sme-seed-post',
+                userAgent: 'SME-Testing-Device/1.0'
+            });
+        }
+
+        // Grupo 3: Validación Técnica N=7
+        for (let i = 0; i < 7; i++) {
+            surveyRecords.push({
+                surveyType: 'EXPERT_EVAL',
+                respondentRole: selectRandom(['Contador / Auxiliar Contable', 'Encargado de Talento Humano / Personal'], [0.60, 0.40]),
+                companySize: selectRandom(sizes, [0.30, 0.50, 0.20]),
+                economicSector: 'Servicios Profesionales / Tecnología',
+                experienceYears: selectRandom(['4 a 8 años', 'Más de 8 años'], [0.50, 0.50]),
+                academicDegree: selectRandom(['Tercer Nivel (Licenciatura / Ingeniería)', 'Posgrado / Especialización'], [0.70, 0.30]),
+                answers: {
+                    exp_1_labor_law_overtime_accuracy: getLikert(4.7),
+                    exp_2_decimos_and_funds_precision: getLikert(4.8),
+                    exp_3_severance_articles_compliance: getLikert(4.8),
+                    exp_4_payroll_structure_standard: getLikert(4.6),
+                    exp_5_biometric_geofence_validity: getLikert(4.6),
+                    exp_6_simplifies_compliance_sme: getLikert(4.7),
+                    exp_7_practical_ready_deployment: getLikert(4.8),
+                    comments: selectRandom(expertComments, [0.35, 0.35, 0.30])
+                },
+                isSynthetic: true,
+                ipHash: 'sme-seed-expert',
+                userAgent: 'SME-Testing-Device/1.0'
             });
         }
 
         await prisma.researchSurveyResponse.createMany({ data: surveyRecords });
-        console.log('[RESEARCH_DATA] 75 encuestas del estudio sembradas con éxito en la BD.');
+        console.log('[RESEARCH_DATA] 40 encuestas de evaluación de PyMEs sembradas con éxito en la BD.');
     }
 }
