@@ -236,10 +236,10 @@ $$\text{Estadístico } D = \max_x |F_{\text{empírica}}(x) - F_{\text{teórica}}
 ---
 
 ### 4.8. Protocolo de Validación por Encuestas e Instrumentos
-La metodología se complementa con 3 instrumentos de evaluación estructurados y detallados en el archivo [FORMULARIOS_INVESTIGACION.md](file:///home/jorge/Proyectos/erp_pymes/FORMULARIOS_INVESTIGACION.md):
-1. **Formulario 1 — PRE-SISTEMA:** Diagnóstico baseline de ineficiencias operativas, suplantación asistencial, subjetividad y cumplimiento legal en PyMEs (20 ítems, Secciones A a E).
-2. **Formulario 2 — POST-SISTEMA (UAT):** Evaluación de usabilidad (SUS), Scoring 5D, simulación causal de ROI (*What-If*), optimización MORL Pareto, privacidad federada y actas de finiquito (19 ítems, Secciones A a F).
-3. **Formulario 3 — EVALUACIÓN DE EXPERTOS:** Validación metodológica y científica por docentes e investigadores de la Cuatrilogía de Motores de IA (Weibull/SGD, Pearl Do-Calculus/PSM/IPW, FedAvg/DP-SGD y Vector Q-Learning MORL) (18 ítems, Secciones A a D).
+La metodología se complementa con 3 instrumentos de evaluación estructurados y detallados en el archivo [INSTRUMENTOS_ENCUESTAS_INVESTIGACION.md](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/recursos_humanos/INSTRUMENTOS_ENCUESTAS_INVESTIGACION.md) y consolidados en [REPORTE_INVESTIGACION_ENCUESTAS.md](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/recursos_humanos/REPORTE_INVESTIGACION_ENCUESTAS.md):
+1. **Formulario 1 — PRE-SISTEMA (Línea Base PyME):** Diagnóstico de ineficiencias operativas, cuadernos de asistencia, cálculo manual de nómina y riesgo en finiquitos (10 reactivos Likert, $n_1 = 15$).
+2. **Formulario 2 — EVALUACIÓN DE EMPLIFI (UAT PyME):** Evaluación de usabilidad, marcación móvil con geocerca, ahorro en nómina y satisfacción general (10 reactivos Likert, $n_2 = 18$).
+3. **Formulario 3 — VALIDACIÓN TÉCNICA Y NORMATIVA:** Dictamen profesional por contadores y gestores de talento sobre conformidad con el Código del Trabajo ecuatoriano y retenciones IESS (7 reactivos, $n_3 = 7$).
 
 ---
 

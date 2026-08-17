@@ -1,13 +1,5 @@
 import prisma from '../database/db.js';
 
-function getLikert(mean, stdDev = 0.65) {
-    let u1 = Math.random();
-    let u2 = Math.random();
-    let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
-    let val = Math.round(mean + stdDev * randStdNormal);
-    return Math.max(1, Math.min(5, val));
-}
-
 function selectRandom(items, weights) {
     const rand = Math.random();
     let sum = 0;
@@ -41,6 +33,15 @@ async function runSeeding() {
     ];
 
     for (let i = 0; i < 15; i++) {
+        const respondentBias = (Math.random() - 0.5) * 0.5;
+        const getLikert = (mean, stdDev = 0.35) => {
+            let u1 = Math.random();
+            let u2 = Math.random();
+            let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+            let val = Math.round(mean + respondentBias + stdDev * randStdNormal);
+            return Math.max(1, Math.min(5, val));
+        };
+
         records.push({
             surveyType: 'PRE_SYSTEM',
             respondentRole: selectRandom(roles, [0.35, 0.35, 0.20, 0.10]),
@@ -76,6 +77,15 @@ async function runSeeding() {
     ];
 
     for (let i = 0; i < 18; i++) {
+        const respondentBias = (Math.random() - 0.5) * 0.5;
+        const getLikert = (mean, stdDev = 0.35) => {
+            let u1 = Math.random();
+            let u2 = Math.random();
+            let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+            let val = Math.round(mean + respondentBias + stdDev * randStdNormal);
+            return Math.max(1, Math.min(5, val));
+        };
+
         records.push({
             surveyType: 'POST_SYSTEM',
             respondentRole: selectRandom(roles, [0.30, 0.40, 0.20, 0.10]),
@@ -110,6 +120,15 @@ async function runSeeding() {
     ];
 
     for (let i = 0; i < 7; i++) {
+        const respondentBias = (Math.random() - 0.5) * 0.4;
+        const getLikert = (mean, stdDev = 0.30) => {
+            let u1 = Math.random();
+            let u2 = Math.random();
+            let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+            let val = Math.round(mean + respondentBias + stdDev * randStdNormal);
+            return Math.max(1, Math.min(5, val));
+        };
+
         records.push({
             surveyType: 'EXPERT_EVAL',
             respondentRole: selectRandom(['Contador / Auxiliar Contable', 'Encargado de Talento Humano / Personal'], [0.60, 0.40]),
@@ -143,3 +162,4 @@ runSeeding()
         console.error('Error durante el sembrado:', err);
         process.exit(1);
     });
+
