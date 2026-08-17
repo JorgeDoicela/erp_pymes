@@ -65,6 +65,8 @@ jobs:
     steps:
       - name: Checkout Codigo Fuente
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Evaluar Filtros de Rutas
         id: filter
