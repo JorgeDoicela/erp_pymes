@@ -1208,6 +1208,26 @@ model ParetoFrontierPoint {
   @@map("pareto_frontier_points")
 }
 
+model ResearchSurveyResponse {
+  id              String   @id @default(cuid())
+  surveyType      String   // PRE_SYSTEM, POST_SYSTEM, EXPERT_EVAL
+  respondentRole  String
+  companySize     String
+  economicSector  String
+  experienceYears String?
+  academicDegree  String?
+  answers         Json     // Matriz de respuestas Likert y preguntas abiertas
+  isSynthetic     Boolean  @default(false)
+  ipHash          String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([surveyType])
+  @@index([isSynthetic])
+  @@map("research_survey_responses")
+}
+
 
 
 

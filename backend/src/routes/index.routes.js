@@ -33,12 +33,17 @@ import { rateLimit } from '../middleware/rateLimit.middleware.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { requireTenant } from '../middleware/tenant.middleware.js';
 
+import researchRoutes from './research.routes.js';
+
 const router = Router();
 
 // Ruta de prueba
 router.get('/', (req, res) => {
     res.send('API EMPLIFI funcionando correctamente v1');
 });
+
+// Módulo de Investigación Científica (Encuestas públicas y estadísticas)
+router.use('/research', researchRoutes);
 
 // Seed Remoto (Protegido para SuperAdmin)
 router.post('/seed', authenticate, authorize(['superadmin']), (req, res, next) => {

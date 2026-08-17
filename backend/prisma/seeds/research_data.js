@@ -301,4 +301,120 @@ export async function seedResearchData(prisma) {
 
         console.log(`Motor IA y datos de investigación configurados para ${tenant.name}.`);
     }
+
+    // 6. Sembrar respuestas de encuestas de investigación (N=75) si no existen
+    const existingSurveysCount = await prisma.researchSurveyResponse.count();
+    if (existingSurveysCount === 0) {
+        console.log('[RESEARCH_DATA] Inicializando 75 encuestas de investigación (Pre, Post, Experto)...');
+        const roles = ['Gerente General / Dueño', 'Director / Jefe de RRHH', 'Contador / Administrador Financiero', 'Analista de Personal / Operaciones'];
+        const sizes = ['Microempresa (1 - 9 emp)', 'Pequeña empresa (10 - 49 emp)', 'Mediana empresa (50 - 199 emp)', 'Empresa grande (> 200 emp)'];
+        const sectors = ['Tecnología / Servicios Profesionales', 'Comercio / Distribución', 'Manufactura / Producción', 'Salud / Educación', 'Servicios Financieros'];
+        const expList = ['< 2 años', '2 - 5 años', '6 - 10 años', '> 10 años'];
+
+        const getLikert = (mean, stdDev = 0.7) => {
+            let u1 = Math.random();
+            let u2 = Math.random();
+            let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+            let val = Math.round(mean + stdDev * randStdNormal);
+            return Math.max(1, Math.min(5, val));
+        };
+
+        const selectRandom = (items, weights) => {
+            const rand = Math.random();
+            let sum = 0;
+            for (let i = 0; i < items.length; i++) {
+                sum += weights[i];
+                if (rand <= sum) return items[i];
+            }
+            return items[items.length - 1];
+        };
+
+        const surveyRecords = [];
+
+        // Pre-Sistema N=25
+        for (let i = 0; i < 25; i++) {
+            surveyRecords.push({
+                surveyType: 'PRE_SYSTEM',
+                respondentRole: selectRandom(roles, [0.30, 0.35, 0.20, 0.15]),
+                companySize: selectRandom(sizes, [0.35, 0.45, 0.15, 0.05]),
+                economicSector: selectRandom(sectors, [0.30, 0.30, 0.20, 0.10, 0.10]),
+                experienceYears: selectRandom(expList, [0.20, 0.40, 0.30, 0.10]),
+                academicDegree: 'Licenciatura / Ingeniería',
+                answers: {
+                    pre_6_manual_attendance: getLikert(4.3),
+                    pre_7_buddy_punching: getLikert(3.5),
+                    pre_8_field_tracking_diff: getLikert(4.1),
+                    pre_9_overtime_calc_hours: getLikert(4.4),
+                    pre_10_fragmented_files: getLikert(4.2),
+                    pre_11_subjective_performance: getLikert(3.9),
+                    pre_12_lacks_5d_metric: getLikert(4.3),
+                    pre_13_turnover_risk_blindness: getLikert(4.0),
+                    pre_18_manual_severance_errors: getLikert(4.1),
+                    pre_20_unencrypted_salaries: getLikert(4.5),
+                    comments: 'Línea base pre-sistema: marcado manual en listas e inconsistencias en horas extra.'
+                },
+                isSynthetic: true,
+                ipHash: 'seed-calibration',
+                userAgent: 'Research-Seeder/1.0'
+            });
+        }
+
+        // Post-Sistema N=35
+        for (let i = 0; i < 35; i++) {
+            surveyRecords.push({
+                surveyType: 'POST_SYSTEM',
+                respondentRole: selectRandom(roles, [0.25, 0.45, 0.15, 0.15]),
+                companySize: selectRandom(sizes, [0.25, 0.50, 0.20, 0.05]),
+                economicSector: selectRandom(sectors, [0.40, 0.20, 0.20, 0.10, 0.10]),
+                experienceYears: selectRandom(expList, [0.10, 0.40, 0.40, 0.10]),
+                academicDegree: 'Licenciatura / Ingeniería',
+                answers: {
+                    post_1_navigation_usability: getLikert(4.5),
+                    post_2_5d_score_clarity: getLikert(4.6),
+                    post_3_geofence_passkey_speed: getLikert(4.4),
+                    post_4_recommend_system: getLikert(4.7),
+                    post_6_weibull_survival_precision: getLikert(4.3),
+                    post_7_rsi_self_improve_confidence: getLikert(4.4),
+                    post_9_causal_simulator_whatif: getLikert(4.2),
+                    post_10_ate_roi_budget_justification: getLikert(4.5),
+                    post_12_pareto_frontier_tradeoff: getLikert(4.1),
+                    post_14_aes256_privacy_confidence: getLikert(4.8),
+                    post_16_ecuador_labor_law_compliance: getLikert(4.8),
+                    comments: 'La automatización de finiquito y el Scoring 5D redujeron los tiempos de nómina significativamente.'
+                },
+                isSynthetic: true,
+                ipHash: 'seed-calibration',
+                userAgent: 'Research-Seeder/1.0'
+            });
+        }
+
+        // Experto N=15
+        for (let i = 0; i < 15; i++) {
+            surveyRecords.push({
+                surveyType: 'EXPERT_EVAL',
+                respondentRole: 'Docente / Investigador Académico',
+                companySize: selectRandom(sizes, [0.20, 0.40, 0.30, 0.10]),
+                economicSector: 'Tecnología / Servicios Profesionales',
+                experienceYears: selectRandom(['6 - 10 años', '> 10 años'], [0.40, 0.60]),
+                academicDegree: selectRandom(['Maestría / MSc', 'Doctorado / PhD'], [0.60, 0.40]),
+                answers: {
+                    exp_1_weibull_theoretical_rigor: getLikert(4.7),
+                    exp_2_causal_docalculus_validity: getLikert(4.8),
+                    exp_3_dpsgd_privacy_guarantee: getLikert(4.5),
+                    exp_4_morl_pareto_optimality: getLikert(4.6),
+                    exp_5_rsi_gradient_descent_calibration: getLikert(4.5),
+                    exp_7_haversine_passkey_security: getLikert(4.8),
+                    exp_8_ecuador_labor_law_precision: getLikert(4.9),
+                    exp_9_scientific_paper_contribution: getLikert(4.8),
+                    comments: 'El marco desacoplado de Do-Calculus y DP-SGD posee rigor y valor académico relevante.'
+                },
+                isSynthetic: true,
+                ipHash: 'seed-calibration',
+                userAgent: 'Research-Seeder/1.0'
+            });
+        }
+
+        await prisma.researchSurveyResponse.createMany({ data: surveyRecords });
+        console.log('[RESEARCH_DATA] 75 encuestas del estudio sembradas con éxito en la BD.');
+    }
 }

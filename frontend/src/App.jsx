@@ -100,6 +100,10 @@ const EntrepreneurshipDetails = lazy(() => import('./pages/entrepreneurship/Proj
 const RegisterTenant = lazy(() => import('./pages/auth/RegisterTenant.jsx'));
 const SuperAdminDashboard = lazy(() => import('./pages/superadmin/SuperAdminDashboard.jsx'));
 
+// Módulo Público de Investigación Científica (Emplifi Research)
+const PublicResearchPage = lazy(() => import('./pages/PublicResearchPage.jsx'));
+const PublicResearchResultsPage = lazy(() => import('./pages/PublicResearchResultsPage.jsx'));
+
 function App() {
   const [auth, setAuth] = useState(() => {
     // Intentar recuperar sesión al cargar
@@ -168,6 +172,8 @@ function App() {
         <Route path="/register-company" element={<RegisterTenant />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/careers/:id" element={<JobApplication />} />
+        <Route path="/investigacion" element={<PublicResearchPage />} />
+        <Route path="/investigacion/resultados" element={<PublicResearchResultsPage />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* Panel compartido para roles administrativos/especializados */}
