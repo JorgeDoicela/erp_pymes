@@ -1,3 +1,11 @@
+/**
+ * @file DigitalMarker.jsx
+ * @description Marcador Digital de Asistencia con Verificación de Geocercas (GPS), Detección de Spoofing y Biometría WebAuthn.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import React, { useState, useEffect } from 'react';
 import attendanceService from '../../services/attendance/attendanceService';
 import systemService from '../../services/systemService';

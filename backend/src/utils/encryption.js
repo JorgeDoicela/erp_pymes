@@ -1,3 +1,11 @@
+/**
+ * @file encryption.js
+ * @description Módulo de Criptografía de Campo (FLE) en Reposo AES-256-GCM con IV aleatorio y verificación GCM Tag.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';

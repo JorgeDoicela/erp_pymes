@@ -1,3 +1,11 @@
+/**
+ * @file main.jsx
+ * @description Punto de entrada de la aplicación SPA React 19 para la plataforma Emplifi.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'

@@ -1,3 +1,11 @@
+/**
+ * @file server.js
+ * @description Punto de entrada principal y servidor HTTP/WebSocket para la plataforma Emplifi.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import 'dotenv/config';
 import http from 'http';
 import app from './app.js';

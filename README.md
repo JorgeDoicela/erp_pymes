@@ -102,4 +102,5 @@ EMAIL_PASS=...
 
 ---
 
-**Autor:** Jorge Doicela — Licencia ISC
+**Autor y Titular de Derechos:** Jorge Doicela — Copyright (c) 2026. Todos los derechos reservados.  
+**Licencia:** Propietaria / Confidencial (Ver archivo [LICENSE](./LICENSE)). Prohibida su copia, reproducción o distribución sin autorización expresa.

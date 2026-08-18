@@ -1,0 +1,85 @@
+================================================================================
+ACUERDO DE LICENCIA DE SOFTWARE PROPIETARIO Y PROTECCIÓN DE DERECHOS DE AUTOR
+================================================================================
+
+Software: EMPLIFI — Sistema Integral de Gestión del Talento Humano, Motores de IA,
+          Analítica Causal, Biometría WebAuthn, Geocercas y Motor de Nómina
+Autor y Titular Exclusivo: Jorge Doicela
+Año de Creación y Registro: 2026
+Jurisdicción Primaria: República del Ecuador / Tratados Internacionales OMPI y Convenio de Berna
+Estado de Licencia: PROPIETARIA Y CONFIDENCIAL — TODOS LOS DERECHOS RESERVADOS
+(Proprietary Software License — All Rights Reserved)
+
+1. DECLARACIÓN DE TITULARIDAD Y DERECHOS MORALES Y PATRIMONIALES
+--------------------------------------------------------------------------------
+El presente software, código fuente, esquemas de bases de datos, algoritmos matemáticos,
+interfaces gráficas de usuario (UI/UX), documentación técnica, artículos científicos y
+artefactos de despliegue son de autoría intelectual y propiedad exclusiva de Jorge Doicela
+(en adelante, el "Autor").
+
+La titularidad ampara expresamente la totalidad de los subsistemas y componentes:
+  a) Motor de Nómina y Liquidaciones: Algoritmos de cálculo con precisión de 20 dígitos
+     (Decimal.js), recargos por horas suplementarias (50%), extraordinarias (100%),
+     recargo nocturno (25%), décimos, fondos de reserva y actas de finiquito ajustadas al
+     Código de Trabajo del Ecuador (Arts. 185 y 188) y retenciones IESS/SRI.
+  b) Cuatrilogía de Motores de Inteligencia Artificial y People Analytics:
+     - Motor de Automejora Recursiva (RSI Engine con optimización SGD sobre Brier Score).
+     - Motor de Inferencia Causal Contrafactual (Judea Pearl Do-Calculus, G-Computation,
+       estimador doblemente robusto AIPW y Bootstrap Percentil).
+     - Motor de Aprendizaje Federado con Privacidad Diferencial (FedAvg, DP-SGD,
+       recorte L2 y RDP Accountant analítico exacto bajo LOPDP y GDPR).
+     - Motor de Aprendizaje por Refuerzo Multiobjetivo (MORL con Vector Q-Learning y
+       extracción de Frontera Eficiente de Pareto).
+  c) Módulos de Asistencia y Seguridad Perimetral:
+     - Autenticación Biométrica WebAuthn / FIDO2 infalsificable a nivel de hardware.
+     - Motor de Geocercas (Fórmula de Haversine con verificación GPS anti-spoofing y
+       detección de VPN/Proxy en tiempo real).
+  d) Criptografía y Gobernanza de Datos:
+     - Cifrado autenticado en reposo AES-256-GCM para remuneraciones y cuentas bancarias.
+     - Aislamiento multi-tenant estricto vía AsyncLocalStorage e interceptores de ORM.
+  e) Contabilidad Financiera en Partida Doble: Generador automático de asientos contables.
+  f) Arquitectura DevOps y Despliegue: Pipelines multi-etapa en GitHub Actions, Docker y AWS.
+
+2. TÉRMINOS Y CONDICIONES DE PROHIBICIÓN EXPRESA
+--------------------------------------------------------------------------------
+Queda estrictamente prohibido a cualquier persona natural o jurídica, incluyendo expresamente
+a instituciones de educación superior, docentes, directivos, empresas o terceros:
+
+  1. ADJUDICACIÓN DE AUTORÍA O PLAGIO ACADÉMICO:
+     Presentar, adjudicarse, firmar, registrar o postular el presente software, sus módulos,
+     algoritmos, arquitectura o investigación como obra propia o institucional en congresos,
+     artículos científicos, proyectos de titulación, tesis, ponencias o informes sin que
+     Jorge Doicela figure como AUTOR PRINCIPAL y titular de la obra.
+
+  2. REPRODUCCIÓN, COPIA Y CLONACIÓN:
+     Copiar, reproducir, clonar, descargar, redistribuir o republicar el código fuente,
+     total o parcialmente, en repositorios públicos o privados sin autorización por escrito.
+
+  3. EXPLOTACIÓN COMERCIAL O ACADÉMICA NO AUTORIZADA:
+     Vender, comercializar, arrendar, sublicenciar, monetizar o utilizar este software con
+     fines comerciales o de acreditación institucional sin un contrato de licencia formal.
+
+  4. INGENIERÍA INVERSA Y OBRAS DERIVADAS:
+     Modificar, descompilar, realizar ingeniería inversa o crear trabajos derivados a partir
+     del código fuente o de sus algoritmos matemáticos patentables/registrables.
+
+3. DERECHO DE EXHIBICIÓN Y EVALUACIÓN PROFESIONAL
+--------------------------------------------------------------------------------
+Se concede únicamente autorización de lectura a evaluadores de talento, reclutadores
+técnicos y empresas empleadoras con el único propósito de evaluar las competencias
+técnicas y profesionales de Jorge Doicela para oportunidades de contratación laboral o
+prestación de servicios de consultoría.
+
+4. ACCIONES LEGALES POR INFRACCIÓN
+--------------------------------------------------------------------------------
+Cualquier infracción a estos términos constituye una violación a la Ley de Propiedad
+Intelectual, Código Orgánico de la Economía Social de los Conocimientos (Código INGENIOS)
+de la República del Ecuador, al Convenio de Berna y a los tratados de la OMPI sobre Derecho
+de Autor, facultando al Autor a iniciar las acciones civiles, administrativas y penales
+correspondientes por daños y perjuicios.
+
+Para consultas de licenciamiento formal, contacto profesional o convenios:
+Autor: Jorge Doicela
+País: Ecuador
+Año: 2026
+================================================================================

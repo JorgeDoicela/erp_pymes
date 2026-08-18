@@ -1,3 +1,11 @@
+/**
+ * @file intelligenceService.js
+ * @description Suite de People Analytics Científico: Supervivencia Weibull, Simulador Monte Carlo (Box-Muller) y ANOVA Interdepartamental.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import prisma from '../database/db.js';
 import { decryptSalary } from '../utils/encryption.js';
 import rsiService from './ai/rsiService.js';

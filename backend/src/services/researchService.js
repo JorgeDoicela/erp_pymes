@@ -1,3 +1,11 @@
+/**
+ * @file researchService.js
+ * @description Servicio de Instrumentación Empírica, Procesamiento de Encuestas y Análisis Psicométrico/Estadístico.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import prisma from '../database/db.js';
 import crypto from 'crypto';
 

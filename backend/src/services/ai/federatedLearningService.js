@@ -1,3 +1,11 @@
+/**
+ * @file federatedLearningService.js
+ * @description Motor de Aprendizaje Federado Multi-Tenant con Privacidad Diferencial (FedAvg + DP-SGD + RDP Accountant).
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import prisma from '../../database/db.js';
 import { computeEpsilonPerRound, computePrivacyAccountant } from '../../utils/rdpAccountant.js';
 

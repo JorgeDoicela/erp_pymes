@@ -1,3 +1,11 @@
+/**
+ * @file morlOptimizationService.js
+ * @description Motor de Aprendizaje por Refuerzo Multiobjetivo (MORL) y Extracción de Frontera Eficiente de Pareto.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import prisma from '../../database/db.js';
 import { decryptSalary } from '../../utils/encryption.js';
 import rsiService from './rsiService.js';

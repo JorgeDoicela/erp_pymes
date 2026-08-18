@@ -15,7 +15,8 @@
   },
   "keywords": [],
   "author": "Jorge Doicela",
-  "license": "ISC",
+  "license": "UNLICENSED",
+  "private": true,
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "@simplewebauthn/browser": "^13.2.2",

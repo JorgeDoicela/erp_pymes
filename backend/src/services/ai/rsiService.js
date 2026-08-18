@@ -1,3 +1,11 @@
+/**
+ * @file rsiService.js
+ * @description Motor de Automejora Recursiva (Recursive Self-Improvement - RSI) y Calibración Continua SGD.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import prisma from '../../database/db.js';
 
 const DEFAULT_HYPERPARAMETERS = {

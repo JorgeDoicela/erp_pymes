@@ -1,3 +1,11 @@
+/**
+ * @file causalInferenceService.js
+ * @description Motor de Inferencia Causal Contrafactual (Judea Pearl Do-Calculus, G-Computation, AIPW Doubly Robust).
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import prisma from '../../database/db.js';
 import { decryptSalary } from '../../utils/encryption.js';
 import rsiService from './rsiService.js';

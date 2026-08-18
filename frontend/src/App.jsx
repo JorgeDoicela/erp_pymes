@@ -1,3 +1,11 @@
+/**
+ * @file App.jsx
+ * @description Enrutamiento principal, control de acceso por roles (RBAC) y vistas de la plataforma Emplifi.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { useState, Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast';

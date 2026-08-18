@@ -1,5 +1,9 @@
 /**
- * RDP Accountant para DP-SGD
+ * @file rdpAccountant.js
+ * @description Módulo de Cálculo Analítico Exacto de Privacidad Diferencial de Rényi (RDP Accountant) para DP-SGD.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  *
  * Referencias:
  *   [1] Mironov, I. (2017). "Rényi Differential Privacy". CSF 2017.

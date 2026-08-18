@@ -1,3 +1,11 @@
+/**
+ * @file app.js
+ * @description Configuración de Express, middlewares de seguridad, CORS, Helmet y enrutamiento central.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

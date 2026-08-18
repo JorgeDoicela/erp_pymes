@@ -1,3 +1,11 @@
+/**
+ * @file attendanceService.js
+ * @description Motor de Control Asistencial, Geocercas (Haversine), Cifrado GPS y Detección Anti-VPN/Proxy.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { attendanceRepository } from '../../repositories/attendance/attendanceRepository.js';
 import prisma from '../../database/db.js';
 import employeeRepository from '../../repositories/employees/employeeRepository.js';

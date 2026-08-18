@@ -1,3 +1,11 @@
+/**
+ * @file BiometricSettings.jsx
+ * @description Componente de Configuración de Credenciales Biométricas WebAuthn/FIDO2 y Consentimiento LOPDP.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { updateConsentTracking } from '../../services/employees/employee.service';

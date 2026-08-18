@@ -1,3 +1,11 @@
+/**
+ * @file payrollCalculationService.js
+ * @description Motor de Cálculo de Nómina, Horas Extra, Recargo Nocturno, Beneficios de Ley y Deducciones (Código de Trabajo Ecuador).
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import prisma from '../../database/db.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
 import { decrypt, safeDecrypt } from '../../utils/encryption.js';

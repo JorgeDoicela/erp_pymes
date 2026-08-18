@@ -1,3 +1,11 @@
+/**
+ * @file db.js
+ * @description Cliente Prisma con interceptor multi-tenant y aislamiento estricto de base de datos.
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { getTenantId, isTenantFilterBypassed, runWithoutTenantFilter } from './tenantContext.js';
