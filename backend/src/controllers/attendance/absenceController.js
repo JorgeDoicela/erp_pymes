@@ -53,20 +53,33 @@ const createRequest = async (req, res, next) => {
             file: req.file
         });
 
-        // NOTIFICATION: Notify Admins (Approvers)
-        const admins = await prisma.employee.findMany({ where: { role: 'admin', isActive: true } });
-        const employee = await prisma.employee.findUnique({ where: { id: targetEmployeeId } });
-
-        for (const admin of admins) {
-            await notificationService.sendAbsenceRequested({
-                recipientId: admin.id,
-                employeeName: `${employee.firstName} ${employee.lastName}`,
-                type: type,
-                startDate: startDate,
-                endDate: endDate,
-                requestId: request.id
+        // NOTIFICATION: Notify Admins (Approvers) of the same tenant (asynchronous / non-blocking)
+        prisma.employee.findUnique({
+            where: { id: targetEmployeeId },
+            select: { firstName: true, lastName: true, tenantId: true }
+        }).then(async (employee) => {
+            if (!employee) return;
+            const employeeTenantId = employee.tenantId || req.tenantId || req.user?.tenantId;
+            const admins = await prisma.employee.findMany({
+                where: {
+                    role: 'admin',
+                    isActive: true,
+                    ...(employeeTenantId ? { tenantId: employeeTenantId } : {})
+                },
+                select: { id: true }
             });
-        }
+
+            await Promise.allSettled(admins.map(admin =>
+                notificationService.sendAbsenceRequested({
+                    recipientId: admin.id,
+                    employeeName: `${employee.firstName} ${employee.lastName}`,
+                    type: type,
+                    startDate: startDate,
+                    endDate: endDate,
+                    requestId: request.id
+                })
+            ));
+        }).catch(err => console.error('[AbsenceNotification] Error dispatching alerts:', err));
 
         res.status(201).json({ success: true, data: request });
     } catch (error) {

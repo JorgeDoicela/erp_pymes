@@ -347,11 +347,8 @@ export const createJournalEntry = async (req, res) => {
         const tenantId = getTenantId(req);
 
         // 1. Validar Cuadratura Perfecta usando la utilidad financiera
-        const totalDebitNum = lines.reduce((acc, line) => acc + (parseFloat(line.debit) || 0), 0);
-        const totalCreditNum = lines.reduce((acc, line) => acc + (parseFloat(line.credit) || 0), 0);
-
-        const totalDebitFin = financial.from(totalDebitNum);
-        const totalCreditFin = financial.from(totalCreditNum);
+        const totalDebitFin = lines.reduce((acc, line) => acc.plus(financial.from(line.debit || 0)), financial.from(0));
+        const totalCreditFin = lines.reduce((acc, line) => acc.plus(financial.from(line.credit || 0)), financial.from(0));
 
         if (!totalDebitFin.equals(totalCreditFin)) {
             return res.status(400).json({
@@ -751,9 +748,22 @@ export const integratePayroll = async (req, res) => {
         }
 
         const dateObj = new Date(payroll.period);
-        // CORRECCIÓN CRÍTICA: totalDebit debe incluir totalSueldos + totalHorasExtras + totalBonos para igualar el haber total
-        const calculatedTotalDebit = Number((totalSueldos + totalHorasExtras + totalBonos).toFixed(2));
-        const calculatedTotalCredit = Number((totalNeto + totalDeducciones).toFixed(2));
+        const sumDebits = lines.reduce((acc, l) => acc.plus(financial.from(l.debit || 0)), financial.from(0));
+        const sumCredits = lines.reduce((acc, l) => acc.plus(financial.from(l.credit || 0)), financial.from(0));
+
+        // Cuadratura estricta para evitar diferencias por centavos de redondeo
+        const calculatedTotalDebit = financial.round(sumDebits);
+        let calculatedTotalCredit = financial.round(sumCredits);
+
+        if (calculatedTotalDebit !== calculatedTotalCredit && lines.length > 0) {
+            // Ajustar diferencia de centavos en la línea de pasivo
+            const diff = financial.from(calculatedTotalDebit).minus(calculatedTotalCredit).toNumber();
+            const lastCreditLine = lines.slice().reverse().find(l => l.credit > 0);
+            if (lastCreditLine) {
+                lastCreditLine.credit = Number((lastCreditLine.credit + diff).toFixed(2));
+                calculatedTotalCredit = calculatedTotalDebit;
+            }
+        }
 
         const entry = await prisma.journalEntry.create({
             data: {

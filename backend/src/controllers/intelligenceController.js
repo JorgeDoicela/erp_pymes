@@ -180,7 +180,8 @@ export async function getDepartmentComparison(req, res) {
  */
 export async function getProactiveAlerts(req, res) {
     try {
-        const alerts = await intelligenceService.getProactiveAlerts();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const alerts = await intelligenceService.getProactiveAlerts(tenantId);
         res.json({
             success: true,
             data: alerts,
@@ -196,7 +197,8 @@ export async function getProactiveAlerts(req, res) {
  */
 export async function getPredictiveAnalytics(req, res) {
     try {
-        const predictions = await intelligenceService.getPredictiveAnalytics();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const predictions = await intelligenceService.getPredictiveAnalytics(tenantId);
         res.json({
             success: true,
             data: predictions,
@@ -214,7 +216,8 @@ export async function getPredictiveAnalytics(req, res) {
 export async function getEmployeeScoring(req, res) {
     try {
         const { employeeId } = req.params;
-        const scoring = await intelligenceService.getEmployeeScoring(employeeId || null);
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const scoring = await intelligenceService.getEmployeeScoring(employeeId || null, tenantId);
         res.json({
             success: true,
             data: scoring,
@@ -230,7 +233,8 @@ export async function getEmployeeScoring(req, res) {
  */
 export async function getOrganizationalHealth(req, res) {
     try {
-        const health = await intelligenceService.getOrganizationalHealth();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const health = await intelligenceService.getOrganizationalHealth(tenantId);
         res.json({
             success: true,
             data: health,
@@ -246,7 +250,8 @@ export async function getOrganizationalHealth(req, res) {
  */
 export async function getPatternAnalysis(req, res) {
     try {
-        const patterns = await intelligenceService.getPatternAnalysis();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const patterns = await intelligenceService.getPatternAnalysis(tenantId);
         res.json({
             success: true,
             data: patterns,
@@ -264,12 +269,13 @@ export async function getPatternAnalysis(req, res) {
 export async function runWhatIfMonteCarlo(req, res) {
     try {
         const params = req.method === 'POST' ? req.body : req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
         const simulation = await intelligenceService.runWhatIfMonteCarlo({
             salaryIncreasePercent: Number(params.salaryIncreasePercent || 5),
             wellnessInvestment: Number(params.wellnessInvestment || 150),
             overtimeOptimization: Number(params.overtimeOptimization || 20),
             iterations: Number(params.iterations || 2000),
-        });
+        }, tenantId);
         res.json({
             success: true,
             data: simulation,

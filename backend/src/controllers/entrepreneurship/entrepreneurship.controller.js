@@ -4,10 +4,13 @@ import prisma from '../../database/db.js';
 export const getProjects = async (req, res) => {
     try {
         const { stage, status } = req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
+
         const projects = await prisma.entrepreneurship.findMany({
             where: {
                 ...(stage && { stage }),
-                ...(status && { status })
+                ...(status && { status }),
+                ...(tenantId ? { owner: { tenantId } } : {})
             },
             include: {
                 owner: {
@@ -28,14 +31,20 @@ export const getProjects = async (req, res) => {
 // Crear un nuevo proyecto
 export const createProject = async (req, res) => {
     try {
-        const { title, description, industry, stage, ownerId, budget, innovationScore } = req.body;
+        const { title, description, industry, stage, budget, innovationScore } = req.body;
+        const targetOwnerId = req.body.ownerId || req.user?.employeeId || req.user?.id;
+
+        if (!targetOwnerId) {
+            return res.status(400).json({ error: 'Propietario del proyecto (ownerId) no especificado' });
+        }
+
         const project = await prisma.entrepreneurship.create({
             data: {
                 title,
                 description,
                 industry,
                 stage: stage || 'IDEATION',
-                ownerId,
+                ownerId: targetOwnerId,
                 budget: parseFloat(budget) || 0,
                 innovationScore: parseFloat(innovationScore) || 0
             }
@@ -53,9 +62,23 @@ export const getProjectDetails = async (req, res) => {
         const project = await prisma.entrepreneurship.findUnique({
             where: { id },
             include: {
-                owner: true,
-                members: { include: { employee: true } },
-                mentors: { include: { employee: true } },
+                owner: {
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true, position: true }
+                },
+                members: {
+                    include: {
+                        employee: {
+                            select: { id: true, firstName: true, lastName: true, email: true, department: true, position: true }
+                        }
+                    }
+                },
+                mentors: {
+                    include: {
+                        employee: {
+                            select: { id: true, firstName: true, lastName: true, email: true, department: true, position: true }
+                        }
+                    }
+                },
                 milestones: { orderBy: { dueDate: 'asc' } },
                 documents: true,
                 updates: { orderBy: { createdAt: 'desc' } },

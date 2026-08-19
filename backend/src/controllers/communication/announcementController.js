@@ -4,9 +4,10 @@ export const createAnnouncement = async (req, res) => {
     try {
         const { title, content, category, priority, requiresAcknowledgment, attachmentUrl } = req.body;
         const authorId = req.user.employeeId || req.user.id;
+        const tenantId = req.tenantId || req.user?.tenantId;
 
         const announcement = await announcementService.createAnnouncement({
-            title, content, category, priority, requiresAcknowledgment, attachmentUrl, authorId
+            title, content, category, priority, requiresAcknowledgment, attachmentUrl, authorId, tenantId
         });
 
         return res.status(201).json({ success: true, message: 'Comunicado publicado exitosamente', data: announcement });
@@ -58,7 +59,8 @@ export const getAnnouncementStats = async (req, res) => {
 
 export const getBirthdays = async (req, res) => {
     try {
-        const birthdays = await announcementService.getBirthdaysOfMonth();
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const birthdays = await announcementService.getBirthdaysOfMonth(tenantId);
         return res.json({ success: true, data: birthdays });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

@@ -379,10 +379,23 @@ export const getEvaluationResults = async (req, res) => {
             };
         });
 
-        const validResults = results.filter(r => r.score > 0);
-        const overallScore = validResults.length > 0
-            ? (validResults.reduce((acc, curr) => acc + curr.score, 0) / validResults.length).toFixed(2)
-            : 0;
+        const validResults = results.filter(r => (criteriaStats[r.criteria]?.count || 0) > 0);
+        let overallScore = 0;
+
+        if (validResults.length > 0) {
+            const hasWeights = validResults.some(r => r.weight && parseFloat(r.weight) > 0);
+            if (hasWeights) {
+                const totalWeight = validResults.reduce((acc, curr) => acc + (parseFloat(curr.weight) || 0), 0);
+                if (totalWeight > 0) {
+                    const weightedSum = validResults.reduce((acc, curr) => acc + (curr.score * (parseFloat(curr.weight) || 0)), 0);
+                    overallScore = parseFloat((weightedSum / totalWeight).toFixed(2));
+                } else {
+                    overallScore = parseFloat((validResults.reduce((acc, curr) => acc + curr.score, 0) / validResults.length).toFixed(2));
+                }
+            } else {
+                overallScore = parseFloat((validResults.reduce((acc, curr) => acc + curr.score, 0) / validResults.length).toFixed(2));
+            }
+        }
 
         const feedback = completedReviewers.map(r => ({
             reviewerName: r.reviewerId === evaluation.employeeId ? 'Autoevaluación' : (userRole === 'admin' ? `${r.reviewer.firstName} ${r.reviewer.lastName}` : 'Evaluador'),

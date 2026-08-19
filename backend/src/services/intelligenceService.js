@@ -128,8 +128,8 @@ export function calculateKolmogorovSmirnovTest(empiricalValues = []) {
 
     const mean = sorted.reduce((a, b) => a + b, 0) / n;
     const lambdaExp = mean > 0 ? 1 / mean : 0.02;
-    // Estimación MLE aproximada de escala (eta) y forma (k) de Weibull
-    const etaWeibull = Math.max(1.0, mean / 0.906);
+    // Estimación MLE / método de momentos de escala (eta) y forma (k) de Weibull: E[X] = eta * Gamma(1 + 1/k) -> eta = mean / Gamma(1.8)
+    const etaWeibull = Math.max(1.0, mean / 0.9313838);
     const kWeibull = 1.25;
 
     let maxDWeibull = 0;
@@ -570,8 +570,15 @@ export async function getRetentionRiskAnalysis(tenantId = null, preloadedEmploye
 
 // ==================== MÓDULO 2: DESEMPEÑO E INSIGHTS ====================
 
-export async function getPerformanceInsights(preloadedEmployees = null) {
-    const employees = preloadedEmployees || await fetchRawEmployees();
+export async function getPerformanceInsights(tenantIdOrEmployees = null) {
+    let employees;
+    if (Array.isArray(tenantIdOrEmployees)) {
+        employees = tenantIdOrEmployees;
+    } else if (typeof tenantIdOrEmployees === 'string') {
+        employees = await fetchRawEmployees(tenantIdOrEmployees);
+    } else {
+        employees = await fetchRawEmployees();
+    }
 
     const insights = {
         declining: [],
@@ -638,8 +645,15 @@ export async function getPerformanceInsights(preloadedEmployees = null) {
 
 // ==================== MÓDULO 3: ASISTENCIA Y ANOMALÍAS ====================
 
-export async function getAttendancePatterns(preloadedEmployees = null) {
-    const employees = preloadedEmployees || await fetchRawEmployees();
+export async function getAttendancePatterns(tenantIdOrEmployees = null) {
+    let employees;
+    if (Array.isArray(tenantIdOrEmployees)) {
+        employees = tenantIdOrEmployees;
+    } else if (typeof tenantIdOrEmployees === 'string') {
+        employees = await fetchRawEmployees(tenantIdOrEmployees);
+    } else {
+        employees = await fetchRawEmployees();
+    }
 
     const patterns = {
         suspiciousAbsences: [],
@@ -708,32 +722,49 @@ export async function getAttendancePatterns(preloadedEmployees = null) {
 
 // ==================== MÓDULO 4: OPTIMIZACIÓN DE NÓMINA ====================
 
-export async function getPayrollOptimization(preloadedPayrolls = null, preloadedBenefits = null) {
-    const payrolls = preloadedPayrolls || await prisma.payroll.findMany({
-        orderBy: { period: 'desc' },
-        take: 12,
-        select: {
-            id: true,
-            totalAmount: true,
-            details: {
-                select: {
-                    employeeId: true,
-                    overtimeHours: true,
-                    overtimeAmount: true,
-                    employee: { select: { firstName: true, lastName: true, department: true } }
-                }
-            }
-        }
-    });
+export async function getPayrollOptimization(tenantIdOrPayrolls = null, preloadedBenefits = null) {
+    let resolvedTenantId = typeof tenantIdOrPayrolls === 'string' ? tenantIdOrPayrolls : null;
+    let payrolls = null;
+    let benefits = null;
 
-    const benefits = preloadedBenefits || await prisma.employeeBenefit.findMany({
-        where: { status: 'ACTIVE' },
-        select: {
-            amount: true,
-            employeeId: true,
-            employee: { select: { department: true } }
-        }
-    });
+    if (Array.isArray(tenantIdOrPayrolls)) {
+        payrolls = tenantIdOrPayrolls;
+        benefits = preloadedBenefits;
+    } else {
+        const payrollWhere = resolvedTenantId ? { tenantId: resolvedTenantId } : {};
+        const benefitWhere = {
+            status: 'ACTIVE',
+            ...(resolvedTenantId ? { employee: { tenantId: resolvedTenantId } } : {})
+        };
+
+        [payrolls, benefits] = await Promise.all([
+            prisma.payroll.findMany({
+                where: payrollWhere,
+                orderBy: { period: 'desc' },
+                take: 12,
+                select: {
+                    id: true,
+                    totalAmount: true,
+                    details: {
+                        select: {
+                            employeeId: true,
+                            overtimeHours: true,
+                            overtimeAmount: true,
+                            employee: { select: { firstName: true, lastName: true, department: true } }
+                        }
+                    }
+                }
+            }),
+            prisma.employeeBenefit.findMany({
+                where: benefitWhere,
+                select: {
+                    amount: true,
+                    employeeId: true,
+                    employee: { select: { department: true } }
+                }
+            })
+        ]);
+    }
 
     const optimization = {
         overtimeAnomalies: [],
@@ -742,7 +773,7 @@ export async function getPayrollOptimization(preloadedPayrolls = null, preloaded
         benefitsDistribution: {},
     };
 
-    if (payrolls.length === 0) return optimization;
+    if (!payrolls || payrolls.length === 0) return optimization;
 
     const latestPayroll = payrolls[0];
     const previousPayroll = payrolls[1];
@@ -780,7 +811,7 @@ export async function getPayrollOptimization(preloadedPayrolls = null, preloaded
         }
     }
 
-    benefits.forEach(benefit => {
+    (benefits || []).forEach(benefit => {
         const dept = benefit.employee?.department || 'General';
         if (!optimization.benefitsDistribution[dept]) {
             optimization.benefitsDistribution[dept] = {
@@ -900,18 +931,19 @@ export async function getRecruitmentMatching(vacancyId) {
 
 // ==================== MÓDULO 6: COMPARATIVA Y ANOVA INTERDEPARTAMENTAL ====================
 
-export async function getDepartmentComparison(preloadedData = null) {
+export async function getDepartmentComparison(tenantIdOrPreloaded = null) {
     let retention, performance, attendance, rawEmployees;
+    let resolvedTenantId = typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null;
 
-    if (preloadedData) {
-        retention = preloadedData.retention;
-        performance = preloadedData.performance;
-        attendance = preloadedData.attendance;
-        rawEmployees = preloadedData.rawEmployees || null;
+    if (tenantIdOrPreloaded && typeof tenantIdOrPreloaded === 'object' && !Array.isArray(tenantIdOrPreloaded)) {
+        retention = tenantIdOrPreloaded.retention;
+        performance = tenantIdOrPreloaded.performance;
+        attendance = tenantIdOrPreloaded.attendance;
+        rawEmployees = tenantIdOrPreloaded.rawEmployees || null;
     } else {
-        rawEmployees = await fetchRawEmployees();
+        rawEmployees = await fetchRawEmployees(resolvedTenantId);
         [retention, performance, attendance] = await Promise.all([
-            getRetentionRiskAnalysis(rawEmployees),
+            getRetentionRiskAnalysis(resolvedTenantId, rawEmployees),
             getPerformanceInsights(rawEmployees),
             getAttendancePatterns(rawEmployees),
         ]);
@@ -1113,7 +1145,7 @@ export async function getDepartmentComparison(preloadedData = null) {
 /**
  * Ejecuta Simulación Monte Carlo de Escenarios Estratégicos (N=2,000 corridas)
  */
-export async function runWhatIfMonteCarlo(params = {}, preloadedData = null) {
+export async function runWhatIfMonteCarlo(params = {}, tenantIdOrPreloaded = null) {
     const {
         salaryIncreasePercent = 5,
         wellnessInvestment = 150,
@@ -1126,13 +1158,14 @@ export async function runWhatIfMonteCarlo(params = {}, preloadedData = null) {
     let mediumRiskCount = 5;
     const baseAvgSalary = 850;
 
-    if (preloadedData?.retention?.stats) {
-        totalEmployees = preloadedData.retention.stats.total || 25;
-        highRiskCount = preloadedData.retention.stats.highRisk || 3;
-        mediumRiskCount = preloadedData.retention.stats.mediumRisk || 5;
+    if (tenantIdOrPreloaded && typeof tenantIdOrPreloaded === 'object' && tenantIdOrPreloaded.retention?.stats) {
+        totalEmployees = tenantIdOrPreloaded.retention.stats.total || 25;
+        highRiskCount = tenantIdOrPreloaded.retention.stats.highRisk || 3;
+        mediumRiskCount = tenantIdOrPreloaded.retention.stats.mediumRisk || 5;
     } else {
-        const rawEmployees = await fetchRawEmployees();
-        const ret = await getRetentionRiskAnalysis(rawEmployees);
+        const resolvedTenantId = typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null;
+        const rawEmployees = await fetchRawEmployees(resolvedTenantId);
+        const ret = await getRetentionRiskAnalysis(resolvedTenantId, rawEmployees);
         totalEmployees = ret.stats.total || 25;
         highRiskCount = ret.stats.highRisk || 3;
         mediumRiskCount = ret.stats.mediumRisk || 5;
@@ -1298,23 +1331,28 @@ export async function runMultiSeedMonteCarloSensitivity(seeds = [42, 100, 500, 1
 
 // ==================== MÓDULO 8: ALERTAS PROACTIVAS Y DASHBOARD INTEGRADO ====================
 
-export async function getProactiveAlerts(preloadedData = null) {
+export async function getProactiveAlerts(tenantIdOrPreloaded = null) {
     const alerts = [];
     const now = new Date();
 
     let retention, attendance, pendingEvaluations;
+    let resolvedTenantId = typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null;
 
-    if (preloadedData) {
-        retention = preloadedData.retention;
-        attendance = preloadedData.attendance;
-        pendingEvaluations = preloadedData.pendingEvaluations || [];
+    if (tenantIdOrPreloaded && typeof tenantIdOrPreloaded === 'object' && !Array.isArray(tenantIdOrPreloaded)) {
+        retention = tenantIdOrPreloaded.retention;
+        attendance = tenantIdOrPreloaded.attendance;
+        pendingEvaluations = tenantIdOrPreloaded.pendingEvaluations || [];
     } else {
-        const rawEmployees = await fetchRawEmployees();
+        const rawEmployees = await fetchRawEmployees(resolvedTenantId);
         [retention, attendance, pendingEvaluations] = await Promise.all([
-            getRetentionRiskAnalysis(rawEmployees),
+            getRetentionRiskAnalysis(resolvedTenantId, rawEmployees),
             getAttendancePatterns(rawEmployees),
             prisma.employeeEvaluation.findMany({
-                where: { status: 'PENDING', endDate: { lt: now } },
+                where: {
+                    status: 'PENDING',
+                    endDate: { lt: now },
+                    ...(resolvedTenantId ? { employee: { tenantId: resolvedTenantId } } : {})
+                },
                 include: { employee: { select: { id: true, firstName: true, lastName: true, department: true, position: true } } }
             })
         ]);
@@ -1380,19 +1418,18 @@ export async function getProactiveAlerts(preloadedData = null) {
     };
 }
 
-export async function getPredictiveAnalytics() {
+export async function getPredictiveAnalytics(tenantId = null) {
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
 
-    const [terminatedEmployees, attendanceData] = await Promise.all([
+    const [terminatedEmployees] = await Promise.all([
         prisma.employee.findMany({
-            where: { isActive: false, exitDate: { gte: twelveMonthsAgo } },
+            where: {
+                isActive: false,
+                exitDate: { gte: twelveMonthsAgo },
+                ...(tenantId ? { tenantId } : {})
+            },
             orderBy: { exitDate: 'asc' }
-        }),
-        prisma.attendance.groupBy({
-            by: ['date'],
-            where: { date: { gte: twelveMonthsAgo }, status: 'Falta' },
-            _count: { id: true }
         })
     ]);
 
@@ -1467,15 +1504,21 @@ export async function getPredictiveAnalytics() {
     };
 }
 
-export async function getEmployeeScoring(employeeId = null, preloadedData = null) {
+export async function getEmployeeScoring(employeeId = null, tenantIdOrPreloaded = null) {
     let employees;
-    if (preloadedData) {
-        employees = preloadedData.employees;
+    let resolvedTenantId = typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null;
+
+    if (tenantIdOrPreloaded && typeof tenantIdOrPreloaded === 'object' && tenantIdOrPreloaded.employees) {
+        employees = tenantIdOrPreloaded.employees;
         if (employeeId) {
             employees = employees.filter(emp => emp.id === employeeId);
         }
     } else {
-        const whereClause = employeeId ? { id: employeeId, isActive: true } : { isActive: true };
+        const whereClause = {
+            isActive: true,
+            ...(employeeId ? { id: employeeId } : {}),
+            ...(resolvedTenantId ? { tenantId: resolvedTenantId } : {})
+        };
         employees = await prisma.employee.findMany({
             where: whereClause,
             include: {
@@ -1557,20 +1600,21 @@ export async function getEmployeeScoring(employeeId = null, preloadedData = null
     };
 }
 
-export async function getOrganizationalHealth(preloadedData = null) {
+export async function getOrganizationalHealth(tenantIdOrPreloaded = null) {
     let retention, performance, attendance, departments, scoring, rawEmployees;
+    let resolvedTenantId = typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null;
 
-    if (preloadedData) {
-        retention = preloadedData.retention;
-        performance = preloadedData.performance;
-        attendance = preloadedData.attendance;
-        departments = preloadedData.departmentComparison;
-        scoring = preloadedData.employeeScoring;
-        rawEmployees = preloadedData.rawEmployees || null;
+    if (tenantIdOrPreloaded && typeof tenantIdOrPreloaded === 'object' && !Array.isArray(tenantIdOrPreloaded)) {
+        retention = tenantIdOrPreloaded.retention;
+        performance = tenantIdOrPreloaded.performance;
+        attendance = tenantIdOrPreloaded.attendance;
+        departments = tenantIdOrPreloaded.departmentComparison;
+        scoring = tenantIdOrPreloaded.employeeScoring;
+        rawEmployees = tenantIdOrPreloaded.rawEmployees || null;
     } else {
-        rawEmployees = await fetchRawEmployees();
+        rawEmployees = await fetchRawEmployees(resolvedTenantId);
         [retention, performance, attendance, scoring] = await Promise.all([
-            getRetentionRiskAnalysis(rawEmployees),
+            getRetentionRiskAnalysis(resolvedTenantId, rawEmployees),
             getPerformanceInsights(rawEmployees),
             getAttendancePatterns(rawEmployees),
             getEmployeeScoring(null, { employees: rawEmployees })
@@ -1627,14 +1671,15 @@ export async function getOrganizationalHealth(preloadedData = null) {
     };
 }
 
-export async function getPatternAnalysis() {
+export async function getPatternAnalysis(tenantId = null) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const attendance = await prisma.attendance.findMany({
         where: {
             date: { gte: thirtyDaysAgo },
-            status: 'Falta'
+            status: 'Falta',
+            ...(tenantId ? { employee: { tenantId } } : {})
         },
         select: {
             date: true,
@@ -1674,8 +1719,8 @@ export async function getPatternAnalysis() {
     };
 }
 
-export async function getRecommendations() {
-    const dashboard = await getIntelligenceDashboard();
+export async function getRecommendations(tenantIdOrPreloaded = null) {
+    const dashboard = await getIntelligenceDashboard(typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null);
     return dashboard.recommendations || [];
 }
 
@@ -1722,10 +1767,10 @@ export async function getIntelligenceDashboard(tenantId = null, forceRefresh = f
             },
             include: { employee: { select: { id: true, firstName: true, lastName: true, department: true, position: true } } }
         }),
-        getPredictiveAnalytics()
+        getPredictiveAnalytics(tenantId)
     ]);
 
-    const retention = await getRetentionRiskAnalysis(rawEmployees);
+    const retention = await getRetentionRiskAnalysis(tenantId, rawEmployees);
     const performance = await getPerformanceInsights(rawEmployees);
     const attendance = await getAttendancePatterns(rawEmployees);
     const payroll = await getPayrollOptimization(payrolls, benefits);
@@ -1742,7 +1787,7 @@ export async function getIntelligenceDashboard(tenantId = null, forceRefresh = f
         rawEmployees
     });
 
-    const patternAnalysis = await getPatternAnalysis();
+    const patternAnalysis = await getPatternAnalysis(tenantId);
     const monteCarloSimulation = await runWhatIfMonteCarlo({}, { retention });
 
     const financialImpact = calculateFinancialImpact({ retention, rawEmployees, attendance, payroll });

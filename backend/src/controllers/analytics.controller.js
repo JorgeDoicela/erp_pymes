@@ -142,7 +142,7 @@ export const getTurnoverReport = async (req, res) => {
         // Simplified Avg: Existing + Exits (Roughly)
         const totalExits = exits.length;
         const avgEmployees = activeEmployees + totalExits; // Approximation for period
-        const turnoverRate = avgEmployees > 0 ? ((totalExits / avgEmployees) * 100).toFixed(2) : 0;
+        const turnoverRate = avgEmployees > 0 ? parseFloat(((totalExits / avgEmployees) * 100).toFixed(2)) : 0;
 
         // 2. Exits by Type
         const exitsByType = exits.reduce((acc, curr) => {

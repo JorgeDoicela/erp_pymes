@@ -45,7 +45,11 @@ class AssetService {
     async returnAsset(assetId, { returnNotes, condition = 'GOOD', status = 'RETURNED' }, adminId) {
         const asset = await prisma.employeeAsset.findUnique({
             where: { id: assetId },
-            include: { employee: true }
+            include: {
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                }
+            }
         });
 
         if (!asset) throw new Error('Activo no encontrado');

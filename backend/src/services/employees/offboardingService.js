@@ -29,27 +29,35 @@ class OffboardingService {
             throw new Error('La fecha de salida no puede ser anterior a la fecha de inicio de contrato');
         }
 
-        const diffTime = Math.abs(endDate - startDate);
-        const daysWorkedTotal = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const yearsWorked = daysWorkedTotal / 365.25;
+        const dStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const dEnd = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+        const diffTime = Math.max(0, dEnd - dStart);
+        const daysWorkedTotal = Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1);
+        const yearsWorked = daysWorkedTotal / 365.0;
         const fullYearsWorked = Math.floor(yearsWorked);
-        const monthsWorked = daysWorkedTotal / 30.4375;
+        const monthsWorked = daysWorkedTotal / 30.0;
 
         const baseSalary = financial.from(contract.salary);
         const dailySalary = financial.divide(baseSalary, 30);
 
-        // 1. Décimo Tercero Proporcional (Período 1 Dic a 30 Nov)
-        // Estimación sobre meses trabajados en el ciclo de acumulación actual (máximo 12 meses)
-        const monthsInThirteenthPeriod = Math.min(monthsWorked, 12);
-        const thirteenthProportional = financial.divide(financial.multiply(baseSalary, monthsInThirteenthPeriod), 12);
+        // 1. Décimo Tercero Proporcional (Período Legal Ecuador: 1 Dic a 30 Nov)
+        const exitYear = dEnd.getFullYear();
+        const exitMonth = dEnd.getMonth(); // 0 = Ene, 11 = Dic
+        const thirteenthPeriodStart = exitMonth === 11 ? new Date(exitYear, 11, 1) : new Date(exitYear - 1, 11, 1);
+        const effectiveThirteenthStart = dStart > thirteenthPeriodStart ? dStart : thirteenthPeriodStart;
+        const daysInThirteenth = Math.max(0, Math.round((dEnd - effectiveThirteenthStart) / (1000 * 60 * 60 * 24)) + 1);
+        const thirteenthProportional = financial.divide(financial.multiply(baseSalary, Math.min(daysInThirteenth, 360)), 360);
 
-        // 2. Décimo Cuarto Proporcional (SBU Ecuador $460.00)
+        // 2. Décimo Cuarto Proporcional (SBU Ecuador $460.00 - Ciclo anual proporcional de 360 días)
         const SBU = financial.from(460);
-        const monthsInFourteenthPeriod = Math.min(monthsWorked, 12);
-        const fourteenthProportional = financial.divide(financial.multiply(SBU, monthsInFourteenthPeriod), 12);
+        const fourteenthPeriodStart = exitMonth >= 2 ? new Date(exitYear, 2, 1) : new Date(exitYear - 1, 2, 1);
+        const effectiveFourteenthStart = dStart > fourteenthPeriodStart ? dStart : fourteenthPeriodStart;
+        const daysInFourteenth = Math.max(0, Math.round((dEnd - effectiveFourteenthStart) / (1000 * 60 * 60 * 24)) + 1);
+        const fourteenthProportional = financial.divide(financial.multiply(SBU, Math.min(daysInFourteenth, 360)), 360);
 
-        // 3. Vacaciones No Gozadas (15 días por año = 1.25 días por mes)
-        const earnedVacationDays = monthsWorked * 1.25;
+        // 3. Vacaciones No Gozadas (15 días por cada 360 días trabajados = 1.25 días/mes)
+        const earnedVacationDays = (daysWorkedTotal / 360.0) * 15.0;
         // Consultar ausencias por vacaciones ya tomadas (flexible con cadenas en BD)
         const takenVacations = await prisma.absenceRequest.findMany({
             where: {
@@ -70,13 +78,13 @@ class OffboardingService {
         });
 
         const pendingVacationDays = Math.max(0, earnedVacationDays - takenDays);
-        const vacationAmount = financial.multiply(dailySalary, pendingVacationDays);
+        const vacationAmount = financial.divide(financial.multiply(baseSalary, pendingVacationDays), 30);
 
-        // 4. Bonificación por Desahucio (25% del sueldo por año de servicio - Art. 185)
+        // 4. Bonificación por Desahucio (25% de la última remuneración mensual por año de servicio - Art. 185)
         // Aplica en Renuncia Voluntaria, Despido Intempestivo y Fin de Contrato
         let desahucioAmount = financial.from(0);
         if (['VOLUNTARY_RESIGNATION', 'UNFAIR_DISMISSAL', 'CONTRACT_END'].includes(causal) && fullYearsWorked >= 1) {
-            desahucioAmount = financial.multiply(financial.multiply(baseSalary, 0.25), fullYearsWorked);
+            desahucioAmount = financial.multiply(financial.divide(baseSalary, 4), fullYearsWorked);
         }
 
         // 5. Indemnización por Despido Intempestivo (Art. 188)
@@ -87,17 +95,23 @@ class OffboardingService {
                 // Hasta 3 años: 3 meses de remuneración
                 severanceAmount = financial.multiply(baseSalary, 3);
             } else {
-                // Más de 3 años: 1 mes de remuneración por cada año de servicio (máx 25 meses)
+                // Más de 3 años: 1 mes de remuneración por cada año o fracción de año de servicio (máx 25 meses)
                 const yearsToPay = Math.min(Math.ceil(yearsWorked), 25);
                 severanceAmount = financial.multiply(baseSalary, yearsToPay);
             }
         }
 
-        const totalSettlement = thirteenthProportional
-            .plus(fourteenthProportional)
-            .plus(vacationAmount)
-            .plus(desahucioAmount)
-            .plus(severanceAmount);
+        const rThirteenth = financial.round(thirteenthProportional);
+        const rFourteenth = financial.round(fourteenthProportional);
+        const rVacation = financial.round(vacationAmount);
+        const rDesahucio = financial.round(desahucioAmount);
+        const rSeverance = financial.round(severanceAmount);
+
+        const totalSettlement = financial.from(rThirteenth)
+            .plus(rFourteenth)
+            .plus(rVacation)
+            .plus(rDesahucio)
+            .plus(rSeverance);
 
         return {
             employee: {
@@ -115,12 +129,12 @@ class OffboardingService {
             yearsWorked: Number(yearsWorked.toFixed(2)),
             monthsWorked: Number(monthsWorked.toFixed(2)),
             baseSalary: financial.round(baseSalary),
-            thirteenthProportional: financial.round(thirteenthProportional),
-            fourteenthProportional: financial.round(fourteenthProportional),
+            thirteenthProportional: rThirteenth,
+            fourteenthProportional: rFourteenth,
             pendingVacationDays: Number(pendingVacationDays.toFixed(1)),
-            vacationAmount: financial.round(vacationAmount),
-            desahucioAmount: financial.round(desahucioAmount),
-            severanceAmount: financial.round(severanceAmount),
+            vacationAmount: rVacation,
+            desahucioAmount: rDesahucio,
+            severanceAmount: rSeverance,
             totalSettlement: financial.round(totalSettlement)
         };
     }
@@ -217,7 +231,11 @@ class OffboardingService {
                     checklist: JSON.stringify(checklist),
                     status: allCompleted ? 'COMPLETED' : 'IN_PROGRESS'
                 },
-                include: { employee: true }
+                include: {
+                    employee: {
+                        select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                    }
+                }
             });
 
             if (allCompleted) {

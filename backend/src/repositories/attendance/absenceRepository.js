@@ -13,7 +13,18 @@ export const absenceRepository = {
         }
         return prisma.absenceRequest.findMany({
             where,
-            include: { employee: true }, // Incluir datos del empleado para el admin
+            include: {
+                employee: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        department: true,
+                        position: true
+                    }
+                }
+            },
             orderBy: { createdAt: 'desc' }
         });
     },

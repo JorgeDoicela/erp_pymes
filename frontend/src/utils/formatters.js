@@ -1,9 +1,10 @@
 export const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-CO', { // Or user's locale
+    return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'COP', // Or relevant currency
-        minimumFractionDigits: 0
-    }).format(amount);
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(Number(amount) || 0);
 };
 
 export const formatDate = (dateString) => {

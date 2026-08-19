@@ -135,7 +135,11 @@ class ExpedientService {
 
         const doc = await prisma.document.findUnique({
             where: { id: documentId },
-            include: { employee: true }
+            include: {
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                }
+            }
         });
 
         if (!doc) throw new Error('Documento no encontrado');

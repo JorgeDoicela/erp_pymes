@@ -5,7 +5,7 @@ class AnnouncementService {
     /**
      * Crear un nuevo comunicado oficial.
      */
-    async createAnnouncement({ title, content, category = 'GENERAL', priority = 'NORMAL', requiresAcknowledgment = false, attachmentUrl, authorId }) {
+    async createAnnouncement({ title, content, category = 'GENERAL', priority = 'NORMAL', requiresAcknowledgment = false, attachmentUrl, authorId, tenantId = null }) {
         if (!title || !title.trim()) throw new Error('El título del comunicado es obligatorio');
         if (!content || !content.trim()) throw new Error('El contenido del comunicado es obligatorio');
 
@@ -17,7 +17,8 @@ class AnnouncementService {
                 priority,
                 requiresAcknowledgment,
                 attachmentUrl,
-                createdById: authorId
+                createdById: authorId,
+                ...(tenantId ? { tenantId } : {})
             },
             include: {
                 createdBy: {
@@ -28,6 +29,7 @@ class AnnouncementService {
 
         if (authorId) {
             auditRepository.createLog({
+                tenantId: tenantId || null,
                 entity: 'Announcement',
                 entityId: announcement.id,
                 action: 'CREATE_ANNOUNCEMENT',
@@ -179,10 +181,13 @@ class AnnouncementService {
     /**
      * Obtener cumpleaños del mes actual.
      */
-    async getBirthdaysOfMonth() {
+    async getBirthdaysOfMonth(tenantId = null) {
         const currentMonth = new Date().getMonth() + 1; // 1-12
         const activeEmployees = await prisma.employee.findMany({
-            where: { isActive: true },
+            where: {
+                isActive: true,
+                ...(tenantId ? { tenantId } : {})
+            },
             select: { id: true, firstName: true, lastName: true, department: true, birthDate: true, position: true }
         });
 

@@ -10,15 +10,22 @@ export const checkDocumentExpirations = async () => {
         const future30 = new Date(today); future30.setDate(today.getDate() + 30);
         const future15 = new Date(today); future15.setDate(today.getDate() + 15);
 
-        // Function to get admins for a specific tenant
+        // Cache admins per tenant in memory for this cron run
+        const adminCache = new Map();
         const getTenantAdmins = async (tenantId) => {
-            return await prisma.employee.findMany({
+            const cacheKey = tenantId || 'default';
+            if (adminCache.has(cacheKey)) return adminCache.get(cacheKey);
+
+            const admins = await prisma.employee.findMany({
                 where: {
                     role: 'admin',
                     isActive: true,
                     ...(tenantId ? { tenantId } : {})
-                }
+                },
+                select: { id: true }
             });
+            adminCache.set(cacheKey, admins);
+            return admins;
         };
 
         // Define function to check specific date
@@ -30,30 +37,34 @@ export const checkDocumentExpirations = async () => {
                 where: {
                     expiryDate: { gte: startOfDay, lte: endOfDay }
                 },
-                include: { employee: true }
+                include: {
+                    employee: {
+                        select: { id: true, firstName: true, lastName: true, tenantId: true }
+                    }
+                }
             });
 
             for (const doc of documents) {
                 // Notify Employee
-                await notificationService.sendDocumentExpirationAlert({
+                notificationService.sendDocumentExpirationAlert({
                     recipientId: doc.employeeId,
                     documentType: doc.type,
                     daysRemaining: days,
                     documentId: doc.id
-                });
+                }).catch(err => console.error('[CRON] Error sending employee expiration alert:', err));
 
                 // Notify Admins of the SAME Tenant
                 const admins = await getTenantAdmins(doc.employee?.tenantId);
-                for (const admin of admins) {
-                    await notificationService.createNotification({
+                await Promise.allSettled(admins.map(admin =>
+                    notificationService.createNotification({
                         recipientId: admin.id,
                         title: `Vencimiento de Documento (Empleado)`,
                         message: `El documento "${doc.type}" de ${doc.employee.firstName} ${doc.employee.lastName} vence en ${days} días.`,
                         type: 'DOCUMENT_EXPIRATION_HR',
                         relatedEntity: 'Document',
                         relatedEntityId: doc.id
-                    });
-                }
+                    })
+                ));
             }
         };
 
@@ -70,21 +81,25 @@ export const checkDocumentExpirations = async () => {
                     lte: new Date(yesterday.setHours(23, 59, 59, 999))
                 }
             },
-            include: { employee: true }
+            include: {
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, tenantId: true }
+                }
+            }
         });
 
         for (const doc of expired) {
             const admins = await getTenantAdmins(doc.employee?.tenantId);
-            for (const admin of admins) {
-                await notificationService.createNotification({
+            await Promise.allSettled(admins.map(admin =>
+                notificationService.createNotification({
                     recipientId: admin.id,
                     title: `Documento Vencido`,
                     message: `El documento "${doc.type}" de ${doc.employee.firstName} ${doc.employee.lastName} HA VENCIDO.`,
                     type: 'DOCUMENT_EXPIRED',
                     relatedEntity: 'Document',
                     relatedEntityId: doc.id
-                });
-            }
+                })
+            ));
         }
 
     } catch (error) {

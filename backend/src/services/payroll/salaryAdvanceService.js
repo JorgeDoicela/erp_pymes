@@ -132,7 +132,11 @@ class SalaryAdvanceService {
     async approveAdvance(id, adminId) {
         const advance = await prisma.salaryAdvance.findUnique({
             where: { id },
-            include: { employee: true }
+            include: {
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                }
+            }
         });
 
         if (!advance) throw new Error('Solicitud de anticipo no encontrada');
@@ -147,7 +151,11 @@ class SalaryAdvanceService {
                 approvedBy: adminId,
                 approvedAt: new Date()
             },
-            include: { employee: true }
+            include: {
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                }
+            }
         });
 
         if (adminId) {
@@ -169,7 +177,11 @@ class SalaryAdvanceService {
     async rejectAdvance(id, rejectionReason, adminId) {
         const advance = await prisma.salaryAdvance.findUnique({
             where: { id },
-            include: { employee: true }
+            include: {
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                }
+            }
         });
 
         if (!advance) throw new Error('Solicitud de anticipo no encontrada');
@@ -183,7 +195,11 @@ class SalaryAdvanceService {
                 status: 'REJECTED',
                 rejectionReason: rejectionReason ? rejectionReason.trim() : 'Solicitud no aprobada por administración'
             },
-            include: { employee: true }
+            include: {
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                }
+            }
         });
 
         if (adminId) {

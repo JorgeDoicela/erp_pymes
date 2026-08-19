@@ -23,12 +23,16 @@ export const checkContractExpirations = async () => {
                         lte: endOfDay
                     }
                 },
-                include: { employee: true }
+                include: {
+                    employee: {
+                        select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                    }
+                }
             });
 
-            for (const contract of contracts) {
-                await notificationService.sendContractExpirationAlert(contract, days);
-            }
+            await Promise.allSettled(contracts.map(contract =>
+                notificationService.sendContractExpirationAlert(contract, days)
+            ));
         }
         console.log('--- Contract Expiration Check Completed ---');
 

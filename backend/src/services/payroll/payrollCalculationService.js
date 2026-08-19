@@ -23,8 +23,8 @@ class PayrollCalculationService {
      */
     async generatePayroll(month, year, adminId = null, tenantId = null) {
         const periodDate = new Date(year, month - 1, 1);
-        const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 0);
+        const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
+        const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
         // 1. Verificación de duplicados: Evitar generar nómina dos veces para el mismo mes/año en la misma empresa
         const existingPayroll = await prisma.payroll.findFirst({
@@ -244,25 +244,34 @@ class PayrollCalculationService {
                 const dayOfWeek = recDate.getUTCDay(); // 0 = Sunday, 6 = Saturday (UTC to avoid server TZ shift)
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-                // 1. Night Surcharge (25%)
+                // 1. Recargo Nocturno (25% - Art. 49 Código del Trabajo de Ecuador: 19h00 a 06h00)
                 if (hasNightSurcharge && rec.checkIn && rec.checkOut) {
                     const checkIn = new Date(rec.checkIn);
                     const checkOut = new Date(rec.checkOut);
 
-                    const getOverlap = (start, end, rStart, rEnd) => {
-                        const maxStart = new Date(Math.max(start, rStart));
-                        const minEnd = new Date(Math.min(end, rEnd));
+                    const getOverlapHours = (start, end, winStart, winEnd) => {
+                        const maxStart = Math.max(start.getTime(), winStart.getTime());
+                        const minEnd = Math.min(end.getTime(), winEnd.getTime());
                         const diffMs = minEnd - maxStart;
                         return diffMs > 0 ? financial.divide(diffMs, 1000 * 60 * 60) : financial.from(0);
                     };
 
-                    const n1Start = new Date(rec.date); n1Start.setHours(19, 0, 0, 0);
-                    const n1End = new Date(rec.date); n1End.setDate(n1End.getDate() + 1); n1End.setHours(0, 0, 0, 0);
+                    const baseD = new Date(rec.date);
+                    // Ventana nocturna 1: 19:00 del día del turno a 24:00 (00:00 día + 1)
+                    const n1Start = new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate(), 19, 0, 0, 0);
+                    const n1End = new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate() + 1, 0, 0, 0, 0);
 
-                    const n2Start = new Date(rec.date); n2Start.setHours(0, 0, 0, 0);
-                    const n2End = new Date(rec.date); n2End.setHours(6, 0, 0, 0);
+                    // Ventana nocturna 2: 00:00 a 06:00 del día siguiente (si el turno cruza medianoche)
+                    const n2Start = new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate() + 1, 0, 0, 0, 0);
+                    const n2End = new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate() + 1, 6, 0, 0, 0);
 
-                    let nightHours = getOverlap(checkIn, checkOut, n1Start, n1End).plus(getOverlap(checkIn, checkOut, n2Start, n2End));
+                    // Ventana nocturna 0: 00:00 a 06:00 del mismo día (si el turno inició en la madrugada del día)
+                    const n0Start = new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate(), 0, 0, 0, 0);
+                    const n0End = new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate(), 6, 0, 0, 0);
+
+                    let nightHours = getOverlapHours(checkIn, checkOut, n1Start, n1End)
+                        .plus(getOverlapHours(checkIn, checkOut, n2Start, n2End))
+                        .plus(getOverlapHours(checkIn, checkOut, n0Start, n0End));
 
                     if (nightHours.gt(0)) {
                         nightSurchargeAmount = nightSurchargeAmount.plus(nightHours.mul(hourlyRate).mul(0.25));
@@ -309,13 +318,32 @@ class PayrollCalculationService {
                 employeeBonuses.push({ name: 'Recargo Nocturno (25%)', amount: financial.round(nightSurchargeAmount) });
             }
 
-            // 1. Global Config Items
+            // 2. Individual Benefits (Bonos, Comisiones, etc.)
+            const benefits = benefitMap.get(emp.id) || [];
+            let individualBonusesTotal = financial.from(0);
+            benefits.forEach(benefit => {
+                const benAmount = financial.from(benefit.amount);
+                individualBonusesTotal = individualBonusesTotal.plus(benAmount);
+                employeeBonuses.push({
+                    name: benefit.name,
+                    amount: financial.round(benAmount),
+                    benefitId: benefit.id,
+                    frequency: benefit.frequency
+                });
+            });
+
+            // Materia Gravada IESS (Sueldo ganado + Horas Extras + Recargo Nocturno + Comisiones/Bonos)
+            const taxableEarnings = earnedSalary.plus(overtimeTotalCost).plus(nightSurchargeAmount).plus(individualBonusesTotal);
+
+            // 1. Global Config Items (Deducciones IESS, Impuesto a la renta, etc.)
             config.items.forEach(item => {
                 let amount = financial.from(0);
                 if (item.fixedValue) {
                     amount = financial.from(item.fixedValue);
                 } else if (item.percentage) {
-                    amount = financial.percentage(earnedSalary, item.percentage);
+                    // Si es deducción de ley como aporte al IESS, se calcula sobre la materia gravada completa
+                    const base = item.type === 'DEDUCTION' ? taxableEarnings : earnedSalary;
+                    amount = financial.percentage(base, item.percentage);
                 }
 
                 if (item.type === 'EARNING') {
@@ -323,17 +351,6 @@ class PayrollCalculationService {
                 } else {
                     employeeDeductions.push({ name: item.name, amount: financial.round(amount) });
                 }
-            });
-
-            // 2. Individual Benefits
-            const benefits = benefitMap.get(emp.id) || [];
-            benefits.forEach(benefit => {
-                employeeBonuses.push({
-                    name: benefit.name,
-                    amount: financial.round(benefit.amount),
-                    benefitId: benefit.id,
-                    frequency: benefit.frequency
-                });
             });
 
             // 3. Anticipos de Sueldo / Préstamos Aprobados
@@ -356,20 +373,29 @@ class PayrollCalculationService {
             const totalBonuses = employeeBonuses.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
             const totalDeductions = employeeDeductions.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
 
-            let netSalary = earnedSalary.plus(overtimeTotalCost).plus(totalBonuses).minus(totalDeductions);
+            const roundedBaseSalary = financial.round(earnedSalary);
+            const roundedOvertimeAmount = financial.round(overtimeTotalCost);
+
+            let netSalary = financial.from(roundedBaseSalary)
+                .plus(roundedOvertimeAmount)
+                .plus(totalBonuses)
+                .minus(totalDeductions);
+
             if (netSalary.lt(0)) netSalary = financial.from(0);
+
+            const finalNetSalary = financial.round(netSalary);
 
             payrollDetails.push({
                 employeeId: emp.id,
-                baseSalary: financial.round(earnedSalary),
+                baseSalary: roundedBaseSalary,
                 workedDays: workedDays,
                 overtimeHours: financial.round(totalOvertimeHours),
-                overtimeAmount: financial.round(overtimeTotalCost),
+                overtimeAmount: roundedOvertimeAmount,
                 bonuses: JSON.stringify(employeeBonuses),
                 deductions: JSON.stringify(employeeDeductions),
-                netSalary: financial.round(netSalary)
+                netSalary: finalNetSalary
             });
-            totalPayrollAmount = totalPayrollAmount.plus(financial.round(netSalary));
+            totalPayrollAmount = totalPayrollAmount.plus(finalNetSalary);
         }
 
         // 5. Save to DB
@@ -545,7 +571,7 @@ class PayrollCalculationService {
                     const adv = advanceMap.get(ded.advanceId);
                     if (adv) {
                         const newPaidInstallments = adv.paidInstallments + 1;
-                        const newPaidAmount = financial.from(adv.paidAmount).plus(ded.amount).toNumber();
+                        const newPaidAmount = financial.round(financial.from(adv.paidAmount).plus(ded.amount));
                         const isFullyPaid = newPaidInstallments >= adv.installments || newPaidAmount >= adv.amount;
 
                         await tx.salaryAdvance.update({
@@ -616,7 +642,7 @@ class PayrollCalculationService {
                 }
 
                 // RNF-20: Ensure 2 decimals in bank file
-                const amount = det.netSalary.toFixed(2);
+                const amount = Number(det.netSalary || 0).toFixed(2);
 
                 csv += `${emp.identityCard},${name},${bank},${emp.accountType || 'AHORROS'},${account},${amount},Nómina ${new Date(payroll.period).toLocaleDateString()}\n`;
             }

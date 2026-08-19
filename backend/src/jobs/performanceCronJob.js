@@ -16,11 +16,19 @@ export const checkPerformanceReminders = async () => {
                 NOT: { endDate: null }
             },
             include: {
-                employee: true,
-                template: true,
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, email: true, tenantId: true }
+                },
+                template: {
+                    select: { id: true, title: true }
+                },
                 reviewers: {
                     where: { status: 'PENDING' },
-                    include: { reviewer: true }
+                    include: {
+                        reviewer: {
+                            select: { id: true, firstName: true, lastName: true, email: true }
+                        }
+                    }
                 }
             }
         });
