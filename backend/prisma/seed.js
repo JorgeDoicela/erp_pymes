@@ -18,6 +18,7 @@ import { seedNotifications } from './seeds/notifications.js';
 import { seedAccounting, seedJournalEntries } from './seeds/accounting.js';
 import { seedEntrepreneurship } from './seeds/entrepreneurship.js';
 import { seedResearchData } from './seeds/research_data.js';
+import { seedOffboarding } from './seeds/offboarding.js';
 
 function createPrisma() {
     return new PrismaClient({
@@ -86,10 +87,12 @@ async function main() {
     await sleep(1000);
 
     // 3. Core Records y Documentos
-    console.log('\n[3/12] Creando registros base (contratos, horarios, habilidades, documentos)...');
+    console.log('\n[3/12] Creando registros base (contratos, horarios, habilidades, documentos, finiquitos)...');
     await withRetry('CORE_RECORDS', (prisma) => seedCoreRecords(prisma, allEmployees));
     await sleep(800);
     await withRetry('DOCUMENTS', (prisma) => seedDocuments(prisma, allEmployees));
+    await sleep(800);
+    await withRetry('OFFBOARDING', (prisma) => seedOffboarding(prisma, allEmployees));
     await sleep(800);
 
     // 4. Reclutamiento

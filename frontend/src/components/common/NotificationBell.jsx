@@ -29,11 +29,11 @@ const NotificationBell = () => {
         setNotifications(prev => [newNotif, ...prev.slice(0, 4)]);
         setUnreadCount(prev => prev + 1);
         toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-slate-900 text-white shadow-xl rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4 border border-slate-700`}>
-                <div className="flex-1 w-0">
-                    <p className="text-xs font-semibold text-blue-400">🔔 Nueva Notificación</p>
-                    <p className="text-xs font-medium text-white mt-0.5">{newNotif.title}</p>
-                    <p className="text-[11px] text-slate-300 line-clamp-2 mt-1">{newNotif.message}</p>
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-white text-gray-900 shadow-lg rounded p-3.5 border border-gray-200 pointer-events-auto flex items-start gap-3`}>
+                <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">Nueva Notificación</p>
+                    <p className="text-xs font-semibold text-gray-900 mt-0.5">{newNotif.title}</p>
+                    <p className="text-xs text-gray-600 line-clamp-2 mt-1">{newNotif.message}</p>
                 </div>
             </div>
         ), { duration: 4000 });

@@ -15,16 +15,18 @@ export async function seedCoreRecords(prisma, employees) {
     const historyBatch = [];
 
     for (const emp of employees) {
-        if (!emp.isActive) continue;
-
         const decSal = decryptSalary(emp.salary) || 1500;
+        
         contractsBatch.push({
             employeeId: emp.id,
             type: emp.contractType || 'Indefinido',
             startDate: emp.hireDate || new Date('2020-01-01'),
+            endDate: emp.isActive ? null : (emp.exitDate || new Date()),
             salary: decSal,
-            status: 'Active'
+            status: emp.isActive ? 'Active' : 'Terminated'
         });
+
+        if (!emp.isActive) continue;
 
         schedulesBatch.push({
             employeeId: emp.id,
