@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { submitResearchSurvey } from '../api/researchApi';
+import QrCodeModal from '../components/common/QrCodeModal';
+import { BsQrCodeScan } from 'react-icons/bs';
 
 export default function PublicResearchPage() {
     const [selectedForm, setSelectedForm] = useState('POST_SYSTEM');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
     const [demographics, setDemographics] = useState({
         respondentRole: 'Administrador / Asistente Administrativo',
@@ -81,6 +84,14 @@ export default function PublicResearchPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-16">
+            {/* Modal de Código QR Proyectable para la Audiencia del Congreso */}
+            <QrCodeModal
+                isOpen={isQrModalOpen}
+                onClose={() => setIsQrModalOpen(false)}
+                title="Escanear Encuesta de Validación"
+                description="Apunta la cámara de tu teléfono móvil a este código QR para abrir el formulario y responder en vivo."
+            />
+
             {/* Header ERP Empresarial */}
             <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -102,6 +113,14 @@ export default function PublicResearchPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsQrModalOpen(true)}
+                            className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer bg-white flex items-center gap-1.5"
+                            title="Proyectar Código QR para escaneo por parte de los asistentes"
+                        >
+                            <BsQrCodeScan className="w-3.5 h-3.5 text-gray-600" />
+                            <span>Proyectar QR</span>
+                        </button>
                         <button
                             onClick={() => { setSelectedForm('POST_SYSTEM'); setIsSubmittedSuccess(false); }}
                             className="px-3.5 py-1.5 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"

@@ -29,27 +29,24 @@ export async function seedResearchData(prisma) {
         { name: 'Operaciones', baseRisk: 26, basePerf: 82, count: 8 }
     ];
 
+    // Nombres y datos reales ecuatorianos para Innovate Corp si no existen
+    const REAL_INNOVATE_EMPLOYEES = [
+        { firstName: 'Mauricio', lastName: 'Alarcón', email: 'mauricio.alarcon@innovatecorp.ec', identityCard: '1721984756', department: 'Tecnología', position: 'Líder Técnico AI', salary: 2600, phone: '0987123450' },
+        { firstName: 'Paulina', lastName: 'Vallejo', email: 'paulina.vallejo@innovatecorp.ec', identityCard: '1718293847', department: 'Tecnología', position: 'Data Scientist Senior', salary: 2400, phone: '0998234561' },
+        { firstName: 'Xavier', lastName: 'Cevallos', email: 'xavier.cevallos@innovatecorp.ec', identityCard: '1729384756', department: 'Tecnología', position: 'Ingeniero de Software', salary: 1900, phone: '0989345672' },
+        { firstName: 'Lorena', lastName: 'Benítez', email: 'lorena.benitez@innovatecorp.ec', identityCard: '1710293847', department: 'Ventas', position: 'Directora Comercial', salary: 2100, phone: '0970456783' },
+        { firstName: 'Esteban', lastName: 'Guamán', email: 'esteban.guaman@innovatecorp.ec', identityCard: '1723849501', department: 'Ventas', position: 'Key Account Manager', salary: 1650, phone: '0961567894' },
+        { firstName: 'Diana', lastName: 'Mendoza', email: 'diana.mendoza@innovatecorp.ec', identityCard: '1714758693', department: 'Ventas', position: 'Ejecutiva Comercial', salary: 1400, phone: '0952678905' },
+        { firstName: 'Carlos', lastName: 'Ortiz', email: 'carlos.ortiz@innovatecorp.ec', identityCard: '1725869704', department: 'Operaciones', position: 'Coordinador de Proyectos', salary: 1750, phone: '0943789016' },
+        { firstName: 'Nathalia', lastName: 'Salazar', email: 'nathalia.salazar@innovatecorp.ec', identityCard: '1716970815', department: 'Operaciones', position: 'Analista de Operaciones', salary: 1300, phone: '0934890127' },
+        { firstName: 'Franklin', lastName: 'Chiluisa', email: 'franklin.chiluisa@innovatecorp.ec', identityCard: '1727081926', department: 'Operaciones', position: 'Especialista en Procesos', salary: 1450, phone: '0925901238' },
+        { firstName: 'Viviana', lastName: 'Andrade', email: 'viviana.andrade@innovatecorp.ec', identityCard: '1718192037', department: 'Recursos Humanos', position: 'Generalista de Talento', salary: 1600, phone: '0916012349' },
+        { firstName: 'Byron', lastName: 'Paredes', email: 'byron.paredes@innovatecorp.ec', identityCard: '1729203148', department: 'Finanzas', position: 'Contador General', salary: 1800, phone: '0997123458' },
+        { firstName: 'Patricia', lastName: 'Jaramillo', email: 'patricia.jaramillo@innovatecorp.ec', identityCard: '1710314259', department: 'Marketing', position: 'Diseñadora UX/UI', salary: 1550, phone: '0988234567' }
+    ];
+
     for (const tenant of tenants) {
         const tenantId = tenant.id;
-
-        // Eliminar empleados de investigación previos para recrearlos con covariables diferenciadas
-        const researchEmps = await prisma.employee.findMany({
-            where: { tenantId, email: { contains: '@emplifi.com' } },
-            select: { id: true }
-        });
-        if (researchEmps.length > 0) {
-            const researchIds = researchEmps.map(e => e.id);
-            // Limpiar datos derivados antes de eliminar empleados
-            await prisma.rsiPredictionAudit.deleteMany({ where: { employeeId: { in: researchIds } } });
-            await prisma.absenceRequest.deleteMany({ where: { employeeId: { in: researchIds } } });
-            await prisma.employeeEvaluation.deleteMany({ where: { employeeId: { in: researchIds } } });
-            // Eliminar uno a uno para ignorar empleados referenciados por vacantes (FK RESTRICT)
-            for (const eid of researchIds) {
-                try {
-                    await prisma.employee.delete({ where: { id: eid } });
-                } catch (_) { /* skip si tiene FK activa en job_vacancies u otras tablas */ }
-            }
-        }
 
         // Crear template de evaluación si no existe
         let evalTemplate = await prisma.evaluationTemplate.findFirst({ where: { tenantId } });
@@ -65,93 +62,51 @@ export async function seedResearchData(prisma) {
             });
         }
 
-        {
-            let empIndex = 1;
-            for (const deptSpec of departments) {
-                for (let k = 0; k < deptSpec.count; k++) {
-                    if (empIndex > 25) break;
-
-                    // Salarios diferenciados por departamento — generan varianza real en el modelo Weibull
-                    // Ventas: salarios bajos (~800-1100 USD) → mayor riesgo por beta_salary
-                    // Tecnología: salarios altos (~1500-1900 USD) → menor riesgo
-                    // Operaciones: salarios medios (~1200-1500 USD) → riesgo bajo
-                    const salaryRanges = {
-                        'Ventas': 800 + Math.floor(Math.random() * 300),
-                        'Tecnología': 1500 + Math.floor(Math.random() * 400),
-                        'Operaciones': 1200 + Math.floor(Math.random() * 300)
-                    };
-                    const salaryVal = salaryRanges[deptSpec.name] || 1200;
-                    const email = `emp.${empIndex}.${tenant.slug}@emplifi.com`;
-
-                    const existingEmp = await prisma.employee.findFirst({ where: { tenantId, email } });
-                    if (!existingEmp) {
-                        const hireDate = new Date(Date.now() - (6 + Math.floor(Math.random() * 48)) * 30 * 24 * 60 * 60 * 1000);
-                        const newEmp = await prisma.employee.create({
-                            data: {
-                                tenantId,
-                                firstName: `Investigación_${empIndex}`,
-                                lastName: `Colaborador_${tenant.slug.substring(0, 3)}`,
-                                email,
-                                identityCard: `17900${String(tenantId).substring(0, 3)}${String(empIndex).padStart(3, '0')}`,
-                                department: deptSpec.name,
-                                position: deptSpec.name === 'Tecnología' ? 'Desarrollador' : deptSpec.name === 'Ventas' ? 'Ejecutivo Comercial' : 'Analista Operativo',
-                                salary: encryptSalary(salaryVal),
-                                civilStatus: 'Soltero',
-                                contractType: 'Indefinido',
-                                password: '$2a$10$e8V9B7C6D5E4F3A2B1C0DuN0O1P2Q3R4S5T6U7V8W9X0Y1Z2A3B4C',
-                                address: 'Av. Amazonas N24-102, Quito',
-                                phone: '0991234567',
-                                birthDate: new Date('1992-05-15'),
-                                hireDate,
-                                isActive: true
-                            }
-                        });
-
-                        // Evaluación de desempeño diferenciada por departamento con varianza estocástica natural (sigma approx 7.0)
-                        await prisma.employeeEvaluation.create({
-                            data: {
-                                templateId: evalTemplate.id,
-                                employeeId: newEmp.id,
-                                startDate: new Date('2025-01-01'),
-                                endDate: new Date('2025-12-31'),
-                                finalScore: Math.max(50, Math.min(100, deptSpec.basePerf + (Math.random() * 24 - 12))),
-                                status: 'COMPLETED'
-                            }
-                        });
-
-                        // Ausencias diferenciadas por riesgo departamental (alimentan beta_absence del modelo Weibull)
-                        // Ventas: 4-8 ausencias → score alto | Tecnología: 0-2 | Operaciones: 0-1
-                        const absenceCountByDept = {
-                            'Ventas': 4 + Math.floor(Math.random() * 5),
-                            'Tecnología': Math.floor(Math.random() * 3),
-                            'Operaciones': Math.floor(Math.random() * 2)
-                        };
-                        const numAbsences = absenceCountByDept[deptSpec.name] || 0;
-                        for (let a = 0; a < numAbsences; a++) {
-                            const absDate = new Date(Date.now() - (20 + a * 12) * 24 * 60 * 60 * 1000);
-                            try {
-                                await prisma.absenceRequest.create({
-                                    data: {
-                                        tenantId,
-                                        employeeId: newEmp.id,
-                                        type: 'INJUSTIFICADA',
-                                        startDate: absDate,
-                                        endDate: absDate,
-                                        reason: 'Ausencia registrada en protocolo de investigación'
-                                    }
-                                });
-                            } catch (_) { /* ignorar si el schema difiere */ }
+        // Si es Innovate Corp y no tiene empleados, crear empleados con nombres reales
+        if (tenant.slug === 'innovate-corp') {
+            const count = await prisma.employee.count({ where: { tenantId } });
+            if (count === 0) {
+                for (const empData of REAL_INNOVATE_EMPLOYEES) {
+                    const hireDate = new Date(Date.now() - (6 + Math.floor(Math.random() * 36)) * 30 * 24 * 60 * 60 * 1000);
+                    const newEmp = await prisma.employee.create({
+                        data: {
+                            tenantId,
+                            firstName: empData.firstName,
+                            lastName: empData.lastName,
+                            email: empData.email,
+                            identityCard: empData.identityCard,
+                            department: empData.department,
+                            position: empData.position,
+                            salary: encryptSalary(empData.salary),
+                            civilStatus: 'Casado',
+                            contractType: 'Indefinido',
+                            password: '$2a$10$e8V9B7C6D5E4F3A2B1C0DuN0O1P2Q3R4S5T6U7V8W9X0Y1Z2A3B4C',
+                            address: 'Av. República del Salvador N34-210, Quito',
+                            phone: empData.phone,
+                            birthDate: new Date('1991-08-20'),
+                            hireDate,
+                            isActive: true
                         }
-                    }
-                    empIndex++;
+                    });
+
+                    // Evaluación de desempeño
+                    await prisma.employeeEvaluation.create({
+                        data: {
+                            templateId: evalTemplate.id,
+                            employeeId: newEmp.id,
+                            startDate: new Date('2025-01-01'),
+                            endDate: new Date('2025-12-31'),
+                            finalScore: Math.round(75 + Math.random() * 20),
+                            status: 'COMPLETED'
+                        }
+                    });
                 }
             }
         }
 
-        // Cargar todos los 25 empleados del tenant
+        // Cargar colaboradores activos reales del tenant
         const tenantEmployees = await prisma.employee.findMany({
-            where: { tenantId, isActive: true },
-            take: 25
+            where: { tenantId, isActive: true }
         });
 
         // 3. Presupuesto de Privacidad Diferencial (DP-FL)

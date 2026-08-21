@@ -29,7 +29,7 @@ export async function seedEntrepreneurship(prisma) {
             equities: {
                 create: [
                     { holderName: 'Admin Inc.', percentage: 10, role: 'INVESTOR' },
-                    { holderName: 'Juan Perez', percentage: 5, role: 'ADVISOR' }
+                    { holderName: 'Ing. Roberto Paredes', percentage: 5, role: 'ADVISOR' }
                 ]
             },
             fundingRounds: {
@@ -123,7 +123,7 @@ export async function seedEntrepreneurship(prisma) {
             equities: {
                 create: [
                     { holderName: 'AgroVentures LP', percentage: 20, role: 'INVESTOR' },
-                    { holderName: 'CTO Founder', percentage: 10, role: 'FOUNDER' }
+                    { holderName: 'Ing. Marcos Alvear', percentage: 10, role: 'FOUNDER' }
                 ]
             },
             fundingRounds: {

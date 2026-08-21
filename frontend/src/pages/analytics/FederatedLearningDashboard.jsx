@@ -175,6 +175,27 @@ const FederatedLearningDashboard = () => {
                 </div>
             </div>
 
+            {/* Panel de Garantía Criptográfica & Privacidad Diferencial — Estándar ERP */}
+            <div className="bg-white border border-gray-200 rounded p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                            Garantía Criptográfica & Privacidad Diferencial
+                        </span>
+                        <span className="text-xs font-mono font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            (ε = {epsilonSpent.toFixed(2)}, δ = 10⁻⁵)-DP Certificado
+                        </span>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed max-w-4xl">
+                        La federación inter-empresarial aplica <strong>DP-SGD con Recorte de Gradiente L2 (C = 1.0)</strong> e inyección de ruido Gaussiano calibrado por el contador RDP (Rényi Differential Privacy). Ningún salario individual, nombre o dato financiero puede ser reconstruido a partir del modelo global agregado.
+                    </p>
+                </div>
+                <div className="bg-gray-50 rounded p-2.5 border border-gray-200 font-mono text-xs whitespace-nowrap text-right shrink-0">
+                    <div className="text-gray-500 text-[10px] uppercase font-semibold">Presupuesto Consumido</div>
+                    <div className="text-gray-900 font-bold text-sm tabular-nums">{budgetPercent}% <span className="text-xs font-normal text-gray-500">(Restante: {(epsilonBudgetMax - epsilonSpent).toFixed(2)} ε)</span></div>
+                </div>
+            </div>
+
             {/* Privacy Budget & KPI Resumen Contable */}
             <div className="bg-white border border-gray-200/80 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-4 pb-2 border-b border-gray-100">

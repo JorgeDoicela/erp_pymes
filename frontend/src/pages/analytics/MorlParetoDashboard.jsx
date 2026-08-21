@@ -160,6 +160,27 @@ const MorlParetoDashboard = () => {
                 </div>
             </div>
 
+            {/* Panel de Optimización Multiobjetivo y Frontera de Pareto — Estándar ERP */}
+            <div className="bg-white border border-gray-200 rounded p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                            Optimización Multiobjetivo (Vector Q-Learning)
+                        </span>
+                        <span className="text-xs font-mono font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            Frontera No Dominada de Pareto
+                        </span>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed max-w-4xl">
+                        Aplica un criterio formal de dominancia estricta sobre el vector bivariado <em>F = (Costo, Retención)</em>. Cada punto de la frontera representa una política matemática óptima donde es imposible aumentar la retención sin incrementar el presupuesto asignado.
+                    </p>
+                </div>
+                <div className="bg-gray-50 rounded p-2.5 border border-gray-200 font-mono text-xs whitespace-nowrap text-right shrink-0">
+                    <div className="text-gray-500 text-[10px] uppercase font-semibold">Soluciones Eficientes</div>
+                    <div className="text-gray-900 font-bold text-sm tabular-nums">{paretoPoints.length} <span className="text-xs font-normal text-gray-500">Puntos Óptimos</span></div>
+                </div>
+            </div>
+
             {/* Workbench & Active Results */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Form: MORL Configurator */}
