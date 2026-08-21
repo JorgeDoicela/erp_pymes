@@ -260,11 +260,37 @@ export const submitAssessment = async (req, res) => {
             }
         });
 
+        // Actualizar automáticamente la evaluación padre si todos los evaluadores completaron
+        if (status === 'COMPLETED') {
+            try {
+                const allReviewers = await prisma.evaluationReviewer.findMany({
+                    where: { evaluationId: review.evaluationId }
+                });
+
+                const allCompleted = allReviewers.every(r => r.status === 'COMPLETED');
+                if (allCompleted && allReviewers.length > 0) {
+                    const validScores = allReviewers.map(r => r.score).filter(s => s !== null && !isNaN(s));
+                    const parentScore = validScores.length > 0
+                        ? parseFloat((validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(2))
+                        : (calculatedScore || 0);
+
+                    await prisma.employeeEvaluation.update({
+                        where: { id: review.evaluationId },
+                        data: {
+                            status: 'COMPLETED',
+                            finalScore: parentScore
+                        }
+                    });
+                }
+            } catch (evalUpdateErr) {
+                console.error('[EVALUATION] Error actualizando estado consolidado:', evalUpdateErr.message);
+            }
+        }
+
         // RF-EVA-004: Notification to HR
         if (status === 'COMPLETED') {
             const evaluator = await prisma.employee.findUnique({ where: { id: userId } });
             console.log(`[NOTIFICATION] HR Notified: Evaluation ${review.evaluationId} completed by ${evaluator?.firstName} ${evaluator?.lastName}`);
-            // In future: sendEmail(hrEmail, "Evaluation Completed", ...)
         }
 
         // RNF-14: Audit Log (Non-blocking)

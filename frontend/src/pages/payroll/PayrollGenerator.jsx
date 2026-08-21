@@ -253,8 +253,8 @@ const PayrollGenerator = () => {
                             {selectedPayroll.details?.map(det => {
                                 const bonuses = JSON.parse(det.bonuses || '[]');
                                 const deductions = JSON.parse(det.deductions || '[]');
-                                const totalBonuses = bonuses.reduce((a, b) => a + b.amount, 0);
-                                const totalDeductions = deductions.reduce((a, b) => a + b.amount, 0);
+                                const totalBonuses = bonuses.reduce((a, b) => a + (Number(b.amount) || 0), 0);
+                                const totalDeductions = deductions.reduce((a, b) => a + (Number(b.amount) || 0), 0);
                                 return (
                                     <div key={det.id} className="p-4 space-y-3">
                                         <div className="flex items-center justify-between">
@@ -300,8 +300,8 @@ const PayrollGenerator = () => {
                                     {selectedPayroll.details?.map(det => {
                                         const bonuses = JSON.parse(det.bonuses || '[]');
                                         const deductions = JSON.parse(det.deductions || '[]');
-                                        const totalBonuses = bonuses.reduce((a, b) => a + b.amount, 0);
-                                        const totalDeductions = deductions.reduce((a, b) => a + b.amount, 0);
+                                        const totalBonuses = bonuses.reduce((a, b) => a + (Number(b.amount) || 0), 0);
+                                        const totalDeductions = deductions.reduce((a, b) => a + (Number(b.amount) || 0), 0);
                                         return (
                                             <tr key={det.id} className="hover:bg-gray-50/60 transition-colors">
                                                 <td className="py-2.5 px-4 font-medium text-gray-900">{det.employee.firstName} {det.employee.lastName}</td>

@@ -54,21 +54,25 @@ export const updateGoalProgress = async (req, res) => {
 
         const goal = await prisma.employeeGoal.findUnique({ where: { id } });
 
-        if (!goal) return res.status(404).json({ message: "Objetivo no encontrado" });
-        if (goal.employeeId !== userId) return res.status(403).json({ message: "No autorizado" });
-
         const newVal = parseFloat(currentValue);
-        let newProgress = (newVal / goal.targetValue) * 100;
-        if (newProgress > 100) newProgress = 100;
+        const validNewVal = isNaN(newVal) ? 0 : newVal;
+        const target = parseFloat(goal.targetValue);
+
+        let newProgress = 0;
+        if (!isNaN(target) && target > 0) {
+            newProgress = Math.max(0, Math.min(100, parseFloat(((validNewVal / target) * 100).toFixed(2))));
+        } else if (validNewVal >= target && target <= 0) {
+            newProgress = 100;
+        }
 
         let newStatus = status || goal.status;
-        if (newProgress === 100) newStatus = 'COMPLETED';
+        if (newProgress >= 100) newStatus = 'COMPLETED';
         else if (newProgress > 0 && newStatus === 'PENDING') newStatus = 'IN_PROGRESS';
 
         const updatedGoal = await prisma.employeeGoal.update({
             where: { id },
             data: {
-                currentValue: newVal,
+                currentValue: validNewVal,
                 progress: newProgress,
                 status: newStatus
             }

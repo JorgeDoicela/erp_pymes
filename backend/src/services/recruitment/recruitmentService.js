@@ -266,8 +266,21 @@ export const recruitmentService = {
 
     async evaluateCandidate(applicationId, evaluationData, evaluatorId, tenantId = null) {
         await this.getApplicationDetails(applicationId, tenantId);
+
+        let overallScore = evaluationData.overallScore;
+        const ratings = evaluationData.ratings;
+
+        if ((overallScore === undefined || overallScore === null || overallScore === 0) && ratings && typeof ratings === 'object') {
+            const values = Object.values(ratings).map(Number).filter(v => !isNaN(v) && v > 0);
+            if (values.length > 0) {
+                const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                overallScore = Number((avg <= 5 ? (avg / 5) * 100 : avg).toFixed(1));
+            }
+        }
+
         return recruitmentRepository.createEvaluation({
             ...evaluationData,
+            overallScore: Number(overallScore || 0),
             applicationId,
             evaluatorId
         });

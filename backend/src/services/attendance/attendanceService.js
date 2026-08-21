@@ -196,8 +196,18 @@ export const attendanceService = {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-        // Buscar si ya existe registro hoy
-        const existingRecord = await attendanceRepository.findByEmployeeAndDate(employeeId, today);
+        // Buscar si ya existe registro hoy o si hay un turno nocturno abierto de las últimas 28 horas
+        let existingRecord = await attendanceRepository.findByEmployeeAndDate(employeeId, today);
+        if (!existingRecord && type !== 'ENTRY') {
+            existingRecord = await prisma.attendance.findFirst({
+                where: {
+                    employeeId,
+                    checkOut: null,
+                    checkIn: { gte: new Date(Date.now() - 28 * 60 * 60 * 1000) }
+                },
+                orderBy: { checkIn: 'desc' }
+            });
+        }
 
         if (type === 'ENTRY') {
             if (existingRecord) {
@@ -417,7 +427,17 @@ export const attendanceService = {
 
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const record = await attendanceRepository.findByEmployeeAndDate(employeeId, today);
+        let record = await attendanceRepository.findByEmployeeAndDate(employeeId, today);
+        if (!record) {
+            record = await prisma.attendance.findFirst({
+                where: {
+                    employeeId,
+                    checkOut: null,
+                    checkIn: { gte: new Date(Date.now() - 28 * 60 * 60 * 1000) }
+                },
+                orderBy: { checkIn: 'desc' }
+            });
+        }
 
         const employeeData = {
             id: employee.id,

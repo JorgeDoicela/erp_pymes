@@ -50,6 +50,16 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
+  // Errores con status code explícito
+  if (err.statusCode || err.status) {
+    const status = err.statusCode || err.status;
+    return res.status(status).json({
+      success: false,
+      message: err.message,
+      type: err.type || 'HttpError',
+    });
+  }
+
   // Error genérico
   res.status(500).json({
     success: false,
@@ -80,12 +90,12 @@ export function requestLogger(req, res, next) {
 export function validateBodyNotEmpty(req, res, next) {
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
     // Skip validation for multipart/form-data (file uploads)
-    if (req.headers['content-type']?.includes('multipart/form-data')) {
+    if (req.headers?.['content-type']?.includes('multipart/form-data')) {
       return next();
     }
 
     // Permitir cuerpos vacíos para acciones específicas de "trigger" (ej: mayorizar, activar/desactivar)
-    const isTriggerAction = req.path.endsWith('/post') || req.path.endsWith('/toggle');
+    const isTriggerAction = req.path?.endsWith('/post') || req.path?.endsWith('/toggle');
     if (isTriggerAction && req.method === 'PATCH') {
       return next();
     }

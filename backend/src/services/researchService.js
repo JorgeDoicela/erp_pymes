@@ -208,9 +208,8 @@ export async function exportDatasetCsv(includeSynthetic = true) {
 
     const answerKeys = new Set();
     responses.forEach(r => {
-        if (r.answers && typeof r.answers === 'object') {
-            Object.keys(r.answers).forEach(k => answerKeys.add(k));
-        }
+        const answers = parseAnswers(r.answers);
+        Object.keys(answers).forEach(k => answerKeys.add(k));
     });
 
     const headers = [
@@ -226,7 +225,7 @@ export async function exportDatasetCsv(includeSynthetic = true) {
     ];
 
     const rows = responses.map(r => {
-        const rowAnswers = r.answers || {};
+        const rowAnswers = parseAnswers(r.answers);
         const answerValues = Array.from(answerKeys).map(k => {
             const val = rowAnswers[k];
             if (val === undefined || val === null) return '';
@@ -294,6 +293,14 @@ function countByKey(list, key) {
     return Object.entries(counts).map(([name, count]) => ({ name, count }));
 }
 
+function parseAnswers(answers) {
+    if (!answers) return {};
+    if (typeof answers === 'string') {
+        try { return JSON.parse(answers); } catch { return {}; }
+    }
+    return answers;
+}
+
 function computeLikertStats(responses) {
     if (!responses || responses.length === 0) return {};
 
@@ -302,7 +309,7 @@ function computeLikertStats(responses) {
     const questionDistributions = {};
 
     responses.forEach(r => {
-        const answers = r.answers || {};
+        const answers = parseAnswers(r.answers);
         Object.entries(answers).forEach(([qKey, val]) => {
             const score = Number(val);
             if (!isNaN(score) && score >= 1 && score <= 5) {
@@ -326,7 +333,8 @@ function computeLikertStats(responses) {
         // Calcular desviación estándar
         let sumSquares = 0;
         responses.forEach(r => {
-            const val = Number(r.answers?.[qKey]);
+            const parsed = parseAnswers(r.answers);
+            const val = Number(parsed[qKey]);
             if (!isNaN(val) && val >= 1 && val <= 5) {
                 sumSquares += Math.pow(val - avg, 2);
             }
@@ -360,7 +368,7 @@ function calculateCronbachAlpha(responses) {
 
     const itemKeysSet = new Set();
     responses.forEach(r => {
-        const answers = r.answers || {};
+        const answers = parseAnswers(r.answers);
         Object.entries(answers).forEach(([k, v]) => {
             if (!isNaN(Number(v)) && Number(v) >= 1 && Number(v) <= 5) {
                 itemKeysSet.add(k);
@@ -375,7 +383,7 @@ function calculateCronbachAlpha(responses) {
     const matrix = [];
     responses.forEach(r => {
         const row = [];
-        const answers = r.answers || {};
+        const answers = parseAnswers(r.answers);
         itemKeys.forEach(k => {
             row.push(Number(answers[k]) || 4);
         });
