@@ -21,9 +21,52 @@ export const shiftRepository = {
         return prisma.shift.findUnique({ where: { id } });
     },
 
+    async updateShift(id, data, tenantId = null) {
+        return prisma.shift.update({
+            where: { id },
+            data
+        });
+    },
+
+    async deleteShift(id, tenantId = null) {
+        return prisma.shift.delete({
+            where: { id }
+        });
+    },
+
     // --- SCHEDULES ---
     async createSchedule(data) {
         return prisma.employeeSchedule.create({ data });
+    },
+
+    async getAllSchedules(tenantId = null) {
+        return prisma.employeeSchedule.findMany({
+            where: {
+                isActive: true,
+                ...(tenantId ? { employee: { tenantId } } : {})
+            },
+            include: {
+                employee: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        department: true,
+                        position: true
+                    }
+                },
+                shift: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    },
+
+    async deleteSchedule(id) {
+        return prisma.employeeSchedule.update({
+            where: { id },
+            data: { isActive: false }
+        });
     },
 
     // Buscar horarios de un empleado que se solapen con un rango de fechas

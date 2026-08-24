@@ -38,6 +38,7 @@ const upload = multer({
 // Rutas
 router.post('/', authenticate, authorize(['admin', 'hr']), upload.single('document'), contractController.create);
 router.get('/expiring', authenticate, authorize(['admin', 'hr']), contractController.getExpiring);
+router.put('/:id/renew', authenticate, authorize(['admin', 'hr']), contractController.renew);
 router.get('/employee/:employeeId', authenticate, authorize(['admin', 'hr', 'accounting', 'employee']), contractController.getByEmployee);
 router.get('/download/:filename', authenticate, contractController.downloadContract);
 

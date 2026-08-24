@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboardData } from '../../services/analytics.service';
-import { FiUsers, FiUserPlus, FiBriefcase, FiDollarSign, FiPieChart, FiBarChart2, FiUserMinus, FiActivity, FiHeart, FiDatabase, FiFileText } from 'react-icons/fi';
+import {
+    FiUsers, FiUserPlus, FiBriefcase, FiDollarSign, FiPieChart, FiBarChart2,
+    FiUserMinus, FiActivity, FiHeart, FiDatabase, FiFileText, FiCpu, FiGitPullRequest, FiShare2, FiTarget
+} from 'react-icons/fi';
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 const AnalyticsDashboard = () => {
@@ -9,19 +12,20 @@ const AnalyticsDashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadData();
-    }, []);
+        let isMounted = true;
+        getDashboardData()
+            .then(result => {
+                if (isMounted) setData(result);
+            })
+            .catch(error => {
+                console.error(error);
+            })
+            .finally(() => {
+                if (isMounted) setLoading(false);
+            });
 
-    const loadData = async () => {
-        try {
-            const result = await getDashboardData();
-            setData(result);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        return () => { isMounted = false; };
+    }, []);
 
     if (loading) return <div className="p-8 text-center text-slate-500 text-sm font-semibold">Cargando Analíticas...</div>;
     if (!data) return <div className="p-8 text-center text-slate-500 text-sm font-semibold">Error al cargar datos.</div>;
@@ -42,32 +46,41 @@ const AnalyticsDashboard = () => {
             </div>
 
             {/* Navegación por pestañas/reportes ERP */}
-            <div className="flex border-b border-gray-200 overflow-x-auto gap-4 text-xs pb-1">
-                <Link to="/intelligence" className="px-3 py-1.5 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors">
-                    Análisis Predictivo AI
-                </Link>
-                <Link to="/admin/reports" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+            <div className="flex border-b border-gray-200 overflow-x-auto gap-2 text-xs pb-2">
+                <Link to="/admin/reports" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors shrink-0">
                     Reportes Asistencia
                 </Link>
-                <Link to="/analytics/turnover" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                <Link to="/analytics/turnover" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors shrink-0">
                     Rotación
                 </Link>
-                <Link to="/analytics/performance" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                <Link to="/analytics/performance" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors shrink-0">
                     Desempeño
                 </Link>
-                <Link to="/analytics/payroll-costs" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                <Link to="/analytics/payroll-costs" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors shrink-0">
                     Costo Nómina
                 </Link>
-                <Link to="/analytics/temporal-attention" className="px-3 py-1.5 border border-purple-300 hover:border-purple-500 text-purple-700 bg-purple-50 font-medium rounded transition-colors flex items-center gap-1.5">
-                    <FiActivity className="w-3.5 h-3.5 text-purple-600" /> Temporal Attention
-                </Link>
-                <Link to="/analytics/ft-transformer" className="px-3 py-1.5 border border-emerald-300 hover:border-emerald-500 text-emerald-700 bg-emerald-50 font-medium rounded transition-colors flex items-center gap-1.5">
-                    <FiActivity className="w-3.5 h-3.5 text-emerald-600" /> FT-Transformer
-                </Link>
-                <Link to="/analytics/satisfaction" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
+                <Link to="/analytics/satisfaction" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors shrink-0">
                     Clima Laboral
                 </Link>
-                <Link to="/analytics/custom" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors flex items-center gap-1.5">
+                <Link to="/analytics/rsi-optimization" className="px-3 py-1.5 border border-emerald-300 hover:border-emerald-500 text-emerald-700 bg-emerald-50 font-medium rounded transition-colors flex items-center gap-1 shrink-0">
+                    <FiCpu className="w-3.5 h-3.5 text-emerald-600" /> Calibración RSI
+                </Link>
+                <Link to="/analytics/causal-inference" className="px-3 py-1.5 border border-blue-300 hover:border-blue-500 text-blue-700 bg-blue-50 font-medium rounded transition-colors flex items-center gap-1 shrink-0">
+                    <FiGitPullRequest className="w-3.5 h-3.5 text-blue-600" /> Inferencia Causal
+                </Link>
+                <Link to="/analytics/federated-learning" className="px-3 py-1.5 border border-emerald-300 hover:border-emerald-500 text-emerald-700 bg-emerald-50 font-medium rounded transition-colors flex items-center gap-1 shrink-0">
+                    <FiShare2 className="w-3.5 h-3.5 text-emerald-600" /> Benchmarking
+                </Link>
+                <Link to="/analytics/morl-pareto" className="px-3 py-1.5 border border-amber-300 hover:border-amber-500 text-amber-700 bg-amber-50 font-medium rounded transition-colors flex items-center gap-1 shrink-0">
+                    <FiTarget className="w-3.5 h-3.5 text-amber-600" /> Optimización MORL
+                </Link>
+                <Link to="/analytics/temporal-attention" className="px-3 py-1.5 border border-purple-300 hover:border-purple-500 text-purple-700 bg-purple-50 font-medium rounded transition-colors flex items-center gap-1 shrink-0">
+                    <FiActivity className="w-3.5 h-3.5 text-purple-600" /> Temporal Attention
+                </Link>
+                <Link to="/analytics/ft-transformer" className="px-3 py-1.5 border border-emerald-300 hover:border-emerald-500 text-emerald-700 bg-emerald-50 font-medium rounded transition-colors flex items-center gap-1 shrink-0">
+                    <FiActivity className="w-3.5 h-3.5 text-emerald-600" /> FT-Transformer
+                </Link>
+                <Link to="/analytics/custom" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors flex items-center gap-1 shrink-0">
                     <FiDatabase className="w-3.5 h-3.5 text-cyan-600" /> Exportación Personalizada
                 </Link>
             </div>

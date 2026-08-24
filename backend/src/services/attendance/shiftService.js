@@ -2,11 +2,47 @@ import { shiftRepository } from '../../repositories/attendance/shiftRepository.j
 
 export const shiftService = {
     async createShift(data, tenantId = null) {
-        return shiftRepository.createShift(data, tenantId);
+        if (!data.name || !data.startTime || !data.endTime) {
+            throw new Error('Nombre, hora de inicio y hora de fin son requeridos.');
+        }
+        return shiftRepository.createShift({
+            name: data.name.trim(),
+            startTime: data.startTime,
+            endTime: data.endTime,
+            breakMinutes: parseInt(data.breakMinutes, 10) || 60,
+            toleranceMinutes: parseInt(data.toleranceMinutes, 10) || 15
+        }, tenantId);
+    },
+
+    async updateShift(id, data, tenantId = null) {
+        const existing = await shiftRepository.getShiftById(id);
+        if (!existing) throw new Error('Turno no encontrado.');
+
+        return shiftRepository.updateShift(id, {
+            name: data.name ? data.name.trim() : existing.name,
+            startTime: data.startTime || existing.startTime,
+            endTime: data.endTime || existing.endTime,
+            breakMinutes: data.breakMinutes !== undefined ? parseInt(data.breakMinutes, 10) : existing.breakMinutes,
+            toleranceMinutes: data.toleranceMinutes !== undefined ? parseInt(data.toleranceMinutes, 10) : existing.toleranceMinutes
+        }, tenantId);
+    },
+
+    async deleteShift(id, tenantId = null) {
+        const existing = await shiftRepository.getShiftById(id);
+        if (!existing) throw new Error('Turno no encontrado.');
+        return shiftRepository.deleteShift(id, tenantId);
     },
 
     async getAllShifts(tenantId = null) {
         return shiftRepository.getAllShifts(tenantId);
+    },
+
+    async getAllSchedules(tenantId = null) {
+        return shiftRepository.getAllSchedules(tenantId);
+    },
+
+    async deleteSchedule(id) {
+        return shiftRepository.deleteSchedule(id);
     },
 
     async assignShiftToEmployees({ employeeIds, shiftId, startDate, endDate, daysOfWeek }) {

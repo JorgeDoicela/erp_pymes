@@ -108,7 +108,26 @@ const updateStatus = async (req, res, next) => {
         const { id } = req.params;
         const { status, adminComment } = req.body;
 
+        if (!status || !['APPROVED', 'REJECTED', 'CANCELLED'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Estado inválido. Debe ser APPROVED, REJECTED o CANCELLED.'
+            });
+        }
+
         const updated = await absenceService.updateRequestStatus(id, status, adminComment);
+
+        // Notify employee asynchronously
+        if (updated && updated.employeeId) {
+            notificationService.sendAbsenceResolved({
+                recipientId: updated.employeeId,
+                type: updated.type,
+                status: status,
+                adminComment: adminComment,
+                requestId: updated.id
+            }).catch(err => console.error('[AbsenceResolutionNotification] Error:', err));
+        }
+
         res.json({ success: true, data: updated });
     } catch (error) {
         next(error);

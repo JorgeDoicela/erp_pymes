@@ -12,11 +12,6 @@ const RecruitmentDashboard = () => {
     const [vacancyToDelete, setVacancyToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
-    useEffect(() => {
-        window.scrollTo(0, 0);
-        loadVacancies();
-    }, []);
-
     const loadVacancies = async () => {
         try {
             setLoading(true);
@@ -30,13 +25,31 @@ const RecruitmentDashboard = () => {
         }
     };
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        let isMounted = true;
+        getVacancies()
+            .then(data => {
+                if (isMounted) setVacancies(data);
+            })
+            .catch(error => {
+                console.error(error);
+                if (isMounted) toast?.error("Error al cargar vacantes");
+            })
+            .finally(() => {
+                if (isMounted) setLoading(false);
+            });
+
+        return () => { isMounted = false; };
+    }, []);
+
     const toggleStatus = async (id, currentStatus) => {
         try {
             const newStatus = currentStatus === 'OPEN' ? 'CLOSED' : 'OPEN';
             await updateVacancyStatus(id, newStatus);
             toast?.success(`Vacante ${newStatus === 'OPEN' ? 'Publicada' : 'Cerrada'}`);
             loadVacancies();
-        } catch (error) {
+        } catch {
             toast?.error("Error al actualizar estado");
         }
     };

@@ -9,8 +9,9 @@ export async function seedOffboarding(prisma, allEmployees) {
     const exEmployees = allEmployees.filter(e => !e.isActive && e.exitDate);
     const offboardingBatch = [];
 
-    for (const emp of exEmployees) {
-        const isDespido = emp.exitType === 'UNJUSTIFIED_DISMISSAL' || emp.position?.includes('Ex') && emp.salary > 1500;
+    for (let idx = 0; idx < exEmployees.length; idx++) {
+        const emp = exEmployees[idx];
+        const isDespido = idx % 2 === 1;
         const causal = isDespido ? 'UNFAIR_DISMISSAL' : 'VOLUNTARY_RESIGNATION';
         const exitDate = emp.exitDate || new Date();
         
@@ -21,12 +22,12 @@ export async function seedOffboarding(prisma, allEmployees) {
                 causal
             });
 
-            const isCompleted = sim.monthsWorked > 2;
+            const isCompleted = idx !== 0; // El primer proceso queda IN_PROGRESS para demostración interactiva
             const checklist = [
                 { id: 'IT_REVOKE', label: 'Revocación de correos corporativos y accesos a sistemas IT', completed: true, category: 'IT', completedAt: new Date(exitDate) },
                 { id: 'EXIT_INTERVIEW', label: 'Realización de entrevista de salida con RRHH', completed: true, category: 'HR', completedAt: new Date(exitDate) },
                 { id: 'SIGN_SETTLEMENT', label: 'Firma de Acta de Finiquito y acreditación de fondos en Ministerio del Trabajo', completed: isCompleted, category: 'LEGAL', completedAt: isCompleted ? new Date(exitDate) : null },
-                { id: 'ASSET_RETURN', label: 'Devolución de Laptop corporativa y credenciales de acceso', completed: true, category: 'ASSETS', completedAt: new Date(exitDate) }
+                { id: 'ASSET_RETURN', label: 'Devolución de Laptop corporativa y credenciales de acceso', completed: isCompleted, category: 'ASSETS', completedAt: isCompleted ? new Date(exitDate) : null }
             ];
 
             offboardingBatch.push({

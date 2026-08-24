@@ -27,8 +27,48 @@ const assignShifts = async (payload) => {
     }
 };
 
+const updateShift = async (id, data) => {
+    try {
+        const response = await api.put(`/shifts/${id}`, data);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+const deleteShift = async (id) => {
+    try {
+        const response = await api.delete(`/shifts/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+const getAllSchedules = async () => {
+    try {
+        const response = await api.get('/shifts/schedules');
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+const deleteSchedule = async (id) => {
+    try {
+        const response = await api.delete(`/shifts/schedule/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
 export default {
     getShifts,
     createShift,
-    assignShifts
+    updateShift,
+    deleteShift,
+    assignShifts,
+    getAllSchedules,
+    deleteSchedule
 };

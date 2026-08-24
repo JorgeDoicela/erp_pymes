@@ -19,7 +19,7 @@ class PayrollConfigController {
             res.status(201).json({ success: true, data: newConfig, message: 'Configuración guardada correctamente' });
         } catch (error) {
             console.error(error);
-            res.status(500).json({ success: false, message: 'Error al guardar configuración' });
+            res.status(400).json({ success: false, message: error.message || 'Error al guardar configuración' });
         }
     }
 }

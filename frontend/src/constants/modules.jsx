@@ -51,7 +51,6 @@ export const adminSections = [
             { title: 'Control de Asistencia', icon: <FiClock />, color: 'bg-indigo-500', path: '/attendance' },
             { title: 'Ausencias y Permisos', icon: <FiUserX />, color: 'bg-rose-500', path: '/admin/absences' },
             { title: 'Gestión de Turnos', icon: <FiCalendar />, color: 'bg-purple-500', path: '/admin/shifts' },
-            { title: 'Reportes de Asistencia', icon: <FiFileText />, color: 'bg-blue-500', path: '/admin/reports' },
         ]
     },
     {
@@ -67,10 +66,7 @@ export const adminSections = [
         title: 'Gestión del Talento',
         modules: [
             { title: 'Evaluaciones y Objetivos', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
-            { title: 'Diseñar Evaluación', icon: <FiPlus />, color: 'bg-orange-600', path: '/performance/create' },
-            { title: 'Asignar Evaluaciones', icon: <FiClipboard />, color: 'bg-indigo-600', path: '/performance/assign' },
             { title: 'Reclutamiento y Vacantes', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
-            { title: 'Publicar Vacante', icon: <FiPlus />, color: 'bg-pink-600', path: '/recruitment/create' },
         ]
     },
     {
@@ -78,17 +74,6 @@ export const adminSections = [
         modules: [
             { title: 'Centro de Inteligencia de Negocio', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
             { title: 'Analíticas e Indicadores', icon: <FiBarChart2 />, color: 'bg-blue-600', path: '/analytics' },
-            { title: 'Rotación de Personal', icon: <FiUserMinus />, color: 'bg-rose-600', path: '/analytics/turnover' },
-            { title: 'Costos Salariales', icon: <FiDollarSign />, color: 'bg-green-600', path: '/analytics/payroll-costs' },
-            { title: 'Rendimiento y Desempeño', icon: <FiTrendingUp />, color: 'bg-blue-600', path: '/analytics/performance' },
-            { title: 'Satisfacción y Clima', icon: <FiActivity />, color: 'bg-purple-600', path: '/analytics/satisfaction' },
-            { title: 'Calibración de Evaluaciones', icon: <FiCpu />, color: 'bg-emerald-600', path: '/analytics/rsi-optimization' },
-            { title: 'Impacto de Decisiones y Políticas', icon: <FiGitPullRequest />, color: 'bg-blue-600', path: '/analytics/causal-inference' },
-            { title: 'Benchmarking y Tendencias', icon: <FiShare2 />, color: 'bg-emerald-600', path: '/analytics/federated-learning' },
-            { title: 'Optimización de Costos y Retención', icon: <FiTarget />, color: 'bg-amber-600', path: '/analytics/morl-pareto' },
-            { title: 'Atención Temporal (12 Meses)', icon: <FiCpu />, color: 'bg-purple-600', path: '/analytics/temporal-attention' },
-            { title: 'FT-Transformer Tabular', icon: <FiActivity />, color: 'bg-emerald-600', path: '/analytics/ft-transformer' },
-            { title: 'Exportación Personalizada', icon: <FiDatabase />, color: 'bg-cyan-600', path: '/analytics/custom' },
         ]
     },
     {

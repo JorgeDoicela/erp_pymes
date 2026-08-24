@@ -78,13 +78,18 @@ class ComplianceService {
         });
 
         // 3. Alertas de Vencimiento de Documentos y Certificados Médicos
+        const docWhere = {
+            OR: [
+                { status: 'REJECTED' },
+                { expiryDate: { lte: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000) } }
+            ]
+        };
+        if (tenantId) {
+            docWhere.employee = { tenantId };
+        }
+
         const expiringDocs = await prisma.document.findMany({
-            where: {
-                OR: [
-                    { status: 'REJECTED' },
-                    { expiryDate: { lte: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000) } }
-                ]
-            },
+            where: docWhere,
             include: {
                 employee: {
                     select: { id: true, firstName: true, lastName: true, identityCard: true, department: true }

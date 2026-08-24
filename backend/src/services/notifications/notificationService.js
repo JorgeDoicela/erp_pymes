@@ -218,6 +218,22 @@ class NotificationService {
         });
     }
 
+    async sendAbsenceResolved({ recipientId, type, status, adminComment, requestId }) {
+        const isApproved = status === 'APPROVED';
+        const title = `Solicitud de Ausencia ${isApproved ? 'Aprobada' : 'Rechazada'}`;
+        const commentText = adminComment ? ` Comentario: "${adminComment}".` : '';
+        const message = `Tu solicitud de ${type} ha sido ${isApproved ? 'APROBADA' : 'RECHAZADA'}.${commentText}`;
+
+        await this.createNotification({
+            recipientId,
+            title,
+            message,
+            type: isApproved ? 'ABSENCE_APPROVED' : 'ABSENCE_REJECTED',
+            relatedEntity: 'AbsenceRequest',
+            relatedEntityId: requestId
+        });
+    }
+
 
     async sendDocumentExpirationAlert({ recipientId, documentType, daysRemaining, documentId }) {
         const title = `Documento Próximo a Vencer: ${documentType}`;

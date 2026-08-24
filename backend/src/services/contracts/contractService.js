@@ -89,6 +89,40 @@ class ContractService {
             }
         });
     }
+
+    async renewContract(contractId, data, tenantId = null) {
+        const contract = await prisma.contract.findUnique({
+            where: { id: contractId },
+            include: { employee: true }
+        });
+        if (!contract) throw new Error('Contrato no encontrado');
+        if (tenantId && contract.employee.tenantId !== tenantId) {
+            throw new Error('No autorizado para modificar contratos de otra empresa');
+        }
+
+        const { newEndDate, newSalary, newType = 'Indefinido', notes } = data;
+        const isIndefinite = newType === 'Indefinido' || !newEndDate;
+
+        const updatedContract = await prisma.contract.update({
+            where: { id: contractId },
+            data: {
+                endDate: isIndefinite ? null : new Date(newEndDate),
+                type: newType,
+                salary: newSalary ? parseFloat(newSalary) : contract.salary,
+                clauses: notes ? `${contract.clauses || ''}\n[Renovado ${new Date().toISOString().split('T')[0]}]: ${notes}` : contract.clauses,
+                status: 'Active'
+            }
+        });
+
+        await prisma.employee.update({
+            where: { id: contract.employeeId },
+            data: {
+                contractType: newType
+            }
+        });
+
+        return updatedContract;
+    }
 }
 
 export default new ContractService();

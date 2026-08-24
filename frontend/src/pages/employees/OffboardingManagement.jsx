@@ -257,23 +257,23 @@ const OffboardingManagement = () => {
 
                     {/* VISTA ESCRITORIO: Tabla Completa */}
                     <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-sm text-left text-slate-600">
-                            <thead className="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200/80">
-                                <tr>
-                                    <th className="p-4">Empleado</th>
-                                    <th className="p-4 text-center">Causal de Salida</th>
-                                    <th className="p-4 text-center">Fecha Salida</th>
-                                    <th className="p-4 text-right">Total Liquidación</th>
-                                    <th className="p-4 text-center">Checklist</th>
-                                    <th className="p-4 text-center">Estado</th>
-                                    <th className="p-4 text-center">Acciones</th>
+                        <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-200 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                                    <th className="py-2.5 px-4">Empleado</th>
+                                    <th className="py-2.5 px-4">Causal de Salida</th>
+                                    <th className="py-2.5 px-4">Fecha Salida</th>
+                                    <th className="py-2.5 px-4 text-right">Total Liquidación</th>
+                                    <th className="py-2.5 px-4 text-center">Checklist</th>
+                                    <th className="py-2.5 px-4 text-center">Estado</th>
+                                    <th className="py-2.5 px-4 text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-gray-100 text-gray-700">
                                 {loading ? (
-                                    <tr><td colSpan="7" className="p-8 text-center text-slate-400">Cargando procesos de salida...</td></tr>
+                                    <tr><td colSpan="7" className="p-8 text-center text-gray-400 text-xs font-mono">Cargando procesos de salida...</td></tr>
                                 ) : offboardings.length === 0 ? (
-                                    <tr><td colSpan="7" className="p-8 text-center text-slate-400">No hay procesos de salida registrados.</td></tr>
+                                    <tr><td colSpan="7" className="p-8 text-center text-gray-400 text-xs italic">No hay procesos de salida registrados.</td></tr>
                                 ) : (
                                     offboardings.map(off => {
                                         const checklist = JSON.parse(off.checklist || '[]');
@@ -282,46 +282,46 @@ const OffboardingManagement = () => {
                                         const isComplete = totalTasks > 0 && completedTasks === totalTasks;
 
                                         return (
-                                            <tr key={off.id} className="hover:bg-slate-50/80 transition-colors">
-                                                <td className="p-4 font-bold text-slate-900">
+                                            <tr key={off.id} className="hover:bg-gray-50/60 transition-colors">
+                                                <td className="py-2.5 px-4 font-medium text-gray-900">
                                                     {off.employee?.firstName} {off.employee?.lastName}
-                                                    <p className="text-xs font-normal text-slate-400">{off.employee?.department || 'General'}</p>
+                                                    <p className="text-[11px] font-normal text-gray-400">{off.employee?.department || 'General'}</p>
                                                 </td>
-                                                <td className="p-4 text-center text-xs font-semibold text-slate-700">
+                                                <td className="py-2.5 px-4 text-gray-700">
                                                     {getCausalLabel(off.causal)}
                                                 </td>
-                                                <td className="p-4 text-center text-xs text-slate-500">
+                                                <td className="py-2.5 px-4 font-mono text-gray-600">
                                                     {new Date(off.exitDate).toLocaleDateString('es-EC')}
                                                 </td>
-                                                <td className="p-4 text-right font-mono font-bold text-emerald-700 text-base">
+                                                <td className="py-2.5 px-4 text-right font-mono font-semibold text-gray-900 tabular-nums">
                                                     ${off.totalSettlement.toFixed(2)}
                                                 </td>
-                                                <td className="p-4 text-center">
-                                                    <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${
-                                                        isComplete ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                                <td className="py-2.5 px-4 text-center">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${
+                                                        isComplete ? 'bg-green-50 text-green-800 border-green-200' : 'bg-gray-50 text-gray-700 border-gray-200'
                                                     }`}>
-                                                        {completedTasks} / {totalTasks} Tareas
+                                                        {completedTasks} / {totalTasks}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-center">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                                                <td className="py-2.5 px-4 text-center">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase border ${
                                                         off.status === 'COMPLETED'
-                                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                                                            ? 'bg-green-50 text-green-800 border-green-200'
+                                                            : 'bg-amber-50 text-amber-800 border-amber-200'
                                                     }`}>
                                                         {off.status === 'COMPLETED' ? 'COMPLETADO' : 'EN PROCESO'}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-center">
-                                                    <div className="flex justify-center gap-2">
+                                                <td className="py-2.5 px-4 text-right">
+                                                    <div className="flex items-center justify-end gap-1.5">
                                                         <button
                                                             onClick={() => {
                                                                 setSelectedOffboarding(off);
                                                                 setChecklistModalOpen(true);
                                                             }}
-                                                            className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                                                            className="border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer"
                                                         >
-                                                            <ClipboardDocumentCheckIcon className="w-4 h-4" /> Checklist
+                                                            Checklist
                                                         </button>
                                                         <button
                                                             onClick={async () => {
@@ -332,7 +332,7 @@ const OffboardingManagement = () => {
                                                                 });
                                                                 if (sim.success) generateSettlementPDF(sim.data);
                                                             }}
-                                                            className="px-3 py-1.5 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition-all"
+                                                            className="border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer"
                                                         >
                                                             PDF Finiquito
                                                         </button>

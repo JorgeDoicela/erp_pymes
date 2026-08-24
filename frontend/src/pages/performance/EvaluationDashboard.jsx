@@ -12,19 +12,20 @@ const EvaluationDashboard = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        fetchTemplates();
-    }, []);
+        let isMounted = true;
+        getEvaluationTemplates()
+            .then(data => {
+                if (isMounted) setTemplates(data);
+            })
+            .catch(error => {
+                console.error(error);
+            })
+            .finally(() => {
+                if (isMounted) setLoading(false);
+            });
 
-    const fetchTemplates = async () => {
-        try {
-            const data = await getEvaluationTemplates();
-            setTemplates(data);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        return () => { isMounted = false; };
+    }, []);
 
     const handleViewDetail = (template) => {
         setSelectedTemplate(template);

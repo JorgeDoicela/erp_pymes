@@ -76,6 +76,30 @@ class ContractController {
             res.status(404).json({ success: false, message: 'Archivo no encontrado' });
         }
     }
+
+    async renew(req, res) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const updated = await contractService.renewContract(id, req.body, tenantId);
+
+            auditRepository.createLog({
+                entity: 'Contract',
+                entityId: id,
+                action: 'UPDATE',
+                performedBy: req.user?.id || 'Admin',
+                details: `Renovación de contrato ${id}. Nuevo tipo: ${req.body.newType || 'Indefinido'}, Nueva fecha fin: ${req.body.newEndDate || 'Indefinido'}`
+            }).catch(err => console.error('Audit Log Error:', err));
+
+            res.json({
+                success: true,
+                data: updated,
+                message: 'Contrato renovado exitosamente'
+            });
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    }
 }
 
 export default new ContractController();
