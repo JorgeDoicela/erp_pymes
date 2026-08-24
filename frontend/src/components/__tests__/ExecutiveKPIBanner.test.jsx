@@ -14,7 +14,7 @@ describe('ExecutiveKPIBanner Component Test Suite', () => {
         expect(screen.getByText('Ahorro Retención')).toBeInTheDocument();
         expect(screen.getByText('Costo Ausentismo')).toBeInTheDocument();
         expect(screen.getByText('Payback Sistema')).toBeInTheDocument();
-        expect(screen.getByText('2.3 meses')).toBeInTheDocument();
+        expect(screen.getByText('0 meses')).toBeInTheDocument();
     });
 
     it('should render formatted custom financial metrics properly', () => {

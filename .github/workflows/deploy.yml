@@ -105,6 +105,7 @@ jobs:
         run: |
           cd backend
           npm install
+          npm install @rollup/rollup-linux-x64-gnu --no-save || true
           npm test
           npm audit --audit-level=high || true
 
@@ -131,6 +132,7 @@ jobs:
         run: |
           cd frontend
           npm install
+          npm install @rollup/rollup-linux-x64-gnu --no-save || true
           npm run lint || true
           npm test
           npm run build

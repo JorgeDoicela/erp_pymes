@@ -47,6 +47,9 @@
     "supertest": "^7.0.0",
     "vitest": "^3.0.0"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.0.0"
+  },
   "prisma": {
     "seed": "node prisma/seed.js"
   }
