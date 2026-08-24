@@ -1,7 +1,7 @@
 import { decryptSalary } from '../../src/utils/encryption.js';
 
 export async function seedPayroll(prisma, employees) {
-    console.log('[PAYROLL] Generando Historial de Nómina Determinístico de 6 meses para ambas empresas...');
+    console.log('[PAYROLL] Generando Historial de Nómina Determinístico de 12 meses para ambas empresas...');
     const today = new Date();
 
     const tenants = await prisma.tenant.findMany({
@@ -12,7 +12,7 @@ export async function seedPayroll(prisma, employees) {
         const tenantEmployees = employees.filter(e => e.tenantId === tenant.id);
         if (tenantEmployees.length === 0) continue;
 
-        for (let i = 5; i >= 0; i--) {
+        for (let i = 11; i >= 0; i--) {
             const date = new Date(today.getFullYear(), today.getMonth() - i, 15);
             const periodStart = new Date(date.getFullYear(), date.getMonth(), 1);
             const periodEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);

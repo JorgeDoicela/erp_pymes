@@ -1917,7 +1917,7 @@ export async function getDataQualityReport(tenantId = null) {
         else missingAttendance.push({ ...empInfo, lastAttendanceDate: (emp.attendance || [])[0]?.date || null });
 
         // Salario registrado
-        const salary = emp._decryptedSalary || 0;
+        const salary = emp._decryptedSalary !== undefined ? emp._decryptedSalary : (decryptSalary(emp.salary) || 0);
         if (salary > 0) withSalary++;
         else missingSalary.push(empInfo);
 

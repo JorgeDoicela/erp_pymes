@@ -59,7 +59,23 @@ export async function seedPerformance(prisma, employees) {
                     status = 'PENDING';
                 }
 
-                const score = 75 + ((emp.id.charCodeAt(0) + idx * 7) % 20);
+                // Generación de puntajes con patrones realistas para análisis de IA:
+                let score = 78;
+                if (emp.email.includes('kevin.arismendi') || emp.email.includes('esteban.suarez')) {
+                    // Curva descendente real (para disparar insights de retroceso de desempeño >12 pts)
+                    const declineScores = [84, 80, 72, 60];
+                    score = declineScores[idx % declineScores.length];
+                } else if (emp.email.includes('andres.morales') || emp.email.includes('ricardo.almeida') || emp.email.includes('valeria.espinoza')) {
+                    // Top performers (>88 pts constantes)
+                    const highScores = [90, 92, 94, 91];
+                    score = highScores[idx % highScores.length];
+                } else if (emp.email.includes('gabriela.torres') || emp.email.includes('diego.vasquez')) {
+                    // Rendimiento promedio-alto
+                    score = 80 + ((emp.id.charCodeAt(0) + idx * 5) % 10);
+                } else {
+                    // Rendimiento estándar normalizado entre 70 y 86
+                    score = 72 + ((emp.id.charCodeAt(0) + idx * 7) % 15);
+                }
 
                 evalsBatch.push({
                     templateId: template.id,
@@ -68,7 +84,7 @@ export async function seedPerformance(prisma, employees) {
                     endDate: end,
                     status: status,
                     finalScore: status === 'COMPLETED' ? parseFloat(score.toFixed(1)) : null,
-                    feedback: status === 'COMPLETED' ? `Evaluación completada. Desempeño: ${score}/100` : 'Pendiente de revisión por liderazgo.',
+                    feedback: status === 'COMPLETED' ? `Evaluación de desempeño trimestral: ${score}/100. Objetivos y competencias evaluados.` : 'Pendiente de revisión por liderazgo.',
                     createdAt: end
                 });
             }

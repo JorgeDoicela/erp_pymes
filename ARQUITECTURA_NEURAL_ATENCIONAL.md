@@ -121,7 +121,24 @@ La evaluación empírica se realiza mediante validación cruzada estratificada d
 
 ---
 
-## 6. Referencias Bibliográficas
+## 6. Integridad de Datos Reales, Inferencia Sin Sesgo Sintético y Gobernanza
+
+Para garantizar validez científica en entornos de producción y congresos académicos, la arquitectura prohíbe explícitamente el uso de valores de respaldo arbitrarios (*hardcoded heuristics/fallbacks*) cuando existen registros incompletos:
+
+1. **Tratamiento No Paramétrico de Valores Faltantes:** 
+   - Cuando un colaborador no cuenta con evaluaciones de desempeño históricas, el déficit de desempeño ($\text{perfDeficit}$) se fija neutralmente en $0$, evitando la inyección de puntajes sintéticos ficticios (e.g. 75 puntos por defecto).
+   - En *Temporal Attention*, los meses sin evaluación emplean interpolación backward del último registro formal observado o asignación nula sin distorsión sinusoidal.
+2. **Proyecciones Financieras por Regresión MCO (OLS):**
+   - La proyección de masa salarial futura ($t+1 \dots t+5$) se computa mediante regresión por Mínimos Cuadrados Ordinarios sobre la serie temporal histórica de nóminas reales del tenant ($\beta_{OLS} = \frac{n\sum xy - \sum x \sum y}{n\sum x^2 - (\sum x)^2}$), abandonando tasas fijas lineales.
+3. **Intervalos de Confianza 95% Rigorosos:**
+   - Para las series predictivas de rotación y nómina, los márgenes de confianza se determinan con el Error Estándar Residual del modelo:
+   $$\text{IC}_{95\%} = \hat{y} \pm 1.96 \cdot \text{SE}_{res} \sqrt{1 + \frac{1}{n} + \frac{(x^* - \bar{x})^2}{S_{xx}}}$$
+4. **Módulo de Auditoría de Calidad y Completitud:**
+   - La plataforma expone un motor de diagnóstico (`getDataQualityReport`) que audita en tiempo real la completitud de los 4 pilares: Evaluaciones ($40\%$), Asistencia biométrica ($30\%$), Salarios reales ($20\%$) y Ausentismos ($10\%$), alertando visualmente en el panel si el índice de completitud no alcanza el umbral de confiabilidad ($\ge 60\%$).
+
+---
+
+## 7. Referencias Bibliográficas
 
 1. **Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., & Polosukhin, I.** (2017). *Attention is all you need*. Advances in Neural Information Processing Systems (NeurIPS 2017), 30, 5998–6008.
 2. **Gorishniy, Y., Rubachev, I., Khrulkov, V., & Babenko, A.** (2021). *Revisiting deep learning models for tabular data*. Advances in Neural Information Processing Systems (NeurIPS 2021), 34, 18932–18943.
@@ -130,3 +147,5 @@ La evaluación empírica se realiza mediante validación cruzada estratificada d
 5. **Robins, J. M., Rotnitzky, A., & Zhao, L. P.** (1994). *Estimation of regression coefficients when some regressors are not always observed*. Journal of the American Statistical Association, 89(427), 846–866.
 6. **McMahan, B., Moore, E., Ramage, D., Hampson, S., & y Arcas, B. A.** (2017). *Communication-efficient learning of deep networks from decentralized data*. Artificial Intelligence and Statistics (AISTATS 2017), 1273–1282.
 7. **Lundberg, S. M., & Lee, S. I.** (2017). *A unified approach to interpreting model predictions*. Advances in Neural Information Processing Systems (NeurIPS 2017), 30, 4765–4774.
+8. **SHRM Foundation** (2022). *The Real Cost of Employee Turnover: Recruitment, Onboarding, and Knowledge Loss*. Society for Human Resource Management.
+
