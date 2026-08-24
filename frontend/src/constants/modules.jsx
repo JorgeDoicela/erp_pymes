@@ -87,6 +87,8 @@ export const adminSections = [
             { title: 'Impacto de Decisiones y Políticas', icon: <FiGitPullRequest />, color: 'bg-blue-600', path: '/analytics/causal-inference' },
             { title: 'Benchmarking y Tendencias', icon: <FiShare2 />, color: 'bg-emerald-600', path: '/analytics/federated-learning' },
             { title: 'Optimización de Costos y Retención', icon: <FiTarget />, color: 'bg-amber-600', path: '/analytics/morl-pareto' },
+            { title: 'Atención Temporal (12 Meses)', icon: <FiCpu />, color: 'bg-purple-600', path: '/analytics/temporal-attention' },
+            { title: 'FT-Transformer Tabular', icon: <FiActivity />, color: 'bg-emerald-600', path: '/analytics/ft-transformer' },
             { title: 'Exportación Personalizada', icon: <FiDatabase />, color: 'bg-cyan-600', path: '/analytics/custom' },
         ]
     },
