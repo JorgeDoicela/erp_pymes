@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 import { isSuperAdmin as checkIsSuperAdmin } from '../../constants/roles.js';
 
-const Header = ({ user, onMenuClick, title = "Panel de Control" }) => {
+const Header = ({ user, onMenuClick, isSidebarOpen = true, title = "Panel de Control" }) => {
     const navigate = useNavigate();
     const isSuperAdmin = checkIsSuperAdmin(user);
     
@@ -45,15 +45,17 @@ const Header = ({ user, onMenuClick, title = "Panel de Control" }) => {
     };
 
     return (
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
-            <div className="flex items-center gap-4">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 md:px-8 sticky top-0 z-30 transition-all duration-300">
+            <div className="flex items-center gap-3 sm:gap-4">
                 <button
                     onClick={onMenuClick}
-                    className="p-2 -ml-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors md:hidden"
+                    className="p-2 -ml-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer flex items-center justify-center"
+                    title={isSidebarOpen ? "Ocultar menú lateral" : "Mostrar menú lateral"}
+                    aria-label="Alternar menú lateral"
                 >
-                    <FiMenu size={24} />
+                    <FiMenu size={20} />
                 </button>
-                <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+                <h2 className="text-sm sm:text-base font-semibold text-gray-900 truncate">{title}</h2>
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">

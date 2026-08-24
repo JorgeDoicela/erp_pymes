@@ -11,6 +11,7 @@ vi.mock('../src/database/db.js', () => ({
         },
         rsiPredictionAudit: {
             create: vi.fn(),
+            findFirst: vi.fn(),
             findMany: vi.fn().mockResolvedValue([]),
             count: vi.fn()
         }

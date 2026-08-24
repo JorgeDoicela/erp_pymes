@@ -1,16 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { motion, AnimatePresence } from 'framer-motion';
 import DeveloperCard from '../common/DeveloperCard';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { FiShield, FiEye } from 'react-icons/fi';
-
 import { isSuperAdmin as checkIsSuperAdmin } from '../../constants/roles.js';
 
 const DashboardLayout = ({ children, user, onLogout, title }) => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isDesktopOpen, setIsDesktopOpen] = useState(() => {
+        const saved = localStorage.getItem('desktop_sidebar_open');
+        return saved !== null ? saved === 'true' : true;
+    });
     const location = useLocation();
+
+    // Cerrar menú móvil al navegar
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [location.pathname]);
 
     const isSuperAdmin = checkIsSuperAdmin(user);
     const isOperationalOrTenantModule = 
@@ -30,41 +37,73 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
         window.location.reload();
     };
 
+    const handleToggleMenu = () => {
+        if (window.innerWidth < 768) {
+            setIsMobileMenuOpen(prev => !prev);
+        } else {
+            setIsDesktopOpen(prev => {
+                const nextState = !prev;
+                localStorage.setItem('desktop_sidebar_open', String(nextState));
+                return nextState;
+            });
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-surface flex">
-            {/* Desktop Sidebar */}
-            <div className="hidden md:block w-64 fixed inset-y-0 left-0 z-40">
-                <Sidebar user={user} onLogout={onLogout} />
-            </div>
+        <div className="min-h-screen bg-[#f9fafb] flex overflow-x-hidden">
+            {/* Desktop Sidebar con animación de deslizamiento y ocultamiento */}
+            <aside
+                className={`hidden md:block fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out ${
+                    isDesktopOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+            >
+                <Sidebar
+                    user={user}
+                    onLogout={onLogout}
+                />
+            </aside>
 
             {/* Mobile Sidebar Overlay */}
             <AnimatePresence>
-                {isMenuOpen && (
+                {isMobileMenuOpen && (
                     <>
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setIsMenuOpen(false)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 md:hidden"
                         />
                         <motion.aside
                             initial={{ x: '-100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed inset-y-0 left-0 w-72 z-50 md:hidden"
+                            className="fixed inset-y-0 left-0 w-72 z-50 md:hidden bg-white shadow-xl"
                         >
-                            <Sidebar user={user} onLogout={onLogout} onClose={() => setIsMenuOpen(false)} />
+                            <Sidebar
+                                user={user}
+                                onLogout={onLogout}
+                                onClose={() => setIsMobileMenuOpen(false)}
+                            />
                         </motion.aside>
                     </>
                 )}
             </AnimatePresence>
 
-            {/* Main Content */}
-            <div className="flex-1 md:ml-64 flex flex-col min-h-screen min-w-0 w-full overflow-x-hidden">
-                <Header user={user} onMenuClick={() => setIsMenuOpen(true)} title={title} />
-                <main className="flex-1 p-3 sm:p-6 overflow-y-auto min-w-0 w-full">
+            {/* Main Content que se expande a todo el ancho cuando el sidebar está oculto */}
+            <div
+                className={`flex-1 flex flex-col min-h-screen min-w-0 w-full transition-all duration-300 ease-in-out ${
+                    isDesktopOpen ? 'md:ml-64' : 'md:ml-0'
+                }`}
+            >
+                <Header
+                    user={user}
+                    onMenuClick={handleToggleMenu}
+                    isSidebarOpen={isDesktopOpen}
+                    title={title}
+                />
+                <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0 w-full">
                     <div className="max-w-7xl mx-auto w-full min-w-0">
                         {isSuperAdmin && selectedTenantId && (
                             <div className="mb-5 bg-gray-900 text-white px-4 py-3 rounded border border-gray-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">

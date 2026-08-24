@@ -357,13 +357,13 @@ const EmployeeProfile = ({ token, user }) => {
             <div className="max-w-5xl mx-auto space-y-5">
                 {/* Selector Rápido de Colaboradores para Administradores / RRHH */}
                 {isAdminOrHR && employeesList.length > 0 && (
-                    <div className="bg-white p-3.5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                        <div className="flex items-center gap-2">
+                    <div className="bg-white p-3.5 rounded border border-gray-200 flex items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
                             <span className="font-semibold text-gray-700 whitespace-nowrap">Ficha 360° de:</span>
                             <select
                                 value={employee.id}
                                 onChange={(e) => navigate(`/admin/employees/${e.target.value}`)}
-                                className="bg-gray-50 border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 font-medium focus:outline-none focus:border-blue-500 cursor-pointer max-w-xs"
+                                className="bg-gray-50 border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 font-medium focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:max-w-xs"
                             >
                                 {employeesList.map(emp => (
                                     <option key={emp.id} value={emp.id}>
@@ -371,20 +371,6 @@ const EmployeeProfile = ({ token, user }) => {
                                     </option>
                                 ))}
                             </select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Link
-                                to={`/admin/expedientes/${employee.id}`}
-                                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded transition-colors text-xs font-medium cursor-pointer"
-                            >
-                                Ver Expediente Digital
-                            </Link>
-                            <Link
-                                to="/admin/employees"
-                                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded transition-colors text-xs font-medium cursor-pointer"
-                            >
-                                Directorio de Empleados
-                            </Link>
                         </div>
                     </div>
                 )}
@@ -403,7 +389,13 @@ const EmployeeProfile = ({ token, user }) => {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto flex-wrap">
+                            <Link
+                                to={`/admin/expedientes/${employee.id}`}
+                                className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer flex-1 sm:flex-none text-center"
+                            >
+                                Ver Expediente Digital
+                            </Link>
                             <button
                                 onClick={handleEditClick}
                                 className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer flex-1 sm:flex-none text-center"

@@ -49,17 +49,6 @@ const DeveloperCard = () => {
                             <p className="italic bg-gray-50 p-3.5 border border-gray-200 rounded text-gray-700">
                                 "Desarrollador de software apasionado por el diseño de soluciones empresariales de alto rendimiento. Construyendo sistemas robustos, seguros y eficientes, transformando ideas complejas en productos digitales que aportan valor real."
                             </p>
-
-                            <div className="border border-gray-200 rounded divide-y divide-gray-100 font-mono text-[11px]">
-                                <div className="px-3.5 py-2 flex justify-between">
-                                    <span className="text-gray-500">Especialidad</span>
-                                    <span className="text-gray-900 font-medium">Sistemas ERP & SaaS</span>
-                                </div>
-                                <div className="px-3.5 py-2 flex justify-between">
-                                    <span className="text-gray-500">Estándar Visual</span>
-                                    <span className="text-gray-900 font-medium">estilos-erp-pymes</span>
-                                </div>
-                            </div>
                         </div>
 
                         {/* Footer */}

@@ -1,14 +1,39 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-export const useNotificationSocket = (onNewNotification) => {
-    const socketRef = useRef(null);
+let globalSocket = null;
 
-    useEffect(() => {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        if (!token) return;
+const getSocketInstance = () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) return null;
 
-        // Extract tenantId from user object in localStorage if available
+    if (globalSocket) {
+        if (!globalSocket.connected) {
+            globalSocket.connect();
+        }
+        return globalSocket;
+    }
+
+    let serverUrl = '';
+    if (import.meta.env.VITE_SOCKET_URL) {
+        serverUrl = import.meta.env.VITE_SOCKET_URL;
+    } else if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.startsWith('http')) {
+        serverUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+    } else {
+        serverUrl = window.location.origin;
+    }
+
+    globalSocket = io(serverUrl, {
+        path: '/socket.io',
+        transports: ['websocket', 'polling'],
+        autoConnect: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 2000
+    });
+
+    globalSocket.on('connect', () => {
+        console.log('[WEBSOCKET] Conectado al servidor de notificaciones');
+
         let userObj = null;
         try {
             const storedUser = localStorage.getItem('user');
@@ -17,52 +42,54 @@ export const useNotificationSocket = (onNewNotification) => {
             console.error('Error parsing stored user:', e);
         }
 
-        // Determine server URL (remove trailing /api if present)
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        const serverUrl = apiUrl.replace(/\/api\/?$/, '');
-
-        const socket = io(serverUrl, {
-            transports: ['websocket', 'polling'],
-            autoConnect: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 2000
+        const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+        globalSocket.emit('authenticate', {
+            token: currentToken,
+            userId: userObj?.id || userObj?.employeeId,
+            tenantId: userObj?.tenantId
         });
 
-        socketRef.current = socket;
+        if (userObj?.tenantId) {
+            globalSocket.emit('join_tenant', userObj.tenantId);
+        }
+    });
 
-        socket.on('connect', () => {
-            console.log('[WEBSOCKET] Conectado al servidor de notificaciones');
-            socket.emit('authenticate', {
-                token: token,
-                userId: userObj?.id || userObj?.employeeId,
-                tenantId: userObj?.tenantId
-            });
+    globalSocket.on('disconnect', (reason) => {
+        console.log('[WEBSOCKET] Desconectado:', reason);
+    });
 
-            if (userObj?.tenantId) {
-                socket.emit('join_tenant', userObj.tenantId);
-            }
-        });
+    return globalSocket;
+};
 
-        socket.on('new_notification', (notification) => {
-            console.log('[WEBSOCKET] Nueva notificación recibida:', notification);
-            if (typeof onNewNotification === 'function') {
-                onNewNotification(notification);
-            }
-        });
+export const useNotificationSocket = (onNewNotification) => {
+    const callbackRef = useRef(onNewNotification);
 
-        socket.on('disconnect', (reason) => {
-            console.log('[WEBSOCKET] Desconectado:', reason);
-        });
-
-        return () => {
-            socket.off('connect');
-            socket.off('new_notification');
-            socket.off('disconnect');
-            socket.disconnect();
-        };
+    useEffect(() => {
+        callbackRef.current = onNewNotification;
     }, [onNewNotification]);
 
-    return socketRef.current;
+    useEffect(() => {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) return;
+
+        const socket = getSocketInstance();
+        if (!socket) return;
+
+        const handleNotification = (notification) => {
+            console.log('[WEBSOCKET] Nueva notificación recibida:', notification);
+            if (typeof callbackRef.current === 'function') {
+                callbackRef.current(notification);
+            }
+        };
+
+        socket.on('new_notification', handleNotification);
+
+        return () => {
+            socket.off('new_notification', handleNotification);
+        };
+    }, []);
+
+    return globalSocket;
 };
 
 export default useNotificationSocket;

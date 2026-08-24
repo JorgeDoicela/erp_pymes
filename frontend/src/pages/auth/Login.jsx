@@ -237,19 +237,9 @@ function Login({ onLogin }) {
 
                             {/* Password */}
                             <div className="space-y-1">
-                                <div className="flex justify-between items-center mb-1">
-                                    <label className="block text-xs font-medium text-gray-700">
-                                        Contraseña
-                                    </label>
-                                    <button
-                                        type="button"
-                                        onClick={handleBiometricLogin}
-                                        className="text-[11px] font-medium text-gray-700 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 bg-white px-2 py-0.5 rounded transition-colors flex items-center gap-1 cursor-pointer"
-                                    >
-                                        <IconFingerprint />
-                                        <span>Biometría</span>
-                                    </button>
-                                </div>
+                                <label className="block text-xs font-medium text-gray-700">
+                                    Contraseña
+                                </label>
                                 <div className="relative">
                                     <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                                     <input
@@ -281,7 +271,7 @@ function Login({ onLogin }) {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                    className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-xs"
                                 >
                                     {loading ? (
                                         <span className="flex items-center justify-center gap-2">
@@ -297,8 +287,29 @@ function Login({ onLogin }) {
                                 </button>
                             </div>
 
+                            {/* Separador de acceso alternativo */}
+                            <div className="relative py-1 text-center">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-200" />
+                                </div>
+                                <div className="relative flex justify-center text-[10px] font-mono uppercase tracking-wider">
+                                    <span className="bg-white px-2 text-gray-400">o accede con</span>
+                                </div>
+                            </div>
+
+                            {/* Botón de Acceso Biométrico estilo Bancario */}
+                            <button
+                                type="button"
+                                onClick={handleBiometricLogin}
+                                disabled={loading}
+                                className="w-full py-2 px-4 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                            >
+                                <IconFingerprint />
+                                <span>Ingresar con Biometría (Huella / Face ID)</span>
+                            </button>
+
                             {/* Links */}
-                            <div className="flex items-center justify-between pt-3.5 border-t border-gray-100">
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                                 <button
                                     type="button"
                                     onClick={() => navigate('/')}

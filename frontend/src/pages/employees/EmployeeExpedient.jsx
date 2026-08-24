@@ -27,8 +27,9 @@ export default function EmployeeExpedient() {
     // Estados para Modo Directorio General
     const [directoryData, setDirectoryData] = useState([]);
     const [directoryLoading, setDirectoryLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('ALL'); // 'ALL' | 'COMPLETE' | 'INCOMPLETE' | 'PENDING_REVIEW'
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'COMPLETE' | 'INCOMPLETE' | 'PENDING_REVIEW'
+    const [departmentFilter, setDepartmentFilter] = useState('ALL');
 
     // Estados para Modo Detalle de Expediente Individual
     const [expedientData, setExpedientData] = useState(null);
@@ -44,15 +45,20 @@ export default function EmployeeExpedient() {
     const [expiryDate, setExpiryDate] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [targetEmployeeId, setTargetEmployeeId] = useState('');
+    const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
+    const [documentToDelete, setDocumentToDelete] = useState(null);
 
     useEffect(() => {
+        if (employeeId === 'undefined') {
+            navigate('/admin/expedientes', { replace: true });
+            return;
+        }
+
         if (isDetailMode) {
             loadExpedientDetail();
-            if (directoryData.length === 0 && !window.location.pathname.includes('/my-expedient')) {
-                getAllExpedientsSummary().then(res => {
-                    if (res.success) setDirectoryData(res.data);
-                }).catch(() => {});
-            }
+            getAllExpedientsSummary().then(res => {
+                if (res.success) setDirectoryData(res.data);
+            }).catch(() => {});
         } else {
             loadDirectory();
         }
@@ -75,6 +81,7 @@ export default function EmployeeExpedient() {
 
     // Cargar Detalle de un Expediente
     const loadExpedientDetail = async () => {
+        if (!employeeId && !window.location.pathname.includes('/my-expedient')) return;
         setExpedientLoading(true);
         try {
             const res = employeeId 
@@ -83,9 +90,12 @@ export default function EmployeeExpedient() {
             if (res.success) {
                 setExpedientData(res.data);
                 if (employeeId) setTargetEmployeeId(employeeId);
+            } else {
+                setExpedientData(null);
             }
         } catch (error) {
             console.error('Error al cargar expediente individual:', error);
+            setExpedientData(null);
         } finally {
             setExpedientLoading(false);
         }
@@ -165,12 +175,14 @@ export default function EmployeeExpedient() {
     };
 
     // Eliminación de Documento
-    const handleDeleteDocument = async (documentId) => {
-        if (!window.confirm('¿Confirmas que deseas eliminar este documento del expediente?')) return;
+    const handleDeleteDocumentConfirm = async () => {
+        if (!documentToDelete?.id) return;
         setActionLoading(true);
         try {
-            const res = await deleteExpedientDocument(documentId);
+            const res = await deleteExpedientDocument(documentToDelete.id);
             if (res.success) {
+                setDeleteConfirmModalOpen(false);
+                setDocumentToDelete(null);
                 if (isDetailMode) {
                     loadExpedientDetail();
                 } else {
@@ -178,7 +190,7 @@ export default function EmployeeExpedient() {
                 }
             }
         } catch (error) {
-            alert(error.message);
+            console.error(error.message);
         } finally {
             setActionLoading(false);
         }
@@ -230,222 +242,226 @@ export default function EmployeeExpedient() {
     };
 
     // -------------------------------------------------------------
-    // RENDER: MODO DETALLE DE EXPEDIENTE
-    // -------------------------------------------------------------
-    if (isDetailMode) {
-        if (expedientLoading) {
-            return (
-                <div className="p-12 text-center text-gray-400 text-xs font-mono">
-                    Cargando Expediente Digital...
-                </div>
-            );
-        }
-
-        const {
-            employee = {},
-            completionPercentage = 0,
-            verifiedCount = 0,
-            totalRequired = 0,
-            checklist = []
-        } = expedientData || {};
-
-        return (
-            <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
-                {/* Selector Rápido de Expediente de Colaborador */}
-                {directoryData.length > 0 && !window.location.pathname.includes('/my-expedient') && (
-                    <div className="bg-white p-3.5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                        <div className="flex items-center gap-2">
-                            <span className="font-semibold text-gray-700 whitespace-nowrap">Expediente de:</span>
-                            <select
-                                value={employee?.id || employeeId}
-                                onChange={(e) => navigate(`/admin/expedientes/${e.target.value}`)}
-                                className="bg-gray-50 border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 font-medium focus:outline-none focus:border-blue-500 cursor-pointer max-w-xs"
-                            >
-                                {directoryData.map(emp => (
-                                    <option key={emp.id} value={emp.id}>
-                                        {emp.firstName} {emp.lastName} ({emp.completionPercentage}% - {emp.identityCard || 'S/N'})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Link
-                                to={`/admin/employees/${employee?.id || employeeId}`}
-                                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded transition-colors text-xs font-medium cursor-pointer"
-                            >
-                                Ver Ficha 360°
-                            </Link>
-                            <Link
-                                to="/admin/expedientes"
-                                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded transition-colors text-xs font-medium cursor-pointer"
-                            >
-                                Directorio de Expedientes
-                            </Link>
-                        </div>
-                    </div>
-                )}
-
-                {/* Header Limpio Directo a Datos */}
-                <div className="bg-white p-5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono">
-                                Gestión de Capital Humano
-                            </span>
-                            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200 font-mono">
-                                Cédula #{employee?.identityCard || 'S/N'}
-                            </span>
-                        </div>
-                        <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                            Expediente de {employee?.firstName} {employee?.lastName}
-                        </h1>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                            Cargo: <span className="font-semibold text-gray-800">{employee?.position || 'Colaborador'}</span> · Departamento: <span className="font-semibold text-gray-800">{employee?.department || 'General'}</span> · Completitud: <span className="font-semibold font-mono text-gray-800 tabular-nums">{completionPercentage}% ({verifiedCount}/{totalRequired} requeridos)</span>
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                        <button
-                            onClick={() => {
-                                setTargetEmployeeId(employee.id);
-                                setUploadCategory('IDENTIFICATION');
-                                setUploadModalOpen(true);
-                            }}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                        >
-                            <FiUploadCloud className="w-3.5 h-3.5" />
-                            <span>Adjuntar Documento</span>
-                        </button>
-
-                        <button
-                            onClick={() => navigate('/admin/expedientes')}
-                            className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 bg-white"
-                        >
-                            <FiArrowLeft className="w-3.5 h-3.5" />
-                            <span>Volver al Directorio</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Cuadrícula de Categorías Documentales */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {checklist.map((item, idx) => (
-                        <div 
-                            key={idx} 
-                            className="bg-white p-4 rounded border border-gray-200 flex flex-col justify-between space-y-3"
-                        >
-                            <div className="flex items-start justify-between gap-3">
-                                <div>
-                                    <h4 className="font-semibold text-xs text-gray-900 leading-snug">{item.label}</h4>
-                                    <p className="text-[11px] text-gray-400 mt-0.5">
-                                        {item.required ? 'Obligatorio por ley laboral' : 'Documento complementario'}
-                                    </p>
-                                </div>
-                                {item.status === 'VERIFIED' ? (
-                                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        VERIFICADO
-                                    </span>
-                                ) : item.status === 'PENDING' ? (
-                                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                                        EN REVISIÓN
-                                    </span>
-                                ) : item.status === 'REJECTED' ? (
-                                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
-                                        RECHAZADO
-                                    </span>
-                                ) : (
-                                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-gray-50 text-gray-500 border border-gray-200">
-                                        FALTANTE
-                                    </span>
-                                )}
-                            </div>
-
-                            {item.document ? (
-                                <div className="bg-gray-50 p-3 rounded border border-gray-200 text-xs space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-mono text-xs text-gray-800 truncate max-w-[220px]">
-                                            {item.document.originalName || 'DocumentoAdjunto.pdf'}
-                                        </span>
-                                        <a
-                                            href={item.document.documentUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-600 hover:underline font-medium text-xs flex items-center gap-1"
-                                        >
-                                            Abrir Archivo <FiExternalLink className="w-3 h-3" />
-                                        </a>
-                                    </div>
-
-                                    {item.document.verificationNotes && (
-                                        <p className="text-rose-700 text-[11px] bg-rose-50 p-1.5 rounded border border-rose-200">
-                                            Observación: {item.document.verificationNotes}
-                                        </p>
-                                    )}
-
-                                    <div className="flex justify-between items-center text-gray-400 pt-1.5 border-t border-gray-200 text-[11px]">
-                                        <span>Subido: {new Date(item.document.createdAt).toLocaleDateString('es-EC')}</span>
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedItem(item);
-                                                    setReviewNotes(item.document.verificationNotes || '');
-                                                    setReviewModalOpen(true);
-                                                }}
-                                                className="text-blue-600 hover:underline font-medium cursor-pointer"
-                                            >
-                                                Revisar
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteDocument(item.document.id)}
-                                                className="text-gray-400 hover:text-rose-600 cursor-pointer"
-                                                title="Eliminar documento"
-                                            >
-                                                <FiTrash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="bg-gray-50 p-3 rounded border border-gray-200 text-xs text-gray-500 flex justify-between items-center">
-                                    <span>Pendiente de adjuntar</span>
-                                    <button
-                                        onClick={() => {
-                                            setTargetEmployeeId(employee.id);
-                                            setUploadCategory(item.categoryKey);
-                                            setUploadModalOpen(true);
-                                        }}
-                                        className="border border-gray-300 hover:border-gray-400 text-gray-700 bg-white text-xs px-2.5 py-1 rounded transition-colors cursor-pointer"
-                                    >
-                                        Subir Archivo
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    // -------------------------------------------------------------
-    // RENDER: MODO DIRECTORIO GENERAL (/admin/expedientes)
+    // RENDER: VISTA UNIFICADA
     // -------------------------------------------------------------
     return (
         <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
-            {/* Header Limpio del Directorio */}
-            <div className="bg-white p-5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono">
-                            Gestión de Capital Humano
-                        </span>
-                        <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono">
-                            Expedientes Digitales
-                        </span>
+            {isDetailMode ? (
+                expedientLoading ? (
+                    <div className="p-12 text-center text-gray-400 text-xs font-mono">
+                        Cargando Expediente Digital...
                     </div>
-                    <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                        Expedientes Digitales de Personal
-                    </h1>
+                ) : !expedientData ? (
+                    <div className="bg-white p-8 rounded border border-gray-200 text-center max-w-md mx-auto my-12 space-y-4">
+                        <p className="text-sm font-semibold text-gray-900">Expediente no disponible</p>
+                        <p className="text-xs text-gray-500">No se encontró información documental para este colaborador.</p>
+                        <button
+                            onClick={() => navigate('/admin/expedientes')}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Volver al Directorio de Expedientes
+                        </button>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        {/* Selector Rápido de Expediente de Colaborador */}
+                        {(Array.isArray(directoryData) ? directoryData : (directoryData?.employees || [])).length > 0 && !window.location.pathname.includes('/my-expedient') && (
+                            <div className="bg-white p-3.5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-gray-700 whitespace-nowrap">Expediente de:</span>
+                                    <select
+                                        value={expedientData?.employee?.id || employeeId}
+                                        onChange={(e) => navigate(`/admin/expedientes/${e.target.value}`)}
+                                        className="bg-gray-50 border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 font-medium focus:outline-none focus:border-blue-500 cursor-pointer max-w-xs"
+                                    >
+                                        {(Array.isArray(directoryData) ? directoryData : (directoryData?.employees || [])).map(emp => (
+                                            <option key={emp.id} value={emp.id}>
+                                                {emp.firstName} {emp.lastName} ({emp.completionPercentage}% - {emp.identityCard || 'S/N'})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Link
+                                        to={`/admin/employees/${expedientData?.employee?.id || employeeId}`}
+                                        className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded transition-colors text-xs font-medium cursor-pointer"
+                                    >
+                                        Ver Ficha del Colaborador
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Header Limpio Directo a Datos */}
+                        <div className="bg-white p-5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono">
+                                        Gestión de Capital Humano
+                                    </span>
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200 font-mono">
+                                        Cédula #{expedientData?.employee?.identityCard || 'S/N'}
+                                    </span>
+                                </div>
+                                <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+                                    Expediente de {expedientData?.employee?.firstName} {expedientData?.employee?.lastName}
+                                </h1>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    Cargo: <span className="font-semibold text-gray-800">{expedientData?.employee?.position || 'Colaborador'}</span> · Departamento: <span className="font-semibold text-gray-800">{expedientData?.employee?.department || 'General'}</span> · Completitud: <span className="font-semibold font-mono text-gray-800 tabular-nums">{expedientData?.completionPercentage || 0}% ({expedientData?.verifiedCount || 0}/{expedientData?.totalRequired || 0} requeridos)</span>
+                                </p>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                    onClick={() => {
+                                        setTargetEmployeeId(expedientData?.employee?.id);
+                                        setUploadCategory('IDENTIFICATION');
+                                        setUploadModalOpen(true);
+                                    }}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                                >
+                                    <FiUploadCloud className="w-3.5 h-3.5" />
+                                    <span>Adjuntar Documento</span>
+                                </button>
+
+                                <button
+                                    onClick={() => navigate('/admin/expedientes')}
+                                    className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 bg-white"
+                                >
+                                    <FiArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Volver al Directorio</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Cuadrícula de Categorías Documentales */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {(expedientData?.checklist || []).map((item, idx) => (
+                                <div 
+                                    key={idx} 
+                                    className="bg-white p-4 rounded border border-gray-200 flex flex-col justify-between space-y-3"
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <h4 className="font-semibold text-xs text-gray-900 leading-snug">{item.label}</h4>
+                                            <p className="text-[11px] text-gray-400 mt-0.5">
+                                                {item.required ? 'Obligatorio por ley laboral' : 'Documento complementario'}
+                                            </p>
+                                        </div>
+                                        {item.status === 'VERIFIED' ? (
+                                            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                VERIFICADO
+                                            </span>
+                                        ) : item.status === 'PENDING' ? (
+                                            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                                PENDIENTE REVISIÓN
+                                            </span>
+                                        ) : item.status === 'REJECTED' ? (
+                                            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
+                                                RECHAZADO
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                                                NO CARGADO
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {item.document ? (
+                                        <div className="bg-gray-50 p-3 rounded border border-gray-200 space-y-2">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="font-medium text-gray-800 truncate max-w-[220px]" title={item.document.originalName}>
+                                                    {item.document.originalName || 'Archivo adjunto'}
+                                                </span>
+                                                <a 
+                                                    href={item.document.documentUrl} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 font-medium text-[11px]"
+                                                >
+                                                    <span>Ver</span>
+                                                    <FiExternalLink className="w-3 h-3" />
+                                                </a>
+                                            </div>
+
+                                            {item.document.expiryDate && (
+                                                <p className="text-[11px] text-gray-500 font-mono">
+                                                    Caducidad: {new Date(item.document.expiryDate).toLocaleDateString('es-EC')}
+                                                </p>
+                                            )}
+
+                                            {item.document.verificationNotes && (
+                                                <p className="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-200">
+                                                    Observación: {item.document.verificationNotes}
+                                                </p>
+                                            )}
+
+                                            <div className="flex justify-between items-center text-gray-400 pt-1.5 border-t border-gray-200 text-[11px]">
+                                                <span>Subido: {new Date(item.document.createdAt).toLocaleDateString('es-EC')}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedItem(item);
+                                                            setReviewNotes(item.document.verificationNotes || '');
+                                                            setReviewModalOpen(true);
+                                                        }}
+                                                        className="text-blue-600 hover:underline font-medium cursor-pointer"
+                                                    >
+                                                        Revisar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setDocumentToDelete({
+                                                                id: item.document.id,
+                                                                name: item.document.originalName || item.label,
+                                                                category: item.label
+                                                            });
+                                                            setDeleteConfirmModalOpen(true);
+                                                        }}
+                                                        className="text-gray-400 hover:text-rose-600 cursor-pointer"
+                                                        title="Eliminar documento"
+                                                    >
+                                                        <FiTrash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-gray-50 p-3 rounded border border-gray-200 text-xs text-gray-500 flex justify-between items-center">
+                                            <span>Pendiente de adjuntar</span>
+                                            <button
+                                                onClick={() => {
+                                                    setTargetEmployeeId(expedientData?.employee?.id);
+                                                    setUploadCategory(item.categoryKey);
+                                                    setUploadModalOpen(true);
+                                                }}
+                                                className="border border-gray-300 hover:border-gray-400 text-gray-700 bg-white text-xs px-2.5 py-1 rounded transition-colors cursor-pointer"
+                                            >
+                                                Subir Archivo
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )
+            ) : (
+                <div className="space-y-6">
+                    {/* Header Limpio del Directorio */}
+                    <div className="bg-white p-5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono">
+                                    Gestión de Capital Humano
+                                </span>
+                                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono">
+                                    Expedientes Digitales
+                                </span>
+                            </div>
+                            <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+                                Expedientes Digitales de Personal
+                            </h1>
                     <p className="text-xs text-gray-500 mt-0.5">
                         Supervisa el cumplimiento de contratos, cédulas y documentos legales de todos los colaboradores.
                     </p>
@@ -640,6 +656,8 @@ export default function EmployeeExpedient() {
                     </div>
                 </div>
             </div>
+        </div>
+    )}
 
             {/* Modal de Subida de Documento */}
             {uploadModalOpen && (
@@ -665,9 +683,9 @@ export default function EmployeeExpedient() {
                                         required
                                     >
                                         <option value="">Selecciona un colaborador...</option>
-                                        {directoryData?.employees?.map(emp => (
+                                        {(Array.isArray(directoryData) ? directoryData : (directoryData?.employees || [])).map(emp => (
                                             <option key={emp.id} value={emp.id}>
-                                                {emp.fullName} ({emp.identityCard})
+                                                {emp.fullName || `${emp.firstName} ${emp.lastName}`} ({emp.identityCard || 'S/N'})
                                             </option>
                                         ))}
                                     </select>
@@ -797,6 +815,54 @@ export default function EmployeeExpedient() {
                                     Aprobar y Verificar
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Confirmación Destructiva (Eliminar Documento) */}
+            {deleteConfirmModalOpen && documentToDelete && (
+                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+                            <h3 className="text-sm font-semibold text-gray-900">Eliminar Documento</h3>
+                            <button 
+                                onClick={() => {
+                                    setDeleteConfirmModalOpen(false);
+                                    setDocumentToDelete(null);
+                                }} 
+                                className="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer"
+                            >
+                                &times;
+                            </button>
+                        </div>
+                        <div className="p-5 space-y-2">
+                            <p className="text-xs text-gray-700 leading-relaxed">
+                                ¿Confirmas que deseas eliminar <strong className="text-gray-900 font-semibold">{documentToDelete.name}</strong> ({documentToDelete.category}) del expediente?
+                            </p>
+                            <p className="text-[11px] text-gray-400">
+                                Esta acción eliminará el archivo del registro y recalculará la completitud del colaborador.
+                            </p>
+                        </div>
+                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDeleteConfirmModalOpen(false);
+                                    setDocumentToDelete(null);
+                                }}
+                                className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDeleteDocumentConfirm}
+                                disabled={actionLoading}
+                                className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                                {actionLoading ? 'Eliminando...' : 'Eliminar Documento'}
+                            </button>
                         </div>
                     </div>
                 </div>

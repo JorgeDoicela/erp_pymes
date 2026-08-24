@@ -1,4 +1,5 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { FiX } from 'react-icons/fi';
 import { getSectionsByRole, getModulesByRole } from '../../constants/modules';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
 import { isSuperAdmin as checkIsSuperAdmin, getRoleLabel as getRoleTitle, ROLES } from '../../constants/roles.js';
@@ -32,17 +33,22 @@ const Sidebar = ({ user, onLogout, onClose }) => {
 
     return (
         <aside className="h-full w-full bg-white border-r border-gray-200 flex flex-col text-gray-600 transition-all duration-300">
-            <div className="p-5 flex items-center justify-between border-b border-gray-100">
+            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-gray-100">
                 <Link
                     to={getHomePath()}
                     onClick={() => { if (onClose) onClose(); }}
                     className="cursor-pointer block"
                 >
-                    <img src={logoEmplifi} alt="EMPLIFI" className="h-9 w-auto object-contain hover:opacity-80 transition-opacity" />
+                    <img src={logoEmplifi} alt="EMPLIFI" className="h-8 w-auto object-contain hover:opacity-80 transition-opacity" />
                 </Link>
                 {onClose && (
-                    <button onClick={onClose} className="md:hidden text-gray-400 hover:text-gray-600 transition-colors p-1">
-                        ✕
+                    <button
+                        onClick={onClose}
+                        className="md:hidden text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded transition-colors cursor-pointer flex items-center justify-center"
+                        title="Ocultar menú"
+                        aria-label="Ocultar menú"
+                    >
+                        <FiX size={18} />
                     </button>
                 )}
             </div>

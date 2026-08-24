@@ -25,7 +25,7 @@ class ExpedientService {
         const employees = await prisma.employee.findMany({
             where: {
                 ...whereClause,
-                status: { not: 'INACTIVE' }
+                isActive: true
             },
             select: {
                 id: true,
@@ -35,8 +35,8 @@ class ExpedientService {
                 email: true,
                 department: true,
                 position: true,
-                status: true,
-                startDate: true,
+                isActive: true,
+                hireDate: true,
                 documents: {
                     select: {
                         id: true,
@@ -46,8 +46,7 @@ class ExpedientService {
                         documentUrl: true,
                         originalName: true,
                         expiryDate: true,
-                        createdAt: true,
-                        updatedAt: true
+                        createdAt: true
                     }
                 }
             },
@@ -87,8 +86,8 @@ class ExpedientService {
                 email: emp.email,
                 department: emp.department || 'General',
                 position: emp.position || 'Colaborador',
-                status: emp.status,
-                startDate: emp.startDate,
+                status: emp.isActive ? 'ACTIVE' : 'INACTIVE',
+                startDate: emp.hireDate,
                 completionPercentage,
                 verifiedRequired,
                 totalRequired: totalRequiredCount,
@@ -126,29 +125,62 @@ class ExpedientService {
      * Obtener estado del Expediente Digital de un Empleado con detalle de documentos y porcentaje de completitud.
      */
     async getEmployeeExpedient(employeeId, user = null) {
-        let employee = await prisma.employee.findFirst({
-            where: {
-                OR: [
-                    { id: employeeId },
-                    ...(user?.email ? [{ email: user.email }] : [])
-                ]
-            },
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                identityCard: true,
-                department: true,
-                position: true,
-                email: true,
-                phone: true,
-                startDate: true,
-                status: true
-            }
-        });
+        const isSuperAdmin = user?.role === 'superadmin';
+        const tenantFilter = (user?.tenantId && !isSuperAdmin) ? { tenantId: user.tenantId } : {};
+
+        let employee = null;
+
+        // 1. Si se provee employeeId explícito, buscar por ID
+        if (employeeId && employeeId !== 'my' && employeeId !== 'undefined') {
+            employee = await prisma.employee.findFirst({
+                where: {
+                    id: employeeId,
+                    ...tenantFilter
+                },
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    identityCard: true,
+                    department: true,
+                    position: true,
+                    email: true,
+                    phone: true,
+                    hireDate: true,
+                    isActive: true,
+                    tenantId: true
+                }
+            });
+        }
+
+        // 2. Si no se encontró por ID o es /my, buscar por sesión del usuario
+        if (!employee && user) {
+            employee = await prisma.employee.findFirst({
+                where: {
+                    OR: [
+                        ...(user.employeeId ? [{ id: user.employeeId }] : []),
+                        ...(user.email ? [{ email: user.email }] : [])
+                    ],
+                    ...tenantFilter
+                },
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    identityCard: true,
+                    department: true,
+                    position: true,
+                    email: true,
+                    phone: true,
+                    hireDate: true,
+                    isActive: true,
+                    tenantId: true
+                }
+            });
+        }
 
         if (!employee) {
-            if (user) {
+            if (user && ['admin', 'hr', 'superadmin'].includes(user.role?.toLowerCase())) {
                 employee = {
                     id: user.id || 'system-user',
                     firstName: user.firstName || user.name || 'Usuario',
@@ -157,12 +189,19 @@ class ExpedientService {
                     department: 'Administración',
                     position: user.role || 'Administrador',
                     email: user.email,
+                    isActive: true,
                     status: 'ACTIVE'
                 };
             } else {
                 throw new Error('Empleado no encontrado');
             }
         }
+
+        const normalizedEmployee = {
+            ...employee,
+            startDate: employee.hireDate || employee.startDate,
+            status: employee.isActive ? 'ACTIVE' : 'INACTIVE'
+        };
 
         const documents = employee.id && !employee.id.startsWith('system-') ? await prisma.document.findMany({
             where: { employeeId: employee.id },
@@ -188,7 +227,7 @@ class ExpedientService {
         const completionPercentage = requiredCats.length > 0 ? Math.round((verifiedCount / requiredCats.length) * 100) : 0;
 
         return {
-            employee,
+            employee: normalizedEmployee,
             completionPercentage,
             verifiedCount,
             pendingCount,
@@ -208,12 +247,16 @@ class ExpedientService {
         const isAdminOrHr = user && ['admin', 'hr', 'superadmin'].includes(user.role?.toLowerCase());
         const targetId = (isAdminOrHr && employeeId) ? employeeId : (user?.employeeId || user?.id || employeeId);
 
+        const isSuperAdmin = user?.role === 'superadmin';
+        const tenantFilter = (user?.tenantId && !isSuperAdmin) ? { tenantId: user.tenantId } : {};
+
         let employee = await prisma.employee.findFirst({
             where: {
                 OR: [
                     { id: targetId },
                     ...(user?.email && !isAdminOrHr ? [{ email: user.email }] : [])
-                ]
+                ],
+                ...tenantFilter
             }
         });
 

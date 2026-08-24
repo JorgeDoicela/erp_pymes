@@ -38,7 +38,6 @@ export const adminSections = [
         title: 'Gestión de Capital Humano',
         modules: [
             { title: 'Empleados y Fichas', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
-            { title: 'Ficha 360° del Empleado', icon: <FiUsers />, color: 'bg-blue-600', path: '/admin/employees/ficha' },
             { title: 'Expedientes Digitales', icon: <FiFolder />, color: 'bg-blue-600', path: '/admin/expedientes' },
             { title: 'Vencimiento de Contratos', icon: <FiFileText />, color: 'bg-amber-600', path: '/admin/contracts/expiring' },
             { title: 'Equipos y EPPs', icon: <FiPackage />, color: 'bg-purple-600', path: '/admin/assets' },
