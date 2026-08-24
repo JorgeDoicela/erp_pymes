@@ -76,21 +76,31 @@ Este modelo clasifica automáticamente al personal en categorías de rendimiento
 - **Simulador Monte Carlo (What-If Estocástico):** Ejecuta 2,000 iteraciones en paralelo utilizando la transformación de Box-Muller para generar variables aleatorias normales. Evalúa el Retorno de Inversión (ROI) e intervalos de confianza del 95% ($p_{2.5}$, mediana $p_{50}$, $p_{97.5}$).
 - **Comparativa Interdepartamental (ANOVA de un factor y Prueba $t$ de Welch):** Determina la significancia estadística ($p < 0.05$) de las variaciones de desempeño entre departamentos mediante la distribución $F(k-1, N-k)$ y la prueba $t$ de Welch para varianzas desiguales.
 
-### 2.4. Cuatrilogía de Motores Científicos de Inteligencia Artificial de Vanguardia
+### 2.4. Suite de Motores Científicos de Inteligencia Artificial de Vanguardia
 
-#### 2.4.1. Motor 1: Automejora Recursiva (Recursive Self-Improvement - RSI Engine)
-Auto-calibra los hiperparámetros del modelo predictivo ($\vec{\beta}, k, \lambda$) en tiempo real tras la resolución de eventos reales (salida de un empleado o actualización de evaluaciones) mediante la minimización de la pérdida cuadrática Brier Score y Log Loss con Descenso de Gradiente Estocástico (SGD):
+#### 2.4.1. Motor 1: Atención Temporal Auto-Supervisada (Temporal Self-Attention)
+Modela la trayectoria secuencial de 12 meses de comportamiento socio-laboral ($\mathbf{X} \in \mathbb{R}^{12 \times 4}$: ausencias, tardanzas, desempeño y horas extra) aplicando el mecanismo canónico de **Scaled Dot-Product Attention (Vaswani et al., NeurIPS 2017)** con codificación posicional sinusoidal fija:
+$$\boldsymbol{\alpha} = \text{Softmax}\left(\frac{\mathbf{q}\mathbf{K}^T}{\sqrt{d_k}}\right), \quad \mathbf{c} = \sum_{t=1}^{12} \alpha_t \mathbf{V}_t$$
+Aprende de manera no lineal qué meses y eventos del último año tienen mayor peso explicativo sobre el riesgo de rotación de cada colaborador, reemplazando los promedios estáticos por una representación contextual densa.
+
+#### 2.4.2. Motor 2: FT-Transformer para Datos Tabulares (Feature Tokenizer + Transformer)
+Adapta la arquitectura Transformer a datos tabulares socio-laborales (**Gorishniy et al., NeurIPS 2021**). Utiliza un **Feature Tokenizer** para proyectar variables continuas a tokens densos de dimensión $d=16$, incorpora un token aprendible $[\text{CLS}]$, y ejecuta **Multi-Head Self-Attention** (2 cabezas) con conexiones residuales, **Layer Normalization** y redes **Feed-Forward con activación GeLU**:
+$$\hat{y} = \sigma\left(\mathbf{w}_{head}^T \mathbf{T}_{final}[0] + b_{head}\right)$$
+Genera una **Matriz de Interacción de Tokens ($7 \times 7$)** que proporciona explicabilidad intrínseca sobre las relaciones cruzadas entre salario, antigüedad, ausencias y desempeño.
+
+#### 2.4.3. Motor 3: Automejora Recursiva (Recursive Self-Improvement - RSI Engine)
+Auto-calibra los hiperparámetros del modelo predictivo ($\vec{\beta}, k, \lambda$) y las matrices de proyección del Transformer en tiempo real tras la resolución de eventos reales (salida de un empleado o actualización de evaluaciones) mediante la minimización de la pérdida cuadrática Brier Score y Log Loss con Descenso de Gradiente Estocástico (SGD):
 $$\text{BrierScore} = \frac{1}{N} \sum_{i=1}^{N} (p_i - y_i)^2$$
 
-#### 2.4.2. Motor 2: Inferencia Causal Contrafactual (Causal AI Engine)
+#### 2.4.4. Motor 4: Inferencia Causal Contrafactual (Causal AI Engine)
 Adopta el **Causal Do-Calculus de Judea Pearl** para responder preguntas de tipo *"¿Qué pasaría si...?"* $P(Y \mid \text{do}(T = t))$. Utiliza **G-Computation (fórmula de ajuste backdoor, Pearl 2009, Theorem 3.3.2)** sobre el conjunto confusor $Z = \{\text{Tenure}, \text{Salary}, \text{Performance}, \text{Absences}\}$, respaldado por el **Estimador Doblemente Robusto (AIPW, Robins et al. 1994)** y **Bootstrap Percentil para IC 95% (Efron & Tibshirani 1993)**. Elimina el sesgo de confusión (*confounding bias*), estimando el **Efecto Promedio del Tratamiento (ATE)** y el ROI financiero neto real de intervenciones organizacionales (aumentos salariales, teletrabajo, ascensos).
 
-#### 2.4.3. Motor 3: Aprendizaje Federado Multi-Tenant con Privacidad Diferencial (FedAvg + DP-SGD)
+#### 2.4.5. Motor 5: Aprendizaje Federado Multi-Tenant con Privacidad Diferencial (FedAvg + DP-SGD)
 Permite la colaboración en el entrenamiento entre empresas (*tenants*) mediante **Weighted Federated Averaging (FedAvg)**. Garantiza matemáticamente la privacidad de los salarios e identidades $(\epsilon, \delta)$ mediante **Recorte de Gradientes en Norma $L_2$** ($C=1.0$), **Inyección de Ruido Gaussiano** ($\tilde{g}_k = \bar{g}_k + \mathcal{N}(0, \sigma^2 C^2 \mathbf{I})$) y la formulación analítica exacta del **RDP Accountant (Rényi Differential Privacy: Mironov 2017, Wang et al. 2019, Balle et al. 2020)** con amplificación por submuestreo de Poisson:
 $$\epsilon(\delta) = \min_{\alpha > 1} \left\{ K \cdot \text{RDP}_\alpha^{\text{subsample}} - \frac{\ln \delta + \ln(\alpha - 1) - \ln \alpha}{\alpha - 1} \right\}$$
 Cumpliendo estrictamente con la Ley Orgánica de Protección de Datos Personales (LOPDP Ecuador) y GDPR (Europa).
 
-#### 2.4.4. Motor 4: Aprendizaje por Refuerzo Multiobjetivo con Frontera de Pareto (MORL Engine)
+#### 2.4.6. Motor 6: Aprendizaje por Refuerzo Multiobjetivo con Frontera de Pareto (MORL Engine)
 Resuelve el dilema gerencial entre retención de talento y costo presupuestario ($) mediante un **Proceso de Decisión de Markov Vectorial (Vectorial MDP)** y **Vector Q-Learning** con escalarización de preferencias $w_1 R_1 + w_2 R_2$. Extrae automáticamente la **Frontera Eficiente de Pareto**, identificando el conjunto inmejorable de políticas no dominadas.
 
 ### 2.5. Motores Especializados de Nómina, Liquidación Legal y Asistencia Geoespacial

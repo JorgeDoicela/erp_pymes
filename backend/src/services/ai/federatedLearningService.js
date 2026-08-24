@@ -56,7 +56,7 @@ class FederatedLearningService {
             tenantId: budget.tenantId,
             epsilonBudgetMax: budget.epsilonBudgetMax,
             epsilonSpent: Number(budget.epsilonSpent.toFixed(2)),
-            epsilonRemaining: Number((budget.epsilonBudgetMax - budget.epsilonSpent).toFixed(2)),
+            epsilonRemaining: Math.max(0, Number((budget.epsilonBudgetMax - budget.epsilonSpent).toFixed(2))),
             delta: budget.delta,
             roundsParticipated: budget.roundsParticipated,
             lastContributionAt: budget.lastContributionAt,

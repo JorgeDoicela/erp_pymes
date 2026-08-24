@@ -38,15 +38,21 @@ const FEATURE_KEYS = [
 const NUM_FEATURES = FEATURE_KEYS.length;
 
 /**
- * Inicialización determinista y estocásticamente acotada de pesos Xavier/Glorot
+ * Inicialización determinista y estocásticamente acotada de pesos Xavier/Glorot (PRNG con semilla fija)
  */
-function createMatrix(rows, cols, scale = 0.2) {
+function createMatrix(rows, cols, scale = 0.2, seed = 42) {
+    let s = (seed + rows * 31 + cols * 17) >>> 0;
+    const rng = () => {
+        s = (Math.imul(s ^ (s >>> 15), s | 1) + (s ^ (s >>> 7))) >>> 0;
+        return (s >>> 0) / 4294967296;
+    };
+
     const mat = [];
     for (let r = 0; r < rows; r++) {
         const row = [];
         for (let c = 0; c < cols; c++) {
-            // Inicialización Xavier
-            const val = (Math.random() * 2 - 1) * Math.sqrt(6 / (rows + cols)) * scale;
+            // Inicialización Xavier determinista
+            const val = (rng() * 2 - 1) * Math.sqrt(6 / (rows + cols)) * scale;
             row.push(Number(val.toFixed(4)));
         }
         mat.push(row);
@@ -59,31 +65,42 @@ function createVector(len, initVal = 0) {
 }
 
 function getDefaultParams() {
+    // Polaridad por feature: [Salary: -1, Tenure: -1, Absences: +1, Perf: -1, Overtime: +1, Late: +1]
+    const polarities = [-0.65, -0.40, 0.75, -0.80, 0.60, 0.55];
+    const tokenizerW = polarities.map((pol, fIdx) => {
+        return Array.from({ length: D_TOKEN }, (_, d) => {
+            const base = (Math.sin(fIdx * 13 + d * 7) * 0.15);
+            return Number((pol * 0.4 + base).toFixed(4));
+        });
+    });
+
+    const headW = Array.from({ length: D_TOKEN }, (_, d) => Number((0.35 + (d % 3) * 0.05).toFixed(4)));
+
     return {
         // Feature Tokenizer: W [6 x 16], b [6 x 16]
-        tokenizerW: createMatrix(NUM_FEATURES, D_TOKEN, 0.4),
-        tokenizerB: createMatrix(NUM_FEATURES, D_TOKEN, 0.1),
+        tokenizerW,
+        tokenizerB: createMatrix(NUM_FEATURES, D_TOKEN, 0.05, 101),
         // CLS token embedding [16]
-        clsToken: new Array(D_TOKEN).fill(0.12),
+        clsToken: new Array(D_TOKEN).fill(0.08),
         // Multi-Head Attention Q, K, V [16 x 16], O [16 x 16]
-        wq: createMatrix(D_TOKEN, D_TOKEN, 0.5),
-        wk: createMatrix(D_TOKEN, D_TOKEN, 0.5),
-        wv: createMatrix(D_TOKEN, D_TOKEN, 0.5),
-        wo: createMatrix(D_TOKEN, D_TOKEN, 0.5),
+        wq: createMatrix(D_TOKEN, D_TOKEN, 0.4, 202),
+        wk: createMatrix(D_TOKEN, D_TOKEN, 0.4, 303),
+        wv: createMatrix(D_TOKEN, D_TOKEN, 0.4, 404),
+        wo: createMatrix(D_TOKEN, D_TOKEN, 0.4, 505),
         // Layer Norm 1
         ln1Gain: createVector(D_TOKEN, 1.0),
         ln1Bias: createVector(D_TOKEN, 0.0),
         // FFN: W1 [16 x 32], b1 [32], W2 [32 x 16], b2 [16]
-        ffnW1: createMatrix(D_TOKEN, 32, 0.4),
+        ffnW1: createMatrix(D_TOKEN, 32, 0.35, 606),
         ffnB1: createVector(32, 0.0),
-        ffnW2: createMatrix(32, D_TOKEN, 0.4),
+        ffnW2: createMatrix(32, D_TOKEN, 0.35, 707),
         ffnB2: createVector(D_TOKEN, 0.0),
         // Layer Norm 2
         ln2Gain: createVector(D_TOKEN, 1.0),
         ln2Bias: createVector(D_TOKEN, 0.0),
         // Head Clasificador final: W_head [16], b_head [1]
-        headW: new Array(D_TOKEN).fill(0.25),
-        headB: -0.45
+        headW,
+        headB: -0.85
     };
 }
 
