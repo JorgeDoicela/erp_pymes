@@ -1299,8 +1299,44 @@ export async function runWhatIfMonteCarlo(params = {}, tenantIdOrPreloaded = nul
 
 /**
  * Ejecuta simulación Monte Carlo con 5 semillas estocásticas para sensibilidad multi-semilla (N=2,000 iteraciones c/u)
+ * Emplea los datos reales de colaboradores, retención y masa salarial del tenant.
  */
-export async function runMultiSeedMonteCarloSensitivity(seeds = [42, 100, 500, 1000, 2026], iterations = 2000) {
+export async function runMultiSeedMonteCarloSensitivity(seeds = [42, 100, 500, 1000, 2026], iterations = 2000, tenantIdOrPreloaded = null) {
+    let totalEmployees = 0;
+    let highRiskCount = 0;
+    let mediumRiskCount = 0;
+    let baseAvgSalary = 0;
+    let rawEmployees = [];
+
+    if (tenantIdOrPreloaded && typeof tenantIdOrPreloaded === 'object' && tenantIdOrPreloaded.retention?.stats) {
+        totalEmployees = tenantIdOrPreloaded.retention.stats.total || 0;
+        highRiskCount = tenantIdOrPreloaded.retention.stats.highRisk || 0;
+        mediumRiskCount = tenantIdOrPreloaded.retention.stats.mediumRisk || 0;
+        rawEmployees = tenantIdOrPreloaded.rawEmployees || [];
+    } else {
+        const resolvedTenantId = typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null;
+        rawEmployees = await fetchRawEmployees(resolvedTenantId);
+        const ret = await getRetentionRiskAnalysis(resolvedTenantId, rawEmployees);
+        totalEmployees = ret.stats.total || 0;
+        highRiskCount = ret.stats.highRisk || 0;
+        mediumRiskCount = ret.stats.mediumRisk || 0;
+    }
+
+    if (rawEmployees.length > 0) {
+        const allSalaries = rawEmployees.map(e => e._decryptedSalary || 0).filter(s => s > 0);
+        baseAvgSalary = allSalaries.length > 0 ? (allSalaries.reduce((a, b) => a + b, 0) / allSalaries.length) : 0;
+    }
+
+    // Inversión estándar estimada (Ajuste salarial 5% + Bienestar $150/emp) sobre nómina real
+    const annualBaseSalaryCost = totalEmployees * baseAvgSalary * 12;
+    const directSalaryIncreaseCost = annualBaseSalaryCost * 0.05;
+    const wellnessTotalCost = totalEmployees * 150;
+    const totalInvestmentCost = Math.max(100, directSalaryIncreaseCost + wellnessTotalCost);
+
+    // Ahorro basal esperado derivado del riesgo real de rotación
+    const baselineTurnoverRiskCost = (highRiskCount * baseAvgSalary * 12 * 0.35) + (mediumRiskCount * baseAvgSalary * 12 * 0.15);
+    const baselineSavingsMean = Math.max(150, baselineTurnoverRiskCost * 0.45);
+
     const seedResults = [];
     for (const seed of seeds) {
         let state = seed;
@@ -1308,9 +1344,6 @@ export async function runMultiSeedMonteCarloSensitivity(seeds = [42, 100, 500, 1
             state = (state * 9301 + 49297) % 233280;
             return state / 233280;
         };
-
-        const totalInvestmentCost = 26000;
-        const baselineSavingsMean = 75800;
 
         const roiResults = [];
         const netSavingsResults = [];
@@ -1345,7 +1378,7 @@ export async function runMultiSeedMonteCarloSensitivity(seeds = [42, 100, 500, 1
 
     const meanMedianRoi = seedResults.reduce((s, r) => s + r.medianRoi, 0) / seedResults.length;
     const stdDevRoi = Math.sqrt(seedResults.reduce((s, r) => s + Math.pow(r.medianRoi - meanMedianRoi, 2), 0) / seedResults.length);
-    const cvPercent = Number(((stdDevRoi / meanMedianRoi) * 100).toFixed(2));
+    const cvPercent = meanMedianRoi !== 0 ? Number(((stdDevRoi / Math.abs(meanMedianRoi)) * 100).toFixed(2)) : 0;
 
     const meanCiLower = seedResults.reduce((s, r) => s + r.ciLower, 0) / seedResults.length;
     const stdCiLower = Math.sqrt(seedResults.reduce((s, r) => s + Math.pow(r.ciLower - meanCiLower, 2), 0) / seedResults.length);
@@ -1359,6 +1392,8 @@ export async function runMultiSeedMonteCarloSensitivity(seeds = [42, 100, 500, 1
     return {
         seedResults,
         summary: {
+            totalInvestmentCost: Math.round(totalInvestmentCost),
+            baselineSavingsMean: Math.round(baselineSavingsMean),
             meanMedianRoi: Number(meanMedianRoi.toFixed(2)),
             stdDevRoi: Number(stdDevRoi.toFixed(2)),
             meanCiLower: Number(meanCiLower.toFixed(2)),
@@ -1879,6 +1914,10 @@ function calculateFinancialImpact({ retention, rawEmployees = [], attendance, pa
     const estimatedAbsenteeismCost = Math.round(totalAbsences * 45 * 1.4);
     const overtimeSavings = Math.round((payroll?.overtimeAnomalies?.length || 0) * 650);
     const totalFinancialOpportunity = potentialRetentionSavings + Math.round(estimatedAbsenteeismCost * 0.5) + overtimeSavings;
+    const estimatedInvestment = (rawEmployees.length * 150) + (highRiskSalarySum * 0.05);
+    const paybackPeriodMonths = totalFinancialOpportunity > 0 && estimatedInvestment > 0
+        ? Number(Math.min(12, Math.max(0.5, (estimatedInvestment / (totalFinancialOpportunity / 12)))).toFixed(1))
+        : (totalFinancialOpportunity > 0 ? 1.0 : 0);
 
     return {
         estimatedTurnoverCostRisk,
@@ -1887,7 +1926,7 @@ function calculateFinancialImpact({ retention, rawEmployees = [], attendance, pa
         overtimeSavings,
         totalFinancialOpportunity,
         currency: 'USD',
-        paybackPeriodMonths: totalFinancialOpportunity > 0 ? 2.3 : 0,
+        paybackPeriodMonths,
     };
 }
 

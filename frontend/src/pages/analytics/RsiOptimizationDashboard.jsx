@@ -3,7 +3,9 @@ import {
     getRsiMetrics, 
     calibrateRsiModel, 
     simulateRsiOutcome, 
-    exportAcademicDataset 
+    exportAcademicDataset,
+    getCrossValidationMetrics,
+    getMultiSeedSensitivity
 } from '../../services/intelligenceService';
 import { 
     FiActivity, 
@@ -14,7 +16,9 @@ import {
     FiSliders, 
     FiCpu, 
     FiUserX,
-    FiUserCheck
+    FiUserCheck,
+    FiCheckCircle,
+    FiTrendingUp
 } from 'react-icons/fi';
 import { 
     XAxis, 
@@ -28,6 +32,8 @@ import {
 
 const RsiOptimizationDashboard = () => {
     const [metrics, setMetrics] = useState(null);
+    const [cvMetrics, setCvMetrics] = useState(null);
+    const [sensitivityMetrics, setSensitivityMetrics] = useState(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [simulationLog, setSimulationLog] = useState([]);
@@ -40,9 +46,20 @@ const RsiOptimizationDashboard = () => {
     const loadMetrics = async () => {
         try {
             setLoading(true);
-            const res = await getRsiMetrics();
-            if (res.success) {
-                setMetrics(res.data);
+            const [res, resCv, resSens] = await Promise.allSettled([
+                getRsiMetrics(),
+                getCrossValidationMetrics(),
+                getMultiSeedSensitivity()
+            ]);
+
+            if (res.status === 'fulfilled' && res.value?.success) {
+                setMetrics(res.value.data);
+            }
+            if (resCv.status === 'fulfilled' && resCv.value?.success) {
+                setCvMetrics(resCv.value.data);
+            }
+            if (resSens.status === 'fulfilled' && resSens.value?.success) {
+                setSensitivityMetrics(resSens.value.data);
             }
         } catch (error) {
             console.error('Error al cargar métricas de calibración:', error);
@@ -394,8 +411,87 @@ const RsiOptimizationDashboard = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Validación Científica: Cross-Validation K-Fold & Sensibilidad Multi-Semilla */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* K-Fold Cross Validation */}
+                <div className="p-4 bg-white border border-gray-200 rounded space-y-3">
+                    <div className="border-b border-gray-100 pb-2 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-900 flex items-center gap-1.5">
+                                <FiCheckCircle className="text-emerald-600 w-3.5 h-3.5" />
+                                Validación Cruzada Estratificada (K=5)
+                            </h3>
+                            <p className="text-[11px] text-gray-400">Evaluación fuera de muestra sobre colaboradores reales</p>
+                        </div>
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-700 bg-emerald-50 rounded border border-emerald-200">
+                            F1: +{cvMetrics?.f1ImprovementPercent || 0}%
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
+                            <span className="text-[10px] uppercase font-semibold text-gray-500">Modelo Baseline Heurístico</span>
+                            <div className="font-mono text-gray-900 text-sm font-semibold">
+                                Acc: {((cvMetrics?.baselineModel?.accuracy || 0) * 100).toFixed(1)}%
+                            </div>
+                            <div className="text-[10px] text-gray-500 font-mono">
+                                F1: {cvMetrics?.baselineModel?.f1Score || 0} · Brier: {cvMetrics?.baselineModel?.brierScore || 0}
+                            </div>
+                        </div>
+
+                        <div className="p-3 bg-emerald-50/50 border border-emerald-200 rounded space-y-1">
+                            <span className="text-[10px] uppercase font-semibold text-emerald-700">Weibull + RSI (Propuesto)</span>
+                            <div className="font-mono text-emerald-900 text-sm font-semibold">
+                                Acc: {((cvMetrics?.advancedWeibullModel?.accuracy || 0) * 100).toFixed(1)}%
+                            </div>
+                            <div className="text-[10px] text-emerald-700 font-mono">
+                                F1: {cvMetrics?.advancedWeibullModel?.f1Score || 0} · Brier: {cvMetrics?.advancedWeibullModel?.brierScore || 0}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sensibilidad Multi-Semilla */}
+                <div className="p-4 bg-white border border-gray-200 rounded space-y-3">
+                    <div className="border-b border-gray-100 pb-2 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-900 flex items-center gap-1.5">
+                                <FiTrendingUp className="text-blue-600 w-3.5 h-3.5" />
+                                Estabilidad Estocástica (5 Semillas)
+                            </h3>
+                            <p className="text-[11px] text-gray-400">N=2,000 iteraciones Monte Carlo con nómina real</p>
+                        </div>
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-semibold text-blue-700 bg-blue-50 rounded border border-blue-200">
+                            CV: {sensitivityMetrics?.summary?.cvPercent || 0}%
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div className="p-2.5 bg-gray-50 border border-gray-200 rounded">
+                            <span className="text-[10px] text-gray-500 uppercase font-semibold block">ROI Mediano</span>
+                            <span className="font-mono text-gray-900 font-bold text-sm">
+                                {sensitivityMetrics?.summary?.meanMedianRoi || 0}%
+                            </span>
+                        </div>
+                        <div className="p-2.5 bg-gray-50 border border-gray-200 rounded">
+                            <span className="text-[10px] text-gray-500 uppercase font-semibold block">IC 95% Inferior</span>
+                            <span className="font-mono text-gray-900 font-bold text-sm">
+                                {sensitivityMetrics?.summary?.meanCiLower || 0}%
+                            </span>
+                        </div>
+                        <div className="p-2.5 bg-gray-50 border border-gray-200 rounded">
+                            <span className="text-[10px] text-gray-500 uppercase font-semibold block">Ahorro Medio</span>
+                            <span className="font-mono text-gray-900 font-bold text-sm">
+                                ${sensitivityMetrics?.summary?.meanSavings?.toLocaleString() || 0}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
 
 export default RsiOptimizationDashboard;
+

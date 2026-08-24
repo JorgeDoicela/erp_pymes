@@ -217,6 +217,31 @@ export async function getStrategicAdvice(queryType, customPrompt = '') {
     return response.data;
 }
 
+/**
+ * Obtiene métricas de validación cruzada estratificada K-Fold (Baseline vs Weibull+RSI)
+ */
+export async function getCrossValidationMetrics() {
+    const response = await intelligenceClient.get('/rsi/cross-validation');
+    return response.data;
+}
+
+/**
+ * Obtiene prueba de bondad de ajuste Kolmogorov-Smirnov con Bootstrap paramétrico
+ */
+export async function getKolmogorovSmirnovAnalysis() {
+    const response = await intelligenceClient.get('/rsi/kolmogorov-smirnov');
+    return response.data;
+}
+
+/**
+ * Obtiene simulación Monte Carlo con 5 semillas estocásticas (Sensibilidad Multi-Semilla)
+ */
+export async function getMultiSeedSensitivity() {
+    const response = await intelligenceClient.get('/rsi/multi-seed-sensitivity');
+    return response.data;
+}
+
+
 
 
 

@@ -61,10 +61,13 @@ router.get('/what-if-monte-carlo', intelligenceController.runWhatIfMonteCarlo);
 // Exportación de Dataset Académico Anonimizado (CSV / JSON)
 router.get('/export-academic', intelligenceController.exportAcademicDataset);
 
-// Motor de Automejora Recursiva (RSI Engine)
+// Motor de Automejora Recursiva (RSI Engine) y Validación Científica
 router.get('/rsi/metrics', intelligenceController.getRsiMetrics);
 router.post('/rsi/calibrate', intelligenceController.calibrateRsiModel);
 router.post('/rsi/simulate', intelligenceController.simulateRsiOutcome);
+router.get('/rsi/cross-validation', intelligenceController.getCrossValidationMetrics);
+router.get('/rsi/kolmogorov-smirnov', intelligenceController.getKolmogorovSmirnovAnalysis);
+router.get('/rsi/multi-seed-sensitivity', intelligenceController.getMultiSeedSensitivity);
 
 // Motor de Inferencia Causal Contrafactual (Causal AI)
 router.post('/causal/simulate', intelligenceController.runCausalSimulation);

@@ -505,6 +505,69 @@ export async function getMorlHistory(req, res) {
 }
 
 /**
+ * GET /api/intelligence/rsi/cross-validation
+ * Evalúa baseline vs modelo Weibull + RSI fuera de muestra mediante K-Fold Cross-Validation
+ */
+export async function getCrossValidationMetrics(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const dashboard = await intelligenceService.getIntelligenceDashboard(tenantId);
+        const rawEmployees = dashboard.retention?.analysis || [];
+        const cvResult = intelligenceService.evaluateBaselineVsAdvancedModel(rawEmployees);
+        return res.json({
+            success: true,
+            data: cvResult
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al calcular validación cruzada');
+    }
+}
+
+/**
+ * GET /api/intelligence/rsi/kolmogorov-smirnov
+ * Ejecuta prueba de bondad de ajuste Kolmogorov-Smirnov con Bootstrap paramétrico
+ */
+export async function getKolmogorovSmirnovAnalysis(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const dashboard = await intelligenceService.getIntelligenceDashboard(tenantId);
+        const analysis = dashboard.retention?.analysis || [];
+        const tenures = analysis.map(emp => {
+            const hire = emp.hireDate ? new Date(emp.hireDate) : new Date();
+            return Math.max(1, (new Date() - hire) / (1000 * 60 * 60 * 24 * 30.4375));
+        });
+        const ksResult = intelligenceService.calculateKolmogorovSmirnovTest(tenures);
+        return res.json({
+            success: true,
+            data: ksResult
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al ejecutar prueba Kolmogorov-Smirnov');
+    }
+}
+
+/**
+ * GET /api/intelligence/rsi/multi-seed-sensitivity
+ * Ejecuta simulación Monte Carlo con 5 semillas estocásticas para sensibilidad multi-semilla
+ */
+export async function getMultiSeedSensitivity(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const result = await intelligenceService.runMultiSeedMonteCarloSensitivity(
+            [42, 100, 500, 1000, 2026],
+            2000,
+            tenantId
+        );
+        return res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al calcular sensibilidad multi-semilla Monte Carlo');
+    }
+}
+
+/**
  * POST /api/intelligence/strategic-advice
  * Genera asesoría estratégica ejecutiva con datos reales del tenant
  */
@@ -521,8 +584,3 @@ export async function getStrategicAdvice(req, res) {
         return handleError(res, error, 'Error al generar asesoría estratégica');
     }
 }
-
-
-
-
-

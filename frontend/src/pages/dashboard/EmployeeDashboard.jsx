@@ -22,7 +22,7 @@ function EmployeeDashboard({ user }) {
     }, []);
 
     const [employeeMetrics, setEmployeeMetrics] = useState({
-        vacationDays: user?.vacationDays || 15,
+        vacationDays: user?.vacationDays !== undefined && user?.vacationDays !== null ? user.vacationDays : null,
         pendingAbsencesCount: 0,
         pendingEvaluationsCount: 0
     });
@@ -41,27 +41,33 @@ function EmployeeDashboard({ user }) {
         const fetchEmployeeData = async () => {
             setLoadingMetrics(true);
             try {
-                const [evalsRes, absencesRes] = await Promise.allSettled([
+                const [evalsRes, absencesRes, profileRes] = await Promise.allSettled([
                     import('../../services/evaluation.service').then(m => m.getMyPendingEvaluations()),
-                    api.get('/absences/my-requests')
+                    api.get('/absences/my-requests'),
+                    api.get('/employees/profile/me').catch(() => null)
                 ]);
 
                 let pendingEvaluationsCount = 0;
                 let pendingAbsencesCount = 0;
+                let realVacationDays = user?.vacationDays !== undefined && user?.vacationDays !== null ? user.vacationDays : null;
 
                 if (evalsRes.status === 'fulfilled' && Array.isArray(evalsRes.value)) {
                     pendingEvaluationsCount = evalsRes.value.filter(e => e.status !== 'COMPLETED').length;
                 }
 
-                if (absencesRes.status === 'fulfilled' && absencesRes.value.data) {
+                if (absencesRes.status === 'fulfilled' && absencesRes.value?.data) {
                     const absList = absencesRes.value.data.data || absencesRes.value.data;
                     if (Array.isArray(absList)) {
                         pendingAbsencesCount = absList.filter(a => a.status === 'PENDING').length;
                     }
                 }
 
+                if (profileRes?.status === 'fulfilled' && profileRes?.value?.data?.data?.vacationDays !== undefined) {
+                    realVacationDays = profileRes.value.data.data.vacationDays;
+                }
+
                 setEmployeeMetrics({
-                    vacationDays: user?.vacationDays || 15,
+                    vacationDays: realVacationDays !== null ? realVacationDays : (user?.vacationDays ?? 'N/D'),
                     pendingAbsencesCount,
                     pendingEvaluationsCount
                 });
