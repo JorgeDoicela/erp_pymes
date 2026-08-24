@@ -23,6 +23,7 @@ import Loading from '../../components/Loading.jsx';
 import ErrorState from '../../components/ErrorState.jsx';
 import ExecutiveKPIBanner from '../../components/ExecutiveKPIBanner.jsx';
 import WhatIfScenarioSimulator from '../../components/WhatIfScenarioSimulator.jsx';
+import DataQualityPanel from './components/DataQualityPanel.jsx';
 import StrategicAIAdvisor from '../../components/StrategicAIAdvisor.jsx';
 import ExecutiveReportModal from '../../components/ExecutiveReportModal.jsx';
 import AdvancedBusinessAnalytics from '../../components/AdvancedBusinessAnalytics.jsx';
@@ -281,6 +282,9 @@ export default function IntelligentDashboard({ user, onLogout }) {
                     {/* TAB 1: RESUMEN ESTRATÉGICO & ROI */}
                     {activeTab === 'overview' && (
                         <div className="space-y-6 w-full min-w-0">
+                            {/* Panel de Calidad de Datos — muestra completitud real para IA */}
+                            <DataQualityPanel />
+
                             {/* Banner Ejecutivo de Impacto Financiero y ROI */}
                             <ExecutiveKPIBanner financialImpact={dashboard?.financialImpact} />
 

@@ -95,4 +95,7 @@ router.get('/ft-transformer/comparison', intelligenceController.getFTTransformer
 router.post('/ft-transformer/train', intelligenceController.trainFTTransformer);
 router.get('/ft-transformer/predict/:employeeId', intelligenceController.predictFTTransformer);
 
+// Calidad de Datos por Empresa — Completitud para el motor de IA
+router.get('/data-quality', intelligenceController.getDataQuality);
+
 export default router;

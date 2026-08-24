@@ -75,14 +75,24 @@ class FederatedLearningService {
         let sumSalary = 0, sumAbsence = 0, sumPerf = 0, sumNoPromo = 0, sumK = 0, sumLambda = 0;
         employees.forEach(emp => {
             const evals = emp.evaluations || [];
-            const avgPerf = evals.length > 0 ? evals.reduce((s, e) => s + (e.finalScore || 70), 0) / evals.length : 75;
+            // Solo usar evaluaciones reales — si no hay datos, la feature de desempeño
+            // no contribuye al gradiente (residual = 0 en esa dimensión)
+            const validEvals = evals.filter(e => e.finalScore != null || e.overallScore != null);
+            const hasPerf = validEvals.length > 0;
+            const avgPerf = hasPerf
+                ? validEvals.reduce((s, e) => s + (e.finalScore ?? e.overallScore), 0) / validEvals.length
+                : null;
+
             const absenceCount = (emp.absences || []).length;
-            const predictedRisk = Math.min(0.9, Math.max(0.05, 0.30 + (absenceCount * 0.05) - (avgPerf / 200)));
+            // Riesgo predicho: sin datos de desempeño, solo ausencias contribuyen
+            const perfComponent = hasPerf ? (avgPerf / 200) : 0;
+            const predictedRisk = Math.min(0.9, Math.max(0.05, 0.30 + (absenceCount * 0.05) - perfComponent));
             const residual = predictedRisk - 0.20; // residuo empírico vs baseline de retención
 
             sumSalary += residual * (-0.15);
             sumAbsence += residual * (0.10);
-            sumPerf += residual * (0.20);
+            // Solo acumular gradiente de desempeño si hay dato real
+            sumPerf += hasPerf ? residual * (0.20) : 0;
             sumNoPromo += residual * (0.05);
             sumK += residual * (0.02);
             sumLambda += residual * (-0.01);

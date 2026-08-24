@@ -96,19 +96,30 @@ class TemporalAttentionService {
             }).length;
             const normLate = Math.min(1.0, monthLates / 5.0);
 
-            // 3. Desempeño evaluado en o más cercano a este mes
+            // 3. Desempeño: valor real del mes o interpolación del último conocido (no se inventa 75)
             const monthEvals = evaluations.filter(e => {
                 const d = new Date(e.createdAt);
                 return d >= startMonth && d <= endMonth;
             });
-            let perfScore = 75;
+            let perfScore = null;
             if (monthEvals.length > 0) {
-                perfScore = monthEvals.reduce((s, e) => s + (e.finalScore || 75), 0) / monthEvals.length;
-            } else if (evaluations.length > 0) {
-                perfScore = evaluations[0].finalScore || 75;
+                const validEvals = monthEvals.filter(e => e.finalScore != null);
+                if (validEvals.length > 0) {
+                    perfScore = validEvals.reduce((s, e) => s + Number(e.finalScore), 0) / validEvals.length;
+                }
             }
-            // Déficit de desempeño normalizado: 1 = excelente (100%), 0 = deficiente (0%)
-            const normPerf = Math.max(0.0, Math.min(1.0, perfScore / 100.0));
+            // Si no hay eval en este mes, usar el último valor conocido (interpolación hacia atrás)
+            if (perfScore === null && evaluations.length > 0) {
+                const pastEvals = evaluations.filter(e => {
+                    const d = new Date(e.createdAt);
+                    return d <= endMonth && (e.finalScore != null);
+                });
+                if (pastEvals.length > 0) {
+                    perfScore = Number(pastEvals[0].finalScore);
+                }
+            }
+            // Si no hay ningún dato histórico, la feature queda en 0 (neutro, sin inventar)
+            const normPerf = perfScore !== null ? Math.max(0.0, Math.min(1.0, perfScore / 100.0)) : 0;
 
             // 4. Horas extra del mes
             const monthOvertime = payrollDetails.filter(p => {

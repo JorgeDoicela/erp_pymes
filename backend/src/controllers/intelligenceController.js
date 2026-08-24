@@ -692,4 +692,21 @@ export async function predictFTTransformer(req, res) {
         return handleError(res, error, 'Error al predecir con FT-Transformer');
     }
 }
-
+/**
+ * GET /api/intelligence/data-quality
+ * Reporte de completitud de datos de la empresa.
+ * Indica qué empleados carecen de evaluaciones, asistencia o salario,
+ * y el % de datos disponibles para el motor de IA.
+ */
+export async function getDataQuality(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const report = await intelligenceService.getDataQualityReport(tenantId);
+        return res.json({
+            success: true,
+            data: report
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al obtener reporte de calidad de datos');
+    }
+}

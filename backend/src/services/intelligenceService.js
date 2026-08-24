@@ -295,7 +295,7 @@ export function evaluateBaselineVsAdvancedModel(employees = []) {
         const advAcc = (advTP + advTN) / (testSet.length || 1);
         const advPrec = advTP / ((advTP + advFP) || 1);
         const advRec = advTP / ((advTP + advFN) || 1);
-        const advF1 = (advPrec + advRec) > 0 ? (2 * advPrec * advRec) / (advPrec + advRec) : 0.85;
+        const advF1 = (advPrec + advRec) > 0 ? (2 * advPrec * advRec) / (advPrec + advRec) : 0;
 
         foldResultsAdvanced.push({
             acc: advAcc,
@@ -463,12 +463,27 @@ function calculateRetentionRiskScore(employee, avgSalary, rsiParams = {}) {
         }
     });
 
+    // Si el empleado no tiene evaluaciones registradas, no asumimos un puntaje inventado.
+    // El perfDeficit queda en 0 (no penaliza ni beneficia) y se marca como dato insuficiente.
     const evals = employee.evaluations || [];
-    let avgPerfScore = 75;
-    if (evals.length > 0) {
-        avgPerfScore = evals.reduce((sum, e) => sum + (e.finalScore || e.overallScore || 70), 0) / evals.length;
+    const hasNoEvals = evals.length === 0;
+    let avgPerfScore = null;
+    let perfDeficit = 0;
+    if (!hasNoEvals) {
+        avgPerfScore = evals.reduce(
+            (sum, e) => sum + (e.finalScore != null ? Number(e.finalScore) : (e.overallScore != null ? Number(e.overallScore) : null)),
+            0
+        );
+        // Contar solo evaluaciones con score real
+        const validEvals = evals.filter(e => e.finalScore != null || e.overallScore != null);
+        if (validEvals.length > 0) {
+            avgPerfScore = validEvals.reduce((sum, e) => sum + (e.finalScore ?? e.overallScore), 0) / validEvals.length;
+            perfDeficit = Math.max(0, (70 - avgPerfScore) / 100);
+        } else {
+            avgPerfScore = null;
+            perfDeficit = 0;
+        }
     }
-    const perfDeficit = Math.max(0, (70 - avgPerfScore) / 100);
 
     const hasRecentPromotion = (employee.contracts || []).some(contract => {
         const monthsAgo = (nowMs - new Date(contract.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30.4375);
@@ -507,7 +522,7 @@ function calculateRetentionRiskScore(employee, avgSalary, rsiParams = {}) {
     if (weightedAbsenceImpact > 1.5) {
         factors.push({ factor: `Recurrencia de ausencias (Decay Index: ${weightedAbsenceImpact.toFixed(1)})`, impact: Math.round(weightedAbsenceImpact * 12) });
     }
-    if (avgPerfScore < 70) {
+    if (avgPerfScore !== null && avgPerfScore < 70) {
         factors.push({ factor: `Déficit de desempeño (${avgPerfScore.toFixed(0)}%)`, impact: Math.round(perfDeficit * 35) });
     }
     if (!hasRecentPromotion && monthsInCompany > 24) {
@@ -525,13 +540,22 @@ function calculateRetentionRiskScore(employee, avgSalary, rsiParams = {}) {
     const ci95Lower = Number(Math.max(0, score - 1.96 * seScore).toFixed(1));
     const ci95Upper = Number(Math.min(100, score + 1.96 * seScore).toFixed(1));
 
+    // Indicador de confiabilidad: baja si no hay evaluaciones reales
+    const lowDataConfidence = hasNoEvals || (evals.filter(e => e.finalScore != null || e.overallScore != null).length === 0);
+
     return {
         score,
         level,
         factors,
         survivalProbability: Number((conditionalSurvival12M * 100).toFixed(1)),
         ci95: { lower: ci95Lower, upper: ci95Upper },
-        weibullHazardRate: Number(hazardMultiplier.toFixed(3))
+        weibullHazardRate: Number(hazardMultiplier.toFixed(3)),
+        lowDataConfidence,
+        dataQuality: {
+            hasEvaluations: !hasNoEvals,
+            hasAbsenceRecords: (employee.absences || []).length > 0,
+            hasAttendanceRecords: (employee.attendance || []).length > 0,
+        }
     };
 }
 
@@ -1550,26 +1574,37 @@ export async function getPredictiveAnalytics(tenantId = null) {
         return sum + Math.pow(y - yPred, 2);
     }, 0);
     const modelReliable = n >= 3;
-    const rSquared = modelReliable && ssTot > 0 ? Math.max(0, 1 - (ssRes / ssTot)) : 0.85;
+    const rSquared = modelReliable && ssTot > 0 ? Math.max(0, 1 - (ssRes / ssTot)) : 0;
+
+    // Error estándar residual real del modelo de regresión (SE_res = sqrt(MSE))
+    const dfModel = Math.max(1, n - 2); // grados de libertad residuales
+    const mse = ssRes / dfModel;
+    const seResidual = Math.sqrt(mse);
 
     const predictions = [];
     for (let i = 1; i <= 3; i++) {
         const nextX = (n - 1) + i;
         const predictedVal = Math.max(0, slope * nextX + intercept);
 
+        // IC 95% basado en SE real: margen = 1.96 * SE_res * sqrt(1 + 1/n + (nextX - meanX)^2 / Sxx)
+        const meanX = sumX / n;
+        const Sxx = sumXX - n * meanX * meanX;
+        const predSE = modelReliable && Sxx > 0
+            ? 1.96 * seResidual * Math.sqrt(1 + (1 / n) + (Math.pow(nextX - meanX, 2) / Sxx))
+            : 0.5 + (i * 0.3); // fallback si no hay suficientes datos
+
         const date = new Date();
         date.setMonth(date.getMonth() + i);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-        const margin = 0.5 + (i * 0.3);
         predictions.push({
             month: monthKey,
             predicted: Number(predictedVal.toFixed(1)),
             ci95: {
-                lower: Number(Math.max(0, predictedVal - margin).toFixed(1)),
-                upper: Number((predictedVal + margin).toFixed(1))
+                lower: Number(Math.max(0, predictedVal - predSE).toFixed(1)),
+                upper: Number((predictedVal + predSE).toFixed(1))
             },
-            confidence: Number(Math.max(0.4, rSquared - (i * 0.05)).toFixed(2))
+            confidence: Number(Math.max(0.3, rSquared - (i * 0.05)).toFixed(2))
         });
     }
 
@@ -1618,33 +1653,53 @@ export async function getEmployeeScoring(employeeId = null, tenantIdOrPreloaded 
 
     const scoredEmployees = employees.map(emp => {
         const avgSalary = departmentAvgSalaries[emp.department || 'General'] || emp._decryptedSalary;
-        const retentionScore = 100 - calculateRetentionRiskScore(emp, avgSalary).score;
+        const retentionRisk = calculateRetentionRiskScore(emp, avgSalary);
+        const retentionScore = 100 - retentionRisk.score;
 
-        let performanceScore = 65;
+        // Desempeño: solo con evaluaciones reales — null si no hay datos
+        let performanceScore = null;
         if (emp.evaluations && emp.evaluations.length > 0) {
-            const sumScore = emp.evaluations.reduce((acc, ev) => acc + (ev.finalScore || ev.overallScore || 70), 0);
-            performanceScore = sumScore / emp.evaluations.length;
+            const validEvals = emp.evaluations.filter(ev => ev.finalScore != null || ev.overallScore != null);
+            if (validEvals.length > 0) {
+                performanceScore = validEvals.reduce((acc, ev) => acc + (ev.finalScore ?? ev.overallScore), 0) / validEvals.length;
+            }
         }
 
         const totalAbsences = emp.absences?.length || 0;
         const totalLates = emp.attendance?.filter(att => att.isLate)?.length || 0;
-        const attendanceScore = Math.max(0, 100 - (totalAbsences * 7) - (totalLates * 2));
+        // Asistencia: si no hay registros, no inventar 100 — marcar como null
+        const attendanceScore = emp.attendance && emp.attendance.length > 0
+            ? Math.max(0, 100 - (totalAbsences * 7) - (totalLates * 2))
+            : null;
 
-        let growthScore = 60;
+        // Crecimiento: solo con metas reales — null si no hay
+        let growthScore = null;
         if (emp.goals && emp.goals.length > 0) {
-            const sumProgress = emp.goals.reduce((acc, g) => acc + (g.progress || 0), 0);
-            growthScore = sumProgress / emp.goals.length;
+            growthScore = emp.goals.reduce((acc, g) => acc + (g.progress || 0), 0) / emp.goals.length;
         }
 
-        const engagementScore = Math.round(performanceScore * 0.4 + growthScore * 0.35 + attendanceScore * 0.25);
+        // Calcular overallScore solo con los componentes que tenemos datos reales
+        // Los pesos se redistribuyen proporcionalmente si algún componente falta
+        const components = [
+            { score: retentionScore,    weight: 0.25, hasData: true },
+            { score: performanceScore,  weight: 0.30, hasData: performanceScore !== null },
+            { score: attendanceScore,   weight: 0.20, hasData: attendanceScore !== null },
+            { score: growthScore,       weight: 0.10, hasData: growthScore !== null },
+        ];
 
-        const overallScore = (
-            retentionScore * 0.25 +
-            performanceScore * 0.30 +
-            attendanceScore * 0.20 +
-            engagementScore * 0.15 +
-            growthScore * 0.10
-        );
+        const available = components.filter(c => c.hasData);
+        const totalWeight = available.reduce((s, c) => s + c.weight, 0);
+        const overallScore = totalWeight > 0
+            ? available.reduce((s, c) => s + (c.score * c.weight), 0) / totalWeight
+            : retentionScore;
+
+        // Engagement: derivado de los datos disponibles
+        const engagementInputs = [performanceScore, growthScore, attendanceScore].filter(v => v !== null);
+        const engagementScore = engagementInputs.length > 0
+            ? engagementInputs.reduce((a, b) => a + b, 0) / engagementInputs.length
+            : null;
+
+        const hasInsufficientData = performanceScore === null || attendanceScore === null;
 
         return {
             employeeId: emp.id,
@@ -1653,11 +1708,20 @@ export async function getEmployeeScoring(employeeId = null, tenantIdOrPreloaded 
             position: emp.position || 'Colaborador',
             scores: {
                 retention: Math.round(retentionScore),
-                performance: Math.round(performanceScore),
-                attendance: Math.round(attendanceScore),
-                engagement: Math.round(engagementScore),
-                growth: Math.round(growthScore),
+                performance: performanceScore !== null ? Math.round(performanceScore) : null,
+                attendance: attendanceScore !== null ? Math.round(attendanceScore) : null,
+                engagement: engagementScore !== null ? Math.round(engagementScore) : null,
+                growth: growthScore !== null ? Math.round(growthScore) : null,
                 overall: Math.round(overallScore)
+            },
+            hasInsufficientData,
+            lowDataConfidence: retentionRisk.lowDataConfidence || hasInsufficientData,
+            dataQuality: {
+                hasEvaluations: performanceScore !== null,
+                hasAttendanceRecords: attendanceScore !== null,
+                hasGoals: growthScore !== null,
+                hasSalary: (emp._decryptedSalary || 0) > 0,
+                hasAbsenceRecords: totalAbsences > 0 || (emp.attendance && emp.attendance.length > 0),
             },
             category: overallScore >= 80 ? 'Top Performer' :
                 overallScore >= 60 ? 'Good Performer' :
@@ -1675,6 +1739,7 @@ export async function getEmployeeScoring(employeeId = null, tenantIdOrPreloaded 
             goodPerformers: scoredEmployees.filter(e => e.category === 'Good Performer').length,
             needsImprovement: scoredEmployees.filter(e => e.category === 'Needs Improvement').length,
             atRisk: scoredEmployees.filter(e => e.category === 'At Risk').length,
+            withInsufficientData: scoredEmployees.filter(e => e.hasInsufficientData).length,
             avgOverallScore: scoredEmployees.length > 0 ? Number((scoredEmployees.reduce((sum, e) => sum + e.scores.overall, 0) / scoredEmployees.length).toFixed(1)) : 0
         }
     };
@@ -1802,6 +1867,101 @@ export async function getPatternAnalysis(tenantId = null) {
 export async function getRecommendations(tenantIdOrPreloaded = null) {
     const dashboard = await getIntelligenceDashboard(typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null);
     return dashboard.recommendations || [];
+}
+
+// ==================== MÓDULO: REPORTE DE CALIDAD DE DATOS ====================
+
+/**
+ * Analiza la completitud real de datos por empresa.
+ * Retorna qué empleados carecen de evaluaciones, asistencia, nómina o salario,
+ * y el % global de completitud de datos para alimentar el motor de IA correctamente.
+ */
+export async function getDataQualityReport(tenantId = null) {
+    const rawEmployees = await fetchRawEmployees(tenantId);
+    if (rawEmployees.length === 0) {
+        return {
+            totalEmployees: 0,
+            completenessPercent: 0,
+            dataReadyForAI: false,
+            missingData: { evaluations: [], attendance: [], salary: [], absenceRecords: [] },
+            summary: { withEvaluations: 0, withAttendance: 0, withSalary: 0, withAbsenceRecords: 0 }
+        };
+    }
+
+    const now = new Date();
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    const twelveMonthsAgo = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+
+    const missingEvaluations = [];
+    const missingAttendance = [];
+    const missingSalary = [];
+    const missingAbsenceRecords = [];
+
+    let withEvals = 0, withAttendance = 0, withSalary = 0, withAbsences = 0;
+
+    rawEmployees.forEach(emp => {
+        const empName = `${emp.firstName} ${emp.lastName}`;
+        const empInfo = { employeeId: emp.id, name: empName, department: emp.department || 'General', position: emp.position };
+
+        // Evaluaciones de desempeño (últimos 12 meses)
+        const recentEvals = (emp.evaluations || []).filter(e => {
+            const d = new Date(e.createdAt);
+            return d >= twelveMonthsAgo && (e.finalScore != null || e.overallScore != null);
+        });
+        if (recentEvals.length > 0) withEvals++;
+        else missingEvaluations.push({ ...empInfo, lastEvalDate: (emp.evaluations || [])[0]?.createdAt || null });
+
+        // Asistencia (últimos 3 meses)
+        const recentAttendance = (emp.attendance || []).filter(a => new Date(a.date || a.createdAt) >= threeMonthsAgo);
+        if (recentAttendance.length > 0) withAttendance++;
+        else missingAttendance.push({ ...empInfo, lastAttendanceDate: (emp.attendance || [])[0]?.date || null });
+
+        // Salario registrado
+        const salary = emp._decryptedSalary || 0;
+        if (salary > 0) withSalary++;
+        else missingSalary.push(empInfo);
+
+        // Registros de ausencias en BD (no el count de faltas — sino si tiene historial)
+        const hasAbsences = (emp.absences || []).length > 0;
+        if (hasAbsences) withAbsences++;
+        else missingAbsenceRecords.push(empInfo);
+    });
+
+    const total = rawEmployees.length;
+    // Completitud ponderada: evaluaciones (40%) + asistencia (30%) + salario (20%) + ausencias (10%)
+    const completenessPercent = Number((
+        (withEvals / total) * 40 +
+        (withAttendance / total) * 30 +
+        (withSalary / total) * 20 +
+        (withAbsences / total) * 10
+    ).toFixed(1));
+
+    return {
+        totalEmployees: total,
+        completenessPercent,
+        dataReadyForAI: completenessPercent >= 60,
+        aiConfidenceLevel: completenessPercent >= 80 ? 'Alta' : completenessPercent >= 60 ? 'Media' : 'Baja — Se requieren más datos',
+        missingData: {
+            evaluations: missingEvaluations,
+            attendance: missingAttendance,
+            salary: missingSalary,
+            absenceRecords: missingAbsenceRecords
+        },
+        summary: {
+            withEvaluations: withEvals,
+            withAttendance: withAttendance,
+            withSalary: withSalary,
+            withAbsenceRecords: withAbsences,
+            missingEvaluations: missingEvaluations.length,
+            missingAttendance: missingAttendance.length,
+            missingSalary: missingSalary.length,
+        },
+        recommendations: [
+            ...(missingEvaluations.length > 0 ? [`Registrar evaluaciones de desempeño para ${missingEvaluations.length} colaborador(es) — impacta directamente en el modelo Weibull y el FT-Transformer.`] : []),
+            ...(missingAttendance.length > 0 ? [`Cargar registros de asistencia de los últimos 3 meses para ${missingAttendance.length} colaborador(es).`] : []),
+            ...(missingSalary.length > 0 ? [`Completar salario para ${missingSalary.length} colaborador(es) — sin este dato el cálculo de riesgo financiero es incorrecto.`] : []),
+        ]
+    };
 }
 
 // ==================== DASHBOARD PRINCIPAL (SINGLE-PASS) ====================
@@ -1979,16 +2139,47 @@ function calculateBurnoutAndProductivity(rawEmployees = [], attendance = {}, pay
 function calculateHeadcountPayrollProjection(rawEmployees = [], payrolls = []) {
     const currentMonthlyPayroll = rawEmployees.reduce((sum, e) => sum + (e._decryptedSalary || 0), 0);
     const months = ['Mes actual', '+1 Mes', '+2 Meses', '+3 Meses', '+4 Meses', '+5 Meses'];
+
+    // Calcular tasa de crecimiento real desde histórico de nóminas (regresión OLS sobre totalAmount)
+    let growthRatePerMonth = 0.015; // fallback por defecto: 1.5%
+    if (payrolls && payrolls.length >= 2) {
+        const payrollAmounts = payrolls
+            .slice(0, 6)
+            .map(p => p.totalAmount || 0)
+            .filter(a => a > 0)
+            .reverse(); // ordenar de más antiguo a más reciente
+
+        const n = payrollAmounts.length;
+        if (n >= 2) {
+            const xs = Array.from({ length: n }, (_, i) => i);
+            const sumX = xs.reduce((a, b) => a + b, 0);
+            const sumY = payrollAmounts.reduce((a, b) => a + b, 0);
+            const sumXY = xs.reduce((s, x, i) => s + x * payrollAmounts[i], 0);
+            const sumXX = xs.reduce((s, x) => s + x * x, 0);
+            const denom = n * sumXX - sumX * sumX;
+            if (denom !== 0) {
+                const slope = (n * sumXY - sumX * sumY) / denom;
+                const intercept = (sumY - slope * sumX) / n;
+                // Tasa de crecimiento mensual relativa al promedio observado
+                const meanPayroll = sumY / n;
+                if (meanPayroll > 0) {
+                    growthRatePerMonth = Math.max(0, Math.min(0.10, slope / meanPayroll)); // acotado [0%, 10%]
+                }
+            }
+        }
+    }
+
     const projection = months.map((m, idx) => {
-        const factor = 1 + (idx * 0.015);
+        const factor = Math.pow(1 + growthRatePerMonth, idx);
         return {
             month: m,
             payroll: Math.round(currentMonthlyPayroll * factor),
             headcount: rawEmployees.length,
+            growthRateMonthly: Number((growthRatePerMonth * 100).toFixed(2)),
         };
     });
 
-    return { currentMonthlyPayroll, projection };
+    return { currentMonthlyPayroll, projection, growthRateMonthly: Number((growthRatePerMonth * 100).toFixed(2)) };
 }
 
 function generateRecommendations(data) {
@@ -2127,7 +2318,9 @@ export async function generateStrategicAdvisorAdvice(tenantId, queryType, custom
     });
 
     const avgSalary = totalPayroll / (totalCount || 1);
-    const turnoverCostPerEmp = avgSalary * 5.5; // Benchmark de reposición real: 5.5 meses de sueldo
+    // Benchmark de reposición: ~5.5 meses de salario (SHRM 2022: "The Real Cost of Turnover"; Gallup 2023)
+    // Incluye: reclutamiento, incorporación, productividad reducida y pérdida de conocimiento
+    const turnoverCostPerEmp = avgSalary * 5.5;
     const riskExposure = totalHighRisk * turnoverCostPerEmp;
 
     if (queryType === 'retention-plan' || customPrompt.toLowerCase().includes('retención') || customPrompt.toLowerCase().includes('talento')) {

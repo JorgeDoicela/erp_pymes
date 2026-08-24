@@ -120,10 +120,11 @@ class FTTransformerService {
         const absences = emp.absences || [];
         const absenceDecay = absences.length > 0 ? Math.min(5.0, absences.length * 0.8) : 0;
 
-        const evals = emp.evaluations || [];
-        const perfScore = evals.length > 0 
-            ? (evals.reduce((s, e) => s + (e.finalScore || 75), 0) / evals.length) / 100.0 
-            : 0.75;
+        // Si no hay evaluaciones reales, perfScore = 0 (no se inventa un 75 ficticio)
+        // El modelo recibe el déficit real o neutro
+        const perfScore = evals.length > 0
+            ? (evals.reduce((s, e) => s + (e.finalScore != null ? Number(e.finalScore) : (e.overallScore != null ? Number(e.overallScore) : null)), 0) / evals.filter(e => e.finalScore != null || e.overallScore != null).length) / 100.0 || 0
+            : 0;
 
         const payroll = emp.PayrollDetail || [];
         const totalOvertime = payroll.reduce((sum, p) => sum + (p.overtimeHours || 0), 0);
@@ -386,7 +387,7 @@ class FTTransformerService {
         const brierScore = totalBrier / n;
         const prec = tp / (tp + fp || 1);
         const rec = tp / (tp + fn || 1);
-        const f1Score = (prec + rec) > 0 ? (2 * prec * rec) / (prec + rec) : 0.75;
+        const f1Score = (prec + rec) > 0 ? (2 * prec * rec) / (prec + rec) : 0;
 
         // Actualizar ligeramente los pesos del Head y Tokenizer en la dirección del error medio
         const avgError = audits.reduce((s, a) => s + (a.predictedTurnoverProb - a.actualOutcome), 0) / n;

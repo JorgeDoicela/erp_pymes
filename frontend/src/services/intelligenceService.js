@@ -293,6 +293,17 @@ export async function predictFTTransformer(employeeId) {
     return response.data;
 }
 
+/**
+ * Obtiene el reporte de calidad de datos de la empresa.
+ * Indica qué empleados carecen de evaluaciones, asistencia o salario,
+ * y el % global de completitud para alimentar el motor de IA correctamente.
+ */
+export async function getDataQualityReport() {
+    const response = await intelligenceClient.get('/data-quality');
+    return response.data;
+}
+
+
 
 
 
