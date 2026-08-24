@@ -27,9 +27,10 @@ export const getDashboardData = async (req, res) => {
             totalEmployees,
             newHires,
             openVacancies,
-            activeContracts,
             employeesByDept,
-            vacanciesByDept
+            vacanciesByDept,
+            activeContractsByDept,
+            activeEmployees
         ] = await Promise.all([
             prisma.employee.count({ where: tenantWhere }),
             prisma.employee.count({
@@ -44,13 +45,6 @@ export const getDashboardData = async (req, res) => {
                     ...tenantWhere
                 }
             }),
-            prisma.contract.aggregate({
-                where: {
-                    status: 'Active',
-                    ...(tenantId ? { employee: { tenantId } } : {})
-                },
-                _sum: { salary: true }
-            }),
             prisma.employee.groupBy({
                 by: ['department'],
                 where: tenantWhere,
@@ -63,32 +57,74 @@ export const getDashboardData = async (req, res) => {
                     status: 'OPEN',
                     ...tenantWhere
                 }
+            }),
+            prisma.contract.findMany({
+                where: {
+                    status: 'Active',
+                    ...(tenantId ? { employee: { tenantId } } : {})
+                },
+                select: {
+                    salary: true,
+                    employee: {
+                        select: {
+                            department: true
+                        }
+                    }
+                }
+            }),
+            prisma.employee.findMany({
+                where: { ...tenantWhere, isActive: true },
+                select: { department: true, salary: true }
             })
         ]);
 
-        const payrollTotal = activeContracts._sum.salary || 0;
-
-        const deptChartData = employeesByDept.map(item => ({
+        const deptChartData = (employeesByDept || []).map(item => ({
             name: item.department || 'Sin Dept',
             value: item._count.id
         }));
 
-        const vacancyChartData = vacanciesByDept.map(item => ({
+        const vacancyChartData = (vacanciesByDept || []).map(item => ({
             name: item.department || 'Sin Dept',
             value: item._count.id
         }));
 
-        console.log("Analytics: Sending response");
+        let payrollTotal = 0;
+        const deptSalaryMap = {};
+
+        if (activeContractsByDept && activeContractsByDept.length > 0) {
+            activeContractsByDept.forEach(c => {
+                const dept = c.employee?.department || 'Sin Dept';
+                const sal = Number(c.salary) || 0;
+                deptSalaryMap[dept] = (deptSalaryMap[dept] || 0) + sal;
+                payrollTotal += sal;
+            });
+        } else if (activeEmployees && activeEmployees.length > 0) {
+            // Fallback usando los salarios en ficha de empleado
+            activeEmployees.forEach(emp => {
+                const dept = emp.department || 'Sin Dept';
+                const sal = parseFloat(emp.salary) || 0;
+                deptSalaryMap[dept] = (deptSalaryMap[dept] || 0) + sal;
+                payrollTotal += sal;
+            });
+        }
+
+        const payrollByDeptChartData = Object.keys(deptSalaryMap).map(dept => ({
+            name: dept,
+            salary: financial.round(deptSalaryMap[dept] || 0)
+        })).sort((a, b) => b.salary - a.salary);
+
+        console.log("Analytics: Sending response successfully");
         res.json({
             kpis: {
-                totalEmployees,
-                newHires,
-                openVacancies,
-                payrollTotal: financial.round(payrollTotal)
+                totalEmployees: totalEmployees || 0,
+                newHires: newHires || 0,
+                openVacancies: openVacancies || 0,
+                payrollTotal: financial.round(payrollTotal || 0)
             },
             charts: {
                 deptChartData,
-                vacancyChartData
+                vacancyChartData,
+                payrollByDeptChartData
             }
         });
 

@@ -17,7 +17,7 @@ export const financial = {
      * Rounds a decimal to fixed precision (default 2).
      */
     round: (value, decimals = 2) => {
-        return new Decimal(value).toDecimalPlaces(decimals).toNumber();
+        return new Decimal(value || 0).toDecimalPlaces(decimals).toNumber();
     },
 
     /**

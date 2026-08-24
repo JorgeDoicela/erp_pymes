@@ -8,10 +8,9 @@ import SmartModuleHub from '../../components/dashboard/SmartModuleHub';
 function AdminDashboard({ user }) {
     const navigate = useNavigate();
     const location = useLocation();
-    const [successMsg, setSuccessMsg] = useState('');
+    const [successMsg, setSuccessMsg] = useState(() => location.state?.successMessage || '');
     const [insights, setInsights] = useState([]);
     const [loadingInsights, setLoadingInsights] = useState(true);
-    const [pendingEvals, setPendingEvals] = useState(0);
 
     const [dashboardMetrics, setDashboardMetrics] = useState({
         totalEmployees: 0,
@@ -23,15 +22,6 @@ function AdminDashboard({ user }) {
     const [loadingMetrics, setLoadingMetrics] = useState(true);
 
     const sections = getSectionsByRole(user);
-
-    useEffect(() => {
-        if (location.state?.successMessage) {
-            setSuccessMsg(location.state.successMessage);
-            window.history.replaceState({}, document.title);
-            const timer = setTimeout(() => setSuccessMsg(''), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [location]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -78,7 +68,6 @@ function AdminDashboard({ user }) {
                     const { getMyPendingEvaluations } = await import('../../services/evaluation.service');
                     const evaluations = await getMyPendingEvaluations();
                     pendingCount = evaluations.filter(e => e.status !== 'COMPLETED').length;
-                    setPendingEvals(pendingCount);
                 } catch (e) {
                     console.error('Error fetching pending evaluations:', e);
                 }
