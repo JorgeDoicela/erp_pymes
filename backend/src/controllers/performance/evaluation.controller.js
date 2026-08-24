@@ -79,8 +79,8 @@ export const assignEvaluation = async (req, res) => {
 
 export const getMyEvaluations = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const reviews = await performanceService.getMyEvaluations(userId);
+        const userId = req.user.employeeId || req.user.id;
+        const reviews = await performanceService.getMyEvaluations(userId, req.user);
         return res.status(200).json(reviews);
     } catch (error) {
         console.error('Error fetching my evaluations:', error);
@@ -118,9 +118,23 @@ export const getEvaluationResults = async (req, res) => {
 
 export const getMyResultsList = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user.employeeId || req.user.id;
+        let actualEmployeeId = userId;
+        const emp = await prisma.employee.findFirst({
+            where: {
+                OR: [
+                    ...(userId ? [{ id: userId }] : []),
+                    ...(req.user?.employeeId ? [{ id: req.user.employeeId }] : []),
+                    ...(req.user?.email ? [{ email: req.user.email }] : [])
+                ],
+                ...(req.user?.tenantId ? { tenantId: req.user.tenantId } : {})
+            },
+            select: { id: true }
+        });
+        if (emp) actualEmployeeId = emp.id;
+
         const results = await prisma.employeeEvaluation.findMany({
-            where: { employeeId: userId },
+            where: { employeeId: actualEmployeeId },
             include: { template: true },
             orderBy: { endDate: 'desc' }
         });

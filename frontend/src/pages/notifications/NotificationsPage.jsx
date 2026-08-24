@@ -74,6 +74,9 @@ const NotificationsPage = () => {
         fetchNotifications();
     }, [filter]);
 
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'hr';
+
     const handleReadAndNavigate = async (notif) => {
         if (!notif.isRead) {
             try {
@@ -87,18 +90,20 @@ const NotificationsPage = () => {
             }
         }
 
-        if (notif.type === 'CONTRACT_EXPIRATION' && notif.relatedEntityId) {
-            navigate('/admin/contracts/expiring');
+        if (notif.type.startsWith('ANNOUNCEMENT')) {
+            navigate('/announcements');
+        } else if (notif.type === 'CONTRACT_EXPIRATION') {
+            navigate(isAdmin ? '/admin/contracts/expiring' : '/my-expedient');
         } else if (notif.type.startsWith('EVALUATION_')) {
-            navigate('/performance');
+            navigate(isAdmin ? '/performance' : '/performance/my-evaluations');
         } else if (notif.type.startsWith('ABSENCE_')) {
-            navigate('/admin/absences');
+            navigate(isAdmin ? '/admin/absences' : '/empleado/ausencias');
         } else if (notif.type === 'DOCUMENT_EXPIRATION') {
             navigate('/profile');
         } else if (notif.type === 'DOCUMENT_EXPIRATION_HR' || notif.type === 'DOCUMENT_EXPIRED') {
-            navigate('/admin/employees');
+            navigate(isAdmin ? '/admin/employees' : '/profile');
         } else if (notif.type.startsWith('PAYROLL_')) {
-            navigate('/admin/payroll/generator');
+            navigate(isAdmin ? '/admin/payroll/generator' : '/my-payments');
         }
     };
 
@@ -143,13 +148,14 @@ const NotificationsPage = () => {
     };
 
     const getCategoryBadge = (type) => {
-        if (!type) return { label: 'SISTEMA', cls: 'bg-gray-100 text-gray-700 border-gray-200' };
-        if (type.startsWith('PAYROLL_')) return { label: 'NÓMINA', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
-        if (type.startsWith('ABSENCE_')) return { label: 'AUSENCIA', cls: 'bg-rose-50 text-rose-800 border-rose-200' };
-        if (type.startsWith('EVALUATION_')) return { label: 'DESEMPEÑO', cls: 'bg-amber-50 text-amber-800 border-amber-200' };
-        if (type.includes('CONTRACT')) return { label: 'CONTRATO', cls: 'bg-blue-50 text-blue-800 border-blue-200' };
-        if (type.includes('DOCUMENT')) return { label: 'DOCUMENTO', cls: 'bg-indigo-50 text-indigo-800 border-indigo-200' };
-        return { label: 'SISTEMA', cls: 'bg-gray-100 text-gray-700 border-gray-200' };
+        if (!type) return { label: 'SISTEMA', cls: 'bg-gray-50 text-gray-700 border-gray-200' };
+        if (type.startsWith('PAYROLL_')) return { label: 'NÓMINA', cls: 'bg-emerald-50/60 text-emerald-900 border-emerald-200' };
+        if (type.startsWith('ABSENCE_')) return { label: 'AUSENCIA', cls: 'bg-rose-50/60 text-rose-900 border-rose-200' };
+        if (type.startsWith('EVALUATION_')) return { label: 'DESEMPEÑO', cls: 'bg-amber-50/60 text-amber-900 border-amber-200' };
+        if (type.includes('CONTRACT')) return { label: 'CONTRATO', cls: 'bg-blue-50/60 text-blue-900 border-blue-200' };
+        if (type.includes('DOCUMENT')) return { label: 'DOCUMENTO', cls: 'bg-indigo-50/60 text-indigo-900 border-indigo-200' };
+        if (type.startsWith('ANNOUNCEMENT')) return { label: 'COMUNICADO', cls: 'bg-gray-50 text-gray-700 border-gray-200' };
+        return { label: 'SISTEMA', cls: 'bg-gray-50 text-gray-700 border-gray-200' };
     };
 
     return (
@@ -193,7 +199,7 @@ const NotificationsPage = () => {
                     </div>
 
                     <button
-                        onClick={() => navigate('/admin/notifications/settings')}
+                        onClick={() => navigate('/notifications/settings')}
                         className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                     >
                         Configurar Canales ↗

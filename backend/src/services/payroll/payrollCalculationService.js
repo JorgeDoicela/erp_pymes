@@ -473,9 +473,35 @@ class PayrollCalculationService {
         };
     }
 
-    async getPayrollsByEmployee(employeeId) {
+    async getPayrollsByEmployee(employeeId, user = null) {
+        const isSuperAdmin = user?.role === 'superadmin';
+        const tenantId = (user?.tenantId && !isSuperAdmin) ? user.tenantId : null;
+
+        let actualEmployeeId = employeeId;
+        if (user) {
+            const emp = await prisma.employee.findFirst({
+                where: {
+                    OR: [
+                        ...(employeeId ? [{ id: employeeId }] : []),
+                        ...(user.id ? [{ id: user.id }] : []),
+                        ...(user.email ? [{ email: user.email }] : [])
+                    ],
+                    ...(tenantId ? { tenantId } : {})
+                },
+                select: { id: true }
+            });
+            if (emp) actualEmployeeId = emp.id;
+        }
+
+        if (!actualEmployeeId) return [];
+
         return await prisma.payrollDetail.findMany({
-            where: { employeeId },
+            where: {
+                employeeId: actualEmployeeId,
+                payroll: {
+                    status: { in: ['APPROVED', 'PAID'] }
+                }
+            },
             include: {
                 payroll: true,
                 employee: true

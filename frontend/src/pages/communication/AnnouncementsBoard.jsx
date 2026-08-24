@@ -10,9 +10,9 @@ import {
 } from '../../services/communication/announcement.service';
 
 const CATEGORY_MAP = {
-    POLICY: { label: 'POLÍTICA / REGLAMENTO', cls: 'bg-gray-100 text-gray-700 border-gray-200' },
-    HOLIDAY: { label: 'FERIADO / ASUETO', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
-    BIRTHDAY: { label: 'CUMPLEAÑOS', cls: 'bg-blue-50 text-blue-800 border-blue-200' },
+    POLICY: { label: 'POLÍTICA / REGLAMENTO', cls: 'bg-gray-50 text-gray-700 border-gray-200' },
+    HOLIDAY: { label: 'FERIADO / ASUETO', cls: 'bg-amber-50/60 text-amber-900 border-amber-200' },
+    BIRTHDAY: { label: 'CUMPLEAÑOS', cls: 'bg-blue-50/60 text-blue-900 border-blue-200' },
     GENERAL: { label: 'AVISO GENERAL', cls: 'bg-gray-50 text-gray-700 border-gray-200' }
 };
 
@@ -99,7 +99,7 @@ const AnnouncementsBoard = ({ user }) => {
 
             if (activeTab === 'POLICY') params.category = 'POLICY';
             else if (activeTab === 'HOLIDAY') params.category = 'HOLIDAY';
-            else if (activeTab === 'PENDING_ACK') params.requiresAck = true;
+            else if (activeTab === 'PENDING_ACK') params.pendingOnly = true;
 
             const res = await getAnnouncements(params);
             if (res.success && Array.isArray(res.data)) {
@@ -164,6 +164,19 @@ const AnnouncementsBoard = ({ user }) => {
             showNotification('error', error.message || 'Error al registrar acuse de recibo');
         } finally {
             setActionLoading(false);
+        }
+    };
+
+    const handleMarkAsRead = async (announcementId) => {
+        try {
+            const res = await markAnnouncementReadOrAcknowledge(announcementId, false);
+            if (res.success) {
+                showNotification('success', 'Lectura confirmada');
+                loadData();
+                loadBoardStats();
+            }
+        } catch (error) {
+            showNotification('error', error.message || 'Error al confirmar lectura');
         }
     };
 
@@ -408,14 +421,14 @@ const AnnouncementsBoard = ({ user }) => {
                                     <div
                                         key={ann.id}
                                         className={`bg-white p-4 rounded border transition-colors ${
-                                            ann.priority === 'URGENT' ? 'border-red-300' : 'border-gray-200'
+                                            ann.priority === 'URGENT' ? 'border-red-200' : 'border-gray-200'
                                         }`}
                                     >
                                         <div className="flex justify-between items-start gap-3 pb-2 border-b border-gray-100">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     {ann.priority === 'URGENT' && (
-                                                        <span className="px-1.5 py-0.5 bg-red-600 text-white font-mono font-bold text-[10px] uppercase rounded">
+                                                        <span className="px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 font-mono font-semibold text-[10px] uppercase rounded">
                                                             URGENTE
                                                         </span>
                                                     )}
@@ -468,29 +481,44 @@ const AnnouncementsBoard = ({ user }) => {
                                             </div>
                                         )}
 
-                                        {/* Acuse de recibo digital */}
-                                        {ann.requiresAcknowledgment && (
+                                        {/* Acuse de recibo digital o confirmación de lectura */}
+                                        {ann.requiresAcknowledgment ? (
                                             <div className="pt-3 border-t border-gray-100">
                                                 {ann.isAcknowledged ? (
-                                                    <div className="bg-emerald-50 border border-emerald-200 p-2 rounded flex items-center justify-between text-xs text-emerald-900">
+                                                    <div className="bg-emerald-50/60 border border-emerald-200 p-2.5 rounded flex items-center justify-between text-xs text-emerald-900">
                                                         <span className="font-medium">Acuse de recibo digital firmado</span>
                                                         <span className="text-[11px] text-emerald-700 font-mono tabular-nums">
                                                             {new Date(ann.readAt).toLocaleDateString('es-EC')}
                                                         </span>
                                                     </div>
                                                 ) : (
-                                                    <div className="bg-amber-50 border border-amber-200 p-3 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                    <div className="bg-amber-50/60 border border-amber-200 p-3 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                                         <p className="text-xs text-amber-900 font-medium">
                                                             Este comunicado requiere confirmación obligatoria de lectura.
                                                         </p>
                                                         <button
                                                             disabled={actionLoading}
                                                             onClick={() => handleAcknowledge(ann.id)}
-                                                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                                                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded transition-colors cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
                                                         >
                                                             Firmar Acuse de Recibo
                                                         </button>
                                                     </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs">
+                                                {ann.isRead ? (
+                                                    <span className="text-[11px] text-gray-400 font-mono">
+                                                        Lectura confirmada · {new Date(ann.readAt).toLocaleDateString('es-EC')}
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleMarkAsRead(ann.id)}
+                                                        className="border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-[11px] px-2.5 py-1 rounded transition-colors cursor-pointer"
+                                                    >
+                                                        Marcar como leído
+                                                    </button>
                                                 )}
                                             </div>
                                         )}

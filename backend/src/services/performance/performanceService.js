@@ -323,12 +323,28 @@ class PerformanceService {
     /**
      * Obtener evaluaciones pendientes del usuario autenticado.
      */
-    async getMyEvaluations(userId) {
+    async getMyEvaluations(userId, user = null) {
+        let actualEmployeeId = userId;
+        if (user) {
+            const emp = await prisma.employee.findFirst({
+                where: {
+                    OR: [
+                        ...(userId ? [{ id: userId }] : []),
+                        ...(user?.employeeId ? [{ id: user.employeeId }] : []),
+                        ...(user?.email ? [{ email: user.email }] : [])
+                    ],
+                    ...(user?.tenantId ? { tenantId: user.tenantId } : {})
+                },
+                select: { id: true }
+            });
+            if (emp) actualEmployeeId = emp.id;
+        }
+
         const reviews = await prisma.evaluationReviewer.findMany({
             where: {
-                reviewerId: userId,
+                reviewerId: actualEmployeeId,
                 evaluation: {
-                    status: { in: ['PENDING', 'IN_PROGRESS'] }
+                    status: { in: ['PENDING', 'IN_PROGRESS', 'COMPLETED'] }
                 }
             },
             include: {

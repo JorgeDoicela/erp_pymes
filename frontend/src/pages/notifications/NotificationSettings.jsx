@@ -228,7 +228,7 @@ const NotificationSettings = () => {
                     </div>
 
                     <button
-                        onClick={() => navigate('/admin/notifications')}
+                        onClick={() => navigate('/notifications')}
                         className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                     >
                         ← Volver a Notificaciones

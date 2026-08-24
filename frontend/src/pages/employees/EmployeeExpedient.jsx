@@ -22,7 +22,10 @@ export default function EmployeeExpedient() {
     const navigate = useNavigate();
 
     // Modo de vista: 'directory' (cuando estamos en /admin/expedientes sin ID) o 'detail' (con ID o /my-expedient)
-    const isDetailMode = Boolean(employeeId) || window.location.pathname.includes('/my-expedient');
+    const isMyExpedient = window.location.pathname.includes('/my-expedient');
+    const isDetailMode = Boolean(employeeId) || isMyExpedient;
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'hr' || currentUser?.role === 'superadmin';
 
     // Estados para Modo Directorio General
     const [directoryData, setDirectoryData] = useState([]);
@@ -50,19 +53,21 @@ export default function EmployeeExpedient() {
 
     useEffect(() => {
         if (employeeId === 'undefined') {
-            navigate('/admin/expedientes', { replace: true });
+            navigate(isAdmin ? '/admin/expedientes' : '/my-expedient', { replace: true });
             return;
         }
 
         if (isDetailMode) {
             loadExpedientDetail();
-            getAllExpedientsSummary().then(res => {
-                if (res.success) setDirectoryData(res.data);
-            }).catch(() => {});
+            if (isAdmin && !isMyExpedient) {
+                getAllExpedientsSummary().then(res => {
+                    if (res.success) setDirectoryData(res.data);
+                }).catch(() => {});
+            }
         } else {
             loadDirectory();
         }
-    }, [employeeId, isDetailMode]);
+    }, [employeeId, isDetailMode, isMyExpedient]);
 
     // Cargar Directorio de Todos los Expedientes
     const loadDirectory = async () => {
@@ -81,12 +86,12 @@ export default function EmployeeExpedient() {
 
     // Cargar Detalle de un Expediente
     const loadExpedientDetail = async () => {
-        if (!employeeId && !window.location.pathname.includes('/my-expedient')) return;
+        if (!employeeId && !isMyExpedient) return;
         setExpedientLoading(true);
         try {
-            const res = employeeId 
-                ? await getEmployeeExpedient(employeeId)
-                : await getMyExpedient();
+            const res = isMyExpedient 
+                ? await getMyExpedient()
+                : await getEmployeeExpedient(employeeId);
             if (res.success) {
                 setExpedientData(res.data);
                 if (employeeId) setTargetEmployeeId(employeeId);
@@ -297,17 +302,24 @@ export default function EmployeeExpedient() {
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono">
-                                        Gestión de Capital Humano
+                                        {isMyExpedient ? 'Mi Portal · Expediente Digital' : 'Gestión de Capital Humano'}
                                     </span>
                                     <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200 font-mono">
                                         Cédula #{expedientData?.employee?.identityCard || 'S/N'}
                                     </span>
                                 </div>
                                 <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                                    Expediente de {expedientData?.employee?.firstName} {expedientData?.employee?.lastName}
+                                    {isMyExpedient 
+                                        ? 'Mi Expediente Digital' 
+                                        : `Expediente de ${expedientData?.employee?.firstName} ${expedientData?.employee?.lastName}`}
                                 </h1>
                                 <p className="text-xs text-gray-500 mt-0.5">
-                                    Cargo: <span className="font-semibold text-gray-800">{expedientData?.employee?.position || 'Colaborador'}</span> · Departamento: <span className="font-semibold text-gray-800">{expedientData?.employee?.department || 'General'}</span> · Completitud: <span className="font-semibold font-mono text-gray-800 tabular-nums">{expedientData?.completionPercentage || 0}% ({expedientData?.verifiedCount || 0}/{expedientData?.totalRequired || 0} requeridos)</span>
+                                    {isMyExpedient ? (
+                                        <>Consulta el estado de tu documentación laboral, contratos y requisitos legales.</>
+                                    ) : (
+                                        <>Cargo: <span className="font-semibold text-gray-800">{expedientData?.employee?.position || 'Colaborador'}</span> · Departamento: <span className="font-semibold text-gray-800">{expedientData?.employee?.department || 'General'}</span></>
+                                    )}
+                                    {' · '}Completitud: <span className="font-semibold font-mono text-gray-800 tabular-nums">{expedientData?.completionPercentage || 0}% ({expedientData?.verifiedCount || 0}/{expedientData?.totalRequired || 0} requeridos)</span>
                                 </p>
                             </div>
 
@@ -318,19 +330,21 @@ export default function EmployeeExpedient() {
                                         setUploadCategory('IDENTIFICATION');
                                         setUploadModalOpen(true);
                                     }}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
                                 >
                                     <FiUploadCloud className="w-3.5 h-3.5" />
                                     <span>Adjuntar Documento</span>
                                 </button>
 
-                                <button
-                                    onClick={() => navigate('/admin/expedientes')}
-                                    className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 bg-white"
-                                >
-                                    <FiArrowLeft className="w-3.5 h-3.5" />
-                                    <span>Volver al Directorio</span>
-                                </button>
+                                {!isMyExpedient && (
+                                    <button
+                                        onClick={() => navigate('/admin/expedientes')}
+                                        className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 bg-white"
+                                    >
+                                        <FiArrowLeft className="w-3.5 h-3.5" />
+                                        <span>Volver al Directorio</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -399,30 +413,34 @@ export default function EmployeeExpedient() {
                                             <div className="flex justify-between items-center text-gray-400 pt-1.5 border-t border-gray-200 text-[11px]">
                                                 <span>Subido: {new Date(item.document.createdAt).toLocaleDateString('es-EC')}</span>
                                                 <div className="flex items-center gap-3">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedItem(item);
-                                                            setReviewNotes(item.document.verificationNotes || '');
-                                                            setReviewModalOpen(true);
-                                                        }}
-                                                        className="text-blue-600 hover:underline font-medium cursor-pointer"
-                                                    >
-                                                        Revisar
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setDocumentToDelete({
-                                                                id: item.document.id,
-                                                                name: item.document.originalName || item.label,
-                                                                category: item.label
-                                                            });
-                                                            setDeleteConfirmModalOpen(true);
-                                                        }}
-                                                        className="text-gray-400 hover:text-rose-600 cursor-pointer"
-                                                        title="Eliminar documento"
-                                                    >
-                                                        <FiTrash2 className="w-3.5 h-3.5" />
-                                                    </button>
+                                                    {isAdmin && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedItem(item);
+                                                                setReviewNotes(item.document.verificationNotes || '');
+                                                                setReviewModalOpen(true);
+                                                            }}
+                                                            className="text-blue-600 hover:underline font-medium cursor-pointer"
+                                                        >
+                                                            Revisar
+                                                        </button>
+                                                    )}
+                                                    {(isAdmin || item.document.status === 'PENDING') && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setDocumentToDelete({
+                                                                    id: item.document.id,
+                                                                    name: item.document.originalName || item.label,
+                                                                    category: item.label
+                                                                });
+                                                                setDeleteConfirmModalOpen(true);
+                                                            }}
+                                                            className="text-gray-400 hover:text-rose-600 cursor-pointer"
+                                                            title="Eliminar documento"
+                                                        >
+                                                            <FiTrash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

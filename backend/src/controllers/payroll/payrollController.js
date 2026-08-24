@@ -35,7 +35,8 @@ class PayrollController {
 
     async getMyPayrolls(req, res) {
         try {
-            const payrolls = await payrollCalculationService.getPayrollsByEmployee(req.user.id);
+            const employeeId = req.user?.employeeId || req.user?.id;
+            const payrolls = await payrollCalculationService.getPayrollsByEmployee(employeeId, req.user);
             res.status(200).json({ success: true, data: payrolls });
         } catch (error) {
             console.error(error);

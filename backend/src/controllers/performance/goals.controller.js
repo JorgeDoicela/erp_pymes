@@ -1,27 +1,42 @@
 import prisma from '../../database/db.js';
 
+const getActualEmployeeId = async (user) => {
+    const directId = user.employeeId || user.id;
+    const emp = await prisma.employee.findFirst({
+        where: {
+            OR: [
+                ...(directId ? [{ id: directId }] : []),
+                ...(user.email ? [{ email: user.email }] : [])
+            ],
+            ...(user.tenantId ? { tenantId: user.tenantId } : {})
+        },
+        select: { id: true }
+    });
+    return emp ? emp.id : directId;
+};
+
 export const createGoal = async (req, res) => {
     try {
         const { title, description, metric, targetValue, unit, deadline, priority } = req.body;
-        const userId = req.user.id;
+        const employeeId = await getActualEmployeeId(req.user);
 
-        // Validation (Simple SMART check)
         if (!title || !metric || !targetValue || !deadline) {
             return res.status(400).json({ message: "Faltan campos obligatorios para definir un objetivo SMART." });
         }
 
         const goal = await prisma.employeeGoal.create({
             data: {
-                employeeId: userId,
-                title,
-                description,
-                metric,
+                employeeId,
+                title: title.trim(),
+                description: description ? description.trim() : null,
+                metric: metric.trim(),
                 targetValue: parseFloat(targetValue),
-                unit,
+                unit: unit || '%',
                 deadline: new Date(deadline),
-                priority,
+                priority: priority || 'MEDIUM',
                 status: 'PENDING',
-                progress: 0
+                progress: 0,
+                currentValue: 0
             }
         });
 
@@ -34,9 +49,9 @@ export const createGoal = async (req, res) => {
 
 export const getMyGoals = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const employeeId = await getActualEmployeeId(req.user);
         const goals = await prisma.employeeGoal.findMany({
-            where: { employeeId: userId },
+            where: { employeeId },
             orderBy: { deadline: 'asc' }
         });
         res.json(goals);
@@ -50,9 +65,14 @@ export const updateGoalProgress = async (req, res) => {
     try {
         const { id } = req.params;
         const { currentValue, status } = req.body;
-        const userId = req.user.id;
+        const employeeId = await getActualEmployeeId(req.user);
+        const isAdminOrHR = ['admin', 'hr', 'superadmin'].includes(req.user.role);
 
         const goal = await prisma.employeeGoal.findUnique({ where: { id } });
+        if (!goal) return res.status(404).json({ message: "Objetivo no encontrado" });
+        if (goal.employeeId !== employeeId && !isAdminOrHR) {
+            return res.status(403).json({ message: "No tienes permiso para actualizar este objetivo" });
+        }
 
         const newVal = parseFloat(currentValue);
         const validNewVal = isNaN(newVal) ? 0 : newVal;
@@ -88,21 +108,20 @@ export const updateGoalProgress = async (req, res) => {
 export const deleteGoal = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const employeeId = await getActualEmployeeId(req.user);
+        const isAdminOrHR = ['admin', 'hr', 'superadmin'].includes(req.user.role);
 
-        await prisma.employeeGoal.deleteMany({
-            where: { id, employeeId: userId }
-        }); // deleteMany ensures ownership check implicitly via where clause safety logic usually, but unique ID is global. findFirst is safer.
-
-        // Better pattern:
         const goal = await prisma.employeeGoal.findUnique({ where: { id } });
-        if (!goal) return res.status(404).json({ message: "Not found" });
-        if (goal.employeeId !== userId) return res.status(403).json({ message: "Forbidden" });
+        if (!goal) return res.status(404).json({ message: "Objetivo no encontrado" });
+        if (goal.employeeId !== employeeId && !isAdminOrHR) {
+            return res.status(403).json({ message: "No tienes permiso para eliminar este objetivo" });
+        }
 
         await prisma.employeeGoal.delete({ where: { id } });
 
-        res.json({ message: "Objetivo eliminado" });
+        res.json({ success: true, message: "Objetivo eliminado correctamente" });
     } catch (error) {
-        res.status(500).json({ message: "Error al eliminar" });
+        console.error("Error deleting goal:", error);
+        res.status(500).json({ message: "Error al eliminar objetivo" });
     }
 };

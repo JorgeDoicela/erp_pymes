@@ -59,7 +59,7 @@ export const verifyExpedientDocument = async (req, res) => {
 export const deleteExpedientDocument = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await expedientService.deleteDocument(id, req.user.id);
+        const result = await expedientService.deleteDocument(id, req.user);
         return res.json({ success: true, message: 'Documento eliminado exitosamente', data: result });
     } catch (error) {
         return res.status(400).json({ success: false, message: error.message });

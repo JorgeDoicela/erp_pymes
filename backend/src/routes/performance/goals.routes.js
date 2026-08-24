@@ -7,6 +7,6 @@ const router = Router();
 router.post('/', authenticate, authorize(['admin', 'hr', 'manager', 'employee']), createGoal);
 router.get('/', authenticate, authorize(['admin', 'hr', 'manager', 'employee']), getMyGoals);
 router.put('/:id/progress', authenticate, authorize(['admin', 'hr', 'manager', 'employee']), updateGoalProgress);
-router.delete('/:id', authenticate, authorize(['admin', 'hr', 'manager']), deleteGoal);
+router.delete('/:id', authenticate, authorize(['admin', 'hr', 'manager', 'employee']), deleteGoal);
 
 export default router;

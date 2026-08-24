@@ -159,6 +159,7 @@ class ExpedientService {
                 where: {
                     OR: [
                         ...(user.employeeId ? [{ id: user.employeeId }] : []),
+                        ...(user.id ? [{ id: user.id }] : []),
                         ...(user.email ? [{ email: user.email }] : [])
                     ],
                     ...tenantFilter
@@ -350,7 +351,7 @@ class ExpedientService {
     /**
      * Eliminar un documento del expediente.
      */
-    async deleteDocument(documentId, adminId) {
+    async deleteDocument(documentId, user) {
         const doc = await prisma.document.findUnique({
             where: { id: documentId },
             include: { employee: true }
@@ -358,16 +359,24 @@ class ExpedientService {
 
         if (!doc) throw new Error('Documento no encontrado');
 
+        const userId = user?.id || user?.employeeId;
+        const isAdminOrHr = user && ['admin', 'hr', 'superadmin'].includes(user.role?.toLowerCase());
+        const isOwner = doc.employeeId === userId;
+
+        if (!isAdminOrHr && (!isOwner || doc.status !== 'PENDING')) {
+            throw new Error('No tienes autorización para eliminar este documento');
+        }
+
         await prisma.document.delete({
             where: { id: documentId }
         });
 
-        if (adminId) {
+        if (userId) {
             auditRepository.createLog({
                 entity: 'Document',
                 entityId: documentId,
                 action: 'DELETE_DOCUMENT',
-                performedBy: adminId,
+                performedBy: userId,
                 details: `Eliminado documento ${doc.documentCategory} (${doc.originalName || doc.type}) de ${doc.employee?.firstName} ${doc.employee?.lastName}`
             }).catch(err => console.error('Audit Log Error:', err));
         }

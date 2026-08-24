@@ -197,7 +197,32 @@ export class EmployeeController {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const updateData = { ...req.body };
+      const userRole = (req.user?.role || '').toLowerCase();
+      const currentUserId = req.user?.employeeId || req.user?.id;
+      const isAdminOrHr = ['admin', 'hr', 'superadmin'].includes(userRole);
+
+      // Si es un colaborador regular, validar que solo edite su propio perfil
+      if (!isAdminOrHr) {
+        if (currentUserId !== id) {
+          return res.status(403).json({
+            success: false,
+            message: 'Acceso denegado: Solo puedes actualizar tu propio perfil.',
+            code: 'FORBIDDEN_SELF_ONLY'
+          });
+        }
+        // Proteger campos sensibles frente a modificaciones no autorizadas
+        delete updateData.salary;
+        delete updateData.role;
+        delete updateData.department;
+        delete updateData.position;
+        delete updateData.hireDate;
+        delete updateData.contractType;
+        delete updateData.isActive;
+        delete updateData.exitDate;
+        delete updateData.exitReason;
+      }
+
       const userId = req.user?.id;
 
       // Validar longitud de contraseña si se está actualizando

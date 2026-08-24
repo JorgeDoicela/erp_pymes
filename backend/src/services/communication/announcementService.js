@@ -70,8 +70,8 @@ class AnnouncementService {
             })
         ]);
 
-        // Cumpleañeros del mes actual
-        const currentMonth = new Date().getMonth() + 1;
+        // Cumpleañeros del mes actual (evaluado con mes UTC consistente)
+        const currentMonth = new Date().getUTCMonth() + 1;
         const birthdayCount = activeEmployees.filter(emp => {
             if (!emp.birthDate) return false;
             return new Date(emp.birthDate).getUTCMonth() + 1 === currentMonth;
@@ -109,7 +109,7 @@ class AnnouncementService {
     /**
      * Obtener comunicados para el tablón con estado de lectura del empleado actual.
      */
-    async getAnnouncementsForEmployee(employeeId, { category, search, requiresAck, page = 1, limit = 20, tenantId = null }) {
+    async getAnnouncementsForEmployee(employeeId, { category, search, requiresAck, pendingOnly, page = 1, limit = 20, tenantId = null }) {
         const skip = (page - 1) * limit;
         const where = {
             ...(tenantId ? { tenantId } : {})
@@ -117,6 +117,15 @@ class AnnouncementService {
 
         if (category) where.category = category;
         if (requiresAck !== undefined) where.requiresAcknowledgment = requiresAck === 'true' || requiresAck === true;
+        if ((pendingOnly === 'true' || pendingOnly === true) && employeeId) {
+            where.requiresAcknowledgment = true;
+            where.reads = {
+                none: {
+                    employeeId,
+                    acknowledged: true
+                }
+            };
+        }
 
         if (search) {
             const cleanSearch = search.trim();

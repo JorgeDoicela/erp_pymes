@@ -192,7 +192,9 @@ class AssetService {
         let emp = await prisma.employee.findFirst({
             where: {
                 OR: [
-                    { id: employeeId },
+                    ...(employeeId ? [{ id: employeeId }] : []),
+                    ...(user?.employeeId ? [{ id: user.employeeId }] : []),
+                    ...(user?.id ? [{ id: user.id }] : []),
                     ...(user?.email ? [{ email: user.email }] : [])
                 ],
                 ...(user?.tenantId ? { tenantId: user.tenantId } : {})

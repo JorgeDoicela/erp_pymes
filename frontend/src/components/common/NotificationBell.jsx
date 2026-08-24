@@ -69,6 +69,9 @@ const NotificationBell = () => {
         return { label: 'SISTEMA', color: 'bg-gray-100 text-gray-700 border-gray-200' };
     };
 
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'hr';
+
     const handleRead = async (notification) => {
         if (!notification.isRead) {
             try {
@@ -83,20 +86,22 @@ const NotificationBell = () => {
         }
 
         setIsOpen(false);
-        if (notification.type === 'CONTRACT_EXPIRATION' && notification.relatedEntityId) {
-            navigate('/admin/contracts/expiring');
+        if (notification.type.startsWith('ANNOUNCEMENT')) {
+            navigate('/announcements');
+        } else if (notification.type === 'CONTRACT_EXPIRATION') {
+            navigate(isAdmin ? '/admin/contracts/expiring' : '/my-expedient');
         } else if (notification.type.startsWith('EVALUATION_')) {
-            navigate('/performance');
+            navigate(isAdmin ? '/performance' : '/performance/my-evaluations');
         } else if (notification.type.startsWith('ABSENCE_')) {
-            navigate('/admin/absences');
+            navigate(isAdmin ? '/admin/absences' : '/empleado/ausencias');
         } else if (notification.type === 'DOCUMENT_EXPIRATION') {
             navigate('/profile');
         } else if (notification.type === 'DOCUMENT_EXPIRATION_HR' || notification.type === 'DOCUMENT_EXPIRED') {
-            navigate('/admin/employees');
+            navigate(isAdmin ? '/admin/employees' : '/profile');
         } else if (notification.type.startsWith('PAYROLL_')) {
-            navigate('/admin/payroll/generator');
+            navigate(isAdmin ? '/admin/payroll/generator' : '/my-payments');
         } else {
-            navigate('/admin/notifications');
+            navigate('/notifications');
         }
     };
 
@@ -112,7 +117,7 @@ const NotificationBell = () => {
 
     const handleViewAll = () => {
         setIsOpen(false);
-        navigate('/admin/notifications');
+        navigate('/notifications');
     };
 
     return (
@@ -150,7 +155,7 @@ const NotificationBell = () => {
                                 </button>
                             )}
                             <button
-                                onClick={() => { setIsOpen(false); navigate('/admin/notifications/settings'); }}
+                                onClick={() => { setIsOpen(false); navigate('/notifications/settings'); }}
                                 className="p-1 rounded hover:bg-gray-200/60 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
                                 title="Configuración de canales"
                             >

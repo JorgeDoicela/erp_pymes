@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { 
     requestAdvance, 
     getMyAdvances, 
     cancelAdvance 
 } from '../../services/payroll/salaryAdvance.service';
 import { 
-    BanknotesIcon, 
-    ClockIcon, 
-    CheckCircleIcon, 
-    XCircleIcon, 
     PlusIcon, 
-    ShieldCheckIcon,
     InformationCircleIcon
 } from '@heroicons/react/24/outline';
 
@@ -40,6 +36,7 @@ const MySalaryAdvances = () => {
             }
         } catch (error) {
             console.error('Error al obtener mis anticipos:', error);
+            toast.error(error.message || 'Error al cargar anticipos');
         } finally {
             setLoading(false);
         }
@@ -55,28 +52,28 @@ const MySalaryAdvances = () => {
                 reason: form.reason
             });
             if (res.success) {
-                alert('Solicitud enviada exitosamente a RRHH/Administración');
+                toast.success('Solicitud de anticipo enviada exitosamente a RRHH');
                 setModalOpen(false);
                 setForm({ amount: '', installments: 1, reason: '' });
                 loadMyAdvances();
             }
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message || 'Error al procesar la solicitud');
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleCancel = async (id) => {
-        if (!window.confirm('¿Deseas cancelar esta solicitud de anticipo?')) return;
+        if (!window.confirm('¿Confirmas la cancelación de esta solicitud de anticipo?')) return;
         try {
             const res = await cancelAdvance(id);
             if (res.success) {
-                alert('Solicitud cancelada');
+                toast.success('Solicitud de anticipo cancelada');
                 loadMyAdvances();
             }
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message || 'Error al cancelar la solicitud');
         }
     };
 
@@ -91,17 +88,17 @@ const MySalaryAdvances = () => {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'APPROVED':
-                return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-green-50 text-green-700 border border-green-200">Aprobado</span>;
+                return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">APROBADO</span>;
             case 'PENDING':
-                return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">Pendiente</span>;
+                return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-amber-50 text-amber-800 border border-amber-200">PENDIENTE</span>;
             case 'PAID':
-                return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700 border border-gray-200">Pagado</span>;
+                return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-gray-100 text-gray-700 border border-gray-200">PAGADO</span>;
             case 'REJECTED':
-                return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-red-50 text-red-700 border border-red-200">Rechazado</span>;
+                return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-rose-50 text-rose-800 border border-rose-200">RECHAZADO</span>;
             case 'CANCELLED':
-                return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">Cancelado</span>;
+                return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-gray-50 text-gray-500 border border-gray-200">CANCELADO</span>;
             default:
-                return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700">{status}</span>;
+                return <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-gray-100 text-gray-700 border border-gray-200">{status}</span>;
         }
     };
 

@@ -29,7 +29,7 @@ router.get('/expedient/my', authenticate, (req, res, next) => {
 router.get('/expedient/:id', authenticate, authorize(['admin', 'hr', 'superadmin', 'accounting']), getEmployeeExpedient);
 router.post('/expedient/upload', authenticate, uploadExpedientDocument);
 router.put('/expedient/verify/:id', authenticate, authorize(['admin', 'hr', 'superadmin']), verifyExpedientDocument);
-router.delete('/expedient/document/:id', authenticate, authorize(['admin', 'hr', 'superadmin']), deleteExpedientDocument);
+router.delete('/expedient/document/:id', authenticate, deleteExpedientDocument);
 
 // --- Activos y EPPs ---
 router.get('/assets', authenticate, authorize(['admin', 'hr', 'superadmin', 'accounting']), getAllAssets);

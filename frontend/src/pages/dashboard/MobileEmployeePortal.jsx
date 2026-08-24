@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { getMyPayrolls } from '../../services/payroll/payrollConfig.service';
@@ -12,12 +12,9 @@ import {
     DocumentArrowDownIcon, 
     PaperAirplaneIcon, 
     MapPinIcon, 
-    CheckCircleIcon,
     DocumentTextIcon,
     CalendarIcon,
     ArrowRightOnRectangleIcon,
-    SparklesIcon,
-    BuildingOfficeIcon,
     UserCircleIcon
 } from '@heroicons/react/24/outline';
 
@@ -25,6 +22,7 @@ const MobileEmployeePortal = ({ user }) => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('HOME'); // HOME | ATTENDANCE | PAYROLL | REQUESTS
     const [loading, setLoading] = useState(true);
+    const [notification, setNotification] = useState(null);
 
     // Data states
     const [payrolls, setPayrolls] = useState([]);
@@ -43,6 +41,11 @@ const MobileEmployeePortal = ({ user }) => {
         reason: ''
     });
     const [formLoading, setFormLoading] = useState(false);
+
+    const showNotification = (type, message) => {
+        setNotification({ type, message });
+        setTimeout(() => setNotification(null), 4000);
+    };
 
     useEffect(() => {
         loadPortalData();
@@ -81,24 +84,24 @@ const MobileEmployeePortal = ({ user }) => {
         try {
             getGps();
             if (clockStatus === 'OUT') {
-                const res = await clockIn({
+                await clockIn({
                     latitude: gpsLocation?.lat,
                     longitude: gpsLocation?.lng
                 });
                 setClockStatus('IN');
                 setClockTime(new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }));
-                alert('¡Entrada marcada exitosamente con GPS!');
+                showNotification('success', 'Entrada marcada exitosamente con geolocalización GPS');
             } else {
-                const res = await clockOut({
+                await clockOut({
                     latitude: gpsLocation?.lat,
                     longitude: gpsLocation?.lng
                 });
                 setClockStatus('OUT');
                 setClockTime(null);
-                alert('¡Salida registrada exitosamente!');
+                showNotification('success', 'Salida registrada exitosamente');
             }
         } catch (error) {
-            alert(error.message || 'Error al registrar marcación');
+            showNotification('error', error.message || 'Error al registrar marcación');
         } finally {
             setClockLoading(false);
         }
@@ -108,13 +111,13 @@ const MobileEmployeePortal = ({ user }) => {
         e.preventDefault();
         setFormLoading(true);
         try {
-            const res = await createAbsenceRequest(requestForm);
-            alert('Solicitud enviada a tu supervisor');
+            await createAbsenceRequest(requestForm);
+            showNotification('success', 'Solicitud de permiso enviada a su supervisor');
             setRequestModalOpen(false);
             setRequestForm({ type: 'VACATION', startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0], reason: '' });
             loadPortalData();
         } catch (error) {
-            alert(error.message || 'Error al enviar solicitud');
+            showNotification('error', error.message || 'Error al enviar solicitud');
         } finally {
             setFormLoading(false);
         }
@@ -124,22 +127,35 @@ const MobileEmployeePortal = ({ user }) => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col pb-24 font-sans text-gray-800">
+            {/* Notificación Toast Sobria */}
+            {notification && (
+                <div
+                    className={`fixed top-4 left-4 right-4 z-50 px-4 py-2.5 rounded border text-xs font-medium shadow-md text-center transition-all ${
+                        notification.type === 'success'
+                            ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                            : 'bg-red-50 text-red-900 border-red-200'
+                    }`}
+                >
+                    {notification.message}
+                </div>
+            )}
+
             {/* Mobile Header Banner */}
             <div className="bg-white text-gray-900 p-4 border-b border-gray-200 shadow-xs relative">
                 <div className="relative z-10 flex justify-between items-center max-w-md mx-auto">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center font-bold text-sm text-gray-700 border border-gray-200">
+                        <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center font-bold text-sm text-gray-700 border border-gray-200 font-mono">
                             {user?.firstName?.[0] || 'E'}{user?.lastName?.[0] || 'P'}
                         </div>
                         <div>
-                            <p className="text-[10px] text-gray-500 font-medium">Portal de Autoservicio</p>
+                            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Portal de Autogestión</p>
                             <h2 className="text-sm font-semibold text-gray-900">{user?.firstName} {user?.lastName}</h2>
-                            <p className="text-[11px] text-gray-500 font-mono">{user?.position || 'Operativo'} • {user?.department || 'General'}</p>
+                            <p className="text-[11px] text-gray-500 font-mono">{user?.position || 'Colaborador'} · {user?.department || 'General'}</p>
                         </div>
                     </div>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium border ${
                         clockStatus === 'IN' 
-                            ? 'bg-green-50 text-green-700 border-green-200' 
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
                             : 'bg-gray-100 text-gray-600 border-gray-200'
                     }`}>
                         {clockStatus === 'IN' ? '● EN TURNO' : '○ FUERA DE TURNO'}
@@ -173,7 +189,7 @@ const MobileEmployeePortal = ({ user }) => {
                                     if (latestPayroll) {
                                         generatePayslipPDF(latestPayroll, user, latestPayroll.payroll?.period || new Date());
                                     } else {
-                                        alert('No tienes roles de pago generados aún');
+                                        showNotification('error', 'No cuenta con roles de pago generados aún');
                                     }
                                 }}
                                 className="bg-white p-3.5 rounded border border-gray-200 shadow-xs hover:bg-gray-50 transition-colors flex flex-col items-start space-y-1.5 text-left cursor-pointer"
@@ -198,226 +214,233 @@ const MobileEmployeePortal = ({ user }) => {
                                         {gpsLocation ? 'Coordenadas GPS Listas' : 'Obteniendo GPS...'}
                                     </p>
                                 </div>
-                                {clockTime && <span className="text-[11px] font-mono font-medium bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">Entrada: {clockTime}</span>}
+                                {clockTime && (
+                                    <span className="text-xs font-mono font-semibold text-emerald-700 tabular-nums">
+                                        {clockTime}
+                                    </span>
+                                )}
                             </div>
 
                             <button
                                 onClick={handleClockAction}
                                 disabled={clockLoading}
-                                className={`w-full py-2.5 rounded font-medium text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
+                                className={`w-full py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${
                                     clockStatus === 'OUT'
-                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                        : 'bg-red-600 hover:bg-red-700 text-white'
+                                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
+                                        : 'bg-red-600 hover:bg-red-700 text-white shadow-xs'
                                 }`}
                             >
                                 <ClockIcon className="w-4 h-4" />
-                                {clockLoading ? 'Procesando...' : clockStatus === 'OUT' ? 'Marcar Entrada Ahora' : 'Marcar Salida Ahora'}
+                                {clockLoading ? 'Registrando...' : clockStatus === 'OUT' ? 'Marcar Entrada de Turno' : 'Marcar Salida de Turno'}
                             </button>
                         </div>
 
-                        {/* Recent Requests Preview */}
-                        <div className="bg-white p-4 rounded border border-gray-200 shadow-xs space-y-3">
-                            <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                                <h4 className="font-semibold text-gray-900 text-xs uppercase tracking-wider">Solicitudes Recientes</h4>
-                                <button onClick={() => setRequestModalOpen(true)} className="text-xs text-blue-600 font-medium hover:underline cursor-pointer">+ Nueva</button>
+                        {/* Recent Requests Status */}
+                        <div className="bg-white rounded border border-gray-200 p-4 space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                                <h4 className="font-semibold text-xs text-gray-900">Mis Permisos Recientes</h4>
+                                <button onClick={() => setActiveTab('REQUESTS')} className="text-[11px] text-blue-600 hover:underline font-medium">Ver todos →</button>
                             </div>
 
-                            {absences.length === 0 ? (
-                                <p className="text-xs text-gray-400 italic text-center py-2">No tienes solicitudes pendientes</p>
-                            ) : (
-                                absences.slice(0, 3).map(abs => (
-                                    <div key={abs.id} className="p-2.5 bg-gray-50 rounded flex justify-between items-center border border-gray-200 text-xs">
+                            <div className="divide-y divide-gray-100">
+                                {absences.slice(0, 3).map((abs) => (
+                                    <div key={abs.id} className="py-2.5 flex justify-between items-center">
                                         <div>
-                                            <p className="font-medium text-gray-800">{abs.type === 'VACATION' ? 'Vacaciones' : abs.type}</p>
-                                            <p className="text-[10px] text-gray-500 font-mono">
+                                            <p className="font-medium text-gray-900 text-xs">{abs.type === 'VACATION' ? 'Vacaciones' : abs.type}</p>
+                                            <p className="text-[10px] text-gray-400 font-mono tabular-nums">
                                                 {new Date(abs.startDate).toLocaleDateString('es-EC')} - {new Date(abs.endDate).toLocaleDateString('es-EC')}
                                             </p>
                                         </div>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono ${
-                                            abs.status === 'APPROVED' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium border ${
+                                            abs.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                                            abs.status === 'REJECTED' ? 'bg-red-50 text-red-800 border-red-200' :
+                                            'bg-amber-50 text-amber-800 border-amber-200'
                                         }`}>
-                                            {abs.status === 'APPROVED' ? 'Aprobado' : 'Pendiente'}
+                                            {abs.status === 'APPROVED' ? 'Aprobado' : abs.status === 'REJECTED' ? 'Rechazado' : 'En Revisión'}
                                         </span>
                                     </div>
-                                ))
-                            )}
-                        </div>
-                    </motion.div>
-                )}
+                                ))}
 
-                {/* TAB 2: MARCACIÓN Y TURNOS */}
-                {activeTab === 'ATTENDANCE' && (
-                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                        <div className="bg-white p-4 rounded border border-gray-200 shadow-xs text-center space-y-3">
-                            <div className="w-12 h-12 rounded bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
-                                <ClockIcon className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 text-sm">Control Horario y Marcaciones</h3>
-                                <p className="text-xs text-gray-500 font-mono mt-0.5">Turno Asignado: 08:00 - 17:00</p>
-                            </div>
-
-                            <button
-                                onClick={handleClockAction}
-                                disabled={clockLoading}
-                                className={`w-full py-2.5 rounded font-medium text-xs shadow-xs transition-colors cursor-pointer ${
-                                    clockStatus === 'OUT'
-                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                        : 'bg-red-600 hover:bg-red-700 text-white'
-                                }`}
-                            >
-                                {clockLoading ? 'Procesando...' : clockStatus === 'OUT' ? 'Marcar Entrada con GPS' : 'Marcar Salida con GPS'}
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* TAB 3: ROLES DE PAGO Y CERTIFICADOS */}
-                {activeTab === 'PAYROLL' && (
-                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                        <div className="bg-white p-4 rounded border border-gray-200 shadow-xs space-y-3">
-                            <h3 className="font-semibold text-gray-900 text-xs uppercase tracking-wider pb-2 border-b border-gray-100">Documentos y Roles</h3>
-
-                            <button
-                                onClick={() => generateCertificatePDF(user || {})}
-                                className="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-xs shadow-xs flex items-center justify-between transition-colors cursor-pointer"
-                            >
-                                <span className="flex items-center gap-1.5">
-                                    <DocumentTextIcon className="w-4 h-4" />
-                                    Certificado Laboral Oficial (PDF)
-                                </span>
-                                <span className="text-[11px]">Descargar ↗</span>
-                            </button>
-
-                            <div className="space-y-2 pt-1">
-                                <h4 className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Historial de Roles de Pago</h4>
-                                {payrolls.length === 0 ? (
-                                    <p className="text-xs text-gray-400 italic py-2 text-center">Sin recibos registrados</p>
-                                ) : (
-                                    payrolls.map(det => (
-                                        <div key={det.id} className="p-2.5 bg-gray-50 rounded border border-gray-200 flex justify-between items-center text-xs">
-                                            <div>
-                                                <p className="font-medium text-gray-800">
-                                                    Nómina {new Date(det.payroll?.period || new Date()).toLocaleDateString('es-EC', { month: 'long', year: 'numeric' })}
-                                                </p>
-                                                <p className="text-gray-500 font-mono tabular-nums text-[11px]">Neto: ${(det.netSalary || 0).toFixed(2)}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => generatePayslipPDF(det, user, det.payroll?.period || new Date())}
-                                                className="px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors"
-                                            >
-                                                PDF Rol
-                                            </button>
-                                        </div>
-                                    ))
+                                {absences.length === 0 && (
+                                    <p className="text-gray-400 py-3 text-center text-xs">No tienes solicitudes recientes</p>
                                 )}
                             </div>
                         </div>
                     </motion.div>
                 )}
 
-                {/* TAB 4: SOLICITUDES */}
-                {activeTab === 'REQUESTS' && (
-                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                        <button
-                            onClick={() => setRequestModalOpen(true)}
-                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded shadow-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                            <PaperAirplaneIcon className="w-3.5 h-3.5" />
-                            + Nueva Solicitud de Permiso
-                        </button>
+                {/* TAB 2: ATTENDANCE */}
+                {activeTab === 'ATTENDANCE' && (
+                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                        <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                            <h3 className="font-semibold text-xs text-gray-900 border-b border-gray-100 pb-2">Marcación en Tiempo Real</h3>
+                            <p className="text-gray-500 text-[11px]">Su marcación registrará la hora oficial y las coordenadas GPS validadas contra la geocerca de la empresa.</p>
 
-                        <div className="bg-white p-4 rounded border border-gray-200 shadow-xs space-y-2.5">
-                            <h4 className="font-semibold text-gray-900 text-xs uppercase tracking-wider pb-2 border-b border-gray-100">Historial de Permisos</h4>
-                            {absences.length === 0 ? (
-                                <p className="text-xs text-gray-400 italic text-center py-3">No has registrado permisos</p>
-                            ) : (
-                                absences.map(abs => (
-                                    <div key={abs.id} className="p-2.5 bg-gray-50 rounded border border-gray-200 flex justify-between items-center text-xs">
-                                        <div>
-                                            <p className="font-medium text-gray-800">{abs.type}</p>
-                                            <p className="text-gray-500 text-[11px] mt-0.5">{abs.reason || 'Sin justificación'}</p>
-                                        </div>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono ${
-                                            abs.status === 'APPROVED' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            <button
+                                onClick={handleClockAction}
+                                disabled={clockLoading}
+                                className={`w-full py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${
+                                    clockStatus === 'OUT'
+                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                        : 'bg-red-600 hover:bg-red-700 text-white'
+                                }`}
+                            >
+                                <ClockIcon className="w-4 h-4" />
+                                {clockLoading ? 'Validando GPS...' : clockStatus === 'OUT' ? 'Marcar Entrada de Turno' : 'Marcar Salida de Turno'}
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* TAB 3: PAYROLL */}
+                {activeTab === 'PAYROLL' && (
+                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                        <h3 className="font-semibold text-xs text-gray-900">Historial de Roles de Pago</h3>
+                        {payrolls.map((p) => (
+                            <div key={p.id} className="bg-white p-3.5 rounded border border-gray-200 flex justify-between items-center">
+                                <div>
+                                    <p className="font-semibold text-gray-900 text-xs">Rol Mensual</p>
+                                    <p className="text-[11px] text-gray-400 font-mono tabular-nums">
+                                        {p.payroll?.period ? new Date(p.payroll.period).toLocaleDateString('es-EC', { month: 'long', year: 'numeric' }) : 'Periodo Actual'}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => generatePayslipPDF(p, user, p.payroll?.period || new Date())}
+                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                                >
+                                    Descargar PDF
+                                </button>
+                            </div>
+                        ))}
+
+                        {payrolls.length === 0 && (
+                            <div className="bg-white p-8 rounded border border-gray-200 text-center text-gray-400 text-xs">
+                                No se registran roles de pago emitidos aún
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
+                {/* TAB 4: REQUESTS */}
+                {activeTab === 'REQUESTS' && (
+                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-semibold text-xs text-gray-900">Mis Solicitudes</h3>
+                            <button
+                                onClick={() => setRequestModalOpen(true)}
+                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                            >
+                                + Nueva Solicitud
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            {absences.map((abs) => (
+                                <div key={abs.id} className="bg-white p-3.5 rounded border border-gray-200 space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                        <p className="font-semibold text-gray-900 text-xs">{abs.type === 'VACATION' ? 'Vacaciones' : abs.type}</p>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium border ${
+                                            abs.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                                            abs.status === 'REJECTED' ? 'bg-red-50 text-red-800 border-red-200' :
+                                            'bg-amber-50 text-amber-800 border-amber-200'
                                         }`}>
-                                            {abs.status === 'APPROVED' ? 'Aprobado' : 'Pendiente'}
+                                            {abs.status === 'APPROVED' ? 'Aprobado' : abs.status === 'REJECTED' ? 'Rechazado' : 'En Revisión'}
                                         </span>
                                     </div>
-                                ))
+                                    <p className="text-[11px] text-gray-500 font-mono tabular-nums">
+                                        {new Date(abs.startDate).toLocaleDateString('es-EC')} al {new Date(abs.endDate).toLocaleDateString('es-EC')}
+                                    </p>
+                                    {abs.reason && <p className="text-[11px] text-gray-400">{abs.reason}</p>}
+                                </div>
+                            ))}
+
+                            {absences.length === 0 && (
+                                <div className="bg-white p-8 rounded border border-gray-200 text-center text-gray-400 text-xs">
+                                    No hay solicitudes registradas
+                                </div>
                             )}
                         </div>
                     </motion.div>
                 )}
             </main>
 
-            {/* Request Form Modal */}
+            {/* Floating Request Modal */}
             <AnimatePresence>
                 {requestModalOpen && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
                         <motion.div
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 20, opacity: 0 }}
-                            className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md overflow-hidden p-5 space-y-4 text-xs"
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white border border-gray-200 rounded max-w-sm w-full p-5 space-y-4 shadow-xl text-xs"
                         >
                             <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                                <h3 className="font-semibold text-gray-900 text-xs uppercase tracking-wider">Solicitud de Vacaciones / Permiso</h3>
-                                <button onClick={() => setRequestModalOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                                <h3 className="font-semibold text-sm text-gray-900">Solicitar Ausencia / Permiso</h3>
+                                <button onClick={() => setRequestModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
                             </div>
 
                             <form onSubmit={handleCreateRequest} className="space-y-3">
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Permiso</label>
+                                    <label className="block text-gray-700 font-medium mb-1">Tipo de Permiso</label>
                                     <select
-                                        className="w-full bg-white border border-gray-200 rounded p-2 text-xs text-gray-800 outline-none"
                                         value={requestForm.type}
                                         onChange={(e) => setRequestForm({ ...requestForm, type: e.target.value })}
+                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                                     >
                                         <option value="VACATION">Vacaciones</option>
-                                        <option value="MEDICAL">Licencia Médica</option>
-                                        <option value="PERSONAL">Asunto Personal</option>
+                                        <option value="SICK_LEAVE">Permiso Médico</option>
+                                        <option value="PERSONAL">Asuntos Personales / Calamidad</option>
                                     </select>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Desde</label>
+                                        <label className="block text-gray-700 font-medium mb-1">Desde</label>
                                         <input
                                             type="date"
                                             required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 outline-none font-mono"
                                             value={requestForm.startDate}
                                             onChange={(e) => setRequestForm({ ...requestForm, startDate: e.target.value })}
+                                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Hasta</label>
+                                        <label className="block text-gray-700 font-medium mb-1">Hasta</label>
                                         <input
                                             type="date"
                                             required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 outline-none font-mono"
                                             value={requestForm.endDate}
                                             onChange={(e) => setRequestForm({ ...requestForm, endDate: e.target.value })}
+                                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Motivo / Detalle</label>
+                                    <label className="block text-gray-700 font-medium mb-1">Motivo / Detalle</label>
                                     <textarea
-                                        rows="2"
+                                        rows={2}
                                         required
-                                        placeholder="Justificación del permiso..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none"
+                                        placeholder="Describa el motivo de la solicitud..."
                                         value={requestForm.reason}
                                         onChange={(e) => setRequestForm({ ...requestForm, reason: e.target.value })}
+                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                                     />
                                 </div>
 
-                                <div className="flex justify-end gap-3 pt-2">
-                                    <button type="button" onClick={() => setRequestModalOpen(false)} className="px-4 py-2 text-xs font-semibold text-slate-600">Cancelar</button>
-                                    <button type="submit" disabled={formLoading} className="px-5 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow-md">
+                                <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setRequestModalOpen(false)}
+                                        className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white text-gray-700 rounded text-xs"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={formLoading}
+                                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium"
+                                    >
                                         {formLoading ? 'Enviando...' : 'Enviar Solicitud'}
                                     </button>
                                 </div>
@@ -427,29 +450,39 @@ const MobileEmployeePortal = ({ user }) => {
                 )}
             </AnimatePresence>
 
-            {/* Fixed Mobile Bottom App Tab Navigation Bar */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 flex justify-around items-center z-40 max-w-md mx-auto shadow-sm">
-                {[
-                    { key: 'HOME', label: 'Inicio', icon: HomeIcon },
-                    { key: 'ATTENDANCE', label: 'Marcación', icon: ClockIcon },
-                    { key: 'PAYROLL', label: 'Roles', icon: DocumentArrowDownIcon },
-                    { key: 'REQUESTS', label: 'Permisos', icon: PaperAirplaneIcon }
-                ].map(tab => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.key;
-                    return (
-                        <button
-                            key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`flex flex-col items-center gap-0.5 transition-colors cursor-pointer ${
-                                isActive ? 'text-blue-600 font-semibold' : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                        >
-                            <Icon className="w-5 h-5" />
-                            <span className="text-[10px]">{tab.label}</span>
-                        </button>
-                    );
-                })}
+            {/* Bottom Mobile Tab Navigation Bar */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-6 flex justify-around items-center z-40 max-w-md mx-auto">
+                <button
+                    onClick={() => setActiveTab('HOME')}
+                    className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${activeTab === 'HOME' ? 'text-blue-600 font-semibold' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    <HomeIcon className="w-5 h-5" />
+                    <span className="text-[10px]">Inicio</span>
+                </button>
+
+                <button
+                    onClick={() => setActiveTab('ATTENDANCE')}
+                    className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${activeTab === 'ATTENDANCE' ? 'text-blue-600 font-semibold' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    <ClockIcon className="w-5 h-5" />
+                    <span className="text-[10px]">Asistencia</span>
+                </button>
+
+                <button
+                    onClick={() => setActiveTab('PAYROLL')}
+                    className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${activeTab === 'PAYROLL' ? 'text-blue-600 font-semibold' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    <DocumentArrowDownIcon className="w-5 h-5" />
+                    <span className="text-[10px]">Mis Pagos</span>
+                </button>
+
+                <button
+                    onClick={() => setActiveTab('REQUESTS')}
+                    className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${activeTab === 'REQUESTS' ? 'text-blue-600 font-semibold' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    <PaperAirplaneIcon className="w-5 h-5" />
+                    <span className="text-[10px]">Permisos</span>
+                </button>
             </nav>
         </div>
     );

@@ -289,6 +289,7 @@ function App() {
         <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/announcements" element={<AnnouncementsBoard user={auth.user} />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/notifications/settings" element={<NotificationSettings />} />
           <Route path="/performance/results/:id" element={<EvaluationResults />} />
           <Route path="/profile" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
           <Route path="/help" element={<HelpCenter />} />

@@ -1,14 +1,140 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { getMyAssets } from '../../services/employees/onboardingOffboarding.service';
 import { 
     FiSearch, 
     FiRefreshCw, 
     FiPrinter, 
-    FiPackage, 
-    FiCheckCircle, 
-    FiClock, 
-    FiAlertCircle 
+    FiEye,
+    FiFileText
 } from 'react-icons/fi';
+
+/**
+ * Genera e imprime el acta formal de entrega-recepción de dotación/activos como PDF.
+ */
+const printActaPDF = (asset) => {
+    const deliveryDateStr = asset.deliveryDate ? new Date(asset.deliveryDate).toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('es-EC');
+    const returnDateStr = asset.returnDate ? new Date(asset.returnDate).toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' }) : null;
+    const emp = asset.employee || {};
+
+    const categoryMap = {
+        EQUIPMENT: 'Cómputo y Tecnología',
+        UNIFORM_PPE: 'EPP e Indumentaria de Trabajo',
+        TOOL: 'Herramienta de Trabajo',
+        ACCESS_CARD: 'Tarjeta o Credencial de Acceso'
+    };
+    const categoryLabel = categoryMap[asset.category] || asset.category || 'Dotación General';
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Acta de Entrega-Recepción - ${asset.name}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; color: #111827; background: white; padding: 40px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 24px; }
+    .company { font-size: 18px; font-weight: bold; color: #111827; }
+    .company-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .badge { border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; font-family: monospace; }
+    .title { text-align: center; font-size: 14px; font-weight: bold; color: #111827; margin: 16px 0 24px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .section { margin-bottom: 20px; }
+    .section-title { font-size: 10px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 10px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; }
+    .field { display: flex; flex-direction: column; }
+    .field-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; }
+    .field-value { font-size: 12px; font-weight: 500; color: #111827; margin-top: 2px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th { background: #f9fafb; text-align: left; padding: 8px 12px; font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
+    td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+    .policy-box { border: 1px solid #e5e7eb; border-radius: 4px; padding: 14px; margin-top: 20px; background: #f9fafb; font-size: 11px; line-height: 1.5; color: #4b5563; }
+    .footer { margin-top: 48px; border-top: 1px solid #e5e7eb; padding-top: 20px; display: flex; justify-content: space-around; text-align: center; font-size: 10px; color: #6b7280; }
+    .signature-line { border-top: 1px solid #111827; margin: 48px auto 4px; width: 200px; }
+    @media print { body { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="company">SISTEMA DE TALENTO HUMANO & LOGÍSTICA</div>
+      <div class="company-sub">Comprobante Oficial de Custodia y Asignación de Bienes</div>
+    </div>
+    <div class="badge">ACT-EQ-${asset.id.slice(-6).toUpperCase()}</div>
+  </div>
+
+  <div class="title">Acta de Entrega - Recepción y Custodia de Bienes</div>
+
+  <div class="section">
+    <div class="section-title">1. Datos del Colaborador Custodio</div>
+    <div class="grid2">
+      <div class="field"><span class="field-label">Nombre Completo</span><span class="field-value">${emp?.firstName || ''} ${emp?.lastName || ''}</span></div>
+      <div class="field"><span class="field-label">Cédula / Identificación</span><span class="field-value" style="font-family: monospace;">${emp?.identityCard || 'S/N'}</span></div>
+      <div class="field"><span class="field-label">Cargo / Puesto</span><span class="field-value">${emp?.position || 'Colaborador'}</span></div>
+      <div class="field"><span class="field-label">Departamento</span><span class="field-value">${emp?.department || 'General'}</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. Especificaciones del Activo / Dotación</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Descripción del Bien</th>
+          <th>Categoría</th>
+          <th>Nº de Serie / Código</th>
+          <th>Estado Inicial</th>
+          <th>Fecha Entrega</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight: 600;">${asset.name}</td>
+          <td>${categoryLabel}</td>
+          <td style="font-family: monospace;">${asset.serialNumber || 'S/N'}</td>
+          <td>${asset.condition === 'NEW' ? 'Nuevo' : 'Buen Estado'}</td>
+          <td style="font-family: monospace;">${deliveryDateStr}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  ${returnDateStr ? `
+  <div class="section">
+    <div class="section-title">3. Estado de Devolución a Bodega</div>
+    <div class="grid2">
+      <div class="field"><span class="field-label">Fecha de Devolución</span><span class="field-value" style="font-family: monospace;">${returnDateStr}</span></div>
+      <div class="field"><span class="field-label">Observaciones</span><span class="field-value">${asset.returnNotes || 'Devolución conforme.'}</span></div>
+    </div>
+  </div>` : ''}
+
+  <div class="policy-box">
+    <strong>Declaración y Compromiso de Responsabilidad:</strong><br/>
+    El colaborador declara haber recibido el bien arriba detallado en óptimas condiciones de funcionamiento e higiene, comprometiéndose a destinarlo exclusivamente para el ejercicio de sus labores profesionales, cuidarlo diligentemente y restituirlo a la organización en caso de cese de funciones, renovación o solicitud justificada de la administración.
+  </div>
+
+  <div class="footer">
+    <div>
+      <div class="signature-line"></div>
+      <div><strong>Firma del Colaborador Receptor</strong></div>
+      <div style="font-family: monospace; font-size: 9px; margin-top: 2px;">C.I. ${emp?.identityCard || 'S/N'}</div>
+    </div>
+    <div>
+      <div class="signature-line"></div>
+      <div><strong>Responsable de Bodega / RRHH</strong></div>
+      <div style="font-size: 9px; margin-top: 2px;">Departamento Administrativo</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank', 'width=800,height=900');
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => {
+        win.focus();
+        win.print();
+    };
+};
 
 export default function MyAssets() {
     const [assets, setAssets] = useState([]);
@@ -31,6 +157,7 @@ export default function MyAssets() {
             }
         } catch (error) {
             console.error('Error al cargar mis activos:', error);
+            toast.error(error.message || 'Error al cargar inventario de activos');
         } finally {
             setLoading(false);
         }
@@ -54,7 +181,7 @@ export default function MyAssets() {
             list = list.filter(a => 
                 a.name.toLowerCase().includes(q) ||
                 (a.serialNumber && a.serialNumber.toLowerCase().includes(q)) ||
-                a.category.toLowerCase().includes(q)
+                (a.category && a.category.toLowerCase().includes(q))
             );
         }
         return list;
@@ -94,7 +221,7 @@ export default function MyAssets() {
                 <button
                     onClick={loadData}
                     disabled={loading}
-                    className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer bg-white flex items-center gap-1.5 shrink-0"
+                    className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer bg-white flex items-center gap-1.5 shrink-0 disabled:opacity-50"
                 >
                     <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                     <span>Actualizar</span>
@@ -143,7 +270,7 @@ export default function MyAssets() {
 
                     {/* Buscador */}
                     <div className="relative w-full sm:w-64">
-                        <FiSearch className="absolute left-3 top-2 text-gray-400" size={13} />
+                        <FiSearch className="absolute left-3 top-2.5 text-gray-400" size={13} />
                         <input
                             type="text"
                             value={searchQuery}
@@ -156,7 +283,7 @@ export default function MyAssets() {
                                 onClick={() => setSearchQuery('')}
                                 className="absolute right-2.5 top-1.5 text-gray-400 hover:text-gray-700 text-xs font-medium cursor-pointer"
                             >
-                                ×
+                                &times;
                             </button>
                         )}
                     </div>
@@ -226,16 +353,27 @@ export default function MyAssets() {
                                             </td>
 
                                             <td className="py-2.5 px-4 text-right">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedAsset(asset);
-                                                        setActaModalOpen(true);
-                                                    }}
-                                                    className="border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                                >
-                                                    <FiPrinter className="w-3.5 h-3.5 text-gray-500" />
-                                                    <span>Ver Acta</span>
-                                                </button>
+                                                <div className="inline-flex items-center gap-1.5 justify-end">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedAsset(asset);
+                                                            setActaModalOpen(true);
+                                                        }}
+                                                        className="border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                        title="Ver Acta"
+                                                    >
+                                                        <FiEye className="w-3.5 h-3.5 text-gray-500" />
+                                                        <span>Ver</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => printActaPDF(asset)}
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-2.5 py-1 rounded transition-colors cursor-pointer inline-flex items-center gap-1 shadow-xs"
+                                                        title="Imprimir Acta Oficial PDF"
+                                                    >
+                                                        <FiPrinter className="w-3.5 h-3.5" />
+                                                        <span>Imprimir</span>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -246,64 +384,72 @@ export default function MyAssets() {
                 </div>
             </div>
 
-            {/* Modal: Acta Oficial Imprimible */}
+            {/* Modal: Vista Previa de Acta Oficial */}
             {actaModalOpen && selectedAsset && (
-                <div className="fixed inset-0 bg-gray-900/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded border border-gray-200 shadow-2xl w-full max-w-2xl overflow-hidden my-8">
-                        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-2xl overflow-hidden my-8 text-xs space-y-4">
+                        <div className="px-5 py-4 bg-gray-50/50 border-b border-gray-200 flex justify-between items-center">
                             <div>
-                                <h3 className="text-sm font-bold text-gray-900">Acta de Entrega - Recepción</h3>
-                                <p className="text-[11px] text-gray-500 font-mono">Comprobante de Dotación Individual</p>
+                                <h3 className="text-sm font-semibold text-gray-900">Acta de Entrega - Recepción</h3>
+                                <p className="text-[11px] text-gray-500 font-mono mt-0.5">Comprobante de Dotación Individual</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => window.print()}
-                                    className="bg-gray-900 hover:bg-black text-white text-xs px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer font-medium"
+                                    onClick={() => printActaPDF(selectedAsset)}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer font-medium shadow-xs"
                                 >
                                     <FiPrinter className="w-3.5 h-3.5" />
-                                    <span>Imprimir</span>
+                                    <span>Imprimir PDF</span>
                                 </button>
-                                <button onClick={() => setActaModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer">&times;</button>
+                                <button 
+                                    onClick={() => setActaModalOpen(false)} 
+                                    className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
+                                >
+                                    &times;
+                                </button>
                             </div>
                         </div>
 
-                        <div className="p-6 space-y-5 text-xs text-gray-800 font-sans" id="acta-print-area">
-                            <div className="border-b border-gray-300 pb-3 text-center">
-                                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">ACTA DE ENTREGA - RECEPCIÓN Y CUSTODIA DE BIENES</h2>
+                        <div className="p-6 space-y-4 text-xs text-gray-800 font-sans">
+                            <div className="border-b border-gray-200 pb-3 text-center">
+                                <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wide">ACTA DE ENTREGA - RECEPCIÓN Y CUSTODIA DE BIENES</h2>
                                 <p className="text-[11px] text-gray-500 font-mono mt-0.5">Código: ACT-EQ-{selectedAsset.id.slice(-6).toUpperCase()}</p>
                             </div>
 
-                            <div className="bg-gray-50 p-3.5 rounded border border-gray-200 space-y-1.5">
-                                <h4 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">1. Datos del Colaborador Receptor</h4>
+                            <div className="bg-gray-50/70 p-3.5 rounded border border-gray-200 space-y-1.5">
+                                <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">1. Datos del Colaborador Receptor</h4>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <div><span className="text-gray-500">Nombre:</span> <span className="font-semibold">{selectedAsset.employee?.firstName} {selectedAsset.employee?.lastName}</span></div>
-                                    <div><span className="text-gray-500">Cédula:</span> <span className="font-mono font-semibold">{selectedAsset.employee?.identityCard || 'S/N'}</span></div>
+                                    <div><span className="text-gray-500">Nombre:</span> <span className="font-semibold text-gray-900">{selectedAsset.employee?.firstName} {selectedAsset.employee?.lastName}</span></div>
+                                    <div><span className="text-gray-500">Cédula:</span> <span className="font-mono font-semibold text-gray-900">{selectedAsset.employee?.identityCard || 'S/N'}</span></div>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 p-3.5 rounded border border-gray-200 space-y-1.5">
-                                <h4 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">2. Detalle del Bien Asignado</h4>
+                            <div className="bg-gray-50/70 p-3.5 rounded border border-gray-200 space-y-1.5">
+                                <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">2. Detalle del Bien Asignado</h4>
                                 <table className="w-full text-left text-xs mt-1 border-collapse">
                                     <tbody>
-                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500 w-40">Bien / Dotación:</td><td className="py-1 font-semibold">{selectedAsset.name}</td></tr>
+                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500 w-40">Bien / Dotación:</td><td className="py-1 font-semibold text-gray-900">{selectedAsset.name}</td></tr>
                                         <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Categoría:</td><td className="py-1">{getCategoryLabel(selectedAsset.category)}</td></tr>
-                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Número de Serie:</td><td className="py-1 font-mono font-semibold">{selectedAsset.serialNumber || 'S/N'}</td></tr>
-                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Estado de Entrega:</td><td className="py-1 font-semibold">{selectedAsset.condition === 'NEW' ? 'Nuevo' : 'Buen Estado'}</td></tr>
-                                        <tr><td className="py-1 text-gray-500">Fecha de Entrega:</td><td className="py-1 font-mono">{selectedAsset.deliveryDate ? new Date(selectedAsset.deliveryDate).toLocaleDateString('es-EC') : '—'}</td></tr>
+                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Número de Serie:</td><td className="py-1 font-mono font-semibold text-gray-900">{selectedAsset.serialNumber || 'S/N'}</td></tr>
+                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Estado de Entrega:</td><td className="py-1 font-semibold text-gray-900">{selectedAsset.condition === 'NEW' ? 'Nuevo' : 'Buen Estado'}</td></tr>
+                                        <tr><td className="py-1 text-gray-500">Fecha de Entrega:</td><td className="py-1 font-mono text-gray-900">{selectedAsset.deliveryDate ? new Date(selectedAsset.deliveryDate).toLocaleDateString('es-EC') : '—'}</td></tr>
                                     </tbody>
                                 </table>
                             </div>
 
-                            <div className="text-[11px] text-gray-600 space-y-1 leading-relaxed border p-3 rounded bg-white">
-                                <p className="font-bold text-gray-800">3. Declaración de Custodia:</p>
+                            <div className="text-[11px] text-gray-600 space-y-1 leading-relaxed border border-gray-200 p-3 rounded bg-white">
+                                <p className="font-semibold text-gray-800">3. Declaración de Custodia:</p>
                                 <p>
-                                    Declaro recibir en óptimas condiciones el bien especificado para el desempeño de mis funciones laborales, asumiendo su cuidado y custodia.
+                                    Declaro recibir en óptimas condiciones el bien especificado para el desempeño de mis funciones laborales, asumiendo su cuidado y custodia responsable.
                                 </p>
                             </div>
                         </div>
 
-                        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
-                            <button onClick={() => setActaModalOpen(false)} className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-4 py-1.5 rounded cursor-pointer">
+                        <div className="px-6 py-3 bg-gray-50/50 border-t border-gray-200 flex justify-end">
+                            <button 
+                                onClick={() => setActaModalOpen(false)} 
+                                className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-4 py-1.5 rounded cursor-pointer transition-colors"
+                            >
                                 Cerrar
                             </button>
                         </div>

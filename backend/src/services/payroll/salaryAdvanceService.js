@@ -17,7 +17,7 @@ class SalaryAdvanceService {
             throw new Error('El número de cuotas debe estar entre 1 y 24');
         }
 
-        // Obtener contrato activo del empleado para validar límite
+        // Obtener contrato activo o salario registrado del colaborador
         const contract = await prisma.contract.findFirst({
             where: {
                 employeeId,
@@ -27,14 +27,26 @@ class SalaryAdvanceService {
             orderBy: { startDate: 'desc' }
         });
 
-        if (!contract) {
-            throw new Error('El empleado no posee un contrato activo vigente');
+        let baseSalary = null;
+        if (contract && contract.salary) {
+            baseSalary = financial.from(contract.salary);
+        } else {
+            const employee = await prisma.employee.findUnique({
+                where: { id: employeeId }
+            });
+            if (employee && employee.salary) {
+                const numericSalary = employee.salary.toString().replace(/[^0-9.]/g, '');
+                if (numericSalary) baseSalary = financial.from(numericSalary);
+            }
         }
 
-        const baseSalary = financial.from(contract.salary);
+        if (!baseSalary || baseSalary.lte(0)) {
+            throw new Error('No se encontró un salario base activo registrado para validar el límite de anticipo');
+        }
+
         const requested = financial.from(numAmount);
 
-        // Validación de políticas PyME: Un anticipo no debe comprometer más del 50% de la capacidad de pago mensual
+        // Validación de políticas: Un anticipo no debe comprometer más del 50% de la capacidad de pago mensual
         const monthlyDeduction = financial.divide(requested, numInstallments);
         const maxMonthlyQuota = financial.percentage(baseSalary, 50);
 

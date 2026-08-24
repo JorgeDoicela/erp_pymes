@@ -32,12 +32,13 @@ export const getAnnouncements = async (req, res) => {
     try {
         const employeeId = req.user.employeeId || req.user.id;
         const tenantId = req.tenantId || req.user?.tenantId;
-        const { category, search, requiresAck, page, limit } = req.query;
+        const { category, search, requiresAck, pendingOnly, page, limit } = req.query;
 
         const result = await announcementService.getAnnouncementsForEmployee(employeeId, {
             category,
             search,
             requiresAck,
+            pendingOnly,
             page: page ? parseInt(page, 10) : 1,
             limit: limit ? parseInt(limit, 10) : 20,
             tenantId
