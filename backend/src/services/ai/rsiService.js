@@ -7,6 +7,8 @@
  */
 
 import prisma from '../../database/db.js';
+import temporalAttentionService from './temporalAttentionService.js';
+import ftTransformerService from './ftTransformerService.js';
 
 const DEFAULT_HYPERPARAMETERS = {
     beta_salary: -0.85,
@@ -426,6 +428,16 @@ class RsiService {
                 triggerReason: finalTriggerReason
             }
         });
+
+        // Auto-calibración complementaria de los módulos Neural Transformer
+        try {
+            await Promise.all([
+                temporalAttentionService.calibrateProjectionWeights(tenantId, newLR * 0.4),
+                ftTransformerService.trainOnAudits(tenantId, newLR * 0.3)
+            ]);
+        } catch (e) {
+            // Continuar sin interrumpir el pipeline principal
+        }
 
         return {
             epoch: newCalibration.epoch,

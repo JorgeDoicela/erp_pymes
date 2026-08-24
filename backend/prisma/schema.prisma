@@ -41,6 +41,8 @@ model Tenant {
   causalInterventions CausalIntervention[]
   privacyBudget       TenantPrivacyBudget?
   morlPolicyRuns      MorlPolicyRun[]
+  attentionCalibrations AttentionCalibration[]
+  ftTransformerWeights FTTransformerWeights[]
 
   @@map("tenants")
 }
@@ -1226,6 +1228,39 @@ model ResearchSurveyResponse {
   @@index([surveyType])
   @@index([isSynthetic])
   @@map("research_survey_responses")
+}
+
+model AttentionCalibration {
+  id           String   @id @default(cuid())
+  tenantId     String
+  epoch        Int
+  wq           Json     // Matriz de proyección Query (4x4)
+  wk           Json     // Matriz de proyección Key (4x4)
+  wv           Json     // Matriz de proyección Value (4x4)
+  brierScore   Float
+  logLoss      Float    @default(0.0)
+  createdAt    DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, epoch])
+  @@map("attention_calibrations")
+}
+
+model FTTransformerWeights {
+  id          String   @id @default(cuid())
+  tenantId    String
+  epoch       Int
+  params      Json     // Pesos: Tokenizer + MHA + FFN + LN
+  brierScore  Float
+  logLoss     Float    @default(0.0)
+  f1Score     Float    @default(0.0)
+  createdAt   DateTime @default(now())
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, epoch])
+  @@map("ft_transformer_weights")
 }
 
 

@@ -9,6 +9,8 @@
 import prisma from '../database/db.js';
 import { decryptSalary } from '../utils/encryption.js';
 import rsiService from './ai/rsiService.js';
+import temporalAttentionService from './ai/temporalAttentionService.js';
+import ftTransformerService from './ai/ftTransformerService.js';
 
 /**
  * Servicio de Inteligencia para Análisis de RRHH (Grado Científico & Producción)
@@ -2187,3 +2189,94 @@ export async function generateStrategicAdvisorAdvice(tenantId, queryType, custom
         financialROI: 'Retorno positivo sobre la estabilidad operativa y control del gasto de personal.'
     };
 }
+
+// ==================== MÓDULO 10: SERVICIOS PUENTE NEURAL TRANSFORMER ====================
+
+export async function getTemporalAttentionSummary(tenantId) {
+    return await temporalAttentionService.getCorporateTemporalAttentionSummary(tenantId);
+}
+
+export async function getTemporalAttentionByEmployee(employeeId, tenantId) {
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+
+    const emp = await prisma.employee.findFirst({
+        where: { id: employeeId, ...(tenantId ? { tenantId } : {}) },
+        select: {
+            id: true,
+            tenantId: true,
+            firstName: true,
+            lastName: true,
+            department: true,
+            position: true,
+            hireDate: true,
+            absences: { where: { createdAt: { gte: twelveMonthsAgo } } },
+            attendance: { where: { date: { gte: twelveMonthsAgo } } },
+            evaluations: { where: { createdAt: { gte: twelveMonthsAgo } }, orderBy: { createdAt: 'desc' } },
+            PayrollDetail: { where: { createdAt: { gte: twelveMonthsAgo } } }
+        }
+    });
+
+    if (!emp) throw new Error('Colaborador no encontrado');
+    const result = await temporalAttentionService.computeTemporalContext(emp);
+    return {
+        employeeId: emp.id,
+        employeeName: `${emp.firstName} ${emp.lastName}`,
+        department: emp.department,
+        position: emp.position,
+        ...result
+    };
+}
+
+export async function calibrateTemporalAttention(tenantId) {
+    return await temporalAttentionService.calibrateProjectionWeights(tenantId);
+}
+
+export async function getFTTransformerComparison(tenantId) {
+    return await ftTransformerService.evaluateComparativeModels(tenantId);
+}
+
+export async function trainFTTransformerModel(tenantId) {
+    return await ftTransformerService.trainOnAudits(tenantId);
+}
+
+export async function getFTTransformerPrediction(employeeId, tenantId) {
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+
+    const emp = await prisma.employee.findFirst({
+        where: { id: employeeId, ...(tenantId ? { tenantId } : {}) },
+        select: {
+            id: true,
+            tenantId: true,
+            firstName: true,
+            lastName: true,
+            department: true,
+            position: true,
+            salary: true,
+            hireDate: true,
+            absences: { where: { createdAt: { gte: twelveMonthsAgo } } },
+            attendance: { where: { date: { gte: twelveMonthsAgo } } },
+            evaluations: { where: { createdAt: { gte: twelveMonthsAgo } }, orderBy: { createdAt: 'desc' } },
+            PayrollDetail: { where: { createdAt: { gte: twelveMonthsAgo } } }
+        }
+    });
+
+    if (!emp) throw new Error('Colaborador no encontrado');
+
+    const { params } = await ftTransformerService.getTenantWeights(emp.tenantId);
+    const salary = decryptSalary(emp.salary) || 0;
+    emp._decryptedSalary = salary;
+
+    const features = ftTransformerService.extractEmployeeFeatures(emp, salary);
+    const forwardResult = ftTransformerService.forward(features, params);
+
+    return {
+        employeeId: emp.id,
+        employeeName: `${emp.firstName} ${emp.lastName}`,
+        department: emp.department,
+        position: emp.position,
+        ...forwardResult
+    };
+}
+

@@ -58,6 +58,12 @@ const AnalyticsDashboard = () => {
                 <Link to="/analytics/payroll-costs" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
                     Costo Nómina
                 </Link>
+                <Link to="/analytics/temporal-attention" className="px-3 py-1.5 border border-purple-300 hover:border-purple-500 text-purple-700 bg-purple-50 font-medium rounded transition-colors flex items-center gap-1.5">
+                    <FiActivity className="w-3.5 h-3.5 text-purple-600" /> Temporal Attention
+                </Link>
+                <Link to="/analytics/ft-transformer" className="px-3 py-1.5 border border-emerald-300 hover:border-emerald-500 text-emerald-700 bg-emerald-50 font-medium rounded transition-colors flex items-center gap-1.5">
+                    <FiActivity className="w-3.5 h-3.5 text-emerald-600" /> FT-Transformer
+                </Link>
                 <Link to="/analytics/satisfaction" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors">
                     Clima Laboral
                 </Link>

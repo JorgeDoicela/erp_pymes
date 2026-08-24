@@ -241,6 +241,58 @@ export async function getMultiSeedSensitivity() {
     return response.data;
 }
 
+// ==================== TEMPORAL ATTENTION (VASWANI 2017) ====================
+
+/**
+ * Obtiene el resumen de atención temporal corporativa sobre secuencias de 12 meses
+ */
+export async function getTemporalAttentionSummary() {
+    const response = await intelligenceClient.get('/temporal-attention/summary');
+    return response.data;
+}
+
+/**
+ * Obtiene la trayectoria de atención temporal de 12 meses para un colaborador
+ */
+export async function getTemporalAttentionByEmployee(employeeId) {
+    const response = await intelligenceClient.get(`/temporal-attention/${employeeId}`);
+    return response.data;
+}
+
+/**
+ * Calibra manualmente las matrices de proyección Q/K/V de atención temporal
+ */
+export async function calibrateTemporalAttention() {
+    const response = await intelligenceClient.post('/temporal-attention/calibrate');
+    return response.data;
+}
+
+// ==================== FT-TRANSFORMER (GORISHNIY 2021) ====================
+
+/**
+ * Obtiene la comparativa 5-Fold: FT-Transformer vs Weibull vs Heurístico
+ */
+export async function getFTTransformerComparison() {
+    const response = await intelligenceClient.get('/ft-transformer/comparison');
+    return response.data;
+}
+
+/**
+ * Entrena y optimiza los pesos del FT-Transformer
+ */
+export async function trainFTTransformer() {
+    const response = await intelligenceClient.post('/ft-transformer/train');
+    return response.data;
+}
+
+/**
+ * Predice el riesgo de rotación con FT-Transformer y mapa de interacción de features
+ */
+export async function predictFTTransformer(employeeId) {
+    const response = await intelligenceClient.get(`/ft-transformer/predict/${employeeId}`);
+    return response.data;
+}
+
 
 
 

@@ -85,4 +85,14 @@ router.get('/morl/history', intelligenceController.getMorlHistory);
 // Asesor Estratégico Ejecutivo
 router.post('/strategic-advice', intelligenceController.getStrategicAdvice);
 
+// Arquitectura de Atención Temporal (Temporal Self-Attention - Vaswani et al. 2017)
+router.get('/temporal-attention/summary', intelligenceController.getTemporalAttentionSummary);
+router.get('/temporal-attention/:employeeId', intelligenceController.getTemporalAttentionByEmployee);
+router.post('/temporal-attention/calibrate', intelligenceController.calibrateTemporalAttention);
+
+// Arquitectura Tabular FT-Transformer (Gorishniy et al. NeurIPS 2021)
+router.get('/ft-transformer/comparison', intelligenceController.getFTTransformerComparison);
+router.post('/ft-transformer/train', intelligenceController.trainFTTransformer);
+router.get('/ft-transformer/predict/:employeeId', intelligenceController.predictFTTransformer);
+
 export default router;

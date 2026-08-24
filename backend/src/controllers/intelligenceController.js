@@ -584,3 +584,112 @@ export async function getStrategicAdvice(req, res) {
         return handleError(res, error, 'Error al generar asesoría estratégica');
     }
 }
+
+// ==================== CONTROLADORES TEMPORAL ATTENTION (VASWANI 2017) ====================
+
+/**
+ * GET /api/intelligence/temporal-attention/summary
+ * Obtiene el resumen corporativo de atención temporal sobre secuencias de 12 meses
+ */
+export async function getTemporalAttentionSummary(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const summary = await intelligenceService.getTemporalAttentionSummary(tenantId);
+        return res.json({
+            success: true,
+            data: summary
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al calcular atención temporal corporativa');
+    }
+}
+
+/**
+ * GET /api/intelligence/temporal-attention/:employeeId
+ * Obtiene el mapa de atención temporal de 12 meses para un colaborador individual
+ */
+export async function getTemporalAttentionByEmployee(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const { employeeId } = req.params;
+        const result = await intelligenceService.getTemporalAttentionByEmployee(employeeId, tenantId);
+        return res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al calcular atención temporal del colaborador');
+    }
+}
+
+/**
+ * POST /api/intelligence/temporal-attention/calibrate
+ * Ejecuta una calibración manual de las matrices de proyección Q/K/V
+ */
+export async function calibrateTemporalAttention(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const result = await intelligenceService.calibrateTemporalAttention(tenantId);
+        return res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al calibrar matrices de proyección de atención');
+    }
+}
+
+// ==================== CONTROLADORES FT-TRANSFORMER (GORISHNIY 2021) ====================
+
+/**
+ * GET /api/intelligence/ft-transformer/comparison
+ * Comparativa 5-Fold Cross Validation: FT-Transformer vs Weibull vs Heurístico
+ */
+export async function getFTTransformerComparison(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const comparison = await intelligenceService.getFTTransformerComparison(tenantId);
+        return res.json({
+            success: true,
+            data: comparison
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al evaluar comparativa FT-Transformer');
+    }
+}
+
+/**
+ * POST /api/intelligence/ft-transformer/train
+ * Ejecuta un ciclo de entrenamiento y calibración de pesos FT-Transformer
+ */
+export async function trainFTTransformer(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const result = await intelligenceService.trainFTTransformerModel(tenantId);
+        return res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al entrenar modelo FT-Transformer');
+    }
+}
+
+/**
+ * GET /api/intelligence/ft-transformer/predict/:employeeId
+ * Forward Pass del FT-Transformer con Feature Tokenizer y Token Interaction Map
+ */
+export async function predictFTTransformer(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const { employeeId } = req.params;
+        const prediction = await intelligenceService.getFTTransformerPrediction(employeeId, tenantId);
+        return res.json({
+            success: true,
+            data: prediction
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al predecir con FT-Transformer');
+    }
+}
+

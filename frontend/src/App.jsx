@@ -78,6 +78,8 @@ const RsiOptimizationDashboard = lazy(() => import('./pages/analytics/RsiOptimiz
 const CausalInferenceDashboard = lazy(() => import('./pages/analytics/CausalInferenceDashboard.jsx'));
 const FederatedLearningDashboard = lazy(() => import('./pages/analytics/FederatedLearningDashboard.jsx'));
 const MorlParetoDashboard = lazy(() => import('./pages/analytics/MorlParetoDashboard.jsx'));
+const TemporalAttentionDashboard = lazy(() => import('./pages/analytics/TemporalAttentionDashboard.jsx'));
+const FTTransformerDashboard = lazy(() => import('./pages/analytics/FTTransformerDashboard.jsx'));
 const TurnoverReport = lazy(() => import('./pages/reports/TurnoverReport.jsx'));
 const PerformanceReport = lazy(() => import('./pages/reports/PerformanceReport.jsx'));
 const PayrollCostReport = lazy(() => import('./pages/reports/PayrollCostReport.jsx'));
@@ -232,6 +234,8 @@ function App() {
           <Route path="/analytics/causal-inference" element={<CausalInferenceDashboard />} />
           <Route path="/analytics/federated-learning" element={<FederatedLearningDashboard />} />
           <Route path="/analytics/morl-pareto" element={<MorlParetoDashboard />} />
+          <Route path="/analytics/temporal-attention" element={<TemporalAttentionDashboard />} />
+          <Route path="/analytics/ft-transformer" element={<FTTransformerDashboard />} />
           <Route path="/analytics/turnover" element={<TurnoverReport />} />
           <Route path="/analytics/performance" element={<PerformanceReport />} />
           <Route path="/analytics/payroll-costs" element={<PayrollCostReport />} />
