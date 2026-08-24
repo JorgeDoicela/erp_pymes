@@ -1,5 +1,22 @@
 import { Router } from 'express';
-import { createVacancy, getVacancies, getPublicVacancies, getVacancyById, updateVacancyStatus, deleteVacancy, applyToVacancy, getApplicationsByVacancy, getApplicationDetails, updateApplicationStatus, deleteApplication, addApplicationNote, scheduleInterview, evaluateCandidate, hireCandidate } from '../controllers/recruitment.controller.js';
+import {
+    createVacancy,
+    getRecruitmentStats,
+    getVacancies,
+    getPublicVacancies,
+    getVacancyById,
+    updateVacancyStatus,
+    deleteVacancy,
+    applyToVacancy,
+    getApplicationsByVacancy,
+    getApplicationDetails,
+    updateApplicationStatus,
+    deleteApplication,
+    addApplicationNote,
+    scheduleInterview,
+    evaluateCandidate,
+    hireCandidate
+} from '../controllers/recruitment.controller.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { requireTenant } from '../middleware/tenant.middleware.js';
 import { uploadResume } from '../middleware/upload.middleware.js';
@@ -13,6 +30,7 @@ router.get('/public/:id', getVacancyById);
 router.post('/public/:id/apply', uploadResume.single('resume'), applyToVacancy);
 
 // Admin Routes
+router.get('/stats', protectedAdmin, getRecruitmentStats);
 router.post('/', protectedAdmin, createVacancy);
 router.get('/', protectedAdmin, getVacancies);
 router.put('/:id/status', protectedAdmin, updateVacancyStatus);

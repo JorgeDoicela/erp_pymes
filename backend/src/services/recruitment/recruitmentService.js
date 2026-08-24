@@ -24,20 +24,73 @@ export const recruitmentService = {
         });
 
         // Audit Log
-        auditRepository.createLog({
-            tenantId: tenantId || null,
-            entity: 'JobVacancy',
-            entityId: vacancy.id,
-            action: 'CREATE',
-            performedBy: userId,
-            details: `Created vacancy: ${title} in ${location}`
-        }).catch(err => console.error('Audit Log Error:', err));
+        if (userId) {
+            await auditRepository.log({
+                tenantId: tenantId || null,
+                entity: 'JobVacancy',
+                entityId: vacancy.id,
+                action: 'CREATE_VACANCY',
+                userId,
+                details: { title, location, deadline }
+            }).catch(err => console.error('[Audit Error] createVacancy:', err));
+        }
 
         return vacancy;
     },
 
-    async getVacancies(tenantId = null) {
-        const where = tenantId ? { tenantId } : {};
+    async getRecruitmentStats(tenantId = null) {
+        const whereVacancy = tenantId ? { tenantId } : {};
+        const whereApp = tenantId ? { vacancy: { tenantId } } : {};
+
+        const [
+            totalVacancies,
+            openVacancies,
+            closedVacancies,
+            totalApplications,
+            hiredCount,
+            inReviewCount
+        ] = await Promise.all([
+            prisma.jobVacancy.count({ where: whereVacancy }),
+            prisma.jobVacancy.count({ where: { ...whereVacancy, status: 'OPEN' } }),
+            prisma.jobVacancy.count({ where: { ...whereVacancy, status: 'CLOSED' } }),
+            prisma.jobApplication.count({ where: whereApp }),
+            prisma.jobApplication.count({ where: { ...whereApp, status: 'HIRED' } }),
+            prisma.jobApplication.count({ where: { ...whereApp, status: { in: ['REVIEWING', 'INTERVIEW'] } } })
+        ]);
+
+        return {
+            totalVacancies,
+            openVacancies,
+            closedVacancies,
+            totalApplications,
+            hiredCount,
+            inReviewCount
+        };
+    },
+
+    async getVacancies(tenantId = null, filters = {}) {
+        const { status, search, department } = filters;
+        const where = {
+            ...(tenantId ? { tenantId } : {})
+        };
+
+        if (status) {
+            where.status = status;
+        }
+
+        if (department) {
+            where.department = department;
+        }
+
+        if (search) {
+            const cleanSearch = search.trim();
+            where.OR = [
+                { title: { contains: cleanSearch, mode: 'insensitive' } },
+                { department: { contains: cleanSearch, mode: 'insensitive' } },
+                { location: { contains: cleanSearch, mode: 'insensitive' } }
+            ];
+        }
+
         return recruitmentRepository.getVacancies(where, {
             postedBy: { select: { firstName: true, lastName: true } },
             tenant: { select: { id: true, name: true, slug: true } }
@@ -79,23 +132,23 @@ export const recruitmentService = {
         return vacancy;
     },
 
-    async updateVacancyStatus(id, status, tenantId = null) {
-        await this.getVacancyById(id, tenantId);
+    async updateVacancyStatus(id, status, tenantId = null, userId = null) {
+        const existing = await this.getVacancyById(id, tenantId);
         const vacancy = await recruitmentRepository.updateVacancy(id, { status });
         
-        auditRepository.createLog({
+        await auditRepository.log({
             tenantId: vacancy.tenantId || tenantId,
             entity: 'JobVacancy',
             entityId: id,
-            action: 'UPDATE',
-            performedBy: 'Admin',
-            details: `Status updated to ${status}`
-        }).catch(err => console.error('Audit Log Error:', err));
+            action: 'UPDATE_VACANCY_STATUS',
+            userId: userId || null,
+            details: { previousStatus: existing.status, newStatus: status, title: vacancy.title }
+        }).catch(err => console.error('[Audit Error] updateVacancyStatus:', err));
 
         return vacancy;
     },
 
-    async deleteVacancy(id, tenantId = null) {
+    async deleteVacancy(id, tenantId = null, userId = null) {
         const vacancy = await this.getVacancyById(id, tenantId);
 
         // 1. Obtener postulaciones para borrar sus archivos subidos (CVs en PDF)
@@ -110,14 +163,14 @@ export const recruitmentService = {
         await recruitmentRepository.deleteVacancy(id);
 
         // 3. Registrar auditoría
-        auditRepository.createLog({
+        await auditRepository.log({
             tenantId: vacancy.tenantId || tenantId,
             entity: 'JobVacancy',
             entityId: id,
-            action: 'DELETE',
-            performedBy: 'Admin',
-            details: `Vacante '${vacancy.title}' eliminada junto con ${applications.length} postulaciones y sus archivos`
-        }).catch(err => console.error('Audit Log Error:', err));
+            action: 'DELETE_VACANCY',
+            userId: userId || null,
+            details: { title: vacancy.title, applicationsDeleted: applications.length }
+        }).catch(err => console.error('[Audit Error] deleteVacancy:', err));
 
         return { success: true, message: `Vacante eliminada exitosamente.` };
     },
@@ -179,19 +232,19 @@ export const recruitmentService = {
         return application;
     },
 
-    async updateApplicationStatus(id, status, sendEmail = true, tenantId = null) {
+    async updateApplicationStatus(id, status, sendEmail = true, tenantId = null, userId = null) {
         await this.getApplicationDetails(id, tenantId);
         const application = await recruitmentRepository.updateApplication(id, { status });
 
         // Audit Log
-        auditRepository.createLog({
-            tenantId: tenantId || null,
+        await auditRepository.log({
+            tenantId: tenantId || application.vacancy?.tenantId || null,
             entity: 'JobApplication',
             entityId: id,
-            action: 'UPDATE',
-            performedBy: 'HR',
-            details: `Application status updated to ${status}`
-        }).catch(err => console.error('Audit Log Error:', err));
+            action: 'UPDATE_APPLICATION_STATUS',
+            userId: userId || null,
+            details: { newStatus: status, applicantName: `${application.firstName} ${application.lastName}` }
+        }).catch(err => console.error('[Audit Error] updateApplicationStatus:', err));
 
         // Enviar email si es rechazado y la opción está habilitada
         if (status === 'REJECTED' && sendEmail) {
@@ -208,7 +261,7 @@ export const recruitmentService = {
         return application;
     },
 
-    async deleteCandidate(id, tenantId = null) {
+    async deleteCandidate(id, tenantId = null, userId = null) {
         const application = await this.getApplicationDetails(id, tenantId);
 
         if (application.resumeUrl) {
@@ -217,14 +270,14 @@ export const recruitmentService = {
 
         await recruitmentRepository.deleteApplication(id);
 
-        auditRepository.createLog({
+        await auditRepository.log({
             tenantId: tenantId || application.vacancy?.tenantId || null,
             entity: 'JobApplication',
             entityId: id,
-            action: 'DELETE',
-            performedBy: 'HR/Admin',
-            details: `Candidato ${application.firstName} ${application.lastName} (${application.email}) eliminado junto con sus archivos.`
-        }).catch(err => console.error('Audit Log Error:', err));
+            action: 'DELETE_CANDIDATE',
+            userId: userId || null,
+            details: { candidateName: `${application.firstName} ${application.lastName}`, email: application.email }
+        }).catch(err => console.error('[Audit Error] deleteCandidate:', err));
 
         return { success: true, message: "Candidato eliminado exitosamente" };
     },
@@ -286,7 +339,7 @@ export const recruitmentService = {
         });
     },
 
-    async hireCandidate(applicationId, hireData, tenantId = null) {
+    async hireCandidate(applicationId, hireData, tenantId = null, userId = null) {
         const {
             identityCard, birthDate, address, civilStatus,
             contractType, salary, startDate, closeVacancy, password
@@ -361,19 +414,23 @@ export const recruitmentService = {
                 });
             }
 
-            // 5. Audit Log (Inside transaction to ensure atomicity)
-            await auditRepository.createLog({
+            // 5. Audit Log
+            await auditRepository.log({
                 tenantId: candidateTenantId,
                 entity: 'Employee',
                 entityId: newEmployee.id,
-                action: 'CREATE',
-                performedBy: 'System/Recruitment',
-                details: `Candidato contratado desde vacante: ${application.vacancy.title}. Contrato: ${contractType}, Salario: ${salary}`
+                action: 'HIRE_CANDIDATE',
+                userId: userId || null,
+                details: {
+                    candidateName: `${application.firstName} ${application.lastName}`,
+                    vacancyTitle: application.vacancy.title,
+                    contractType,
+                    salary
+                }
             });
 
             return newEmployee;
         }).then(async (newEmployee) => {
-            // Enviar email de bienvenida fuera de la transacción
             const shouldSendEmail = hireData.sendEmail !== undefined ? hireData.sendEmail : true;
             if (shouldSendEmail) {
                 try {

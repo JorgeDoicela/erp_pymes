@@ -6,14 +6,19 @@ export const getPublicVacancies = async (params = {}) => {
     return response.data;
 };
 
-// Admin Vacancies
+// Admin Vacancies & Stats
+export const getRecruitmentStats = async () => {
+    const response = await api.get('/recruitment/stats');
+    return response.data;
+};
+
 export const createVacancy = async (data) => {
     const response = await api.post('/recruitment', data);
     return response.data;
 };
 
-export const getVacancies = async () => {
-    const response = await api.get('/recruitment');
+export const getVacancies = async (params = {}) => {
+    const response = await api.get('/recruitment', { params });
     return response.data;
 };
 

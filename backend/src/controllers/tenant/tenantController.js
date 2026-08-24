@@ -2,6 +2,7 @@ import prisma from '../../database/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { encrypt } from '../../utils/encryption.js';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 
 /**
  * Registro público de una nueva empresa (Onboarding SaaS)
@@ -232,6 +233,16 @@ export const updateMyTenant = async (req, res) => {
                 ...(ruc !== undefined ? { ruc } : {})
             }
         });
+
+        // Audit Log
+        await auditRepository.log({
+            tenantId: req.tenantId,
+            entity: 'Tenant',
+            entityId: updated.id,
+            action: 'UPDATE_TENANT_PROFILE',
+            userId: req.user?.id || req.user?.employeeId,
+            details: { name: updated.name, ruc: updated.ruc }
+        }).catch(err => console.error('[Audit Error] updateMyTenant:', err));
 
         res.json({
             success: true,

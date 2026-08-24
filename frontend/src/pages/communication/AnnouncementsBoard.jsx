@@ -1,26 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import {
     getAnnouncements,
+    getBoardStats,
     createAnnouncement,
     markAnnouncementReadOrAcknowledge,
     getAnnouncementStats,
+    deleteAnnouncement,
     getBirthdays
 } from '../../services/communication/announcement.service';
 
+const CATEGORY_MAP = {
+    POLICY: { label: 'POLÍTICA / REGLAMENTO', cls: 'bg-gray-100 text-gray-700 border-gray-200' },
+    HOLIDAY: { label: 'FERIADO / ASUETO', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+    BIRTHDAY: { label: 'CUMPLEAÑOS', cls: 'bg-blue-50 text-blue-800 border-blue-200' },
+    GENERAL: { label: 'AVISO GENERAL', cls: 'bg-gray-50 text-gray-700 border-gray-200' }
+};
+
 const AnnouncementsBoard = ({ user }) => {
+    // Estados principales
     const [announcements, setAnnouncements] = useState([]);
     const [birthdays, setBirthdays] = useState([]);
+    const [stats, setStats] = useState({
+        total: 0,
+        policyCount: 0,
+        holidayCount: 0,
+        birthdayCount: 0,
+        pendingAcknowledgmentCount: 0
+    });
     const [loading, setLoading] = useState(true);
-    const [filterCategory, setFilterCategory] = useState('');
+
+    // Navegación de pestañas: 'ALL', 'POLICY', 'HOLIDAY', 'BIRTHDAYS', 'PENDING_ACK'
+    const [activeTab, setActiveTab] = useState('ALL');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Modals
+    // Modales y acciones
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [statsModalOpen, setStatsModalOpen] = useState(false);
     const [selectedStats, setSelectedStats] = useState(null);
+    const [announcementToDelete, setAnnouncementToDelete] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
+    const [notification, setNotification] = useState(null);
 
-    // Form Publish
+    // Formulario de publicación
     const [form, setForm] = useState({
         title: '',
         content: '',
@@ -33,21 +54,59 @@ const AnnouncementsBoard = ({ user }) => {
     const isAdmin = user?.role === 'admin' || user?.role === 'hr';
 
     useEffect(() => {
+        window.scrollTo(0, 0);
+        loadBoardStats();
+        loadBirthdays();
+    }, []);
+
+    useEffect(() => {
         loadData();
-    }, [filterCategory]);
+    }, [activeTab]);
+
+    const showNotification = (type, message) => {
+        setNotification({ type, message });
+        setTimeout(() => setNotification(null), 4000);
+    };
+
+    const loadBoardStats = async () => {
+        try {
+            const res = await getBoardStats();
+            if (res.success && res.data) {
+                setStats(res.data);
+            }
+        } catch (error) {
+            console.error('Error cargando estadísticas del tablón:', error);
+        }
+    };
+
+    const loadBirthdays = async () => {
+        try {
+            const res = await getBirthdays();
+            if (res.success && Array.isArray(res.data)) {
+                setBirthdays(res.data);
+            }
+        } catch (error) {
+            console.error('Error cargando cumpleaños:', error);
+        }
+    };
 
     const loadData = async () => {
         setLoading(true);
         try {
-            const [resAnn, resBday] = await Promise.all([
-                getAnnouncements({ category: filterCategory || undefined, search: searchTerm || undefined }),
-                getBirthdays().catch(() => ({ data: [] }))
-            ]);
+            const params = {
+                search: searchTerm.trim() || undefined
+            };
 
-            if (resAnn.success) setAnnouncements(resAnn.data);
-            if (resBday.success) setBirthdays(resBday.data);
+            if (activeTab === 'POLICY') params.category = 'POLICY';
+            else if (activeTab === 'HOLIDAY') params.category = 'HOLIDAY';
+            else if (activeTab === 'PENDING_ACK') params.requiresAck = true;
+
+            const res = await getAnnouncements(params);
+            if (res.success && Array.isArray(res.data)) {
+                setAnnouncements(res.data);
+            }
         } catch (error) {
-            console.error('Error al cargar comunicados:', error);
+            showNotification('error', error.message || 'Error al cargar comunicados');
         } finally {
             setLoading(false);
         }
@@ -58,37 +117,53 @@ const AnnouncementsBoard = ({ user }) => {
         loadData();
     };
 
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+    };
+
     const handlePublishSubmit = async (e) => {
         e.preventDefault();
         if (!form.title.trim() || !form.content.trim()) {
-            alert('Proporciona el título y contenido del comunicado');
+            showNotification('error', 'Proporcione el título y contenido del comunicado');
             return;
         }
         setActionLoading(true);
         try {
             const res = await createAnnouncement(form);
             if (res.success) {
-                alert('Comunicado publicado exitosamente');
+                showNotification('success', 'Comunicado oficial publicado exitosamente');
                 setCreateModalOpen(false);
-                setForm({ title: '', content: '', category: 'GENERAL', priority: 'NORMAL', requiresAcknowledgment: false, attachmentUrl: '' });
+                setForm({
+                    title: '',
+                    content: '',
+                    category: 'GENERAL',
+                    priority: 'NORMAL',
+                    requiresAcknowledgment: false,
+                    attachmentUrl: ''
+                });
                 loadData();
+                loadBoardStats();
             }
         } catch (error) {
-            alert(error.message);
+            showNotification('error', error.message || 'Error al publicar comunicado');
         } finally {
             setActionLoading(false);
         }
     };
 
     const handleAcknowledge = async (announcementId) => {
+        setActionLoading(true);
         try {
             const res = await markAnnouncementReadOrAcknowledge(announcementId, true);
             if (res.success) {
-                alert('Acuse de recibo digital registrado correctamente');
+                showNotification('success', 'Acuse de recibo digital firmado y registrado');
                 loadData();
+                loadBoardStats();
             }
         } catch (error) {
-            alert(error.message);
+            showNotification('error', error.message || 'Error al registrar acuse de recibo');
+        } finally {
+            setActionLoading(false);
         }
     };
 
@@ -100,218 +175,378 @@ const AnnouncementsBoard = ({ user }) => {
                 setStatsModalOpen(true);
             }
         } catch (error) {
-            alert(error.message);
+            showNotification('error', error.message || 'Error al obtener métricas de lectura');
         }
     };
 
-    const getCategoryBadge = (category) => {
-        switch (category) {
-            case 'POLICY':
-                return <span className="px-2 py-0.5 bg-gray-100 text-gray-700 border border-gray-200 text-xs font-mono rounded">Política / Reglamento</span>;
-            case 'HOLIDAY':
-                return <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-mono rounded">Feriado / Asueto</span>;
-            case 'BIRTHDAY':
-                return <span className="px-2 py-0.5 bg-blue-50 text-blue-800 border border-blue-200 text-xs font-mono rounded">Cumpleaños</span>;
-            default:
-                return <span className="px-2 py-0.5 bg-gray-100 text-gray-700 border border-gray-200 text-xs font-mono rounded">Aviso General</span>;
+    const handleDeleteAnnouncement = async () => {
+        if (!announcementToDelete) return;
+        setActionLoading(true);
+        try {
+            await deleteAnnouncement(announcementToDelete.id);
+            showNotification('success', 'Comunicado eliminado correctamente');
+            setAnnouncementToDelete(null);
+            loadData();
+            loadBoardStats();
+        } catch (error) {
+            showNotification('error', error.message || 'Error al eliminar el comunicado');
+        } finally {
+            setActionLoading(false);
         }
     };
+
+    const inputClass = "w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors";
 
     return (
-        <div className="space-y-5">
-            {/* Header Limpio ERP */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-200">
+        <div className="space-y-4">
+            {/* Notificación Toast Sobria */}
+            {notification && (
+                <div
+                    className={`fixed top-5 right-5 z-50 px-4 py-2.5 rounded border text-xs font-medium shadow-md transition-all ${
+                        notification.type === 'success'
+                            ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                            : 'bg-red-50 text-red-900 border-red-200'
+                    }`}
+                >
+                    {notification.message}
+                </div>
+            )}
+
+            {/* Header ERP con Resumen Institucional */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Plataforma · Comunicación</p>
-                    <h1 className="text-xl font-semibold text-gray-900">Tablón de Anuncios y Comunicados Oficiales</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Canal institucional de noticias, políticas de la empresa y acuse de recibo digital.</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Plataforma · Comunicación Institucional</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Tablón de Anuncios y Comunicados</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Canal oficial de noticias, políticas de la empresa y acuses de recibo digitales.</p>
                 </div>
 
-                {isAdmin && (
-                    <button
-                        onClick={() => setCreateModalOpen(false) || setCreateModalOpen(true)}
-                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors shrink-0 cursor-pointer"
-                    >
-                        Publicar nuevo comunicado
-                    </button>
-                )}
-            </div>
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="hidden sm:flex items-center gap-4 bg-white px-3.5 py-2 rounded border border-gray-200 font-mono text-xs">
+                        <div>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Comunicados Oficiales</span>
+                            <span className="font-semibold text-gray-900 tabular-nums">{stats.total} publicados</span>
+                        </div>
+                        <div className="w-px h-6 bg-gray-200" />
+                        <div>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Políticas Vigentes</span>
+                            <span className="font-semibold text-blue-700 tabular-nums">{stats.policyCount}</span>
+                        </div>
+                        <div className="w-px h-6 bg-gray-200" />
+                        <div>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Cumpleaños Mes</span>
+                            <span className="font-semibold text-emerald-700 tabular-nums">{stats.birthdayCount}</span>
+                        </div>
+                    </div>
 
-            {/* Barra de Filtros y Búsqueda */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-white p-3.5 rounded border border-gray-200">
-                <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-                    {[
-                        { label: 'Todos', value: '' },
-                        { label: 'Políticas & Código', value: 'POLICY' },
-                        { label: 'Feriados & Eventos', value: 'HOLIDAY' },
-                        { label: 'Cumpleaños', value: 'BIRTHDAY' }
-                    ].map(tab => (
+                    {isAdmin && (
                         <button
-                            key={tab.value}
-                            onClick={() => setFilterCategory(tab.value)}
-                            className={`px-3 py-1.5 text-xs rounded transition-colors whitespace-nowrap cursor-pointer ${
-                                filterCategory === tab.value
-                                    ? 'bg-blue-600 text-white font-medium'
-                                    : 'border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900'
-                            }`}
+                            onClick={() => setCreateModalOpen(true)}
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
                         >
-                            {tab.label}
+                            + Publicar Comunicado
                         </button>
-                    ))}
+                    )}
                 </div>
-
-                <form onSubmit={handleSearch} className="flex gap-2 w-full md:w-72">
-                    <input
-                        type="text"
-                        placeholder="Buscar en comunicados..."
-                        className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    <button type="submit" className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer shrink-0">
-                        Buscar
-                    </button>
-                </form>
             </div>
 
-            {/* Layout Grid: Feed Principal + Cumpleaños Lateral */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                {/* Feed de Comunicados */}
-                <div className="lg:col-span-2 space-y-4">
-                    {loading ? (
-                        <div className="bg-white p-12 text-center text-gray-400 text-xs rounded border border-gray-200">
-                            Cargando comunicados...
-                        </div>
-                    ) : announcements.length === 0 ? (
-                        <div className="bg-white p-12 text-center text-gray-400 text-xs rounded border border-gray-200">
-                            No se encontraron comunicados publicados.
-                        </div>
-                    ) : (
-                        announcements.map(ann => (
-                            <div
-                                key={ann.id}
-                                className={`bg-white p-5 rounded border space-y-3 ${
-                                    ann.priority === 'URGENT' ? 'border-red-300 bg-red-50/10' : 'border-gray-200'
-                                }`}
+            {/* Pestañas con Contadores Integrados (Holded/Linear Style) */}
+            <div className="flex items-center justify-between border-b border-gray-200 gap-4 overflow-x-auto">
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={() => handleTabChange('ALL')}
+                        className={`pb-2.5 px-3 text-xs font-medium transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+                            activeTab === 'ALL'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                    >
+                        Todos <span className="ml-1.5 font-mono text-[11px] text-gray-400">({stats.total})</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleTabChange('POLICY')}
+                        className={`pb-2.5 px-3 text-xs font-medium transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+                            activeTab === 'POLICY'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                    >
+                        Políticas & Reglamentos <span className="ml-1.5 font-mono text-[11px] text-gray-400">({stats.policyCount})</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleTabChange('HOLIDAY')}
+                        className={`pb-2.5 px-3 text-xs font-medium transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+                            activeTab === 'HOLIDAY'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                    >
+                        Feriados & Asuetos <span className="ml-1.5 font-mono text-[11px] text-amber-700">({stats.holidayCount})</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleTabChange('PENDING_ACK')}
+                        className={`pb-2.5 px-3 text-xs font-medium transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+                            activeTab === 'PENDING_ACK'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                    >
+                        Requieren Acuse de Recibo <span className="ml-1.5 font-mono text-[11px] text-blue-700">({stats.pendingAcknowledgmentCount})</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleTabChange('BIRTHDAYS')}
+                        className={`pb-2.5 px-3 text-xs font-medium transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+                            activeTab === 'BIRTHDAYS'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                    >
+                        Cumpleaños del Mes <span className="ml-1.5 font-mono text-[11px] text-emerald-600">({stats.birthdayCount})</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Barra de Búsqueda */}
+            {activeTab !== 'BIRTHDAYS' && (
+                <div className="bg-white p-3 rounded border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <form onSubmit={handleSearch} className="flex items-center gap-2 w-full sm:w-auto flex-grow max-w-md">
+                        <input
+                            type="text"
+                            placeholder="Buscar por título o contenido del comunicado..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={inputClass}
+                        />
+                        <button
+                            type="submit"
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors shrink-0 cursor-pointer"
+                        >
+                            Buscar
+                        </button>
+                        {searchTerm && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setTimeout(loadData, 0);
+                                }}
+                                className="text-xs text-gray-400 hover:text-gray-600 underline cursor-pointer shrink-0"
                             >
-                                <div className="flex justify-between items-start gap-4">
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            {ann.priority === 'URGENT' && (
-                                                <span className="px-2 py-0.5 bg-red-600 text-white font-mono font-bold text-[10px] uppercase rounded">
-                                                    URGENTE
-                                                </span>
-                                            )}
-                                            {getCategoryBadge(ann.category)}
-                                            <span className="text-xs text-gray-400 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                                {new Date(ann.createdAt).toLocaleDateString('es-EC', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                            </span>
-                                        </div>
-                                        <h3 className="text-base font-semibold text-gray-900 pt-0.5">{ann.title}</h3>
-                                        <p className="text-xs text-gray-500">Por {ann.createdBy?.firstName} {ann.createdBy?.lastName}</p>
-                                    </div>
+                                Limpiar
+                            </button>
+                        )}
+                    </form>
+                </div>
+            )}
 
-                                    {isAdmin && (
-                                        <button
-                                            onClick={() => handleOpenStats(ann.id)}
-                                            className="px-2.5 py-1 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-xs rounded transition-colors cursor-pointer shrink-0"
-                                        >
-                                            Lecturas
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="text-gray-700 text-xs leading-relaxed whitespace-pre-line border-t border-gray-100 pt-3">
-                                    {ann.content}
-                                </div>
-
-                                {ann.attachmentUrl && (
-                                    <div className="pt-1">
-                                        <a
-                                            href={ann.attachmentUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline font-mono"
-                                        >
-                                            Ver Archivo Adjunto (URL)
-                                        </a>
-                                    </div>
+            {/* Layout Principal: Feed + Sidebar */}
+            {activeTab === 'BIRTHDAYS' ? (
+                /* VISTA COMPLETA DE CUMPLEAÑOS */
+                <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 bg-gray-50/50">
+                        <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
+                            Cumpleañeros del Mes Actual ({birthdays.length})
+                        </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-200 text-[10px] sm:text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                                    <th className="py-2.5 px-4">Colaborador</th>
+                                    <th className="py-2.5 px-4">Departamento</th>
+                                    <th className="py-2.5 px-4">Cargo / Posición</th>
+                                    <th className="py-2.5 px-4 text-center">Día de Celebración</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {birthdays.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="4" className="p-12 text-center text-gray-400 text-xs">
+                                            No hay cumpleaños registrados este mes.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    birthdays.map(bday => (
+                                        <tr key={bday.id} className="hover:bg-gray-50/60 transition-colors">
+                                            <td className="py-2.5 px-4 font-medium text-gray-900">
+                                                {bday.firstName} {bday.lastName}
+                                            </td>
+                                            <td className="py-2.5 px-4 text-gray-600">{bday.department || 'General'}</td>
+                                            <td className="py-2.5 px-4 text-gray-500">{bday.position || 'Colaborador'}</td>
+                                            <td className="py-2.5 px-4 text-center font-mono font-semibold text-gray-900 tabular-nums">
+                                                Día {bday.day}
+                                            </td>
+                                        </tr>
+                                    ))
                                 )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ) : (
+                /* FEED PRINCIPAL + SIDEBAR */
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {/* FEED DE COMUNICADOS */}
+                    <div className="lg:col-span-2 space-y-3">
+                        {loading ? (
+                            <div className="bg-white p-12 text-center text-gray-400 text-xs rounded border border-gray-200">
+                                Cargando comunicados oficiales...
+                            </div>
+                        ) : announcements.length === 0 ? (
+                            <div className="bg-white p-12 text-center rounded border border-gray-200">
+                                <p className="text-sm font-medium text-gray-700">Sin comunicados disponibles</p>
+                                <p className="text-xs text-gray-400 mt-1">No se encontraron avisos o políticas con los filtros actuales.</p>
+                            </div>
+                        ) : (
+                            announcements.map(ann => {
+                                const catConfig = CATEGORY_MAP[ann.category] || CATEGORY_MAP.GENERAL;
 
-                                {/* Acuse de recibo digital */}
-                                {ann.requiresAcknowledgment && (
-                                    <div className="pt-3 border-t border-gray-100">
-                                        {ann.isAcknowledged ? (
-                                            <div className="bg-green-50 border border-green-200 p-2.5 rounded flex items-center justify-between text-xs text-green-800">
-                                                <span className="font-medium">Acuse de recibo digital firmado</span>
-                                                <span className="text-[11px] text-green-700 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                                    {new Date(ann.readAt).toLocaleDateString('es-EC')}
-                                                </span>
+                                return (
+                                    <div
+                                        key={ann.id}
+                                        className={`bg-white p-4 rounded border transition-colors ${
+                                            ann.priority === 'URGENT' ? 'border-red-300' : 'border-gray-200'
+                                        }`}
+                                    >
+                                        <div className="flex justify-between items-start gap-3 pb-2 border-b border-gray-100">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    {ann.priority === 'URGENT' && (
+                                                        <span className="px-1.5 py-0.5 bg-red-600 text-white font-mono font-bold text-[10px] uppercase rounded">
+                                                            URGENTE
+                                                        </span>
+                                                    )}
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${catConfig.cls}`}>
+                                                        {catConfig.label}
+                                                    </span>
+                                                    <span className="text-[11px] text-gray-400 font-mono tabular-nums">
+                                                        {new Date(ann.createdAt).toLocaleDateString('es-EC', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-sm font-semibold text-gray-900 pt-0.5">{ann.title}</h3>
+                                                <p className="text-[11px] text-gray-400">
+                                                    Publicado por: {ann.createdBy?.firstName} {ann.createdBy?.lastName || 'Administración'}
+                                                </p>
                                             </div>
-                                        ) : (
-                                            <div className="bg-amber-50 border border-amber-200 p-3 rounded space-y-2">
-                                                <p className="text-xs text-amber-900 font-medium">Este comunicado requiere confirmación obligatoria de lectura.</p>
-                                                <button
-                                                    onClick={() => handleAcknowledge(ann.id)}
-                                                    className="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded transition-colors cursor-pointer"
+
+                                            {isAdmin && (
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <button
+                                                        onClick={() => handleOpenStats(ann.id)}
+                                                        className="border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer"
+                                                    >
+                                                        Lecturas
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setAnnouncementToDelete(ann)}
+                                                        className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs px-2 py-1 rounded transition-colors cursor-pointer"
+                                                        title="Eliminar comunicado"
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="text-gray-700 text-xs leading-relaxed whitespace-pre-line py-3">
+                                            {ann.content}
+                                        </div>
+
+                                        {ann.attachmentUrl && (
+                                            <div className="pt-1 pb-2">
+                                                <a
+                                                    href={ann.attachmentUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline font-mono"
                                                 >
-                                                    Confirmar Lectura y Acuse de Recibo
-                                                </button>
+                                                    Ver Archivo Adjunto ↗
+                                                </a>
+                                            </div>
+                                        )}
+
+                                        {/* Acuse de recibo digital */}
+                                        {ann.requiresAcknowledgment && (
+                                            <div className="pt-3 border-t border-gray-100">
+                                                {ann.isAcknowledged ? (
+                                                    <div className="bg-emerald-50 border border-emerald-200 p-2 rounded flex items-center justify-between text-xs text-emerald-900">
+                                                        <span className="font-medium">Acuse de recibo digital firmado</span>
+                                                        <span className="text-[11px] text-emerald-700 font-mono tabular-nums">
+                                                            {new Date(ann.readAt).toLocaleDateString('es-EC')}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-amber-50 border border-amber-200 p-3 rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                        <p className="text-xs text-amber-900 font-medium">
+                                                            Este comunicado requiere confirmación obligatoria de lectura.
+                                                        </p>
+                                                        <button
+                                                            disabled={actionLoading}
+                                                            onClick={() => handleAcknowledge(ann.id)}
+                                                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                                                        >
+                                                            Firmar Acuse de Recibo
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    {/* SIDEBAR DE CUMPLEAÑOS DEL MES */}
+                    <div className="space-y-4">
+                        <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                            <div className="border-b border-gray-100 pb-2">
+                                <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Cumpleaños del Mes</h3>
+                                <p className="text-xs text-gray-400 mt-0.5">Colaboradores que celebran este mes.</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                {birthdays.length === 0 ? (
+                                    <p className="text-xs text-gray-400 text-center py-4">Sin cumpleaños registrados</p>
+                                ) : (
+                                    birthdays.map(bday => (
+                                        <div key={bday.id} className="p-2.5 bg-gray-50/60 rounded flex items-center justify-between border border-gray-100 text-xs">
+                                            <div>
+                                                <p className="font-medium text-gray-900">{bday.firstName} {bday.lastName}</p>
+                                                <p className="text-[11px] text-gray-400">{bday.department || 'General'}</p>
+                                            </div>
+                                            <span className="font-mono text-xs text-gray-700 font-semibold bg-white border border-gray-200 px-2 py-0.5 rounded tabular-nums">
+                                                Día {bday.day}
+                                            </span>
+                                        </div>
+                                    ))
                                 )}
                             </div>
-                        ))
-                    )}
-                </div>
-
-                {/* Sidebar Lateral: Cumpleaños del Mes */}
-                <div className="space-y-4">
-                    <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
-                        <div className="border-b border-gray-100 pb-2">
-                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Cumpleaños del Mes</h3>
-                            <p className="text-xs text-gray-400 mt-0.5">Compañeros que celebran este mes.</p>
-                        </div>
-
-                        <div className="space-y-2">
-                            {birthdays.length === 0 ? (
-                                <p className="text-xs text-gray-400 italic text-center py-2">Sin cumpleaños registrados este mes</p>
-                            ) : (
-                                birthdays.map(bday => (
-                                    <div key={bday.id} className="p-2.5 bg-gray-50/70 rounded flex items-center justify-between border border-gray-100 text-xs">
-                                        <div>
-                                            <p className="font-medium text-gray-900">{bday.firstName} {bday.lastName}</p>
-                                            <p className="text-[11px] text-gray-400">{bday.department || 'General'}</p>
-                                        </div>
-                                        <span className="font-mono text-xs text-gray-700 font-semibold bg-white border border-gray-200 px-2 py-0.5 rounded" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                            Día {bday.day}
-                                        </span>
-                                    </div>
-                                ))
-                            )}
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {/* Modal Crear Comunicado (Admin) */}
+            {/* MODAL: PUBLICAR COMUNICADO OFICIAL */}
             {createModalOpen && (
                 <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-xl w-full overflow-hidden shadow-xl">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <div className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl text-xs">
+                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
                             <h3 className="text-base font-semibold text-gray-900">Publicar Comunicado Oficial</h3>
-                            <button onClick={() => setCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+                            <button onClick={() => setCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer">&times;</button>
                         </div>
                         <form onSubmit={handlePublishSubmit}>
-                            <div className="p-5 space-y-4 text-xs">
+                            <div className="p-5 space-y-3.5">
                                 <div>
-                                    <label className="block font-medium text-gray-600 mb-1">Título del Comunicado</label>
+                                    <label className="block font-medium text-gray-700 mb-1">Título del Comunicado</label>
                                     <input
                                         type="text"
                                         required
                                         placeholder="ej. Actualización de Políticas / Aviso Operativo"
-                                        className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                                        className={inputClass}
                                         value={form.title}
                                         onChange={(e) => setForm({ ...form, title: e.target.value })}
                                     />
@@ -319,9 +554,9 @@ const AnnouncementsBoard = ({ user }) => {
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block font-medium text-gray-600 mb-1">Categoría</label>
+                                        <label className="block font-medium text-gray-700 mb-1">Categoría</label>
                                         <select
-                                            className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                                            className={inputClass}
                                             value={form.category}
                                             onChange={(e) => setForm({ ...form, category: e.target.value })}
                                         >
@@ -332,9 +567,9 @@ const AnnouncementsBoard = ({ user }) => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block font-medium text-gray-600 mb-1">Prioridad</label>
+                                        <label className="block font-medium text-gray-700 mb-1">Prioridad</label>
                                         <select
-                                            className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                                            className={inputClass}
                                             value={form.priority}
                                             onChange={(e) => setForm({ ...form, priority: e.target.value })}
                                         >
@@ -345,56 +580,55 @@ const AnnouncementsBoard = ({ user }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block font-medium text-gray-600 mb-1">Contenido</label>
+                                    <label className="block font-medium text-gray-700 mb-1">Contenido</label>
                                     <textarea
                                         rows="4"
                                         required
-                                        placeholder="Escribe el contenido del mensaje..."
-                                        className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                                        placeholder="Redacte el comunicado oficial..."
+                                        className={inputClass}
                                         value={form.content}
                                         onChange={(e) => setForm({ ...form, content: e.target.value })}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block font-medium text-gray-600 mb-1">Enlace / Adjunto (Opcional)</label>
+                                    <label className="block font-medium text-gray-700 mb-1">Enlace de Archivo Adjunto (Opcional)</label>
                                     <input
                                         type="url"
                                         placeholder="https://..."
-                                        className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 font-mono focus:outline-none focus:border-blue-500"
+                                        className={inputClass}
                                         value={form.attachmentUrl}
                                         onChange={(e) => setForm({ ...form, attachmentUrl: e.target.value })}
                                     />
                                 </div>
 
-                                <div className="flex items-center gap-2 p-2.5 bg-gray-50 border border-gray-200 rounded">
-                                    <input
-                                        type="checkbox"
-                                        id="reqAck"
-                                        checked={form.requiresAcknowledgment}
-                                        onChange={(e) => setForm({ ...form, requiresAcknowledgment: e.target.checked })}
-                                        className="rounded border-gray-300 text-blue-600 cursor-pointer"
-                                    />
-                                    <label htmlFor="reqAck" className="text-xs text-gray-700 font-medium cursor-pointer">
-                                        Requerir Acuse de Recibo Digital a los empleados
+                                <div className="pt-2 border-t border-gray-100">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={form.requiresAcknowledgment}
+                                            onChange={(e) => setForm({ ...form, requiresAcknowledgment: e.target.checked })}
+                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="text-gray-700 font-medium">Requerir confirmación obligatoria de lectura (Acuse digital)</span>
                                     </label>
                                 </div>
                             </div>
 
-                            <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
+                            <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setCreateModalOpen(false)}
-                                    className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                                    className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={actionLoading}
-                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
                                 >
-                                    {actionLoading ? 'Publicando...' : 'Publicar Anuncio'}
+                                    {actionLoading ? 'Publicando...' : 'Publicar Comunicado'}
                                 </button>
                             </div>
                         </form>
@@ -402,59 +636,115 @@ const AnnouncementsBoard = ({ user }) => {
                 </div>
             )}
 
-            {/* Modal Estadísticas de Lectura */}
+            {/* MODAL: ESTADÍSTICAS DE LECTURA (ADMIN) */}
             {statsModalOpen && selectedStats && (
                 <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-xl w-full overflow-hidden shadow-xl">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <div className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl text-xs">
+                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
                             <div>
-                                <h3 className="text-base font-semibold text-gray-900">Métricas de Lectura y Acuse</h3>
-                                <p className="text-xs text-gray-400 truncate max-w-xs">{selectedStats.announcement?.title}</p>
+                                <h3 className="text-sm font-semibold text-gray-900">Control de Lectura y Acuses</h3>
+                                <p className="text-[11px] text-gray-500 mt-0.5 truncate max-w-sm">{selectedStats.announcement?.title}</p>
                             </div>
-                            <button onClick={() => setStatsModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+                            <button onClick={() => setStatsModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer">&times;</button>
                         </div>
 
-                        <div className="p-5 space-y-4 max-h-[450px] overflow-y-auto text-xs">
-                            <div className="grid grid-cols-2 gap-3 text-center">
-                                <div className="p-3.5 bg-gray-50 border border-gray-200 rounded">
-                                    <p className="text-[11px] font-medium text-gray-400 uppercase">Lectura Realizada</p>
-                                    <h4 className="text-xl font-bold text-gray-900 font-mono mt-1" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                        {selectedStats.metrics?.readPercentage}%
-                                    </h4>
-                                    <p className="text-[11px] text-gray-500 font-mono mt-0.5">{selectedStats.metrics?.totalReads} / {selectedStats.metrics?.totalActiveEmployees} Empleados</p>
+                        <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto">
+                            {/* Métricas */}
+                            <div className="grid grid-cols-2 gap-3 font-mono">
+                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Lecturas Confirmadas</span>
+                                    <span className="text-base font-semibold text-gray-900 tabular-nums">
+                                        {selectedStats.metrics?.totalReads} / {selectedStats.metrics?.totalActiveEmployees}
+                                    </span>
+                                    <span className="text-[11px] text-gray-500 block">({selectedStats.metrics?.readPercentage}%)</span>
                                 </div>
-                                <div className="p-3.5 bg-gray-50 border border-gray-200 rounded">
-                                    <p className="text-[11px] font-medium text-gray-400 uppercase">Acuse de Recibo</p>
-                                    <h4 className="text-xl font-bold text-gray-900 font-mono mt-1" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                        {selectedStats.metrics?.acknowledgedPercentage}%
-                                    </h4>
-                                    <p className="text-[11px] text-gray-500 font-mono mt-0.5">{selectedStats.metrics?.totalAcknowledged} Confirmados</p>
+                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Acuses Firmados</span>
+                                    <span className="text-base font-semibold text-emerald-700 tabular-nums">
+                                        {selectedStats.metrics?.totalAcknowledged} / {selectedStats.metrics?.totalActiveEmployees}
+                                    </span>
+                                    <span className="text-[11px] text-gray-500 block">({selectedStats.metrics?.acknowledgedPercentage}%)</span>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Pendientes por Leer / Firmar ({selectedStats.pendingEmployees?.length || 0})</h4>
-                                <div className="max-h-36 overflow-y-auto space-y-1.5">
-                                    {selectedStats.pendingEmployees?.length === 0 ? (
-                                        <p className="text-xs text-green-700 font-medium italic">¡El 100% de los empleados ha leído esta publicación!</p>
+                            {/* Colaboradores con lectura registrada */}
+                            <div>
+                                <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                                    Colaboradores que leyeron ({selectedStats.reads?.length || 0})
+                                </h4>
+                                <div className="divide-y divide-gray-100 border border-gray-200 rounded max-h-36 overflow-y-auto">
+                                    {selectedStats.reads && selectedStats.reads.length > 0 ? (
+                                        selectedStats.reads.map(r => (
+                                            <div key={r.id} className="p-2 flex items-center justify-between">
+                                                <span>{r.employee?.firstName} {r.employee?.lastName}</span>
+                                                <span className="font-mono text-[11px] text-gray-400">
+                                                    {new Date(r.readAt).toLocaleDateString('es-EC')}
+                                                </span>
+                                            </div>
+                                        ))
                                     ) : (
-                                        selectedStats.pendingEmployees?.map(emp => (
-                                            <div key={emp.id} className="p-2 bg-gray-50 rounded border border-gray-100 text-xs flex justify-between items-center">
-                                                <span className="font-medium text-gray-800">{emp.firstName} {emp.lastName}</span>
+                                        <p className="p-3 text-center text-gray-400">Sin lecturas registradas</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Colaboradores pendientes */}
+                            <div>
+                                <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                                    Colaboradores pendientes ({selectedStats.pendingEmployees?.length || 0})
+                                </h4>
+                                <div className="divide-y divide-gray-100 border border-gray-200 rounded max-h-36 overflow-y-auto">
+                                    {selectedStats.pendingEmployees && selectedStats.pendingEmployees.length > 0 ? (
+                                        selectedStats.pendingEmployees.map(emp => (
+                                            <div key={emp.id} className="p-2 flex items-center justify-between text-gray-600">
+                                                <span>{emp.firstName} {emp.lastName}</span>
                                                 <span className="text-[11px] text-gray-400">{emp.department || 'General'}</span>
                                             </div>
                                         ))
+                                    ) : (
+                                        <p className="p-3 text-center text-emerald-600 font-medium">¡Todos los colaboradores han leído el comunicado!</p>
                                     )}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end">
+                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
                             <button
                                 onClick={() => setStatsModalOpen(false)}
-                                className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                                className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors cursor-pointer"
                             >
                                 Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+            {announcementToDelete && (
+                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white border border-gray-200 rounded max-w-sm w-full overflow-hidden shadow-xl text-xs">
+                        <div className="p-5">
+                            <h3 className="text-sm font-semibold text-gray-900">¿Eliminar comunicado?</h3>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Se retirará del tablón el comunicado "{announcementToDelete.title}" junto con todos sus registros de acuse de recibo.
+                            </p>
+                        </div>
+                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setAnnouncementToDelete(null)}
+                                className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                disabled={actionLoading}
+                                onClick={handleDeleteAnnouncement}
+                                className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                                {actionLoading ? 'Eliminando...' : 'Sí, Eliminar'}
                             </button>
                         </div>
                     </div>

@@ -1,9 +1,8 @@
-import { FiX, FiInfo, FiLayers, FiList } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 
 const EvaluationDetailModal = ({ isOpen, onClose, template }) => {
     if (!isOpen || !template) return null;
 
-    // Parse JSON fields safely
     const parseCriteria = () => {
         try {
             if (typeof template.criteria === 'string') {
@@ -32,15 +31,14 @@ const EvaluationDetailModal = ({ isOpen, onClose, template }) => {
     const scale = parseScale();
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 print:hidden">
-            <div className="bg-white border border-gray-200 rounded w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-xl text-xs">
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4">
+            <div className="bg-white border border-gray-200 rounded max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-xl text-xs">
                 {/* Header */}
-                <div className="p-4 px-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                    <div className="flex-1 pr-4">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <h2 className="text-sm font-semibold text-gray-900">{template.title}</h2>
-                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-mono rounded border border-blue-200">
+                <div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-base font-semibold text-gray-900">{template.title}</h3>
+                            <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-[11px] font-mono rounded border border-gray-200">
                                 {template.period}
                             </span>
                         </div>
@@ -50,100 +48,92 @@ const EvaluationDetailModal = ({ isOpen, onClose, template }) => {
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors shrink-0"
+                        className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
                     >
-                        <FiX size={16} />
+                        ×
                     </button>
                 </div>
 
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-4">
-
+                {/* Content */}
+                <div className="p-5 space-y-4 overflow-y-auto max-h-[65vh]">
                     {/* Instructions */}
                     {template.instructions && (
-                        <div className="bg-blue-50 rounded-xl p-5 border border-blue-100">
-                            <h3 className="text-sm font-bold text-blue-800 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                <FiInfo className="text-blue-600" /> Instrucciones
-                            </h3>
-                            <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        <div className="bg-gray-50 rounded p-3.5 border border-gray-200">
+                            <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                                Instrucciones para Evaluadores
+                            </h4>
+                            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
                                 {template.instructions}
                             </p>
                         </div>
                     )}
 
                     {/* Scale Configuration */}
-                    <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-                        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <FiLayers className="text-slate-500" /> Escala de Evaluación
-                        </h3>
-                        <div className="flex items-center gap-4 flex-wrap">
-                            <div className="bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
-                                <span className="text-slate-400 text-xs block mb-1">Tipo</span>
-                                <span className="text-slate-800 font-semibold">
-                                    {scale.type === 'numeric' ? 'Numérica' :
-                                        scale.type === 'percentage' ? 'Porcentaje' :
-                                            scale.label || 'No especificado'}
-                                </span>
-                            </div>
-                            {scale.min !== undefined && scale.max !== undefined && (
-                                <div className="bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
-                                    <span className="text-slate-400 text-xs block mb-1">Rango</span>
-                                    <span className="text-slate-800 font-semibold">
-                                        {scale.min} - {scale.max}
-                                    </span>
-                                </div>
-                            )}
+                    <div className="bg-gray-50 rounded p-3.5 border border-gray-200 flex items-center justify-between">
+                        <div>
+                            <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider block mb-0.5">
+                                Escala de Puntuación
+                            </span>
+                            <span className="text-gray-600">
+                                {scale.type === 'numeric' ? 'Numérica' :
+                                    scale.type === 'percentage' ? 'Porcentaje' :
+                                        scale.label || 'Estándar'}
+                            </span>
                         </div>
+                        {scale.min !== undefined && scale.max !== undefined && (
+                            <span className="font-mono font-semibold text-gray-900 text-xs bg-white px-2.5 py-1 rounded border border-gray-200">
+                                Rango: {scale.min} a {scale.max} pts
+                            </span>
+                        )}
                     </div>
 
                     {/* Criteria List */}
                     <div>
-                        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <FiList className="text-emerald-600" /> Criterios de Evaluación ({criteria.length})
-                        </h3>
+                        <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider">
+                                Criterios y Competencias Evaluadas ({criteria.length})
+                            </h4>
+                        </div>
 
-                        <div className="space-y-3">
+                        <div className="divide-y divide-gray-100 border border-gray-200 rounded overflow-hidden">
                             {criteria.length > 0 ? (
                                 criteria.map((item, index) => (
-                                    <div key={item.id || index} className="bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all">
-                                        <div className="flex justify-between items-start gap-4">
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-slate-800 text-lg mb-1">{item.name}</h4>
-                                                {item.description && (
-                                                    <p className="text-slate-500 text-sm mb-3">{item.description}</p>
-                                                )}
-                                                <div className="flex gap-2 flex-wrap">
-                                                    <span className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-600 border border-slate-200 font-medium">
-                                                        {item.type || 'Competencia'}
+                                    <div key={item.id || index} className="p-3 bg-white hover:bg-gray-50/50 transition-colors flex items-start justify-between gap-3">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-mono text-gray-400 text-[11px]">{index + 1}.</span>
+                                                <h5 className="font-medium text-gray-900">{item.name}</h5>
+                                                {item.type && (
+                                                    <span className="px-1.5 py-0.5 bg-gray-50 text-gray-600 rounded text-[10px] border border-gray-200">
+                                                        {item.type}
                                                     </span>
-                                                    {item.weight && (
-                                                        <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-xs border border-emerald-100 font-bold">
-                                                            Peso: {item.weight}%
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                )}
                                             </div>
-                                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-xs font-mono text-slate-500 flex-shrink-0 border border-slate-200">
-                                                {index + 1}
-                                            </div>
+                                            {item.description && (
+                                                <p className="text-gray-500 text-[11px] mt-1 pl-4">{item.description}</p>
+                                            )}
                                         </div>
+                                        {item.weight && (
+                                            <span className="font-mono text-[11px] font-medium text-gray-700 bg-gray-50 px-2 py-0.5 rounded border border-gray-200 shrink-0">
+                                                Peso: {item.weight}%
+                                            </span>
+                                        )}
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-8 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
-                                    <p className="text-slate-400 italic">No hay criterios definidos para esta evaluación.</p>
+                                <div className="p-4 text-center text-gray-400">
+                                    No hay criterios configurados en esta plantilla.
                                 </div>
                             )}
                         </div>
                     </div>
-
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-slate-200 bg-slate-50/50 flex justify-end gap-3">
+                <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium rounded-lg transition-colors shadow-sm"
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                     >
                         Cerrar
                     </button>
@@ -154,4 +144,3 @@ const EvaluationDetailModal = ({ isOpen, onClose, template }) => {
 };
 
 export default EvaluationDetailModal;
-

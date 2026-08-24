@@ -34,8 +34,7 @@ class SalaryAdvanceService {
         const baseSalary = financial.from(contract.salary);
         const requested = financial.from(numAmount);
 
-        // Validación de políticas PyME: Un anticipo de 1 cuota no debe superar el 60% del sueldo base mensual.
-        // Préstamos multicuota no deben requerir cuota mensual superior al 40% del sueldo base.
+        // Validación de políticas PyME: Un anticipo no debe comprometer más del 50% de la capacidad de pago mensual
         const monthlyDeduction = financial.divide(requested, numInstallments);
         const maxMonthlyQuota = financial.percentage(baseSalary, 50);
 
@@ -64,6 +63,143 @@ class SalaryAdvanceService {
     }
 
     /**
+     * Registro directo de anticipo / préstamo por parte del Administrador.
+     */
+    async createAdvanceByAdmin({ employeeId, amount, installments = 1, reason, autoApprove = true }, adminId = null, tenantId = null) {
+        const numAmount = Number(amount);
+        const numInstallments = parseInt(installments, 10);
+
+        if (!employeeId) {
+            throw new Error('El colaborador es requerido');
+        }
+        if (!numAmount || numAmount <= 0) {
+            throw new Error('El monto debe ser un valor positivo mayor a 0');
+        }
+        if (!numInstallments || numInstallments < 1 || numInstallments > 24) {
+            throw new Error('El número de cuotas debe estar entre 1 y 24');
+        }
+
+        // Verificar que el empleado pertenezca al tenant si aplica
+        const employee = await prisma.employee.findFirst({
+            where: {
+                id: employeeId,
+                ...(tenantId ? { tenantId } : {})
+            },
+            include: {
+                contracts: {
+                    where: {
+                        status: 'Active',
+                        OR: [{ endDate: null }, { endDate: { gte: new Date() } }]
+                    },
+                    orderBy: { startDate: 'desc' },
+                    take: 1
+                }
+            }
+        });
+
+        if (!employee) {
+            throw new Error('Colaborador no encontrado o sin permisos');
+        }
+
+        const activeContract = employee.contracts[0];
+        const baseSalary = activeContract
+            ? financial.from(activeContract.salary)
+            : (employee.salary ? financial.from(employee.salary.toString().replace(/[^0-9.]/g, '')) : financial.from(0));
+
+        const requested = financial.from(numAmount);
+        const monthlyDeduction = financial.divide(requested, numInstallments);
+
+        const status = autoApprove ? 'APPROVED' : 'PENDING';
+
+        const advance = await prisma.salaryAdvance.create({
+            data: {
+                employeeId,
+                amount: financial.round(requested),
+                installments: numInstallments,
+                monthlyDeduction: financial.round(monthlyDeduction),
+                reason: reason ? reason.trim() : 'Concesión administrativa',
+                status,
+                approvedBy: autoApprove ? adminId : null,
+                approvedAt: autoApprove ? new Date() : null
+            },
+            include: {
+                employee: {
+                    select: { id: true, firstName: true, lastName: true, identityCard: true, department: true, position: true }
+                }
+            }
+        });
+
+        if (adminId) {
+            await auditRepository.log({
+                action: autoApprove ? 'ADMIN_CREATE_AND_APPROVE_ADVANCE' : 'ADMIN_CREATE_ADVANCE',
+                entity: 'SalaryAdvance',
+                entityId: advance.id,
+                userId: adminId,
+                tenantId,
+                details: {
+                    employeeId,
+                    employeeName: `${employee.firstName} ${employee.lastName}`,
+                    amount: advance.amount,
+                    installments: advance.installments,
+                    monthlyDeduction: advance.monthlyDeduction,
+                    status: advance.status
+                }
+            }).catch(err => console.error('[Audit Error] createAdvanceByAdmin:', err));
+        }
+
+        return advance;
+    }
+
+    /**
+     * Obtener estadísticas globales y contadores de anticipos por estado.
+     */
+    async getStats(tenantId = null) {
+        const baseWhere = tenantId ? { employee: { tenantId } } : {};
+
+        const [
+            totalCount,
+            pendingCount,
+            approvedCount,
+            paidCount,
+            rejectedCount,
+            cancelledCount,
+            approvedAdvances
+        ] = await Promise.all([
+            prisma.salaryAdvance.count({ where: baseWhere }),
+            prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'PENDING' } }),
+            prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'APPROVED' } }),
+            prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'PAID' } }),
+            prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'REJECTED' } }),
+            prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'CANCELLED' } }),
+            prisma.salaryAdvance.findMany({
+                where: { ...baseWhere, status: 'APPROVED' },
+                select: { amount: true, paidAmount: true, monthlyDeduction: true }
+            })
+        ]);
+
+        const totalActiveBalance = approvedAdvances.reduce(
+            (sum, a) => sum + Math.max(0, (a.amount || 0) - (a.paidAmount || 0)),
+            0
+        );
+
+        const monthlyDeductionsTotal = approvedAdvances.reduce(
+            (sum, a) => sum + (a.monthlyDeduction || 0),
+            0
+        );
+
+        return {
+            total: totalCount,
+            pending: pendingCount,
+            approved: approvedCount,
+            paid: paidCount,
+            rejected: rejectedCount,
+            cancelled: cancelledCount,
+            totalActiveBalance: financial.round(financial.from(totalActiveBalance)),
+            monthlyDeductionsTotal: financial.round(financial.from(monthlyDeductionsTotal))
+        };
+    }
+
+    /**
      * Obtener listado de anticipos con filtros para Administradores.
      */
     async getAdvances({ page = 1, limit = 20, status, employeeId, search, tenantId }) {
@@ -79,10 +215,13 @@ class SalaryAdvanceService {
 
         const employeeWhere = tenantId ? { tenantId } : {};
         if (search) {
+            const cleanSearch = search.trim();
             employeeWhere.OR = [
-                { firstName: { contains: search, mode: 'insensitive' } },
-                { lastName: { contains: search, mode: 'insensitive' } },
-                { identityCard: { contains: search, mode: 'insensitive' } }
+                { firstName: { contains: cleanSearch, mode: 'insensitive' } },
+                { lastName: { contains: cleanSearch, mode: 'insensitive' } },
+                { identityCard: { contains: cleanSearch, mode: 'insensitive' } },
+                { department: { contains: cleanSearch, mode: 'insensitive' } },
+                { position: { contains: cleanSearch, mode: 'insensitive' } }
             ];
         }
 
@@ -129,9 +268,12 @@ class SalaryAdvanceService {
     /**
      * Aprobación de anticipo por el Administrador.
      */
-    async approveAdvance(id, adminId) {
-        const advance = await prisma.salaryAdvance.findUnique({
-            where: { id },
+    async approveAdvance(id, adminId, tenantId = null) {
+        const advance = await prisma.salaryAdvance.findFirst({
+            where: {
+                id,
+                ...(tenantId ? { employee: { tenantId } } : {})
+            },
             include: {
                 employee: {
                     select: { id: true, firstName: true, lastName: true, email: true, department: true }
@@ -139,7 +281,7 @@ class SalaryAdvanceService {
             }
         });
 
-        if (!advance) throw new Error('Solicitud de anticipo no encontrada');
+        if (!advance) throw new Error('Solicitud de anticipo no encontrada o sin permisos');
         if (advance.status !== 'PENDING') {
             throw new Error(`La solicitud se encuentra en estado ${advance.status} y no puede ser aprobada`);
         }
@@ -153,19 +295,26 @@ class SalaryAdvanceService {
             },
             include: {
                 employee: {
-                    select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true, position: true }
                 }
             }
         });
 
         if (adminId) {
-            auditRepository.createLog({
+            await auditRepository.log({
+                action: 'APPROVE_SALARY_ADVANCE',
                 entity: 'SalaryAdvance',
                 entityId: id,
-                action: 'APPROVE',
-                performedBy: adminId,
-                details: `Aprobado anticipo de $${advance.amount} (${advance.installments} cuotas) para ${advance.employee.firstName} ${advance.employee.lastName}`
-            }).catch(err => console.error('Audit Log Error:', err));
+                userId: adminId,
+                tenantId,
+                details: {
+                    amount: advance.amount,
+                    installments: advance.installments,
+                    monthlyDeduction: advance.monthlyDeduction,
+                    employeeId: advance.employeeId,
+                    employeeName: `${advance.employee?.firstName} ${advance.employee?.lastName}`
+                }
+            }).catch(err => console.error('[Audit Error] approveAdvance:', err));
         }
 
         return updated;
@@ -174,9 +323,12 @@ class SalaryAdvanceService {
     /**
      * Rechazo de anticipo por el Administrador.
      */
-    async rejectAdvance(id, rejectionReason, adminId) {
-        const advance = await prisma.salaryAdvance.findUnique({
-            where: { id },
+    async rejectAdvance(id, rejectionReason, adminId, tenantId = null) {
+        const advance = await prisma.salaryAdvance.findFirst({
+            where: {
+                id,
+                ...(tenantId ? { employee: { tenantId } } : {})
+            },
             include: {
                 employee: {
                     select: { id: true, firstName: true, lastName: true, email: true, department: true }
@@ -184,7 +336,7 @@ class SalaryAdvanceService {
             }
         });
 
-        if (!advance) throw new Error('Solicitud de anticipo no encontrada');
+        if (!advance) throw new Error('Solicitud de anticipo no encontrada o sin permisos');
         if (advance.status !== 'PENDING') {
             throw new Error(`La solicitud se encuentra en estado ${advance.status} y no puede ser rechazada`);
         }
@@ -197,19 +349,25 @@ class SalaryAdvanceService {
             },
             include: {
                 employee: {
-                    select: { id: true, firstName: true, lastName: true, email: true, department: true }
+                    select: { id: true, firstName: true, lastName: true, email: true, department: true, position: true }
                 }
             }
         });
 
         if (adminId) {
-            auditRepository.createLog({
+            await auditRepository.log({
+                action: 'REJECT_SALARY_ADVANCE',
                 entity: 'SalaryAdvance',
                 entityId: id,
-                action: 'REJECT',
-                performedBy: adminId,
-                details: `Rechazado anticipo de $${advance.amount} para ${advance.employee.firstName} ${advance.employee.lastName}. Motivo: ${updated.rejectionReason}`
-            }).catch(err => console.error('Audit Log Error:', err));
+                userId: adminId,
+                tenantId,
+                details: {
+                    amount: advance.amount,
+                    rejectionReason: updated.rejectionReason,
+                    employeeId: advance.employeeId,
+                    employeeName: `${advance.employee?.firstName} ${advance.employee?.lastName}`
+                }
+            }).catch(err => console.error('[Audit Error] rejectAdvance:', err));
         }
 
         return updated;

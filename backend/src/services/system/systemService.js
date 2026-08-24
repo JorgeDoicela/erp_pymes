@@ -2,23 +2,33 @@ import prisma from '../../database/db.js';
 import { encryptCoordinate, decryptCoordinate } from '../../utils/encryption.js';
 
 class SystemService {
-    async getSettings() {
+    async getSettings(tenantId = null) {
         try {
-            // upsert guarantees the record always exists
-            const settings = await prisma.systemSetting.upsert({
-                where: { id: 'default' },
-                update: {},
-                create: {
-                    id: 'default',
-                    maintenanceMode: false,
-                    biometricEnabled: false,
-                    allowedIPs: null,
-                    globalLatitude: null,
-                    globalLongitude: null,
-                    globalRadius: 200,
-                    maintenanceMessage: 'El sistema estará en mantenimiento brevemente.'
-                }
-            });
+            let settings = null;
+            if (tenantId) {
+                settings = await prisma.systemSetting.findFirst({
+                    where: { tenantId }
+                });
+            }
+
+            if (!settings) {
+                // Si no existe para el tenant, buscar 'default' o crearlo
+                settings = await prisma.systemSetting.upsert({
+                    where: { id: 'default' },
+                    update: {},
+                    create: {
+                        id: 'default',
+                        tenantId: tenantId || null,
+                        maintenanceMode: false,
+                        biometricEnabled: false,
+                        allowedIPs: null,
+                        globalLatitude: null,
+                        globalLongitude: null,
+                        globalRadius: 200,
+                        maintenanceMessage: 'El sistema estará en mantenimiento brevemente.'
+                    }
+                });
+            }
 
             return {
                 ...settings,
@@ -26,8 +36,10 @@ class SystemService {
                 globalLongitude: decryptCoordinate(settings.globalLongitude)
             };
         } catch (error) {
+            console.error('Error fetching settings:', error);
             return {
                 id: 'default',
+                tenantId: tenantId || null,
                 maintenanceMode: false,
                 biometricEnabled: false,
                 allowedIPs: null,
@@ -39,7 +51,7 @@ class SystemService {
         }
     }
 
-    async updateSettings(data) {
+    async updateSettings(data, tenantId = null) {
         const updateData = { ...data };
         if (data.globalLatitude !== undefined) {
             updateData.globalLatitude = encryptCoordinate(data.globalLatitude);
@@ -48,22 +60,46 @@ class SystemService {
             updateData.globalLongitude = encryptCoordinate(data.globalLongitude);
         }
 
-        // upsert so it works even if the record doesn't exist yet
-        const settings = await prisma.systemSetting.upsert({
-            where: { id: 'default' },
-            update: updateData,
-            create: {
-                id: 'default',
-                maintenanceMode: false,
-                biometricEnabled: false,
-                allowedIPs: null,
-                globalLatitude: null,
-                globalLongitude: null,
-                globalRadius: 200,
-                maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
-                ...updateData
+        let settings = null;
+        if (tenantId) {
+            const existing = await prisma.systemSetting.findFirst({ where: { tenantId } });
+            if (existing) {
+                settings = await prisma.systemSetting.update({
+                    where: { id: existing.id },
+                    data: updateData
+                });
+            } else {
+                settings = await prisma.systemSetting.create({
+                    data: {
+                        tenantId,
+                        maintenanceMode: false,
+                        biometricEnabled: false,
+                        allowedIPs: null,
+                        globalLatitude: null,
+                        globalLongitude: null,
+                        globalRadius: 200,
+                        maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
+                        ...updateData
+                    }
+                });
             }
-        });
+        } else {
+            settings = await prisma.systemSetting.upsert({
+                where: { id: 'default' },
+                update: updateData,
+                create: {
+                    id: 'default',
+                    maintenanceMode: false,
+                    biometricEnabled: false,
+                    allowedIPs: null,
+                    globalLatitude: null,
+                    globalLongitude: null,
+                    globalRadius: 200,
+                    maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
+                    ...updateData
+                }
+            });
+        }
 
         return {
             ...settings,
@@ -74,7 +110,6 @@ class SystemService {
 
     async checkHealth() {
         try {
-            // Check DB connection
             await prisma.$queryRaw`SELECT 1`;
             return {
                 status: 'UP',
@@ -94,14 +129,13 @@ class SystemService {
 
     async reverseGeocode(lat, lng) {
         try {
-            // Validate coordinates
             if (!lat || !lng) throw new Error('Coordinates missing');
 
             const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
 
             const response = await fetch(url, {
                 headers: {
-                    'User-Agent': 'Emplifi-App/1.0 (internal-tool)'
+                    'User-Agent': 'RecursosHumanos-App/1.0 (internal-tool)'
                 }
             });
 
@@ -113,7 +147,7 @@ class SystemService {
             return data;
         } catch (error) {
             console.error('Geocoding Error:', error.message);
-            return null; // Return null instead of crashing, frontend will handle it
+            return null;
         }
     }
 }

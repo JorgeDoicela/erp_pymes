@@ -13,11 +13,12 @@ const NotificationBell = () => {
 
     const fetchNotificationsData = async () => {
         try {
-            const [data, unreadRes] = await Promise.all([
-                notificationService.getNotifications(),
+            const [res, unreadRes] = await Promise.all([
+                notificationService.getNotifications({ limit: 5 }),
                 notificationService.getUnreadCount()
             ]);
-            setNotifications(data.slice(0, 5));
+            const list = Array.isArray(res) ? res : (res?.data || []);
+            setNotifications(list.slice(0, 5));
             setUnreadCount(unreadRes.count || 0);
         } catch (error) {
             console.error('Error fetching notifications:', error);
@@ -26,7 +27,7 @@ const NotificationBell = () => {
 
     // Callback when real-time WebSocket notification arrives
     const handleNewWebSocketNotification = useCallback((newNotif) => {
-        setNotifications(prev => [newNotif, ...prev.slice(0, 4)]);
+        setNotifications(prev => [newNotif, ...(Array.isArray(prev) ? prev.slice(0, 4) : [])]);
         setUnreadCount(prev => prev + 1);
         toast.custom((t) => (
             <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-white text-gray-900 shadow-lg rounded p-3.5 border border-gray-200 pointer-events-auto flex items-start gap-3`}>
@@ -59,13 +60,13 @@ const NotificationBell = () => {
     }, []);
 
     const getCategoryBadge = (type) => {
-        if (!type) return { label: 'Sistema', color: 'bg-slate-100 text-slate-700 border-slate-200' };
-        if (type.startsWith('PAYROLL_')) return { label: 'Nómina', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-        if (type.startsWith('ABSENCE_')) return { label: 'Ausencia', color: 'bg-rose-50 text-rose-700 border-rose-200' };
-        if (type.startsWith('EVALUATION_')) return { label: 'Evaluación', color: 'bg-amber-50 text-amber-700 border-amber-200' };
-        if (type.includes('CONTRACT')) return { label: 'Contrato', color: 'bg-blue-50 text-blue-700 border-blue-200' };
-        if (type.includes('DOCUMENT')) return { label: 'Documento', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
-        return { label: 'Sistema', color: 'bg-slate-100 text-slate-700 border-slate-200' };
+        if (!type) return { label: 'SISTEMA', color: 'bg-gray-100 text-gray-700 border-gray-200' };
+        if (type.startsWith('PAYROLL_')) return { label: 'NÓMINA', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+        if (type.startsWith('ABSENCE_')) return { label: 'AUSENCIA', color: 'bg-rose-50 text-rose-800 border-rose-200' };
+        if (type.startsWith('EVALUATION_')) return { label: 'DESEMPEÑO', color: 'bg-amber-50 text-amber-800 border-amber-200' };
+        if (type.includes('CONTRACT')) return { label: 'CONTRATO', color: 'bg-blue-50 text-blue-800 border-blue-200' };
+        if (type.includes('DOCUMENT')) return { label: 'DOCUMENTO', color: 'bg-indigo-50 text-indigo-800 border-indigo-200' };
+        return { label: 'SISTEMA', color: 'bg-gray-100 text-gray-700 border-gray-200' };
     };
 
     const handleRead = async (notification) => {
@@ -118,26 +119,26 @@ const NotificationBell = () => {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`relative p-2 transition-all rounded-lg ${isOpen ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
+                className={`relative p-2 transition-colors rounded ${isOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}
                 title="Centro de Notificaciones"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-mono font-bold text-white bg-blue-600 rounded-full border-2 border-white animate-pulse">
+                    <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-mono font-bold text-white bg-blue-600 rounded-full border-2 border-white">
                         {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                 )}
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-96 origin-top-right bg-white border border-slate-200/80 rounded-xl shadow-xl z-[100] overflow-hidden text-slate-800 transition-all duration-200">
-                    <div className="p-3.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 backdrop-blur-sm">
+                <div className="absolute right-0 mt-2 w-96 origin-top-right bg-white border border-gray-200 rounded shadow-xl z-[100] overflow-hidden text-gray-800">
+                    <div className="p-3.5 border-b border-gray-200 flex justify-between items-center bg-gray-50/70">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-slate-900 text-xs tracking-tight">Notificaciones</h3>
+                            <h3 className="font-semibold text-gray-900 text-xs tracking-tight">Notificaciones</h3>
                             {unreadCount > 0 && (
-                                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-700 rounded-full">
+                                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-700 rounded font-mono">
                                     {unreadCount} nuevas
                                 </span>
                             )}
@@ -150,8 +151,8 @@ const NotificationBell = () => {
                             )}
                             <button
                                 onClick={() => { setIsOpen(false); navigate('/admin/notifications/settings'); }}
-                                className="p-1 rounded-md hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 transition-colors"
-                                title="Configuración"
+                                className="p-1 rounded hover:bg-gray-200/60 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+                                title="Configuración de canales"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -161,42 +162,39 @@ const NotificationBell = () => {
                         </div>
                     </div>
 
-                    <div className="max-h-[26rem] overflow-y-auto custom-scrollbar">
+                    <div className="max-h-[26rem] overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <div className="p-8 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                </svg>
-                                <span className="font-medium text-slate-500">No tienes notificaciones recientes</span>
+                            <div className="p-8 text-center text-gray-400 text-xs flex flex-col items-center gap-2">
+                                <span className="font-medium text-gray-500">No tienes notificaciones recientes</span>
                             </div>
                         ) : (
-                            <ul className="divide-y divide-slate-100">
-                                {notifications.map(notification => {
-                                    const badge = getCategoryBadge(notification.type);
+                            <ul className="divide-y divide-gray-100">
+                                {notifications.map(item => {
+                                    const badge = getCategoryBadge(item.type);
                                     return (
                                         <li
-                                            key={notification.id}
-                                            onClick={() => handleRead(notification)}
-                                            className={`p-3.5 hover:bg-slate-50/80 cursor-pointer transition-colors relative ${!notification.isRead ? 'bg-blue-50/30' : ''}`}
+                                            key={item.id}
+                                            onClick={() => handleRead(item)}
+                                            className={`p-3.5 hover:bg-gray-50/80 cursor-pointer transition-colors relative ${!item.isRead ? 'bg-blue-50/30' : ''}`}
                                         >
                                             <div className="flex gap-3 items-start">
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex justify-between items-center gap-2 mb-1">
-                                                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge.color}`}>
+                                                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${badge.color}`}>
                                                             {badge.label}
                                                         </span>
-                                                        <span className="text-[10px] text-slate-400 font-mono">
-                                                            {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        <span className="text-[10px] text-gray-400 font-mono tabular-nums">
+                                                            {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
-                                                    <p className={`text-xs ${!notification.isRead ? 'text-slate-900 font-semibold' : 'text-slate-700 font-medium'}`}>
-                                                        {notification.title}
+                                                    <p className={`text-xs ${!item.isRead ? 'text-gray-900 font-semibold' : 'text-gray-700 font-medium'}`}>
+                                                        {item.title}
                                                     </p>
-                                                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed mt-0.5">
-                                                        {notification.message}
+                                                    <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed mt-0.5">
+                                                        {item.message}
                                                     </p>
                                                 </div>
-                                                {!notification.isRead && (
+                                                {!item.isRead && (
                                                     <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0 mt-1"></span>
                                                 )}
                                             </div>
@@ -207,12 +205,12 @@ const NotificationBell = () => {
                         )}
                     </div>
 
-                    <div className="p-2.5 border-t border-slate-100 bg-slate-50/50">
+                    <div className="p-2.5 border-t border-gray-200 bg-gray-50/50">
                         <button
                             onClick={handleViewAll}
-                            className="w-full py-1.5 text-xs text-center text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors font-medium cursor-pointer"
+                            className="w-full py-1.5 text-xs text-center text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors font-medium cursor-pointer"
                         >
-                            Ver todas las notificaciones
+                            Ver todas las notificaciones →
                         </button>
                     </div>
                 </div>

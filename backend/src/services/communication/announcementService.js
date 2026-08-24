@@ -28,30 +28,101 @@ class AnnouncementService {
         });
 
         if (authorId) {
-            auditRepository.createLog({
+            await auditRepository.log({
                 tenantId: tenantId || null,
                 entity: 'Announcement',
                 entityId: announcement.id,
                 action: 'CREATE_ANNOUNCEMENT',
-                performedBy: authorId,
-                details: `Publicado comunicado '${announcement.title}' (${category}) - Acuse de recibo: ${requiresAcknowledgment}`
-            }).catch(err => console.error('Audit Log Error:', err));
+                userId: authorId,
+                details: {
+                    title: announcement.title,
+                    category,
+                    priority,
+                    requiresAcknowledgment
+                }
+            }).catch(err => console.error('[Audit Error] createAnnouncement:', err));
         }
 
         return announcement;
     }
 
     /**
+     * Obtener estadísticas consolidadas del tablón de comunicados.
+     */
+    async getBoardStats(employeeId, tenantId = null) {
+        const whereBase = tenantId ? { tenantId } : {};
+
+        const [
+            total,
+            policyCount,
+            holidayCount,
+            activeEmployees
+        ] = await Promise.all([
+            prisma.announcement.count({ where: whereBase }),
+            prisma.announcement.count({ where: { ...whereBase, category: 'POLICY' } }),
+            prisma.announcement.count({ where: { ...whereBase, category: 'HOLIDAY' } }),
+            prisma.employee.findMany({
+                where: {
+                    isActive: true,
+                    ...(tenantId ? { tenantId } : {})
+                },
+                select: { birthDate: true }
+            })
+        ]);
+
+        // Cumpleañeros del mes actual
+        const currentMonth = new Date().getMonth() + 1;
+        const birthdayCount = activeEmployees.filter(emp => {
+            if (!emp.birthDate) return false;
+            return new Date(emp.birthDate).getUTCMonth() + 1 === currentMonth;
+        }).length;
+
+        // Conteo de acuses pendientes para el empleado actual
+        let pendingAcknowledgmentCount = 0;
+        if (employeeId) {
+            const acknowledgmentsRequired = await prisma.announcement.findMany({
+                where: {
+                    ...whereBase,
+                    requiresAcknowledgment: true
+                },
+                select: {
+                    id: true,
+                    reads: {
+                        where: { employeeId, acknowledged: true },
+                        select: { id: true }
+                    }
+                }
+            });
+
+            pendingAcknowledgmentCount = acknowledgmentsRequired.filter(a => a.reads.length === 0).length;
+        }
+
+        return {
+            total,
+            policyCount,
+            holidayCount,
+            birthdayCount,
+            pendingAcknowledgmentCount
+        };
+    }
+
+    /**
      * Obtener comunicados para el tablón con estado de lectura del empleado actual.
      */
-    async getAnnouncementsForEmployee(employeeId, { category, search, page = 1, limit = 20 }) {
+    async getAnnouncementsForEmployee(employeeId, { category, search, requiresAck, page = 1, limit = 20, tenantId = null }) {
         const skip = (page - 1) * limit;
-        const where = {};
+        const where = {
+            ...(tenantId ? { tenantId } : {})
+        };
+
         if (category) where.category = category;
+        if (requiresAck !== undefined) where.requiresAcknowledgment = requiresAck === 'true' || requiresAck === true;
+
         if (search) {
+            const cleanSearch = search.trim();
             where.OR = [
-                { title: { contains: search, mode: 'insensitive' } },
-                { content: { contains: search, mode: 'insensitive' } }
+                { title: { contains: cleanSearch, mode: 'insensitive' } },
+                { content: { contains: cleanSearch, mode: 'insensitive' } }
             ];
         }
 
@@ -77,7 +148,7 @@ class AnnouncementService {
             const userRead = ann.reads && ann.reads.length > 0 ? ann.reads[0] : null;
             return {
                 ...ann,
-                readsCount: undefined,
+                reads: undefined,
                 isRead: !!userRead,
                 readAt: userRead?.readAt || null,
                 isAcknowledged: userRead?.acknowledged || false
@@ -98,9 +169,14 @@ class AnnouncementService {
     /**
      * Marcar comunicado como Leído o Firmar Acuse de Recibo Digital.
      */
-    async markAsReadOrAcknowledged(announcementId, employeeId, { acknowledge = false }) {
-        const announcement = await prisma.announcement.findUnique({
-            where: { id: announcementId }
+    async markAsReadOrAcknowledged(announcementId, employeeId, { acknowledge = false }, tenantId = null) {
+        const whereAnnouncement = {
+            id: announcementId,
+            ...(tenantId ? { tenantId } : {})
+        };
+
+        const announcement = await prisma.announcement.findFirst({
+            where: whereAnnouncement
         });
 
         if (!announcement) throw new Error('Comunicado no encontrado');
@@ -124,15 +200,31 @@ class AnnouncementService {
             }
         });
 
+        if (acknowledge) {
+            await auditRepository.log({
+                tenantId: announcement.tenantId || tenantId,
+                entity: 'Announcement',
+                entityId: announcementId,
+                action: 'ACKNOWLEDGE_ANNOUNCEMENT',
+                userId: employeeId,
+                details: { title: announcement.title, readAt: readRecord.readAt }
+            }).catch(err => console.error('[Audit Error] markAsReadOrAcknowledged:', err));
+        }
+
         return readRecord;
     }
 
     /**
      * Obtener estadísticas de lectura y acuse de recibo para administradores.
      */
-    async getAnnouncementStats(announcementId) {
-        const announcement = await prisma.announcement.findUnique({
-            where: { id: announcementId },
+    async getAnnouncementStats(announcementId, tenantId = null) {
+        const whereAnnouncement = {
+            id: announcementId,
+            ...(tenantId ? { tenantId } : {})
+        };
+
+        const announcement = await prisma.announcement.findFirst({
+            where: whereAnnouncement,
             include: {
                 createdBy: { select: { firstName: true, lastName: true } },
                 reads: {
@@ -145,7 +237,13 @@ class AnnouncementService {
 
         if (!announcement) throw new Error('Comunicado no encontrado');
 
-        const totalActiveEmployees = await prisma.employee.count({ where: { isActive: true } });
+        const totalActiveEmployees = await prisma.employee.count({
+            where: {
+                isActive: true,
+                ...(tenantId ? { tenantId } : {})
+            }
+        });
+
         const totalReads = announcement.reads.length;
         const totalAcknowledged = announcement.reads.filter(r => r.acknowledged).length;
 
@@ -153,6 +251,7 @@ class AnnouncementService {
         const pendingEmployees = await prisma.employee.findMany({
             where: {
                 isActive: true,
+                ...(tenantId ? { tenantId } : {}),
                 id: { notIn: Array.from(readEmployeeIds) }
             },
             select: { id: true, firstName: true, lastName: true, department: true }
@@ -176,6 +275,37 @@ class AnnouncementService {
             reads: announcement.reads,
             pendingEmployees
         };
+    }
+
+    /**
+     * Eliminar un comunicado oficial.
+     */
+    async deleteAnnouncement(id, tenantId = null, userId = null) {
+        const whereAnnouncement = {
+            id,
+            ...(tenantId ? { tenantId } : {})
+        };
+
+        const announcement = await prisma.announcement.findFirst({
+            where: whereAnnouncement
+        });
+
+        if (!announcement) throw new Error('Comunicado no encontrado o no pertenece a la empresa');
+
+        await prisma.announcement.delete({
+            where: { id }
+        });
+
+        await auditRepository.log({
+            tenantId: announcement.tenantId || tenantId,
+            entity: 'Announcement',
+            entityId: id,
+            action: 'DELETE_ANNOUNCEMENT',
+            userId: userId || null,
+            details: { title: announcement.title, category: announcement.category }
+        }).catch(err => console.error('[Audit Error] deleteAnnouncement:', err));
+
+        return { success: true, message: 'Comunicado eliminado exitosamente' };
     }
 
     /**

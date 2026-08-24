@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import systemService from '../../services/system/systemService.js';
 import { authenticate, authorize } from '../../middleware/auth.middleware.js';
+import auditRepository from '../../repositories/audit/auditRepository.js';
 
 const router = Router();
 
@@ -13,13 +14,31 @@ router.get('/health', async (req, res) => {
 
 // System Settings (Admin Only)
 router.get('/settings', authenticate, authorize(['admin']), async (req, res) => {
-    const settings = await systemService.getSettings();
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const settings = await systemService.getSettings(tenantId);
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     res.json({ success: true, data: { ...settings, yourIp: ip } });
 });
 
 router.put('/settings', authenticate, authorize(['admin']), async (req, res) => {
-    const updated = await systemService.updateSettings(req.body);
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const updated = await systemService.updateSettings(req.body, tenantId);
+
+    // Audit Log
+    await auditRepository.log({
+        tenantId: tenantId || null,
+        entity: 'SystemSetting',
+        entityId: updated.id,
+        action: 'UPDATE_SYSTEM_SETTINGS',
+        userId: req.user?.id || req.user?.employeeId,
+        details: {
+            biometricEnabled: updated.biometricEnabled,
+            maintenanceMode: updated.maintenanceMode,
+            globalRadius: updated.globalRadius,
+            hasAllowedIPs: !!updated.allowedIPs
+        }
+    }).catch(err => console.error('[Audit Error] updateSettings:', err));
+
     res.json({ success: true, data: updated });
 });
 
@@ -40,7 +59,8 @@ router.get('/geocode', async (req, res) => {
 // Public endpoint - biometric setting (no auth needed for attendance page)
 router.get('/biometric-setting', async (req, res) => {
     try {
-        const settings = await systemService.getSettings();
+        const tenantId = req.query.tenantId || null;
+        const settings = await systemService.getSettings(tenantId);
         res.json({ success: true, biometricEnabled: settings?.biometricEnabled ?? false });
     } catch (error) {
         res.json({ success: true, biometricEnabled: false });

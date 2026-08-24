@@ -1,325 +1,404 @@
 import { useState, useEffect } from 'react';
-import { getVacancies, updateVacancyStatus, deleteVacancy } from '../../services/recruitment.service';
-import { FiPlus, FiBriefcase, FiUsers, FiGlobe, FiEye, FiCheckCircle, FiSlash, FiCopy, FiInfo, FiSearch, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import {
+    getVacancies,
+    getRecruitmentStats,
+    updateVacancyStatus,
+    deleteVacancy
+} from '../../services/recruitment.service';
 
 const RecruitmentDashboard = () => {
     const navigate = useNavigate();
+
+    // Estados
     const [vacancies, setVacancies] = useState([]);
+    const [stats, setStats] = useState({
+        totalVacancies: 0,
+        openVacancies: 0,
+        closedVacancies: 0,
+        totalApplications: 0,
+        hiredCount: 0,
+        inReviewCount: 0
+    });
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('ALL'); // ALL, OPEN, CLOSED
     const [searchTerm, setSearchTerm] = useState('');
     const [vacancyToDelete, setVacancyToDelete] = useState(null);
-    const [deleting, setDeleting] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [notification, setNotification] = useState(null); // { type: 'success' | 'error', message: '' }
 
-    const loadVacancies = async () => {
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        loadStats();
+    }, []);
+
+    useEffect(() => {
+        loadVacanciesData();
+    }, [activeTab]);
+
+    const showNotification = (type, message) => {
+        setNotification({ type, message });
+        setTimeout(() => setNotification(null), 4000);
+    };
+
+    const loadStats = async () => {
         try {
-            setLoading(true);
-            const data = await getVacancies();
-            setVacancies(data);
+            const res = await getRecruitmentStats();
+            if (res.success && res.data) {
+                setStats(res.data);
+            }
         } catch (error) {
-            console.error(error);
-            toast?.error("Error al cargar vacantes");
+            console.error('Error cargando estadísticas de reclutamiento:', error);
+        }
+    };
+
+    const loadVacanciesData = async () => {
+        setLoading(true);
+        try {
+            const params = {
+                status: activeTab === 'ALL' ? undefined : activeTab,
+                search: searchTerm.trim() || undefined
+            };
+
+            const data = await getVacancies(params);
+            if (Array.isArray(data)) {
+                setVacancies(data);
+            }
+        } catch (error) {
+            showNotification('error', error.message || 'Error al cargar vacantes');
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        window.scrollTo(0, 0);
-        let isMounted = true;
-        getVacancies()
-            .then(data => {
-                if (isMounted) setVacancies(data);
-            })
-            .catch(error => {
-                console.error(error);
-                if (isMounted) toast?.error("Error al cargar vacantes");
-            })
-            .finally(() => {
-                if (isMounted) setLoading(false);
-            });
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        loadVacanciesData();
+    };
 
-        return () => { isMounted = false; };
-    }, []);
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+    };
 
     const toggleStatus = async (id, currentStatus) => {
         try {
             const newStatus = currentStatus === 'OPEN' ? 'CLOSED' : 'OPEN';
             await updateVacancyStatus(id, newStatus);
-            toast?.success(`Vacante ${newStatus === 'OPEN' ? 'Publicada' : 'Cerrada'}`);
-            loadVacancies();
-        } catch {
-            toast?.error("Error al actualizar estado");
+            showNotification('success', `Vacante ${newStatus === 'OPEN' ? 'publicada y abierta' : 'cerrada'}`);
+            loadVacanciesData();
+            loadStats();
+        } catch (error) {
+            showNotification('error', error.message || 'Error al actualizar estado');
         }
     };
 
     const handleDeleteVacancy = async () => {
         if (!vacancyToDelete) return;
+        setActionLoading(true);
         try {
-            setDeleting(true);
             await deleteVacancy(vacancyToDelete.id);
-            toast?.success("Vacante y archivos asociados eliminados correctamente");
+            showNotification('success', 'Vacante eliminada exitosamente');
             setVacancyToDelete(null);
-            loadVacancies();
+            loadVacanciesData();
+            loadStats();
         } catch (error) {
-            console.error(error);
-            toast?.error(error.response?.data?.message || "Error al eliminar la vacante");
+            showNotification('error', error.message || 'Error al eliminar vacante');
         } finally {
-            setDeleting(false);
+            setActionLoading(false);
         }
     };
 
-    const copyLink = (vacancy) => {
+    const copyVacancyLink = (vacancy) => {
         const companySlug = vacancy?.tenant?.slug;
-        const link = companySlug 
+        const link = companySlug
             ? `${window.location.origin}/careers/${vacancy.id}?company=${companySlug}`
             : `${window.location.origin}/careers/${vacancy.id}`;
         navigator.clipboard.writeText(link);
-        toast?.success("Enlace de vacante institucional copiado");
+        showNotification('success', 'Enlace institucional de la vacante copiado al portapapeles');
     };
 
     const copyCompanyPortalLink = () => {
         const companySlug = vacancies.find(v => v.tenant?.slug)?.tenant?.slug;
-        const link = companySlug 
+        const link = companySlug
             ? `${window.location.origin}/careers?company=${companySlug}`
             : `${window.location.origin}/careers`;
         navigator.clipboard.writeText(link);
-        toast?.success("Enlace del Portal de Empleo de la empresa copiado");
+        showNotification('success', 'Enlace del Portal de Empleo copiado al portapapeles');
     };
 
-    const filteredVacancies = vacancies.filter(v =>
-        v.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.department.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const inputClass = "w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors";
 
     return (
-        <div className="space-y-5">
-            {/* Header Limpio ERP */}
-            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-4">
+            {/* Notificación Toast Sobria */}
+            {notification && (
+                <div
+                    className={`fixed top-5 right-5 z-50 px-4 py-2.5 rounded border text-xs font-medium shadow-md transition-all ${
+                        notification.type === 'success'
+                            ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                            : 'bg-red-50 text-red-900 border-red-200'
+                    }`}
+                >
+                    {notification.message}
+                </div>
+            )}
+
+            {/* Header ERP con Métricas de Selección Integradas */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Recursos Humanos · Selección de Personal</p>
                     <h1 className="text-xl font-semibold text-gray-900">Talento Humano & Reclutamiento</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Gestiona vacantes abiertas, recepción de postulaciones y candidatos.</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Gestione ofertas laborales, recepción de postulaciones y seguimiento de candidatos.</p>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="hidden sm:flex items-center gap-4 bg-white px-3.5 py-2 rounded border border-gray-200 font-mono text-xs">
+                        <div>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Vacantes Abiertas</span>
+                            <span className="font-semibold text-emerald-700 tabular-nums">
+                                {stats.openVacancies} activas
+                            </span>
+                        </div>
+                        <div className="w-px h-6 bg-gray-200" />
+                        <div>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Postulaciones</span>
+                            <span className="font-semibold text-gray-900 tabular-nums">
+                                {stats.totalApplications} recibidas
+                            </span>
+                        </div>
+                        <div className="w-px h-6 bg-gray-200" />
+                        <div>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Contratados</span>
+                            <span className="font-semibold text-blue-700 tabular-nums">
+                                {stats.hiredCount}
+                            </span>
+                        </div>
+                    </div>
+
                     <button
                         onClick={copyCompanyPortalLink}
-                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 shrink-0 border border-slate-200"
-                        title="Copiar enlace público del Portal de Empleo de esta empresa"
+                        className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                        title="Copiar enlace público del Portal de Empleo de la empresa"
                     >
-                        <FiGlobe size={14} /> Portal de Empleo Empresa
+                        Portal de Empleo ↗
                     </button>
+
                     <button
                         onClick={() => navigate('/recruitment/create')}
-                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
                     >
-                        <FiPlus size={14} /> Crear Nueva Vacante
+                        + Crear Vacante
                     </button>
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative max-w-xl flex-1">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por cargo o departamento..."
-                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors placeholder-gray-400"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+            {/* Pestañas con Contadores Integrados (Holded/Linear Style) */}
+            <div className="flex items-center justify-between border-b border-gray-200 gap-4 overflow-x-auto">
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={() => handleTabChange('ALL')}
+                        className={`pb-2.5 px-3 text-xs font-medium transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+                            activeTab === 'ALL'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                    >
+                        Todas las Vacantes <span className="ml-1.5 font-mono text-[11px] text-gray-400">({stats.totalVacancies})</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleTabChange('OPEN')}
+                        className={`pb-2.5 px-3 text-xs font-medium transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+                            activeTab === 'OPEN'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                    >
+                        Publicadas / Abiertas <span className="ml-1.5 font-mono text-[11px] text-emerald-600">({stats.openVacancies})</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleTabChange('CLOSED')}
+                        className={`pb-2.5 px-3 text-xs font-medium transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+                            activeTab === 'CLOSED'
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                    >
+                        Cerradas / Pausadas <span className="ml-1.5 font-mono text-[11px] text-gray-400">({stats.closedVacancies})</span>
+                    </button>
                 </div>
             </div>
 
-            {loading ? (
-                <div className="text-center py-16 bg-white rounded border border-gray-200">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-                    <p className="text-gray-400 text-xs font-medium">Cargando vacantes...</p>
-                </div>
-            ) : (
-                <div className="bg-white rounded border border-gray-200 overflow-hidden">
-                    {/* VISTA MÓVIL: Tarjetas Apiladas (Cero scroll horizontal) */}
-                    <div className="block md:hidden divide-y divide-gray-100">
-                        {filteredVacancies.map(v => (
-                            <div key={v.id} className="p-4 space-y-3">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 bg-blue-50 border border-blue-200 rounded text-blue-700 flex items-center justify-center shrink-0">
-                                            <FiBriefcase size={14} />
-                                        </div>
-                                        <div>
+            {/* Barra de Búsqueda */}
+            <div className="bg-white p-3 rounded border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 w-full sm:w-auto flex-grow max-w-md">
+                    <input
+                        type="text"
+                        placeholder="Buscar por cargo, departamento o ubicación..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={inputClass}
+                    />
+                    <button
+                        type="submit"
+                        className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors shrink-0 cursor-pointer"
+                    >
+                        Buscar
+                    </button>
+                    {searchTerm && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchTerm('');
+                                setTimeout(loadVacanciesData, 0);
+                            }}
+                            className="text-xs text-gray-400 hover:text-gray-600 underline cursor-pointer shrink-0"
+                        >
+                            Limpiar
+                        </button>
+                    )}
+                </form>
+            </div>
+
+            {/* Tabla Principal de Vacantes (Hoja de Cálculo Sobria) */}
+            <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr className="bg-gray-50/50 border-b border-gray-200 text-[10px] sm:text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                                <th className="py-2.5 px-4">Oferta / Cargo</th>
+                                <th className="py-2.5 px-4">Departamento</th>
+                                <th className="py-2.5 px-4">Modalidad & Ubicación</th>
+                                <th className="py-2.5 px-4 text-center">Postulantes Recibidos</th>
+                                <th className="py-2.5 px-4 text-right">Rango Salarial</th>
+                                <th className="py-2.5 px-4 text-center">Fecha Límite</th>
+                                <th className="py-2.5 px-4 text-center">Estado</th>
+                                <th className="py-2.5 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="8" className="p-8 text-center text-gray-400 text-xs">
+                                        Cargando vacantes laborales...
+                                    </td>
+                                </tr>
+                            ) : vacancies.length === 0 ? (
+                                <tr>
+                                    <td colSpan="8" className="p-12 text-center">
+                                        <p className="text-sm font-medium text-gray-700">Sin vacantes registradas</p>
+                                        <p className="text-xs text-gray-400 mt-1">Crea una nueva vacante para iniciar la recepción de candidatos.</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                vacancies.map(v => (
+                                    <tr key={v.id} className="hover:bg-gray-50/60 transition-colors">
+                                        <td className="py-2.5 px-4">
                                             <button
                                                 onClick={() => navigate(`/recruitment/vacancy/${v.id}`)}
-                                                className="font-bold text-gray-900 text-sm hover:text-blue-600 transition-colors text-left cursor-pointer"
+                                                className="font-medium text-gray-900 hover:text-blue-600 transition-colors text-left cursor-pointer block"
                                             >
                                                 {v.title}
                                             </button>
-                                            <p className="text-xs text-gray-500">{v.department} · {v.location || 'Presencial'}</p>
-                                        </div>
-                                    </div>
-                                    <span className={`px-2 py-0.5 text-[10px] font-medium rounded border shrink-0 ${v.status === 'OPEN' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-                                        {v.status === 'OPEN' ? 'Publicada' : 'Cerrada'}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between pt-2 border-t border-gray-50 text-xs">
-                                    <button
-                                        onClick={() => navigate(`/recruitment/applications/${v.id}`)}
-                                        className="px-2.5 py-1 bg-gray-100 border border-gray-200 rounded font-mono font-medium text-gray-800 hover:bg-gray-200 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-                                    >
-                                        <FiUsers size={12} className="text-gray-500" />
-                                        {v.applicationsCount || 0} postulantes
-                                    </button>
-                                    <div className="flex items-center gap-1.5">
-                                        <button
-                                            onClick={() => copyLink(v)}
-                                            className="app-button-table cursor-pointer"
-                                            title="Copiar Enlace Público"
-                                        >
-                                            <FiCopy size={12} />
-                                        </button>
-                                        <button
-                                            onClick={() => toggleStatus(v.id, v.status)}
-                                            className="app-button-table cursor-pointer"
-                                            title={v.status === 'OPEN' ? 'Cerrar Vacante' : 'Abrir Vacante'}
-                                        >
-                                            {v.status === 'OPEN' ? <FiSlash size={12} /> : <FiCheckCircle size={12} />}
-                                        </button>
-                                        <button
-                                            onClick={() => setVacancyToDelete(v)}
-                                            className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs px-2 py-1 rounded transition-colors cursor-pointer"
-                                            title="Eliminar vacante"
-                                        >
-                                            <FiTrash2 size={12} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        {filteredVacancies.length === 0 && (
-                            <div className="p-8 text-center text-gray-400 text-xs italic">
-                                No se encontraron vacantes registradas.
-                            </div>
-                        )}
-                    </div>
-
-                    {/* VISTA ESCRITORIO: Tabla Completa */}
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="app-table w-full">
-                            <thead>
-                                <tr>
-                                    <th className="app-th">Información Básica</th>
-                                    <th className="app-th">Departamento</th>
-                                    <th className="app-th text-center">Talento Recibido</th>
-                                    <th className="app-th">Visibilidad</th>
-                                    <th className="app-th text-right">Gestión</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredVacancies.map(v => (
-                                    <tr key={v.id} className="hover:bg-gray-50/60 transition-colors">
-                                        <td className="app-td">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-7 h-7 bg-blue-50 border border-blue-200 rounded text-blue-700 flex items-center justify-center shrink-0">
-                                                    <FiBriefcase size={14} />
-                                                </div>
-                                                <div>
-                                                    <button
-                                                        onClick={() => navigate(`/recruitment/vacancy/${v.id}`)}
-                                                        className="font-semibold text-gray-900 text-xs hover:text-blue-600 transition-colors text-left"
-                                                    >
-                                                        {v.title}
-                                                    </button>
-                                                    <p className="text-[11px] text-gray-400">{v.location || 'Presencial'} · {v.type || 'Tiempo Completo'}</p>
-                                                </div>
-                                            </div>
+                                            <span className="text-gray-400 text-[11px]">
+                                                Creada por: {v.postedBy?.firstName} {v.postedBy?.lastName || 'RRHH'}
+                                            </span>
                                         </td>
-                                        <td className="app-td">
-                                            <span className="text-xs font-medium text-gray-700">{v.department}</span>
+                                        <td className="py-2.5 px-4 font-medium text-gray-700">
+                                            {v.department}
                                         </td>
-                                        <td className="app-td text-center">
+                                        <td className="py-2.5 px-4 text-gray-600">
+                                            {v.location || 'Presencial'} · <span className="text-gray-400 text-[11px]">{v.employmentType || 'Tiempo Completo'}</span>
+                                        </td>
+                                        <td className="py-2.5 px-4 text-center">
                                             <button
                                                 onClick={() => navigate(`/recruitment/applications/${v.id}`)}
-                                                className="px-2.5 py-1 bg-gray-100 border border-gray-200 rounded text-xs font-mono font-medium text-gray-800 hover:bg-gray-200 transition-colors inline-flex items-center gap-1.5"
-                                                style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
+                                                className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded font-mono font-medium text-gray-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                                             >
-                                                <FiUsers size={12} className="text-gray-500" />
-                                                {v.applicationsCount || 0} postulantes
+                                                <span>{v.applicationsCount || 0} candidatos</span>
+                                                <span className="text-blue-600">→</span>
                                             </button>
                                         </td>
-                                        <td className="app-td">
-                                            <span className={`px-2 py-0.5 text-[11px] font-medium rounded border ${v.status === 'OPEN' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                                        <td className="py-2.5 px-4 text-right font-mono font-medium text-gray-900 tabular-nums">
+                                            {v.salaryMin && v.salaryMax
+                                                ? `$${v.salaryMin.toFixed(0)} - $${v.salaryMax.toFixed(0)}`
+                                                : v.salaryMin ? `Desde $${v.salaryMin.toFixed(0)}` : 'A convenir'}
+                                        </td>
+                                        <td className="py-2.5 px-4 text-center font-mono text-[11px] text-gray-500 tabular-nums">
+                                            {new Date(v.deadline).toLocaleDateString('es-EC')}
+                                        </td>
+                                        <td className="py-2.5 px-4 text-center">
+                                            <span className={`px-2 py-0.5 rounded text-[11px] font-medium border ${
+                                                v.status === 'OPEN'
+                                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                            }`}>
                                                 {v.status === 'OPEN' ? 'Publicada' : 'Cerrada'}
                                             </span>
                                         </td>
-                                        <td className="app-td text-right">
+                                        <td className="py-2.5 px-4 text-right">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
-                                                    onClick={() => copyLink(v)}
-                                                    className="app-button-table"
-                                                    title="Copiar Enlace Público"
+                                                    onClick={() => copyVacancyLink(v)}
+                                                    className="border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 text-xs px-2 py-1 rounded transition-colors cursor-pointer"
+                                                    title="Copiar enlace de postulación"
                                                 >
-                                                    <FiCopy size={12} /> Enlace
+                                                    Enlace
                                                 </button>
                                                 <button
                                                     onClick={() => toggleStatus(v.id, v.status)}
-                                                    className="app-button-table"
-                                                    title={v.status === 'OPEN' ? 'Cerrar Vacante' : 'Abrir Vacante'}
+                                                    className={`border text-xs px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                                                        v.status === 'OPEN'
+                                                            ? 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                                                            : 'border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100'
+                                                    }`}
+                                                    title={v.status === 'OPEN' ? 'Cerrar vacante' : 'Publicar vacante'}
                                                 >
-                                                    {v.status === 'OPEN' ? <FiSlash size={12} /> : <FiCheckCircle size={12} />}
+                                                    {v.status === 'OPEN' ? 'Cerrar' : 'Publicar'}
                                                 </button>
                                                 <button
                                                     onClick={() => setVacancyToDelete(v)}
                                                     className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs px-2 py-1 rounded transition-colors cursor-pointer"
                                                     title="Eliminar vacante"
                                                 >
-                                                    <FiTrash2 size={12} />
+                                                    Eliminar
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
-                                {filteredVacancies.length === 0 && (
-                                    <tr>
-                                        <td colSpan="5" className="app-td text-center py-12 text-gray-400">
-                                            No se encontraron vacantes registradas.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-            )}
+            </div>
 
-            {/* Modal Confirmar Eliminación desde Dashboard */}
+            {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
             {vacancyToDelete && (
-                <div className="app-modal-overlay">
-                    <div className="app-modal-content max-w-md">
-                        <div className="text-center space-y-3">
-                            <div className="w-10 h-10 bg-red-50 text-red-700 border border-red-200 rounded flex items-center justify-center mx-auto">
-                                <FiAlertTriangle size={20} />
-                            </div>
+                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white border border-gray-200 rounded max-w-sm w-full overflow-hidden shadow-xl">
+                        <div className="p-5">
                             <h3 className="text-sm font-semibold text-gray-900">¿Eliminar la vacante "{vacancyToDelete.title}"?</h3>
-                            <p className="text-xs text-gray-500 leading-relaxed">
-                                Esta acción es irreversible. Se eliminará la oferta laboral y todas sus postulaciones recibidas.
+                            <p className="text-xs text-gray-500 mt-2">
+                                Esta acción eliminará permanentemente la oferta de empleo y todas las postulaciones y hojas de vida asociadas.
                             </p>
                         </div>
-
-                        <div className="flex gap-2 pt-3 border-t border-gray-200 justify-end">
+                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
                             <button
-                                disabled={deleting}
+                                type="button"
                                 onClick={() => setVacancyToDelete(null)}
-                                className="app-button-secondary"
+                                className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button
-                                disabled={deleting}
+                                type="button"
+                                disabled={actionLoading}
                                 onClick={handleDeleteVacancy}
-                                className="app-button-danger"
+                                className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
                             >
-                                {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                                {actionLoading ? 'Eliminando...' : 'Sí, Eliminar'}
                             </button>
                         </div>
                     </div>

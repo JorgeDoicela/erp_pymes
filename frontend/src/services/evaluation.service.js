@@ -1,5 +1,15 @@
 import api from '../api/axios';
 
+export const getPerformanceStats = async () => {
+    const response = await api.get('/performance/stats');
+    return response.data;
+};
+
+export const getEmployeeEvaluations = async (params = {}) => {
+    const response = await api.get('/performance/evaluations', { params });
+    return response.data;
+};
+
 export const createEvaluationTemplate = async (data) => {
     const response = await api.post('/performance/templates', data);
     return response.data;

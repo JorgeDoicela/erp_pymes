@@ -1,104 +1,168 @@
-import prisma from '../../database/db.js';
+import employeeBenefitService from '../../services/payroll/employeeBenefitService.js';
 
 class EmployeeBenefitController {
-    async create(req, res) {
+    async getAll(req, res) {
         try {
-            const { employeeId, name, amount, type, frequency } = req.body;
+            const { page, limit, status, type, employeeId, search } = req.query;
+            const tenantId = req.tenantId || req.user?.tenantId;
 
-            const benefit = await prisma.employeeBenefit.create({
-                data: {
-                    employeeId,
-                    name,
-                    amount: parseFloat(amount),
-                    type, // BONUS, INCENTIVE
-                    frequency, // ONE_TIME, RECURRING
-                    status: 'ACTIVE'
-                }
+            const result = await employeeBenefitService.getBenefits({
+                page: page ? parseInt(page, 10) : 1,
+                limit: limit ? parseInt(limit, 10) : 20,
+                status,
+                type,
+                employeeId,
+                search,
+                tenantId
             });
 
-            res.status(201).json({ success: true, data: benefit });
+            return res.status(200).json({
+                success: true,
+                ...result
+            });
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ success: false, message: 'Error al asignar beneficio' });
+            console.error('Error en getAll benefits:', error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Error al obtener el listado de beneficios'
+            });
+        }
+    }
+
+    async getStats(req, res) {
+        try {
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const stats = await employeeBenefitService.getStats(tenantId);
+            return res.status(200).json({
+                success: true,
+                data: stats
+            });
+        } catch (error) {
+            console.error('Error en getStats benefits:', error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Error al obtener estadísticas de beneficios'
+            });
         }
     }
 
     async getByEmployee(req, res) {
         try {
             const { employeeId } = req.params;
-            const benefits = await prisma.employeeBenefit.findMany({
-                where: { employeeId },
-                orderBy: { createdAt: 'desc' }
+            const tenantId = req.tenantId || req.user?.tenantId;
+
+            const benefits = await employeeBenefitService.getByEmployee(employeeId, tenantId);
+            return res.status(200).json({
+                success: true,
+                data: benefits
             });
-            res.status(200).json({ success: true, data: benefits });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Error al obtener beneficios' });
+            console.error('Error en getByEmployee benefits:', error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Error al obtener beneficios del empleado'
+            });
+        }
+    }
+
+    async create(req, res) {
+        try {
+            const { employeeId, name, amount, type, frequency } = req.body;
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const adminId = req.user?.id;
+
+            const benefit = await employeeBenefitService.createBenefit(
+                { employeeId, name, amount, type, frequency },
+                tenantId,
+                adminId
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: 'Beneficio asignado exitosamente',
+                data: benefit
+            });
+        } catch (error) {
+            console.error('Error en create benefit:', error);
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Error al asignar beneficio'
+            });
         }
     }
 
     async bulkCreate(req, res) {
         try {
             const { employeeIds, name, amount, type, frequency, isSpecialCalculation } = req.body;
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const adminId = req.user?.id;
 
-            if (!employeeIds || !Array.isArray(employeeIds)) {
-                return res.status(400).json({ success: false, message: 'Se requiere una lista de empleados' });
-            }
+            const result = await employeeBenefitService.bulkCreate(
+                { employeeIds, name, amount, type, frequency, isSpecialCalculation },
+                tenantId,
+                adminId
+            );
 
-            let empMap = new Map();
-            if (isSpecialCalculation === 'DECIMO_TERCERO') {
-                const employees = await prisma.employee.findMany({
-                    where: { id: { in: employeeIds } },
-                    select: { id: true, salary: true }
-                });
-                empMap = new Map(employees.map(e => [e.id, e]));
-            }
-
-            const benefits = [];
-
-            for (const empId of employeeIds) {
-                let finalAmount = parseFloat(amount);
-
-                if (isSpecialCalculation === 'DECIMO_TERCERO') {
-                    const emp = empMap.get(empId);
-                    if (emp && emp.salary) {
-                        const baseSalary = parseFloat(emp.salary.replace(/[^0-9.]/g, '')) || 0;
-                        finalAmount = baseSalary;
-                    }
-                } else if (isSpecialCalculation === 'DECIMO_CUARTO') {
-                    finalAmount = 460.00;
-                }
-
-                benefits.push({
-                    employeeId: empId,
-                    name,
-                    amount: finalAmount,
-                    type: type || 'BONUS',
-                    frequency: frequency || 'ONE_TIME',
-                    status: 'ACTIVE'
-                });
-            }
-
-            await prisma.employeeBenefit.createMany({
-                data: benefits
+            return res.status(201).json({
+                success: true,
+                ...result
             });
-
-            res.status(201).json({ success: true, message: `${benefits.length} beneficios asignados correctamente` });
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ success: false, message: 'Error en asignación masiva' });
+            console.error('Error en bulkCreate benefits:', error);
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Error en asignación masiva de beneficios'
+            });
+        }
+    }
+
+    async update(req, res) {
+        try {
+            const { id } = req.params;
+            const { name, amount, type, frequency } = req.body;
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const adminId = req.user?.id;
+
+            const updated = await employeeBenefitService.updateBenefit(
+                id,
+                { name, amount, type, frequency },
+                tenantId,
+                adminId
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: 'Beneficio actualizado exitosamente',
+                data: updated
+            });
+        } catch (error) {
+            console.error('Error en update benefit:', error);
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Error al actualizar beneficio'
+            });
         }
     }
 
     async deactivate(req, res) {
         try {
             const { id } = req.params;
-            await prisma.employeeBenefit.update({
-                where: { id },
-                data: { status: 'CANCELLED' }
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const adminId = req.user?.id;
+
+            const updated = await employeeBenefitService.deactivate(id, tenantId, adminId);
+
+            return res.status(200).json({
+                success: true,
+                message: 'Beneficio cancelado exitosamente',
+                data: updated
             });
-            res.status(200).json({ success: true, message: 'Beneficio cancelado' });
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Error al cancelar beneficio' });
+            console.error('Error en deactivate benefit:', error);
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Error al cancelar beneficio'
+            });
         }
     }
 }

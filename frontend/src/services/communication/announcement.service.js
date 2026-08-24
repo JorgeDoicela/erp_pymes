@@ -1,5 +1,14 @@
 import api from '../../api/axios';
 
+export const getBoardStats = async () => {
+    try {
+        const response = await api.get('/announcements/board-stats');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al cargar estadísticas del tablón');
+    }
+};
+
 export const getAnnouncements = async (params = {}) => {
     try {
         const response = await api.get('/announcements', { params });
@@ -33,6 +42,15 @@ export const getAnnouncementStats = async (id) => {
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Error al cargar métricas de lectura');
+    }
+};
+
+export const deleteAnnouncement = async (id) => {
+    try {
+        const response = await api.delete(`/announcements/${id}`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al eliminar el comunicado');
     }
 };
 

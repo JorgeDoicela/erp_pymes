@@ -1,7 +1,12 @@
 import api from '../../api/axios';
 
-const getNotifications = async () => {
-    const response = await api.get('/notifications');
+const getNotificationStats = async () => {
+    const response = await api.get('/notifications/stats');
+    return response.data;
+};
+
+const getNotifications = async (params = {}) => {
+    const response = await api.get('/notifications', { params });
     return response.data;
 };
 
@@ -20,11 +25,24 @@ const markAllAsRead = async () => {
     return response.data;
 };
 
+const deleteNotification = async (id) => {
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+};
+
+const clearReadNotifications = async () => {
+    const response = await api.delete('/notifications/clear-read');
+    return response.data;
+};
+
 const notificationService = {
+    getNotificationStats,
     getNotifications,
     getUnreadCount,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    deleteNotification,
+    clearReadNotifications
 };
 
 export default notificationService;

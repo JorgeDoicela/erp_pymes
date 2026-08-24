@@ -9,6 +9,24 @@ export const requestAdvance = async (data) => {
     }
 };
 
+export const createAdvanceByAdmin = async (data) => {
+    try {
+        const response = await api.post('/salary-advances/admin-create', data);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al registrar anticipo administrativo');
+    }
+};
+
+export const getAdvanceStats = async () => {
+    try {
+        const response = await api.get('/salary-advances/stats');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al obtener estadísticas de anticipos');
+    }
+};
+
 export const getMyAdvances = async () => {
     try {
         const response = await api.get('/salary-advances/my');

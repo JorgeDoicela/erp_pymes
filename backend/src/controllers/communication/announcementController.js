@@ -16,16 +16,31 @@ export const createAnnouncement = async (req, res) => {
     }
 };
 
+export const getBoardStats = async (req, res) => {
+    try {
+        const employeeId = req.user.employeeId || req.user.id;
+        const tenantId = req.tenantId || req.user?.tenantId;
+
+        const stats = await announcementService.getBoardStats(employeeId, tenantId);
+        return res.json({ success: true, data: stats });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export const getAnnouncements = async (req, res) => {
     try {
         const employeeId = req.user.employeeId || req.user.id;
-        const { category, search, page, limit } = req.query;
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const { category, search, requiresAck, page, limit } = req.query;
 
         const result = await announcementService.getAnnouncementsForEmployee(employeeId, {
             category,
             search,
-            page: page ? parseInt(page) : 1,
-            limit: limit ? parseInt(limit) : 20
+            requiresAck,
+            page: page ? parseInt(page, 10) : 1,
+            limit: limit ? parseInt(limit, 10) : 20,
+            tenantId
         });
 
         return res.json({ success: true, ...result });
@@ -39,9 +54,10 @@ export const markAnnouncementReadOrAcknowledge = async (req, res) => {
         const { id } = req.params;
         const { acknowledge } = req.body;
         const employeeId = req.user.employeeId || req.user.id;
+        const tenantId = req.tenantId || req.user?.tenantId;
 
-        const readRecord = await announcementService.markAsReadOrAcknowledged(id, employeeId, { acknowledge: !!acknowledge });
-        return res.json({ success: true, message: acknowledge ? 'Acuse de recibo registrado' : 'Lectura registrada', data: readRecord });
+        const readRecord = await announcementService.markAsReadOrAcknowledged(id, employeeId, { acknowledge: !!acknowledge }, tenantId);
+        return res.json({ success: true, message: acknowledge ? 'Acuse de recibo digital registrado' : 'Lectura registrada', data: readRecord });
     } catch (error) {
         return res.status(400).json({ success: false, message: error.message });
     }
@@ -50,8 +66,22 @@ export const markAnnouncementReadOrAcknowledge = async (req, res) => {
 export const getAnnouncementStats = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await announcementService.getAnnouncementStats(id);
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const result = await announcementService.getAnnouncementStats(id, tenantId);
         return res.json({ success: true, data: result });
+    } catch (error) {
+        return res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const deleteAnnouncement = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const userId = req.user.id;
+
+        const result = await announcementService.deleteAnnouncement(id, tenantId, userId);
+        return res.json({ success: true, ...result });
     } catch (error) {
         return res.status(400).json({ success: false, message: error.message });
     }
