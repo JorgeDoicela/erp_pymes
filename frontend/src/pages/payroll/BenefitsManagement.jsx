@@ -135,23 +135,31 @@ const BenefitsManagement = () => {
                 ...prev,
                 name: 'Fondos de Reserva (Mensual)',
                 isSpecial: false,
-                amount: (selectedEmployee ? (parseFloat(selectedEmployee.salary?.toString().replace(/[^0-9.]/g, '') || '0') * 0.0833).toFixed(2) : '38.32'),
+                amount: (selectedEmployee ? (parseFloat(selectedEmployee.salary?.toString().replace(/[^0-9.]/g, '') || '0') * 0.0833).toFixed(2) : ''),
                 type: 'BONUS'
             }));
         } else if (type === 'UTILIDADES') {
+            // Participación de Utilidades: calculada como porcentaje del salario real o dejada en blanco para que el admin la ingrese
+            const utilAmountEst = selectedEmployee
+                ? (parseFloat(selectedEmployee.salary?.toString().replace(/[^0-9.]/g, '') || '0') * 0.10).toFixed(2)
+                : '';
             setBulkData(prev => ({
                 ...prev,
                 name: 'Participación de Utilidades',
                 isSpecial: false,
-                amount: '450.00',
+                amount: utilAmountEst,
                 type: 'BONUS'
             }));
         } else if (type === 'NAVIDAD') {
+            // Canasta Navideña: calculada o dejada en blanco para que el admin ingrese el monto real
+            const xmasAmountEst = selectedEmployee
+                ? (parseFloat(selectedEmployee.salary?.toString().replace(/[^0-9.]/g, '') || '0') * 0.083).toFixed(2)
+                : '';
             setBulkData(prev => ({
                 ...prev,
                 name: 'Canasta Navideña / Bono',
                 isSpecial: false,
-                amount: '100.00',
+                amount: xmasAmountEst,
                 type: 'BONUS'
             }));
         }

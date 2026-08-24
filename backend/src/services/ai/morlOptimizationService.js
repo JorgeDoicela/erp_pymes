@@ -64,7 +64,7 @@ class MorlOptimizationService {
      */
     async runMorlParetoOptimization({
         tenantId,
-        budgetLimit = 15000,
+        budgetLimit = null,
         targetDepartment = 'ALL',
         customTitle = null
     }) {
@@ -92,9 +92,21 @@ class MorlOptimizationService {
         const beta_absence = rsiParams.beta_absence !== undefined ? rsiParams.beta_absence : 0.35;
         const beta_salary = rsiParams.beta_salary !== undefined ? rsiParams.beta_salary : -0.85;
 
+        // Calcular masa salarial total del tenant
+        const allSalaries = rawEmployees.map(emp => {
+            const salary = decryptSalary(emp.salary);
+            return salary && salary > 0 ? salary : 0;
+        });
+        const totalMonthlySalary = allSalaries.reduce((a, b) => a + b, 0);
+
+        // budgetLimit = 5% de la masa salarial anual (o valor explícito del usuario)
+        const effectiveBudgetLimit = budgetLimit && budgetLimit > 0
+            ? Number(budgetLimit)
+            : Math.max(1000, Math.round(totalMonthlySalary * 12 * 0.05));
+
         // Decriptar salarios e incorporar hiperparámetros calibrados por RSI Engine
         const employees = rawEmployees.map(emp => {
-            const salary = emp._decryptedSalary !== undefined ? emp._decryptedSalary : (decryptSalary(emp.salary) || 850);
+            const salary = emp._decryptedSalary !== undefined ? emp._decryptedSalary : (decryptSalary(emp.salary) || 0);
             const baseTurnoverProb = Math.max(0.08, Math.min(0.75, 0.30 - (salary / 3500) * Math.abs(beta_salary * 0.2) + (emp.absences.length * beta_absence * 0.1)));
             return {
                 id: emp.id,
@@ -173,7 +185,7 @@ class MorlOptimizationService {
                 expectedRetentionRate: retentionRate,
                 retainedEmployeeCount: Math.min(sampleSize, Math.round(sampleSize - counterfactualTurnoverCount)),
                 policyActionsJson: JSON.stringify(actionBreakdown),
-                exceedsBudget: totalCost > budgetLimit
+                exceedsBudget: totalCost > effectiveBudgetLimit
             });
         });
 
@@ -190,14 +202,14 @@ class MorlOptimizationService {
         // 4. Filtrar puntos no dominados de la Frontera de Pareto
         const paretoFrontier = this.filterNonDominatedParetoPoints(deduplicated);
 
-        const title = customTitle || `Optimización MORL (Tope: $${budgetLimit}) - Dept '${targetDepartment}'`;
+        const title = customTitle || `Optimización MORL (Tope: $${effectiveBudgetLimit}) - Dept '${targetDepartment}'`;
 
         // 4. Persistir la corrida de optimización multiobjetivo
         const runRecord = await prisma.morlPolicyRun.create({
             data: {
                 tenantId,
                 title,
-                budgetLimit: Number(budgetLimit),
+                budgetLimit: Number(effectiveBudgetLimit),
                 targetDepartment,
                 sampleSize,
                 hyperparametersJson: JSON.stringify({ alpha: 0.1, gamma: 0.95, epsilon: 0.05, episodes: 500 }),

@@ -12,41 +12,40 @@ export default function ExecutiveReportModal({ isOpen, onClose, data }) {
     };
 
     const financial = data?.financialImpact || {
-        estimatedTurnoverCostRisk: 14500,
-        potentialRetentionSavings: 10875,
-        estimatedAbsenteeismCost: 3200,
-        totalFinancialOpportunity: 15725,
+        estimatedTurnoverCostRisk: 0,
+        potentialRetentionSavings: 0,
+        estimatedAbsenteeismCost: 0,
+        totalFinancialOpportunity: 0,
         currency: 'USD',
     };
 
-    const retention = data?.retention?.stats || { total: 25, highRisk: 3, mediumRisk: 5, lowRisk: 17 };
+    const retention = data?.retention?.stats || { total: 0, highRisk: 0, mediumRisk: 0, lowRisk: 0 };
     
-    const healthScore = data?.organizationalHealth?.overallScore ?? data?.organizationalHealth?.score ?? 78;
-    const healthCategory = data?.organizationalHealth?.category ?? 'Saludable';
+    const healthScore = data?.organizationalHealth?.overallScore ?? data?.organizationalHealth?.score ?? 0;
+    const healthCategory = data?.organizationalHealth?.category ?? 'Sin datos';
 
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val || 0);
 
     return (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-2xl max-w-4xl w-full shadow-xl overflow-hidden border border-slate-200 my-8">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded max-w-4xl w-full shadow-xl overflow-hidden border border-gray-200 my-8">
                 {/* Minimalist Header Modal Bar */}
-                <div className="bg-slate-50 text-slate-800 p-4 px-6 border-b border-slate-200 flex items-center justify-between print:hidden">
-                    <div className="flex items-center gap-2.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <h3 className="font-bold text-sm text-slate-800">Vista Previa de Informe Ejecutivo</h3>
+                <div className="bg-gray-50 text-gray-800 p-3 px-5 border-b border-gray-200 flex items-center justify-between print:hidden">
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-xs text-gray-900 uppercase tracking-wider">Informe Ejecutivo Organizacional y Financiero</h3>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={handlePrint}
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-xl text-xs font-semibold text-white flex items-center gap-2 shadow-xs transition-all"
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
                         >
-                            <FiPrinter className="w-4 h-4" /> Imprimir / Guardar PDF
+                            <FiPrinter size={13} /> Imprimir / PDF
                         </button>
                         <button
                             onClick={onClose}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-lg transition-colors"
+                            className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors"
                         >
-                            <FiX className="w-5 h-5" />
+                            <FiX size={16} />
                         </button>
                     </div>
                 </div>

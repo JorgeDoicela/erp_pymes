@@ -1,6 +1,15 @@
 import api from '../../api/axios';
 
 // --- EXPEDIENTE DIGITAL ---
+export const getAllExpedientsSummary = async () => {
+    try {
+        const response = await api.get('/onboarding-offboarding/expedients/summary');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al cargar directorio de expedientes');
+    }
+};
+
 export const getMyExpedient = async () => {
     try {
         const response = await api.get('/onboarding-offboarding/expedient/my');
@@ -37,6 +46,15 @@ export const verifyExpedientDocument = async (documentId, status, notes) => {
     }
 };
 
+export const deleteExpedientDocument = async (documentId) => {
+    try {
+        const response = await api.delete(`/onboarding-offboarding/expedient/document/${documentId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al eliminar documento');
+    }
+};
+
 // --- EQUIPOS Y EPPS ---
 export const getAllAssets = async (params = {}) => {
     try {
@@ -44,6 +62,15 @@ export const getAllAssets = async (params = {}) => {
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || 'Error al cargar inventario de activos/EPPs');
+    }
+};
+
+export const getMyAssets = async () => {
+    try {
+        const response = await api.get('/onboarding-offboarding/assets/my');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al cargar tus activos y equipos en custodia');
     }
 };
 
@@ -70,7 +97,25 @@ export const returnAsset = async (assetId, data) => {
         const response = await api.put(`/onboarding-offboarding/assets/return/${assetId}`, data);
         return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Error al registrar devolución');
+        throw new Error(error.response?.data?.message || 'Error al registrar devolución de activo');
+    }
+};
+
+export const updateAsset = async (assetId, data) => {
+    try {
+        const response = await api.put(`/onboarding-offboarding/assets/${assetId}`, data);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al actualizar información del activo');
+    }
+};
+
+export const deleteAsset = async (assetId) => {
+    try {
+        const response = await api.delete(`/onboarding-offboarding/assets/${assetId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al eliminar registro del activo');
     }
 };
 

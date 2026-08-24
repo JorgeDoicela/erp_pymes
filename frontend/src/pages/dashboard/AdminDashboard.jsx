@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { getSectionsByRole } from '../../constants/modules';
 import * as intelligenceService from '../../services/intelligenceService';
 import api from '../../api/axios';
+import SmartModuleHub from '../../components/dashboard/SmartModuleHub';
 
 function AdminDashboard({ user }) {
     const navigate = useNavigate();
@@ -70,17 +71,38 @@ function AdminDashboard({ user }) {
             }
         };
 
-        const fetchInsights = async () => {
+        const fetchPendingAndInsights = async () => {
             try {
+                let pendingCount = 0;
+                try {
+                    const { getMyPendingEvaluations } = await import('../../services/evaluation.service');
+                    const evaluations = await getMyPendingEvaluations();
+                    pendingCount = evaluations.filter(e => e.status !== 'COMPLETED').length;
+                    setPendingEvals(pendingCount);
+                } catch (e) {
+                    console.error('Error fetching pending evaluations:', e);
+                }
+
                 const response = await intelligenceService.getProactiveAlerts();
-                if (response.success && response.data && response.data.alerts) {
-                    const mappedInsights = response.data.alerts.slice(0, 4).map(alert => ({
+                const fetchedAlerts = (response.success && response.data && response.data.alerts)
+                    ? response.data.alerts.slice(0, 4).map(alert => ({
                         type: alert.priority === 'high' ? 'warning' : 'info',
                         message: alert.message || alert.title,
-                        priority: alert.priority
-                    }));
-                    setInsights(mappedInsights);
+                        priority: alert.priority,
+                        link: '/intelligence'
+                    }))
+                    : [];
+
+                if (pendingCount > 0) {
+                    fetchedAlerts.unshift({
+                        type: 'warning',
+                        message: `Tienes ${pendingCount} evaluación${pendingCount > 1 ? 'es' : ''} de desempeño pendiente${pendingCount > 1 ? 's' : ''} por completar.`,
+                        priority: 'high',
+                        link: '/performance/my-evaluations'
+                    });
                 }
+
+                setInsights(fetchedAlerts);
             } catch (error) {
                 console.error('Error fetching dashboard insights:', error);
             } finally {
@@ -88,19 +110,8 @@ function AdminDashboard({ user }) {
             }
         };
 
-        const fetchPending = async () => {
-            try {
-                const { getMyPendingEvaluations } = await import('../../services/evaluation.service');
-                const evaluations = await getMyPendingEvaluations();
-                setPendingEvals(evaluations.filter(e => e.status !== 'COMPLETED').length);
-            } catch (e) {
-                console.error('Error fetching pending evaluations:', e);
-            }
-        };
-
         fetchDashboardData();
-        fetchInsights();
-        fetchPending();
+        fetchPendingAndInsights();
     }, []);
 
     return (
@@ -122,120 +133,106 @@ function AdminDashboard({ user }) {
                     </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                    {pendingEvals > 0 && (
-                        <Link
-                            to="/performance/my-evaluations"
-                            className="px-3.5 py-2 border border-amber-200 bg-amber-50 text-amber-800 text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 hover:bg-amber-100"
-                        >
-                            <span className="w-4 h-4 bg-amber-600 text-white text-[9px] flex items-center justify-center rounded-full font-mono">{pendingEvals}</span>
-                            Evaluaciones Pendientes
-                        </Link>
-                    )}
                     <Link
                         to="/admin/register-employee"
-                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5"
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 shadow-xs"
                     >
                         + Nuevo Empleado
                     </Link>
                 </div>
             </div>
 
-            {/* Panel Contable de Métricas Operativas */}
-            <div className="bg-white border border-gray-200 rounded overflow-hidden">
-                <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
-                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Resumen Operativo</h3>
+            {/* Layout Principal de la Consola: Módulos a la izquierda, Panel Contable y Alertas a la derecha */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                {/* Columna Principal (Consola Inteligente de Módulos Operativos) */}
+                <div className="lg:col-span-8 space-y-6">
+                    <SmartModuleHub user={user} sections={sections} />
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100 text-xs">
-                    <div className="p-4">
-                        <p className="text-gray-500 mb-1">Plantilla Activa</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                            {loadingMetrics ? '—' : dashboardMetrics.totalEmployees}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5 font-mono">+{dashboardMetrics.newHires} este mes</p>
-                    </div>
-                    <div className="p-4">
-                        <p className="text-gray-500 mb-1">Nómina Estimada</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                            ${loadingMetrics ? '—' : dashboardMetrics.estimatedPayroll.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Proyección contractual</p>
-                    </div>
-                    <div className="p-4">
-                        <p className="text-gray-500 mb-1">Permisos por Aprobar</p>
-                        <p className="text-base font-semibold font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums', color: dashboardMetrics.pendingAbsences > 0 ? '#92400e' : '#111827' }}>
-                            {loadingMetrics ? '—' : dashboardMetrics.pendingAbsences}
-                        </p>
-                        <Link to="/admin/absences" className="text-[11px] text-blue-600 hover:underline mt-0.5 block">Revisar solicitudes →</Link>
-                    </div>
-                    <div className="p-4">
-                        <p className="text-gray-500 mb-1">Vacantes Abiertas</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                            {loadingMetrics ? '—' : dashboardMetrics.openVacancies}
-                        </p>
-                        <Link to="/recruitment" className="text-[11px] text-blue-600 hover:underline mt-0.5 block">Ver reclutamiento →</Link>
-                    </div>
-                </div>
-            </div>
 
-            {/* Alertas Operativas — Panel ERP */}
-            <div className="bg-white border border-gray-200 rounded overflow-hidden">
-                <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Alertas e Inteligencia Operativa</h3>
-                    <Link to="/intelligence" className="text-[11px] text-blue-600 hover:underline">Ver panel completo →</Link>
-                </div>
-                <div className="p-4">
-                    {loadingInsights ? (
-                        <div className="py-6 text-center text-gray-400 text-xs">Cargando alertas del sistema...</div>
-                    ) : insights.length > 0 ? (
-                        <div className="divide-y divide-gray-100">
-                            {insights.map((insight, idx) => (
-                                <div
-                                    key={idx}
-                                    onClick={() => navigate('/intelligence')}
-                                    className="py-3 flex items-start gap-3 cursor-pointer hover:bg-gray-50/60 transition-colors px-1 rounded"
-                                >
-                                    <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${insight.priority === 'high' ? 'bg-amber-500' : 'bg-blue-500'}`} />
-                                    <div>
-                                        <p className="text-xs text-gray-800 line-clamp-2">{insight.message}</p>
-                                        <span className="text-[11px] text-blue-600 font-medium mt-0.5 block">Ver detalle →</span>
-                                    </div>
-                                </div>
-                            ))}
+                {/* Columna Lateral (Panel Contable Sobrio + Alertas) */}
+                <div className="lg:col-span-4 space-y-5">
+                    {/* Panel de Estado y Balance Operativo Estilo Contable */}
+                    <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                        <div className="px-4 py-2.5 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Balance Operativo</h3>
+                            <span className="text-[10px] font-mono text-gray-400">EN TIEMPO REAL</span>
                         </div>
-                    ) : (
-                        <div className="py-8 text-center text-xs">
-                            <p className="font-medium text-gray-700">Sin alertas pendientes</p>
-                            <p className="text-gray-400 mt-0.5">Toda la operación se encuentra al día.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Módulos — Grilla ERP */}
-            <div className="space-y-6">
-                {sections.map((section, sIdx) => {
-                    const filteredModules = section.modules.filter(m => m.path !== '/admin' && m.path !== '/empleado' && m.path !== '/superadmin/dashboard');
-                    if (filteredModules.length === 0) return null;
-                    return (
-                        <div key={sIdx}>
-                            <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">{section.title}</h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                                {filteredModules.map((mod, idx) => (
-                                    <Link
-                                        key={idx}
-                                        to={mod.path}
-                                        className="flex flex-col items-center justify-center p-4 bg-white rounded border border-gray-200 hover:border-gray-300 transition-colors group h-28 text-center cursor-pointer"
-                                    >
-                                        <div className="text-gray-400 group-hover:text-gray-600 transition-colors mb-2 text-lg">
-                                            {mod.icon}
-                                        </div>
-                                        <span className="text-xs font-medium text-gray-700 group-hover:text-gray-900 leading-tight">{mod.title}</span>
+                        <div className="divide-y divide-gray-100 font-mono text-xs">
+                            <div className="px-4 py-2.5 flex items-center justify-between">
+                                <span className="text-gray-600">Plantilla activa</span>
+                                <span className="font-semibold text-gray-900 tabular-nums">
+                                    {loadingMetrics ? '—' : `${dashboardMetrics.totalEmployees} colaboradores`}
+                                </span>
+                            </div>
+                            <div className="px-4 py-2.5 flex items-center justify-between">
+                                <span className="text-gray-600">Altas del mes</span>
+                                <span className="text-gray-700 tabular-nums">
+                                    {loadingMetrics ? '—' : `+${dashboardMetrics.newHires} ingresados`}
+                                </span>
+                            </div>
+                            <div className="px-4 py-2.5 flex items-center justify-between">
+                                <span className="text-gray-600">Nómina proyectada</span>
+                                <span className="font-semibold text-gray-900 tabular-nums">
+                                    ${loadingMetrics ? '—' : dashboardMetrics.estimatedPayroll.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                                </span>
+                            </div>
+                            <div className="px-4 py-2.5 flex items-center justify-between">
+                                <span className="text-gray-600">Permisos por aprobar</span>
+                                {dashboardMetrics.pendingAbsences > 0 ? (
+                                    <Link to="/admin/absences" className="font-semibold text-amber-700 hover:underline tabular-nums">
+                                        {dashboardMetrics.pendingAbsences} pendientes →
                                     </Link>
-                                ))}
+                                ) : (
+                                    <span className="text-gray-400">0 pendientes</span>
+                                )}
+                            </div>
+                            <div className="px-4 py-2.5 flex items-center justify-between">
+                                <span className="text-gray-600">Vacantes activas</span>
+                                {dashboardMetrics.openVacancies > 0 ? (
+                                    <Link to="/recruitment" className="font-semibold text-blue-600 hover:underline tabular-nums">
+                                        {dashboardMetrics.openVacancies} abiertas →
+                                    </Link>
+                                ) : (
+                                    <span className="text-gray-400">0 abiertas</span>
+                                )}
                             </div>
                         </div>
-                    );
-                })}
+                    </div>
+
+                    {/* Alertas del Sistema */}
+                    <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                        <div className="px-4 py-2.5 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Alertas del Sistema</h3>
+                            <Link to="/intelligence" className="text-[11px] text-blue-600 hover:underline font-medium">Ver panel →</Link>
+                        </div>
+                        <div className="p-4">
+                            {loadingInsights ? (
+                                <div className="py-4 text-center text-gray-400 text-xs font-mono">Cargando alertas...</div>
+                            ) : insights.length > 0 ? (
+                                <div className="divide-y divide-gray-100">
+                                    {insights.map((insight, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => navigate(insight.link || '/intelligence')}
+                                            className="py-2.5 flex items-start gap-2.5 cursor-pointer hover:bg-gray-50/60 transition-colors px-1 rounded"
+                                        >
+                                            <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${insight.priority === 'high' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs text-gray-800 line-clamp-2 leading-relaxed">{insight.message}</p>
+                                                <span className="text-[11px] text-blue-600 font-medium mt-0.5 block">Atender solicitud →</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-4 text-center text-xs">
+                                    <p className="font-medium text-gray-700">Sin alertas pendientes</p>
+                                    <p className="text-gray-400 text-[11px] mt-0.5">La operación se encuentra al día.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

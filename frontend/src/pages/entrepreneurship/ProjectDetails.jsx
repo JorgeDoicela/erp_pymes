@@ -103,62 +103,41 @@ const ProjectDetails = () => {
     ];
 
     return (
-        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
-            {/* Navigation Header */}
-            <div className="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
-                <button 
-                    onClick={() => navigate('/entrepreneurship')}
-                    className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-all font-bold text-sm"
-                >
-                    <FiArrowLeft /> Dashboard
-                </button>
-                <div className="flex gap-2">
-                    <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest leading-none flex items-center">
-                        {project.stage}
-                    </span>
-                    <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest leading-none flex items-center">
-                        Tier 4 Validado
-                    </span>
-                </div>
-            </div>
-
-            {/* Project Cover Info */}
-            <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-sm relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <FiZap size={180} className="text-indigo-500" />
-                </div>
-                
-                <div className="relative z-10 max-w-3xl space-y-6">
-                    <div className="w-20 h-20 rounded-3xl bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-xl shadow-indigo-100 mb-6">
-                        {project.title.charAt(0)}
-                    </div>
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => navigate('/entrepreneurship')}
+                        className="px-2.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                        <FiArrowLeft size={14} /> Volver
+                    </button>
                     <div>
-                        <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">{project.title}</h1>
-                        <p className="text-slate-500 text-lg md:text-xl leading-relaxed font-medium">{project.description}</p>
+                        <h1 className="text-xl font-semibold text-gray-900">{project.title}</h1>
+                        <p className="text-xs text-gray-500 mt-0.5">{project.description}</p>
                     </div>
-                    <div className="flex flex-wrap gap-4 pt-4">
-                        <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                            <FiTrendingUp className="text-indigo-500" />
-                            <span className="text-slate-800 font-bold text-sm select-none">${(project.valuation || 0).toLocaleString()} <span className="text-[10px] text-slate-400 font-medium">Valuación</span></span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                            <FiUsers className="text-emerald-500" />
-                            <span className="text-slate-800 font-bold text-sm select-none">{project.members?.length + 1} <span className="text-[10px] text-slate-400 font-medium">Miembros</span></span>
-                        </div>
-                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded text-xs font-mono font-medium">
+                        Etapa: {project.stage}
+                    </span>
+                    <span className="bg-gray-100 text-gray-700 border border-gray-200 px-2.5 py-1 rounded text-xs font-mono font-medium">
+                        ${(project.valuation || 0).toLocaleString()} USD Valuación
+                    </span>
                 </div>
             </div>
 
-            {/* Tabs Navigation */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none sticky top-0 z-20 bg-slate-50/80 backdrop-blur-md py-4 rounded-3xl px-2">
+            {/* Tabs Navigation Limpio */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 text-xs border-b border-gray-200">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all whitespace-nowrap shadow-sm ${
+                        className={`flex items-center gap-1.5 px-3 py-2 font-medium transition-colors cursor-pointer whitespace-nowrap ${
                             activeTab === tab.id 
-                            ? 'bg-indigo-600 text-white translate-y-[-2px]' 
-                            : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-100'
+                            ? 'border-b-2 border-blue-600 text-blue-600 font-semibold' 
+                            : 'text-gray-500 hover:text-gray-800'
                         }`}
                     >
                         {tab.icon} {tab.label}
@@ -167,7 +146,7 @@ const ProjectDetails = () => {
             </div>
 
             {/* Tab Content Panels */}
-            <div className="animate-fadeIn pb-12">
+            <div className="pb-8">
                 {activeTab === 'roadmap' && <KanbanRoadmap />}
                 {activeTab === 'analytics' && <AnalyticsView />}
                 {activeTab === 'growth' && <GrowthMetrics />}
@@ -176,61 +155,60 @@ const ProjectDetails = () => {
                 {activeTab === 'validation' && <DiscoveryLog />}
 
                 {activeTab === 'team' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm col-span-1 md:col-span-2">
-                            <h3 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
-                                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-500"><FiUsers /></div> Fundadores y Miembros
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div className="bg-white p-5 rounded border border-gray-200 md:col-span-2 space-y-4">
+                            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                                <FiUsers className="text-blue-600" /> Equipo Fundador y Miembros
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="flex items-center gap-4 p-5 rounded-3xl bg-indigo-50 border border-indigo-100 group">
-                                    <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div className="flex items-center gap-3 p-3 rounded bg-blue-50/50 border border-blue-200">
+                                    <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
                                         {project.owner?.firstName?.[0]}
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-800 text-lg leading-tight">{project.owner?.firstName} {project.owner?.lastName}</p>
-                                        <p className="text-[10px] uppercase font-black text-indigo-600 tracking-widest mt-1">Fundador / CEO</p>
+                                        <p className="font-semibold text-gray-900">{project.owner?.firstName} {project.owner?.lastName}</p>
+                                        <p className="text-[11px] font-mono text-blue-700">Fundador / CEO</p>
                                     </div>
                                 </div>
                                 {project.members?.map(member => (
-                                    <div key={member.id} className="flex items-center gap-4 p-5 rounded-3xl bg-white border border-slate-100 hover:border-slate-200 transition-colors">
-                                        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center font-bold text-slate-400 text-xl">
+                                    <div key={member.id} className="flex items-center gap-3 p-3 rounded bg-white border border-gray-200">
+                                        <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center font-semibold text-gray-600 text-sm">
                                             {member.employee?.firstName?.[0] || 'U'}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-700 leading-tight">{member.employee?.firstName} {member.employee?.lastName}</p>
-                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">{member.role}</p>
+                                            <p className="font-semibold text-gray-900">{member.employee?.firstName} {member.employee?.lastName}</p>
+                                            <p className="text-[11px] text-gray-500 font-mono">{member.role}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs flex flex-col">
-                            <h3 className="text-lg font-bold mb-6 flex items-center gap-3 text-slate-900">
-                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl"><FiZap /></div> Mentores Asignados
-                            </h3>
-                            <div className="flex-1 space-y-4">
-                                {project.mentors?.length === 0 ? (
-                                    <div className="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-200 text-center text-slate-400 text-xs">
-                                        Aún no hay mentores estratégicos vinculados.
-                                    </div>
-                                ) : (
-                                    project.mentors.map(m => (
-                                        <div key={m.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 hover:bg-slate-100/80 transition-colors">
-                                            <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
-                                                {m.mentorName[0]}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-slate-800 text-sm">{m.mentorName}</p>
-                                                <p className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">{m.specialty}</p>
-                                            </div>
+                        <div className="bg-white p-5 rounded border border-gray-200 flex flex-col justify-between space-y-4">
+                            <div>
+                                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <FiZap className="text-blue-600" /> Mentores Asignados
+                                </h3>
+                                <div className="space-y-2.5">
+                                    {project.mentors?.length === 0 ? (
+                                        <div className="bg-gray-50 p-4 rounded border border-dashed border-gray-200 text-center text-gray-400 text-xs">
+                                            Sin mentores estratégicos vinculados.
                                         </div>
-                                    ))
-                                )}
+                                    ) : (
+                                        project.mentors.map(m => (
+                                            <div key={m.id} className="flex items-center gap-3 bg-gray-50 p-2.5 rounded border border-gray-200">
+                                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-xs">
+                                                    {m.mentorName[0]}
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-gray-900 text-xs">{m.mentorName}</p>
+                                                    <p className="text-[10px] text-gray-400 font-mono">{m.specialty}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
-                            <button className="app-button-primary w-full mt-6">
-                                Emparejar Mentor AI
-                            </button>
                         </div>
                     </div>
                 )}
@@ -240,33 +218,30 @@ const ProjectDetails = () => {
                 {activeTab === 'validation' && <DiscoveryLog />}
 
                 {activeTab === 'updates' && (
-                    <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs">
-                        <div className="flex justify-between items-center mb-8">
-                            <h3 className="text-xl font-bold text-slate-800">Bitácora de Innovación</h3>
-                            <button onClick={() => setShowUpdateModal(true)} className="app-button-primary">
-                                Nueva Entrada
+                    <div className="bg-white p-4 sm:p-5 rounded border border-gray-200 text-xs space-y-4">
+                        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                            <div>
+                                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Bitácora de Hitos y Avances</h3>
+                                <p className="text-[11px] text-gray-500">Historial cronológico de iteraciones de producto y negocio.</p>
+                            </div>
+                            <button onClick={() => setShowUpdateModal(true)} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors cursor-pointer shadow-xs">
+                                + Nueva Entrada
                             </button>
                         </div>
-                        <div className="space-y-8 relative before:absolute before:left-[19px] before:top-2 before:bottom-0 before:w-0.5 before:bg-slate-100">
+                        <div className="space-y-4">
                             {project.updates?.length === 0 ? (
-                                <div className="text-center py-16">
-                                    <FiArchive className="text-slate-200 text-6xl mx-auto mb-4" />
-                                    <p className="text-slate-400 font-medium text-xs">No hay registros en la bitácora todavía.</p>
+                                <div className="text-center py-10 text-gray-400">
+                                    <FiArchive className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                    <p className="text-xs">No hay registros en la bitácora todavía.</p>
                                 </div>
                             ) : (
                                 project.updates.map((update) => (
-                                    <div key={update.id} onClick={() => setDetailUpdate(update)} className="relative pl-12 group cursor-pointer">
-                                        <div className="absolute left-0 top-1 w-10 h-10 rounded-xl bg-white border-2 border-indigo-500 z-10 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
-                                            <FiActivity size={14} />
+                                    <div key={update.id} onClick={() => setDetailUpdate(update)} className="p-3 bg-gray-50 rounded border border-gray-200 hover:border-gray-300 transition-colors cursor-pointer space-y-1">
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-semibold text-gray-900 text-xs">{update.title}</span>
+                                            <span className="text-[11px] font-mono text-gray-500">{new Date(update.createdAt).toLocaleDateString('es-EC')}</span>
                                         </div>
-                                        <div className="space-y-2 bg-slate-50/60 p-4 rounded-xl hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200">
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg uppercase">{update.type}</span>
-                                                <span className="text-[11px] font-semibold text-slate-400">{new Date(update.createdAt).toLocaleString()}</span>
-                                            </div>
-                                            <h4 className="text-lg font-bold text-slate-800 tracking-tight">{update.title}</h4>
-                                            <p className="text-slate-500 text-xs leading-relaxed max-w-4xl line-clamp-2">{update.content}</p>
-                                        </div>
+                                        <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed">{update.description}</p>
                                     </div>
                                 ))
                             )}

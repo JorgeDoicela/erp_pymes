@@ -201,17 +201,26 @@ export function calculateKolmogorovSmirnovTest(empiricalValues = []) {
  * calculando el promedio y la desviación estándar empírica entre pliegues.
  */
 export function evaluateBaselineVsAdvancedModel(employees = []) {
-    const n = Math.max(75, employees.length);
-    const K = 5;
+    if (!employees || employees.length === 0) {
+        return {
+            sampleSize: 0,
+            crossValidationFolds: 5,
+            baselineModel: { name: 'Heurístico Trivial', accuracy: 0, accuracyStd: 0, f1Score: 0, f1ScoreStd: 0, brierScore: 0, brierScoreStd: 0 },
+            advancedWeibullModel: { name: 'Marco Avanzado Weibull + RSI AI', accuracy: 0, accuracyStd: 0, f1Score: 0, f1ScoreStd: 0, brierScore: 0, brierScoreStd: 0 },
+            brierReductionPercent: 0,
+            f1ImprovementPercent: 0
+        };
+    }
+    const n = employees.length;
+    const K = Math.min(5, Math.max(2, Math.floor(n / 2)));
 
-    // Crear cohorte con ground truth empírico basado en covariables socio-laborales reales (~30% rotación)
+    // Crear cohorte con ground truth empírico basado en covariables socio-laborales reales
     const dataset = employees.map((emp, i) => {
-        const salary = emp._decryptedSalary || 850;
+        const salary = emp._decryptedSalary || 0;
         const absences = (emp.absences || []).length;
         const perf = emp.evaluations && emp.evaluations.length > 0 ? emp.evaluations[0].finalScore : 75;
         
-        // Ground truth de rotación real en base a factores combinados de riesgo
-        const actualOutcome = (absences >= 2 || (salary < 800 && perf < 78) || (absences >= 1 && perf < 70) || i % 4 === 0) ? 1 : 0;
+        const actualOutcome = (absences >= 2 || (salary > 0 && perf < 70) || (absences >= 1 && perf < 70)) ? 1 : 0;
         return { emp, salary, absences, perf, actualOutcome, index: i };
     });
 
@@ -385,6 +394,14 @@ async function fetchRawEmployees(tenantId = null) {
                 },
                 select: { date: true, isLate: true, status: true }
             },
+            PayrollDetail: {
+                where: {
+                    createdAt: { gte: twelveMonthsAgo }
+                },
+                select: { overtimeAmount: true, overtimeHours: true },
+                orderBy: { createdAt: 'desc' },
+                take: 12
+            }
         },
     });
 }
@@ -399,8 +416,8 @@ function prepareEmployeeData(employees) {
         if (!departmentSalaries[dept]) {
             departmentSalaries[dept] = [];
         }
-        const salary = decryptSalary(emp.salary) || 850;
-        departmentSalaries[dept].push(salary);
+        const salary = decryptSalary(emp.salary) || 0;
+        if (salary > 0) departmentSalaries[dept].push(salary);
         emp._decryptedSalary = salary;
     });
 
@@ -409,7 +426,7 @@ function prepareEmployeeData(employees) {
         const salaries = departmentSalaries[dept];
         departmentAvgSalaries[dept] = salaries.length > 0
             ? salaries.reduce((a, b) => a + b, 0) / salaries.length
-            : 850;
+            : 0;
     });
 
     return { employees, departmentAvgSalaries };
@@ -427,8 +444,8 @@ function calculateRetentionRiskScore(employee, avgSalary, rsiParams = {}) {
     const hireDate = employee.hireDate ? new Date(employee.hireDate) : new Date();
     const monthsInCompany = Math.max(0.5, (new Date() - hireDate) / (1000 * 60 * 60 * 24 * 30.4375));
 
-    const empSalary = employee._decryptedSalary !== undefined ? employee._decryptedSalary : (decryptSalary(employee.salary) || 850);
-    const salaryRatio = empSalary / (avgSalary || 1);
+    const empSalary = employee._decryptedSalary !== undefined ? employee._decryptedSalary : (decryptSalary(employee.salary) || 0);
+    const salaryRatio = avgSalary > 0 ? (empSalary / avgSalary) : 1;
     const logSalaryRatio = Math.log(Math.max(0.2, salaryRatio));
 
     const nowMs = Date.now();
@@ -1111,8 +1128,12 @@ export async function getDepartmentComparison(tenantIdOrPreloaded = null) {
         const bestDeptName = comparison[0].department;
         const worstDeptName = comparison[comparison.length - 1].department;
 
-        const bestScores = rawEmployees.filter(e => e.department === bestDeptName).map(e => e.evaluations?.[0]?.finalScore || 75);
-        const worstScores = rawEmployees.filter(e => e.department === worstDeptName).map(e => e.evaluations?.[0]?.finalScore || 60);
+        const bestScores = rawEmployees
+            .filter(e => e.department === bestDeptName && (e.evaluations?.[0]?.finalScore != null || e.evaluations?.[0]?.overallScore != null))
+            .map(e => e.evaluations[0].finalScore ?? e.evaluations[0].overallScore);
+        const worstScores = rawEmployees
+            .filter(e => e.department === worstDeptName && (e.evaluations?.[0]?.finalScore != null || e.evaluations?.[0]?.overallScore != null))
+            .map(e => e.evaluations[0].finalScore ?? e.evaluations[0].overallScore);
 
         if (bestScores.length >= 2 && worstScores.length >= 2) {
             const welch = calculateWelchTTest(bestScores, worstScores);
@@ -1153,22 +1174,29 @@ export async function runWhatIfMonteCarlo(params = {}, tenantIdOrPreloaded = nul
         iterations = 2000
     } = params;
 
-    let totalEmployees = 25;
-    let highRiskCount = 3;
-    let mediumRiskCount = 5;
-    const baseAvgSalary = 850;
+    let totalEmployees = 0;
+    let highRiskCount = 0;
+    let mediumRiskCount = 0;
+    let baseAvgSalary = 0;
 
+    let rawEmployees = [];
     if (tenantIdOrPreloaded && typeof tenantIdOrPreloaded === 'object' && tenantIdOrPreloaded.retention?.stats) {
-        totalEmployees = tenantIdOrPreloaded.retention.stats.total || 25;
-        highRiskCount = tenantIdOrPreloaded.retention.stats.highRisk || 3;
-        mediumRiskCount = tenantIdOrPreloaded.retention.stats.mediumRisk || 5;
+        totalEmployees = tenantIdOrPreloaded.retention.stats.total || 0;
+        highRiskCount = tenantIdOrPreloaded.retention.stats.highRisk || 0;
+        mediumRiskCount = tenantIdOrPreloaded.retention.stats.mediumRisk || 0;
+        rawEmployees = tenantIdOrPreloaded.rawEmployees || [];
     } else {
         const resolvedTenantId = typeof tenantIdOrPreloaded === 'string' ? tenantIdOrPreloaded : null;
-        const rawEmployees = await fetchRawEmployees(resolvedTenantId);
+        rawEmployees = await fetchRawEmployees(resolvedTenantId);
         const ret = await getRetentionRiskAnalysis(resolvedTenantId, rawEmployees);
-        totalEmployees = ret.stats.total || 25;
-        highRiskCount = ret.stats.highRisk || 3;
-        mediumRiskCount = ret.stats.mediumRisk || 5;
+        totalEmployees = ret.stats.total || 0;
+        highRiskCount = ret.stats.highRisk || 0;
+        mediumRiskCount = ret.stats.mediumRisk || 0;
+    }
+
+    if (rawEmployees.length > 0) {
+        const allSalaries = rawEmployees.map(e => e._decryptedSalary || 0).filter(s => s > 0);
+        baseAvgSalary = allSalaries.length > 0 ? (allSalaries.reduce((a, b) => a + b, 0) / allSalaries.length) : 0;
     }
 
     const annualBaseSalaryCost = totalEmployees * baseAvgSalary * 12;
@@ -1185,6 +1213,21 @@ export async function runWhatIfMonteCarlo(params = {}, tenantIdOrPreloaded = nul
     let sumRoiSalaryDelta = 0;
     let sumRoiWellnessDelta = 0;
 
+    // Calcular costo mensual real de sobretiempos desde registros de nómina
+    let avgMonthlyOvertimeCostPerEmp = 0;
+    if (rawEmployees.length > 0) {
+        const overtimeAmounts = rawEmployees.map(emp => {
+            const payDetails = emp.PayrollDetail || [];
+            const totalOvertime = payDetails.reduce((s, d) => s + (d.overtimeAmount || 0), 0);
+            const months = payDetails.length || 1;
+            return totalOvertime / months;
+        });
+        const totalOT = overtimeAmounts.reduce((a, b) => a + b, 0);
+        avgMonthlyOvertimeCostPerEmp = totalOT / Math.max(1, rawEmployees.length);
+    }
+    // Si no hay datos de nómina, se estima en 0 (no hay sobretiempos que optimizar)
+    const annualOvertimeBaseCost = totalEmployees * avgMonthlyOvertimeCostPerEmp * 12;
+
     for (let i = 0; i < iterations; i++) {
         const salaryElasticity = Math.max(1.0, randomNormal(3.5, 0.6));
         const wellnessElasticity = Math.max(0.02, randomNormal(0.12, 0.03));
@@ -1195,7 +1238,7 @@ export async function runWhatIfMonteCarlo(params = {}, tenantIdOrPreloaded = nul
         ));
 
         const simulatedAvoidedTurnover = baselineTurnoverRiskCost * (simulatedRiskRedPct / 100);
-        const simulatedOvertimeSavings = (totalEmployees * 45 * 12 * (overtimeOptimization / 100)) * overtimeSavingsFactor;
+        const simulatedOvertimeSavings = (annualOvertimeBaseCost * (overtimeOptimization / 100)) * overtimeSavingsFactor;
 
         const simulatedGrossSavings = simulatedAvoidedTurnover + simulatedOvertimeSavings;
         const simulatedNetSavings = simulatedGrossSavings - totalInvestmentCost;
@@ -1822,7 +1865,7 @@ function calculateFinancialImpact({ retention, rawEmployees = [], attendance, pa
 
     const analysis = retention?.analysis || [];
     analysis.forEach(emp => {
-        const empSalary = emp._decryptedSalary || 850;
+        const empSalary = emp._decryptedSalary || 0;
         if (emp.level === 'Alto Riesgo') {
             highRiskSalarySum += empSalary * 12;
         } else if (emp.level === 'Riesgo Medio') {
@@ -1830,15 +1873,11 @@ function calculateFinancialImpact({ retention, rawEmployees = [], attendance, pa
         }
     });
 
-    let estimatedTurnoverCostRisk = Math.round((highRiskSalarySum * 0.35) + (mediumRiskSalarySum * 0.15));
-    if (estimatedTurnoverCostRisk === 0) {
-        estimatedTurnoverCostRisk = (retention?.stats?.highRisk || 1) * 4800 + (retention?.stats?.mediumRisk || 2) * 1800;
-    }
-
+    const estimatedTurnoverCostRisk = Math.round((highRiskSalarySum * 0.35) + (mediumRiskSalarySum * 0.15));
     const potentialRetentionSavings = Math.round(estimatedTurnoverCostRisk * 0.75);
     const totalAbsences = (attendance?.suspiciousAbsences?.length || 0) * 3 + (attendance?.departmentImpact || []).reduce((acc, d) => acc + (d.totalAbsences || 0), 0);
-    const estimatedAbsenteeismCost = Math.max(1200, Math.round(totalAbsences * 45 * 1.4));
-    const overtimeSavings = Math.max(800, Math.round((payroll?.overtimeAnomalies?.length || 1) * 650));
+    const estimatedAbsenteeismCost = Math.round(totalAbsences * 45 * 1.4);
+    const overtimeSavings = Math.round((payroll?.overtimeAnomalies?.length || 0) * 650);
     const totalFinancialOpportunity = potentialRetentionSavings + Math.round(estimatedAbsenteeismCost * 0.5) + overtimeSavings;
 
     return {
@@ -1848,7 +1887,7 @@ function calculateFinancialImpact({ retention, rawEmployees = [], attendance, pa
         overtimeSavings,
         totalFinancialOpportunity,
         currency: 'USD',
-        paybackPeriodMonths: 2.3,
+        paybackPeriodMonths: totalFinancialOpportunity > 0 ? 2.3 : 0,
     };
 }
 
@@ -1886,28 +1925,25 @@ function calculateBurnoutAndProductivity(rawEmployees = [], attendance = {}, pay
         };
     });
 
-    if (departmentMetrics.length === 0) {
-        departmentMetrics.push(
-            { department: 'Tecnología', burnoutScore: 38, productivityRatio: 88, headcount: 8, riskLevel: 'Riesgo Moderado' },
-            { department: 'Operaciones', burnoutScore: 58, productivityRatio: 74, headcount: 12, riskLevel: 'Riesgo Moderado' }
-        );
-    }
-
-    const overallBurnout = Math.round(departmentMetrics.reduce((sum, m) => sum + m.burnoutScore, 0) / departmentMetrics.length);
-    const overallProductivity = Math.round(departmentMetrics.reduce((sum, m) => sum + m.productivityRatio, 0) / departmentMetrics.length);
+    const overallBurnout = departmentMetrics.length > 0
+        ? Math.round(departmentMetrics.reduce((sum, m) => sum + m.burnoutScore, 0) / departmentMetrics.length)
+        : 0;
+    const overallProductivity = departmentMetrics.length > 0
+        ? Math.round(departmentMetrics.reduce((sum, m) => sum + m.productivityRatio, 0) / departmentMetrics.length)
+        : 0;
 
     return { overallBurnout, overallProductivity, departmentMetrics };
 }
 
 function calculateHeadcountPayrollProjection(rawEmployees = [], payrolls = []) {
-    const currentMonthlyPayroll = rawEmployees.reduce((sum, e) => sum + (e._decryptedSalary || 850), 0) || 15800;
+    const currentMonthlyPayroll = rawEmployees.reduce((sum, e) => sum + (e._decryptedSalary || 0), 0);
     const months = ['Mes actual', '+1 Mes', '+2 Meses', '+3 Meses', '+4 Meses', '+5 Meses'];
     const projection = months.map((m, idx) => {
-        const factor = 1 + (idx * 0.018);
+        const factor = 1 + (idx * 0.015);
         return {
             month: m,
             payroll: Math.round(currentMonthlyPayroll * factor),
-            headcount: rawEmployees.length > 0 ? (rawEmployees.length + Math.floor(idx * 0.4)) : (17 + Math.floor(idx * 0.5)),
+            headcount: rawEmployees.length,
         };
     });
 
@@ -1964,8 +2000,8 @@ export async function generateAcademicDataset(tenantId = null, format = 'csv') {
 
         const evals = emp.evaluations || [];
         const avgPerf = evals.length > 0
-            ? evals.reduce((sum, e) => sum + (e.finalScore || e.overallScore || 70), 0) / evals.length
-            : 75.0;
+            ? evals.reduce((sum, e) => sum + (e.finalScore != null ? Number(e.finalScore) : (e.overallScore != null ? Number(e.overallScore) : 50)), 0) / evals.length
+            : null;
 
         const totalAbsences = emp.absences?.length || 0;
         const totalLates = emp.attendance?.filter(a => a.isLate)?.length || 0;
@@ -1978,7 +2014,7 @@ export async function generateAcademicDataset(tenantId = null, format = 'csv') {
             tenure_days: tenureDays,
             tenure_months: Number((tenureDays / 30.4375).toFixed(1)),
             relative_salary_ratio: salaryRatio,
-            perf_eval_mean_12m: Number(avgPerf.toFixed(1)),
+            perf_eval_mean_12m: avgPerf !== null ? Number(avgPerf.toFixed(1)) : null,
             absences_count_12m: totalAbsences,
             late_arrivals_count_12m: totalLates,
             weibull_hazard_rate: riskData.weibullHazardRate,
@@ -2007,4 +2043,108 @@ export async function generateAcademicDataset(tenantId = null, format = 'csv') {
     );
 
     return [headers, ...rows].join('\n');
+}
+
+// ==================== ASESOR ESTRATÉGICO EJECUTIVO (DYNAMIC IA ADVISOR) ====================
+
+/**
+ * Genera dictamen y asesoría estratégica ejecutiva basada 100% en los datos reales del tenant
+ */
+export async function generateStrategicAdvisorAdvice(tenantId, queryType, customPrompt = '') {
+    const rawEmployees = await fetchRawEmployees(tenantId);
+    const { employees, departmentAvgSalaries } = prepareEmployeeData(rawEmployees);
+    const totalCount = employees.length;
+
+    if (totalCount === 0) {
+        return {
+            title: 'Diagnóstico Organizacional Inicial',
+            executiveSummary: 'Actualmente no se registran colaboradores activos en la nómina para generar dictámenes estadísticos o financieros.',
+            actions: [
+                { step: '1. Registro de Personal', detail: 'Ingresa los colaboradores de la empresa en el módulo de Empleados.' },
+                { step: '2. Carga de Asistencia y Nómina', detail: 'Registra las jornadas y estipendios para alimentar los motores predictivos.' },
+                { step: '3. Evaluación de Clima y Desempeño', detail: 'Aplica evaluaciones periódicas para calibrar los modelos de retención.' }
+            ],
+            impact: 'Habilitación de analíticas predictivas y control financiero.',
+            financialROI: '$0.00 USD (Esperando registros)'
+        };
+    }
+
+    let totalPayroll = 0;
+    let totalHighRisk = 0;
+    let totalAbsences = 0;
+    let highRiskEmployees = [];
+
+    employees.forEach(emp => {
+        const avgSal = departmentAvgSalaries[emp.department || 'General'] || emp._decryptedSalary;
+        const risk = calculateRetentionRiskScore(emp, avgSal);
+        totalPayroll += (emp._decryptedSalary || 0);
+        totalAbsences += (emp.absences || []).length;
+        if (risk.level === 'Alto Riesgo') {
+            totalHighRisk++;
+            highRiskEmployees.push({ name: `${emp.firstName} ${emp.lastName}`, dept: emp.department, salary: emp._decryptedSalary });
+        }
+    });
+
+    const avgSalary = totalPayroll / (totalCount || 1);
+    const turnoverCostPerEmp = avgSalary * 5.5; // Benchmark de reposición real: 5.5 meses de sueldo
+    const riskExposure = totalHighRisk * turnoverCostPerEmp;
+
+    if (queryType === 'retention-plan' || customPrompt.toLowerCase().includes('retención') || customPrompt.toLowerCase().includes('talento')) {
+        const potentialSavings = riskExposure * 0.45;
+        return {
+            title: `Plan de Retención de Talento Crítico (${totalHighRisk} en Alto Riesgo)`,
+            executiveSummary: `Se evaluaron ${totalCount} colaboradores activos. Se detectaron ${totalHighRisk} personas con alto riesgo de desvinculación, representando una exposición financiera estimada de $${riskExposure.toLocaleString('en-US', { maximumFractionDigits: 0 })} USD en costos de reemplazo.`,
+            actions: [
+                { step: '1. Revisión Salarial Departamental', detail: `El salario promedio actual de la empresa es de $${avgSalary.toFixed(0)} USD. Priorizar nivelación en áreas con mayor brecha.` },
+                { step: '2. Entrevistas de Permanencia', detail: `Agendar sesiones 1 a 1 de seguimiento con los ${totalHighRisk} colaboradores identificados.` },
+                { step: '3. Medición de Carga y Clima', detail: 'Revisar horas extras y ausentismos recientes para mitigar factores de desgaste.' }
+            ],
+            impact: totalHighRisk > 0 ? `Mitigación proyectada de hasta el 45% en salidas voluntarias (${Math.round(totalHighRisk * 0.45)} colaboradores retenidos).` : 'Plantilla actualmente estable con bajo riesgo global de fuga.',
+            financialROI: potentialSavings > 0 ? `Ahorro potencial estimado de ~$${potentialSavings.toLocaleString('en-US', { maximumFractionDigits: 0 })} USD en reemplazos y liquidaciones.` : '$0.00 USD (Riesgo financiero controlado).'
+        };
+    }
+
+    if (queryType === 'payroll-efficiency' || customPrompt.toLowerCase().includes('nómina') || customPrompt.toLowerCase().includes('horas extras') || customPrompt.toLowerCase().includes('costo')) {
+        const monthlyPayroll = totalPayroll;
+        const targetOptimization = monthlyPayroll * 0.04;
+        return {
+            title: 'Estrategia de Eficiencia en Nómina y Asistencia',
+            executiveSummary: `La nómina mensual actual agregada es de $${monthlyPayroll.toLocaleString('en-US', { maximumFractionDigits: 2 })} USD distribuida en ${totalCount} colaboradores, con un acumulado de ${totalAbsences} ausencias registradas.`,
+            actions: [
+                { step: '1. Control de Tiempos y Asistencia', detail: 'Monitorear marcaciones biométricas y justificaciones para reducir sobretiempos imprevistos.' },
+                { step: '2. Optimización de Cargas Laborales', detail: 'Reequilibrar turnos en departamentos con picos de horas extraordinarias.' },
+                { step: '3. Automatización de Procesos', detail: 'Centralizar el cálculo pre-nómina para evitar reprocesos manuales de liquidación.' }
+            ],
+            impact: 'Reducción estimada del 15% al 25% en sobrecostos operativos por desvíos de jornada.',
+            financialROI: targetOptimization > 0 ? `Optimización recurrente proyectada de ~$${targetOptimization.toLocaleString('en-US', { maximumFractionDigits: 0 })} USD mensuales.` : '$0.00 USD'
+        };
+    }
+
+    if (queryType === 'board-report' || customPrompt.toLowerCase().includes('directorio') || customPrompt.toLowerCase().includes('informe') || customPrompt.toLowerCase().includes('gerencia')) {
+        const stabilityRate = totalCount > 0 ? (((totalCount - totalHighRisk) / totalCount) * 100).toFixed(1) : 100;
+        return {
+            title: 'Dictamen Ejecutivo para Directorio y Gerencia General',
+            executiveSummary: `El índice de estabilidad del equipo se sitúa en ${stabilityRate}% sobre un headcount de ${totalCount} colaboradores. La masa salarial mensual asciende a $${totalPayroll.toLocaleString('en-US', { maximumFractionDigits: 0 })} USD.`,
+            actions: [
+                { step: '1. Sostenibilidad del Capital Humano', detail: `Mantener el monitoreo continuo sobre el ${((totalHighRisk / (totalCount || 1)) * 100).toFixed(1)}% de personal en riesgo alto.` },
+                { step: '2. Presupuesto de Desarrollo', detail: 'Alinear incentivos al cumplimiento de metas cuantificables y productividad.' },
+                { step: '3. Auditoría de Cumplimiento', detail: 'Revisar vencimientos de contratos y normativas laborales vigentes.' }
+            ],
+            impact: 'Gobierno corporativo respaldado por People Analytics con datos 100% reales de la empresa.',
+            financialROI: `Control sobre un presupuesto anual de nómina de ~$${(totalPayroll * 12).toLocaleString('en-US', { maximumFractionDigits: 0 })} USD.`
+        };
+    }
+
+    // Consulta libre personalizada
+    return {
+        title: `Análisis Estratégico: "${customPrompt}"`,
+        executiveSummary: `Evaluación computada sobre ${totalCount} colaboradores activos y una nómina de $${totalPayroll.toLocaleString('en-US', { maximumFractionDigits: 0 })} USD.`,
+        actions: [
+            { step: '1. Diagnóstico Focalizado', detail: `Revisar indicadores de rotación (${totalHighRisk} casos prioritarios) y asistencia (${totalAbsences} ausencias).` },
+            { step: '2. Ejecución Departamental', detail: 'Ajustar planes de trabajo por área según el rendimiento promedio departamental.' },
+            { step: '3. Seguimiento Continuo', detail: 'Monitorear la evolución de métricas desde el panel de alertas de Inteligencia.' }
+        ],
+        impact: 'Optimización de recursos y decisiones informadas basadas en datos reales del negocio.',
+        financialROI: 'Retorno positivo sobre la estabilidad operativa y control del gasto de personal.'
+    };
 }

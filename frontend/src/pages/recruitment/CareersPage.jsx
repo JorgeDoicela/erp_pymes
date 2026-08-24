@@ -54,50 +54,50 @@ const CareersPage = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {vacancies.map(v => (
-                                <div key={v.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all group flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex items-center justify-between gap-2 mb-3">
-                                            <span className="bg-blue-50 text-blue-700 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-blue-100">
+                                <div key={v.id} className="bg-white border border-gray-200 rounded p-4 flex flex-col justify-between text-xs hover:border-gray-300 transition-colors">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="bg-blue-50 text-blue-700 text-[10px] font-medium px-2 py-0.5 rounded border border-blue-200 uppercase tracking-wider">
                                                 {v.department}
                                             </span>
                                             {v.tenant?.name && !companyName && (
-                                                <span className="text-[11px] font-semibold text-slate-400 truncate max-w-[120px]">
+                                                <span className="text-[10px] text-gray-400 truncate max-w-[120px]">
                                                     {v.tenant.name}
                                                 </span>
                                             )}
                                         </div>
-                                        <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors">{v.title}</h3>
-                                        <div className="space-y-2 mb-6 text-sm text-slate-600">
+                                        <h3 className="text-sm font-semibold text-gray-900 leading-snug">{v.title}</h3>
+                                        <div className="space-y-1.5 text-xs text-gray-600">
                                             <div className="flex items-center">
-                                                <FiMapPin className="mr-2 text-slate-400 shrink-0" /> {v.location}
+                                                <FiMapPin className="mr-1.5 text-gray-400 shrink-0" size={13} /> {v.location}
                                             </div>
                                             <div className="flex items-center">
-                                                <FiClock className="mr-2 text-slate-400 shrink-0" /> {v.employmentType}
+                                                <FiClock className="mr-1.5 text-gray-400 shrink-0" size={13} /> {v.employmentType}
                                             </div>
                                             {v.salaryMin && (
-                                                <div className="flex items-center">
-                                                    <FiDollarSign className="mr-2 text-slate-400 shrink-0" /> ${v.salaryMin} - ${v.salaryMax} USD
+                                                <div className="flex items-center font-mono tabular-nums">
+                                                    <FiDollarSign className="mr-1 text-gray-400 shrink-0" size={13} /> ${v.salaryMin} - ${v.salaryMax} USD
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => navigate(`/careers/${v.id}`)}
-                                        className="w-full py-3 bg-slate-100 text-slate-800 font-bold rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all flex items-center justify-center cursor-pointer text-sm shadow-sm"
+                                        className="w-full mt-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-xs shadow-xs"
                                     >
-                                        Ver Detalle de Oferta <FiArrowRight className="ml-2" />
+                                        Ver Oferta <FiArrowRight size={13} />
                                     </button>
                                 </div>
                             ))}
                         </div>
 
                         {vacancies.length === 0 && (
-                            <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-                                <FiBriefcase className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                                <h3 className="text-lg font-bold text-slate-800 mb-1">Sin vacantes disponibles</h3>
-                                <p className="text-slate-500 text-sm">No existen ofertas de empleo activas en este momento. Por favor vuelve a consultar más adelante.</p>
+                            <div className="text-center py-16 bg-white rounded border border-gray-200 p-6 text-xs text-gray-500">
+                                <FiBriefcase className="mx-auto h-8 w-8 text-gray-300 mb-2" />
+                                <h3 className="text-sm font-semibold text-gray-900 mb-1">Sin vacantes disponibles</h3>
+                                <p className="text-gray-500 text-xs">No existen ofertas de empleo activas en este momento.</p>
                             </div>
                         )}
                     </>

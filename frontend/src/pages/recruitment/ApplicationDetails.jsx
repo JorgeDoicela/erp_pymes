@@ -273,216 +273,189 @@ const ApplicationDetails = () => {
             <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Profile Column */}
-                <div className="lg:col-span-2 space-y-6">
-                    <button onClick={() => navigate(-1)} className="flex items-center text-slate-500 hover:text-slate-800 transition-colors font-medium">
-                        <FiArrowLeft className="mr-2" /> Volver al Listado
+                <div className="lg:col-span-2 space-y-4">
+                    <button onClick={() => navigate(-1)} className="flex items-center text-gray-500 hover:text-gray-800 transition-colors text-xs font-medium cursor-pointer">
+                        <FiArrowLeft className="mr-1.5" size={13} /> Volver al Listado
                     </button>
 
-                    <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm overflow-hidden relative">
-                        {/* Decorative background element */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 z-0 opacity-50"></div>
-
-                        <div className="relative z-10">
-                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 leading-tight">
-                                            {app.firstName} {app.lastName}
-                                        </h1>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(app.status)}`}>
-                                            {statusLabels[app.status] || app.status}
-                                        </span>
-                                    </div>
-                                    <p className="text-blue-600 text-lg md:text-xl font-semibold flex items-center">
-                                        <FiBriefcase className="mr-2" /> {app.vacancy?.title}
-                                    </p>
+                    <div className="bg-white p-5 rounded border border-gray-200 text-xs space-y-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4 border-b border-gray-100">
+                            <div>
+                                <div className="flex items-center gap-2.5 mb-1">
+                                    <h1 className="text-lg font-semibold text-gray-900 leading-tight">
+                                        {app.firstName} {app.lastName}
+                                    </h1>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${getStatusColor(app.status)}`}>
+                                        {statusLabels[app.status] || app.status}
+                                    </span>
                                 </div>
-
-                                <div className="flex gap-2 flex-wrap sm:justify-end w-full sm:w-auto">
-                                    <select
-                                        value={app.status}
-                                        onChange={(e) => handleStatusChange(e.target.value)}
-                                        className="flex-1 sm:flex-none bg-slate-100 border-slate-200 rounded-xl p-2.5 text-slate-700 font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-slate-200 transition-all text-sm shadow-sm"
-                                    >
-                                        <option value="PENDING">Marcar Pendiente</option>
-                                        <option value="REVIEWING">En Revisión</option>
-                                        <option value="INTERVIEW">Fase de Entrevistas</option>
-                                        <option value="TESTING">Pruebas Técnicas</option>
-                                        <option value="OFFER">Enviar Oferta</option>
-                                        <option value="HIRED">Contratado</option>
-                                        <option value="REJECTED">Rechazado</option>
-                                    </select>
-
-                                    {app.status !== 'HIRED' && (
-                                        <button
-                                            onClick={() => setShowHireModal(true)}
-                                            className="flex-1 sm:flex-none px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all text-sm active:scale-95"
-                                        >
-                                            <FiCheckCircle className="mr-2" /> Contratar Ahora
-                                        </button>
-                                    )}
-
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowDeleteModal(true)}
-                                        className="flex-1 sm:flex-none px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold flex items-center justify-center border border-red-200 transition-all text-sm active:scale-95"
-                                    >
-                                        <FiTrash2 className="mr-2" /> Eliminar Candidato
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-slate-600 mb-8 border-y border-slate-100 py-6">
-                                <div className="flex items-center group cursor-copy" onClick={() => { navigator.clipboard.writeText(app.email); toast?.success("Email copiado") }}>
-                                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center mr-3 group-hover:bg-blue-50 transition-colors">
-                                        <FiMail className="text-slate-400 group-hover:text-blue-500" />
-                                    </div>
-                                    <div className="overflow-hidden">
-                                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Email</p>
-                                        <p className="font-semibold text-slate-800 truncate">{app.email}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center mr-3">
-                                        <FiPhone className="text-slate-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Teléfono</p>
-                                        <p className="font-semibold text-slate-800">{app.phone}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-slate-50 p-6 rounded-2xl mb-8 border border-slate-100">
-                                <h3 className="font-bold mb-4 text-slate-800 flex items-center text-lg">
-                                    <FiFileText className="mr-2 text-blue-500" /> Carta de Presentación
-                                </h3>
-                                <p className="text-slate-600 whitespace-pre-line leading-relaxed text-base">
-                                    {app.coverLetter || "El candidato no incluyó una carta de presentación."}
+                                <p className="text-blue-600 font-medium text-xs flex items-center">
+                                    <FiBriefcase className="mr-1.5" size={13} /> {app.vacancy?.title}
                                 </p>
                             </div>
 
-                            {app.resumeUrl && (
-                                <div className="flex flex-wrap gap-3">
+                            <div className="flex gap-2 flex-wrap sm:justify-end w-full sm:w-auto">
+                                <select
+                                    value={app.status}
+                                    onChange={(e) => handleStatusChange(e.target.value)}
+                                    className="bg-white border border-gray-300 rounded px-2.5 py-1.5 text-gray-700 text-xs font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+                                >
+                                    <option value="PENDING">Pendiente</option>
+                                    <option value="REVIEWING">En Revisión</option>
+                                    <option value="INTERVIEW">Entrevista</option>
+                                    <option value="TESTING">Pruebas Técnicas</option>
+                                    <option value="OFFER">Oferta</option>
+                                    <option value="HIRED">Contratado</option>
+                                    <option value="REJECTED">Rechazado</option>
+                                </select>
+
+                                {app.status !== 'HIRED' && (
                                     <button
-                                        type="button"
-                                        onClick={() => setShowPdfModal(true)}
-                                        className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold transition-all shadow-lg shadow-blue-100 active:scale-95 text-sm"
+                                        onClick={() => setShowHireModal(true)}
+                                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium flex items-center justify-center transition-colors shadow-xs cursor-pointer"
                                     >
-                                        <FiEye className="mr-2 text-base" /> Ver CV (PDF)
+                                        <FiCheckCircle className="mr-1.5" size={13} /> Contratar
                                     </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => window.open(getResumeUrl(app.resumeUrl), '_blank')}
-                                        className="inline-flex items-center justify-center px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold transition-all active:scale-95 text-sm border border-slate-200"
-                                    >
-                                        <FiExternalLink className="mr-2 text-base" /> Abrir en nueva pestaña
-                                    </button>
-                                </div>
-                            )}
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="px-3 py-1.5 bg-white border border-red-200 hover:bg-red-50 text-red-600 rounded text-xs font-medium flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                    <FiTrash2 className="mr-1.5" size={13} /> Eliminar
+                                </button>
+                            </div>
                         </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-600 py-2">
+                            <div className="flex items-center cursor-pointer" onClick={() => { navigator.clipboard.writeText(app.email); toast?.success("Email copiado") }}>
+                                <FiMail className="text-gray-400 mr-2 shrink-0" size={14} />
+                                <div>
+                                    <p className="text-[10px] text-gray-400 uppercase font-semibold">Email</p>
+                                    <p className="font-medium text-gray-800">{app.email}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center">
+                                <FiPhone className="text-gray-400 mr-2 shrink-0" size={14} />
+                                <div>
+                                    <p className="text-[10px] text-gray-400 uppercase font-semibold">Teléfono</p>
+                                    <p className="font-medium text-gray-800 font-mono">{app.phone}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 p-3.5 rounded border border-gray-200 space-y-1.5">
+                            <h3 className="font-semibold text-gray-800 flex items-center text-xs">
+                                <FiFileText className="mr-1.5 text-blue-600" size={13} /> Carta de Presentación
+                            </h3>
+                            <p className="text-gray-600 whitespace-pre-line leading-relaxed text-xs">
+                                {app.coverLetter || "El candidato no incluyó una carta de presentación."}
+                            </p>
+                        </div>
+
+                        {app.resumeUrl && (
+                            <div className="flex flex-wrap gap-2 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPdfModal(true)}
+                                    className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded text-xs font-medium transition-colors shadow-xs cursor-pointer"
+                                >
+                                    <FiEye className="mr-1.5" size={13} /> Ver CV (PDF)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => window.open(getResumeUrl(app.resumeUrl), '_blank')}
+                                    className="inline-flex items-center px-3 py-1.5 bg-white text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition-colors border border-gray-300 cursor-pointer"
+                                >
+                                    <FiExternalLink className="mr-1.5" size={13} /> Abrir en nueva pestaña
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Timeline / Interviews Section */}
-                    <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div className="flex justify-between items-center mb-8">
-                            <h3 className="text-xl font-bold text-slate-900 flex items-center">
-                                <FiCalendar className="mr-2 text-purple-600" /> Próximas Entrevistas
+                    <div className="bg-white p-5 rounded border border-gray-200 text-xs space-y-4">
+                        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                            <h3 className="font-semibold text-gray-900 text-xs uppercase tracking-wider flex items-center">
+                                <FiCalendar className="mr-1.5 text-blue-600" size={13} /> Entrevistas Programadas
                             </h3>
                             <button
                                 onClick={() => setShowModal(true)}
-                                className="px-5 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-xl font-bold text-sm transition-all border border-purple-100"
+                                className="px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium transition-colors cursor-pointer"
                             >
                                 + Agendar
                             </button>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-2.5">
                             {app.interviews?.map(int => (
-                                <div key={int.id} className="group relative pl-8 pb-4">
-                                    {/* Timeline connector */}
-                                    <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-slate-100 group-last:bottom-auto group-last:h-4"></div>
-                                    <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-white border-2 border-purple-500 flex items-center justify-center z-10">
-                                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                                    </div>
-
-                                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 group-hover:border-purple-300 transition-all group-hover:shadow-md">
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                            <div>
-                                                <p className="font-extrabold text-slate-800 text-lg">
-                                                    {new Date(int.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                                </p>
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    <span className="flex items-center text-xs font-bold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
-                                                        <FiClock className="mr-1.5" /> {new Date(int.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                    <span className="flex items-center text-xs font-bold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
-                                                        <FiMapPin className="mr-1.5" /> {int.type}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="text-right w-full md:w-auto">
-                                                <p className="text-xs text-slate-400 font-medium truncate max-w-[200px]">{int.location}</p>
-                                            </div>
+                                <div key={int.id} className="p-3 bg-gray-50 rounded border border-gray-200 space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                        <p className="font-semibold text-gray-900">
+                                            {new Date(int.date).toLocaleDateString('es-EC', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <span className="font-mono text-[11px] text-gray-600 bg-white px-2 py-0.5 rounded border border-gray-200">
+                                                {new Date(int.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            <span className="text-[11px] font-medium text-gray-600 bg-white px-2 py-0.5 rounded border border-gray-200">
+                                                {int.type}
+                                            </span>
                                         </div>
                                     </div>
+                                    <p className="text-[11px] text-gray-500 truncate">{int.location}</p>
                                 </div>
                             ))}
                             {app.interviews?.length === 0 && (
-                                <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-                                    <p className="text-slate-400 font-medium">No hay entrevistas programadas.</p>
+                                <div className="text-center py-6 bg-gray-50 rounded border border-dashed border-gray-200">
+                                    <p className="text-gray-400">No hay entrevistas programadas.</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Evaluations Section */}
-                    <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                        <div className="flex justify-between items-center mb-8">
-                            <h3 className="text-xl font-bold text-slate-900 flex items-center">
-                                <FiStar className="mr-2 text-yellow-500" /> Evaluaciones de Equipo
+                    <div className="bg-white p-5 rounded border border-gray-200 text-xs space-y-4">
+                        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                            <h3 className="font-semibold text-gray-900 text-xs uppercase tracking-wider flex items-center">
+                                <FiStar className="mr-1.5 text-amber-500" size={13} /> Evaluaciones de Equipo
                             </h3>
                             <button
                                 onClick={() => setShowEvaModal(true)}
-                                className="px-5 py-2 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-xl font-bold text-sm transition-all border border-yellow-100"
+                                className="px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium transition-colors cursor-pointer"
                             >
-                                + Evaluar Candidato
+                                + Evaluar
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {app.evaluations?.map(eva => (
-                                <div key={eva.id} className="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-lg transition-all relative group">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex items-center">
-                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3 text-blue-600 font-bold">
+                                <div key={eva.id} className="bg-gray-50 p-3 rounded border border-gray-200 space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-[10px]">
                                                 {eva.evaluator?.firstName[0]}{eva.evaluator?.lastName[0]}
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-slate-800 leading-tight">{eva.evaluator?.firstName} {eva.evaluator?.lastName}</p>
-                                                <p className="text-[10px] text-slate-400 uppercase tracking-tighter">Evaluador</p>
-                                            </div>
+                                            <p className="font-medium text-gray-900 leading-tight">{eva.evaluator?.firstName} {eva.evaluator?.lastName}</p>
                                         </div>
-                                        <span className="text-lg font-black text-yellow-600 bg-yellow-50 px-3 py-1 rounded-xl border border-yellow-100 flex items-center gap-1.5 shadow-sm">
-                                            {eva.overallScore} <FiStar className="fill-current text-yellow-500" size={16} />
+                                        <span className="font-mono font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                                            {eva.overallScore} <FiStar className="fill-current text-amber-500" size={12} />
                                         </span>
                                     </div>
-                                    <div className="relative">
-                                        <FiMessageSquare className="absolute top-0 left-0 text-slate-100 -mt-2 -ml-2" size={32} />
-                                        <p className="text-slate-600 italic text-sm relative z-10 pl-2">"{eva.comments}"</p>
-                                    </div>
-                                    <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${eva.recommendation === 'HIRE' ? 'bg-emerald-50 text-emerald-600' : eva.recommendation === 'MAYBE' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600'}`}>
-                                            REC: {eva.recommendation}
+                                    <p className="text-gray-600 italic leading-normal">"{eva.comments}"</p>
+                                    <div className="pt-1.5 border-t border-gray-200 flex justify-between items-center text-[10px]">
+                                        <span className={`font-mono font-medium px-1.5 py-0.5 rounded ${eva.recommendation === 'HIRE' ? 'bg-green-50 text-green-700 border border-green-200' : eva.recommendation === 'MAYBE' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                            {eva.recommendation}
                                         </span>
-                                        <span className="text-[10px] text-slate-300">{new Date(eva.createdAt).toLocaleDateString()}</span>
+                                        <span className="text-gray-400 font-mono">{new Date(eva.createdAt).toLocaleDateString('es-EC')}</span>
                                     </div>
                                 </div>
                             ))}
                         </div>
                         {app.evaluations?.length === 0 && (
-                            <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-                                <p className="text-slate-400 font-medium">Aún no se han registrado evaluaciones.</p>
+                            <div className="text-center py-6 bg-gray-50 rounded border border-dashed border-gray-200">
+                                <p className="text-gray-400">Aún no se han registrado evaluaciones.</p>
                             </div>
                         )}
                     </div>
@@ -490,12 +463,12 @@ const ApplicationDetails = () => {
 
                 {/* Notes Column */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm h-[600px] flex flex-col sticky top-6 overflow-hidden">
-                        <div className="p-6 bg-slate-800 text-white">
-                            <h3 className="text-lg font-bold flex items-center">
-                                <FiMessageSquare className="mr-2 text-blue-400" /> Notas de Seguimiento
+                    <div className="bg-white rounded border border-gray-200 h-[600px] flex flex-col sticky top-4 overflow-hidden text-xs">
+                        <div className="p-3.5 bg-gray-50 border-b border-gray-200">
+                            <h3 className="font-semibold text-gray-900 text-xs uppercase tracking-wider flex items-center">
+                                <FiMessageSquare className="mr-1.5 text-blue-600" size={13} /> Notas de Seguimiento
                             </h3>
-                            <p className="text-slate-400 text-xs mt-1">Solo visible para el equipo interno</p>
+                            <p className="text-gray-400 text-[11px] mt-0.5">Visibles únicamente para el equipo evaluador</p>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-slate-50/30">
@@ -539,48 +512,43 @@ const ApplicationDetails = () => {
 
             {/* Interviews Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
-                    <div className="bg-white p-8 rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl scale-in-center">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
-                                <FiCalendar size={24} />
-                            </div>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded p-5 max-w-md w-full border border-gray-200 shadow-xl text-xs space-y-4">
+                        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                             <div>
-                                <h2 className="text-2xl font-black text-slate-900">Agendar Cita</h2>
-                                <p className="text-slate-500 text-sm">Define el encuentro con el candidato</p>
+                                <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Agendar Entrevista</h2>
+                                <p className="text-[11px] text-gray-500">Programar sesión con {app.firstName} {app.lastName}</p>
                             </div>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
                         </div>
 
-                        <form onSubmit={handleSchedule} className="space-y-5">
-                            <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleSchedule} className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Fecha</label>
-                                    <input required type="date" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-2 focus:ring-purple-500 outline-none transition-all shadow-sm" value={interviewData.date} onChange={e => setInterviewData({ ...interviewData, date: e.target.value })} />
+                                    <label className="block font-medium text-gray-700 mb-1">Fecha</label>
+                                    <input required type="date" className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500 font-mono" value={interviewData.date} onChange={e => setInterviewData({ ...interviewData, date: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Hora</label>
-                                    <input required type="time" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-2 focus:ring-purple-500 outline-none transition-all shadow-sm" value={interviewData.time} onChange={e => setInterviewData({ ...interviewData, time: e.target.value })} />
+                                    <label className="block font-medium text-gray-700 mb-1">Hora</label>
+                                    <input required type="time" className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500 font-mono" value={interviewData.time} onChange={e => setInterviewData({ ...interviewData, time: e.target.value })} />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Canal de Entrevista</label>
-                                <select className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:ring-2 focus:ring-purple-500 outline-none transition-all shadow-sm font-bold" value={interviewData.type} onChange={e => setInterviewData({ ...interviewData, type: e.target.value })}>
+                                <label className="block font-medium text-gray-700 mb-1">Modalidad</label>
+                                <select className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500" value={interviewData.type} onChange={e => setInterviewData({ ...interviewData, type: e.target.value })}>
                                     <option value="VIRTUAL">Videollamada (Virtual)</option>
                                     <option value="PRESENTIAL">En Oficina (Presencial)</option>
-                                    <option value="PHONE">Llamada Telefónica</option>
+                                    <option value="PHONE">Telefónica</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ubicación o Enlace</label>
-                                <div className="relative">
-                                    <FiMapPin className="absolute left-3 top-3.5 text-slate-400" />
-                                    <input required type="text" placeholder="Ej: Google Meet o Dirección..." className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 p-3 text-slate-800 focus:ring-2 focus:ring-purple-500 outline-none transition-all shadow-sm" value={interviewData.location} onChange={e => setInterviewData({ ...interviewData, location: e.target.value })} />
-                                </div>
+                                <label className="block font-medium text-gray-700 mb-1">Ubicación o Enlace</label>
+                                <input required type="text" placeholder="Ej: Meet, Teams o Sala 2B..." className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500" value={interviewData.location} onChange={e => setInterviewData({ ...interviewData, location: e.target.value })} />
                             </div>
-                            <div className="flex justify-end pt-4 gap-3">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 text-slate-500 hover:text-slate-800 font-bold transition-all">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-black shadow-lg shadow-purple-200 hover:shadow-purple-300 transition-all flex items-center">
-                                    {submitting ? 'Confirmando...' : 'Agendar Ahora'}
+                            <div className="flex justify-end pt-3 border-t border-gray-100 gap-2">
+                                <button type="button" onClick={() => setShowModal(false)} className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded font-medium transition-colors">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors shadow-xs">
+                                    {submitting ? 'Guardando...' : 'Confirmar Entrevista'}
                                 </button>
                             </div>
                         </form>
@@ -590,33 +558,31 @@ const ApplicationDetails = () => {
 
             {/* Evaluation Modal */}
             {showEvaModal && (
-                <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
-                    <div className="bg-white p-8 rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-y-auto max-h-[90vh] scale-in-center">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                <FiStar size={24} />
-                            </div>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded p-5 max-w-lg w-full border border-gray-200 shadow-xl overflow-y-auto max-h-[90vh] text-xs space-y-4">
+                        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                             <div>
-                                <h2 className="text-2xl font-black text-slate-900">Evaluación de Talento</h2>
-                                <p className="text-slate-500 text-sm">Registra tu impresión técnica y profesional</p>
+                                <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Evaluación de Candidato</h2>
+                                <p className="text-[11px] text-gray-500">Puntaje técnico y recomendación de contratación</p>
                             </div>
+                            <button onClick={() => setShowEvaModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
                         </div>
 
-                        <form onSubmit={handleEvaluate} className="space-y-8">
-                            <div className="space-y-6">
-                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">Criterios de Selección (1-5)</h3>
+                        <form onSubmit={handleEvaluate} className="space-y-4">
+                            <div className="space-y-2.5">
+                                <h3 className="font-semibold text-gray-700 uppercase tracking-wider text-[11px]">Criterios de Evaluación (1-5)</h3>
                                 {Object.keys(evaData.ratings).map(criterion => (
-                                    <div key={criterion} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                                        <label className="text-slate-700 font-extrabold capitalize text-base">{criterion}</label>
-                                        <div className="flex gap-1.5">
+                                    <div key={criterion} className="flex justify-between items-center p-2.5 bg-gray-50 rounded border border-gray-200">
+                                        <label className="text-gray-800 font-medium capitalize">{criterion}</label>
+                                        <div className="flex gap-1">
                                             {[1, 2, 3, 4, 5].map(star => (
                                                 <button
                                                     key={star}
                                                     type="button"
                                                     onClick={() => updateRating(criterion, star)}
-                                                    className={`p-2 rounded-xl transition-all active:scale-90 ${evaData.ratings[criterion] >= star ? 'bg-yellow-400 text-white shadow-sm' : 'bg-white text-slate-200 border border-slate-100 hover:border-yellow-200'}`}
+                                                    className={`p-1.5 rounded transition-colors cursor-pointer ${evaData.ratings[criterion] >= star ? 'bg-amber-400 text-white' : 'bg-white text-gray-300 border border-gray-200 hover:border-amber-300'}`}
                                                 >
-                                                    <FiStar className="text-xl" fill={evaData.ratings[criterion] >= star ? "currentColor" : "none"} />
+                                                    <FiStar size={13} fill={evaData.ratings[criterion] >= star ? "currentColor" : "none"} />
                                                 </button>
                                             ))}
                                         </div>
@@ -624,49 +590,49 @@ const ApplicationDetails = () => {
                                 ))}
                             </div>
 
-                            <div className="flex justify-between items-center bg-slate-800 p-6 rounded-2xl shadow-xl shadow-slate-200">
-                                <span className="font-bold text-white uppercase tracking-widest text-xs">Puntuación Promedio</span>
-                                <span className="text-4xl font-black text-yellow-400 flex items-baseline gap-1">
-                                    {evaData.overallScore} <span className="text-xs text-slate-500 font-medium">/ 5.0</span>
+                            <div className="flex justify-between items-center bg-gray-900 p-3 rounded text-white font-mono">
+                                <span className="text-xs uppercase tracking-wider">Promedio General</span>
+                                <span className="text-lg font-bold text-amber-400">
+                                    {evaData.overallScore} / 5.0
                                 </span>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Comentarios Detallados</label>
-                                <textarea required placeholder="Explica por qué has dado esta calificación..." className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-slate-800 h-32 focus:ring-2 focus:ring-yellow-500 outline-none transition-all shadow-inner" value={evaData.comments} onChange={e => setEvaData({ ...evaData, comments: e.target.value })}></textarea>
+                                <label className="block font-medium text-gray-700 mb-1">Comentarios y Observaciones</label>
+                                <textarea required placeholder="Observaciones técnicas sobre el desempeño del candidato..." className="w-full bg-white border border-gray-200 rounded p-2.5 text-gray-800 h-24 focus:outline-none focus:border-blue-500 resize-none" value={evaData.comments} onChange={e => setEvaData({ ...evaData, comments: e.target.value })}></textarea>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Recomendación Final</label>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <label className="block font-medium text-gray-700 mb-2">Recomendación Final</label>
+                                <div className="grid grid-cols-3 gap-2 text-center">
                                     <button
                                         type="button"
                                         onClick={() => setEvaData({ ...evaData, recommendation: 'HIRE' })}
-                                        className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all font-bold ${evaData.recommendation === 'HIRE' ? 'bg-emerald-50 border-emerald-500 text-emerald-700 ring-4 ring-emerald-50' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                        className={`p-2.5 rounded border transition-colors font-semibold cursor-pointer ${evaData.recommendation === 'HIRE' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                                     >
-                                        <FiCheckCircle size={24} /> <span className="text-xs">CONTRATAR</span>
+                                        Contratar
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setEvaData({ ...evaData, recommendation: 'MAYBE' })}
-                                        className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all font-bold ${evaData.recommendation === 'MAYBE' ? 'bg-yellow-50 border-yellow-500 text-yellow-700 ring-4 ring-yellow-50' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                        className={`p-2.5 rounded border transition-colors font-semibold cursor-pointer ${evaData.recommendation === 'MAYBE' ? 'bg-yellow-50 border-yellow-500 text-yellow-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                                     >
-                                        <FiStar size={24} /> <span className="text-xs">EN DUDA</span>
+                                        En Duda
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setEvaData({ ...evaData, recommendation: 'NO_HIRE' })}
-                                        className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all font-bold ${evaData.recommendation === 'NO_HIRE' ? 'bg-red-50 border-red-500 text-red-700 ring-4 ring-red-50' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                        className={`p-2.5 rounded border transition-colors font-semibold cursor-pointer ${evaData.recommendation === 'NO_HIRE' ? 'bg-red-50 border-red-500 text-red-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                                     >
-                                        <FiXCircle size={24} /> <span className="text-xs">RECHAZAR</span>
+                                        Rechazar
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="flex justify-end pt-4 gap-3">
-                                <button type="button" onClick={() => setShowEvaModal(false)} className="px-6 py-3 text-slate-400 hover:text-slate-800 font-bold transition-all">Omitir</button>
-                                <button type="submit" disabled={submitting} className="px-10 py-3.5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center active:scale-95">
-                                    {submitting ? 'Guardando...' : 'Finalizar Evaluación'}
+                            <div className="flex justify-end pt-3 border-t border-gray-100 gap-2">
+                                <button type="button" onClick={() => setShowEvaModal(false)} className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded font-medium transition-colors">Cancelar</button>
+                                <button type="submit" disabled={submitting} className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors shadow-xs">
+                                    {submitting ? 'Guardando...' : 'Guardar Evaluación'}
                                 </button>
                             </div>
                         </form>
@@ -676,50 +642,47 @@ const ApplicationDetails = () => {
 
             {/* Hire Modal */}
             {showHireModal && (
-                <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
-                    <div className="bg-white p-8 rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-y-auto max-h-[90vh] scale-in-center">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-100">
-                                <FiBriefcase size={28} />
-                            </div>
+                <div className="app-modal-overlay">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl max-w-lg w-full overflow-hidden animate-scale-in">
+                        <div className="px-5 py-3.5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                             <div>
-                                <h2 className="text-2xl font-black text-slate-900 leading-tight">Vincular a la Empresa</h2>
-                                <p className="text-slate-500 font-medium">Contratación formal de {app.firstName}</p>
+                                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                                    <FiBriefcase className="text-blue-600" /> Vincular a la Empresa
+                                </h3>
+                                <p className="text-[11px] text-gray-500 mt-0.5">Contratación formal de {app.firstName} {app.lastName}</p>
                             </div>
+                            <button onClick={() => setShowHireModal(false)} className="text-gray-400 hover:text-gray-600 p-1"><FiX size={16} /></button>
                         </div>
 
-                        <div className="bg-blue-50/80 p-5 rounded-2xl mb-8 flex items-start gap-4 border border-blue-100/50">
-                            <div className="w-8 h-8 rounded-full bg-blue-200 flex flex-shrink-0 items-center justify-center text-blue-700 font-bold text-sm">!</div>
-                            <div>
-                                <p className="text-blue-900 font-extrabold text-sm mb-1">Nota importante:</p>
-                                <p className="text-blue-700 text-xs leading-relaxed font-medium">La cuenta de empleado se activará tras confirmar. Asegúrate de proporcionar una contraseña segura.</p>
+                        <form onSubmit={handleHire} className="p-5 space-y-3.5 text-xs max-h-[80vh] overflow-y-auto">
+                            <div className="p-3 bg-blue-50 border border-blue-200 rounded text-gray-700">
+                                <span className="font-semibold text-blue-900 block text-[11px]">Activación de Cuenta</span>
+                                <p className="text-[11px] text-blue-800 mt-0.5">La cuenta de colaborador se activará inmediatamente en el sistema.</p>
                             </div>
-                        </div>
 
-                        <form onSubmit={handleHire} className="space-y-6">
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Identificación Personal (Cédula)</label>
-                                    <input required type="text" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 focus:ring-2 focus:ring-blue-600 outline-none transition-all shadow-none" value={hireData.identityCard} onChange={e => setHireData({ ...hireData, identityCard: e.target.value })} />
+                                    <label className="block font-medium text-gray-700 mb-1">Cédula / Identificación Personal</label>
+                                    <input required type="text" className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 font-mono focus:outline-none focus:border-blue-500" value={hireData.identityCard} onChange={e => setHireData({ ...hireData, identityCard: e.target.value })} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">F. Nacimiento</label>
-                                        <input required type="date" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 focus:ring-2 focus:ring-blue-600 outline-none transition-all text-sm" value={hireData.birthDate} onChange={e => setHireData({ ...hireData, birthDate: e.target.value })} />
+                                        <label className="block font-medium text-gray-700 mb-1">Fecha de Nacimiento</label>
+                                        <input required type="date" className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500" value={hireData.birthDate} onChange={e => setHireData({ ...hireData, birthDate: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">F. Inicio Laboral</label>
-                                        <input required type="date" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 focus:ring-2 focus:ring-blue-600 outline-none transition-all text-sm" value={hireData.startDate} onChange={e => setHireData({ ...hireData, startDate: e.target.value })} />
+                                        <label className="block font-medium text-gray-700 mb-1">Fecha de Inicio Laboral</label>
+                                        <input required type="date" className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500" value={hireData.startDate} onChange={e => setHireData({ ...hireData, startDate: e.target.value })} />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Dirección de Domicilio</label>
-                                    <input required type="text" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 focus:ring-2 focus:ring-blue-600 outline-none transition-all" value={hireData.address} onChange={e => setHireData({ ...hireData, address: e.target.value })} />
+                                    <label className="block font-medium text-gray-700 mb-1">Dirección de Domicilio</label>
+                                    <input required type="text" className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500" value={hireData.address} onChange={e => setHireData({ ...hireData, address: e.target.value })} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Estado Civil</label>
-                                        <select className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 font-bold focus:ring-2 focus:ring-blue-600 outline-none transition-all" value={hireData.civilStatus} onChange={e => setHireData({ ...hireData, civilStatus: e.target.value })}>
+                                        <label className="block font-medium text-gray-700 mb-1">Estado Civil</label>
+                                        <select className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500" value={hireData.civilStatus} onChange={e => setHireData({ ...hireData, civilStatus: e.target.value })}>
                                             <option>Soltero/a</option>
                                             <option>Casado/a</option>
                                             <option>Divorciado/a</option>
@@ -728,8 +691,8 @@ const ApplicationDetails = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Contrato</label>
-                                        <select className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 font-bold focus:ring-2 focus:ring-blue-600 outline-none transition-all" value={hireData.contractType} onChange={e => setHireData({ ...hireData, contractType: e.target.value })}>
+                                        <label className="block font-medium text-gray-700 mb-1">Tipo de Contrato</label>
+                                        <select className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500" value={hireData.contractType} onChange={e => setHireData({ ...hireData, contractType: e.target.value })}>
                                             <option>Indefinido</option>
                                             <option>Plazo Fijo</option>
                                             <option>Servicios Prof.</option>
@@ -738,36 +701,31 @@ const ApplicationDetails = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Remuneración Mensual (Bruto USD)</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-3.5 font-bold text-slate-400">$</span>
-                                        <input required type="number" step="0.01" className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-8 p-3.5 text-slate-800 font-bold focus:ring-2 focus:ring-blue-600 outline-none transition-all" value={hireData.salary} onChange={e => setHireData({ ...hireData, salary: e.target.value })} />
-                                    </div>
+                                    <label className="block font-medium text-gray-700 mb-1">Remuneración Mensual (Bruto USD)</label>
+                                    <input required type="number" step="0.01" className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 font-mono focus:outline-none focus:border-blue-500" value={hireData.salary} onChange={e => setHireData({ ...hireData, salary: e.target.value })} />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Contraseña Inicial</label>
-                                    <input required type="password" placeholder="Mínimo 8 caracteres" className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-slate-800 focus:ring-2 focus:ring-blue-600 outline-none transition-all" value={hireData.password} onChange={e => setHireData({ ...hireData, password: e.target.value })} />
+                                    <label className="block font-medium text-gray-700 mb-1">Contraseña Inicial</label>
+                                    <input required type="password" placeholder="Mínimo 8 caracteres" className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500" value={hireData.password} onChange={e => setHireData({ ...hireData, password: e.target.value })} />
                                 </div>
 
-                                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-4 transition-all hover:border-blue-400 cursor-pointer select-none" onClick={() => setHireData({ ...hireData, closeVacancy: !hireData.closeVacancy })}>
-                                    <div className={`w-6 h-6 rounded flex items-center justify-center transition-all border-2 ${hireData.closeVacancy ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200'}`}>
-                                        {hireData.closeVacancy && <FiCheckCircle size={16} />}
-                                    </div>
-                                    <p className="text-slate-700 text-sm font-bold flex-1">Finalizar esta vacante automáticamente</p>
+                                <div className="p-3 bg-gray-50 rounded border border-gray-200 flex items-center gap-3 cursor-pointer select-none" onClick={() => setHireData({ ...hireData, closeVacancy: !hireData.closeVacancy })}>
+                                    <input type="checkbox" checked={hireData.closeVacancy} onChange={() => {}} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    <p className="text-gray-700 text-xs font-medium">Finalizar esta vacante automáticamente</p>
                                 </div>
 
-                                <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center gap-4 transition-all hover:border-blue-400 cursor-pointer select-none" onClick={() => setHireData({ ...hireData, sendEmail: !hireData.sendEmail })}>
-                                    <div className={`w-6 h-6 rounded flex items-center justify-center transition-all border-2 ${hireData.sendEmail ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200'}`}>
-                                        {hireData.sendEmail && <FiCheckCircle size={16} />}
-                                    </div>
-                                    <p className="text-blue-700 text-sm font-bold flex-1">Enviar email de bienvenida automáticamente</p>
+                                <div className="p-3 bg-gray-50 rounded border border-gray-200 flex items-center gap-3 cursor-pointer select-none" onClick={() => setHireData({ ...hireData, sendEmail: !hireData.sendEmail })}>
+                                    <input type="checkbox" checked={hireData.sendEmail} onChange={() => {}} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    <p className="text-gray-700 text-xs font-medium">Enviar email de bienvenida automáticamente</p>
                                 </div>
                             </div>
 
-                            <div className="flex justify-end pt-6 gap-4 border-t border-slate-100">
-                                <button type="button" onClick={() => setShowHireModal(false)} className="px-6 py-3 text-slate-400 hover:text-slate-800 font-bold transition-all">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="px-10 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black shadow-2xl shadow-blue-200 transition-all flex items-center active:scale-95">
+                            <div className="flex justify-end pt-3 gap-2 border-t border-gray-200">
+                                <button type="button" onClick={() => setShowHireModal(false)} className="px-3.5 py-2 text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium transition-colors">
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={submitting} className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors shadow-xs">
                                     {submitting ? 'Formalizando...' : 'Completar Contratación'}
                                 </button>
                             </div>
@@ -778,32 +736,30 @@ const ApplicationDetails = () => {
 
             {/* Modal de Confirmación de Eliminación de Candidato */}
             {showDeleteModal && (
-                <div className="app-modal-overlay">
-                    <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center text-red-600 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-3 shrink-0">
-                                <FiAlertTriangle size={24} />
-                            </div>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded p-5 max-w-md w-full shadow-xl border border-gray-200 text-xs space-y-3.5">
+                        <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                            <FiAlertTriangle className="text-red-600 w-5 h-5 shrink-0" />
                             <div>
-                                <h3 className="text-lg font-bold text-slate-800">¿Eliminar candidato?</h3>
-                                <p className="text-xs text-slate-500">Esta acción no se puede deshacer</p>
+                                <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar candidato?</h3>
+                                <p className="text-[11px] text-gray-500">Esta acción no se puede deshacer</p>
                             </div>
                         </div>
-                        <p className="text-slate-600 text-sm mb-6">
-                            Se eliminará permanentemente la postulación de <strong>{app?.firstName} {app?.lastName}</strong> y todos sus archivos de currículum (PDF) adjuntos.
+                        <p className="text-gray-600 leading-relaxed">
+                            Se eliminará permanentemente la postulación de <strong className="text-gray-900">{app?.firstName} {app?.lastName}</strong> y todos sus archivos de currículum adjuntos.
                         </p>
-                        <div className="flex justify-end gap-3">
+                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
                                 disabled={deletingCandidate}
-                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all"
+                                className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleDeleteCandidate}
                                 disabled={deletingCandidate}
-                                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all flex items-center shadow-lg shadow-red-200 disabled:opacity-50"
+                                className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
                             >
                                 {deletingCandidate ? "Eliminando..." : "Eliminar Definitivamente"}
                             </button>
@@ -814,43 +770,40 @@ const ApplicationDetails = () => {
 
             {/* Modal de Previsualización de CV en PDF dentro del sistema */}
             {showPdfModal && (
-                <div className="app-modal-overlay">
-                    <div className="bg-white rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded w-full max-w-5xl h-[90vh] flex flex-col shadow-xl overflow-hidden border border-gray-200 text-xs">
                         {/* Header del Modal */}
-                        <div className="px-6 py-4 bg-indigo-950 text-white flex justify-between items-center shrink-0">
-                            <div className="flex items-center space-x-3">
-                                <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg">
-                                    <FiFileText size={20} />
-                                </div>
+                        <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
+                            <div className="flex items-center space-x-2.5">
+                                <FiFileText className="text-blue-600 w-4 h-4" />
                                 <div>
-                                    <h3 className="font-bold text-base text-white leading-tight">
-                                        Currículum - {app?.firstName} {app?.lastName}
+                                    <h3 className="font-semibold text-xs text-gray-900 uppercase tracking-wider">
+                                        Currículum — {app?.firstName} {app?.lastName}
                                     </h3>
-                                    <p className="text-xs text-slate-400">Previsualización de Documento PDF</p>
                                 </div>
                             </div>
-                            <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-2">
                                 <button
                                     onClick={() => window.open(getResumeUrl(app.resumeUrl), '_blank')}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all flex items-center shadow-md active:scale-95"
+                                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
                                 >
-                                    <FiExternalLink className="mr-1.5" /> Abrir en Pestaña Nueva
+                                    <FiExternalLink size={12} /> Abrir en Pestaña
                                 </button>
                                 <button
                                     onClick={() => setShowPdfModal(false)}
-                                    className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all"
+                                    className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors"
                                     title="Cerrar"
                                 >
-                                    <FiX size={20} />
+                                    <FiX size={16} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Viewer Body */}
-                        <div className="flex-1 bg-slate-100 p-2 sm:p-4 overflow-hidden relative">
+                        <div className="flex-1 bg-gray-100 p-2 overflow-hidden relative">
                             <iframe
                                 src={getResumeUrl(app.resumeUrl)}
-                                className="w-full h-full rounded-xl border border-slate-200 shadow-inner bg-white"
+                                className="w-full h-full rounded border border-gray-200 bg-white"
                                 title={`CV - ${app?.firstName} ${app?.lastName}`}
                             />
                         </div>

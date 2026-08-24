@@ -209,6 +209,14 @@ export async function getMorlHistory() {
     return response.data;
 }
 
+/**
+ * Obtiene asesoría estratégica ejecutiva basada en datos reales del tenant
+ */
+export async function getStrategicAdvice(queryType, customPrompt = '') {
+    const response = await intelligenceClient.post('/strategic-advice', { queryType, customPrompt });
+    return response.data;
+}
+
 
 
 

@@ -57,22 +57,24 @@ const JobApplication = () => {
 
     if (!vacancy) return <div className="p-10 text-center">Cargando...</div>;
     if (status === 'success' || status === 'already_applied') return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="bg-white p-10 rounded-2xl shadow-xl border border-slate-100 text-center max-w-lg scale-in-center">
-                <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-100">
-                    <FiCheckCircle className="text-white text-4xl" />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="bg-white p-6 rounded border border-gray-200 shadow-lg text-center max-w-md text-xs space-y-4">
+                <div className="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto border border-green-200">
+                    <FiCheckCircle size={24} />
                 </div>
-                <h2 className="text-3xl font-black text-slate-900 mb-3">
-                    {status === 'already_applied' ? '¡Ya estás postulado!' : '¡Postulación Recibida!'}
-                </h2>
-                <p className="text-slate-500 font-medium mb-8 leading-relaxed">
-                    {status === 'already_applied'
-                        ? 'Tu solicitud para esta vacante ya ha sido registrada anteriormente. Nuestro equipo de RRHH está procesando tu perfil.'
-                        : 'Hemos recibido tu información correctamente. Nuestro equipo de RRHH revisará tu perfil y te contactará pronto.'}
-                </p>
+                <div>
+                    <h2 className="text-base font-semibold text-gray-900 mb-1">
+                        {status === 'already_applied' ? 'Postulación Ya Registrada' : 'Postulación Recibida con Éxito'}
+                    </h2>
+                    <p className="text-gray-500 leading-relaxed">
+                        {status === 'already_applied'
+                            ? 'Su postulación para esta vacante ya se encuentra registrada en nuestro sistema de selección.'
+                            : 'Hemos recibido su expediente correctamente. El equipo de talento humano evaluará su perfil.'}
+                    </p>
+                </div>
                 <button
                     onClick={() => navigate('/careers')}
-                    className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-xs transition-colors cursor-pointer shadow-xs"
                 >
                     Explorar Otras Ofertas
                 </button>
@@ -81,23 +83,23 @@ const JobApplication = () => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 py-6 md:py-12 px-4 sm:px-6">
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="bg-white p-6 md:p-8 border-b border-slate-100 text-center sm:text-left">
+        <div className="min-h-screen bg-gray-50 py-6 px-4">
+            <div className="max-w-3xl mx-auto bg-white rounded border border-gray-200 overflow-hidden text-xs">
+                <div className="bg-white p-5 border-b border-gray-200">
                     {vacancy.tenant?.name && (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-xs font-bold uppercase tracking-wider mb-3">
-                            <FiCheckCircle size={14} /> Oferta de {vacancy.tenant.name}
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-blue-700 text-[10px] font-mono uppercase tracking-wider mb-2">
+                            <FiCheckCircle size={12} /> {vacancy.tenant.name}
                         </div>
                     )}
-                    <h1 className="text-2xl md:text-3xl font-bold mb-4 text-slate-800">{vacancy.title}</h1>
-                    <div className="flex flex-wrap justify-center sm:justify-start gap-4 md:gap-6 text-sm">
-                        <span className="flex items-center text-slate-600"><FiMapPin className="mr-2 text-slate-400" /> {vacancy.location}</span>
-                        <span className="flex items-center text-slate-600"><FiBriefcase className="mr-2 text-slate-400" /> {vacancy.department}</span>
-                        <span className="flex items-center text-slate-600"><FiClock className="mr-2 text-slate-400" /> {vacancy.employmentType}</span>
+                    <h1 className="text-lg font-semibold text-gray-900 mb-2">{vacancy.title}</h1>
+                    <div className="flex flex-wrap gap-4 text-gray-600 text-xs">
+                        <span className="flex items-center"><FiMapPin className="mr-1 text-gray-400" size={13} /> {vacancy.location}</span>
+                        <span className="flex items-center"><FiBriefcase className="mr-1 text-gray-400" size={13} /> {vacancy.department}</span>
+                        <span className="flex items-center"><FiClock className="mr-1 text-gray-400" size={13} /> {vacancy.employmentType}</span>
                     </div>
                 </div>
 
-                <div className="p-6 md:p-8">
+                <div className="p-5">
                     <div className="mb-8 space-y-6">
                         <section>
                             <h3 className="font-bold text-lg text-gray-900 mb-2">Descripción</h3>

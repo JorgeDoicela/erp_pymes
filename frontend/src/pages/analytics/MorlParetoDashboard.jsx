@@ -31,8 +31,8 @@ const MorlParetoDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [optimizing, setOptimizing] = useState(false);
 
-    // Formulario MORL
-    const [budgetLimit, setBudgetLimit] = useState(15000);
+    // Formulario de Optimización — budgetLimit se inicializa desde el ~5% de la nómina real
+    const [budgetLimit, setBudgetLimit] = useState(0);
     const [targetDepartment, setTargetDepartment] = useState('ALL');
     const [customTitle, setCustomTitle] = useState('');
 
@@ -43,16 +43,29 @@ const MorlParetoDashboard = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const resHistory = await getMorlHistory();
+            const [resHistory, resDashboard] = await Promise.all([
+                getMorlHistory(),
+                import('../../services/intelligenceService.js').then(m => m.getDashboard())
+            ]);
+
+            // Calcular presupuesto sugerido: 5% de la masa salarial mensual real del tenant
+            if (resDashboard?.data?.payroll) {
+                const payrollData = resDashboard.data.payroll;
+                const monthlySalaryMass = payrollData.totalMonthlyCost || payrollData.nextPayrollAmount || 0;
+                const suggested = Math.round(monthlySalaryMass * 0.05 * 12); // 5% anual
+                setBudgetLimit(suggested > 0 ? suggested : 5000);
+            }
+
             if (resHistory.success && resHistory.data.length > 0) {
                 setHistory(resHistory.data);
-                // Mostrar el último run del historial sin ejecutar uno nuevo
                 const last = resHistory.data[0];
                 setActiveRun(last);
                 setSelectedPointIndex(last.selectedPointIndex || 0);
+                // Si ya hay una corrida previa, usar su budgetLimit como referencia
+                if (last.budgetLimit > 0) setBudgetLimit(last.budgetLimit);
             }
         } catch (error) {
-            console.error('Error al cargar datos MORL:', error);
+            console.error('Error al cargar datos de optimización:', error);
         } finally {
             setLoading(false);
         }
@@ -75,7 +88,7 @@ const MorlParetoDashboard = () => {
                 if (updatedHist.success) setHistory(updatedHist.data);
             }
         } catch (error) {
-            console.error('Error al ejecutar optimización MORL:', error);
+            console.error('Error al ejecutar optimización:', error);
         } finally {
             setOptimizing(false);
         }
@@ -89,18 +102,18 @@ const MorlParetoDashboard = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3 bg-gray-50">
                 <FiTarget className="w-6 h-6 text-gray-500 animate-spin" />
-                <p className="text-xs font-medium text-gray-500">Cargando historial de optimización MORL...</p>
+                <p className="text-xs font-medium text-gray-500">Cargando optimizador de presupuesto y retención...</p>
             </div>
         );
     }
 
     if (!activeRun) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 bg-gray-50 rounded">
-                <FiTarget className="w-8 h-8 text-gray-300" />
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 bg-gray-50 rounded p-6">
+                <FiTarget className="w-8 h-8 text-gray-400" />
                 <div className="text-center">
-                    <p className="text-sm font-semibold text-gray-700">Sin optimizaciones ejecutadas</p>
-                    <p className="text-xs text-gray-500 mt-1">Configura los parámetros y ejecuta tu primera optimización Pareto</p>
+                    <p className="text-sm font-semibold text-gray-700">Sin optimizaciones ejecutadas aún</p>
+                    <p className="text-xs text-gray-500 mt-1">Configura tu presupuesto límite y encuentra la combinación óptima de retención</p>
                 </div>
                 <button
                     onClick={() => handleRunOptimization()}
@@ -134,18 +147,18 @@ const MorlParetoDashboard = () => {
                 <div>
                     <div className="flex items-center space-x-2 mb-1">
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded uppercase tracking-wider font-mono">
-                            Optimización Financiera Inteligente
+                            Optimización Financiera
                         </span>
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
-                            Equilibrio Costo-Beneficio
+                            Equilibrio Costo vs. Retención
                         </span>
                     </div>
                     <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
                         <FiTarget className="text-blue-600" />
-                        Balance Óptimo Costo vs. Retención
+                        Optimización de Costos y Retención
                     </h1>
                     <p className="text-xs text-gray-500 mt-1">
-                        Encuentra el punto exacto de inversión que maximiza la retención de tus colaboradores sin exceder tu presupuesto.
+                        Descubre cuánto presupuesto asignar a aumentos, teletrabajo o beneficios para retener a tus mejores colaboradores sin gastar de más.
                     </p>
                 </div>
 
@@ -160,42 +173,42 @@ const MorlParetoDashboard = () => {
                 </div>
             </div>
 
-            {/* Panel de Optimización Multiobjetivo y Frontera de Pareto — Estándar ERP */}
+            {/* Explicación Sencilla de Negocio para PyMEs */}
             <div className="bg-white border border-gray-200 rounded p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                            Optimización Multiobjetivo (Vector Q-Learning)
+                            ¿Cómo funciona este optimizador?
                         </span>
                         <span className="text-xs font-mono font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                            Frontera No Dominada de Pareto
+                            Equilibrio Óptimo
                         </span>
                     </div>
                     <p className="text-xs text-gray-600 leading-relaxed max-w-4xl">
-                        Aplica un criterio formal de dominancia estricta sobre el vector bivariado <em>F = (Costo, Retención)</em>. Cada punto de la frontera representa una política matemática óptima donde es imposible aumentar la retención sin incrementar el presupuesto asignado.
+                        Cada punto en la gráfica representa una combinación eficiente: el sistema calcula la inversión mínima necesaria para alcanzar el mayor porcentaje posible de permanencia del personal. Elige el punto que mejor se ajuste al presupuesto disponible de tu negocio.
                     </p>
                 </div>
                 <div className="bg-gray-50 rounded p-2.5 border border-gray-200 font-mono text-xs whitespace-nowrap text-right shrink-0">
-                    <div className="text-gray-500 text-[10px] uppercase font-semibold">Soluciones Eficientes</div>
-                    <div className="text-gray-900 font-bold text-sm tabular-nums">{paretoPoints.length} <span className="text-xs font-normal text-gray-500">Puntos Óptimos</span></div>
+                    <div className="text-gray-500 text-[10px] uppercase font-semibold">Opciones Óptimas</div>
+                    <div className="text-gray-900 font-bold text-sm tabular-nums">{paretoPoints.length} <span className="text-xs font-normal text-gray-500">alternativas calculadas</span></div>
                 </div>
             </div>
 
-            {/* Workbench & Active Results */}
+            {/* Configuración y Resultados Interactivos */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Form: MORL Configurator */}
+                {/* Formulario de Presupuesto */}
                 <div className="p-4 bg-white border border-gray-200 rounded space-y-4">
                     <div className="border-b border-gray-100 pb-3">
                         <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                             <FiSliders className="text-blue-600" />
-                            Configuración de Presupuesto
+                            Definir Presupuesto Límite
                         </h2>
                     </div>
 
                     <div className="space-y-4">
                         <div>
                             <div className="flex justify-between text-xs font-medium text-gray-600 mb-1">
-                                <span>Presupuesto Máximo de Inversión ($)</span>
+                                <span>Presupuesto Máximo Anual</span>
                                 <span className="font-mono font-semibold text-gray-900">{formatMoney(budgetLimit)}</span>
                             </div>
                             <input
@@ -218,24 +231,24 @@ const MorlParetoDashboard = () => {
                                 onChange={(e) => setTargetDepartment(e.target.value)}
                                 className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                             >
-                                <option value="ALL">Todos los Departamentos (Global)</option>
+                                <option value="ALL">Toda la Empresa (Global)</option>
                                 <option value="Tecnología">Tecnología / IT</option>
                                 <option value="Ventas">Ventas y Comercial</option>
-                                <option value="Operaciones">Operaciones</option>
+                                <option value="Operaciones">Operaciones y Logística</option>
                                 <option value="Finanzas">Finanzas y Contabilidad</option>
                             </select>
                         </div>
 
                         <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Título Personalizado (Opcional)
+                                Título del Plan (Opcional)
                             </label>
                             <input
                                 type="text"
                                 value={customTitle}
                                 onChange={(e) => setCustomTitle(e.target.value)}
                                 className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                                placeholder="Ej. Plan Anual Retención Q4"
+                                placeholder="Ej. Plan Anual de Fidelización Q4"
                             />
                         </div>
 
@@ -245,60 +258,60 @@ const MorlParetoDashboard = () => {
                             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer w-full flex items-center justify-center gap-1.5 disabled:opacity-50"
                         >
                             <FiPlay className={`w-3.5 h-3.5 ${optimizing ? 'animate-spin' : ''}`} />
-                            {optimizing ? 'Optimizando Política MORL...' : 'Optimizar Política Presupuestaria'}
+                            {optimizing ? 'Calculando Opciones Óptimas...' : 'Recalcular Plan Óptimo'}
                         </button>
                     </div>
                 </div>
 
-                {/* Right (2 cols): Selected Pareto Point & Interactive Chart */}
+                {/* Opción Seleccionada y Gráfica Interactiva */}
                 <div className="lg:col-span-2 space-y-4">
-                    {/* KPI Resumen Contable */}
+                    {/* Resumen Contable de la Opción Seleccionada */}
                     <div className="bg-white border border-gray-200 rounded p-4">
                         <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-3 pb-2 border-b border-gray-100">
-                            Resumen de Solución Seleccionada (Punto Pareto #{selectedPointIndex + 1})
+                            Resumen de la Opción Seleccionada (Alternativa #{selectedPointIndex + 1})
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
                             <div className="py-2 sm:py-0 sm:px-4 first:pl-0 flex flex-col justify-between">
-                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Costo de Política</span>
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Inversión Estimada</span>
                                 <div className="mt-1 flex items-baseline space-x-2">
                                     <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
                                         {formatMoney(selectedPoint.totalCostEstimate)}
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-gray-400 mt-1">Peso Costo w₂ = {selectedPoint.weightCost}</span>
+                                <span className="text-[11px] text-gray-400 mt-1">Costo total de las medidas</span>
                             </div>
 
                             <div className="py-2 sm:py-0 sm:px-4 flex flex-col justify-between">
-                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Tasa Retención Esperada</span>
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Retención Estimada</span>
                                 <div className="mt-1 flex items-baseline space-x-2">
                                     <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
                                         {selectedPoint.expectedRetentionRate}%
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-gray-400 mt-1">Peso Retención w₁ = {selectedPoint.weightRetention}</span>
+                                <span className="text-[11px] text-gray-400 mt-1">Permanencia esperada del equipo</span>
                             </div>
 
                             <div className="py-2 sm:py-0 sm:px-4 last:pr-0 flex flex-col justify-between">
-                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Empleados Retenidos</span>
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Colaboradores Retenidos</span>
                                 <div className="mt-1 flex items-baseline space-x-2">
                                     <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
-                                        {selectedPoint.retainedEmployeeCount} Empleados
+                                        {selectedPoint.retainedEmployeeCount} personas
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-gray-400 mt-1">Solución No Dominada</span>
+                                <span className="text-[11px] text-gray-400 mt-1">Protegidos contra renuncias</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Interactive Pareto Scatter Chart */}
+                    {/* Gráfica de Opciones Óptimas */}
                     <div className="p-4 bg-white border border-gray-200 rounded space-y-3">
                         <div className="border-b border-gray-100 pb-3">
                             <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                                 <FiActivity className="text-blue-600" />
-                                Curva de la Frontera Eficiente de Pareto (Presupuesto $ vs. Retención %)
+                                Curva de Rendimiento: Presupuesto ($) vs. Retención (%)
                             </h3>
                             <p className="text-xs text-gray-500 mt-0.5">
-                                Haz clic en cualquier punto de la curva para seleccionar una combinación de la frontera.
+                                Haz clic en cualquiera de los puntos para ver el desglose exacto de medidas de esa opción.
                             </p>
                         </div>
 
@@ -306,8 +319,8 @@ const MorlParetoDashboard = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                    <XAxis type="number" dataKey="x" name="Costo Presupuestario" unit="$" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                                    <YAxis type="number" dataKey="y" name="Tasa Retención" unit="%" domain={[50, 100]} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                                    <XAxis type="number" dataKey="x" name="Inversión" unit="$" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                                    <YAxis type="number" dataKey="y" name="Retención" unit="%" domain={[50, 100]} tick={{ fontSize: 11, fill: '#6b7280' }} />
                                     <Tooltip 
                                         cursor={{ strokeDasharray: '3 3' }}
                                         content={({ payload }) => {
@@ -315,17 +328,16 @@ const MorlParetoDashboard = () => {
                                                 const data = payload[0].payload;
                                                 return (
                                                     <div className="bg-gray-900 text-white p-2.5 rounded border border-gray-800 text-xs space-y-1">
-                                                        <p className="font-semibold text-gray-200">Punto Pareto #{data.index + 1}</p>
-                                                        <p className="font-mono">Costo: {formatMoney(data.x)}</p>
+                                                        <p className="font-semibold text-gray-200">Opción #{data.index + 1}</p>
+                                                        <p className="font-mono">Inversión: {formatMoney(data.x)}</p>
                                                         <p className="font-mono">Retención: {data.y}%</p>
-                                                        <p className="text-[10px] text-gray-400 font-mono">w₁ (Retención) = {data.w1}</p>
                                                     </div>
                                                 );
                                             }
                                             return null;
                                         }}
                                     />
-                                    <Scatter name="Puntos Pareto" data={scatterData} onClick={(node) => setSelectedPointIndex(node.index)}>
+                                    <Scatter name="Opciones" data={scatterData} onClick={(node) => setSelectedPointIndex(node.index)}>
                                         {scatterData.map((entry, index) => (
                                             <Cell 
                                                 key={`cell-${index}`} 
@@ -341,15 +353,15 @@ const MorlParetoDashboard = () => {
                 </div>
             </div>
 
-            {/* Action Matrix Breakdown */}
+            {/* Desglose de Medidas de la Opción Seleccionada */}
             <div className="p-4 bg-white border border-gray-200 rounded space-y-3">
                 <div className="border-b border-gray-100 pb-3">
                     <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <FiPieChart className="text-blue-600" />
-                        Desglose de Acciones Recomendadas (Punto Pareto #{selectedPointIndex + 1})
+                        Medidas Sugeridas para esta Alternativa (Opción #{selectedPointIndex + 1})
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
-                        Acciones óptimas aprendidas por la política greedy de Q-Learning según categoría de riesgo.
+                        Cantidad de colaboradores que recibirían cada tipo de beneficio según su perfil de desempeño y riesgo.
                     </p>
                 </div>
 
@@ -360,11 +372,11 @@ const MorlParetoDashboard = () => {
                     </div>
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
                         <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.TRAINING_GRANT || 0}</span>
-                        <p className="text-[10px] text-gray-500">Beca Capacitación</p>
+                        <p className="text-[10px] text-gray-500">Capacitación</p>
                     </div>
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
                         <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.REMOTE_WORK_2D || 0}</span>
-                        <p className="text-[10px] text-gray-500">Teletrabajo 2d/sem</p>
+                        <p className="text-[10px] text-gray-500">Teletrabajo 2d</p>
                     </div>
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-1">
                         <span className="text-lg font-semibold font-mono tabular-nums text-gray-900">{actionBreakdown.SALARY_BUMP_5 || 0}</span>
@@ -381,12 +393,12 @@ const MorlParetoDashboard = () => {
                 </div>
             </div>
 
-            {/* History Table */}
+            {/* Historial de Planes */}
             <div className="p-4 bg-white border border-gray-200 rounded space-y-4">
                 <div className="border-b border-gray-100 pb-3">
                     <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <FiLayers className="text-blue-600" />
-                        Historial de Corridas de Optimización MORL
+                        Historial de Planes Optimizados
                     </h2>
                 </div>
 
@@ -394,18 +406,18 @@ const MorlParetoDashboard = () => {
                     <table className="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                                <th className="py-2.5 px-4">Título Corrida</th>
-                                <th className="py-2.5 px-4">Dept. Objetivo</th>
+                                <th className="py-2.5 px-4">Título del Plan</th>
+                                <th className="py-2.5 px-4">Departamento</th>
                                 <th className="py-2.5 px-4">Presupuesto Límite</th>
-                                <th className="py-2.5 px-4">Muestra</th>
-                                <th className="py-2.5 px-4">Puntos Pareto No Dominados</th>
-                                <th className="py-2.5 px-4">Fecha Ejecución</th>
+                                <th className="py-2.5 px-4">Colaboradores</th>
+                                <th className="py-2.5 px-4">Opciones Generadas</th>
+                                <th className="py-2.5 px-4">Fecha</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-gray-700">
                             {history.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="py-4 px-4 text-center text-gray-400 italic">No hay ejecuciones MORL registradas.</td>
+                                    <td colSpan="6" className="py-4 px-4 text-center text-gray-400 italic">No hay planes registrados.</td>
                                 </tr>
                             ) : (
                                 history.map((item, idx) => (
@@ -417,8 +429,8 @@ const MorlParetoDashboard = () => {
                                             </span>
                                         </td>
                                         <td className="py-2.5 px-4 font-mono tabular-nums">{formatMoney(item.budgetLimit)}</td>
-                                        <td className="py-2.5 px-4 font-mono tabular-nums">{item.sampleSize} emp.</td>
-                                        <td className="py-2.5 px-4 font-semibold font-mono tabular-nums text-gray-900">{item.paretoPointsCount} puntos</td>
+                                        <td className="py-2.5 px-4 font-mono tabular-nums">{item.sampleSize} personas</td>
+                                        <td className="py-2.5 px-4 font-semibold font-mono tabular-nums text-gray-900">{item.paretoPointsCount} opciones</td>
                                         <td className="py-2.5 px-4 text-gray-400 font-mono text-[11px]">{new Date(item.createdAt).toLocaleDateString()}</td>
                                     </tr>
                                 ))

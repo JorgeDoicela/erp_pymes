@@ -52,29 +52,29 @@ const PitchOptimizer = () => {
     };
 
     return (
-        <div className="space-y-8 animate-fadeIn">
-            <div className="flex justify-between items-center">
+        <div className="space-y-5">
+            <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-                        <FiCpu className="text-indigo-600" /> Optimizador Predictivo de Pitch
+                    <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                        <FiCpu className="text-blue-600" /> Evaluación de Narrativa y Propuesta de Valor
                     </h2>
-                    <p className="text-slate-500 text-sm font-medium">Refina tu propuesta de valor con inteligencia predictiva.</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Optimización de mensaje para levantamiento de capital y clientes.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {/* Editor Section */}
-                <div className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 flex flex-col h-full">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-black text-slate-700 uppercase tracking-tight flex items-center gap-2">
-                            <FiEdit3 className="text-indigo-500" /> Elevator Pitch
+                <div className="bg-white rounded border border-gray-200 p-4 flex flex-col space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                        <h3 className="font-semibold text-xs text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <FiEdit3 className="text-blue-600" /> Discurso Principal (Elevator Pitch)
                         </h3>
-                        {saving && <span className="text-[10px] font-black text-indigo-400 animate-pulse">GUARDANDO...</span>}
+                        {saving && <span className="text-[10px] font-mono text-blue-600">Guardando...</span>}
                     </div>
                     
                     <textarea 
-                        className="w-full flex-1 p-6 rounded-3xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-700 leading-relaxed min-h-[300px]"
-                        placeholder="Escribe aquí tu narrativa de pitch... Describe tu problema, solución y mercado."
+                        className="w-full flex-1 p-3 rounded bg-white border border-gray-200 text-xs text-gray-800 focus:outline-none focus:border-blue-500 leading-relaxed min-h-[260px] resize-none"
+                        placeholder="Describa el problema, solución de producto, modelo de ingresos y tracción actual..."
                         value={narrative}
                         onChange={(e) => setNarrative(e.target.value)}
                         onBlur={handleSave}
@@ -83,53 +83,47 @@ const PitchOptimizer = () => {
                     <button 
                         onClick={handleAnalyze}
                         disabled={loading || !narrative}
-                        className="app-button-primary w-full py-3.5 mt-6"
+                        className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
                     >
-                        {loading ? 'Analizando...' : <><FiZap /> Ejecutar Análisis Predictivo</>}
+                        {loading ? 'Analizando...' : <><FiZap size={14} /> Evaluar Narrativa</>}
                     </button>
                 </div>
 
                 {/* Analysis Section */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {analysis ? (
                         <>
-                            <div className="bg-white rounded-2xl border border-indigo-100 p-6 shadow-xs relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 blur-2xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>
-                                <div className="relative z-10">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Scorecard Predictivo</span>
-                                        <div className="text-4xl font-extrabold text-slate-900">{analysis.score}<span className="text-base text-slate-400 font-normal">/100</span></div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-3 bg-indigo-50/60 p-4 rounded-xl border border-indigo-100/80">
-                                            <FiZap className="text-indigo-600 shrink-0 text-lg" />
-                                            <p className="text-sm font-medium text-slate-800">{analysis.analysis}</p>
-                                        </div>
-                                    </div>
+                            <div className="bg-white rounded border border-gray-200 p-4 space-y-3">
+                                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-700">Puntaje de Solidez</span>
+                                    <div className="text-2xl font-mono font-bold text-gray-900 tabular-nums">{analysis.score}<span className="text-xs text-gray-400 font-normal">/100</span></div>
+                                </div>
+                                <div className="p-3 bg-gray-50 rounded border border-gray-200 text-xs text-gray-800 leading-relaxed">
+                                    {analysis.analysis}
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-2xl p-6 shadow-xs border border-slate-200">
-                                <h3 className="font-bold text-slate-800 uppercase tracking-tight mb-4 flex items-center gap-2 text-xs">
-                                    Recomendaciones de Mejora
+                            <div className="bg-white rounded border border-gray-200 p-4 space-y-3">
+                                <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs pb-2 border-b border-gray-100">
+                                    Observaciones y Sugerencias
                                 </h3>
-                                <div className="space-y-3">
+                                <div className="space-y-2 text-xs">
                                     {analysis.suggestions.map((s, idx) => (
-                                        <div key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-indigo-100 transition-all">
-                                            <div className="mt-1">
-                                                {analysis.score > 70 ? <FiArrowRight className="text-emerald-500" /> : <FiAlertTriangle className="text-amber-500" />}
+                                        <div key={idx} className="flex items-start gap-2 p-2.5 rounded bg-gray-50 border border-gray-200">
+                                            <div className="mt-0.5 shrink-0">
+                                                {analysis.score > 70 ? <FiArrowRight className="text-green-600" size={13} /> : <FiAlertTriangle className="text-amber-600" size={13} />}
                                             </div>
-                                            <p className="text-xs font-bold text-slate-600 leading-relaxed">{s}</p>
+                                            <p className="text-gray-700 leading-normal">{s}</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </>
                     ) : (
-                        <div className="h-full bg-slate-50 border-4 border-dashed border-slate-100 rounded-[32px] flex flex-col items-center justify-center p-12 text-center opacity-60">
-                            <FiCpu className="text-5xl text-slate-200 mb-6" />
-                            <h4 className="font-black text-slate-400 uppercase tracking-widest text-sm">Análisis Predictivo Inactivo</h4>
-                            <p className="text-xs text-slate-400 mt-2 font-medium">Escribe tu pitch y presiona analizar para obtener feedback instantáneo de nuestro motor predictivo corporativo.</p>
+                        <div className="h-full min-h-[280px] bg-gray-50 border border-dashed border-gray-200 rounded flex flex-col items-center justify-center p-8 text-center text-xs text-gray-400">
+                            <FiCpu className="w-8 h-8 mb-2 text-gray-300" />
+                            <h4 className="font-semibold text-gray-600 uppercase tracking-wider mb-1">Sin evaluación generada</h4>
+                            <p className="max-w-xs text-[11px]">Redacte la propuesta en el editor y presione evaluar para recibir feedback técnico.</p>
                         </div>
                     )}
                 </div>

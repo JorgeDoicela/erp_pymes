@@ -140,72 +140,68 @@ const BiometricSettings = () => {
 
     if (statusLoading) {
         return (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex items-center justify-center min-h-[300px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="bg-white rounded border border-gray-200 p-5 flex items-center justify-center min-h-[250px]">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Sección 1: Consentimiento de Protección de Datos y Ubicación */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800">
-                        <IconPin />
-                    </div>
+            <div className="bg-white rounded border border-gray-200 p-5 space-y-3">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                    <IconPin className="text-gray-600" />
                     <div>
-                        <h2 className="text-lg font-bold text-slate-900">Protección de Datos y Geolocalización</h2>
-                        <p className="text-xs text-slate-500">Gestione su consentimiento para el tratamiento de ubicación en registros de asistencia</p>
+                        <h2 className="text-sm font-semibold text-gray-900">Protección de Datos y Geolocalización</h2>
+                        <p className="text-xs text-gray-500">Gestione el consentimiento para el tratamiento de coordenadas en marcaciones de asistencia.</p>
                     </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 mb-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="p-3.5 rounded border border-gray-200 bg-gray-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
                     <div>
-                        <div className="flex items-center gap-2 font-semibold text-slate-900 text-sm">
+                        <div className="flex items-center gap-2 font-medium text-gray-900">
                             Estado del consentimiento: {trackingConsent ? (
-                                <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md text-xs font-semibold">
+                                <span className="inline-flex items-center gap-1 text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded text-[11px] font-mono">
                                     <IconCheck /> Otorgado
                                 </span>
                             ) : (
-                                <span className="inline-flex items-center gap-1 text-slate-600 bg-slate-200/70 border border-slate-300/60 px-2.5 py-0.5 rounded-md text-xs font-semibold">
+                                <span className="inline-flex items-center gap-1 text-gray-600 bg-gray-200/70 border border-gray-300 px-2 py-0.5 rounded text-[11px] font-mono">
                                     No otorgado
                                 </span>
                             )}
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">
-                            {consentDate ? `Última actualización: ${new Date(consentDate).toLocaleDateString()}` : 'No se ha registrado fecha de consentimiento.'}
+                        <p className="text-[11px] text-gray-500 mt-0.5 font-mono">
+                            {consentDate ? `Última actualización: ${new Date(consentDate).toLocaleDateString('es-EC')}` : 'Sin fecha registrada.'}
                         </p>
                     </div>
 
                     <button
                         onClick={() => handleToggleConsent(!trackingConsent)}
                         disabled={consentLoading}
-                        className={`px-4 py-2 rounded-lg font-medium text-xs transition-all shadow-xs flex items-center gap-2 cursor-pointer ${
+                        className={`px-3 py-1.5 rounded text-xs font-medium transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer ${
                             trackingConsent
-                                ? 'bg-white border border-slate-300 text-slate-700 hover:text-red-700 hover:border-red-200 hover:bg-red-50/50'
-                                : 'bg-slate-900 text-white hover:bg-slate-800'
+                                ? 'bg-white border border-gray-300 text-gray-700 hover:text-red-700 hover:border-red-200 hover:bg-red-50/50'
+                                : 'bg-blue-600 text-white hover:bg-blue-700'
                         }`}
                     >
                         {consentLoading ? 'Procesando...' : trackingConsent ? 'Retirar consentimiento' : 'Otorgar consentimiento'}
                     </button>
                 </div>
 
-                <p className="text-xs text-slate-500 leading-relaxed">
-                    <strong>Nota LOPDP/GDPR:</strong> La geolocalización solo se procesa puntualmente al momento de registrar entrada o salida dentro de geocercas configuradas. Sus datos no son rastreados de forma continua.
+                <p className="text-[11px] text-gray-500 leading-relaxed">
+                    <strong>Nota LOPDP:</strong> La geolocalización solo se procesa puntualmente al momento de registrar entrada o salida dentro de geocercas configuradas.
                 </p>
             </div>
 
             {/* Sección 2: Seguridad Biométrica */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                        <IconShield />
-                    </div>
+            <div className="bg-white rounded border border-gray-200 p-5 space-y-4">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                    <IconShield className="text-blue-600" />
                     <div>
-                        <h2 className="text-xl font-bold text-slate-800">Seguridad Biométrica</h2>
-                        <p className="text-sm text-slate-500">
-                            {isRegistered ? 'Su biometría está configurada y lista' : 'Configure su huella para marcaciones rápidas y seguras'}
+                        <h2 className="text-sm font-semibold text-gray-900">Seguridad Biométrica y Credenciales WebAuthn</h2>
+                        <p className="text-xs text-gray-500">
+                            {isRegistered ? 'Biometría configurada y lista para marcaciones rápidas.' : 'Configure su huella o llave física para marcaciones sin clave.'}
                         </p>
                     </div>
                 </div>

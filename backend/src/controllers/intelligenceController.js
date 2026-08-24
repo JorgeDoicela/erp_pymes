@@ -504,6 +504,24 @@ export async function getMorlHistory(req, res) {
     }
 }
 
+/**
+ * POST /api/intelligence/strategic-advice
+ * Genera asesoría estratégica ejecutiva con datos reales del tenant
+ */
+export async function getStrategicAdvice(req, res) {
+    try {
+        const tenantId = req.tenantId || req.user?.tenantId;
+        const { queryType, customPrompt } = req.body || {};
+        const advice = await intelligenceService.generateStrategicAdvisorAdvice(tenantId, queryType, customPrompt);
+        return res.json({
+            success: true,
+            data: advice
+        });
+    } catch (error) {
+        return handleError(res, error, 'Error al generar asesoría estratégica');
+    }
+}
+
 
 
 

@@ -304,19 +304,8 @@ class RsiService {
         });
 
         const n = resolvedAudits.length;
-        let brierScore = Number((totalSquareError / n).toFixed(4));
-        let logLoss = Number((totalLogLoss / n).toFixed(4));
-
-        // Convergencia SGD decreciente con offset tenant-específico (reproducible, no aleatorio)
-        if (currentEpoch > 1) {
-            const noise = this._tenantNoiseSeed(tenantId);
-            const tenantFinalBrier  = Math.max(0.038, FINAL_CALIBRATED_BRIER  + noise);
-            const tenantFinalLogLoss = Math.max(0.120, FINAL_CALIBRATED_LOGLOSS + noise * 2.5);
-            const decayRate = 0.88 + noise * 0.5;
-            const decay = Math.pow(Math.max(0.80, Math.min(0.92, decayRate)), currentEpoch - 1);
-            brierScore = Number((tenantFinalBrier  + (BASELINE_BRIER_SCORE  - tenantFinalBrier)  * decay).toFixed(4));
-            logLoss    = Number((tenantFinalLogLoss + (BASELINE_LOG_LOSS - tenantFinalLogLoss) * decay).toFixed(4));
-        }
+        const brierScore = Number((totalSquareError / n).toFixed(4));
+        const logLoss = Number((totalLogLoss / n).toFixed(4));
 
         return { brierScore, logLoss, sampleCount: n, resolvedAudits };
     }
@@ -464,23 +453,43 @@ class RsiService {
     async simulateOutcomeEvent(tenantId, employeeId, actualOutcome) {
         if (!tenantId) throw new Error('TenantID es requerido');
 
-        const targetEmpId = employeeId || `emp_sim_${Date.now()}`;
-        const simulatedScore = Math.round(30 + Math.random() * 50);
+        let targetEmpId = employeeId;
+        let pScore = 50;
+
+        if (targetEmpId) {
+            const lastAudit = await prisma.rsiPredictionAudit.findFirst({
+                where: { tenantId, employeeId: targetEmpId },
+                orderBy: { createdAt: 'desc' }
+            });
+            if (lastAudit) {
+                pScore = lastAudit.predictedScore;
+            }
+        } else {
+            const activeEmp = await prisma.employee.findFirst({
+                where: { tenantId, isActive: true },
+                select: { id: true }
+            });
+            if (activeEmp) {
+                targetEmpId = activeEmp.id;
+            } else {
+                throw new Error('No hay empleados registrados en la empresa para registrar eventos de retención/rotación.');
+            }
+        }
 
         await this.recordPredictionAudit({
             tenantId,
             employeeId: targetEmpId,
-            predictedScore: simulatedScore,
-            predictedTurnover: simulatedScore / 100,
+            predictedScore: pScore,
+            predictedTurnover: pScore / 100,
             actualOutcome
         });
 
-        const calibrationResult = await this.runRecursiveCalibration(tenantId, 'SIMULATION_EVENT');
+        const calibrationResult = await this.runRecursiveCalibration(tenantId, 'OUTCOME_EVENT');
 
         return {
             simulatedEmployeeId: targetEmpId,
             actualOutcome: actualOutcome === 1 ? 'RENUNCIA' : 'PERMANENCIA',
-            predictedRiskScore: simulatedScore,
+            predictedRiskScore: pScore,
             calibration: calibrationResult
         };
     }

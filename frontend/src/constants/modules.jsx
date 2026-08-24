@@ -1,8 +1,8 @@
 import {
     FiUsers, FiClock, FiCalendar, FiUserX, FiDollarSign, FiGift,
-    FiClipboard, FiBriefcase, FiFileText, FiBarChart2, FiHelpCircle,
+    FiClipboard, FiBriefcase, FiFileText, FiBarChart2,
     FiTrendingUp, FiShield, FiSettings, FiTarget, FiActivity, FiCompass,
-    FiBookOpen, FiList, FiPlus, FiCreditCard, FiFolder, FiPackage, FiUserMinus, FiVolume2, FiLayers, FiCpu, FiGitPullRequest, FiShare2, FiDatabase
+    FiBookOpen, FiList, FiPlus, FiCreditCard, FiFolder, FiPackage, FiUserMinus, FiVolume2, FiCpu, FiGitPullRequest, FiShare2, FiDatabase
 } from 'react-icons/fi';
 import { isSuperAdmin as checkIsSuperAdmin, ROLES } from './roles.js';
 
@@ -29,7 +29,6 @@ export const superAdminSections = [
         modules: [
             { title: 'Comunicados y Anuncios', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/announcements' },
             { title: 'Mi Perfil SuperAdmin', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
-            { title: 'Centro de Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
         ]
     }
 ];
@@ -39,7 +38,9 @@ export const adminSections = [
         title: 'Gestión de Capital Humano',
         modules: [
             { title: 'Empleados y Fichas', icon: <FiUsers />, color: 'bg-blue-500', path: '/admin/employees' },
+            { title: 'Ficha 360° del Empleado', icon: <FiUsers />, color: 'bg-blue-600', path: '/admin/employees/ficha' },
             { title: 'Expedientes Digitales', icon: <FiFolder />, color: 'bg-blue-600', path: '/admin/expedientes' },
+            { title: 'Vencimiento de Contratos', icon: <FiFileText />, color: 'bg-amber-600', path: '/admin/contracts/expiring' },
             { title: 'Equipos y EPPs', icon: <FiPackage />, color: 'bg-purple-600', path: '/admin/assets' },
             { title: 'Salida de Personal y Liquidaciones', icon: <FiUserMinus />, color: 'bg-rose-600', path: '/admin/offboarding' },
             { title: 'Cumplimiento Legal', icon: <FiShield />, color: 'bg-emerald-700', path: '/admin/compliance' },
@@ -67,38 +68,37 @@ export const adminSections = [
         title: 'Gestión del Talento',
         modules: [
             { title: 'Evaluaciones y Objetivos', icon: <FiTrendingUp />, color: 'bg-orange-500', path: '/performance' },
+            { title: 'Diseñar Evaluación', icon: <FiPlus />, color: 'bg-orange-600', path: '/performance/create' },
+            { title: 'Asignar Evaluaciones', icon: <FiClipboard />, color: 'bg-indigo-600', path: '/performance/assign' },
             { title: 'Reclutamiento y Vacantes', icon: <FiBriefcase />, color: 'bg-pink-500', path: '/recruitment' },
+            { title: 'Publicar Vacante', icon: <FiPlus />, color: 'bg-pink-600', path: '/recruitment/create' },
         ]
     },
-    /* Se ocultaron Contabilidad y Emprendimiento para la presentación general
-    {
-        title: 'Contabilidad e Innovación',
-        modules: [
-            { title: 'Contabilidad General', icon: <FiBookOpen />, color: 'bg-blue-800', path: '/admin/accounting' },
-            { title: 'Proyectos e Innovación', icon: <FiCompass />, color: 'bg-amber-600', path: '/admin/entrepreneurship' },
-        ]
-    },
-    */
     {
         title: 'Inteligencia y Analíticas',
         modules: [
             { title: 'Centro de Inteligencia de Negocio', icon: <FiActivity />, color: 'bg-indigo-600', path: '/intelligence' },
-            { title: 'Mejora Automática de Precisión', icon: <FiCpu />, color: 'bg-emerald-600', path: '/analytics/rsi-optimization' },
-            { title: 'Inferencia Causal (Evaluación do(T))', icon: <FiGitPullRequest />, color: 'bg-blue-600', path: '/analytics/causal-inference' },
-            { title: 'Red Colaborativa de Inteligencia Segura', icon: <FiShare2 />, color: 'bg-emerald-600', path: '/analytics/federated-learning' },
-            { title: 'Balance Costo vs. Retención', icon: <FiTarget />, color: 'bg-amber-600', path: '/analytics/morl-pareto' },
-            { title: 'Exportación Personalizada', icon: <FiDatabase />, color: 'bg-cyan-600', path: '/analytics/custom' },
             { title: 'Analíticas e Indicadores', icon: <FiBarChart2 />, color: 'bg-blue-600', path: '/analytics' },
+            { title: 'Rotación de Personal', icon: <FiUserMinus />, color: 'bg-rose-600', path: '/analytics/turnover' },
+            { title: 'Costos Salariales', icon: <FiDollarSign />, color: 'bg-green-600', path: '/analytics/payroll-costs' },
+            { title: 'Rendimiento y Desempeño', icon: <FiTrendingUp />, color: 'bg-blue-600', path: '/analytics/performance' },
+            { title: 'Satisfacción y Clima', icon: <FiActivity />, color: 'bg-purple-600', path: '/analytics/satisfaction' },
+            { title: 'Calibración de Evaluaciones', icon: <FiCpu />, color: 'bg-emerald-600', path: '/analytics/rsi-optimization' },
+            { title: 'Impacto de Decisiones y Políticas', icon: <FiGitPullRequest />, color: 'bg-blue-600', path: '/analytics/causal-inference' },
+            { title: 'Benchmarking y Tendencias', icon: <FiShare2 />, color: 'bg-emerald-600', path: '/analytics/federated-learning' },
+            { title: 'Optimización de Costos y Retención', icon: <FiTarget />, color: 'bg-amber-600', path: '/analytics/morl-pareto' },
+            { title: 'Exportación Personalizada', icon: <FiDatabase />, color: 'bg-cyan-600', path: '/analytics/custom' },
         ]
     },
     {
         title: 'Comunicación y Administración',
         modules: [
             { title: 'Comunicados y Anuncios', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/announcements' },
+            { title: 'Notificaciones y Alertas', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/admin/notifications' },
+            { title: 'Configuración Notificaciones', icon: <FiSettings />, color: 'bg-slate-600', path: '/admin/notifications/settings' },
             { title: 'Auditoría de Sistema', icon: <FiShield />, color: 'bg-slate-500', path: '/admin/audit' },
             { title: 'Configuración de Empresa', icon: <FiSettings />, color: 'bg-slate-600', path: '/admin/settings' },
             { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
-            { title: 'Centro de Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
         ]
     }
 ];
@@ -109,6 +109,7 @@ export const employeeSections = [
         modules: [
             { title: 'Portal de Autogestión', icon: <FiBarChart2 />, color: 'bg-blue-500', path: '/empleado' },
             { title: 'Comunicados y Anuncios', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/announcements' },
+            { title: 'Notificaciones y Alertas', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/notifications' },
             { title: 'Mi Expediente Digital', icon: <FiFolder />, color: 'bg-blue-600', path: '/my-expedient' },
             { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
         ]
@@ -125,6 +126,7 @@ export const employeeSections = [
         modules: [
             { title: 'Mis Recibos de Pago', icon: <FiDollarSign />, color: 'bg-green-500', path: '/my-payments' },
             { title: 'Mis Anticipos', icon: <FiCreditCard />, color: 'bg-emerald-600', path: '/my-advances' },
+            { title: 'Mis Equipos y EPPs', icon: <FiPackage />, color: 'bg-purple-600', path: '/my-assets' },
         ]
     },
     {
@@ -132,13 +134,6 @@ export const employeeSections = [
         modules: [
             { title: 'Mis Evaluaciones', icon: <FiClipboard />, color: 'bg-orange-500', path: '/performance/my-evaluations' },
             { title: 'Mis Objetivos', icon: <FiTarget />, color: 'bg-cyan-500', path: '/performance/goals' },
-            // { title: 'Proyectos e Innovación', icon: <FiCompass />, color: 'bg-amber-600', path: '/entrepreneurship' },
-        ]
-    },
-    {
-        title: 'Soporte',
-        modules: [
-            { title: 'Centro de Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
         ]
     }
 ];
@@ -165,7 +160,6 @@ export const accountingSections = [
         modules: [
             { title: 'BI & Analíticas', icon: <FiActivity />, color: 'bg-indigo-600', path: '/analytics' },
             { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
-            { title: 'Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
         ]
     }
 ];
@@ -183,7 +177,6 @@ export const entrepreneurSections = [
         title: 'Personal y Soporte',
         modules: [
             { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
-            { title: 'Ayuda', icon: <FiHelpCircle />, color: 'bg-amber-500', path: '/help' },
         ]
     }
 ];

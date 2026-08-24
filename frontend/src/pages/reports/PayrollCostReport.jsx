@@ -95,58 +95,66 @@ const PayrollCostReport = () => {
                 </div>
             </div>
 
-            {/* Gráfico Principal de Tendencia */}
-            <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
-                <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Tendencia de Costos de Nómina</h3>
-                <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={data.charts.trend} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                            <XAxis dataKey="name" stroke="#6b7280" fontSize={11} />
-                            <YAxis stroke="#6b7280" fontSize={11} />
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
-                            <Area type="monotone" dataKey="total" stroke="#166534" fill="#f0fdf4" fillOpacity={0.8} name="Total" />
-                            <Area type="monotone" dataKey="salary" stackId="1" stroke="#2563eb" fill="#2563eb" fillOpacity={0.2} name="Salario Base" />
-                            <Area type="monotone" dataKey="overtime" stackId="1" stroke="#d97706" fill="#d97706" fillOpacity={0.2} name="Horas Extra" />
-                        </AreaChart>
-                    </ResponsiveContainer>
+            {/* Gráficos de Nómina o Estado Vacío */}
+            {(!data.charts?.trend || data.charts.trend.length === 0) ? (
+                <div className="bg-white p-8 rounded border border-gray-200 text-center text-xs text-gray-500">
+                    <p className="font-semibold text-gray-800 text-sm">Sin nóminas emitidas en el período seleccionado</p>
+                    <p className="text-gray-400 mt-1 font-mono">No se registran roles de pago ni liquidaciones salariales generadas en este rango de fechas.</p>
                 </div>
-            </div>
-
-            {/* Desglose de Composición y Departamentos */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
-                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Composición Estructurada del Costo</h3>
-                    <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={data.charts.breakdown} cx="50%" cy="50%" outerRadius={70} fill="#2563eb" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                                    {data.charts.breakdown.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
-                                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                            </PieChart>
-                        </ResponsiveContainer>
+            ) : (
+                <>
+                    {/* Gráfico Principal de Tendencia */}
+                    <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Tendencia de Costos de Nómina</h3>
+                        <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={data.charts.trend} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                                    <XAxis dataKey="name" stroke="#6b7280" fontSize={11} />
+                                    <YAxis stroke="#6b7280" fontSize={11} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
+                                    <Area type="monotone" dataKey="total" stroke="#166534" fill="#f0fdf4" fillOpacity={0.8} name="Total" />
+                                    <Area type="monotone" dataKey="salary" stackId="1" stroke="#2563eb" fill="#2563eb" fillOpacity={0.2} name="Salario Base" />
+                                    <Area type="monotone" dataKey="overtime" stackId="1" stroke="#d97706" fill="#d97706" fillOpacity={0.2} name="Horas Extra" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
-                </div>
 
-                <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
-                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Distribución por Departamento</h3>
-                    <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={data.charts.byDepartment} layout="vertical">
-                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e5e7eb" />
-                                <XAxis type="number" stroke="#6b7280" fontSize={11} />
-                                <YAxis dataKey="name" type="category" width={90} stroke="#6b7280" fontSize={11} />
-                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
-                                <Bar dataKey="value" fill="#2563eb" barSize={16} radius={[0, 2, 2, 0]}>
-                                    {data.charts.byDepartment.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                    {/* Desglose de Composición y Departamentos */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Composición Estructurada del Costo</h3>
+                            <div className="h-60">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie data={data.charts.breakdown} cx="50%" cy="50%" outerRadius={70} fill="#2563eb" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                            {data.charts.breakdown.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                        </Pie>
+                                        <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
+                                        <Legend wrapperStyle={{ fontSize: '11px' }} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Distribución por Departamento</h3>
+                            <div className="h-60">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={data.charts.byDepartment} layout="vertical">
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e5e7eb" />
+                                        <XAxis type="number" stroke="#6b7280" fontSize={11} />
+                                        <YAxis dataKey="name" type="category" width={90} stroke="#6b7280" fontSize={11} />
+                                        <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
+                                        <Bar dataKey="value" fill="#2563eb" barSize={16} radius={[0, 2, 2, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </>
+            )}
 
             {/* Acción de Exportar */}
             <div className="flex justify-end pt-2">

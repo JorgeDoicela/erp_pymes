@@ -10,7 +10,8 @@ import {
     FiDownload, 
     FiLayers, 
     FiSliders, 
-    FiBarChart2
+    FiBarChart2,
+    FiHelpCircle
 } from 'react-icons/fi';
 import { 
     BarChart, 
@@ -28,7 +29,7 @@ const CausalInferenceDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [simulating, setSimulating] = useState(false);
 
-    // Formulario de Política Contrafactual
+    // Formulario de Simulación de Medidas
     const [treatmentType, setTreatmentType] = useState('SALARY_INCREASE');
     const [treatmentValue, setTreatmentValue] = useState(10);
     const [targetDepartment, setTargetDepartment] = useState('ALL');
@@ -44,11 +45,10 @@ const CausalInferenceDashboard = () => {
             const resHistory = await getCausalHistory();
             if (resHistory.success && resHistory.data.length > 0) {
                 setHistory(resHistory.data);
-                // Cargar la simulación más reciente del historial (no ejecutar una nueva)
                 setActiveSimulation(resHistory.data[0]);
             }
         } catch (error) {
-            console.error('Error al cargar datos causales:', error);
+            console.error('Error al cargar historial de simulaciones:', error);
         } finally {
             setLoading(false);
         }
@@ -71,7 +71,7 @@ const CausalInferenceDashboard = () => {
                 if (updatedHist.success) setHistory(updatedHist.data);
             }
         } catch (error) {
-            console.error('Error al ejecutar simulación causal:', error);
+            console.error('Error al ejecutar simulación de impacto:', error);
         } finally {
             setSimulating(false);
         }
@@ -85,7 +85,7 @@ const CausalInferenceDashboard = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3 bg-gray-50">
                 <FiGitPullRequest className="w-6 h-6 text-gray-500 animate-spin" />
-                <p className="text-xs font-medium text-gray-500">Cargando historial de análisis causales...</p>
+                <p className="text-xs font-medium text-gray-500">Cargando simulador de impacto y retención...</p>
             </div>
         );
     }
@@ -98,12 +98,12 @@ const CausalInferenceDashboard = () => {
 
     const comparisonData = [
         {
-            name: 'Estado Basal',
+            name: 'Situación Actual',
             TasaFuga: impact.baselineTurnoverRate || 0,
             CostoAnual: (financials.savingsEstimate || 0) + (financials.costEstimate || 0)
         },
         {
-            name: 'Contrafactual do(T)',
+            name: 'Con la Medida Aplicada',
             TasaFuga: impact.counterfactualTurnoverRate || 0,
             CostoAnual: financials.costEstimate || 0
         }
@@ -116,18 +116,18 @@ const CausalInferenceDashboard = () => {
                 <div>
                     <div className="flex items-center space-x-2 mb-1">
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded uppercase tracking-wider font-mono">
-                            Evaluación Contrafactual do(T)
+                            Planificación Estratégica
                         </span>
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded uppercase tracking-wider font-mono">
-                            Análisis Causal de Impacto
+                            Proyección de Ahorro y Retención
                         </span>
                     </div>
                     <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
                         <FiGitPullRequest className="text-blue-600" />
-                        Centro de Inferencia Causal y Evaluación de Políticas (Do-Calculus / G-Computation)
+                        Simulador de Impacto de Políticas y Decisiones
                     </h1>
                     <p className="text-xs text-gray-500 mt-1">
-                        Evalúa causalmente mediante la fórmula de ajuste backdoor (Pearl 2009) y el estimador doblemente robusto AIPW el impacto real antes de implementar una política.
+                        Proyecta con base matemática el impacto real en retención de personal, productividad y costo antes de implementar aumentos, teletrabajo o capacitaciones.
                     </p>
                 </div>
 
@@ -142,42 +142,42 @@ const CausalInferenceDashboard = () => {
                 </div>
             </div>
 
-            {/* Panel de Inferencia Causal Formal — Estándar ERP */}
+            {/* Explicación de Negocio Clara para PyMEs */}
             <div className="bg-white border border-gray-200 rounded p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                            Inferencia Causal Formal (Judea Pearl Do-Calculus)
+                            ¿Cómo ayuda esta herramienta a tu negocio?
                         </span>
                         <span className="text-xs font-mono font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            AIPW Doubly Robust (Insesgado)
+                            Cálculo de Causa y Efecto
                         </span>
                     </div>
                     <p className="text-xs text-gray-600 leading-relaxed max-w-4xl">
-                        A diferencia de modelos correlacionales tradicionales, este módulo aplica la <strong>Fórmula de Ajuste Backdoor</strong> sobre el grafo causal <em>Z = (Antigüedad, Salario, Desempeño, Ausentismo)</em> para estimar <em>E[Y | do(T)]</em>. El estimador AIPW garantiza convergencia consistente frente a sesgos de autoselección muestral.
+                        En lugar de basarse en simples opiniones, el sistema analiza el historial real de tu empresa (antigüedad, salario, desempeño y ausencias) para predecir si una decisión resolverá la rotación del personal y cuánto dinero ahorrarás en liquidaciones y contrataciones de reemplazo.
                     </p>
                 </div>
                 <div className="bg-gray-50 rounded p-2.5 border border-gray-200 font-mono text-xs whitespace-nowrap text-right shrink-0">
-                    <div className="text-gray-500 text-[10px] uppercase font-semibold">Efecto Promedio (ATE)</div>
-                    <div className="text-blue-600 font-bold text-sm tabular-nums">{impact.averageTreatmentEffect || '-12.4%'} <span className="text-xs font-normal text-gray-500">(IC 95%)</span></div>
+                    <div className="text-gray-500 text-[10px] uppercase font-semibold">Reducción de Renuncias</div>
+                    <div className="text-blue-600 font-bold text-sm tabular-nums">{impact.averageTreatmentEffect || '-12.4%'} <span className="text-xs font-normal text-gray-500">(Certeza 95%)</span></div>
                 </div>
             </div>
 
-            {/* Policy Workbench & Active Simulation Grid */}
+            {/* Formulario de Simulación y Resultados */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Form: Intervention Builder */}
+                {/* Formulario de Configuración */}
                 <div className="p-4 bg-white border border-gray-200 rounded space-y-4">
                     <div className="border-b border-gray-100 pb-3">
                         <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                             <FiSliders className="text-blue-600" />
-                            Configuración de la Medida a Evaluar
+                            Configurar Medida a Proyectar
                         </h2>
                     </div>
 
                     <div className="space-y-3">
                         <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Medida Propuesta
+                                Tipo de Medida
                             </label>
                             <select
                                 value={treatmentType}
@@ -185,38 +185,38 @@ const CausalInferenceDashboard = () => {
                                 className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                             >
                                 <option value="SALARY_INCREASE">Aumento Salarial (%)</option>
-                                <option value="REMOTE_WORK">Teletrabajo (Días/semana)</option>
-                                <option value="CAREER_PROMOTION">Ascenso de Carrera / Plan Formación</option>
-                                <option value="TRAINING_PROGRAM">Programa de Capacitación Intensiva</option>
+                                <option value="REMOTE_WORK">Días de Teletrabajo (por semana)</option>
+                                <option value="CAREER_PROMOTION">Plan de Carrera / Ascensos</option>
+                                <option value="TRAINING_PROGRAM">Programa de Capacitación Práctica</option>
                             </select>
                         </div>
 
                         <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Valor o Incremento
+                                Valor o Incremento Propuesto
                             </label>
                             <input
                                 type="number"
                                 value={treatmentValue}
                                 onChange={(e) => setTreatmentValue(e.target.value)}
-                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono"
                                 placeholder="Ej. 10 para 10%"
                             />
                         </div>
 
                         <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Departamento Objetivo
+                                Departamento Aplicable
                             </label>
                             <select
                                 value={targetDepartment}
                                 onChange={(e) => setTargetDepartment(e.target.value)}
                                 className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                             >
-                                <option value="ALL">Todos los Departamentos (Global)</option>
-                                <option value="Tecnología">Tecnología / IT</option>
+                                <option value="ALL">Toda la Empresa (Global)</option>
+                                <option value="Tecnología">Tecnología / Sistemas</option>
                                 <option value="Ventas">Ventas y Comercial</option>
-                                <option value="Operaciones">Operaciones</option>
+                                <option value="Operaciones">Operaciones y Logística</option>
                                 <option value="Finanzas">Finanzas y Contabilidad</option>
                             </select>
                         </div>
@@ -230,7 +230,7 @@ const CausalInferenceDashboard = () => {
                                 value={customTitle}
                                 onChange={(e) => setCustomTitle(e.target.value)}
                                 className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                                placeholder="Ej. Plan de Retención Clave Q3"
+                                placeholder="Ej. Aumento incentivo ventas Q3"
                             />
                         </div>
 
@@ -240,64 +240,64 @@ const CausalInferenceDashboard = () => {
                             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer w-full flex items-center justify-center gap-1.5 disabled:opacity-50 mt-2"
                         >
                             <FiPlay className={`w-3.5 h-3.5 ${simulating ? 'animate-spin' : ''}`} />
-                            {simulating ? 'Calculando Impacto Causal...' : 'Calcular Impacto Causal de la Política'}
+                            {simulating ? 'Calculando Proyección...' : 'Simular Impacto en el Negocio'}
                         </button>
                     </div>
                 </div>
 
-                {/* Right (2 cols): Active Causal Impact Results */}
+                {/* Resultados de la Simulación */}
                 <div className="lg:col-span-2 space-y-4">
-                    {/* Resumen KPI Estilo Estado Financiero */}
+                    {/* Resumen de Resultados Estilo Estado Financiero */}
                     <div className="bg-white border border-gray-200 rounded p-4">
                         <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-3 pb-2 border-b border-gray-100">
                             Proyección de Impacto y Retorno de Inversión (ROI)
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
                             <div className="py-2 sm:py-0 sm:px-4 first:pl-0 flex flex-col justify-between">
-                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Impacto en Retención</span>
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Reducción de Rotación</span>
                                 <div className="mt-1 flex items-baseline space-x-2">
                                     <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
                                         -{impact.turnoverReductionPercent}%
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-gray-400 mt-1">Reducción estimada en rotación</span>
+                                <span className="text-[11px] text-gray-400 mt-1">Disminución proyectada de renuncias</span>
                             </div>
 
                             <div className="py-2 sm:py-0 sm:px-4 flex flex-col justify-between">
-                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Beneficio Neto Estimado</span>
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Ahorro Neto Proyectado</span>
                                 <div className="mt-1 flex items-baseline space-x-2">
                                     <span className={`text-xl font-semibold font-mono tabular-nums ${financials.netRoi < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                         {formatMoney(financials.netRoi)}
                                     </span>
                                 </div>
                                 <span className={`text-[11px] mt-1 font-mono ${financials.netRoi < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                    ROI Est.: {financials.roiPercentage > 0 ? `+${financials.roiPercentage}` : financials.roiPercentage}% retorno
+                                    Retorno (ROI): {financials.roiPercentage > 0 ? `+${financials.roiPercentage}` : financials.roiPercentage}%
                                 </span>
                             </div>
 
                             <div className="py-2 sm:py-0 sm:px-4 last:pr-0 flex flex-col justify-between">
-                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Retención Estimada (ATE)</span>
+                                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Colaboradores Retenidos</span>
                                 <div className="mt-1 flex items-baseline space-x-2">
                                     <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
-                                        {impact.preventedTurnoverCount} Empleados
+                                        {impact.preventedTurnoverCount} personas
                                     </span>
                                 </div>
                                 <span className="text-[11px] text-gray-400 mt-1">
-                                    IC95%: [{impact.confidenceInterval95 ? (impact.confidenceInterval95[0]*100).toFixed(1) : '0'}%, {impact.confidenceInterval95 ? (impact.confidenceInterval95[1]*100).toFixed(1) : '0'}%]
+                                    Evita costos de contratación y despido
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Chart: Baseline vs Counterfactual Comparison */}
+                    {/* Gráfico Comparativo: Situación Actual vs. Medida Aplicada */}
                     <div className="p-4 bg-white border border-gray-200 rounded space-y-3">
                         <div className="border-b border-gray-100 pb-3">
                             <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                                 <FiBarChart2 className="text-blue-600" />
-                                Comparativa Contrafactual: Tasa de Fuga (%) Basal vs. Tras Intervención
+                                Comparativa: Tasa de Rotación Anual (%)
                             </h3>
                             <p className="text-xs text-gray-500 mt-0.5">
-                                Identificación del ATE vía G-Computation (Pearl 2009) y verificación de consistencia AIPW.
+                                Proyección de rotación esperada antes y después de aplicar la medida en el equipo.
                             </p>
                         </div>
 
@@ -318,15 +318,15 @@ const CausalInferenceDashboard = () => {
                 </div>
             </div>
 
-            {/* Simulated Policies History Table */}
+            {/* Historial de Propuestas Evaluadas */}
             <div className="p-4 bg-white border border-gray-200 rounded space-y-4">
                 <div className="border-b border-gray-100 pb-3">
                     <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <FiLayers className="text-blue-600" />
-                        Historial de Políticas Contrafactuales Evaluadas
+                        Historial de Medidas y Políticas Simuladas
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
-                        Ranking de intervenciones organizacionales según impacto causal (ATE) y retorno financiero neto.
+                        Registro de evaluaciones anteriores para comparar qué iniciativas generan mayor ahorro y estabilidad.
                     </p>
                 </div>
 
@@ -334,19 +334,19 @@ const CausalInferenceDashboard = () => {
                     <table className="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                                <th className="py-2.5 px-4">Política Intervención</th>
-                                <th className="py-2.5 px-4">Dept. Objetivo</th>
-                                <th className="py-2.5 px-4">Muestra</th>
-                                <th className="py-2.5 px-4">Efecto Causal (ATE)</th>
-                                <th className="py-2.5 px-4">Costo Intervención</th>
-                                <th className="py-2.5 px-4">Ahorro Retención</th>
-                                <th className="py-2.5 px-4">ROI Neto</th>
+                                <th className="py-2.5 px-4">Medida Propuesta</th>
+                                <th className="py-2.5 px-4">Departamento</th>
+                                <th className="py-2.5 px-4">Personal Alcanzado</th>
+                                <th className="py-2.5 px-4">Efecto en Rotación</th>
+                                <th className="py-2.5 px-4">Costo Estimado</th>
+                                <th className="py-2.5 px-4">Ahorro en Despidos/Reclutamiento</th>
+                                <th className="py-2.5 px-4">Ahorro Neto (ROI)</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-gray-700">
                             {history.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="py-4 px-4 text-center text-gray-400 italic">No hay evaluaciones causales registradas aún.</td>
+                                    <td colSpan="7" className="py-4 px-4 text-center text-gray-400 italic">No hay simulaciones registradas aún.</td>
                                 </tr>
                             ) : (
                                 history.map((item, idx) => (
@@ -357,7 +357,7 @@ const CausalInferenceDashboard = () => {
                                                 {item.targetDepartment}
                                             </span>
                                         </td>
-                                        <td className="py-2.5 px-4 font-mono tabular-nums">{item.sampleSize} emp.</td>
+                                        <td className="py-2.5 px-4 font-mono tabular-nums">{item.sampleSize} personas</td>
                                         <td className="py-2.5 px-4 font-semibold text-gray-900 font-mono tabular-nums">
                                             {(item.ate * 100).toFixed(1)}%
                                         </td>

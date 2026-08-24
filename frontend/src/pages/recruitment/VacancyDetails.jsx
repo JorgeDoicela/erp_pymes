@@ -157,33 +157,31 @@ const VacancyDetails = () => {
 
             {/* Modal Confirmar Eliminación de Candidato Individual */}
             {appToDelete && (
-                <div className="app-modal-overlay">
-                    <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">
-                        <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                            <FiAlertTriangle size={28} />
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded p-5 max-w-md w-full shadow-xl border border-gray-200 space-y-3.5 text-xs">
+                        <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                            <FiAlertTriangle className="text-red-600 w-5 h-5 shrink-0" />
+                            <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar candidato?</h3>
                         </div>
 
-                        <div className="text-center space-y-2">
-                            <h3 className="text-xl font-black text-slate-800">¿Eliminar candidato?</h3>
-                            <p className="text-slate-600 text-sm leading-relaxed">
-                                Se eliminará la postulación de <strong className="text-slate-800">{appToDelete.firstName} {appToDelete.lastName}</strong> y todos sus archivos de currículum (PDF) adjuntos.
-                            </p>
-                        </div>
+                        <p className="text-gray-600 leading-relaxed">
+                            Se eliminará la postulación de <strong className="text-gray-900">{appToDelete.firstName} {appToDelete.lastName}</strong> y todos sus archivos adjuntos de currículum.
+                        </p>
 
-                        <div className="flex gap-3 pt-2">
+                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                             <button
                                 disabled={deletingCandidate}
                                 onClick={() => setAppToDelete(null)}
-                                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-sm"
+                                className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
                                 disabled={deletingCandidate}
                                 onClick={handleDeleteCandidate}
-                                className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-red-100 disabled:opacity-50"
+                                className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
                             >
-                                {deletingCandidate ? 'Eliminando...' : 'Sí, Eliminar'}
+                                {deletingCandidate ? 'Eliminando...' : 'Eliminar Postulación'}
                             </button>
                         </div>
                     </div>
@@ -192,33 +190,31 @@ const VacancyDetails = () => {
 
             {/* Modal Confirmar Eliminación de Vacante Completa */}
             {showDeleteModal && (
-                <div className="app-modal-overlay">
-                    <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">
-                        <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                            <FiAlertTriangle size={28} />
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded p-5 max-w-md w-full shadow-xl border border-gray-200 space-y-3.5 text-xs">
+                        <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                            <FiAlertTriangle className="text-red-600 w-5 h-5 shrink-0" />
+                            <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar esta vacante?</h3>
                         </div>
 
-                        <div className="text-center space-y-2">
-                            <h3 className="text-xl font-black text-slate-800">¿Eliminar esta vacante?</h3>
-                            <p className="text-slate-600 text-sm leading-relaxed">
-                                Esta acción es irreversible. Se eliminará la vacante de empleo, las <strong className="text-slate-800">{applications.length} postulaciones</strong> recibidas y <strong className="text-slate-800">todos los archivos de Hojas de Vida (PDF)</strong> subidos por los postulantes.
-                            </p>
-                        </div>
+                        <p className="text-gray-600 leading-relaxed">
+                            Esta acción es irreversible. Se eliminará la vacante, las <strong className="text-gray-900">{applications.length} postulaciones</strong> recibidas y todos los archivos adjuntos.
+                        </p>
 
-                        <div className="flex gap-3 pt-2">
+                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                             <button
                                 disabled={deleting}
                                 onClick={() => setShowDeleteModal(false)}
-                                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-sm"
+                                className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
                                 disabled={deleting}
                                 onClick={handleDelete}
-                                className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-red-100 disabled:opacity-50"
+                                className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
                             >
-                                {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                                {deleting ? 'Eliminando...' : 'Eliminar Vacante'}
                             </button>
                         </div>
                     </div>

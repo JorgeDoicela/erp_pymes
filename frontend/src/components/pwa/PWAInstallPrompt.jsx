@@ -95,23 +95,23 @@ export default function PWAInstallPrompt() {
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="w-full max-w-sm md:max-w-md"
           >
-            <div className="relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 p-5 shadow-2xl shadow-slate-400/20 text-slate-800">
+            <div className="relative overflow-hidden rounded bg-white border border-gray-200 p-4 shadow-lg text-gray-800">
 
               
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 p-0.5 border border-slate-200/60 shadow-sm flex-shrink-0 flex items-center justify-center overflow-hidden">
-                    <img src="/favicon.webp" alt="Emplifi Logo" className="w-full h-full object-cover rounded-lg" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded bg-gray-100 p-0.5 border border-gray-200 shrink-0 flex items-center justify-center overflow-hidden">
+                    <img src="/favicon.webp" alt="Emplifi Logo" className="w-full h-full object-cover rounded" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-base text-slate-900 tracking-tight flex items-center gap-2">
-                      Instalar Emplifi App
-                      <span className="text-[10px] bg-blue-50 text-blue-600 border border-blue-200/80 px-2 py-0.5 rounded-full font-semibold">
+                    <h4 className="font-semibold text-sm text-gray-900 flex items-center gap-1.5">
+                      Instalar Aplicación Emplifi
+                      <span className="text-[10px] bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.2 rounded font-mono">
                         PWA
                       </span>
                     </h4>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                      Instala la app en tu dispositivo para un acceso rápido y directo.
+                    <p className="text-xs text-gray-500 mt-0.5 leading-normal">
+                      Acceso directo y soporte sin conexión en su dispositivo.
                     </p>
                   </div>
                 </div>

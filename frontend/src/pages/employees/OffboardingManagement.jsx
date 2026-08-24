@@ -171,11 +171,11 @@ const OffboardingManagement = () => {
                     </div>
 
                     {/* VISTA MÓVIL: Tarjetas Apiladas (Responsive UX) */}
-                    <div className="block md:hidden p-4 space-y-3">
+                    <div className="block md:hidden divide-y divide-gray-100 bg-white rounded border border-gray-200">
                         {loading ? (
-                            <div className="p-8 text-center text-gray-400 text-xs">Cargando procesos de salida...</div>
+                            <div className="p-8 text-center text-gray-400 text-xs font-mono">Cargando procesos de salida...</div>
                         ) : offboardings.length === 0 ? (
-                            <div className="p-8 bg-white rounded border border-gray-200 text-center text-gray-400 text-xs">
+                            <div className="p-8 text-center text-gray-400 text-xs italic">
                                 No hay procesos de salida registrados.
                             </div>
                         ) : (
@@ -186,14 +186,14 @@ const OffboardingManagement = () => {
                                 const isComplete = totalTasks > 0 && completedTasks === totalTasks;
 
                                 return (
-                                    <div key={off.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-xs">
-                                        <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                                    <div key={off.id} className="p-4 space-y-2 bg-white">
+                                        <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
                                             <div>
-                                                <h4 className="font-bold text-slate-900 text-xs">{off.employee?.firstName} {off.employee?.lastName}</h4>
-                                                <p className="text-[11px] text-slate-400 font-normal mt-0.5">{off.employee?.department || 'General'}</p>
+                                                <h4 className="font-semibold text-gray-900 text-xs">{off.employee?.firstName} {off.employee?.lastName}</h4>
+                                                <p className="text-[11px] text-gray-400 mt-0.5">{off.employee?.department || 'General'}</p>
                                             </div>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                                off.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase ${
+                                                off.status === 'COMPLETED' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
                                             }`}>
                                                 {off.status === 'COMPLETED' ? 'COMPLETADO' : 'EN PROCESO'}
                                             </span>
@@ -201,39 +201,39 @@ const OffboardingManagement = () => {
 
                                         <div className="grid grid-cols-2 gap-2 text-xs">
                                             <div>
-                                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Causal de Salida</span>
-                                                <span className="font-semibold text-slate-700">{getCausalLabel(off.causal)}</span>
+                                                <span className="text-[10px] text-gray-400 font-medium uppercase block">Causal de Salida</span>
+                                                <span className="font-medium text-gray-800">{getCausalLabel(off.causal)}</span>
                                             </div>
                                             <div>
-                                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Fecha Salida</span>
-                                                <span className="text-slate-600">{new Date(off.exitDate).toLocaleDateString('es-EC')}</span>
+                                                <span className="text-[10px] text-gray-400 font-medium uppercase block">Fecha Salida</span>
+                                                <span className="text-gray-700 font-mono">{new Date(off.exitDate).toLocaleDateString('es-EC')}</span>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-50">
+                                        <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-100">
                                             <div>
-                                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Total Liquidación</span>
-                                                <span className="font-mono font-extrabold text-emerald-700 text-base">${off.totalSettlement.toFixed(2)}</span>
+                                                <span className="text-[10px] text-gray-400 font-medium uppercase block">Total Liquidación</span>
+                                                <span className="font-mono font-semibold text-gray-900 tabular-nums">${off.totalSettlement.toFixed(2)}</span>
                                             </div>
                                             <div>
-                                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Checklist</span>
-                                                <span className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold ${
-                                                    isComplete ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                                <span className="text-[10px] text-gray-400 font-medium uppercase block">Checklist</span>
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium ${
+                                                    isComplete ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
                                                 }`}>
-                                                    {completedTasks} / {totalTasks} Tareas
+                                                    {completedTasks}/{totalTasks} Tareas
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="pt-2 flex gap-2">
+                                        <div className="pt-2 flex justify-end gap-2 border-t border-gray-100">
                                             <button
                                                 onClick={() => {
                                                     setSelectedOffboarding(off);
                                                     setChecklistModalOpen(true);
                                                 }}
-                                                className="flex-1 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1"
+                                                className="px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium transition-colors"
                                             >
-                                                <ClipboardDocumentCheckIcon className="w-4 h-4" /> Checklist
+                                                Gestionar Checklist
                                             </button>
                                             <button
                                                 onClick={async () => {
@@ -242,9 +242,9 @@ const OffboardingManagement = () => {
                                                         exitDate: off.exitDate,
                                                         causal: off.causal
                                                     });
-                                                    if (sim.success) generateSettlementPDF(sim.data);
+                                                    if (sim?.success) generateSettlementPDF(sim.data);
                                                 }}
-                                                className="flex-1 py-2 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition-all text-center"
+                                                className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
                                             >
                                                 PDF Finiquito
                                             </button>
@@ -350,20 +350,20 @@ const OffboardingManagement = () => {
 
             {/* TAB 2: SIMULADOR DE LIQUIDACIÓN LEGAL */}
             {activeTab === 'SIMULATOR' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Controls Form */}
-                    <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-5">
-                        <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-                            <CalculatorIcon className="w-5 h-5 text-blue-600" />
+                    <div className="bg-white p-5 rounded border border-gray-200 space-y-4">
+                        <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2.5 flex items-center gap-2">
+                            <CalculatorIcon className="w-4 h-4 text-blue-600" />
                             Parámetros de Liquidación
                         </h3>
 
-                        <form onSubmit={handleSimulate} className="space-y-4">
+                        <form onSubmit={handleSimulate} className="space-y-3.5 text-xs">
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Seleccionar Empleado</label>
+                                <label className="block font-medium text-gray-700 mb-1">Empleado</label>
                                 <select
                                     required
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                    className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500"
                                     value={simForm.employeeId}
                                     onChange={(e) => setSimForm({ ...simForm, employeeId: e.target.value })}
                                 >
@@ -377,20 +377,20 @@ const OffboardingManagement = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Fecha Estimada de Salida</label>
+                                <label className="block font-medium text-gray-700 mb-1">Fecha Estimada de Salida</label>
                                 <input
                                     type="date"
                                     required
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-mono"
+                                    className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
                                     value={simForm.exitDate}
                                     onChange={(e) => setSimForm({ ...simForm, exitDate: e.target.value })}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Causal Legal de Salida</label>
+                                <label className="block font-medium text-gray-700 mb-1">Causal Legal de Salida</label>
                                 <select
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                    className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-800 focus:outline-none focus:border-blue-500"
                                     value={simForm.causal}
                                     onChange={(e) => setSimForm({ ...simForm, causal: e.target.value })}
                                 >
@@ -404,87 +404,87 @@ const OffboardingManagement = () => {
                             <button
                                 type="submit"
                                 disabled={simLoading || !simForm.employeeId}
-                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded text-xs transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                             >
                                 <CalculatorIcon className="w-4 h-4" />
-                                {simLoading ? 'Calculando Haberes...' : 'Calcular Liquidación de Ley'}
+                                {simLoading ? 'Calculando...' : 'Calcular Liquidación de Ley'}
                             </button>
                         </form>
                     </div>
 
                     {/* Results Simulation Display */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-4">
                         {simResult ? (
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 5 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-6"
+                                className="bg-white p-5 rounded border border-gray-200 space-y-4 text-xs"
                             >
-                                <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                                <div className="flex justify-between items-start border-b border-gray-200 pb-3">
                                     <div>
-                                        <h4 className="text-xl font-bold text-slate-800">
+                                        <h4 className="text-sm font-semibold text-gray-900">
                                             {simResult.employee.firstName} {simResult.employee.lastName}
                                         </h4>
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            {simResult.employee.position} • C.I. {simResult.employee.identityCard} • Sueldo Base: ${simResult.baseSalary.toFixed(2)}
+                                        <p className="text-[11px] text-gray-500 mt-0.5">
+                                            {simResult.employee.position} · C.I. {simResult.employee.identityCard} · Sueldo Base: <span className="font-mono">${simResult.baseSalary.toFixed(2)}</span>
                                         </p>
                                     </div>
-                                    <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-200">
+                                    <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-mono font-medium rounded border border-blue-200">
                                         {simResult.yearsWorked} Años de Servicio ({simResult.daysWorkedTotal} Días)
                                     </span>
                                 </div>
 
                                 {/* Calculation breakdown cards */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/60 flex justify-between items-center">
-                                        <span className="font-semibold text-slate-700">13er Sueldo Proporcional:</span>
-                                        <span className="font-mono font-bold text-slate-900 text-sm">${simResult.thirteenthProportional.toFixed(2)}</span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <div className="p-3 bg-gray-50 rounded border border-gray-200 flex justify-between items-center">
+                                        <span className="text-gray-600">13er Sueldo Proporcional:</span>
+                                        <span className="font-mono font-semibold text-gray-900 tabular-nums">${simResult.thirteenthProportional.toFixed(2)}</span>
                                     </div>
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/60 flex justify-between items-center">
-                                        <span className="font-semibold text-slate-700">14to Sueldo Proporcional (SBU):</span>
-                                        <span className="font-mono font-bold text-slate-900 text-sm">${simResult.fourteenthProportional.toFixed(2)}</span>
+                                    <div className="p-3 bg-gray-50 rounded border border-gray-200 flex justify-between items-center">
+                                        <span className="text-gray-600">14to Sueldo Proporcional (SBU):</span>
+                                        <span className="font-mono font-semibold text-gray-900 tabular-nums">${simResult.fourteenthProportional.toFixed(2)}</span>
                                     </div>
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/60 flex justify-between items-center">
-                                        <span className="font-semibold text-slate-700">Vacaciones No Gozadas ({simResult.pendingVacationDays} días):</span>
-                                        <span className="font-mono font-bold text-slate-900 text-sm">${simResult.vacationAmount.toFixed(2)}</span>
+                                    <div className="p-3 bg-gray-50 rounded border border-gray-200 flex justify-between items-center">
+                                        <span className="text-gray-600">Vacaciones No Gozadas ({simResult.pendingVacationDays} d):</span>
+                                        <span className="font-mono font-semibold text-gray-900 tabular-nums">${simResult.vacationAmount.toFixed(2)}</span>
                                     </div>
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/60 flex justify-between items-center">
-                                        <span className="font-semibold text-slate-700">Desahucio (25% por año):</span>
-                                        <span className="font-mono font-bold text-slate-900 text-sm">${simResult.desahucioAmount.toFixed(2)}</span>
+                                    <div className="p-3 bg-gray-50 rounded border border-gray-200 flex justify-between items-center">
+                                        <span className="text-gray-600">Desahucio (25% por año):</span>
+                                        <span className="font-mono font-semibold text-gray-900 tabular-nums">${simResult.desahucioAmount.toFixed(2)}</span>
                                     </div>
-                                    <div className="p-4 bg-rose-50/50 rounded-xl border border-rose-200/60 flex justify-between items-center md:col-span-2">
-                                        <span className="font-bold text-rose-800">Indemnización por Despido Intempestivo (Art. 188):</span>
-                                        <span className="font-mono font-extrabold text-rose-700 text-base">${simResult.severanceAmount.toFixed(2)}</span>
+                                    <div className="p-3 bg-red-50/60 rounded border border-red-200 flex justify-between items-center sm:col-span-2">
+                                        <span className="font-medium text-red-900">Indemnización Despido Intempestivo (Art. 188):</span>
+                                        <span className="font-mono font-bold text-red-700 text-sm tabular-nums">${simResult.severanceAmount.toFixed(2)}</span>
                                     </div>
                                 </div>
 
                                 {/* Total Liquidación Banner */}
-                                <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-6 rounded-2xl flex justify-between items-center shadow-md">
+                                <div className="bg-gray-900 text-white p-4 rounded flex flex-col sm:flex-row justify-between items-center gap-3">
                                     <div>
-                                        <p className="text-xs font-bold text-emerald-100 uppercase tracking-wider">Total Acta de Finiquito Estimada</p>
-                                        <h3 className="text-3xl font-black mt-1">${simResult.totalSettlement.toFixed(2)}</h3>
+                                        <p className="text-[11px] text-gray-400 uppercase tracking-wider">Total Acta de Finiquito Estimada</p>
+                                        <h3 className="text-2xl font-mono font-semibold mt-0.5 tabular-nums">${simResult.totalSettlement.toFixed(2)}</h3>
                                     </div>
-                                    <div className="flex gap-3">
+                                    <div className="flex gap-2">
                                         <button
                                             onClick={() => generateSettlementPDF(simResult)}
-                                            className="px-4 py-2.5 bg-white text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-50 transition-all shadow-sm flex items-center gap-1.5"
+                                            className="px-3 py-1.5 bg-white text-gray-900 rounded text-xs font-medium hover:bg-gray-100 transition-colors flex items-center gap-1.5 cursor-pointer"
                                         >
                                             <DocumentTextIcon className="w-4 h-4" /> Exportar PDF
                                         </button>
                                         <button
                                             onClick={handleStartOffboarding}
-                                            className="app-button-primary"
+                                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors cursor-pointer shadow-xs"
                                         >
-                                            Iniciar Offboarding Oficial
+                                            Iniciar Proceso Oficial
                                         </button>
                                     </div>
                                 </div>
                             </motion.div>
                         ) : (
-                            <div className="bg-white p-12 rounded-2xl border border-slate-200/80 shadow-sm text-center text-slate-400 space-y-3">
-                                <CalculatorIcon className="w-12 h-12 mx-auto text-slate-300" />
-                                <p className="font-bold text-slate-600 text-base">Simulador de Acta de Finiquito y Liquidación</p>
-                                <p className="text-xs max-w-md mx-auto">
+                            <div className="bg-white p-10 rounded border border-gray-200 text-center text-gray-400 space-y-2">
+                                <CalculatorIcon className="w-8 h-8 mx-auto text-gray-300" />
+                                <p className="font-semibold text-gray-700 text-sm">Simulador de Acta de Finiquito y Liquidación</p>
+                                <p className="text-xs max-w-md mx-auto text-gray-500">
                                     Selecciona un empleado y la causal de salida para proyectar el cálculo exacto de haberes de ley (Décimos, Vacaciones, Desahucio e Indemnizaciones).
                                 </p>
                             </div>
@@ -501,38 +501,38 @@ const OffboardingManagement = () => {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden"
+                            className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-lg overflow-hidden"
                         >
-                            <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                            <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-800">Checklist de Salida (Offboarding)</h3>
-                                    <p className="text-xs text-slate-500 mt-0.5">{selectedOffboarding.employee?.firstName} {selectedOffboarding.employee?.lastName}</p>
+                                    <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Checklist de Salida (Offboarding)</h3>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">{selectedOffboarding.employee?.firstName} {selectedOffboarding.employee?.lastName}</p>
                                 </div>
-                                <button onClick={() => setChecklistModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+                                <button onClick={() => setChecklistModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg font-bold">&times;</button>
                             </div>
 
-                            <div className="p-6 space-y-4 max-h-[400px] overflow-y-auto">
+                            <div className="p-5 space-y-2.5 max-h-[400px] overflow-y-auto text-xs">
                                 {JSON.parse(selectedOffboarding.checklist || '[]').map((task) => (
                                     <div 
                                         key={task.id} 
                                         onClick={() => handleToggleTask(task.id, task.completed)}
-                                        className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                                        className={`p-3 rounded border transition-colors cursor-pointer flex items-center justify-between ${
                                             task.completed 
-                                                ? 'bg-emerald-50/60 border-emerald-200 text-emerald-900'
-                                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-300'
+                                                ? 'bg-green-50/50 border-green-200 text-green-900'
+                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                                         }`}
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2.5">
                                             <input
                                                 type="checkbox"
                                                 checked={task.completed}
                                                 onChange={() => {}} // Handled by div onClick
-                                                className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
+                                                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
                                             />
-                                            <span className="text-xs font-bold">{task.label}</span>
+                                            <span className="font-medium">{task.label}</span>
                                         </div>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                                            task.completed ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                                        <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded ${
+                                            task.completed ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
                                         }`}>
                                             {task.completed ? 'COMPLETADO' : 'PENDIENTE'}
                                         </span>
@@ -540,10 +540,10 @@ const OffboardingManagement = () => {
                                 ))}
                             </div>
 
-                            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                            <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
                                 <button
                                     onClick={() => setChecklistModalOpen(false)}
-                                    className="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-xl"
+                                    className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors"
                                 >
                                     Cerrar
                                 </button>

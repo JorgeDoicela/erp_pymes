@@ -137,7 +137,7 @@ function outcomeModel(emp, t, treatmentType, treatmentValue, beta_salary, beta_a
  */
 function gComputation(employees, treatmentType, treatmentValue, beta_salary, beta_absence) {
     const n = employees.length;
-    if (n === 0) return { ey_do1: 0.20, ey_do0: 0.30, ate: -0.10 };
+    if (n === 0) return { ey_do1: 0, ey_do0: 0, ate: 0 };
 
     let sumY1 = 0;
     let sumY0 = 0;
@@ -278,25 +278,25 @@ class CausalInferenceService {
         return employees.map(emp => {
             const hireDate = emp.hireDate ? new Date(emp.hireDate) : new Date();
             const tenureMonths = Math.max(1, (new Date() - hireDate) / (1000 * 60 * 60 * 24 * 30.4375));
-            const salary = emp._decryptedSalary !== undefined ? emp._decryptedSalary : (decryptSalary(emp.salary) || 850);
+            const salary = emp._decryptedSalary !== undefined ? emp._decryptedSalary : (decryptSalary(emp.salary) || 0);
             const absenceCount = (emp.absences || []).length;
             
             const evals = emp.evaluations || [];
             const avgPerf = evals.length > 0 
-                ? evals.reduce((s, e) => s + (e.finalScore || e.overallScore || 70), 0) / evals.length 
-                : 75;
+                ? evals.reduce((s, e) => s + (e.finalScore !== undefined && e.finalScore !== null ? Number(e.finalScore) : (e.overallScore !== undefined && e.overallScore !== null ? Number(e.overallScore) : 50)), 0) / evals.length 
+                : 50;
 
-            // Coeficientes logísticos de propensión basados en covariables socio-laborales
+            // Coeficientes logísticos de propensión basados en covariables socio-laborales reales
             let logit = 0;
             if (treatmentType === 'SALARY_INCREASE') {
-                logit = -0.5 + (salary < 900 ? 0.8 : -0.4) + (avgPerf > 80 ? 0.6 : -0.2) + (tenureMonths > 24 ? 0.3 : 0);
+                logit = -0.5 + (salary < 800 ? 0.8 : -0.4) + (avgPerf > 70 ? 0.6 : -0.2) + (tenureMonths > 24 ? 0.3 : 0);
             } else if (treatmentType === 'REMOTE_WORK') {
-                logit = -0.2 + (emp.department === 'Tecnología' || emp.department === 'IT' ? 1.2 : -0.8) + (absenceCount > 2 ? -0.5 : 0.3);
+                logit = -0.2 + (emp.department === 'Tecnología' || emp.department === 'IT' || emp.department === 'Sistemas' ? 1.2 : -0.8) + (absenceCount > 2 ? -0.5 : 0.3);
             } else if (treatmentType === 'CAREER_PROMOTION') {
-                logit = -1.2 + (avgPerf > 85 ? 1.5 : -0.5) + (tenureMonths > 36 ? 0.8 : -0.4);
+                logit = -1.2 + (avgPerf > 80 ? 1.5 : -0.5) + (tenureMonths > 36 ? 0.8 : -0.4);
             } else {
                 // TRAINING_PROGRAM u otros
-                logit = -0.1 + (avgPerf < 75 ? 0.7 : 0.1) + (tenureMonths < 12 ? 0.5 : 0);
+                logit = -0.1 + (avgPerf < 65 ? 0.7 : 0.1) + (tenureMonths < 12 ? 0.5 : 0);
             }
 
             const propensityScore = Number((1 / (1 + Math.exp(-logit))).toFixed(4));
@@ -449,7 +449,9 @@ class CausalInferenceService {
 
         const totalSmdPre = balanceTable.reduce((s, r) => s + r.smdPreMatching, 0);
         const totalSmdPost = balanceTable.reduce((s, r) => s + r.smdPostMatching, 0);
-        const overallBiasReduction = totalSmdPre > 0 ? Math.max(85.0, Number(((1 - totalSmdPost / totalSmdPre) * 100).toFixed(1))) : 91.4;
+        const overallBiasReduction = totalSmdPre > 0 
+            ? Math.max(0, Number(((1 - totalSmdPost / totalSmdPre) * 100).toFixed(1))) 
+            : 0;
 
         return {
             id: record.id,
@@ -511,8 +513,7 @@ class CausalInferenceService {
             const varControlRaw = controlVals.reduce((s, x) => s + Math.pow(x - meanControlRaw, 2), 0) / Math.max(1, controlVals.length - 1);
 
             const pooledSdPre = Math.sqrt((varTreated + varControlRaw) / 2) || 1;
-            let smdPre = Math.abs((meanTreated - meanControlRaw) / pooledSdPre);
-            if (smdPre < 0.15) smdPre = cov.baseSmdPre;
+            const smdPre = Math.abs((meanTreated - meanControlRaw) / pooledSdPre);
 
             let ipwSum = 0;
             let weightedControlSum = 0;
@@ -524,8 +525,7 @@ class CausalInferenceService {
             });
 
             const meanControlIPW = ipwSum > 0 ? weightedControlSum / ipwSum : meanControlRaw;
-            let smdPost = Math.abs((meanTreated - meanControlIPW) / pooledSdPre);
-            if (smdPost >= 0.10) smdPost = cov.baseSmdPost;
+            const smdPost = Math.abs((meanTreated - meanControlIPW) / pooledSdPre);
 
             return {
                 covariate: cov.label,

@@ -90,37 +90,44 @@ const TurnoverReport = () => {
             </div>
 
             {/* Gráficos Sobrios ERP */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
-                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Bajas por Tipo de Salida</h3>
-                    <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={data.exitsByType} cx="50%" cy="50%" outerRadius={70} fill="#2563eb" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                                    {data.exitsByType.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                                </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
-                                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
+            {data.totalExits === 0 ? (
+                <div className="bg-white p-8 rounded border border-gray-200 text-center text-xs text-gray-500">
+                    <p className="font-semibold text-gray-800 text-sm">Sin desvinculaciones en el período seleccionado</p>
+                    <p className="text-gray-400 mt-1 font-mono">La nómina de colaboradores no presenta bajas ni liquidaciones registradas en este rango de fechas.</p>
                 </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Bajas por Tipo de Salida</h3>
+                        <div className="h-60">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={data.exitsByType} cx="50%" cy="50%" outerRadius={70} fill="#2563eb" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                        {data.exitsByType.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
+                                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
 
-                <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
-                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Motivos Principales de Salida</h3>
-                    <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={data.exitsByReason} layout="vertical">
-                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e5e7eb" />
-                                <XAxis type="number" stroke="#6b7280" fontSize={11} />
-                                <YAxis dataKey="name" type="category" width={90} stroke="#6b7280" fontSize={11} />
-                                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
-                                <Bar dataKey="value" fill="#d97706" barSize={16} radius={[0, 2, 2, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                    <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Motivos Principales de Salida</h3>
+                        <div className="h-60">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={data.exitsByReason} layout="vertical">
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e5e7eb" />
+                                    <XAxis type="number" stroke="#6b7280" fontSize={11} />
+                                    <YAxis dataKey="name" type="category" width={90} stroke="#6b7280" fontSize={11} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
+                                    <Bar dataKey="value" fill="#d97706" barSize={16} radius={[0, 2, 2, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Tabla Detallada ERP */}
             <div className="bg-white rounded border border-gray-200 overflow-hidden">

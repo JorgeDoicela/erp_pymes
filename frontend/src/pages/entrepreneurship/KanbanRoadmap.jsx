@@ -88,54 +88,59 @@ const KanbanRoadmap = () => {
     return (
         <div className="space-y-8 animate-fadeIn">            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-3">
-                        <FiLayout className="text-indigo-600" /> Startup Roadmap
+                    <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                        <FiLayout className="text-blue-600" /> Tablero de Hitos y Entregables
                     </h2>
-                    <p className="text-slate-500 text-xs sm:text-sm font-medium">Gestión ágil de hitos críticos y ejecución estratégica.</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Seguimiento de ejecución por etapas operativas.</p>
                 </div>
-                <button onClick={() => setShowModal(true)} className="app-button-primary w-full sm:w-auto">
-                    <FiPlus /> Nuevo Hito
+                <button 
+                    onClick={() => setShowModal(true)} 
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                    <FiPlus size={14} /> Nuevo Hito
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[600px] overflow-x-auto pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 min-h-[500px] overflow-x-auto pb-2 text-xs">
                 {columns.map((col) => (
-                    <div key={col.id} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col">
-                        <div className="flex items-center justify-between mb-4 px-1">
-                            <div className="flex items-center gap-2">
-                                <span className={`w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-${col.color}-600 border border-slate-200/60`}>{col.icon}</span>
-                                <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">{col.title}</h3>
+                    <div key={col.id} className="bg-gray-50/50 rounded border border-gray-200 p-3 flex flex-col space-y-3">
+                        <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-gray-600">{col.icon}</span>
+                                <h3 className="font-semibold text-gray-800 text-xs uppercase tracking-wider">{col.title}</h3>
                             </div>
-                            <span className="bg-slate-100 border border-slate-200/80 text-slate-600 text-[10px] font-bold w-6 h-6 flex items-center justify-center rounded-lg shadow-2xs">
+                            <span className="bg-white border border-gray-200 text-gray-600 text-[10px] font-mono font-medium px-1.5 py-0.5 rounded">
                                 {getColumnTasks(col.id).length}
                             </span>
                         </div>
-                        <div className="space-y-4 flex-1">
+                        <div className="space-y-2.5 flex-1">
                             {getColumnTasks(col.id).map((task) => (
                                 <div
                                     key={task.id}
                                     onClick={() => setDetailModal(task)}
-                                    className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-200 transition-all group cursor-pointer"
+                                    className="bg-white p-3 rounded border border-gray-200 hover:border-blue-400 transition-colors group cursor-pointer space-y-2"
                                 >
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h4 className="font-bold text-slate-800 leading-tight text-sm flex-1 pr-2">{task.title}</h4>
+                                    <div className="flex justify-between items-start">
+                                        <h4 className="font-semibold text-gray-900 leading-snug text-xs flex-1 pr-1">{task.title}</h4>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleDeleteMilestone(task.id); }}
-                                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-all flex-shrink-0"
+                                            className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 transition-opacity shrink-0"
                                         >
                                             <FiTrash2 size={12} />
                                         </button>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 line-clamp-2 mb-4 font-medium leading-relaxed">
-                                        {task.description || "Haz clic para ver detalles."}
-                                    </p>
-                                    <div className="flex justify-between items-center pt-3 border-t border-slate-50">
-                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-tighter flex items-center gap-1">
-                                            <FiCalendar size={9} /> {new Date(task.dueDate).toLocaleDateString()}
+                                    {task.description && (
+                                        <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">
+                                            {task.description}
+                                        </p>
+                                    )}
+                                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                                        <span className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
+                                            <FiCalendar size={10} /> {new Date(task.dueDate).toLocaleDateString('es-EC')}
                                         </span>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                                             {columns.filter(c => c.id !== (task.kanbanColumn || 'BACKLOG')).map(c => (
-                                                <button key={c.id} onClick={() => handleMoveTask(task.id, c.id)} className={`w-5 h-5 rounded-lg bg-${c.color}-50 text-${c.color}-600 flex items-center justify-center hover:scale-110 transition-transform`} title={`Mover a ${c.title}`}>
+                                                <button key={c.id} onClick={() => handleMoveTask(task.id, c.id)} className="w-5 h-5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center text-[10px]" title={`Mover a ${c.title}`}>
                                                     {c.icon}
                                                 </button>
                                             ))}
@@ -144,8 +149,8 @@ const KanbanRoadmap = () => {
                                 </div>
                             ))}
                             {getColumnTasks(col.id).length === 0 && (
-                                <div className="h-32 border-2 border-dashed border-slate-200 rounded-3xl flex items-center justify-center">
-                                    <span className="text-[10px] uppercase font-black text-slate-300 tracking-widest">Vacío</span>
+                                <div className="h-24 border border-dashed border-gray-200 rounded flex items-center justify-center">
+                                    <span className="text-[11px] text-gray-400 font-mono">Sin tareas</span>
                                 </div>
                             )}
                         </div>
@@ -156,51 +161,45 @@ const KanbanRoadmap = () => {
             {/* Modal Detalle de Hito */}
             {detailModal && (
                 <div className="app-modal-overlay" onClick={() => setDetailModal(null)}>
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 animate-slideDown" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-start mb-6">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md p-5 animate-scale-in" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-start mb-4">
                             <div>
-                                <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase ${statusColors[detailModal.status] || 'bg-slate-100 text-slate-600'}`}>
+                                <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded uppercase ${statusColors[detailModal.status] || 'bg-gray-100 text-gray-600'}`}>
                                     {detailModal.status === 'PENDING' ? 'PENDIENTE' : 
                                      detailModal.status === 'IN_PROGRESS' ? 'EN PROCESO' : 
                                      detailModal.status === 'REVIEW' ? 'EN REVISIÓN' : 'COMPLETADO'}
                                 </span>
-                                <h3 className="text-2xl font-black text-slate-800 mt-3 tracking-tight">{detailModal.title}</h3>
+                                <h3 className="text-sm font-semibold text-gray-900 mt-2">{detailModal.title}</h3>
                             </div>
-                            <button onClick={() => setDetailModal(null)} className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-all">
-                                <FiX />
+                            <button onClick={() => setDetailModal(null)} className="text-gray-400 hover:text-gray-600 p-1">
+                                <FiX size={16} />
                             </button>
                         </div>
                         
-                        <div className="space-y-5">
+                        <div className="space-y-3 text-xs">
                             {detailModal.description && (
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-sm text-slate-600 leading-relaxed">{detailModal.description}</p>
+                                <div className="bg-gray-50 p-3 rounded border border-gray-200 text-gray-700 leading-relaxed">
+                                    {detailModal.description}
                                 </div>
                             )}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-slate-50 p-4 rounded-2xl text-center">
-                                    <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Fecha Límite</p>
-                                    <p className="font-bold text-slate-700">{new Date(detailModal.dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                                <div className="bg-gray-50 p-2.5 rounded border border-gray-200">
+                                    <p className="text-[10px] text-gray-400 font-sans uppercase mb-0.5">Fecha Límite</p>
+                                    <p className="font-semibold text-gray-800">{new Date(detailModal.dueDate).toLocaleDateString('es-EC')}</p>
                                 </div>
-                                <div className="bg-slate-50 p-4 rounded-2xl text-center">
-                                    <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Columna</p>
-                                    <p className="font-bold text-slate-700">{columns.find(c => c.id === detailModal.kanbanColumn)?.title || 'Backlog'}</p>
+                                <div className="bg-gray-50 p-2.5 rounded border border-gray-200">
+                                    <p className="text-[10px] text-gray-400 font-sans uppercase mb-0.5">Columna</p>
+                                    <p className="font-semibold text-gray-800">{columns.find(c => c.id === detailModal.kanbanColumn)?.title || 'Backlog'}</p>
                                 </div>
                             </div>
-                            {detailModal.completedDate && (
-                                <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                                    <p className="text-[10px] uppercase font-black text-emerald-500 mb-1">Completado el</p>
-                                    <p className="font-bold text-emerald-700">{new Date(detailModal.completedDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                                </div>
-                            )}
                         </div>
 
-                        <div className="flex gap-3 mt-6 pt-6 border-t border-slate-50">
-                            <button onClick={() => handleMoveTask(detailModal.id, 'DONE')} className="flex-1 py-3 bg-emerald-500 text-white rounded-2xl font-bold text-sm hover:bg-emerald-600 transition-all">
-                                Marcar como hecho ✓
+                        <div className="flex gap-2 mt-4 pt-3 border-t border-gray-200">
+                            <button onClick={() => handleMoveTask(detailModal.id, 'DONE')} className="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium transition-colors shadow-xs">
+                                Marcar como Realizado
                             </button>
-                            <button onClick={() => { handleDeleteMilestone(detailModal.id); }} className="px-4 py-3 text-red-400 border border-red-100 rounded-2xl font-bold text-sm hover:bg-red-50 transition-all">
-                                <FiTrash2 />
+                            <button onClick={() => { handleDeleteMilestone(detailModal.id); }} className="px-3 py-1.5 text-gray-700 bg-white border border-gray-300 rounded text-xs font-medium hover:bg-red-50 hover:text-red-600 transition-colors">
+                                <FiTrash2 size={14} />
                             </button>
                         </div>
                     </div>
@@ -210,35 +209,35 @@ const KanbanRoadmap = () => {
             {/* Modal Crear Hito */}
             {showModal && (
                 <div className="app-modal-overlay">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-black text-slate-800">Nuevo Hito Estratégico</h3>
-                            <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-all"><FiX /></button>
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md p-5 animate-scale-in">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Nuevo Hito de Proyecto</h3>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 p-1"><FiX size={16} /></button>
                         </div>
-                        <form onSubmit={handleAddMilestone} className="space-y-5">
+                        <form onSubmit={handleAddMilestone} className="space-y-3 text-xs">
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Título *</label>
-                                <input required className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700" value={newMilestone.title} onChange={(e) => setNewMilestone({ ...newMilestone, title: e.target.value })} placeholder="Ej: Lanzar versión beta pública" />
+                                <label className="block font-medium text-gray-700 mb-1">Título *</label>
+                                <input required className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500" value={newMilestone.title} onChange={(e) => setNewMilestone({ ...newMilestone, title: e.target.value })} placeholder="Ej: Lanzar versión beta pública" />
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Descripción</label>
-                                <textarea rows="3" className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none resize-none text-slate-600" value={newMilestone.description} onChange={(e) => setNewMilestone({ ...newMilestone, description: e.target.value })} placeholder="¿Qué abarca este hito?" />
+                                <label className="block font-medium text-gray-700 mb-1">Descripción</label>
+                                <textarea rows="3" className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 resize-none" value={newMilestone.description} onChange={(e) => setNewMilestone({ ...newMilestone, description: e.target.value })} placeholder="Detalles u objetivos del hito..." />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Fecha límite *</label>
-                                    <input required type="date" className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700" value={newMilestone.dueDate} onChange={(e) => setNewMilestone({ ...newMilestone, dueDate: e.target.value })} />
+                                    <label className="block font-medium text-gray-700 mb-1">Fecha Límite *</label>
+                                    <input required type="date" className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 font-mono" value={newMilestone.dueDate} onChange={(e) => setNewMilestone({ ...newMilestone, dueDate: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Columna</label>
-                                    <select className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700" value={newMilestone.kanbanColumn} onChange={(e) => setNewMilestone({ ...newMilestone, kanbanColumn: e.target.value })}>
+                                    <label className="block font-medium text-gray-700 mb-1">Columna</label>
+                                    <select className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500" value={newMilestone.kanbanColumn} onChange={(e) => setNewMilestone({ ...newMilestone, kanbanColumn: e.target.value })}>
                                         {columns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                                     </select>
                                 </div>
                             </div>
-                            <div className="flex gap-3 mt-2">
-                                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 transition-all text-sm">Cancelar</button>
-                                <button type="submit" disabled={saving} className="app-button-primary flex-1">{saving ? 'Guardando...' : 'Crear Hito'}</button>
+                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                                <button type="button" onClick={() => setShowModal(false)} className="px-3.5 py-2 text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
+                                <button type="submit" disabled={saving} className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors shadow-xs">{saving ? 'Guardando...' : 'Crear Hito'}</button>
                             </div>
                         </form>
                     </div>

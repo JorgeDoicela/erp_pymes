@@ -32,32 +32,32 @@ const EvaluationDetailModal = ({ isOpen, onClose, template }) => {
     const scale = parseScale();
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:hidden">
-            <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 print:hidden">
+            <div className="bg-white border border-gray-200 rounded w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-xl text-xs">
 
                 {/* Header */}
-                <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+                <div className="p-4 px-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                     <div className="flex-1 pr-4">
-                        <div className="flex items-center gap-3 mb-2 flex-wrap">
-                            <h2 className="text-2xl font-bold text-slate-800">{template.title}</h2>
-                            <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="text-sm font-semibold text-gray-900">{template.title}</h2>
+                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-mono rounded border border-blue-200">
                                 {template.period}
                             </span>
                         </div>
                         {template.description && (
-                            <p className="text-slate-500 text-sm">{template.description}</p>
+                            <p className="text-gray-500 text-xs mt-0.5">{template.description}</p>
                         )}
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
+                        className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors shrink-0"
                     >
-                        <FiX size={24} />
+                        <FiX size={16} />
                     </button>
                 </div>
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-5 space-y-4">
 
                     {/* Instructions */}
                     {template.instructions && (

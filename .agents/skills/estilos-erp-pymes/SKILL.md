@@ -80,35 +80,20 @@ Las tablas deben parecerse a una hoja de cálculo limpia, no a tarjetas apiladas
 
 ---
 
-## 5. KPI / Métricas — Filas Sobrias Estilo Tabla Contable
+## 5. Cero Bloques de KPIs Superiores — Diseño Directo a Tabla Operativa
 
-**PROHIBIDO usar tarjetas flotantes de KPI, cajas gigantes ni bloques apilados arriba** (se ven "hechos por IA").
+**PROHIBIDO poner bloques, tarjetas flotantes o filas de KPIs gigantes en la parte superior de las páginas operativas** (ej. "Total Colaboradores 0", "Expedientes Completos 0", etc.). Estos bloques ocupan espacio innecesario y delatan interfaces generadas por IA.
 
-El encabezado debe ser 100% limpio: sólo categoría, título y botones de acción.
+Un ERP profesional (estilo Linear, Holded, Xero) va **directo a la acción y a los datos**:
 
-Las métricas financieras o de resumen deben mostrarse en un **panel lateral estilo informe contable / estado financiero**, con filas limpias donde el concepto está a la izquierda y el valor a la derecha:
-
-```
-┌──────────────────────────────────────────────────┐
-│ MRR                                  $133.00 USD │
-│ ARR proyectado                     $1,596.00 USD │
-│ ARPU                              $66.50 / emp.  │
-├──────────────────────────────────────────────────┤
-│ Distribución por plan                            │
-│ Essential                              2 (25%)   │
-│ Growth                                 4 (50%)   │
-│ Enterprise                             2 (25%)   │
-├──────────────────────────────────────────────────┤
-│ Estado del sistema                       HEALTHY │
-└──────────────────────────────────────────────────┘
-```
-
-**Reglas estrictas:**
-- **Encabezado principal:** Limpio, sin tarjetas de números ni filas de KPIs.
-- **Formato de datos:** Filas compactas `px-4 py-2.5 border-b border-gray-100 flex items-center justify-between`.
-- **Valores:** `text-xs font-semibold text-gray-900 font-mono` con `tabular-nums`.
-- **Etiquetas:** `text-xs text-gray-500`.
-- La **tabla principal del directorio** es la fuente de verdad detallada; el panel solo ofrece contexto financiero sobrio.
+1. **Encabezado Limpio:** Solo categoría, título del módulo, subtítulo conciso y botones de acción principal.
+2. **Pestañas con Contadores Integrados:** El estado del sistema y los filtros se expresan como contadores tabulares en las propias pestañas o filtros:
+   ```
+   [ Todos (17) ]  [ Por Validar (2) ]  [ Incompletos (5) ]  [ Completos (10) ]
+   ```
+3. **Barra de Herramientas Directa:** Buscador y selectores de departamento/fecha alineados con las pestañas.
+4. **La Tabla o Directorio es la Protagonista:** El usuario ve inmediatamente la información que necesita gestionar sin tener que hacer scroll sobre cajas decorativas de números.
+5. **Paneles Laterales Estrictamente Opcionales:** Si un módulo requiere métricas financieras agregadas (ej. balance contable), se coloca en una columna lateral derecha compacta de 1 sola columna, jamás como un muro horizontal gigante que tape la tabla principal.
 
 ---
 

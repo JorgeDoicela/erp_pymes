@@ -1,14 +1,12 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
     FiUsers, FiClock, FiCalendar, FiDollarSign, FiGift,
     FiBriefcase, FiFileText, FiBarChart2, FiTrendingUp,
-    FiCpu, FiArrowRight, FiCheckCircle, FiActivity, FiZap,
-    FiShield, FiLock, FiLayers, FiDatabase, FiServer,
-    FiCheck, FiChevronRight, FiSliders, FiCompass,
-    FiAward, FiSmartphone, FiHelpCircle, FiCheckSquare,
-    FiPercent, FiShare2, FiTarget, FiSearch, FiCode
+    FiShield, FiLock, FiLayers, FiCheck, FiChevronRight,
+    FiSliders, FiAward, FiSmartphone, FiCheckSquare,
+    FiPercent, FiTarget, FiSearch, FiArrowRight, FiActivity,
+    FiPieChart, FiGrid, FiHelpCircle, FiCheckCircle
 } from 'react-icons/fi';
 import logoEmplifi from '../../assets/images/logo_emplifi.png';
 import DeveloperCard from '../../components/common/DeveloperCard';
@@ -17,7 +15,10 @@ function Home() {
     // Estado del demostrador interactivo en vivo
     const [activeDemoTab, setActiveDemoTab] = useState('payroll');
 
-    // Estado para la calculadora de Nómina en vivo
+    // Estado del catálogo de módulos por categoría
+    const [activeModuleCategory, setActiveModuleCategory] = useState('all');
+
+    // Estado para la calculadora de Nómina en vivo (Parámetros legales Ecuador)
     const [payrollSalary, setPayrollSalary] = useState(850);
     const [payrollDays, setPayrollDays] = useState(30);
     const [payrollOvertime50, setPayrollOvertime50] = useState(4);
@@ -29,7 +30,7 @@ function Home() {
     const [offboardingSalary, setOffboardingSalary] = useState(900);
     const [offboardingYears, setOffboardingYears] = useState(3);
     const [offboardingMonths, setOffboardingMonths] = useState(4);
-    const [offboardingCausal, setOffboardingCausal] = useState('UNFAIR_DISMISSAL'); // UNFAIR_DISMISSAL, VOLUNTARY_RESIGNATION, CONTRACT_END
+    const [offboardingCausal, setOffboardingCausal] = useState('UNFAIR_DISMISSAL');
     const [offboardingVacationDays, setOffboardingVacationDays] = useState(8);
 
     // Estado para el visor de Asistencia GPS
@@ -45,7 +46,7 @@ function Home() {
         const base = Number(payrollSalary) || 0;
         const days = Math.min(30, Math.max(1, Number(payrollDays) || 30));
         const dailyRate = base / 30;
-        const hourlyRate = base / 240; // 30 días * 8 horas
+        const hourlyRate = base / 240;
 
         const earnedSalary = dailyRate * days;
         const overtime50Amount = (Number(payrollOvertime50) || 0) * hourlyRate * 1.5;
@@ -53,12 +54,11 @@ function Home() {
         const nightSurchargeAmount = (Number(payrollNightHours) || 0) * hourlyRate * 0.25;
         const totalEarnings = earnedSalary + overtime50Amount + overtime100Amount + nightSurchargeAmount;
 
-        // Aportes de Ley IESS
-        const iessPersonal = totalEarnings * 0.0945; // 9.45%
-        const iessPatronal = totalEarnings * 0.1115; // 11.15%
-        const thirteenthMonthly = totalEarnings / 12; // Provisión 13ro
-        const fourteenthMonthly = 460 / 12; // $38.33 USD sobre SBU $460
-        const reserveFund = totalEarnings * 0.0833; // 8.33%
+        const iessPersonal = totalEarnings * 0.0945;
+        const iessPatronal = totalEarnings * 0.1115;
+        const thirteenthMonthly = totalEarnings / 12;
+        const fourteenthMonthly = 460 / 12;
+        const reserveFund = totalEarnings * 0.0833;
 
         const totalDeductions = iessPersonal + (Number(payrollAdvance) || 0);
         const netSalary = Math.max(0, totalEarnings - totalDeductions);
@@ -89,22 +89,19 @@ function Home() {
         const totalMonths = Math.min(12, months > 0 ? months : 12);
         const dailyRate = base / 30;
 
-        // Proporcionales de Décimos
         const thirteenth = (base * totalMonths) / 12;
-        const fourteenth = (460 * totalMonths) / 12; // SBU $460
+        const fourteenth = (460 * totalMonths) / 12;
         const vacationAmount = (Number(offboardingVacationDays) || 0) * dailyRate;
 
-        // Desahucio (Art. 185): 25% del último sueldo por año completo
         const appliesDesahucio = years >= 1 && ['VOLUNTARY_RESIGNATION', 'UNFAIR_DISMISSAL', 'CONTRACT_END'].includes(offboardingCausal);
         const desahucioAmount = appliesDesahucio ? base * 0.25 * years : 0;
 
-        // Indemnización por Despido Intempestivo (Art. 188)
         let severanceAmount = 0;
         if (offboardingCausal === 'UNFAIR_DISMISSAL') {
             if (years <= 3) {
-                severanceAmount = base * 3; // Mínimo 3 meses
+                severanceAmount = base * 3;
             } else {
-                const yearsToPay = Math.min(years + (months > 0 ? 1 : 0), 25); // Hasta 25 meses
+                const yearsToPay = Math.min(years + (months > 0 ? 1 : 0), 25);
                 severanceAmount = base * yearsToPay;
             }
         }
@@ -124,148 +121,163 @@ function Home() {
         };
     }, [offboardingSalary, offboardingYears, offboardingMonths, offboardingCausal, offboardingVacationDays]);
 
-    // Catálogo exhaustivo de 14 Módulos Operativos
+    // Catálogo organizado de Módulos Operativos
     const modules = [
         {
             code: 'MOD-01',
-            title: 'Ficha & Expediente Digital',
-            category: 'Personal',
-            desc: 'Expediente centralizado con habilidades, trayectoria laboral, activos, EPPs asignados y porcentaje de onboarding.',
+            title: 'Expediente & Ficha Digital',
+            category: 'personal',
+            categoryName: 'Personal',
+            desc: 'Historial laboral, habilidades, contratos, activos y EPPs asignados con seguimiento de onboarding.',
             icon: <FiUsers className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-02',
             title: 'Asistencia GPS & WebAuthn',
-            category: 'Control',
-            desc: 'Marcación con geocerca Haversine, detección anti-VPN/proxy, control de IPs permitidas y Passkeys biométricas.',
+            category: 'control',
+            categoryName: 'Control',
+            desc: 'Marcación con geocerca Haversine, detección anti-VPN y autenticación biométrica segura.',
             icon: <FiClock className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-03',
-            title: 'Turnos & Horarios',
-            category: 'Control',
-            desc: 'Configuración de turnos flexibles, tolerancia de atrasos, minutos de descanso y cálculo de horas nocturnas.',
+            title: 'Turnos & Horarios Flexibles',
+            category: 'control',
+            categoryName: 'Control',
+            desc: 'Turnos rotativos, tolerancia de atrasos, cálculo de recargo nocturno y descansos programados.',
             icon: <FiCalendar className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-04',
             title: 'Permisos & Ausencias',
-            category: 'Control',
-            desc: 'Flujo de aprobación para vacaciones, calamidad, enfermedad y licencias con respaldo documental y evidencias.',
+            category: 'control',
+            categoryName: 'Control',
+            desc: 'Flujo de aprobación para vacaciones, permisos médicos y licencias con adjuntos y evidencias.',
             icon: <FiCheckCircle className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-05',
             title: 'Motor de Nómina Legal',
-            category: 'Compensación',
-            desc: 'Procesamiento batch con Decimal.js (20 dígitos): horas extra 50%/100%, recargos 25%, IESS y amortización de anticipos.',
+            category: 'compensacion',
+            categoryName: 'Nómina',
+            desc: 'Cálculo de horas extra 50%/100%, recargos nocturnos 25%, aportes IESS y emisión de roles.',
             icon: <FiDollarSign className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-06',
             title: 'Beneficios & Anticipos',
-            category: 'Compensación',
-            desc: 'Asignación de comisiones, bonos recurrentes y gestión de anticipos quincenales con deducción automática por cuotas.',
+            category: 'compensacion',
+            categoryName: 'Nómina',
+            desc: 'Gestión de anticipos quincenales, bonos por desempeño y amortización por cuotas.',
             icon: <FiGift className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-07',
             title: 'Finiquitos & Liquidaciones',
-            category: 'Legal',
-            desc: 'Simulador de actas de finiquito (Arts. 185 y 188), cálculo de décimos, vacaciones y checklist de desvinculación.',
+            category: 'legal',
+            categoryName: 'Legal',
+            desc: 'Simulador de actas de finiquito (Arts. 185 y 188), cálculo de décimos y checklist de desvinculación.',
             icon: <FiCheckSquare className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-08',
             title: 'Evaluaciones 360° & OKRs',
-            category: 'Desempeño',
-            desc: 'Plantillas personalizadas por competencias, gráficos de radar, metas SMART y seguimiento continuo de progreso.',
+            category: 'desempeno',
+            categoryName: 'Desempeño',
+            desc: 'Matrices de competencias, gráficos de radar, objetivos SMART y planes de desarrollo individual.',
             icon: <FiTrendingUp className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-09',
             title: 'Portal de Reclutamiento',
-            category: 'Atracción',
-            desc: 'Portal público de vacantes (/careers), recepción de CVs en PDF, pipeline Kanban de selección y scoring de candidatos.',
+            category: 'talento',
+            categoryName: 'Talento',
+            desc: 'Página de vacantes pública (/careers), pipeline Kanban de selección y recepción de CVs.',
             icon: <FiBriefcase className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-10',
             title: 'Contabilidad Aislada',
-            category: 'Finanzas',
-            desc: 'Plan de cuentas jerárquico multinivel, asientos con balance débito/crédito, centros de costos y balance de comprobación.',
+            category: 'finanzas',
+            categoryName: 'Finanzas',
+            desc: 'Plan de cuentas jerárquico multinivel, asientos con balance débito/crédito y centros de costos.',
             icon: <FiLayers className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-11',
             title: 'Compliance & Auditoría',
-            category: 'Gobernanza',
-            desc: 'Semáforo de contratos por vencer, control de provisiones patronales y registro inmutable de auditoría (AuditLog).',
+            category: 'legal',
+            categoryName: 'Legal',
+            desc: 'Monitoreo de contratos por vencer, control de provisiones patronales y trazabilidad AuditLog.',
             icon: <FiShield className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-12',
-            title: 'Comunicados & Clima',
-            category: 'Comunicación',
-            desc: 'Tablón de anuncios oficiales con acuse de recibo digital firmado y encuestas anónimas de clima laboral NPS.',
+            title: 'Comunicados & Clima Laboral',
+            category: 'personal',
+            categoryName: 'Personal',
+            desc: 'Tablón de anuncios oficiales con acuse de recibo y encuestas anónimas de satisfacción.',
             icon: <FiActivity className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-13',
             title: 'Portal Móvil PWA',
-            category: 'Autoservicio',
-            desc: 'Autogestión para colaboradores: marcación en 1 toque, consulta de roles y emisión de certificados con código QR.',
+            category: 'personal',
+            categoryName: 'Personal',
+            desc: 'Autoservicio para colaboradores: marcación en 1 toque, descarga de roles y certificados con QR.',
             icon: <FiSmartphone className="w-4 h-4 text-blue-600" />
         },
         {
             code: 'MOD-14',
             title: 'Emprendimiento & Hitos',
-            category: 'Estrategia',
-            desc: 'Módulo de incubadora corporativa con seguimiento de proyectos, rondas de inversión e hitos de crecimiento.',
+            category: 'desempeno',
+            categoryName: 'Estrategia',
+            desc: 'Gestión de proyectos internos, asignación presupuestaria y cumplimiento de hitos.',
             icon: <FiTarget className="w-4 h-4 text-blue-600" />
         }
     ];
 
-    // Los 4 Motores Científicos de IA (Deep AI Suite)
+    const filteredModules = useMemo(() => {
+        if (activeModuleCategory === 'all') return modules;
+        return modules.filter(m => m.category === activeModuleCategory);
+    }, [activeModuleCategory]);
+
+    // Pilares de Inteligencia Aplicada y Analítica
     const aiEngines = [
         {
             number: '01',
-            name: 'Motor RSI (Automejora Recursiva)',
-            subtitle: 'Closed-Loop Real-Time Stochastic Calibration',
-            desc: 'Auto-calibra los hiperparámetros predictivos tras cada desenlace real de personal mediante Descenso de Gradiente Estocástico (SGD) minimizando Brier Score y Log-Loss.',
-            impact: '+50.7% mejora en F1-Score out-of-sample',
-            tag: 'RSI ENGINE'
+            title: 'Automejora Continua del Desempeño',
+            tag: 'ADAPTIVE ENGINE',
+            desc: 'Calibra continuamente los parámetros de retención y productividad laboral a partir de los desenlaces operativos históricos de la empresa.',
+            benefit: 'Ajuste dinámico sin configuraciones manuales complejas'
         },
         {
             number: '02',
-            name: 'Motor Causal Contrafactual',
-            subtitle: 'Judea Pearl Do-Calculus & AIPW Estimation',
-            desc: 'Responde preguntas de tipo "¿Qué pasaría si...?" P(Y | do(T)) utilizando G-Computation e Inverse Probability Weighting (IPW) para estimar el Efecto Promedio del Tratamiento (ATE) y el ROI.',
-            impact: '95.7% reducción de sesgo covariado (SMD < 0.10)',
-            tag: 'CAUSAL AI'
+            title: 'Análisis Causal & Retorno de Inversión',
+            tag: 'CAUSAL INSIGHTS',
+            desc: 'Identifica el impacto real de capacitaciones, incentivos y políticas salariales sobre la rotación de personal y la satisfacción.',
+            benefit: 'Toma de decisiones respaldada en relaciones de causa-efecto'
         },
         {
             number: '03',
-            name: 'Aprendizaje Federado con DP-SGD',
-            subtitle: 'FedAvg & Rényi Differential Privacy (RDP)',
-            desc: 'Entrenamiento colaborativo entre empresas sin transferencia de salarios ni datos privados. Garantiza matemáticamente la privacidad (ε, δ) cumpliendo con la LOPDP y GDPR.',
-            impact: 'Cero fuga de PII con RDP Accountant',
-            tag: 'FEDERATED AI'
+            title: 'Gobernanza de Datos & Privacidad',
+            tag: 'ENTERPRISE SECURITY',
+            desc: 'Aislamiento estricto de nómina y datos bancarios de colaboradores, cumpliendo con la LOPDP ecuatoriana y estándares internacionales.',
+            benefit: 'Encriptación AES-256 y cero mezcla de datos entre empresas'
         },
         {
             number: '04',
-            name: 'Optimización Multiobjetivo MORL',
-            subtitle: 'Vectorial MDP & Vector Q-Learning',
-            desc: 'Resuelve el conflicto entre retención de talento (%) y presupuesto ($), extrayendo la Frontera de Pareto de políticas óptimas no dominadas para la dirección ejecutiva.',
-            impact: 'Frontera de Pareto automatizada',
-            tag: 'MORL PARETO'
+            title: 'Optimización de Presupuesto & Retención',
+            tag: 'BUDGET OPTIMIZER',
+            desc: 'Equilibra el costo de nómina con los índices de retención óptimos mediante modelado de escenarios para la dirección general.',
+            benefit: 'Frontera de políticas salariales óptimas para el negocio'
         }
     ];
 
-    // Planes de precios con impacto social
+    // Planes de precios transparentes
     const pricingPlans = [
         {
-            name: 'ESSENTIAL',
+            name: 'Essential',
             price: '$0.50',
             unit: 'USD / empleado / mes',
             limit: 'Hasta 25 colaboradores',
@@ -273,15 +285,15 @@ function Home() {
             isPopular: false,
             features: [
                 'Expediente digital de colaboradores',
-                'Marcación de asistencia con geocerca GPS',
-                'Motor de nómina automatizada Ecuador',
-                'Cálculo de horas extra y recargo nocturno',
-                'Generación de actas de finiquito básicas',
-                'Soporte estándar y 45 días de prueba gratuita'
+                'Marcación de asistencia GPS con geocerca',
+                'Motor de nómina legal para Ecuador',
+                'Horas extra 50%/100% y recargo nocturno',
+                'Simulador de finiquitos y liquidaciones',
+                '45 días de prueba completa sin tarjeta'
             ]
         },
         {
-            name: 'GROWTH',
+            name: 'Growth',
             price: '$1.00',
             unit: 'USD / empleado / mes',
             limit: 'Hasta 100 colaboradores',
@@ -289,16 +301,16 @@ function Home() {
             isPopular: true,
             features: [
                 'Todo lo incluido en Essential',
-                'Evaluaciones 360° y objetivos SMART (OKRs)',
-                'Portal público de vacantes y pipeline Kanban',
-                'Módulo contable: plan de cuentas y asientos',
+                'Evaluaciones 360° y metas SMART (OKRs)',
+                'Portal público de vacantes (/careers)',
+                'Módulo contable con plan de cuentas y asientos',
                 'Autenticación biométrica WebAuthn (Passkeys)',
-                'Detección anti-VPN y reporte de horas nocturnas',
-                'Soporte prioritario y 45 días de prueba gratuita'
+                'Detección de accesos por VPN / Proxies',
+                'Soporte técnico prioritario'
             ]
         },
         {
-            name: 'ENTERPRISE',
+            name: 'Enterprise',
             price: '$2.00',
             unit: 'USD / empleado / mes',
             limit: 'Colaboradores ilimitados',
@@ -306,84 +318,79 @@ function Home() {
             isPopular: false,
             features: [
                 'Todo lo incluido en Growth',
-                'Cuatrilogía completa de Motores de IA (RSI, Causal, FedAvg, MORL)',
-                'Simulador Monte Carlo (2,000 iteraciones)',
-                'Modelado de supervivencia Weibull y ANOVA',
-                'Exportación de datasets anonimizados para investigación',
-                'Aislamiento y gobernanza LOPDP de grado doctoral',
-                'SLA garantizado y 45 días de prueba gratuita'
+                'Suite completa de analítica predictiva y causal',
+                'Simulación de escenarios de rotación y costos',
+                'Centros de costos y reportes avanzados de nómina',
+                'Portal de evidencia científica e investigación',
+                'Acuerdo de nivel de servicio (SLA) preferencial'
             ]
         }
     ];
 
     const faqs = [
         {
-            q: '¿Cómo garantiza Emplifi el cumplimiento de las leyes laborales del Ecuador?',
-            a: 'Emplifi incorpora los coeficientes exactos del Código del Trabajo, resoluciones del IESS y del SRI: aporte personal (9.45%), aporte patronal (11.15%), horas suplementarias (50%), extraordinarias (100%), recargo nocturno (25%), 13er sueldo, 14to sueldo sobre el SBU vigente ($460.00 USD), fondo de reserva (8.33%), bonificación por desahucio (Art. 185: 25% por año) e indemnización por despido intempestivo (Art. 188 con tope de 25 meses).'
-        },
-        {
-            q: '¿Qué es el aislamiento Multi-Tenant y cómo protege los datos de mi empresa?',
-            a: 'La plataforma implementa un modelo Shared Database, Shared Schema con inyección asíncrona mediante AsyncLocalStorage e interceptores de base de datos en Prisma ORM. Esto garantiza a nivel de consultas SQL que ninguna empresa pueda acceder, visualizar ni mezclar datos con otra. Además, los salarios, cuentas bancarias y coordenadas GPS se encriptan con AES-256-GCM.'
+            q: '¿Cómo garantiza Emplifi el cumplimiento legal en Ecuador?',
+            a: 'El motor incorpora automáticamente los porcentajes vigentes del Código del Trabajo, IESS y SRI: aporte personal (9.45%), aporte patronal (11.15%), horas suplementarias (50%), extraordinarias (100%), recargo nocturno (25%), decimotercero, decimocuarto (SBU $460.00 USD), fondo de reserva (8.33%), desahucio (Art. 185) y despido intempestivo (Art. 188).'
         },
         {
             q: '¿Cómo funciona la prueba gratuita de 45 días?',
-            a: 'La prueba gratuita incluye acceso total a todas las funcionalidades del sistema durante 45 días naturales completos, sin necesidad de ingresar tarjeta de crédito. Este plazo está pensado para que tu empresa complete un ciclo mensual completo de asistencia, aprobación de solicitudes y cálculo/cierre de nómina.'
+            a: 'La prueba incluye acceso completo a todos los módulos y funciones por 45 días continuos. No requiere tarjeta de crédito al registrar la empresa, lo que permite completar un ciclo completo de asistencia y nómina mensual sin costo.'
         },
         {
-            q: '¿Qué precisión tienen los cálculos financieros y salariales?',
-            a: 'Todos los cálculos matemáticos y monetarios del sistema se ejecutan con la librería Decimal.js con 20 dígitos de precisión y modo de redondeo financiero ROUND_HALF_UP, eliminando los errores de coma flotante de las hojas de cálculo tradicionales.'
+            q: '¿Cómo se garantiza la seguridad y privacidad de la información?',
+            a: 'Cada empresa opera en un entorno con aislamiento lógico estricto. Las credenciales, remuneraciones, cuentas bancarias y coordenadas GPS se encriptan con AES-256-GCM, garantizando el cumplimiento de la Ley Orgánica de Protección de Datos Personales (LOPDP).'
         },
         {
-            q: '¿Pueden los colaboradores registrar asistencia desde sus propios teléfonos?',
-            a: 'Sí. Emplifi funciona como una Progressive Web App (PWA) instalable. Los colaboradores pueden marcar entrada y salida en un toque; el sistema valida la geocerca Haversine, detecta intentos de engaño por VPN o proxies, y verifica la identidad mediante biometría WebAuthn (Passkeys).'
+            q: '¿Los colaboradores pueden marcar asistencia desde sus propios teléfonos?',
+            a: 'Sí. Emplifi funciona como una Progressive Web App (PWA) rápida y liviana. Los colaboradores pueden registrar su entrada y salida desde el móvil verificando la geocerca permitida y sin requerir descargas pesadas desde tiendas de aplicaciones.'
         },
         {
-            q: '¿En qué consiste la Cuatrilogía de Motores de Inteligencia Artificial?',
-            a: 'Es una suite analítica científica integrada por 4 motores: Automejora Recursiva (RSI Engine con SGD), Inferencia Causal Contrafactual (Do-Calculus de Pearl y ajuste IPW), Aprendizaje Federado con Privacidad Diferencial (DP-SGD bajo norma LOPDP/GDPR) y Optimización Multiobjetivo (Vector Q-Learning con Frontera de Pareto).'
+            q: '¿Qué precisión tienen los cálculos salariales y contables?',
+            a: 'Todos los cálculos financieros y salariales se realizan con precisión de alta escala mediante aritmética decimal exacta y redondeo financiero bancario, eliminando inconsistencias de centavos.'
         }
     ];
 
     return (
         <main className="min-h-screen bg-[#f9fafb] text-[#111827] font-sans antialiased selection:bg-blue-600 selection:text-white">
-            {/* Header / Navbar Profesional */}
+            {/* Header / Barra de Navegación Principal */}
             <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-14">
-                        {/* Logo e Identidad */}
+                        {/* Identidad de Marca */}
                         <div className="flex items-center gap-3">
                             <Link to="/" className="flex items-center gap-2.5">
                                 <img src={logoEmplifi} alt="Emplifi" className="h-7 w-auto object-contain" />
                                 <span className="font-bold text-sm tracking-tight text-gray-900 hidden sm:inline">EMPLIFI</span>
                             </Link>
                             <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded bg-gray-100 border border-gray-200 text-gray-600 text-[10px] font-mono font-medium">
-                                SaaS v2.6 · PyMEs Ecuador
+                                SaaS ERP · Ecuador
                             </span>
                         </div>
 
-                        {/* Enlaces de Navegación Rápida */}
-                        <nav className="hidden lg:flex items-center gap-5 text-xs font-medium text-gray-600">
-                            <a href="#modulos" className="hover:text-blue-600 transition-colors">Módulos (14)</a>
-                            <a href="#demostrador" className="hover:text-blue-600 transition-colors">Calculadoras en Vivo</a>
-                            <a href="#motores-ia" className="hover:text-blue-600 transition-colors">Cuatrilogía IA</a>
-                            <a href="#precios" className="hover:text-blue-600 transition-colors">Planes & Precios</a>
-                            <Link to="/investigacion" className="hover:text-blue-600 transition-colors flex items-center gap-1">
+                        {/* Navegación Principal */}
+                        <nav className="hidden lg:flex items-center gap-6 text-xs font-medium text-gray-600">
+                            <a href="#modulos" className="hover:text-blue-600 transition-colors">Módulos</a>
+                            <a href="#simulador" className="hover:text-blue-600 transition-colors">Simuladores</a>
+                            <a href="#analitica" className="hover:text-blue-600 transition-colors">Analítica</a>
+                            <a href="#precios" className="hover:text-blue-600 transition-colors">Precios</a>
+                            <Link to="/investigacion" className="hover:text-blue-600 transition-colors inline-flex items-center gap-1">
                                 <FiSearch className="w-3 h-3 text-blue-600" />
-                                <span>Evidencia Científica</span>
+                                <span>Investigación</span>
                             </Link>
                         </nav>
 
-                        {/* CTAs de Cabecera */}
+                        {/* Botones de Acción */}
                         <div className="flex items-center gap-2">
                             <Link
                                 to="/careers"
-                                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
+                                className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
                             >
                                 <FiBriefcase className="w-3.5 h-3.5 text-gray-500" />
                                 <span>Vacantes</span>
                             </Link>
                             <Link
                                 to="/login"
-                                className="px-3.5 py-1.5 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
+                                className="px-3 py-1.5 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
                             >
                                 Iniciar Sesión
                             </Link>
@@ -400,213 +407,271 @@ function Home() {
             </header>
 
             {/* Hero Section */}
-            <section className="py-14 sm:py-20 bg-white border-b border-gray-200">
+            <section className="py-12 sm:py-16 bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-4xl mx-auto text-center">
-                        {/* Categoría & Respaldo */}
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-gray-50 border border-gray-200 text-gray-700 text-xs font-mono font-medium mb-6">
+                    <div className="max-w-3xl mx-auto text-center">
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-gray-50 border border-gray-200 text-gray-700 text-xs font-mono font-medium mb-5">
                             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span>PLATAFORMA SAAS MULTI-TENANT · CÓDIGO DEL TRABAJO ECUADOR</span>
+                            <span>SISTEMA DE GESTIÓN HUMANA Y NÓMINA LEGAL · ECUADOR</span>
                         </div>
 
-                        {/* Titular Principal */}
-                        <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-5">
-                            Gestión Integral de Talento Humano, Nómina Legal y Analítica Científica
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-4">
+                            Gestión integral de personal y nómina legal para PyMEs
                         </h1>
 
-                        {/* Subtítulo Detallado */}
-                        <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-8 max-w-3xl mx-auto">
-                            Automatiza el ciclo completo de personal en PyMEs: nómina batch con precisión de 20 dígitos,
-                            asistencia por geocerca Haversine y biometría WebAuthn, actas de finiquito legales instantáneas y
-                            una <strong className="text-gray-900 font-semibold">Cuatrilogía de Motores de Inteligencia Artificial</strong> de grado doctoral.
+                        <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-7 max-w-2xl mx-auto">
+                            Automatiza roles de pago con el Código del Trabajo y aportes IESS, control asistencial con geocerca GPS,
+                            expedientes de colaboradores y finiquitos instantáneos en una plataforma confiable y segura.
                         </p>
 
-                        {/* Botones de Acción Principal */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
                             <Link
                                 to="/register-company"
-                                className="w-full sm:w-auto px-6 py-3 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors inline-flex items-center justify-center gap-2 shadow-sm"
+                                className="w-full sm:w-auto px-6 py-2.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors inline-flex items-center justify-center gap-2 shadow-sm"
                             >
-                                <span>Comenzar Prueba Gratuita (45 Días)</span>
+                                <span>Iniciar Prueba Gratuita (45 Días)</span>
                                 <FiArrowRight className="w-4 h-4" />
                             </Link>
                             <a
-                                href="#demostrador"
-                                className="w-full sm:w-auto px-5 py-3 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors inline-flex items-center justify-center gap-2"
+                                href="#simulador"
+                                className="w-full sm:w-auto px-5 py-2.5 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors inline-flex items-center justify-center gap-2"
                             >
                                 <FiSliders className="w-4 h-4 text-gray-500" />
-                                <span>Probar Simuladores en Vivo</span>
+                                <span>Probar Simuladores</span>
                             </a>
-                            <Link
-                                to="/investigacion"
-                                className="w-full sm:w-auto px-5 py-3 rounded border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-medium transition-colors inline-flex items-center justify-center gap-2"
-                            >
-                                <FiAward className="w-4 h-4 text-blue-600" />
-                                <span>Portal Científico</span>
-                            </Link>
                         </div>
 
-                        {/* Barra de Garantías Técnicas y de Seguridad */}
+                        {/* Indicadores de Confianza Institucional */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-gray-100 text-left font-mono text-[11px]">
-                            <div className="p-2.5 rounded bg-gray-50 border border-gray-200">
-                                <div className="flex items-center gap-1.5 text-gray-900 font-semibold mb-0.5">
+                            <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                <div className="text-gray-900 font-semibold mb-0.5 flex items-center gap-1.5">
                                     <FiShield className="w-3.5 h-3.5 text-blue-600" />
-                                    <span>Aislamiento Total</span>
+                                    <span>Normativa Ecuador</span>
                                 </div>
-                                <p className="text-gray-500 text-[10px]">Prisma $use + AsyncLocalStorage</p>
+                                <p className="text-gray-500 text-[10px]">Código del Trabajo & IESS</p>
                             </div>
-                            <div className="p-2.5 rounded bg-gray-50 border border-gray-200">
-                                <div className="flex items-center gap-1.5 text-gray-900 font-semibold mb-0.5">
+                            <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                <div className="text-gray-900 font-semibold mb-0.5 flex items-center gap-1.5">
                                     <FiLock className="w-3.5 h-3.5 text-blue-600" />
-                                    <span>Cifrado AES-256-GCM</span>
+                                    <span>Cifrado Bancario</span>
                                 </div>
-                                <p className="text-gray-500 text-[10px]">Salarios, Bancos y GPS protegidos</p>
+                                <p className="text-gray-500 text-[10px]">AES-256 & LOPDP</p>
                             </div>
-                            <div className="p-2.5 rounded bg-gray-50 border border-gray-200">
-                                <div className="flex items-center gap-1.5 text-gray-900 font-semibold mb-0.5">
+                            <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                <div className="text-gray-900 font-semibold mb-0.5 flex items-center gap-1.5">
                                     <FiPercent className="w-3.5 h-3.5 text-blue-600" />
-                                    <span>Precisión 20 Dígitos</span>
+                                    <span>Cálculo Exacto</span>
                                 </div>
-                                <p className="text-gray-500 text-[10px]">Decimal.js ROUND_HALF_UP</p>
+                                <p className="text-gray-500 text-[10px]">Aritmética de alta precisión</p>
                             </div>
-                            <div className="p-2.5 rounded bg-gray-50 border border-gray-200">
-                                <div className="flex items-center gap-1.5 text-gray-900 font-semibold mb-0.5">
+                            <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                <div className="text-gray-900 font-semibold mb-0.5 flex items-center gap-1.5">
                                     <FiCheckCircle className="w-3.5 h-3.5 text-blue-600" />
-                                    <span>45 Días de Prueba</span>
+                                    <span>45 Días Libres</span>
                                 </div>
-                                <p className="text-gray-500 text-[10px]">Sin tarjeta de crédito requerida</p>
+                                <p className="text-gray-500 text-[10px]">Sin tarjeta de crédito</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Panel de Validación Científica y Resultados Empíricos (N = 40) */}
+            {/* Vista Previa del Producto / Mock Operativo Realista */}
             <section className="py-10 bg-gray-50 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                        <div>
-                            <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-blue-600">
-                                ESTUDIO DE EVALUACIÓN EMPÍRICA Y USABILIDAD EN PYMES
+                    <div className="max-w-5xl mx-auto bg-white rounded border border-gray-200 shadow-sm overflow-hidden">
+                        {/* Barra Superior del Sistema Mock */}
+                        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between font-mono text-xs">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+                                <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+                                <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+                                <span className="ml-2 text-gray-500 text-[11px]">panel.emplifi.ec · Vista Operativa de Empresa</span>
+                            </div>
+                            <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200 font-medium">
+                                NÓMINA ACTIVA
                             </span>
-                            <h2 className="text-lg font-bold text-gray-900">
-                                Resultados Cuantitativos Validados en Producción
-                            </h2>
                         </div>
-                        <Link
-                            to="/investigacion/resultados"
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-                        >
-                            <span>Ver informe psicométrico completo (Alfa Cronbach α = 0.864)</span>
-                            <FiArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-white p-4 rounded border border-gray-200">
-                            <span className="text-[10px] uppercase font-mono tracking-wider text-gray-500">Eficiencia en Nómina</span>
-                            <div className="text-2xl font-bold font-mono text-gray-900 my-1 tabular-nums">-84.2%</div>
-                            <p className="text-xs text-gray-600">Reducción del tiempo mensual de elaboración de rol (de 18h a &lt;2h).</p>
-                        </div>
-                        <div className="bg-white p-4 rounded border border-gray-200">
-                            <span className="text-[10px] uppercase font-mono tracking-wider text-gray-500">Conformidad Legal</span>
-                            <div className="text-2xl font-bold font-mono text-emerald-600 my-1 tabular-nums">100.0%</div>
-                            <p className="text-xs text-gray-600">Apego estricto a los Arts. 185 y 188 del Código del Trabajo y aportes IESS.</p>
-                        </div>
-                        <div className="bg-white p-4 rounded border border-gray-200">
-                            <span className="text-[10px] uppercase font-mono tracking-wider text-gray-500">Satisfacción PyME</span>
-                            <div className="text-2xl font-bold font-mono text-blue-600 my-1 tabular-nums">97.2%</div>
-                            <p className="text-xs text-gray-600">Índice favorable de recomendación y adopción por administradores (UAT).</p>
-                        </div>
-                        <div className="bg-white p-4 rounded border border-gray-200">
-                            <span className="text-[10px] uppercase font-mono tracking-wider text-gray-500">Balance Causal IPW</span>
-                            <div className="text-2xl font-bold font-mono text-gray-900 my-1 tabular-nums">95.7%</div>
-                            <p className="text-xs text-gray-600">Reducción del sesgo covariado confusor en análisis predictivo (SMD &lt; 0.10).</p>
+                        {/* Contenido Visual del Mock */}
+                        <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
+                            {/* Panel Izquierdo: Resumen de Colaboradores */}
+                            <div className="lg:col-span-8 space-y-4">
+                                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                                    <div>
+                                        <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider font-mono">
+                                            Personal en Turno Activo
+                                        </h3>
+                                        <p className="text-[11px] text-gray-500">Marcaciones validadas por geocerca GPS</p>
+                                    </div>
+                                    <span className="text-xs font-mono font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                                        12 / 12 Presentes
+                                    </span>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs font-mono">
+                                        <thead>
+                                            <tr className="border-b border-gray-200 text-[10px] text-gray-500 uppercase tracking-wider">
+                                                <th className="pb-2 font-medium">Colaborador</th>
+                                                <th className="pb-2 font-medium">Cargo</th>
+                                                <th className="pb-2 font-medium">Entrada</th>
+                                                <th className="pb-2 font-medium">Ubicación GPS</th>
+                                                <th className="pb-2 font-medium text-right">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 text-[11px]">
+                                            <tr>
+                                                <td className="py-2 font-semibold text-gray-900">Carlos Méndez</td>
+                                                <td className="py-2 text-gray-600">Supervisor de Planta</td>
+                                                <td className="py-2 text-gray-600">08:00 AM</td>
+                                                <td className="py-2 text-gray-600">Sede Principal (42m)</td>
+                                                <td className="py-2 text-right">
+                                                    <span className="px-1.5 py-0.5 bg-green-50 text-green-700 rounded border border-green-200 text-[10px]">
+                                                        Puntual
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="py-2 font-semibold text-gray-900">Elena Salgado</td>
+                                                <td className="py-2 text-gray-600">Contadora General</td>
+                                                <td className="py-2 text-gray-600">08:02 AM</td>
+                                                <td className="py-2 text-gray-600">Sede Principal (18m)</td>
+                                                <td className="py-2 text-right">
+                                                    <span className="px-1.5 py-0.5 bg-green-50 text-green-700 rounded border border-green-200 text-[10px]">
+                                                        Puntual
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="py-2 font-semibold text-gray-900">David Vaca</td>
+                                                <td className="py-2 text-gray-600">Técnico de Campo</td>
+                                                <td className="py-2 text-gray-600">08:14 AM</td>
+                                                <td className="py-2 text-gray-600">Sucursal Norte (95m)</td>
+                                                <td className="py-2 text-right">
+                                                    <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded border border-amber-200 text-[10px]">
+                                                        Tolerancia (14m)
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Panel Derecho: Resumen Financiero Estilo Contable */}
+                            <div className="lg:col-span-4 bg-gray-50 rounded border border-gray-200 p-4 font-mono text-xs flex flex-col justify-between">
+                                <div>
+                                    <div className="flex justify-between items-center pb-2 border-b border-gray-200 mb-3">
+                                        <span className="text-[11px] font-semibold text-gray-900 uppercase">Resumen de Nómina</span>
+                                        <span className="text-[10px] text-gray-500">MES EN CURSO</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-gray-600 text-[11px]">
+                                            <span>Masa Salarial Base:</span>
+                                            <span className="text-gray-900 font-semibold tabular-nums">$9,850.00</span>
+                                        </div>
+                                        <div className="flex justify-between text-gray-600 text-[11px]">
+                                            <span>Horas Extraordinarias:</span>
+                                            <span className="text-gray-900 tabular-nums">$412.50</span>
+                                        </div>
+                                        <div className="flex justify-between text-gray-600 text-[11px]">
+                                            <span>Aporte Personal IESS:</span>
+                                            <span className="text-red-600 tabular-nums">-$969.80</span>
+                                        </div>
+                                        <div className="flex justify-between text-gray-600 text-[11px]">
+                                            <span>Aporte Patronal (11.15%):</span>
+                                            <span className="text-gray-900 tabular-nums">$1,144.27</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="pt-3 border-t border-gray-200 mt-3 flex justify-between items-center text-xs">
+                                    <span className="font-semibold text-gray-900">Total Líquido:</span>
+                                    <span className="text-blue-600 font-bold tabular-nums">$9,292.70 USD</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Demostrador Interactivo en Vivo (Calculadoras Oficiales) */}
-            <section id="demostrador" className="py-14 bg-white border-b border-gray-200">
+            {/* Simuladores Interactivos en Vivo */}
+            <section id="simulador" className="py-14 bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-3xl mx-auto text-center mb-8">
+                    <div className="max-w-2xl mx-auto text-center mb-8">
                         <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-blue-600">
-                            INTERACTIVIDAD Y TRANSPARENCIA MATEMÁTICA
+                            TRANSPARENCIA & MOTOR DE CÁLCULO
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
-                            Prueba los Motores de Cálculo en Tiempo Real
+                        <h2 className="text-2xl font-bold text-gray-900 mt-1">
+                            Simuladores Oficiales en Tiempo Real
                         </h2>
                         <p className="text-xs sm:text-sm text-gray-600 mt-2">
-                            Comprueba directamente las fórmulas de nómina, liquidación legal y geocerca que operan dentro de Emplifi.
+                            Comprueba directamente las fórmulas de nómina, actas de finiquito y control por geocerca que rigen el sistema.
                         </p>
                     </div>
 
-                    {/* Selector de Pestañas Sobrio */}
+                    {/* Selector de Pestañas de Simulación */}
                     <div className="flex items-center justify-center border-b border-gray-200 mb-8 overflow-x-auto">
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setActiveDemoTab('payroll')}
                                 className={`pb-3 px-4 text-xs font-medium transition-colors border-b-2 cursor-pointer ${
                                     activeDemoTab === 'payroll'
-                                        ? 'border-gray-900 text-gray-900 font-semibold'
+                                        ? 'border-blue-600 text-blue-600 font-semibold'
                                         : 'border-transparent text-gray-500 hover:text-gray-900'
                                 }`}
                             >
-                                1. Motor de Nómina & IESS
+                                1. Rol de Pago & Aportes IESS
                             </button>
                             <button
                                 onClick={() => setActiveDemoTab('offboarding')}
                                 className={`pb-3 px-4 text-xs font-medium transition-colors border-b-2 cursor-pointer ${
                                     activeDemoTab === 'offboarding'
-                                        ? 'border-gray-900 text-gray-900 font-semibold'
+                                        ? 'border-blue-600 text-blue-600 font-semibold'
                                         : 'border-transparent text-gray-500 hover:text-gray-900'
                                 }`}
                             >
-                                2. Finiquito Legal (Offboarding)
+                                2. Acta de Finiquito Legal
                             </button>
                             <button
                                 onClick={() => setActiveDemoTab('attendance')}
                                 className={`pb-3 px-4 text-xs font-medium transition-colors border-b-2 cursor-pointer ${
                                     activeDemoTab === 'attendance'
-                                        ? 'border-gray-900 text-gray-900 font-semibold'
+                                        ? 'border-blue-600 text-blue-600 font-semibold'
                                         : 'border-transparent text-gray-500 hover:text-gray-900'
                                 }`}
                             >
-                                3. Geocerca Haversine & Anti-VPN
+                                3. Geocerca GPS & Detección VPN
                             </button>
                         </div>
                     </div>
 
-                    {/* Contenido Dinámico de la Pestaña Activa */}
+                    {/* Contenido Dinámico de Simuladores */}
                     <div className="max-w-5xl mx-auto bg-gray-50 rounded border border-gray-200 overflow-hidden shadow-sm">
+                        {/* Tab 1: Rol de Pago */}
                         {activeDemoTab === 'payroll' && (
                             <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-                                {/* Formulario de Parámetros */}
                                 <div className="lg:col-span-6 space-y-4">
                                     <div className="flex items-center justify-between pb-2 border-b border-gray-200">
                                         <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider font-mono">
-                                            Parámetros de Nómina (Mensual)
+                                            Parámetros de Nómina (Ecuador)
                                         </h3>
-                                        <span className="text-[10px] font-mono text-gray-500">EC-COD-TRABAJO</span>
+                                        <span className="text-[10px] font-mono text-gray-500">SBU: $460.00</span>
                                     </div>
 
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 mb-1">
                                             Salario Base Mensual (USD):
                                         </label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="number"
-                                                min="460"
-                                                max="5000"
-                                                step="50"
-                                                value={payrollSalary}
-                                                onChange={(e) => setPayrollSalary(e.target.value)}
-                                                className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded text-xs font-mono text-gray-900 focus:outline-none focus:border-blue-500"
-                                            />
-                                            <span className="text-xs font-mono text-gray-500">SBU ≥ $460</span>
-                                        </div>
+                                        <input
+                                            type="number"
+                                            min="460"
+                                            max="5000"
+                                            step="50"
+                                            value={payrollSalary}
+                                            onChange={(e) => setPayrollSalary(e.target.value)}
+                                            className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded text-xs font-mono text-gray-900 focus:outline-none focus:border-blue-500"
+                                        />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3">
@@ -642,7 +707,7 @@ function Home() {
                                     <div className="grid grid-cols-3 gap-2">
                                         <div>
                                             <label className="block text-[10px] font-medium text-gray-700 mb-1">
-                                                H. Extra (50%):
+                                                Horas Extra 50%:
                                             </label>
                                             <input
                                                 type="number"
@@ -655,7 +720,7 @@ function Home() {
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-medium text-gray-700 mb-1">
-                                                H. Extra (100%):
+                                                Horas Extra 100%:
                                             </label>
                                             <input
                                                 type="number"
@@ -668,7 +733,7 @@ function Home() {
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-medium text-gray-700 mb-1">
-                                                H. Nocturnas (25%):
+                                                Horas Nocturnas 25%:
                                             </label>
                                             <input
                                                 type="number"
@@ -682,19 +747,18 @@ function Home() {
                                     </div>
                                 </div>
 
-                                {/* Panel Lateral Estilo Liquidación Contable */}
                                 <div className="lg:col-span-6 bg-white rounded border border-gray-200 p-4 font-mono text-xs flex flex-col justify-between">
                                     <div>
                                         <div className="flex justify-between items-center pb-2.5 border-b border-gray-200 mb-3">
-                                            <span className="text-[11px] font-semibold text-gray-900 uppercase">ROL DE PAGO INDIVIDUAL</span>
+                                            <span className="text-[11px] font-semibold text-gray-900 uppercase">Desglose del Rol Individual</span>
                                             <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-200">
-                                                CALCULADO CON DECIMAL.JS
+                                                IESS CONFORME
                                             </span>
                                         </div>
 
                                         <div className="space-y-1.5">
                                             <div className="flex justify-between text-gray-600">
-                                                <span>(+) Salario Proporcional ({payrollDays} días):</span>
+                                                <span>(+) Sueldo ganado ({payrollDays}d):</span>
                                                 <span className="text-gray-900 font-semibold tabular-nums">${payrollCalc.earnedSalary}</span>
                                             </div>
                                             <div className="flex justify-between text-gray-600">
@@ -706,7 +770,7 @@ function Home() {
                                                 <span className="text-gray-900 tabular-nums">${payrollCalc.overtime100Amount}</span>
                                             </div>
                                             <div className="flex justify-between text-gray-600">
-                                                <span>(+) Recargo Nocturno (25% franjas):</span>
+                                                <span>(+) Recargo Nocturno (25%):</span>
                                                 <span className="text-gray-900 tabular-nums">${payrollCalc.nightSurchargeAmount}</span>
                                             </div>
                                             <div className="flex justify-between pt-1.5 border-t border-gray-100 text-gray-800 font-medium">
@@ -719,7 +783,7 @@ function Home() {
                                             </div>
                                             {Number(payrollAdvance) > 0 && (
                                                 <div className="flex justify-between text-red-600">
-                                                    <span>(-) Amortización Anticipo:</span>
+                                                    <span>(-) Anticipo Descontado:</span>
                                                     <span className="tabular-nums">-${Number(payrollAdvance).toFixed(2)}</span>
                                                 </div>
                                             )}
@@ -728,34 +792,35 @@ function Home() {
 
                                     <div className="pt-3 border-t-2 border-gray-200 mt-3">
                                         <div className="flex justify-between items-center text-sm font-bold text-gray-900">
-                                            <span>LÍQUIDO A RECIBIR (NETO):</span>
+                                            <span>LÍQUIDO A PAGAR:</span>
                                             <span className="text-blue-600 text-base font-mono tabular-nums">
                                                 ${payrollCalc.netSalary} USD
                                             </span>
                                         </div>
                                         <div className="mt-2 text-[10px] text-gray-500 flex justify-between">
-                                            <span>Aporte Patronal (11.15%): ${payrollCalc.iessPatronal}</span>
-                                            <span>Provisión 13ro: ${payrollCalc.thirteenthMonthly}</span>
-                                            <span>Provisión 14to: ${payrollCalc.fourteenthMonthly}</span>
+                                            <span>Patronal 11.15%: ${payrollCalc.iessPatronal}</span>
+                                            <span>13ro: ${payrollCalc.thirteenthMonthly}</span>
+                                            <span>14to: ${payrollCalc.fourteenthMonthly}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         )}
 
+                        {/* Tab 2: Finiquito */}
                         {activeDemoTab === 'offboarding' && (
                             <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
                                 <div className="lg:col-span-6 space-y-4">
                                     <div className="flex items-center justify-between pb-2 border-b border-gray-200">
                                         <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider font-mono">
-                                            Parámetros de Desvinculación
+                                            Datos de Terminación Laboral
                                         </h3>
                                         <span className="text-[10px] font-mono text-gray-500">ARTS. 185 & 188</span>
                                     </div>
 
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 mb-1">
-                                            Último Salario Percibido (USD):
+                                            Último Sueldo Percibido (USD):
                                         </label>
                                         <input
                                             type="number"
@@ -781,7 +846,7 @@ function Home() {
                                         </div>
                                         <div>
                                             <label className="block text-[11px] font-medium text-gray-700 mb-1">
-                                                Meses Fracción:
+                                                Meses Adicionales:
                                             </label>
                                             <input
                                                 type="number"
@@ -796,12 +861,12 @@ function Home() {
 
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 mb-1">
-                                            Causal de Terminación Laboral:
+                                            Causal de Salida:
                                         </label>
                                         <select
                                             value={offboardingCausal}
                                             onChange={(e) => setOffboardingCausal(e.target.value)}
-                                            className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded text-xs text-gray-900 font-medium"
+                                            className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded text-xs text-gray-900"
                                         >
                                             <option value="UNFAIR_DISMISSAL">Despido Intempestivo (Art. 188 + 185)</option>
                                             <option value="VOLUNTARY_RESIGNATION">Renuncia Voluntaria (Art. 185)</option>
@@ -827,9 +892,9 @@ function Home() {
                                 <div className="lg:col-span-6 bg-white rounded border border-gray-200 p-4 font-mono text-xs flex flex-col justify-between">
                                     <div>
                                         <div className="flex justify-between items-center pb-2.5 border-b border-gray-200 mb-3">
-                                            <span className="text-[11px] font-semibold text-gray-900 uppercase">SIMULADOR ACTA DE FINIQUITO</span>
+                                            <span className="text-[11px] font-semibold text-gray-900 uppercase">Acta de Liquidación Legal</span>
                                             <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
-                                                DICTAMEN CONFORME 100%
+                                                CÓDIGO DEL TRABAJO
                                             </span>
                                         </div>
 
@@ -861,32 +926,30 @@ function Home() {
 
                                     <div className="pt-3 border-t-2 border-gray-200 mt-3">
                                         <div className="flex justify-between items-center text-sm font-bold text-gray-900">
-                                            <span>TOTAL ACTA DE FINIQUITO:</span>
+                                            <span>TOTAL LIQUIDACIÓN:</span>
                                             <span className="text-emerald-700 text-base font-mono tabular-nums">
                                                 ${offboardingCalc.totalSettlement} USD
                                             </span>
                                         </div>
-                                        <p className="mt-2 text-[10px] text-gray-500">
-                                            Genera checklist automático de revocación de accesos IT y entrega de EPPs.
-                                        </p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
+                        {/* Tab 3: Asistencia GPS */}
                         {activeDemoTab === 'attendance' && (
                             <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
                                 <div className="lg:col-span-6 space-y-4">
                                     <div className="flex items-center justify-between pb-2 border-b border-gray-200">
                                         <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider font-mono">
-                                            Fórmula de Haversine & Geofence
+                                            Geocerca GPS de la Sede
                                         </h3>
-                                        <span className="text-[10px] font-mono text-gray-500">R = 6,371 km</span>
+                                        <span className="text-[10px] font-mono text-gray-500">Radio: {geoRadius}m</span>
                                     </div>
 
                                     <div>
                                         <label className="block text-xs font-medium text-gray-700 mb-1">
-                                            Distancia al Centro de Trabajo ({geoDistance} metros):
+                                            Distancia del empleado al centro de trabajo ({geoDistance}m):
                                         </label>
                                         <input
                                             type="range"
@@ -899,77 +962,71 @@ function Home() {
                                         />
                                         <div className="flex justify-between text-[10px] font-mono text-gray-500 mt-1">
                                             <span>0m (En sede)</span>
-                                            <span>Radio Permitido: {geoRadius}m</span>
-                                            <span>500m (Fuera)</span>
+                                            <span>Límite: {geoRadius}m</span>
+                                            <span>500m (Lejos)</span>
                                         </div>
                                     </div>
 
-                                    <div className="p-3 bg-white rounded border border-gray-200 space-y-2">
+                                    <div className="p-3 bg-white rounded border border-gray-200">
                                         <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-800">
                                             <input
                                                 type="checkbox"
                                                 checked={vpnDetected}
                                                 onChange={(e) => setVpnDetected(e.target.checked)}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                className="rounded border-gray-300 text-blue-600"
                                             />
-                                            <span>Simular detección de Proxy / VPN (ip-api.com)</span>
+                                            <span>Simular uso de VPN o Proxy en dispositivo</span>
                                         </label>
                                     </div>
 
                                     <p className="text-xs text-gray-600 leading-relaxed">
-                                        El motor calcula la distancia del gran círculo sobre la superficie terrestre,
-                                        trunca las coordenadas a 4 decimales (~11m de precisión para proteger la privacidad LOPDP)
-                                        y las encripta mediante <strong className="text-gray-900">AES-256-GCM</strong>.
+                                        El sistema valida las coordenadas del colaborador en milisegundos mediante la fórmula de Haversine y bloquea intentos de falseo de ubicación.
                                     </p>
                                 </div>
 
                                 <div className="lg:col-span-6 bg-white rounded border border-gray-200 p-4 font-mono text-xs flex flex-col justify-between">
                                     <div>
                                         <div className="flex justify-between items-center pb-2.5 border-b border-gray-200 mb-3">
-                                            <span className="text-[11px] font-semibold text-gray-900 uppercase">VALIDACIÓN DE ASISTENCIA</span>
+                                            <span className="text-[11px] font-semibold text-gray-900 uppercase">Resultado de Marcación</span>
                                             <span className={`text-[10px] px-2 py-0.5 rounded border ${
                                                 geoDistance <= geoRadius && !vpnDetected
                                                     ? 'bg-green-50 text-green-700 border-green-200'
                                                     : 'bg-red-50 text-red-700 border-red-200'
                                             }`}>
-                                                {geoDistance <= geoRadius && !vpnDetected ? 'MARCACIÓN VÁLIDA ✓' : 'MARCACIÓN RECHAZADA ✗'}
+                                                {geoDistance <= geoRadius && !vpnDetected ? 'MARCACIÓN ACEPTADA ✓' : 'MARCACIÓN RECHAZADA ✗'}
                                             </span>
                                         </div>
 
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 text-[11px]">
                                             <div className="flex justify-between text-gray-600">
-                                                <span>Distancia calculada:</span>
+                                                <span>Distancia a la sede:</span>
                                                 <span className="text-gray-900 font-semibold tabular-nums">{geoDistance} metros</span>
                                             </div>
                                             <div className="flex justify-between text-gray-600">
-                                                <span>Radio máximo de geocerca:</span>
+                                                <span>Geocerca configurada:</span>
                                                 <span className="text-gray-900 tabular-nums">{geoRadius} metros</span>
                                             </div>
                                             <div className="flex justify-between text-gray-600">
-                                                <span>Estado de IP & Anti-VPN:</span>
-                                                <span className={`tabular-nums font-semibold ${vpnDetected ? 'text-red-600' : 'text-green-600'}`}>
-                                                    {vpnDetected ? 'BLOQUEADO (VPN Detectada)' : 'CONEXIÓN LIMPIA (IP Verificada)'}
+                                                <span>Detección de VPN / Proxy:</span>
+                                                <span className={`font-semibold ${vpnDetected ? 'text-red-600' : 'text-green-600'}`}>
+                                                    {vpnDetected ? 'Detectado (Bloqueo 403)' : 'Conexión Directa'}
                                                 </span>
-                                            </div>
-                                            <div className="flex justify-between text-gray-600">
-                                                <span>Cifrado de Coordenadas:</span>
-                                                <span className="text-gray-900">AES-256-GCM (AuthTag 128-bit)</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="pt-3 border-t border-gray-200 mt-3 text-[11px] text-gray-500">
+                                    <div className="pt-3 border-t border-gray-200 mt-3 text-[11px]">
                                         {geoDistance <= geoRadius && !vpnDetected ? (
-                                            <span className="text-green-700">
-                                                ✓ Empleado dentro de la geocerca permitida. Registro de entrada autorizado con cálculo de atrasos en base al turno activo.
+                                            <span className="text-green-700 font-medium">
+                                                ✓ Registro aprobado y guardado en expediente.
                                             </span>
                                         ) : vpnDetected ? (
-                                            <span className="text-red-700">
-                                                ✗ Error 403: Se ha detectado el uso de proxy o red virtual. Desactiva la VPN para registrar la asistencia.
+                                            <span className="text-red-700 font-medium">
+                                                ✗ Marcación rechazada: se detectó una red virtual.
                                             </span>
                                         ) : (
-                                            <span className="text-red-700">
-                                                ✗ Error 400: Estás a {geoDistance}m del lugar de trabajo. Debes encontrarte a menos de {geoRadius}m de la sede.
+                                            <span className="text-red-700 font-medium">
+                                                ✗ Fuera del radio de {geoRadius}m permitido.
                                             </span>
                                         )}
                                     </div>
@@ -980,28 +1037,50 @@ function Home() {
                 </div>
             </section>
 
-            {/* Módulos Funcionales Completos (Directorio de 14 Módulos) */}
+            {/* Directorio Modular de la Plataforma */}
             <section id="modulos" className="py-14 bg-gray-50 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                         <div>
                             <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-gray-500">
                                 ARQUITECTURA MODULAR INTEGRAL
                             </span>
                             <h2 className="text-2xl font-bold text-gray-900 mt-0.5">
-                                14 Módulos Especializados en una Sola Plataforma
+                                Todo lo que tu empresa necesita en un solo sistema
                             </h2>
                         </div>
-                        <span className="text-xs font-mono font-semibold text-gray-500 bg-white px-3 py-1 rounded border border-gray-200 w-fit">
-                            14 MÓDULOS ACTIVOS
-                        </span>
+
+                        {/* Filtros por Categoría */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                            {[
+                                { id: 'all', label: 'Todos (14)' },
+                                { id: 'compensacion', label: 'Nómina' },
+                                { id: 'control', label: 'Asistencia' },
+                                { id: 'personal', label: 'Personal' },
+                                { id: 'desempeno', label: 'Desempeño' },
+                                { id: 'legal', label: 'Legal' }
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveModuleCategory(tab.id)}
+                                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                                        activeModuleCategory === tab.id
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
+                    {/* Grilla de Módulos */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {modules.map((mod, idx) => (
+                        {filteredModules.map((mod, idx) => (
                             <div
                                 key={idx}
-                                className="bg-white rounded border border-gray-200 hover:border-blue-500 p-4 transition-colors flex flex-col justify-between"
+                                className="bg-white rounded border border-gray-200 hover:border-gray-300 p-4 transition-colors flex flex-col justify-between shadow-xs"
                             >
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
@@ -1020,8 +1099,8 @@ function Home() {
                                     </p>
                                 </div>
                                 <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[10px] font-mono text-gray-500">
-                                    <span>{mod.category}</span>
-                                    <span className="text-blue-600 font-medium">Operativo ✓</span>
+                                    <span>{mod.categoryName}</span>
+                                    <span className="text-blue-600 font-medium">Activo ✓</span>
                                 </div>
                             </div>
                         ))}
@@ -1029,19 +1108,18 @@ function Home() {
                 </div>
             </section>
 
-            {/* Cuatrilogía Científica de Inteligencia Artificial */}
-            <section id="motores-ia" className="py-14 bg-white border-b border-gray-200">
+            {/* Analítica Avanzada & Toma de Decisiones */}
+            <section id="analitica" className="py-14 bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-3xl mb-8">
+                    <div className="max-w-2xl mb-8">
                         <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-blue-600">
-                            INVESTIGACIÓN CIENTÍFICA & MACHINE LEARNING
+                            INTELIGENCIA & ANALÍTICA DE TALENTO
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
-                            La Cuatrilogía de Motores de Inteligencia Artificial
+                        <h2 className="text-2xl font-bold text-gray-900 mt-1">
+                            Toma de decisiones respaldada en datos reales
                         </h2>
                         <p className="text-xs sm:text-sm text-gray-600 mt-2">
-                            A diferencia de soluciones comerciales tradicionales que operan con heurísticas estáticas,
-                            Emplifi incorpora cuatro modelos matemáticos de vanguardia con demostración experimental.
+                            Modelos analíticos diseñados para prevenir la rotación involuntaria y optimizar el presupuesto salarial de la empresa.
                         </p>
                     </div>
 
@@ -1052,67 +1130,64 @@ function Home() {
                                 className="bg-gray-50 rounded border border-gray-200 p-5 flex flex-col justify-between"
                             >
                                 <div>
-                                    <div className="flex items-center justify-between mb-2.5">
+                                    <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs font-mono font-bold text-blue-600">
-                                            MOTOR {engine.number}
+                                            PILAR {engine.number}
                                         </span>
                                         <span className="text-[10px] font-mono font-medium px-2 py-0.5 bg-white border border-gray-200 text-gray-700 rounded">
                                             {engine.tag}
                                         </span>
                                     </div>
-                                    <h3 className="text-sm font-bold text-gray-900">
-                                        {engine.name}
+                                    <h3 className="text-sm font-bold text-gray-900 mb-2">
+                                        {engine.title}
                                     </h3>
-                                    <p className="text-[11px] font-mono text-gray-500 mb-3">
-                                        {engine.subtitle}
-                                    </p>
                                     <p className="text-xs text-gray-600 leading-relaxed mb-4">
                                         {engine.desc}
                                     </p>
                                 </div>
 
                                 <div className="p-3 bg-white rounded border border-gray-200 flex items-center justify-between font-mono text-[11px]">
-                                    <span className="text-gray-500">Impacto empírico:</span>
-                                    <span className="text-gray-900 font-semibold">{engine.impact}</span>
+                                    <span className="text-gray-500">Beneficio:</span>
+                                    <span className="text-gray-900 font-semibold">{engine.benefit}</span>
                                 </div>
                             </div>
                         ))}
                     </div>
 
+                    {/* Enlace al portal de evidencia científica */}
                     <div className="mt-6 p-4 rounded bg-gray-50 border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
                         <div className="flex items-center gap-2">
                             <FiAward className="w-5 h-5 text-blue-600 shrink-0" />
                             <span className="text-gray-700">
-                                ¿Quieres inspeccionar las pruebas de hipótesis, ANOVA y simulaciones Monte Carlo?
+                                ¿Deseas revisar el estudio empírico y los resultados de evaluación en PyMEs?
                             </span>
                         </div>
                         <Link
                             to="/investigacion"
                             className="px-4 py-2 rounded bg-white border border-gray-300 hover:bg-gray-100 text-gray-900 font-semibold transition-colors shrink-0"
                         >
-                            Explorar Portal de Investigación →
+                            Ver Portal de Investigación →
                         </Link>
                     </div>
                 </div>
             </section>
 
-            {/* Portal de Autoservicio & Progressive Web App (PWA) */}
+            {/* Autoservicio Móvil & Progressive Web App (PWA) */}
             <section className="py-14 bg-gray-50 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-white rounded border border-gray-200 p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                         <div className="lg:col-span-7 space-y-4">
-                            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 text-xs font-mono font-medium">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 text-xs font-mono font-medium">
                                 <FiSmartphone className="w-3.5 h-3.5" />
-                                <span>PORTAL MÓVIL PWA & AUTOSERVICIO EN 1 TOQUE</span>
+                                <span>PORTAL MÓVIL PWA · AUTOSERVICIO</span>
                             </div>
 
                             <h2 className="text-2xl font-bold text-gray-900 leading-tight">
-                                Autoservicio Completo para el Colaborador en Campo y Oficina
+                                Autoservicio instantáneo para cada colaborador
                             </h2>
 
                             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                                Sin necesidad de descargas de tiendas externas ni configuraciones complejas. La aplicación PWA de Emplifi
-                                permite a cada colaborador gestionar su jornada desde cualquier dispositivo:
+                                Sin descargas obligatorias de tiendas externas. La aplicación PWA de Emplifi permite que cada empleado gestione su jornada desde cualquier dispositivo:
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 font-mono text-xs">
@@ -1126,20 +1201,21 @@ function Home() {
                                 </div>
                                 <div className="flex items-start gap-2 p-2.5 rounded bg-gray-50 border border-gray-200">
                                     <FiCheck className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                                    <span>Solicitud de anticipos y permisos con evidencias</span>
+                                    <span>Solicitud de anticipos y permisos</span>
                                 </div>
                                 <div className="flex items-start gap-2 p-2.5 rounded bg-gray-50 border border-gray-200">
                                     <FiCheck className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                                    <span>Certificados laborales digitales con QR oficial</span>
+                                    <span>Certificados laborales digitales con QR</span>
                                 </div>
                             </div>
                         </div>
 
+                        {/* Tarjeta de Certificado Digital con QR */}
                         <div className="lg:col-span-5 bg-gray-50 rounded border border-gray-200 p-5 font-mono text-xs space-y-3">
                             <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                                 <span className="font-semibold text-gray-900">CERTIFICADO LABORAL DIGITAL</span>
                                 <span className="text-[10px] text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                                    QR VERIFICABLE
+                                    VERIFICABLE
                                 </span>
                             </div>
 
@@ -1163,29 +1239,29 @@ function Home() {
                             </div>
 
                             <p className="text-[10px] text-gray-500 leading-relaxed">
-                                Emite documentos oficiales con firma de responsabilidad y código QR encriptado para trámites bancarios y notariales sin recargar a Recursos Humanos.
+                                Emite certificados y roles firmados digitalmente para trámites bancarios y notariales sin recargar al departamento de RRHH.
                             </p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Planes de Precios Transparentes */}
+            {/* Planes y Precios Transparentes */}
             <section id="precios" className="py-14 bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-3xl mx-auto text-center mb-10">
+                    <div className="max-w-2xl mx-auto text-center mb-10">
                         <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-blue-600">
-                            INCLUSIÓN TECNOLÓGICA & PRECIOS PYME
+                            PLANES ACCESIBLES
                         </span>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
-                            Tarifas Claras y Accesibles con 45 Días de Prueba
+                        <h2 className="text-2xl font-bold text-gray-900 mt-1">
+                            Precios claros y sin sorpresas
                         </h2>
                         <p className="text-xs sm:text-sm text-gray-600 mt-2">
-                            Paga únicamente por los colaboradores activos que gestionas. Todos los planes incluyen 45 días naturales de prueba completa sin compromiso ni tarjeta de crédito.
+                            Paga únicamente por los colaboradores activos que gestionas. Todos los planes incluyen 45 días de prueba completa sin compromiso.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                         {pricingPlans.map((plan, idx) => (
                             <div
                                 key={idx}
@@ -1238,15 +1314,15 @@ function Home() {
                 </div>
             </section>
 
-            {/* Preguntas Frecuentes (FAQ) */}
+            {/* Preguntas Frecuentes */}
             <section className="py-14 bg-gray-50 border-b border-gray-200">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-8">
                         <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-gray-500">
                             RESOLUCIÓN DE DUDAS
                         </span>
                         <h2 className="text-2xl font-bold text-gray-900 mt-1">
-                            Preguntas Frecuentes sobre la Plataforma
+                            Preguntas Frecuentes
                         </h2>
                     </div>
 
@@ -1258,7 +1334,7 @@ function Home() {
                             >
                                 <button
                                     onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                                    className="w-full px-5 py-4 text-left flex items-center justify-between text-xs sm:text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer"
+                                    className="w-full px-5 py-3.5 text-left flex items-center justify-between text-xs sm:text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer"
                                 >
                                     <span>{faq.q}</span>
                                     <FiChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${
@@ -1277,24 +1353,24 @@ function Home() {
             </section>
 
             {/* CTA Final */}
-            <section className="py-16 bg-white border-b border-gray-200">
-                <div className="max-w-4xl mx-auto px-4 text-center">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-                        Transforma la Gestión de Personal de tu Empresa Hoy
+            <section className="py-14 bg-white border-b border-gray-200">
+                <div className="max-w-3xl mx-auto px-4 text-center">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                        Optimiza la gestión laboral de tu empresa hoy
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-8 max-w-xl mx-auto leading-relaxed">
-                        Únete a las PyMEs que han reducido más del 80% del tiempo de nómina y operan con certeza jurídica y analítica predictiva.
+                    <p className="text-xs sm:text-sm text-gray-600 mb-6 max-w-xl mx-auto leading-relaxed">
+                        Crea tu empresa en minutos y accede a 45 días de prueba completa con soporte y todas las funciones activadas.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <Link
                             to="/register-company"
-                            className="w-full sm:w-auto px-6 py-3 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-sm"
+                            className="w-full sm:w-auto px-6 py-2.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-sm"
                         >
-                            Crear Cuenta Empresa (Prueba 45 Días)
+                            Crear Cuenta Empresa (45 Días Gratis)
                         </Link>
                         <Link
                             to="/login"
-                            className="w-full sm:w-auto px-6 py-3 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
+                            className="w-full sm:w-auto px-6 py-2.5 rounded border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
                         >
                             Acceder al Sistema
                         </Link>
@@ -1302,21 +1378,20 @@ function Home() {
                 </div>
             </section>
 
-            {/* Footer Institucional Exhaustivo */}
-            <footer className="bg-gray-50 text-gray-600 text-xs border-t border-gray-200 py-12">
+            {/* Footer Institucional */}
+            <footer className="bg-gray-50 text-gray-600 text-xs border-t border-gray-200 py-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-gray-200">
-                        <div className="space-y-3">
+                        <div className="space-y-2.5">
                             <div className="flex items-center gap-2">
                                 <img src={logoEmplifi} alt="Emplifi" className="h-6 w-auto object-contain" />
                                 <span className="font-bold text-gray-900">EMPLIFI</span>
                             </div>
                             <p className="text-[11px] text-gray-500 leading-relaxed">
-                                Sistema SaaS Multi-Tenant de Gestión del Talento Humano, Control Asistencial Biométrico,
-                                Nómina Legal y Analítica Científica para PyMEs.
+                                Sistema ERP de Gestión del Talento Humano, Nómina Legal y Control Asistencial para PyMEs en Ecuador.
                             </p>
                             <p className="text-[10px] font-mono text-gray-400">
-                                Quito, Ecuador · Despliegue en AWS EC2
+                                Quito, Ecuador
                             </p>
                         </div>
 
@@ -1325,20 +1400,19 @@ function Home() {
                             <ul className="space-y-2 text-[11px]">
                                 <li><a href="#modulos" className="hover:text-blue-600 transition-colors">Nómina & Finiquitos</a></li>
                                 <li><a href="#modulos" className="hover:text-blue-600 transition-colors">Asistencia Geoespacial</a></li>
-                                <li><a href="#modulos" className="hover:text-blue-600 transition-colors">Evaluaciones 360° & OKRs</a></li>
+                                <li><a href="#modulos" className="hover:text-blue-600 transition-colors">Evaluaciones 360°</a></li>
                                 <li><a href="#modulos" className="hover:text-blue-600 transition-colors">Contabilidad Aislada</a></li>
                                 <li><a href="#modulos" className="hover:text-blue-600 transition-colors">Portal Móvil PWA</a></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="font-semibold text-gray-900 text-xs uppercase tracking-wider font-mono mb-3">Investigación & IA</h4>
+                            <h4 className="font-semibold text-gray-900 text-xs uppercase tracking-wider font-mono mb-3">Investigación</h4>
                             <ul className="space-y-2 text-[11px]">
                                 <li><Link to="/investigacion" className="hover:text-blue-600 transition-colors">Portal de Investigación</Link></li>
                                 <li><Link to="/investigacion/resultados" className="hover:text-blue-600 transition-colors">Reporte Psicométrico (N=40)</Link></li>
-                                <li><a href="#motores-ia" className="hover:text-blue-600 transition-colors">Motor RSI & SGD</a></li>
-                                <li><a href="#motores-ia" className="hover:text-blue-600 transition-colors">Inferencia Causal (Pearl)</a></li>
-                                <li><a href="#motores-ia" className="hover:text-blue-600 transition-colors">Aprendizaje Federado DP-SGD</a></li>
+                                <li><a href="#analitica" className="hover:text-blue-600 transition-colors">Modelos de Desempeño</a></li>
+                                <li><a href="#analitica" className="hover:text-blue-600 transition-colors">Gobernanza LOPDP</a></li>
                             </ul>
                         </div>
 
@@ -1347,18 +1421,18 @@ function Home() {
                             <ul className="space-y-2 text-[11px]">
                                 <li><Link to="/login" className="hover:text-blue-600 transition-colors">Iniciar Sesión</Link></li>
                                 <li><Link to="/register-company" className="hover:text-blue-600 transition-colors">Registrar Nueva Empresa</Link></li>
-                                <li><Link to="/careers" className="hover:text-blue-600 transition-colors">Portal de Empleo & Vacantes</Link></li>
-                                <li><a href="#precios" className="hover:text-blue-600 transition-colors">Planes y Precios</a></li>
+                                <li><Link to="/careers" className="hover:text-blue-600 transition-colors">Portal de Vacantes</Link></li>
+                                <li><a href="#precios" className="hover:text-blue-600 transition-colors">Planes & Tarifas</a></li>
                             </ul>
                         </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-mono text-gray-500">
                         <div>
-                            © 2026 Jorge Doicela. Todos los derechos reservados. Licencia Propietaria.
+                            © 2026 Jorge Doicela. Todos los derechos reservados.
                         </div>
                         <div className="flex items-center gap-4">
-                            <span>Dominio Oficial: erp.jorgedoicela.com</span>
+                            <span>Dominio: erp.jorgedoicela.com</span>
                             <span className="text-gray-300">|</span>
                             <span>Seguridad: AES-256-GCM + RBAC</span>
                         </div>

@@ -98,40 +98,39 @@ const SalaryAdvancesManagement = () => {
 
     return (
         <div className="space-y-5">
-            {/* Header ERP */}
-            <div className="pb-4 border-b border-gray-200">
-                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Nómina · Anticipos y Préstamos</p>
-                <h1 className="text-xl font-semibold text-gray-900">Gestión de Anticipos y Préstamos</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Control de solicitudes, aprobaciones y cuotas diferidas en el rol de pagos.</p>
-            </div>
-
-            {/* Panel Contable Resumen */}
-            <div className="bg-white border border-gray-200 rounded overflow-hidden">
-                <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
-                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado Financiero de Anticipos</h3>
+            {/* Header ERP con Balance Financiero Integrado */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Nómina · Anticipos y Préstamos</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Gestión de Anticipos y Préstamos</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Control de solicitudes, aprobaciones y cuotas diferidas en el rol de pagos.</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 text-xs">
-                    <div className="p-4">
-                        <p className="text-gray-500 mb-1">Solicitudes por Revisar</p>
-                        <p className="text-base font-semibold font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums', color: pendingCount > 0 ? '#92400e' : '#111827' }}>
-                            {pendingCount}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5 font-mono">Pendientes de aprobación</p>
+                {/* Resumen Financiero en Línea Sobrio */}
+                <div className="flex items-center gap-4 bg-white px-4 py-2.5 rounded border border-gray-200 font-mono text-xs shrink-0">
+                    <div>
+                        <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Saldo Activo</span>
+                        <span className="font-semibold text-gray-900 tabular-nums">
+                            ${totalApprovedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                        </span>
                     </div>
-                    <div className="p-4">
-                        <p className="text-gray-500 mb-1">Saldo Saldo Activo Total</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                            ${totalApprovedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5 font-mono">Pendiente de cobro en nómina</p>
+                    <div className="w-px h-7 bg-gray-200" />
+                    <div>
+                        <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Deducción Mes</span>
+                        <span className="font-semibold text-gray-900 tabular-nums">
+                            ${monthlyDeductionsTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                        </span>
                     </div>
-                    <div className="p-4">
-                        <p className="text-gray-500 mb-1">Deducción Estimada Mes</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                            ${monthlyDeductionsTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5 font-mono">Descuento próximo período</p>
-                    </div>
+                    {pendingCount > 0 && (
+                        <>
+                            <div className="w-px h-7 bg-gray-200" />
+                            <div>
+                                <span className="text-[10px] text-amber-700 uppercase tracking-wider block font-sans">Pendientes</span>
+                                <span className="font-semibold text-amber-800 tabular-nums">
+                                    {pendingCount} por revisar
+                                </span>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 

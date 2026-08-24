@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getEmployeeById, updateEmployee, getEmployeeHistory, getContracts, uploadDocument, getDocuments, deleteDocument, getProfile } from '../../services/employees/employee.service';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { getEmployeeById, getEmployees, updateEmployee, getEmployeeHistory, getContracts, uploadDocument, getDocuments, deleteDocument, getProfile } from '../../services/employees/employee.service';
 import EditEmployeeModal from './components/EditEmployeeModal';
 import SkillsTab from './components/SkillsTab';
 import ContractsTab from './components/ContractsTab';
@@ -17,6 +17,7 @@ const EmployeeProfile = ({ token, user }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [employee, setEmployee] = useState(null);
+    const [employeesList, setEmployeesList] = useState([]);
     const [history, setHistory] = useState([]);
     const [contracts, setContracts] = useState([]);
     const [documents, setDocuments] = useState([]);
@@ -34,6 +35,19 @@ const EmployeeProfile = ({ token, user }) => {
     const [editForm, setEditForm] = useState({});
     const [fieldErrors, setFieldErrors] = useState({});
 
+    const isAdminOrHR = user?.role === 'admin' || user?.role === 'hr';
+
+    useEffect(() => {
+        if (isAdminOrHR && token) {
+            getEmployees(token).then(res => {
+                const list = res?.data?.employees || res?.data || [];
+                if (Array.isArray(list)) {
+                    setEmployeesList(list);
+                }
+            }).catch(console.error);
+        }
+    }, [isAdminOrHR, token]);
+
     useEffect(() => {
         window.scrollTo(0, 0);
         if (token) {
@@ -49,8 +63,17 @@ const EmployeeProfile = ({ token, user }) => {
             if (id) {
                 const cleanId = id.trim();
                 data = await getEmployeeById(cleanId, token);
+            } else if (isAdminOrHR && employeesList.length > 0) {
+                data = await getEmployeeById(employeesList[0].id, token);
             } else {
                 data = await getProfile(token);
+                if ((!data || !data.data) && isAdminOrHR) {
+                    const empRes = await getEmployees(token);
+                    const list = empRes?.data?.employees || empRes?.data || [];
+                    if (list.length > 0) {
+                        data = await getEmployeeById(list[0].id, token);
+                    }
+                }
             }
 
             if (data && data.data) {
@@ -332,6 +355,40 @@ const EmployeeProfile = ({ token, user }) => {
     return (
         <div className="space-y-5">
             <div className="max-w-5xl mx-auto space-y-5">
+                {/* Selector Rápido de Colaboradores para Administradores / RRHH */}
+                {isAdminOrHR && employeesList.length > 0 && (
+                    <div className="bg-white p-3.5 rounded border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-700 whitespace-nowrap">Ficha 360° de:</span>
+                            <select
+                                value={employee.id}
+                                onChange={(e) => navigate(`/admin/employees/${e.target.value}`)}
+                                className="bg-gray-50 border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-900 font-medium focus:outline-none focus:border-blue-500 cursor-pointer max-w-xs"
+                            >
+                                {employeesList.map(emp => (
+                                    <option key={emp.id} value={emp.id}>
+                                        {emp.firstName} {emp.lastName} ({emp.identityCard || emp.position || 'Colaborador'})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Link
+                                to={`/admin/expedientes/${employee.id}`}
+                                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded transition-colors text-xs font-medium cursor-pointer"
+                            >
+                                Ver Expediente Digital
+                            </Link>
+                            <Link
+                                to="/admin/employees"
+                                className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded transition-colors text-xs font-medium cursor-pointer"
+                            >
+                                Directorio de Empleados
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
                 {/* Header Limpio ERP */}
                 <div className="bg-white rounded p-5 border border-gray-200">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">

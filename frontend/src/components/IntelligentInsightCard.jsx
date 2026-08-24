@@ -11,76 +11,55 @@ export default function IntelligentInsightCard({
     value,
     trend,
     description,
-    color = 'blue',
     priority = 'medium',
     onAction
 }) {
-    // Colores según prioridad
-    const colorClasses = {
-        blue: 'from-blue-500 to-blue-600',
-        green: 'from-green-500 to-green-600',
-        yellow: 'from-yellow-500 to-yellow-600',
-        red: 'from-red-500 to-red-600',
-        purple: 'from-purple-500 to-purple-600',
-        orange: 'from-orange-500 to-orange-600',
-    };
-
     const priorityBadges = {
-        high: 'bg-red-100 text-red-700',
-        medium: 'bg-yellow-100 text-yellow-700',
-        low: 'bg-green-100 text-green-700',
+        high: 'bg-red-50 text-red-700 border-red-200',
+        medium: 'bg-amber-50 text-amber-700 border-amber-200',
+        low: 'bg-green-50 text-green-700 border-green-200',
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-        >
-            {/* Header con gradiente */}
-            <div className={`bg-gradient-to-r ${colorClasses[color]} p-4 text-white`}>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {Icon && <Icon className="w-6 h-6" />}
-                        <h3 className="font-semibold text-lg">{title}</h3>
-                    </div>
-                    {priority && (
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityBadges[priority]}`}>
-                            {priority === 'high' ? 'Alta' : priority === 'medium' ? 'Media' : 'Baja'}
-                        </span>
-                    )}
+        <div className="bg-white rounded border border-gray-200 p-4 space-y-3 text-xs shadow-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                <div className="flex items-center gap-2 text-gray-700">
+                    {Icon && <Icon className="w-4 h-4 text-blue-600" />}
+                    <h3 className="font-semibold text-xs text-gray-900 uppercase tracking-wider">{title}</h3>
                 </div>
+                {priority && (
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${priorityBadges[priority]}`}>
+                        {priority === 'high' ? 'Alta' : priority === 'medium' ? 'Media' : 'Baja'}
+                    </span>
+                )}
             </div>
 
-            {/* Contenido */}
-            <div className="p-6">
-                {/* Valor principal */}
-                <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-4xl font-bold text-gray-900">{value}</span>
+            <div>
+                <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-xl font-mono font-bold text-gray-900 tabular-nums">{value}</span>
                     {trend && (
-                        <span className={`text-sm font-medium ${trend > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        <span className={`text-[11px] font-mono font-medium ${trend > 0 ? 'text-red-600' : 'text-green-600'}`}>
                             {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
                         </span>
                     )}
                 </div>
 
-                {/* Descripción */}
                 {description && (
-                    <p className="text-gray-600 text-sm mb-4">{description}</p>
+                    <p className="text-gray-500 leading-normal text-xs">{description}</p>
                 )}
+            </div>
 
-                {/* Botón de acción */}
-                {onAction && (
+            {onAction && (
+                <div className="pt-2 border-t border-gray-100">
                     <button
                         onClick={onAction}
-                        className="w-full mt-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium"
+                        className="w-full py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded border border-gray-200 transition-colors text-xs font-medium cursor-pointer"
                     >
                         Ver detalles →
                     </button>
-                )}
-            </div>
-        </motion.div>
+                </div>
+            )}
+        </div>
     );
 }
 

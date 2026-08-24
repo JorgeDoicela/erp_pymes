@@ -7,25 +7,14 @@ import { FiTrendingUp, FiActivity, FiUsers, FiCheckCircle } from 'react-icons/fi
  */
 export default function AdvancedBusinessAnalytics({ data }) {
     const burnout = data?.burnoutAnalysis || {
-        overallBurnout: 42,
-        overallProductivity: 84,
-        departmentMetrics: [
-            { department: 'Tecnología', burnoutScore: 38, productivityRatio: 88, headcount: 8, riskLevel: 'Riesgo Moderado' },
-            { department: 'Operaciones', burnoutScore: 58, productivityRatio: 74, headcount: 12, riskLevel: 'Riesgo Moderado' },
-            { department: 'Ventas', burnoutScore: 28, productivityRatio: 92, headcount: 6, riskLevel: 'Estable' }
-        ]
+        overallBurnout: 0,
+        overallProductivity: 0,
+        departmentMetrics: []
     };
 
     const payrollProjections = data?.payrollProjections || {
-        currentMonthlyPayroll: 15800,
-        projection: [
-            { month: 'Mes actual', payroll: 15800, headcount: 17 },
-            { month: '+1 Mes', payroll: 16084, headcount: 17 },
-            { month: '+2 Meses', payroll: 16368, headcount: 17 },
-            { month: '+3 Meses', payroll: 16653, headcount: 18 },
-            { month: '+4 Meses', payroll: 16937, headcount: 18 },
-            { month: '+5 Meses', payroll: 17222, headcount: 19 },
-        ]
+        currentMonthlyPayroll: 0,
+        projection: []
     };
 
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val || 0);

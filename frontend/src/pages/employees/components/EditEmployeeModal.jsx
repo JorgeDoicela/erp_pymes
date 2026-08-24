@@ -6,22 +6,25 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 w-full max-w-2xl border border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto">
-                <h2 className="text-2xl font-bold mb-6 text-slate-800">
-                    {user?.id === editForm.id ? 'Editar mi Perfil' :
-                        (editForm.role === 'admin' ? 'Editar Administrador' : 'Editar Empleado')}
-                </h2>
-                <form onSubmit={onSave} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded p-6 w-full max-w-2xl border border-gray-200 shadow-xl max-h-[90vh] overflow-y-auto text-xs space-y-4">
+                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-900">
+                        {user?.id === editForm.id ? 'Editar Mi Perfil de Colaborador' :
+                            (editForm.role === 'admin' ? 'Editar Administrador' : 'Editar Ficha de Empleado')}
+                    </h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+                </div>
+                <form onSubmit={onSave} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Información Personal */}
                         <div className="col-span-1 md:col-span-2">
-                            <h4 className="text-emerald-600 font-semibold mb-4 border-b border-slate-200 pb-2">Información Personal</h4>
+                            <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2 pb-1 border-b border-gray-100">Información Personal</h4>
                         </div>
 
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                            <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Cédula</label>
-                            <p className="text-slate-800 font-medium">{employeeIdentityCard}</p>
+                        <div className="bg-gray-50 p-2.5 rounded border border-gray-200">
+                            <label className="text-[10px] text-gray-500 uppercase font-semibold block mb-0.5">Cédula / Documento</label>
+                            <p className="text-gray-900 font-mono font-medium">{employeeIdentityCard}</p>
                         </div>
                         <InputField label="Nombre" name="firstName" value={editForm.firstName} onChange={onChange} error={fieldErrors.firstName} help="Nombre legal del empleado." />
                         <InputField label="Apellido" name="lastName" value={editForm.lastName} onChange={onChange} error={fieldErrors.lastName} help="Apellidos completos." />

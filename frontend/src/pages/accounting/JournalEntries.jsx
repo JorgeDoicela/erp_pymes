@@ -180,20 +180,20 @@ const JournalEntries = () => {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100 gap-4">
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                        <FiBook className="text-indigo-600" /> Libro Diario
-                    </h1>
-                    <p className="text-slate-500 text-sm mt-1">Registro cronológico de transacciones</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Contabilidad · Registro Asistido</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Libro Diario General</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Comprobantes de diario, asientos contables de personal y mayorización.</p>
                 </div>
                 {!showForm && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <select
                             value={selectedPeriod}
                             onChange={(e) => { setSelectedPeriod(e.target.value); fetchData(e.target.value); }}
-                            className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 font-medium focus:outline-none focus:border-blue-500"
                         >
                             <option value="">Todos los Periodos</option>
                             {periods.map(p => (
@@ -202,37 +202,37 @@ const JournalEntries = () => {
                         </select>
                         <button
                             onClick={() => setShowForm(true)}
-                            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-sm transition-all"
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
                         >
-                            <FiPlus /> Registrar Asiento
+                            <FiPlus size={14} /> Registrar Asiento
                         </button>
                     </div>
                 )}
             </div>
 
             {showForm ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 animate-fade-in overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                        <h2 className="font-bold text-slate-800">Nuevo Asiento Contable</h2>
-                        <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600"><FiX /></button>
+                <div className="bg-white rounded border border-gray-200 overflow-hidden animate-fade-in">
+                    <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h2 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Nuevo Asiento Contable</h2>
+                        <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 p-1"><FiX size={16} /></button>
                     </div>
-                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Número de Asiento</label>
-                                <input type="text" readOnly value={formData.entryNumber} className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl font-mono text-sm text-slate-600 outline-none" />
+                                <label className="block font-medium text-gray-700 mb-1">Número de Asiento</label>
+                                <input type="text" readOnly value={formData.entryNumber} className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded font-mono text-gray-600 outline-none" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Fecha</label>
-                                <input type="date" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                                <label className="block font-medium text-gray-700 mb-1">Fecha</label>
+                                <input type="date" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded text-gray-800 focus:outline-none focus:border-blue-500" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Referencia / Glosa General</label>
-                                <input type="text" required placeholder="Ej: Venta de Mercancías segun Fact..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                                <label className="block font-medium text-gray-700 mb-1">Glosa / Concepto General</label>
+                                <input type="text" required placeholder="Ej: Registro nómina mensual..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded text-gray-800 focus:outline-none focus:border-blue-500" />
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto border border-slate-100 rounded-xl">
+                        <div className="overflow-x-auto border border-gray-200 rounded">
                             <table className="w-full text-sm">
                                 <thead className="bg-slate-50 text-slate-400 font-bold uppercase text-[10px] tracking-widest">
                                     <tr>
@@ -298,209 +298,204 @@ const JournalEntries = () => {
                     </form>
                 </div>
             ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="space-y-4">
                     {/* VISTA MÓVIL: Tarjetas Apiladas (Responsive UX) */}
-            <div className="block md:hidden space-y-3">
-                {entries.length === 0 ? (
-                    <div className="p-8 bg-white rounded-2xl border border-slate-200/80 text-center text-slate-400 text-xs italic">
-                        No hay asientos registrados aún.
-                    </div>
-                ) : (
-                    entries.map(entry => (
-                        <div key={entry.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 space-y-3 shadow-xs">
-                            <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                                <div>
-                                    <h4 className="font-bold text-slate-900 text-xs">{entry.description}</h4>
-                                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">{entry.entryNumber} | {entry.type}</p>
-                                </div>
-                                <div className="shrink-0">
-                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${entry.status === 'POSTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                                        {entry.status === 'POSTED' ? 'Mayorizado' : 'Borrador'}
-                                    </span>
-                                </div>
+                    <div className="block md:hidden divide-y divide-gray-100 bg-white rounded border border-gray-200">
+                        {entries.length === 0 ? (
+                            <div className="p-8 text-center text-gray-400 text-xs italic">
+                                No hay asientos registrados aún.
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Fecha</span>
-                                    <span className="text-slate-700 font-medium">{new Date(entry.date).toLocaleDateString()}</span>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Monto Total</span>
-                                    <span className="font-mono font-extrabold text-slate-900">${entry.totalDebit.toLocaleString()}</span>
-                                </div>
-                            </div>
-
-                            <div className="pt-2 flex justify-end gap-2 border-t border-slate-50">
-                                <button
-                                    onClick={() => setSelectedEntry(entry)}
-                                    className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                >
-                                    <FiEye /> Detalle
-                                </button>
-                                {entry.status === 'DRAFT' && (
-                                    <>
-                                        <button
-                                            onClick={() => handlePost(entry.id)}
-                                            className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-xs"
-                                        >
-                                            <FiCheckCircle /> Mayorizar
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(entry.id)}
-                                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                                            title="Eliminar Borrador"
-                                        >
-                                            <FiTrash2 size={16} />
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-
-            {/* VISTA ESCRITORIO: Tabla Completa */}
-            <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th className="px-6 py-4 border-b">Referencia</th>
-                                <th className="px-6 py-4 border-b">Fecha</th>
-                                <th className="px-6 py-4 border-b text-right">Total ($)</th>
-                                <th className="px-6 py-4 border-b">Estado</th>
-                                <th className="px-6 py-4 border-b text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {entries.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium">
-                                        No hay asientos registrados aún.
-                                    </td>
-                                </tr>
-                            ) : (
-                                entries.map(entry => (
-                                    <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-slate-800">{entry.description}</div>
-                                            <div className="text-[10px] text-slate-400 font-mono">{entry.entryNumber} | {entry.type}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600">
-                                            {new Date(entry.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-mono font-bold text-slate-700">
-                                            ${entry.totalDebit.toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${entry.status === 'POSTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                        ) : (
+                            entries.map(entry => (
+                                <div key={entry.id} className="p-4 space-y-2 bg-white">
+                                    <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
+                                        <div>
+                                            <h4 className="font-semibold text-gray-900 text-xs">{entry.description}</h4>
+                                            <p className="text-[11px] text-gray-400 font-mono mt-0.5">{entry.entryNumber} · {entry.type}</p>
+                                        </div>
+                                        <div className="shrink-0">
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase ${entry.status === 'POSTED' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
                                                 {entry.status === 'POSTED' ? 'Mayorizado' : 'Borrador'}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                                        <div>
+                                            <span className="text-[10px] text-gray-400 font-sans font-medium uppercase block">Fecha</span>
+                                            <span className="text-gray-700">{new Date(entry.date).toLocaleDateString('es-EC')}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] text-gray-400 font-sans font-medium uppercase block">Monto Total</span>
+                                            <span className="font-semibold text-gray-900 tabular-nums">${entry.totalDebit.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 flex justify-end gap-2 border-t border-gray-100">
+                                        <button
+                                            onClick={() => setSelectedEntry(entry)}
+                                            className="px-2.5 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <FiEye size={12} /> Detalle
+                                        </button>
+                                        {entry.status === 'DRAFT' && (
+                                            <>
                                                 <button
-                                                    onClick={() => setSelectedEntry(entry)}
-                                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                    title="Ver Detalle"
+                                                    onClick={() => handlePost(entry.id)}
+                                                    className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium transition-colors inline-flex items-center gap-1 cursor-pointer shadow-xs"
                                                 >
-                                                    <FiEye size={18} />
+                                                    <FiCheckCircle size={12} /> Mayorizar
                                                 </button>
-                                                {entry.status === 'DRAFT' && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => handlePost(entry.id)}
-                                                            className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-all border border-emerald-100"
-                                                        >
-                                                            <FiCheckCircle /> Mayorizar
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(entry.id)}
-                                                            className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                                            title="Eliminar Borrador"
-                                                        >
-                                                            <FiTrash2 size={18} />
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </td>
+                                                <button
+                                                    onClick={() => handleDelete(entry.id)}
+                                                    className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors"
+                                                    title="Eliminar Borrador"
+                                                >
+                                                    <FiTrash2 size={14} />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* VISTA ESCRITORIO: Tabla Completa */}
+                    <div className="hidden md:block bg-white rounded border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs text-gray-700">
+                                <thead className="bg-gray-50 text-[11px] font-semibold uppercase text-gray-500 border-b border-gray-200">
+                                    <tr>
+                                        <th className="p-3.5">Referencia / Glosa</th>
+                                        <th className="p-3.5">Fecha</th>
+                                        <th className="p-3.5 text-right">Total ($)</th>
+                                        <th className="p-3.5">Estado</th>
+                                        <th className="p-3.5 text-right">Acciones</th>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {entries.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="5" className="p-8 text-center text-gray-400">
+                                                No hay comprobantes contables registrados en el periodo.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        entries.map(entry => (
+                                            <tr key={entry.id} className="hover:bg-gray-50/60 transition-colors">
+                                                <td className="p-3.5">
+                                                    <div className="font-semibold text-gray-900">{entry.description}</div>
+                                                    <div className="text-[11px] text-gray-400 font-mono">{entry.entryNumber} · {entry.type}</div>
+                                                </td>
+                                                <td className="p-3.5 font-mono text-gray-600">
+                                                    {new Date(entry.date).toLocaleDateString('es-EC')}
+                                                </td>
+                                                <td className="p-3.5 text-right font-mono font-semibold text-gray-900 tabular-nums">
+                                                    ${entry.totalDebit.toFixed(2)}
+                                                </td>
+                                                <td className="p-3.5">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase ${entry.status === 'POSTED' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
+                                                        {entry.status === 'POSTED' ? 'Mayorizado' : 'Borrador'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3.5 text-right">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        <button
+                                                            onClick={() => setSelectedEntry(entry)}
+                                                            className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                                                            title="Ver Detalle"
+                                                        >
+                                                            <FiEye size={16} />
+                                                        </button>
+                                                        {entry.status === 'DRAFT' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handlePost(entry.id)}
+                                                                    className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-[11px] font-medium transition-colors shadow-xs"
+                                                                >
+                                                                    Mayorizar
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDelete(entry.id)}
+                                                                    className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors"
+                                                                    title="Eliminar Borrador"
+                                                                >
+                                                                    <FiTrash2 size={16} />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            </div>
             )}
 
             {/* Modal de Detalle de Asiento */}
             {selectedEntry && (
                 <div className="app-modal-overlay">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-scale-in">
-                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-4xl overflow-hidden animate-scale-in">
+                        <div className="px-5 py-3.5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900">Detalle de Asiento Contable</h3>
-                                <p className="text-xs text-slate-500 font-mono uppercase">{selectedEntry.entryNumber} | {new Date(selectedEntry.date).toLocaleDateString()}</p>
+                                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Comprobante de Diario Contable</h3>
+                                <p className="text-[11px] text-gray-500 font-mono mt-0.5">{selectedEntry.entryNumber} — {new Date(selectedEntry.date).toLocaleDateString('es-EC')}</p>
                             </div>
-                            <button onClick={() => setSelectedEntry(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><FiX className="text-slate-400" /></button>
+                            <button onClick={() => setSelectedEntry(null)} className="text-gray-400 hover:text-gray-600 p-1"><FiX size={16} /></button>
                         </div>
 
-                        <div className="p-6 space-y-6">
-                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-4 items-start">
-                                <div className="p-2 bg-indigo-600 text-white rounded-lg">
-                                    <FiInfo size={20} />
-                                </div>
-                                <div>
-                                    <p className="font-bold text-slate-900 leading-tight">{selectedEntry.description}</p>
-                                    <p className="text-xs text-slate-600 mt-1">Estado: <span className="font-bold text-indigo-600 uppercase">{selectedEntry.status}</span> | Tipo: {selectedEntry.type}</p>
-                                </div>
+                        <div className="p-5 space-y-4 text-xs">
+                            <div className="bg-blue-50/70 border border-blue-200 rounded p-3 text-gray-700">
+                                <p className="font-semibold text-blue-900">{selectedEntry.description}</p>
+                                <p className="text-[11px] text-blue-800 font-mono mt-0.5">Estado: <span className="font-semibold uppercase">{selectedEntry.status}</span> · Tipo: {selectedEntry.type}</p>
                             </div>
 
-                            <div className="border border-slate-200 rounded-2xl overflow-hidden">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-slate-50 text-slate-400 font-bold uppercase text-[10px] tracking-widest">
+                            <div className="border border-gray-200 rounded overflow-hidden">
+                                <table className="w-full text-xs text-left text-gray-700">
+                                    <thead className="bg-gray-50 text-[11px] font-semibold uppercase text-gray-500 border-b border-gray-200">
                                         <tr>
-                                            <th className="px-4 py-3 text-left">Cuenta Contable</th>
-                                            <th className="px-4 py-3 text-left">Centro Costo</th>
-                                            <th className="px-4 py-3 text-left">Descripción Línea</th>
-                                            <th className="px-4 py-3 text-right">Debe ($)</th>
-                                            <th className="px-4 py-3 text-right">Haber ($)</th>
+                                            <th className="p-3">Cuenta Contable</th>
+                                            <th className="p-3">Centro Costo</th>
+                                            <th className="p-3">Descripción Línea</th>
+                                            <th className="p-3 text-right">Debe ($)</th>
+                                            <th className="p-3 text-right">Haber ($)</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-gray-100 font-mono">
                                         {selectedEntry.lines.map((line, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-50/50">
-                                                <td className="px-4 py-3">
-                                                    <div className="font-medium text-slate-800">{line.account?.name}</div>
-                                                    <div className="text-[10px] font-mono text-slate-400">{line.account?.code}</div>
+                                            <tr key={idx} className="hover:bg-gray-50/60 transition-colors">
+                                                <td className="p-3 font-sans">
+                                                    <div className="font-semibold text-gray-900">{line.account?.name}</div>
+                                                    <div className="text-[11px] text-gray-400 font-mono">{line.account?.code}</div>
                                                 </td>
-                                                <td className="px-4 py-3 text-slate-600 text-xs">
+                                                <td className="p-3 text-gray-700">
                                                     {line.costCenter?.name || '-'}
                                                 </td>
-                                                <td className="px-4 py-3 text-slate-500 text-xs italic">
+                                                <td className="p-3 text-gray-700 font-sans">
                                                     {line.description || 'Sin detalle adicional'}
                                                 </td>
-                                                <td className="px-4 py-3 text-right font-mono text-blue-600">
-                                                    {line.debit > 0 ? line.debit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '-'}
+                                                <td className="p-3 text-right tabular-nums text-gray-900">
+                                                    {line.debit > 0 ? line.debit.toFixed(2) : '-'}
                                                 </td>
-                                                <td className="px-4 py-3 text-right font-mono text-rose-600">
-                                                    {line.credit > 0 ? line.credit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '-'}
+                                                <td className="p-3 text-right tabular-nums text-gray-900">
+                                                    {line.credit > 0 ? line.credit.toFixed(2) : '-'}
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-200">
+                                    <tfoot className="bg-gray-50 font-semibold border-t-2 border-gray-200">
                                         <tr>
-                                            <td colSpan="3" className="px-4 py-4 text-right uppercase text-xs tracking-wider text-slate-500">Totales Cuadrados</td>
-                                            <td className="px-4 py-4 text-right font-mono text-indigo-600 border-l border-slate-100">
-                                                ${selectedEntry.totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                            <td colSpan="3" className="p-3 text-right uppercase text-[11px] tracking-wider text-gray-500">Balance Asiento</td>
+                                            <td className="p-3 text-right font-mono font-bold text-gray-900 border-l border-gray-100 tabular-nums">
+                                                ${selectedEntry.totalDebit.toFixed(2)}
                                             </td>
-                                            <td className="px-4 py-4 text-right font-mono text-indigo-600 border-l border-slate-100">
-                                                ${selectedEntry.totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                            <td className="p-3 text-right font-mono font-bold text-gray-900 border-l border-gray-100 tabular-nums">
+                                                ${selectedEntry.totalCredit.toFixed(2)}
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -508,9 +503,9 @@ const JournalEntries = () => {
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-                            <button onClick={() => setSelectedEntry(null)} className="app-button-primary">
-                                Cerrar Vista
+                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
+                            <button onClick={() => setSelectedEntry(null)} className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-medium rounded transition-colors">
+                                Cerrar
                             </button>
                         </div>
                     </div>

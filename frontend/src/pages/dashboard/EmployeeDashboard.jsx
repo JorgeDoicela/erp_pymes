@@ -6,9 +6,20 @@ import {
 } from 'react-icons/fi';
 import { getSectionsByRole } from '../../constants/modules';
 import api from '../../api/axios';
+import SmartModuleHub from '../../components/dashboard/SmartModuleHub';
+import MobileEmployeePortal from './MobileEmployeePortal';
 
 function EmployeeDashboard({ user }) {
     const navigate = useNavigate();
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const [employeeMetrics, setEmployeeMetrics] = useState({
         vacationDays: user?.vacationDays || 15,
@@ -64,6 +75,10 @@ function EmployeeDashboard({ user }) {
         fetchEmployeeData();
     }, [user]);
 
+    if (isMobile) {
+        return <MobileEmployeePortal user={user} />;
+    }
+
     return (
         <div className="space-y-6 max-w-[1400px] mx-auto">
             {/* Header Principal Sobrio */}
@@ -96,114 +111,9 @@ function EmployeeDashboard({ user }) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Columna Izquierda / Principal: Accesos directos y módulos */}
+                {/* Columna Izquierda / Principal: Consola Inteligente de Módulos */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Accesos Frecuentes */}
-                    <div className="bg-white rounded border border-gray-200">
-                        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                Accesos Rápidos de Operación
-                            </h2>
-                        </div>
-                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <button
-                                onClick={() => navigate('/empleado/asistencia')}
-                                className="flex items-center justify-between p-3 rounded border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors text-left cursor-pointer group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-mono shrink-0">
-                                        <FiClock />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-900 leading-tight">Control de Asistencia</p>
-                                        <p className="text-[11px] text-gray-400 mt-0.5">Marcación de entrada / salida</p>
-                                    </div>
-                                </div>
-                                <FiArrowRight className="text-gray-400 group-hover:text-gray-700 transition-colors text-xs" />
-                            </button>
-
-                            <button
-                                onClick={() => navigate('/my-payments')}
-                                className="flex items-center justify-between p-3 rounded border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors text-left cursor-pointer group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-mono shrink-0">
-                                        <FiDollarSign />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-900 leading-tight">Recibos de Pago</p>
-                                        <p className="text-[11px] text-gray-400 mt-0.5">Consulta de roles de pago</p>
-                                    </div>
-                                </div>
-                                <FiArrowRight className="text-gray-400 group-hover:text-gray-700 transition-colors text-xs" />
-                            </button>
-
-                            <button
-                                onClick={() => navigate('/my-advances')}
-                                className="flex items-center justify-between p-3 rounded border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors text-left cursor-pointer group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-mono shrink-0">
-                                        <FiSend />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-900 leading-tight">Anticipos de Sueldo</p>
-                                        <p className="text-[11px] text-gray-400 mt-0.5">Solicitudes de adelanto</p>
-                                    </div>
-                                </div>
-                                <FiArrowRight className="text-gray-400 group-hover:text-gray-700 transition-colors text-xs" />
-                            </button>
-
-                            <button
-                                onClick={() => navigate('/announcements')}
-                                className="flex items-center justify-between p-3 rounded border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors text-left cursor-pointer group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-gray-100 text-gray-700 flex items-center justify-center text-sm font-mono shrink-0">
-                                        <FiVolume2 />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-semibold text-gray-900 leading-tight">Comunicados Oficiales</p>
-                                        <p className="text-[11px] text-gray-400 mt-0.5">Novedades e institucionales</p>
-                                    </div>
-                                </div>
-                                <FiArrowRight className="text-gray-400 group-hover:text-gray-700 transition-colors text-xs" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Secciones de Módulos */}
-                    <div className="space-y-4">
-                        {sections.map((section, sIdx) => {
-                            const filteredModules = section.modules.filter(m => m.path !== '/empleado');
-                            if (filteredModules.length === 0) return null;
-                            return (
-                                <div key={sIdx} className="bg-white rounded border border-gray-200">
-                                    <div className="px-4 py-3 border-b border-gray-100">
-                                        <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                                            {section.title}
-                                        </h3>
-                                    </div>
-                                    <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                                        {filteredModules.map((mod, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => navigate(mod.path)}
-                                                className="flex items-center gap-2.5 p-2.5 rounded border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors text-left cursor-pointer group"
-                                            >
-                                                <span className="text-gray-500 group-hover:text-gray-900 text-sm shrink-0">
-                                                    {mod.icon}
-                                                </span>
-                                                <span className="text-xs font-medium text-gray-800 group-hover:text-gray-900 leading-tight">
-                                                    {mod.title}
-                                                </span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <SmartModuleHub user={user} sections={sections} />
                 </div>
 
                 {/* Columna Derecha: Resumen de Estado Personal (Panel Contable Sobrio) */}
@@ -266,15 +176,6 @@ function EmployeeDashboard({ user }) {
                                     Editar Perfil
                                 </button>
                             </div>
-                        </div>
-
-                        <div className="p-3 bg-gray-50 border-t border-gray-200">
-                            <button
-                                onClick={() => navigate('/help')}
-                                className="w-full py-1.5 px-3 border border-gray-300 hover:bg-white text-gray-700 text-xs font-medium rounded transition-colors text-center cursor-pointer block"
-                            >
-                                Ir al Centro de Ayuda
-                            </button>
                         </div>
                     </div>
                 </div>

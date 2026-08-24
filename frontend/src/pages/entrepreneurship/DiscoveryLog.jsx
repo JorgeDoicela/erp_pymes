@@ -92,57 +92,55 @@ const DiscoveryLog = () => {
     };
 
     return (
-        <div className="space-y-8 animate-fadeIn">
-            <div className="flex justify-between items-center">
+        <div className="space-y-5">
+            <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <FiMessageSquare className="text-indigo-600" /> Descubrimiento de Clientes
+                    <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                        <FiMessageSquare className="text-blue-600" /> Descubrimiento y Validación de Clientes
                     </h2>
-                    <p className="text-slate-500 text-sm">Validación de mercado basada en feedback real de clientes.</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Entrevistas de validación, hallazgos cualitativos y dimensión de mercado.</p>
                 </div>
                 <button 
                     onClick={() => setShowInterviewModal(true)}
-                    className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
-                    <FiPlus /> Registrar Entrevista
+                    <FiPlus size={14} /> Registrar Entrevista
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Lista de Entrevistas */}
-                <div className="space-y-4">
-                    <h3 className="font-bold text-slate-700 flex items-center gap-2 px-1">
-                        Recientes Entrevistas
+                <div className="lg:col-span-2 space-y-3">
+                    <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
+                        Bitácora de Entrevistas
                     </h3>
                     {interviews.length === 0 ? (
-                        <div className="bg-white p-12 rounded-3xl border border-dashed border-slate-200 text-center text-slate-400 italic">
-                            Aún no has registrado entrevistas. ¡Sal a hablar con tus clientes!
+                        <div className="bg-white p-8 rounded border border-dashed border-gray-200 text-center text-gray-400 text-xs">
+                            No se han registrado entrevistas aún.
                         </div>
                     ) : (
                         interviews.map((interview) => (
-                            <div key={interview.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative group">
+                            <div key={interview.id} className="bg-white p-4 rounded border border-gray-200 hover:border-gray-300 transition-colors relative group space-y-2 text-xs">
                                 <button 
                                     onClick={() => handleDeleteInterview(interview.id)}
-                                    className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all"
+                                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 transition-opacity"
                                 >
-                                    <FiTrash2 size={16} />
+                                    <FiTrash2 size={13} />
                                 </button>
-                                <div className="flex justify-between items-start mb-4 pr-8">
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-3xl">{sentimentIcon(interview.sentiment)}</div>
-                                        <div>
-                                            <h4 className="font-bold text-slate-800 text-lg leading-tight">{interview.customerName}</h4>
-                                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-1 block">
-                                                {new Date(interview.createdAt).toLocaleDateString()}
-                                            </span>
-                                        </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="text-gray-700">{sentimentIcon(interview.sentiment)}</div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-900 leading-snug">{interview.customerName}</h4>
+                                        <span className="text-[10px] font-mono text-gray-400 block">
+                                            {new Date(interview.createdAt).toLocaleDateString('es-EC')}
+                                        </span>
                                     </div>
                                 </div>
-                                <p className="text-sm text-slate-600 leading-relaxed italic mb-4">"{interview.feedback}"</p>
+                                <p className="text-gray-600 italic">"{interview.feedback}"</p>
                                 {interview.insights && (
-                                    <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50">
-                                        <span className="text-[10px] font-black text-indigo-600 uppercase block mb-1 tracking-wider">Aprendizajes Clave:</span>
-                                        <p className="text-xs text-indigo-900 font-medium">{interview.insights}</p>
+                                    <div className="bg-blue-50/50 p-2.5 rounded border border-blue-200 text-[11px]">
+                                        <span className="font-semibold text-blue-900 block mb-0.5">Aprendizajes Clave:</span>
+                                        <p className="text-blue-800">{interview.insights}</p>
                                     </div>
                                 )}
                             </div>
@@ -150,61 +148,56 @@ const DiscoveryLog = () => {
                     )}
                 </div>
 
-                {/* Market Size Calculator (Simplified UI for now) */}
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 h-fit sticky top-24">
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
-                            <FiTarget className="text-2xl" />
-                        </div>
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Oportunidad de Mercado</h3>
+                {/* Market Size Calculator */}
+                <div className="bg-white p-5 rounded border border-gray-200 h-fit space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                        <FiTarget className="text-blue-600" />
+                        <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Dimensionamiento de Mercado</h3>
                     </div>
                     
-                    <div className="space-y-6">
-                        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 transition-all hover:bg-white hover:shadow-md">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">TAM (Mercado Total Direccionable)</label>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-slate-400 font-mono italic text-sm">$</span>
+                    <div className="space-y-3 text-xs">
+                        <div className="p-3 rounded bg-gray-50 border border-gray-200 space-y-1">
+                            <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">TAM (Mercado Total Direccionable)</label>
+                            <div className="flex items-baseline gap-1 font-mono">
+                                <span className="text-gray-400">$</span>
                                 <input 
-                                    className="bg-transparent border-none p-0 focus:ring-0 text-2xl font-black text-slate-800 w-full" 
+                                    className="bg-transparent border-none p-0 focus:outline-none text-base font-semibold text-gray-900 w-full" 
                                     value={market.tam}
                                     onChange={(e) => setMarket({...market, tam: e.target.value})}
                                     placeholder="0.00" 
                                 />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-2 font-medium">El tamaño total de la oportunidad de mercado global.</p>
                         </div>
 
-                        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 border-l-4 border-l-indigo-500 transition-all hover:bg-white hover:shadow-md">
-                            <label className="block text-[10px] font-black text-indigo-400 uppercase mb-2 tracking-widest">SAM (Mercado Atendible)</label>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-slate-400 font-mono italic text-sm">$</span>
+                        <div className="p-3 rounded bg-gray-50 border border-gray-200 border-l-2 border-l-blue-600 space-y-1">
+                            <label className="block text-[10px] font-semibold text-blue-700 uppercase tracking-wider">SAM (Mercado Atendible)</label>
+                            <div className="flex items-baseline gap-1 font-mono">
+                                <span className="text-gray-400">$</span>
                                 <input 
-                                    className="bg-transparent border-none p-0 focus:ring-0 text-2xl font-black text-slate-800 w-full" 
+                                    className="bg-transparent border-none p-0 focus:outline-none text-base font-semibold text-gray-900 w-full" 
                                     value={market.sam}
                                     onChange={(e) => setMarket({...market, sam: e.target.value})}
                                     placeholder="0.00" 
                                 />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-2 font-medium">El segmento del TAM que tu producto puede atender.</p>
                         </div>
 
-                        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 border-l-4 border-l-emerald-500 transition-all hover:bg-white hover:shadow-md">
-                            <label className="block text-[10px] font-black text-emerald-400 uppercase mb-2 tracking-widest">SOM (Mercado Obtenible)</label>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-slate-400 font-mono italic text-sm">$</span>
+                        <div className="p-3 rounded bg-gray-50 border border-gray-200 border-l-2 border-l-green-600 space-y-1">
+                            <label className="block text-[10px] font-semibold text-green-700 uppercase tracking-wider">SOM (Mercado Capturable Objetivo)</label>
+                            <div className="flex items-baseline gap-1 font-mono">
+                                <span className="text-gray-400">$</span>
                                 <input 
-                                    className="bg-transparent border-none p-0 focus:ring-0 text-2xl font-black text-slate-800 w-full" 
+                                    className="bg-transparent border-none p-0 focus:outline-none text-base font-semibold text-gray-900 w-full" 
                                     value={market.som}
                                     onChange={(e) => setMarket({...market, som: e.target.value})}
                                     placeholder="0.00" 
                                 />
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-2 font-medium">El porcentaje del SAM que planeas capturar.</p>
                         </div>
 
                         <button 
                             onClick={handleUpdateMarket}
-                            className="app-button-primary w-full py-3"
+                            className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors cursor-pointer shadow-xs"
                         >
                             Actualizar Proyecciones
                         </button>
@@ -215,74 +208,77 @@ const DiscoveryLog = () => {
             {/* Modal para añadir entrevista */}
             {showInterviewModal && (
                 <div className="app-modal-overlay">
-                    <div className="app-modal-content max-w-xl">
-                        <h3 className="text-xl font-bold text-slate-800 mb-4 tracking-tight">Registro de Discovery</h3>
-                        <form onSubmit={handleAddInterview} className="space-y-6">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl max-w-lg w-full p-5 animate-scale-in">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Registrar Entrevista de Validación</h3>
+                            <button onClick={() => setShowInterviewModal(false)} className="text-gray-400 hover:text-gray-600 p-1"><FiX size={16} /></button>
+                        </div>
+                        <form onSubmit={handleAddInterview} className="space-y-3.5 text-xs">
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Lead / Cliente Entrevistado</label>
+                                <label className="block font-medium text-gray-700 mb-1">Cliente / Contacto Entrevistado</label>
                                 <input 
                                     required
-                                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700"
+                                    className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500"
                                     value={newInterview.customerName}
                                     onChange={(e) => setNewInterview({...newInterview, customerName: e.target.value})}
-                                    placeholder="Ej: Director de Operaciones - Holcim"
+                                    placeholder="Ej: Gerente de Operaciones - Empresa X"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Sentimiento del Feedback</label>
-                                <div className="flex gap-4">
+                                <label className="block font-medium text-gray-700 mb-1">Sentimiento del Feedback</label>
+                                <div className="flex gap-2">
                                     {[
-                                        { val: 'NEGATIVE', icon: <FiFrown /> },
-                                        { val: 'NEUTRAL', icon: <FiMeh /> },
-                                        { val: 'POSITIVE', icon: <FiSmile /> }
+                                        { val: 'NEGATIVE', icon: <FiFrown />, label: 'Negativo' },
+                                        { val: 'NEUTRAL', icon: <FiMeh />, label: 'Neutral' },
+                                        { val: 'POSITIVE', icon: <FiSmile />, label: 'Favorable' }
                                     ].map((s) => (
                                         <button 
                                             key={s.val}
                                             type="button"
                                             onClick={() => setNewInterview({...newInterview, sentiment: s.val})}
-                                            className={`flex-1 py-4 rounded-2xl border-2 flex items-center justify-center text-3xl transition-all ${
-                                                newInterview.sentiment === s.val ? 'border-indigo-500 bg-indigo-50/50 shadow-inner' : 'border-slate-50 bg-slate-50 grayscale opacity-40'
+                                            className={`flex-1 py-2 rounded border flex items-center justify-center gap-1.5 transition-colors cursor-pointer text-xs font-medium ${
+                                                newInterview.sentiment === s.val ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                                             }`}
                                         >
-                                            {s.icon}
+                                            {s.icon} {s.label}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Feedback Directo (Datos Raw)</label>
+                                <label className="block font-medium text-gray-700 mb-1">Feedback del Cliente</label>
                                 <textarea 
                                     required
-                                    rows="4"
-                                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none font-medium text-slate-600"
+                                    rows="3"
+                                    className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 resize-none"
                                     value={newInterview.feedback}
                                     onChange={(e) => setNewInterview({...newInterview, feedback: e.target.value})}
-                                    placeholder="¿Qué problemas o beneficios mencionó el cliente?"
+                                    placeholder="Comentarios o necesidades expresadas..."
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Aprendizajes Clave (Insights)</label>
+                                <label className="block font-medium text-gray-700 mb-1">Aprendizajes Clave (Insights)</label>
                                 <textarea 
                                     rows="2"
-                                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none font-bold text-indigo-900"
+                                    className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 resize-none"
                                     value={newInterview.insights}
                                     onChange={(e) => setNewInterview({...newInterview, insights: e.target.value})}
-                                    placeholder="¿Qué validamos o invalidamos hoy?"
+                                    placeholder="Hipótesis validadas o descartadas..."
                                 />
                             </div>
-                            <div className="flex gap-4 mt-8">
+                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
                                 <button 
                                     type="button"
                                     onClick={() => setShowInterviewModal(false)}
-                                    className="flex-1 py-4 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 transition-all uppercase tracking-widest text-xs"
+                                    className="px-3.5 py-2 text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium transition-colors"
                                 >
-                                    Cerrar
+                                    Cancelar
                                 </button>
                                 <button 
                                     type="submit"
-                                    className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95"
+                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors shadow-xs"
                                 >
-                                    Guardar Entrada
+                                    Guardar Registro
                                 </button>
                             </div>
                         </form>

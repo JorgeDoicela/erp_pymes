@@ -79,4 +79,7 @@ router.get('/federated/rounds-history', intelligenceController.getFederatedRound
 router.post('/morl/optimize', intelligenceController.runMorlOptimization);
 router.get('/morl/history', intelligenceController.getMorlHistory);
 
+// Asesor Estratégico Ejecutivo
+router.post('/strategic-advice', intelligenceController.getStrategicAdvice);
+
 export default router;

@@ -53,44 +53,36 @@ const ProjectForm = () => {
     ];
 
     return (
-        <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fadeIn">
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                <div className="bg-white border-b border-slate-200/80 p-8 text-slate-900 relative">
-                    <div className="relative z-10">
-                        <h2 className="text-2xl font-bold flex items-center gap-3 tracking-tight text-slate-900">
-                             Lanzar Emprendimiento Profesional
-                        </h2>
-                        <p className="text-slate-500 text-sm mt-1 font-normal">Inicia tu proceso de incubación con estándares de nivel internacional.</p>
-                    </div>
+        <div className="max-w-3xl mx-auto space-y-4">
+            <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                <div className="border-b border-gray-200 p-5">
+                    <h2 className="text-base font-semibold text-gray-900">
+                        Registro de Proyecto de Emprendimiento
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Definición de propuesta de valor, mercado y parámetros de incubación.</p>
                 </div>
 
-                <div className="p-8">
+                <div className="p-5 space-y-6">
                     {/* Stepper */}
-                    <div className="flex items-center gap-6 mb-10">
+                    <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
                         {[
-                            { s: 1, label: 'Concepto' },
-                            { s: 2, label: 'Estrategia & BI' }
+                            { s: 1, label: '1. Concepto y Mercado' },
+                            { s: 2, label: '2. Parámetros Operativos' }
                         ].map(stepInfo => (
-                            <React.Fragment key={stepInfo.s}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs transition-all ${step === stepInfo.s ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-50 text-slate-400 border border-slate-200/60'}`}>
-                                        {stepInfo.s}
-                                    </div>
-                                    <span className={`text-xs font-semibold uppercase tracking-wider ${step === stepInfo.s ? 'text-slate-900' : 'text-slate-400'}`}>
-                                        {stepInfo.label}
-                                    </span>
-                                </div>
-                                {stepInfo.s === 1 && <div className="w-12 h-0.5 bg-slate-100 flex-shrink-0" />}
-                            </React.Fragment>
+                            <div key={stepInfo.s} className="flex items-center gap-2">
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded ${step === stepInfo.s ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-400'}`}>
+                                    {stepInfo.label}
+                                </span>
+                            </div>
                         ))}
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-8">
+                    <form onSubmit={handleSubmit} className="space-y-4 text-xs">
                         {step === 1 ? (
-                            <div className="space-y-8 animate-slideDown">
-                                <div className="space-y-3">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1 flex items-center gap-2">
-                                        <FiFileText className="text-indigo-500" /> Nombre del Emprendimiento
+                            <div className="space-y-3.5">
+                                <div>
+                                    <label className="block font-medium text-gray-700 mb-1">
+                                        Nombre del Proyecto *
                                     </label>
                                     <input 
                                         type="text" 
@@ -98,14 +90,14 @@ const ProjectForm = () => {
                                         required
                                         value={formData.title}
                                         onChange={handleChange}
-                                        placeholder="Ej: AgroScan AI, Neobank Quitus, etc."
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 font-bold text-slate-800 text-lg"
+                                        placeholder="Ej: AgroScan, Soluciones Logísticas, etc."
+                                        className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 font-medium"
                                     />
                                 </div>
 
-                                <div className="space-y-3">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1 flex items-center gap-2">
-                                        <FiTarget className="text-indigo-500" /> Mercado / Vertical
+                                <div>
+                                    <label className="block font-medium text-gray-700 mb-1">
+                                        Industria / Sector *
                                     </label>
                                     <input 
                                         type="text" 
@@ -113,38 +105,40 @@ const ProjectForm = () => {
                                         required
                                         value={formData.industry}
                                         onChange={handleChange}
-                                        placeholder="Ej: Fintech, Agritech, SaaS..."
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 font-bold text-slate-800"
+                                        placeholder="Ej: Fintech, Agritech, Logística, Retail..."
+                                        className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500"
                                     />
                                 </div>
 
-                                <div className="space-y-3">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1 font-bold mb-2">Descripción y Propuesta de Valor</label>
+                                <div>
+                                    <label className="block font-medium text-gray-700 mb-1">Descripción y Propuesta de Valor *</label>
                                     <textarea 
                                         name="description"
                                         required
-                                        rows="5"
+                                        rows="4"
                                         value={formData.description}
                                         onChange={handleChange}
-                                        placeholder="Describe el problema de mercado que has identificado y cómo tu solución lo resuelve de una forma única..."
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 resize-none font-medium text-slate-600 leading-relaxed"
+                                        placeholder="Describa el problema que resuelve y la solución diferencial..."
+                                        className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 resize-none leading-relaxed"
                                     />
                                 </div>
 
-                                 <button 
-                                    type="button" 
-                                    onClick={() => setStep(2)}
-                                    className="app-button-primary w-full py-4 text-xs font-bold uppercase tracking-wider"
-                                >
-                                    Configurar Estrategia <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
-                                </button>
+                                <div className="pt-3 border-t border-gray-200 flex justify-end">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setStep(2)}
+                                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                    >
+                                        Continuar a Parámetros <FiArrowRight size={13} />
+                                    </button>
+                                </div>
                             </div>
                         ) : (
-                            <div className="space-y-8 animate-slideDown">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1 flex items-center gap-2">
-                                            <FiDollarSign className="text-emerald-500" /> Presupuesto Inicial (USD)
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-1">
+                                            Presupuesto Inicial ($ USD)
                                         </label>
                                         <input 
                                             type="number" 
@@ -152,76 +146,75 @@ const ProjectForm = () => {
                                             value={formData.budget}
                                             onChange={handleChange}
                                             placeholder="0.00"
-                                            className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none font-mono font-bold text-slate-800"
+                                            className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
                                         />
                                     </div>
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1 flex items-center gap-2">
-                                            <FiActivity className="text-amber-500" /> Puntaje de Innovación (0-100)
+                                    <div>
+                                        <label className="block font-medium text-gray-700 mb-1">
+                                            Nivel de Innovación (0-100)
                                         </label>
-                                        <div className="flex items-center gap-4 bg-slate-50 px-6 py-4 rounded-2xl border border-slate-100">
+                                        <div className="flex items-center gap-3 bg-gray-50 px-3 py-1 rounded border border-gray-200">
                                             <input 
                                                 type="range" 
-                                                min="0"
-                                                max="100"
+                                                min="0" 
+                                                max="100" 
                                                 name="innovationScore"
                                                 value={formData.innovationScore}
                                                 onChange={handleChange}
-                                                className="flex-1 accent-indigo-600"
+                                                className="flex-1 accent-blue-600"
                                             />
-                                            <span className="font-black text-indigo-600 text-lg w-8">{formData.innovationScore}</span>
+                                            <span className="font-mono font-semibold text-gray-800 text-xs w-6">{formData.innovationScore}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1 flex items-center gap-2">
-                                        <FiFileText className="text-indigo-500" /> Elevator Pitch (Narrativa)
+                                <div>
+                                    <label className="block font-medium text-gray-700 mb-1">
+                                        Discurso Resumido (Elevator Pitch)
                                     </label>
                                     <textarea 
                                         name="pitchNarrative"
-                                        rows="4"
+                                        rows="3"
                                         value={formData.pitchNarrative}
                                         onChange={handleChange}
-                                        placeholder="Escribe tu pitch aquí para que nuestro motor predictivo lo optimice..."
-                                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 font-medium text-slate-700 leading-relaxed"
+                                        placeholder="Resumen ejecutivo del problema, solución y modelo de monetización..."
+                                        className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 resize-none"
                                     />
-                                    <p className="text-[10px] text-slate-400 font-medium px-2 italic">* Este texto será analizado mediante análisis predictivo de datos para proyectar el éxito.</p>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block ml-1">Etapa de Madurez Crítica</label>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block font-medium text-gray-700 mb-2">Etapa de Madurez del Proyecto</label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                                         {stages.map(s => (
                                             <button
                                                 key={s.id}
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, stage: s.id })}
-                                                className={`flex flex-col p-5 rounded-2xl border-2 text-left transition-all ${formData.stage === s.id ? 'border-indigo-600 bg-indigo-50/50 shadow-xs' : 'border-slate-100 bg-slate-50/50 hover:bg-white hover:border-slate-200'}`}
+                                                className={`p-3 rounded border text-left transition-colors cursor-pointer ${formData.stage === s.id ? 'border-blue-600 bg-blue-50/50 text-blue-900 font-semibold' : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}`}
                                             >
-                                                <span className={`font-bold text-xs uppercase tracking-wider mb-1 ${formData.stage === s.id ? 'text-indigo-700' : 'text-slate-700'}`}>
+                                                <span className="block text-xs font-semibold mb-0.5">
                                                     {s.label}
                                                 </span>
-                                                <span className="text-[11px] text-slate-500 leading-tight font-medium">{s.desc}</span>
+                                                <span className="text-[11px] text-gray-500 font-normal">{s.desc}</span>
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col md:flex-row gap-4 pt-6">
+                                <div className="flex justify-between gap-2 pt-3 border-t border-gray-200">
                                     <button 
                                         type="button" 
                                         onClick={() => setStep(1)}
-                                        className="app-button-secondary flex-1"
+                                        className="px-3.5 py-2 text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium transition-colors"
                                     >
-                                        <FiArrowLeft /> Volver
+                                        <FiArrowLeft size={13} className="inline mr-1" /> Volver
                                     </button>
                                     <button 
                                         type="submit"
                                         disabled={loading}
-                                        className="app-button-primary flex-[2]"
+                                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors shadow-xs"
                                     >
-                                        {loading ? 'Generando Ecosistema...' : <><FiSave /> Lanzar Mi Emprendimiento</>}
+                                        {loading ? 'Guardando...' : <><FiSave size={13} className="inline mr-1" /> Registrar Emprendimiento</>}
                                     </button>
                                 </div>
                             </div>

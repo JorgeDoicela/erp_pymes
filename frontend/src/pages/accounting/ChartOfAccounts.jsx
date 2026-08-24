@@ -206,37 +206,37 @@ const ChartOfAccounts = () => {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div className="space-y-5">
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Catálogo de Cuentas</h1>
-                    <p className="text-slate-500 text-sm mt-1">Estructura jerárquica financiera y auditoría de saldos</p>
+                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Contabilidad · Estructura Financiera</p>
+                    <h1 className="text-xl font-semibold text-gray-900">Plan de Cuentas Contable</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Estructura jerárquica de cuentas bajo NIIF y auditoría de saldos.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <button
-                        onClick={() => setShowModal(true)}
-                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm hover:shadow-indigo-200 hover:shadow-lg active:scale-95"
+                        onClick={() => { resetForm(); setShowModal(true); }}
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
                     >
-                        <FiPlus /> Nueva Cuenta Madre
+                        <FiPlus size={14} /> Nueva Cuenta Madre
                     </button>
                 </div>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 min-h-[500px]">
+            <div className="bg-white rounded p-4 border border-gray-200 min-h-[450px]">
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                     </div>
                 ) : accounts.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <FiHash className="w-8 h-8 text-slate-400" />
-                        </div>
-                        <h3 className="text-lg font-medium text-slate-900">Catalogo Vacío</h3>
-                        <p className="text-slate-500 mt-1 max-w-sm mx-auto">Comienza creando tu estructura de cuentas Nivel 1 (Activo, Pasivo, Patrimonio).</p>
+                    <div className="text-center py-16 bg-gray-50 rounded border border-dashed border-gray-200">
+                        <FiHash className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <h3 className="text-xs font-semibold text-gray-700">Catálogo Vacío</h3>
+                        <p className="text-[11px] text-gray-400 mt-0.5">Crea la estructura de cuentas de Nivel 1 (Activo, Pasivo, Patrimonio).</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         {renderTree(accounts)}
                     </div>
                 )}
@@ -245,45 +245,45 @@ const ChartOfAccounts = () => {
             {/* Modal de Mayor Auxiliar */}
             {viewingLedger && (
                 <div className="app-modal-overlay">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden animate-scale-in">
-                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-indigo-600 text-white">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-4xl overflow-hidden animate-scale-in">
+                        <div className="px-5 py-3.5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                             <div>
-                                <h3 className="text-xl font-bold flex items-center gap-2"><FiBookOpen /> Mayor de Cuenta</h3>
-                                <p className="text-indigo-100 text-xs opacity-80 uppercase tracking-widest">{viewingLedger.code} | {viewingLedger.name}</p>
+                                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2"><FiBookOpen className="text-blue-600" /> Mayor de Cuenta Auxiliar</h3>
+                                <p className="text-[11px] font-mono text-gray-500 mt-0.5">{viewingLedger.code} — {viewingLedger.name}</p>
                             </div>
-                            <button onClick={() => setViewingLedger(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><FiX size={24} /></button>
+                            <button onClick={() => setViewingLedger(null)} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"><FiX size={18} /></button>
                         </div>
 
-                        <div className="p-8 max-h-[65vh] overflow-y-auto">
+                        <div className="p-5 max-h-[60vh] overflow-y-auto">
                             {loadingLedger ? (
-                                <div className="flex flex-col items-center justify-center py-20 gap-3">
-                                    <FiRefreshCw className="animate-spin text-indigo-500 w-10 h-10" />
-                                    <p className="text-slate-500 font-medium">Cargando movimientos...</p>
+                                <div className="flex flex-col items-center justify-center py-16 gap-2">
+                                    <FiRefreshCw className="animate-spin text-blue-600 w-6 h-6" />
+                                    <p className="text-gray-500 text-xs font-mono">Cargando movimientos contables...</p>
                                 </div>
                             ) : ledgerMovements.length === 0 ? (
-                                <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-300 italic text-slate-400">
-                                    Esta cuenta no tiene registros históricos aún.
+                                <div className="text-center py-12 bg-gray-50 rounded border border-dashed border-gray-200 text-xs text-gray-400 italic">
+                                    Esta cuenta no registra movimientos históricos en el ejercicio.
                                 </div>
                             ) : (
-                                <div className="border border-slate-200 rounded-2xl overflow-hidden">
-                                    <table className="w-full text-xs">
-                                        <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-tight">
+                                <div className="border border-gray-200 rounded overflow-hidden">
+                                    <table className="w-full text-xs text-left text-gray-700">
+                                        <thead className="bg-gray-50 text-[11px] uppercase font-semibold text-gray-500 border-b border-gray-200">
                                             <tr>
-                                                <th className="px-4 py-3 text-left">Fecha</th>
-                                                <th className="px-4 py-3 text-left">Asiento</th>
-                                                <th className="px-4 py-3 text-left">Glosa / Concepto</th>
-                                                <th className="px-4 py-3 text-right">Debe ($)</th>
-                                                <th className="px-4 py-3 text-right">Haber ($)</th>
+                                                <th className="p-3">Fecha</th>
+                                                <th className="p-3">Asiento</th>
+                                                <th className="p-3">Glosa / Concepto</th>
+                                                <th className="p-3 text-right">Debe ($)</th>
+                                                <th className="p-3 text-right">Haber ($)</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100">
+                                        <tbody className="divide-y divide-gray-100 font-mono">
                                             {ledgerMovements.map((mov, i) => (
-                                                <tr key={i} className="hover:bg-slate-50/50">
-                                                    <td className="px-4 py-3 text-slate-500">{new Date(mov.journalEntry?.date).toLocaleDateString()}</td>
-                                                    <td className="px-4 py-3 font-mono font-bold text-indigo-600">{mov.journalEntry?.entryNumber}</td>
-                                                    <td className="px-4 py-3 text-slate-700 font-medium">{mov.description || mov.journalEntry?.description}</td>
-                                                    <td className="px-4 py-3 text-right font-mono text-blue-600">{mov.debit > 0 ? mov.debit.toLocaleString() : '-'}</td>
-                                                    <td className="px-4 py-3 text-right font-mono text-rose-600">{mov.credit > 0 ? mov.credit.toLocaleString() : '-'}</td>
+                                                <tr key={i} className="hover:bg-gray-50/70 transition-colors">
+                                                    <td className="p-3 text-gray-600">{new Date(mov.journalEntry?.date).toLocaleDateString('es-EC')}</td>
+                                                    <td className="p-3 font-semibold text-blue-700">{mov.journalEntry?.entryNumber}</td>
+                                                    <td className="p-3 text-gray-800 font-sans">{mov.description || mov.journalEntry?.description}</td>
+                                                    <td className="p-3 text-right tabular-nums text-gray-900">{mov.debit > 0 ? mov.debit.toFixed(2) : '-'}</td>
+                                                    <td className="p-3 text-right tabular-nums text-gray-900">{mov.credit > 0 ? mov.credit.toFixed(2) : '-'}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -291,8 +291,10 @@ const ChartOfAccounts = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex justify-end">
-                            <button onClick={() => setViewingLedger(null)} className="app-button-primary">Cerrar Auditoría</button>
+                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
+                            <button onClick={() => setViewingLedger(null)} className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-medium rounded transition-colors">
+                                Cerrar Auditoría
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -301,22 +303,22 @@ const ChartOfAccounts = () => {
             {/* Modal de Creación / Edición */}
             {showModal && (
                 <div className="app-modal-overlay">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-in">
-                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h3 className="text-lg font-bold text-slate-900">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md overflow-hidden animate-scale-in">
+                        <div className="px-5 py-3.5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
                                 {selectedId ? 'Editar Cuenta' : (formData.parentId ? 'Nueva Subcuenta' : 'Nueva Cuenta Madre')}
                             </h3>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600"><FiX /></button>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 p-1"><FiX size={16} /></button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                        <form onSubmit={handleSubmit} className="p-5 space-y-3.5 text-xs">
                             {!formData.parentId && !selectedId && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Naturaleza / Tipo</label>
+                                    <label className="block font-medium text-gray-700 mb-1">Naturaleza Contable</label>
                                     <select
                                         value={formData.type}
                                         onChange={e => setFormData({ ...formData, type: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                        className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded text-gray-800 focus:outline-none focus:border-blue-500"
                                     >
                                         {accountTypes.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                                     </select>
@@ -331,65 +333,61 @@ const ChartOfAccounts = () => {
                                         disabled={!!selectedId}
                                         value={formData.code}
                                         onChange={e => setFormData({ ...formData, code: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono disabled:opacity-60"
+                                        className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded text-gray-800 font-mono focus:outline-none focus:border-blue-500 disabled:opacity-60"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Nivel</label>
+                                    <label className="block font-medium text-gray-700 mb-1">Nivel</label>
                                     <input
                                         type="number" required min="1" disabled
                                         value={formData.level}
-                                        className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed"
+                                        className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-gray-500 font-mono cursor-not-allowed"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Nombre de Cuenta</label>
+                                <label className="block font-medium text-gray-700 mb-1">Nombre de Cuenta</label>
                                 <input
                                     type="text" required placeholder="Ej: Caja General"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded text-gray-800 focus:outline-none focus:border-blue-500"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Descripción (Opcional)</label>
+                                <label className="block font-medium text-gray-700 mb-1">Descripción (Opcional)</label>
                                 <textarea
                                     value={formData.description}
                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-20"
+                                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded text-gray-800 focus:outline-none focus:border-blue-500 resize-none h-16"
                                 />
                             </div>
 
-                            <div className="flex items-center gap-3 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl">
-                                <div className="relative flex items-start">
-                                    <div className="flex h-6 items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="isTransactional"
-                                            disabled={!!selectedId && accounts.some(a => a.parentId === selectedId)}
-                                            checked={formData.isTransactional}
-                                            onChange={e => setFormData({ ...formData, isTransactional: e.target.checked })}
-                                            className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 disabled:opacity-50"
-                                        />
-                                    </div>
-                                    <div className="ml-3 text-sm leading-6">
-                                        <label htmlFor="isTransactional" className="font-medium text-slate-900 cursor-pointer">
-                                            Es Cuenta Transaccional
-                                        </label>
-                                        <p className="text-slate-500 text-[10px]">Solo las transaccionales reciben asientos. Una cuenta con hijos no puede ser transaccional.</p>
-                                    </div>
+                            <div className="flex items-start gap-2.5 p-3 bg-gray-50 border border-gray-200 rounded">
+                                <input
+                                    type="checkbox"
+                                    id="isTransactional"
+                                    disabled={!!selectedId && accounts.some(a => a.parentId === selectedId)}
+                                    checked={formData.isTransactional}
+                                    onChange={e => setFormData({ ...formData, isTransactional: e.target.checked })}
+                                    className="h-4 w-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                                />
+                                <div className="text-xs">
+                                    <label htmlFor="isTransactional" className="font-semibold text-gray-900 cursor-pointer block">
+                                        Es Cuenta Transaccional
+                                    </label>
+                                    <p className="text-gray-500 text-[11px] mt-0.5">Solo las transaccionales reciben asientos. Cuentas con subcuentas no son transaccionales.</p>
                                 </div>
                             </div>
 
-                            <div className="pt-4 flex gap-3">
-                                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 font-medium transition-colors">
+                            <div className="pt-2 flex justify-end gap-2">
+                                <button type="button" onClick={() => setShowModal(false)} className="px-3.5 py-2 text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium text-xs transition-colors">
                                     Cancelar
                                 </button>
-                                <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium disabled:opacity-50 transition-colors shadow-sm">
-                                    {isSubmitting ? 'Guardando...' : (selectedId ? 'Actualizar' : 'Guardar Cuenta')}
+                                <button type="submit" disabled={isSubmitting} className="px-3.5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium text-xs disabled:opacity-50 transition-colors shadow-xs">
+                                    {isSubmitting ? 'Guardando...' : (selectedId ? 'Actualizar Cuenta' : 'Guardar Cuenta')}
                                 </button>
                             </div>
                         </form>

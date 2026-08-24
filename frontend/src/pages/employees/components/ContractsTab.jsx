@@ -119,14 +119,17 @@ const ContractsTab = ({ contracts, user, employeeId, token, onUpdate }) => {
 
             {/* Create Contract Modal */}
             {isCreatingContract && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-8 w-full max-w-2xl border border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-2xl font-bold mb-6 text-slate-800">Registrar Nuevo Contrato</h2>
-                        <form onSubmit={handleCreateContract} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded p-6 w-full max-w-xl border border-gray-200 shadow-xl max-h-[90vh] overflow-y-auto text-xs space-y-4">
+                        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-900">Registrar Nuevo Contrato Laboral</h2>
+                            <button onClick={() => setIsCreatingContract(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                        </div>
+                        <form onSubmit={handleCreateContract} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium text-slate-700">Tipo de Contrato</label>
-                                    <select name="type" value={contractForm.type} onChange={handleContractChange} className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all shadow-sm">
+                                    <label className="text-xs font-medium text-gray-700">Modalidad de Contrato</label>
+                                    <select name="type" value={contractForm.type} onChange={handleContractChange} className="w-full bg-white border border-gray-200 rounded p-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500">
                                         {CONTRACT_TYPES.map(opt => (
                                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                                         ))}

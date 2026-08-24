@@ -7,13 +7,13 @@ import { FiDollarSign, FiShield, FiClock, FiTrendingUp } from 'react-icons/fi';
  */
 export default function ExecutiveKPIBanner({ financialImpact }) {
     const data = financialImpact || {
-        estimatedTurnoverCostRisk: 14500,
-        potentialRetentionSavings: 10875,
-        estimatedAbsenteeismCost: 3200,
-        overtimeSavings: 1650,
-        totalFinancialOpportunity: 15725,
+        estimatedTurnoverCostRisk: 0,
+        potentialRetentionSavings: 0,
+        estimatedAbsenteeismCost: 0,
+        overtimeSavings: 0,
+        totalFinancialOpportunity: 0,
         currency: 'USD',
-        paybackPeriodMonths: 2.3,
+        paybackPeriodMonths: 0,
     };
 
     const formatCurrency = (amount) => {

@@ -49,45 +49,43 @@ export default function MethodologyModal({ isOpen, onClose }) {
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs overflow-y-auto">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                    initial={{ opacity: 0, scale: 0.98, y: 8 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 12 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden my-8"
+                    exit={{ opacity: 0, scale: 0.98, y: 8 }}
+                    transition={{ duration: 0.15 }}
+                    className="bg-white rounded shadow-xl border border-gray-200 w-full max-w-3xl overflow-hidden my-8"
                 >
                     {/* ── Header ── */}
-                    <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg border border-indigo-200">
-                                <FiBookOpen className="w-5 h-5" />
-                            </div>
+                    <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-gray-200">
+                        <div className="flex items-center gap-2.5">
+                            <FiBookOpen className="w-5 h-5 text-blue-600" />
                             <div>
-                                <h3 className="text-sm font-bold text-slate-800 tracking-tight">
+                                <h3 className="text-sm font-semibold text-gray-900">
                                     Ficha Metodológica — Modelos Estadísticos y Econométricos
                                 </h3>
-                                <p className="text-xs text-slate-400 mt-0.5">
-                                    Fundamentación matemática del Agente de Inteligencia
+                                <p className="text-xs text-gray-500">
+                                    Fundamentación analítica de los algoritmos de predicción y riesgo
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            className="p-1 text-gray-400 hover:text-gray-700 rounded transition-colors cursor-pointer"
                         >
-                            <FiX className="w-5 h-5" />
+                            <FiX size={16} />
                         </button>
                     </div>
 
                     {/* ── Cuerpo ── */}
-                    <div className="p-5 space-y-5 max-h-[75vh] overflow-y-auto bg-white">
+                    <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto bg-white text-xs">
 
                         {/* Modelo 1 — Weibull */}
-                        <section className="border border-slate-200 rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
-                                <FiActivity className="w-4 h-4 text-indigo-600 shrink-0" />
-                                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                        <section className="border border-gray-200 rounded overflow-hidden">
+                            <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                                <FiActivity className="w-4 h-4 text-blue-600 shrink-0" />
+                                <h4 className="text-xs font-semibold text-gray-800 uppercase tracking-wide">
                                     1. Análisis de Estabilidad y Tiempo de Permanencia (Modelo de Weibull)
                                 </h4>
                             </div>

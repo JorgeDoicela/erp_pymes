@@ -44,53 +44,43 @@ const GrowthMetrics = () => {
     ];
 
     return (
-        <div className="space-y-8 animate-fadeIn">
-            <div className="flex justify-between items-center">
+        <div className="space-y-5">
+            <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-                        <FiTrendingUp className="text-indigo-600" /> Motor de Crecimiento
+                    <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                        <FiTrendingUp className="text-blue-600" /> Métricas de Crecimiento y Tracción
                     </h2>
-                    <p className="text-slate-500 text-sm font-medium">Métricas clave de tracción y rentabilidad del negocio.</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Indicadores clave de ingresos recurrentes, adquisición de clientes y ciclo de vida.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {cards.map((card, idx) => (
-                    <div key={idx} className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 group hover:shadow-xl transition-all">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className={`w-12 h-12 rounded-2xl bg-${card.color}-50 text-${card.color}-600 flex items-center justify-center text-xl`}>
-                                {card.icon}
-                            </div>
-                            <span className="text-emerald-500 text-xs font-black flex items-center gap-1">
-                                +12% <FiArrowUpRight />
-                            </span>
+                    <div key={idx} className="bg-white p-4 rounded border border-gray-200 space-y-2">
+                        <div className="flex justify-between items-center">
+                            <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">{card.title}</span>
+                            <span className="text-gray-400">{card.icon}</span>
                         </div>
-                        <h3 className="text-3xl font-black text-slate-800 mb-1">{card.value}</h3>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{card.title}</span>
-                            <span className="text-[10px] text-slate-300">•</span>
-                            <span className="text-[10px] text-slate-400 font-medium">{card.detail}</span>
-                        </div>
+                        <h3 className="text-xl font-mono font-bold text-gray-900 tabular-nums">{card.value}</h3>
+                        <p className="text-[11px] text-gray-500">{card.detail}</p>
                     </div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Chart Section */}
-                <div className="lg:col-span-2 bg-white rounded-[32px] p-8 shadow-sm border border-slate-100">
-                    <div className="flex justify-between items-center mb-8">
-                        <h3 className="font-black text-slate-700 uppercase tracking-tight text-sm">Evolución de Ingresos (MRR)</h3>
-                        <select className="bg-slate-50 border-none rounded-xl text-[10px] font-black px-4 py-2 uppercase tracking-widest focus:ring-0">
-                            <option>Últimos 6 meses</option>
-                        </select>
+                <div className="lg:col-span-2 bg-white rounded border border-gray-200 p-4 space-y-4">
+                    <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                        <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs">Evolución de Ingresos Recurrentes (MRR)</h3>
+                        <span className="text-[11px] text-gray-400 font-mono">Semestre en curso</span>
                     </div>
-                    <div className="h-[300px] w-full">
+                    <div className="h-[260px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
-                                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
+                                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -98,18 +88,18 @@ const GrowthMetrics = () => {
                                     dataKey="month" 
                                     axisLine={false} 
                                     tickLine={false} 
-                                    tick={{fontSize: 10, fontWeight: 900, fill: '#94a3b8'}}
-                                    dy={10}
+                                    tick={{fontSize: 10, fill: '#64748b'}}
+                                    dy={5}
                                 />
                                 <YAxis hide />
                                 <Tooltip 
-                                    contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 'bold'}}
+                                    contentStyle={{borderRadius: '4px', border: '1px solid #e2e8f0', boxShadow: 'none', fontSize: '11px'}}
                                 />
                                 <Area 
                                     type="monotone" 
                                     dataKey="value" 
-                                    stroke="#4f46e5" 
-                                    strokeWidth={4}
+                                    stroke="#2563eb" 
+                                    strokeWidth={2}
                                     fillOpacity={1} 
                                     fill="url(#colorValue)" 
                                 />
@@ -119,38 +109,35 @@ const GrowthMetrics = () => {
                 </div>
 
                 {/* Units Economics */}
-                <div className="bg-white rounded-2xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <h3 className="font-bold uppercase tracking-wider text-indigo-600 text-xs mb-6">Economía de Unidad</h3>
-                        <div className="space-y-6">
+                <div className="bg-white rounded border border-gray-200 p-4 flex flex-col justify-between space-y-4">
+                    <div className="space-y-4">
+                        <h3 className="font-semibold uppercase tracking-wider text-gray-900 text-xs pb-2 border-b border-gray-100">Economía de Unidad</h3>
+                        <div className="space-y-4">
                             <div>
-                                <div className="flex justify-between items-end mb-2">
-                                    <span className="text-xs font-bold text-slate-500">LTV / CAC Ratio</span>
-                                    <span className={`text-2xl font-extrabold ${metrics?.isSustainable ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                <div className="flex justify-between items-end mb-1.5 font-mono">
+                                    <span className="text-xs text-gray-500 font-sans">Ratio LTV / CAC</span>
+                                    <span className={`text-xl font-bold tabular-nums ${metrics?.isSustainable ? 'text-green-700' : 'text-amber-700'}`}>
                                         {metrics?.unitEconomics || '0.0'}
                                     </span>
                                 </div>
-                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                     <div 
-                                        className={`h-full rounded-full ${metrics?.isSustainable ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                                        className={`h-full rounded-full ${metrics?.isSustainable ? 'bg-green-600' : 'bg-amber-500'}`} 
                                         style={{ width: `${Math.min((metrics?.unitEconomics || 0) * 10, 100)}%` }}
                                     ></div>
                                 </div>
-                                <p className="text-[11px] text-slate-500 mt-2.5 font-medium">Un ratio mayor a 3.0 se considera un negocio saludable y escalable.</p>
+                                <p className="text-[11px] text-gray-400 mt-1.5 leading-tight">Un ratio {'>'} 3.0 refleja un modelo comercialmente eficiente.</p>
                             </div>
 
-                            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block mb-1.5">Sostenibilidad</span>
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-2.5 h-2.5 rounded-full ${metrics?.isSustainable ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`}></div>
-                                    <span className="text-xs font-black uppercase">{metrics?.isSustainable ? 'Estructura Saludable' : 'Optimización Requerida'}</span>
+                            <div className="p-3 rounded bg-gray-50 border border-gray-200 text-xs space-y-1">
+                                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block">Diagnóstico de Viabilidad</span>
+                                <div className="flex items-center gap-1.5 font-medium">
+                                    <span className={`inline-block w-2 h-2 rounded-full ${metrics?.isSustainable ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+                                    <span className="text-gray-800">{metrics?.isSustainable ? 'Estructura Saludable' : 'Optimización Requerida'}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button className="w-full mt-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold text-xs transition-all border border-white/10">
-                        Exportar Reporte
-                    </button>
                 </div>
             </div>
         </div>

@@ -33,6 +33,7 @@ const EmployeeList = lazy(() => import('./pages/employees/EmployeeList.jsx'));
 const EmployeeProfile = lazy(() => import('./pages/employees/EmployeeProfile.jsx'));
 const EmployeeExpedient = lazy(() => import('./pages/employees/EmployeeExpedient.jsx'));
 const EmployeeAssetsManagement = lazy(() => import('./pages/employees/EmployeeAssetsManagement.jsx'));
+const MyAssets = lazy(() => import('./pages/employees/MyAssets.jsx'));
 const OffboardingManagement = lazy(() => import('./pages/employees/OffboardingManagement.jsx'));
 const MobileEmployeePortal = lazy(() => import('./pages/dashboard/MobileEmployeePortal.jsx'));
 const LegalComplianceDashboard = lazy(() => import('./pages/compliance/LegalComplianceDashboard.jsx'));
@@ -206,6 +207,7 @@ function App() {
           <Route path="/admin/absences" element={<AdminAbsences />} />
           <Route path="/admin/register-employee" element={<RegisterEmployee token={auth.token} />} />
           <Route path="/admin/employees" element={<EmployeeList token={auth.token} />} />
+          <Route path="/admin/employees/ficha" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
           <Route path="/admin/employees/:id" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
           <Route path="/attendance" element={<AttendancePage user={auth.user} />} />
           <Route path="/admin/notifications" element={<NotificationsPage />} />
@@ -265,11 +267,12 @@ function App() {
         {/* Employee Self-Service Routes - Solo para rol employee */}
         <Route element={<RequireAuth role="employee"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
-          <Route path="/empleado/portal" element={<Navigate to="/empleado" replace />} />
+          <Route path="/empleado/portal" element={<MobileEmployeePortal user={auth.user} />} />
           <Route path="/empleado/asistencia" element={<EmployeeAttendance user={auth.user} />} />
           <Route path="/empleado/ausencias" element={<EmployeeAbsences />} />
           <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
           <Route path="/my-advances" element={<MySalaryAdvances />} />
+          <Route path="/my-assets" element={<MyAssets />} />
           <Route path="/my-expedient" element={<EmployeeExpedient />} />
           <Route path="/performance/goals" element={<MyGoals />} />
           <Route path="/performance/my-evaluations" element={<MyEvaluations />} />
@@ -281,6 +284,7 @@ function App() {
 
         <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
           <Route path="/announcements" element={<AnnouncementsBoard user={auth.user} />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/performance/results/:id" element={<EvaluationResults />} />
           <Route path="/profile" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
           <Route path="/help" element={<HelpCenter />} />

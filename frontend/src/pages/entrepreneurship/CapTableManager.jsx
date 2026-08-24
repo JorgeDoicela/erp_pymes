@@ -92,70 +92,63 @@ const CapTableManager = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <FiPieChart className="text-indigo-600" /> CapTable y Capital
+                        <FiPieChart className="text-blue-600" /> Distribución de Capital Social (CapTable)
                     </h2>
-                    <p className="text-slate-500 text-sm">Distribución de propiedad y rondas de inversión.</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Composición accionaria, rondas de inversión y acuerdos de vesting.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button onClick={() => setShowFundingModal(true)} className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-xl hover:bg-amber-600 transition-all font-medium text-sm shadow-sm">
-                        <FiPlus /> Ronda
+                    <button onClick={() => setShowFundingModal(true)} className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                        <FiPlus size={14} /> Ronda de Inversión
                     </button>
-                    <button onClick={() => setShowEquityModal(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm">
-                        <FiPlus /> Socio
+                    <button onClick={() => setShowEquityModal(true)} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
+                        <FiPlus size={14} /> Registrar Socio
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Composición de Equidad */}
-                <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                        <h3 className="font-bold text-slate-800">Distribución de Acciones</h3>
-                        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${totalPercentage > 100 ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                            {totalPercentage}% TOTAL
+                <div className="lg:col-span-2 bg-white rounded border border-gray-200 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Participación Accionaria</h3>
+                        <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded border ${totalPercentage > 100 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                            {totalPercentage}% TOTAL ASIGNADO
                         </span>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-wider">
+                        <table className="w-full text-left text-xs text-gray-700">
+                            <thead className="bg-gray-50 text-[11px] uppercase font-semibold text-gray-500 border-b border-gray-200">
                                 <tr>
-                                    <th className="px-6 py-3 font-semibold">Tenedor</th>
-                                    <th className="px-6 py-3 font-semibold">Rol</th>
-                                    <th className="px-6 py-3 font-semibold text-right">Acciones</th>
+                                    <th className="p-3.5">Tenedor de Acciones</th>
+                                    <th className="p-3.5">Rol Institucional</th>
+                                    <th className="p-3.5 text-right">Porcentaje</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
+                            <tbody className="divide-y divide-gray-100">
                                 {equities.length === 0 ? (
                                     <tr>
-                                        <td colSpan="3" className="px-6 py-8 text-center text-slate-500 italic">No hay registros en el CapTable</td>
+                                        <td colSpan="3" className="p-8 text-center text-gray-400 italic">No hay socios registrados en el CapTable.</td>
                                     </tr>
                                 ) : (
                                     equities.map((eq) => (
-                                        <tr key={eq.id} onClick={() => setDetailEquity(eq)} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs uppercase">
-                                                        {eq.holderName.charAt(0)}
-                                                    </div>
-                                                    <span className="font-semibold text-slate-700">{eq.holderName}</span>
-                                                </div>
+                                        <tr key={eq.id} onClick={() => setDetailEquity(eq)} className="hover:bg-gray-50/60 transition-colors group cursor-pointer">
+                                            <td className="p-3.5 font-medium text-gray-900">
+                                                {eq.holderName}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg font-medium">
+                                            <td className="p-3.5">
+                                                <span className="text-[11px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded font-mono">
                                                     {eq.role}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center justify-end gap-3">
-                                                    <span className="font-mono font-bold text-slate-900">
-                                                        {eq.percentage}%
-                                                    </span>
+                                            <td className="p-3.5 text-right font-mono font-semibold text-gray-900 tabular-nums">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <span>{eq.percentage}%</span>
                                                     <button 
-                                                        onClick={() => handleDeleteEquity(eq.id)}
-                                                        className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                                                        title="Eliminar del CapTable"
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteEquity(eq.id); }}
+                                                        className="p-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Eliminar"
                                                     >
-                                                        <FiTrash2 size={14} />
+                                                        <FiTrash2 size={13} />
                                                     </button>
                                                 </div>
                                             </td>
@@ -168,29 +161,29 @@ const CapTableManager = () => {
                 </div>
 
                 {/* Resumen Inversión */}
-                <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <FiBriefcase className="text-amber-500" /> Rondas de Inversión
+                <div className="space-y-4">
+                    <div className="bg-white p-4 rounded border border-gray-200 space-y-3">
+                        <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-gray-100">
+                            <FiBriefcase className="text-blue-600" /> Rondas de Inversión
                         </h3>
-                        <div className="space-y-4">
+                        <div className="space-y-2.5 text-xs">
                             {fundingRounds.length === 0 ? (
-                                <p className="text-xs text-slate-500 italic">No se han registrado rondas.</p>
+                                <p className="text-xs text-gray-400 italic py-2">Sin rondas registradas.</p>
                             ) : (
                                 fundingRounds.map((round) => (
-                                    <div key={round.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 relative group">
+                                    <div key={round.id} className="p-3 rounded bg-gray-50 border border-gray-200 relative group space-y-1">
                                         <button 
                                             onClick={() => handleDeleteFunding(round.id)}
-                                            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 transition-all bg-white rounded-lg shadow-sm border border-slate-100"
+                                            className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 transition-opacity bg-white rounded border border-gray-200"
                                         >
                                             <FiTrash2 size={12} />
                                         </button>
-                                        <div className="flex justify-between items-start mb-1 pr-6">
-                                            <span className="text-xs font-bold text-slate-700">{round.roundName}</span>
-                                            <span className="text-[10px] text-slate-400">{new Date(round.date).toLocaleDateString()}</span>
+                                        <div className="flex justify-between items-start pr-6 font-mono text-[11px]">
+                                            <span className="font-semibold text-gray-900">{round.roundName}</span>
+                                            <span className="text-gray-400">{new Date(round.date).toLocaleDateString('es-EC')}</span>
                                         </div>
-                                        <div className="text-lg font-bold text-indigo-600">${round.amountRaised.toLocaleString()}</div>
-                                        <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-tighter font-bold">Valuación: ${round.valuation.toLocaleString()}</div>
+                                        <div className="text-sm font-mono font-semibold text-gray-900 tabular-nums">${round.amountRaised.toLocaleString()} USD</div>
+                                        <div className="text-[11px] text-gray-500 font-mono">Valuación: ${round.valuation.toLocaleString()} USD</div>
                                     </div>
                                 ))
                             )}
@@ -202,36 +195,39 @@ const CapTableManager = () => {
             {/* Modal para añadir socio */}
             {showEquityModal && (
                 <div className="app-modal-overlay">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown">
-                        <h3 className="text-xl font-bold text-slate-800 mb-6">Añadir Participación</h3>
-                        <form onSubmit={handleAddEquity} className="space-y-4">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md p-5 animate-scale-in">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Añadir Participación Accionaria</h3>
+                            <button onClick={() => setShowEquityModal(false)} className="text-gray-400 hover:text-gray-600 p-1"><FiX size={16} /></button>
+                        </div>
+                        <form onSubmit={handleAddEquity} className="space-y-3 text-xs">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nombre del Socio</label>
+                                <label className="block font-medium text-gray-700 mb-1">Nombre del Socio / Entidad</label>
                                 <input 
                                     required
-                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm font-bold text-slate-700"
+                                    className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500"
                                     value={newEquity.holderName}
                                     onChange={(e) => setNewEquity({...newEquity, holderName: e.target.value})}
-                                    placeholder="Ej: Elon Musk"
+                                    placeholder="Ej: Inversiones ABC S.A."
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Porcentaje (%)</label>
+                                    <label className="block font-medium text-gray-700 mb-1">Porcentaje (%)</label>
                                     <input 
                                         required
                                         type="number"
                                         step="0.01"
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm font-mono font-bold text-slate-700"
+                                        className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
                                         value={newEquity.percentage}
                                         onChange={(e) => setNewEquity({...newEquity, percentage: e.target.value})}
                                         placeholder="0.00"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Rol</label>
+                                    <label className="block font-medium text-gray-700 mb-1">Rol</label>
                                     <select 
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm font-bold text-slate-700"
+                                        className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500"
                                         value={newEquity.role}
                                         onChange={(e) => setNewEquity({...newEquity, role: e.target.value})}
                                     >
@@ -243,12 +239,12 @@ const CapTableManager = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Términos de Vesting</label>
-                                <input className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm text-slate-700" value={newEquity.vestingTerms} onChange={(e) => setNewEquity({...newEquity, vestingTerms: e.target.value})} placeholder="Ej: 4 años, cliff 1 año" />
+                                <label className="block font-medium text-gray-700 mb-1">Términos de Vesting</label>
+                                <input className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500" value={newEquity.vestingTerms} onChange={(e) => setNewEquity({...newEquity, vestingTerms: e.target.value})} placeholder="Ej: 4 años, cliff 1 año" />
                             </div>
-                            <div className="flex gap-3 mt-8">
-                                <button type="button" onClick={() => setShowEquityModal(false)} className="flex-1 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm">Cancelar</button>
-                                <button type="submit" className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md text-sm">Guardar</button>
+                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                                <button type="button" onClick={() => setShowEquityModal(false)} className="px-3.5 py-2 text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
+                                <button type="submit" className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors shadow-xs">Guardar Socio</button>
                             </div>
                         </form>
                     </div>
@@ -258,77 +254,34 @@ const CapTableManager = () => {
             {/* Modal Detalle Equity */}
             {detailEquity && (
                 <div className="app-modal-overlay" onClick={() => setDetailEquity(null)}>
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-black text-2xl">{detailEquity.holderName.charAt(0)}</div>
-                                <div>
-                                    <h3 className="text-xl font-black text-slate-800">{detailEquity.holderName}</h3>
-                                    <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg font-bold">
-                                        {detailEquity.role === 'Founder' ? 'Fundador' : 
-                                         detailEquity.role === 'Investor' ? 'Inversor' : 
-                                         detailEquity.role === 'Advisor' ? 'Asesor' : 'Empleado'}
-                                    </span>
-                                </div>
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md p-5 animate-scale-in" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-900">{detailEquity.holderName}</h3>
+                                <span className="text-[11px] font-mono text-blue-700 mt-0.5 block">
+                                    {detailEquity.role}
+                                </span>
                             </div>
-                            <button onClick={() => setDetailEquity(null)} className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-all">✕</button>
+                            <button onClick={() => setDetailEquity(null)} className="text-gray-400 hover:text-gray-600 p-1">✕</button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="bg-slate-50 p-5 rounded-2xl text-center">
-                                <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Participación</p>
-                                <p className="text-3xl font-black text-indigo-600">{detailEquity.percentage}%</p>
+                        <div className="grid grid-cols-2 gap-3 mb-4 text-xs font-mono">
+                            <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                                <p className="text-[10px] text-gray-400 font-sans uppercase mb-0.5">Participación</p>
+                                <p className="text-xl font-bold text-gray-900 tabular-nums">{detailEquity.percentage}%</p>
                             </div>
-                            <div className="bg-slate-50 p-5 rounded-2xl text-center">
-                                <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Tipo</p>
-                                <p className="text-lg font-black text-slate-700">
-                                    {detailEquity.role === 'Founder' ? 'Fundador' : 
-                                     detailEquity.role === 'Investor' ? 'Inversor' : 
-                                     detailEquity.role === 'Advisor' ? 'Asesor' : 'Empleado'}
-                                </p>
+                            <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                                <p className="text-[10px] text-gray-400 font-sans uppercase mb-0.5">Tipo</p>
+                                <p className="text-sm font-sans font-medium text-gray-800">{detailEquity.role}</p>
                             </div>
                         </div>
                         {detailEquity.vestingTerms && (
-                            <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 mb-6">
-                                <p className="text-[10px] uppercase font-black text-indigo-500 mb-1">Términos de Vesting</p>
-                                <p className="text-sm font-bold text-indigo-900">{detailEquity.vestingTerms}</p>
+                            <div className="bg-blue-50/50 p-3 rounded border border-blue-200 mb-4 text-xs">
+                                <p className="text-[10px] text-blue-700 uppercase font-medium mb-0.5">Términos de Vesting</p>
+                                <p className="text-gray-800">{detailEquity.vestingTerms}</p>
                             </div>
                         )}
-                        <button onClick={() => { handleDeleteEquity(detailEquity.id); setDetailEquity(null); }} className="w-full py-3 border border-red-100 text-red-500 rounded-2xl font-bold text-sm hover:bg-red-50 transition-all">
+                        <button onClick={() => { handleDeleteEquity(detailEquity.id); setDetailEquity(null); }} className="w-full py-1.5 bg-white border border-red-200 text-red-600 rounded text-xs font-medium hover:bg-red-50 transition-colors">
                             Eliminar del CapTable
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Modal Detalle Ronda */}
-            {detailFunding && (
-                <div className="app-modal-overlay" onClick={() => setDetailFunding(null)}>
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 className="text-2xl font-black text-slate-800">{detailFunding.roundName}</h3>
-                                <p className="text-slate-400 text-sm">{new Date(detailFunding.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                            </div>
-                            <button onClick={() => setDetailFunding(null)} className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-all">✕</button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="bg-emerald-50 p-5 rounded-2xl text-center">
-                                <p className="text-[10px] uppercase font-black text-emerald-500 mb-1">Levantado</p>
-                                <p className="text-2xl font-black text-emerald-700">${detailFunding.amountRaised?.toLocaleString()}</p>
-                            </div>
-                            <div className="bg-indigo-50 p-5 rounded-2xl text-center">
-                                <p className="text-[10px] uppercase font-black text-indigo-500 mb-1">Valuación</p>
-                                <p className="text-2xl font-black text-indigo-700">${detailFunding.valuation?.toLocaleString()}</p>
-                            </div>
-                        </div>
-                        {detailFunding.investors && (
-                            <div className="bg-slate-50 p-4 rounded-2xl mb-6">
-                                <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Inversores</p>
-                                <p className="text-sm font-bold text-slate-700">{detailFunding.investors}</p>
-                            </div>
-                        )}
-                        <button onClick={() => { handleDeleteFunding(detailFunding.id); setDetailFunding(null); }} className="w-full py-3 border border-red-100 text-red-500 rounded-2xl font-bold text-sm hover:bg-red-50 transition-all">
-                            Eliminar Ronda
                         </button>
                     </div>
                 </div>
@@ -337,36 +290,39 @@ const CapTableManager = () => {
             {/* Modal Nueva Ronda de Inversión */}
             {showFundingModal && (
                 <div className="app-modal-overlay">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-slideDown">
-                        <h3 className="text-xl font-bold text-slate-800 mb-6">Registrar Ronda de Inversión</h3>
-                        <form onSubmit={handleAddFunding} className="space-y-4">
+                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md p-5 animate-scale-in">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Registrar Ronda de Inversión</h3>
+                            <button onClick={() => setShowFundingModal(false)} className="text-gray-400 hover:text-gray-600 p-1"><FiX size={16} /></button>
+                        </div>
+                        <form onSubmit={handleAddFunding} className="space-y-3 text-xs">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nombre de la Ronda *</label>
-                                <input required className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-sm font-bold text-slate-700" value={newFunding.roundName} onChange={(e) => setNewFunding({...newFunding, roundName: e.target.value})} placeholder="Ej: Seed A, Series A" />
+                                <label className="block font-medium text-gray-700 mb-1">Nombre de la Ronda *</label>
+                                <input required className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500" value={newFunding.roundName} onChange={(e) => setNewFunding({...newFunding, roundName: e.target.value})} placeholder="Ej: Semilla, Serie A" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Monto ($) *</label>
-                                    <input required type="number" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-sm font-mono font-bold text-slate-700" value={newFunding.amountRaised} onChange={(e) => setNewFunding({...newFunding, amountRaised: e.target.value})} placeholder="0" />
+                                    <label className="block font-medium text-gray-700 mb-1">Monto Inyectado ($) *</label>
+                                    <input required type="number" className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 font-mono" value={newFunding.amountRaised} onChange={(e) => setNewFunding({...newFunding, amountRaised: e.target.value})} placeholder="0.00" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Valuación ($) *</label>
-                                    <input required type="number" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-sm font-mono font-bold text-slate-700" value={newFunding.valuation} onChange={(e) => setNewFunding({...newFunding, valuation: e.target.value})} placeholder="0" />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Fecha *</label>
-                                    <input required type="date" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-sm font-bold text-slate-700" value={newFunding.date} onChange={(e) => setNewFunding({...newFunding, date: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Inversores</label>
-                                    <input className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-sm text-slate-700" value={newFunding.investors} onChange={(e) => setNewFunding({...newFunding, investors: e.target.value})} placeholder="Ej: Angel, VC Fund" />
+                                    <label className="block font-medium text-gray-700 mb-1">Valuación Post-Money ($) *</label>
+                                    <input required type="number" className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 font-mono" value={newFunding.valuation} onChange={(e) => setNewFunding({...newFunding, valuation: e.target.value})} placeholder="0.00" />
                                 </div>
                             </div>
-                            <div className="flex gap-3 mt-4">
-                                <button type="button" onClick={() => setShowFundingModal(false)} className="flex-1 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm">Cancelar</button>
-                                <button type="submit" className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-all shadow-md text-sm">Registrar</button>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block font-medium text-gray-700 mb-1">Fecha de Cierre *</label>
+                                    <input required type="date" className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 font-mono" value={newFunding.date} onChange={(e) => setNewFunding({...newFunding, date: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="block font-medium text-gray-700 mb-1">Inversores Principales</label>
+                                    <input className="w-full px-3 py-1.5 rounded bg-white border border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500" value={newFunding.investors} onChange={(e) => setNewFunding({...newFunding, investors: e.target.value})} placeholder="Ej: Ángel, Fondo VC" />
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                                <button type="button" onClick={() => setShowFundingModal(false)} className="px-3.5 py-2 text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
+                                <button type="submit" className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors shadow-xs">Registrar Ronda</button>
                             </div>
                         </form>
                     </div>

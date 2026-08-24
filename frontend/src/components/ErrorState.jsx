@@ -5,23 +5,27 @@ import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 export default function ErrorState({ title = "Error al cargar la información", message = "Ocurrió un problema inesperado al consultar los datos de inteligencia.", onRetry }) {
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-lg border border-red-100 p-8 text-center max-w-lg mx-auto my-12"
+            className="bg-white rounded border border-gray-200 p-6 text-center max-w-md mx-auto my-8 shadow-xs text-xs space-y-3"
         >
-            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
-                <FiAlertCircle className="w-8 h-8" />
+            <div className="w-10 h-10 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto border border-red-100">
+                <FiAlertCircle className="w-5 h-5" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">{title}</h3>
-            <p className="text-sm text-slate-600 mb-6 leading-relaxed">{message}</p>
+            <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
+                <p className="text-xs text-gray-600 leading-normal">{message}</p>
+            </div>
             {onRetry && (
-                <button
-                    onClick={onRetry}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-100 active:scale-95"
-                >
-                    <FiRefreshCw className="w-4 h-4" />
-                    Reintentar
-                </button>
+                <div className="pt-2">
+                    <button
+                        onClick={onRetry}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors shadow-xs cursor-pointer"
+                    >
+                        <FiRefreshCw className="w-3.5 h-3.5" />
+                        Reintentar
+                    </button>
+                </div>
             )}
         </motion.div>
     );

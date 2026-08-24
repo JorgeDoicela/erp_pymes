@@ -52,6 +52,10 @@ const Dashboard = () => {
         SCALING: 'Escalamiento'
     };
 
+    const [selectedStage, setSelectedStage] = useState('ALL');
+
+    const filteredProjects = projects.filter(p => selectedStage === 'ALL' || p.stage === selectedStage);
+
     return (
         <div className="space-y-5">
             {/* Header Limpio ERP */}
@@ -63,51 +67,50 @@ const Dashboard = () => {
                 </div>
                 <Link 
                     to="create" 
-                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 shrink-0"
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 shrink-0 shadow-xs"
                 >
                     <FiPlus size={14} /> Lanzar Proyecto
                 </Link>
             </div>
 
-            {/* Resumen de Estados ERP */}
-            <div className="bg-white border border-gray-200 rounded overflow-hidden">
-                <div className="px-4 py-2.5 bg-gray-50/50 border-b border-gray-200">
-                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Métricas de Incubación</h3>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-gray-100 text-xs">
-                    <div className="p-3.5 text-center">
-                        <p className="text-gray-500 mb-0.5">Total Proyectos</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.total}</p>
-                    </div>
-                    <div className="p-3.5 text-center">
-                        <p className="text-gray-500 mb-0.5">Ideación</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.ideation}</p>
-                    </div>
-                    <div className="p-3.5 text-center">
-                        <p className="text-gray-500 mb-0.5">Validación</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.validation}</p>
-                    </div>
-                    <div className="p-3.5 text-center">
-                        <p className="text-gray-500 mb-0.5">MVP</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.mvp}</p>
-                    </div>
-                    <div className="p-3.5 text-center">
-                        <p className="text-gray-500 mb-0.5">Escalamiento</p>
-                        <p className="text-base font-semibold text-gray-900 font-mono" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>{stats.scaling}</p>
-                    </div>
-                </div>
+            {/* Filtros por Etapa / Tabs Funcionales */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                {[
+                    { id: 'ALL', label: 'Todos los Proyectos', count: stats.total },
+                    { id: 'IDEATION', label: 'Ideación', count: stats.ideation },
+                    { id: 'VALIDATION', label: 'Validación', count: stats.validation },
+                    { id: 'MVP', label: 'MVP / Prototipo', count: stats.mvp },
+                    { id: 'SCALING', label: 'Escalamiento', count: stats.scaling }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setSelectedStage(tab.id)}
+                        className={`px-3 py-1.5 rounded font-medium transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap ${
+                            selectedStage === tab.id
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                        <span>{tab.label}</span>
+                        <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
+                            selectedStage === tab.id ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                            {tab.count}
+                        </span>
+                    </button>
+                ))}
             </div>
 
             {loading ? (
-                <div className="p-12 text-center text-gray-400 text-xs">Cargando proyectos de incubación...</div>
-            ) : projects.length === 0 ? (
+                <div className="p-12 text-center text-gray-400 text-xs font-mono">Cargando proyectos de incubación...</div>
+            ) : filteredProjects.length === 0 ? (
                 <div className="p-12 text-center bg-white border border-gray-200 rounded">
-                    <p className="text-sm font-medium text-gray-700">Sin proyectos activos</p>
-                    <p className="text-xs text-gray-400 mt-1">Registra tu idea para comenzar el proceso de incubación.</p>
+                    <p className="text-sm font-medium text-gray-700">Sin proyectos en esta etapa</p>
+                    <p className="text-xs text-gray-400 mt-1">No se encontraron proyectos correspondientes al filtro seleccionado.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {projects.map((project) => (
+                    {filteredProjects.map((project) => (
                         <Link 
                             key={project.id} 
                             to={`${project.id}`}

@@ -648,14 +648,12 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                         className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[99] flex items-center justify-center p-4"
                     >
                         <motion.div
-                            initial={{ scale: 0.96, opacity: 0, y: 10 }}
+                            initial={{ scale: 0.98, opacity: 0, y: 6 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.96, opacity: 0, y: 10 }}
+                            exit={{ scale: 0.98, opacity: 0, y: 6 }}
                             transition={{ duration: 0.15, ease: "easeOut" }}
-                            className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200/90 relative overflow-hidden my-auto"
+                            className="bg-white rounded max-w-md w-full shadow-xl border border-gray-200 relative overflow-hidden my-auto text-xs"
                         >
-                            {/* Subtle Top Border */}
-                            <div className="h-1 w-full bg-slate-800" />
 
                             <div className="p-5 space-y-4">
                                 {/* Header */}
