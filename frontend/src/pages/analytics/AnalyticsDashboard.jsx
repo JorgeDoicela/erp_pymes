@@ -36,7 +36,7 @@ const OPERATIONAL_REPORTS = [
         path: '/analytics/performance',
         category: 'Evaluación y Metas',
         tag: 'Estratégico',
-        desc: 'Resultados de evaluaciones por competencias, cumplimiento de KPIs y mapa de talento.'
+        desc: 'Resultados de evaluaciones individuales, distribución de calificaciones por rango y comparativa de rendimiento por departamento.'
     },
     {
         id: 'payroll_costs',
@@ -44,7 +44,7 @@ const OPERATIONAL_REPORTS = [
         path: '/analytics/payroll-costs',
         category: 'Finanzas RRHH',
         tag: 'Financiero',
-        desc: 'Distribución de masa salarial por departamento, beneficios sociales y provisiones de ley.'
+        desc: 'Evolución de costos de nómina, desglose por componente salarial (salario base, horas extra, aportes) y distribución por departamento.'
     },
     {
         id: 'satisfaction',
@@ -52,7 +52,7 @@ const OPERATIONAL_REPORTS = [
         path: '/analytics/satisfaction',
         category: 'Cultura y Clima',
         tag: 'Encuestas',
-        desc: 'Índices de satisfacción interna, prevención de burnout y eNPS organizacional.'
+        desc: 'Índice de satisfacción interna (0-100), puntuación eNPS, análisis radar por dimensiones y comentarios cualitativos de la plantilla.'
     }
 ];
 
@@ -95,7 +95,7 @@ const AI_MODELS = [
         path: '/analytics/temporal-attention',
         category: 'Deep Learning Secuencial',
         tag: 'Attention Mechanism',
-        desc: 'Redes con mecanismo de atención temporal sobre historial de asistencia, desempeño y feedback continuo.'
+        desc: 'Ponderación no lineal de secuencias de 12 meses (asistencia, desempeño, nómina) mediante Scaled Dot-Product Attention para modelado de riesgo de rotación.'
     },
     {
         id: 'ft_transformer',
@@ -103,7 +103,7 @@ const AI_MODELS = [
         path: '/analytics/ft-transformer',
         category: 'Transformer Tabular',
         tag: 'Feature Tokenizer',
-        desc: 'Arquitectura transformer de última generación adaptada para la detección temprana de anomalías en nómina.'
+        desc: 'Tokenización de covariables socio-laborales en embeddings densos con atención multi-cabeza para predicción de riesgo de rotación (Gorishniy et al., NeurIPS 2021).'
     }
 ];
 

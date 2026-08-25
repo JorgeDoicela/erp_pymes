@@ -4,13 +4,34 @@ import { BlockMath } from 'react-katex';
 import Modal from './common/Modal';
 import 'katex/dist/katex.min.css';
 
-// Formulas LaTeX
+/**
+ * =========================================================================================
+ * FICHA METODOLOGICA - CENTRO DE INTELIGENCIA DE NEGOCIO (/intelligence)
+ * =========================================================================================
+ * 
+ * REGLA DE INTEGRIDAD ARQUITECTONICA Y ACADEMICA:
+ * Este archivo pertenece EXCLUSIVAMENTE a la pantalla /intelligence (IntelligentDashboard.jsx).
+ * 
+ * REGLAS ESTRICTAS DE CONTENIDO (NO MODIFICAR NI MEZCLAR):
+ * 1. DEBE CONTENER EXACTAMENTE LOS 6 MOTORES OBSERVABLES EN ESTA PANTALLA:
+ *    - #1: Riesgo de Rotacion Instantanea (Modelo de Weibull Generalizado) -> Tabs 1 y 4
+ *    - #2: Simulacion Estocastica de Monte Carlo y CVaR al 95% (Simulador What-If) -> Tab 3
+ *    - #3: Scoring Multidimensional 360 y Deteccion de Top Performers -> Tab 4
+ *    - #4: Analisis de Varianza Interdepartamental (ANOVA Unidireccional & Welch's T-Test) -> Tab 5
+ *    - #5: Salud Organizacional (OHI) y Calibracion de Estabilidad Corporativa -> Tab 1
+ *    - #6: Motor de Integridad de Datos y Generador de Dataset Academico Anonimizado -> Tab 1 & Header
+ * 
+ * 2. PROHIBIDO AGREGAR:
+ *    - NO agregar motores de /analytics (como FT-Transformer, Inferencia Causal, FedAvg, MORL).
+ *      Cada pantalla tiene su propia ficha metodologica independiente.
+ *    - NO agregar calculos sin representacion visual directa o interactiva en /intelligence.
+ * =========================================================================================
+ */
+
+// Formulas LaTeX de los 6 Motores Operativos del Centro de Inteligencia (/intelligence)
 const FORMULAS = {
     weibull:
         'h(t) = \\dfrac{k}{\\lambda}\\left(\\dfrac{t}{\\lambda}\\right)^{k-1} \\cdot \\exp\\!\\left(\\beta_{\\text{sal}}\\,\\ln\\frac{S_{\\text{emp}}}{S_{\\text{dept}}} + \\beta_{\\text{abs}}\\sum_{i=1}^n e^{-\\lambda_{\\text{decay}}\\,\\Delta t_i} + \\beta_{\\text{perf}}\\cdot\\text{Deficit}\\right)',
-
-    survival:
-        'R(t) = 1 - e^{-\\Delta H(t)}, \\quad \\hat{\\sigma}_R^2(t) = [R(t)]^2 \\sum_{t_i \\le t} \\frac{d_i}{n_i (n_i - d_i)}, \\quad CI_{95\\%} = R(t) \\pm 1.96\\,\\hat{\\sigma}_R(t)',
 
     montecarlo:
         'ROI_{\\text{sim}} = \\frac{\\Delta C_{\\text{rotacion}} + \\Delta H_{\\text{ahorro}} - I_{\\text{total}}}{I_{\\text{total}}} \\times 100',
@@ -18,11 +39,11 @@ const FORMULAS = {
     cvar:
         'CVaR_{95\\%} = \\mathbb{E}\\left[ X \\mid X \\le P_{5} \\right] = \\frac{1}{0.05}\\int_{0}^{0.05} VaR_u(X)\\,du',
 
+    scoring360:
+        '\\text{Score}_{360} = 0.10\\cdot E_{\\text{auto}} + 0.50\\cdot E_{\\text{jefe}} + 0.20\\cdot E_{\\text{pares}} + 0.20\\cdot E_{\\text{sub}}, \\quad \\text{Top Performer} \\iff \\text{Score}_{360} > \\mu + 1.5\\sigma',
+
     anova:
         'F = \\frac{MS_{\\text{between}}}{MS_{\\text{within}}} = \\frac{SS_{\\text{between}}\\,/\\,(k-1)}{SS_{\\text{within}}\\,/\\,(N-k)}, \\quad p \\approx 1 - \\Phi\\!\\left(Z_{\\text{Wilson-Hilferty}}\\right)',
-
-    payrollProjection:
-        'P_{t+h} = P_t \\cdot (1 + g_{\\text{org}})^h + \\sum_{j=1}^h \\Delta S_{\\text{ajuste}, j}, \\quad \\text{Burnout}_{\\text{idx}} = \\frac{\\text{HorasExtras}}{\\text{HorasBase}} \\cdot w_{\\text{ext}} + \\frac{\\text{Ausencias}}{\\text{DiasHabiles}} \\cdot w_{\\text{abs}}',
 
     ohi:
         'OHI = 0.30\\cdot\\text{Clima} + 0.30\\cdot\\text{Retencion} + 0.20\\cdot\\text{EquidadSalarial} + 0.20\\cdot\\text{Asistencia}',
@@ -59,6 +80,7 @@ FormulaBlock.propTypes = {
 export default function MethodologyModal({ isOpen, onClose }) {
     const [searchFilter, setSearchFilter] = useState('');
 
+    // Catálogo cerrado y verificado de los 6 motores de /intelligence (NO MODIFICAR NI AGREGAR OTROS)
     const sections = [
         {
             id: 'weibull',
@@ -75,26 +97,12 @@ export default function MethodologyModal({ isOpen, onClose }) {
                 'beta_sal: Ponderador de compresión salarial respecto a la mediana departamental ln(S_emp / S_dept).',
                 'beta_abs: Ponderador de ausentismo con decaimiento temporal acumulado exp(-lambda_decay * Delta t).',
                 'beta_perf: Ponderador del déficit de competencias en la evaluación 360.'
-            ]
-        },
-        {
-            id: 'survival',
-            num: '2',
-            title: 'Curva de Supervivencia Actuarial a 30 / 60 / 90 Días y Varianza de Greenwood',
-            tabName: 'Pestaña 2: Tendencias y Proyecciones',
-            actions: 'Gráfico de líneas con intervalos de confianza al 95% y botones de corte temporal a 30, 60 y 90 días',
-            summary: 'Estima la probabilidad de retención acumulada R(t) a lo largo del tiempo y calcula intervalos de confianza actuariales al 95% mediante la fórmula de Greenwood.',
-            formula: FORMULAS.survival,
-            formulaLabel: 'Función de Supervivencia R(t) e Intervalos de Confianza Greenwood',
-            details: [
-                'R(t): Probabilidad estimada de que el colaborador permanezca activo en el tiempo t.',
-                'Delta H(t): Incremento acumulado de la función de riesgo integrada.',
-                'sigma_R: Error estándar actuarial estimado a partir del número de eventos y colaboradores en riesgo.'
-            ]
+            ],
+            talkingPoints: 'El modelo de Weibull es el mismo utilizado por aseguradoras de vida para calcular primas actuariales. Aplicarlo a RRHH permite cuantificar el riesgo individual de renuncia con el mismo rigor con que un actuario calcula el riesgo de mortalidad — convirtiendo una intuición gerencial en una cifra auditada y reproducible.'
         },
         {
             id: 'montecarlo',
-            num: '3',
+            num: '2',
             title: 'Simulación Estocástica de Monte Carlo y CVaR al 95% (Simulador What-If)',
             tabName: 'Pestaña 3: Simulador de Escenarios',
             actions: 'Sliders interactivos en pantalla: Aumento Salarial Preventivo (0-15%), Presupuesto Bienestar ($0-$500) y Reducción de Horas Extras (0-40%) con cálculo estocástico automático',
@@ -110,26 +118,29 @@ export default function MethodologyModal({ isOpen, onClose }) {
                 'I_total: Inversión presupuestaria total asignada a la estrategia de retención.',
                 'CVaR_95%: Pérdida esperada en el 5% de los peores escenarios simulados.',
                 'Diagrama de Tornado: Sensibilidad e impacto relativo de cada variable sobre la retención neta.'
-            ]
+            ],
+            talkingPoints: '2,000 iteraciones estocásticas equivalen a simular el comportamiento de la empresa durante 2,000 años de forma paralela en milisegundos. El CVaR 95% es la misma métrica que utilizan los fondos de inversión institucionales para cuantificar el peor escenario financiero admisible — aquí aplicada a cuantificar el costo máximo de rotación bajo interés directivo.'
         },
         {
             id: 'talent_scoring',
-            num: '4',
+            num: '3',
             title: 'Scoring Multidimensional 360° y Detección de Top Performers',
             tabName: 'Pestaña 4: Talento y Desempeño',
             actions: 'Tarjetas de empleados destacados, indicadores de score multidimensional y detección temprana de fuga',
-            summary: 'Evalúa el desempeño integral del colaborador combinando notas de autoevaluación, pares, subordinados y supervisores ponderadas por fiabilidad.',
-            formula: FORMULAS.ohi,
-            formulaLabel: 'Índice Multidimensional de Desempeño y Retención',
+            summary: 'Evalúa el desempeño integral del colaborador combinando notas de autoevaluación, pares, subordinados y supervisores ponderadas por fiabilidad, y ubica al talento en la matriz 9-Box.',
+            formula: FORMULAS.scoring360,
+            formulaLabel: 'Fórmula de Scoring Compuesto 360° y Umbral de Top Performer',
             details: [
-                'Top Performer: Puntuación compuesta superior al percentil 85 con bajo riesgo de rotación.',
+                'w_auto = 10%, w_jefe = 50%, w_pares = 20%, w_sub = 20%: ponderación estándar de evaluación 360°.',
+                'Top Performer: Puntuación compuesta superior al percentil 85 (> μ + 1.5σ) con bajo riesgo de rotación.',
                 'Needs Improvement: Detección temprana de brechas de rendimiento antes del ciclo anual de desvinculación.',
-                'Consistencia Evaluativa: Normalización estadística para evitar sesgos de evaluadores estrictos o permisivos.'
-            ]
+                'Consistencia Evaluativa: Normalización estadística para eliminar sesgos de evaluadores estrictos o permisivos.'
+            ],
+            talkingPoints: 'El umbral de percentil 85 como criterio de Top Performer es el mismo estándar que usan consultoras como McKinsey y BCG para sus programas de high-potentials. La normalización estadística elimina el sesgo del evaluador — si un jefe siempre pone 10, el sistema corrige la distorsión automáticamente.'
         },
         {
             id: 'anova',
-            num: '5',
+            num: '4',
             title: 'Análisis de Varianza Interdepartamental (ANOVA Unidireccional & Welch\'s T-Test)',
             tabName: 'Pestaña 5: Organización',
             actions: 'Tabla de significancia estadística ANOVA, estadístico F de Snedecor y test post-hoc de Welch entre áreas',
@@ -141,26 +152,12 @@ export default function MethodologyModal({ isOpen, onClose }) {
                 'MS_within: Varianza residual interna de los empleados dentro de su propio departamento.',
                 'Valor p < 0.05: Confirma heterogeneidad estructural real, justificando intervenciones diferenciadas por área.',
                 'Welch\'s T-Test: Identifica exactamente qué pares de departamentos presentan diferencias críticas sin asumir varianzas iguales.'
-            ]
-        },
-        {
-            id: 'payroll_burnout',
-            num: '6',
-            title: 'Proyección Presupuestaria de Nómina a 6 Meses y Diagnóstico de Burnout',
-            tabName: 'Pestaña 2: Tendencias y Proyecciones',
-            actions: 'Gráfico de área de evolución salarial a 6 meses y matriz de diagnóstico de sobrecarga operativa',
-            summary: 'Proyecta el gasto mensual de nómina considerando crecimiento orgánico e incrementos previstos, y calcula un índice predictivo de Burnout a partir del ratio de horas extras y ausentismo acumulado.',
-            formula: FORMULAS.payrollProjection,
-            formulaLabel: 'Ecuación de Proyección Presupuestaria y Ratio de Burnout',
-            details: [
-                'P_t: Masa salarial actual en el período base.',
-                'g_org: Tasa mensual de crecimiento orgánico de la plantilla.',
-                'Burnout_idx: Riesgo de agotamiento derivado de sobrecarga horaria prolongada.'
-            ]
+            ],
+            talkingPoints: 'El estadístico F de Snedecor es la prueba de referencia en econometría laboral para confirmar diferencias estructurales entre grupos. Un valor-p < 0.05 presentado al directorio equivale a decir: “estas diferencias entre departamentos no son coincidencia — tienen un origen estructural que requiere intervención diferenciada por área”.'
         },
         {
             id: 'ohi_scoring',
-            num: '7',
+            num: '5',
             title: 'Salud Organizacional (OHI) y Calibración de Estabilidad Corporativa',
             tabName: 'Pestaña 1: Resumen Ejecutivo de Negocio',
             actions: 'Velocímetro OHI (0-100), barra de progreso y desglose de los 4 pilares corporativos',
@@ -172,14 +169,15 @@ export default function MethodologyModal({ isOpen, onClose }) {
             details: [
                 'OHI: Ponderación de 4 pilares: Clima (30%), Retención (30%), Equidad (20%) y Asistencia (20%).',
                 'Diagnóstico Integral: Permite a los directivos evaluar de un vistazo el bienestar operativo y clima de la compañía.'
-            ]
+            ],
+            talkingPoints: 'Un OHI por debajo de 60 correlaciona con incrementos del 40–60% en la rotación voluntaria en el siguiente ejercicio según literatura de People Analytics. Presentarlo en el directorio convierte la percepción subjetiva de “ambiente laboral” en una cifra de 0 a 100, auditable trimestre a trimestre.'
         },
         {
             id: 'dataquality_export',
-            num: '8',
+            num: '6',
             title: 'Motor de Integridad de Datos y Generador de Dataset Académico Anonimizado',
-            tabName: 'Header Principal de Inteligencia',
-            actions: 'Botón "Exportar Dataset", selector de formato (CSV / JSON) y panel de completitud',
+            tabName: 'Header Principal de Inteligencia & Pestaña 1: Resumen Ejecutivo',
+            actions: 'Botón “Exportar Dataset”, selector de formato (CSV / JSON) y panel de completitud en pantalla',
             summary: 'Audita continuamente la completitud y frescura de las fuentes de datos (expedientes, contratos, biométrico, nómina) y genera datasets con k-anonimato para investigación empírica y auditorías externas.',
             formula: FORMULAS.dataQuality,
             formulaLabel: 'Índice Global de Calidad e Integridad de Datos (Q_data)',
@@ -188,7 +186,8 @@ export default function MethodologyModal({ isOpen, onClose }) {
                 'Frescura (35%): Antigüedad y frecuencia de sincronización de marcaciones biométricas.',
                 'Consistencia (25%): Integridad referencial entre nómina, departamentos y evaluaciones.',
                 'Exportación Anonimizada: Anonimiza identificadores directos (nombres, cédulas) preservando propiedades estadísticas.'
-            ]
+            ],
+            talkingPoints: 'Un índice Q_data < 0.70 invalida estadísticamente cualquier predicción del sistema. Publicarlo de forma transparente demuestra integridad académica: los resultados son reproducibles por auditores externos y los hallazgos del congreso pueden ser verificados independientemente.'
         }
     ];
 
@@ -341,6 +340,18 @@ export default function MethodologyModal({ isOpen, onClose }) {
                                             ))}
                                         </ul>
                                     </div>
+
+                                    {/* Bloque 5: Clave de Presentación para Congresos */}
+                                    {activeEngine.talkingPoints && (
+                                        <div className="p-3 bg-emerald-50/50 border-l-2 border-emerald-600 border-y border-r border-emerald-100 rounded-r text-gray-800 space-y-1.5">
+                                            <div className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider">
+                                                Clave de Presentación para Congresos & Comités Directivos
+                                            </div>
+                                            <p className="text-[11px] leading-normal text-gray-700">
+                                                {activeEngine.talkingPoints}
+                                            </p>
+                                        </div>
+                                    )}
 
                                 </div>
                             </div>

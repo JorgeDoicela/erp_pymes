@@ -359,17 +359,18 @@ export default function IntelligentDashboard({ user, onLogout }) {
 
                      {/* TAB 4: TALENTO Y DESEMPEÑO */}
                      {activeTab === 'talent' && (
-                         <div className="space-y-8">
+                         <div className="space-y-6">
                              {/* Top Performers */}
                              {employeeScoring && employeeScoring.employees && (
-                                 <div>
-                                     <div className="flex items-center justify-between mb-4">
-                                         <h3 className="text-xl font-bold text-slate-800">Talento Top &amp; Desempeño</h3>
-                                         <span className="text-sm text-slate-500">Scoring Multidimensional</span>
+                                 <div className="space-y-3">
+                                     <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                                         <div>
+                                             <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">Talento Top &amp; Desempeño</h3>
+                                             <p className="text-[11px] text-gray-400 mt-0.5">Scoring multidimensional — Top &amp; Good Performers</p>
+                                         </div>
                                      </div>
-                                     {/* Fix #14: estado vacío si no hay top performers */}
                                      {employeeScoring.employees.filter(e => e.category === 'Top Performer' || e.category === 'Good Performer').length > 0 ? (
-                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                              {employeeScoring.employees
                                                  .filter(emp => emp.category === 'Top Performer' || emp.category === 'Good Performer')
                                                  .slice(0, 6)
@@ -378,36 +379,49 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                                  ))}
                                          </div>
                                      ) : (
-                                         <div className="flex flex-col items-center justify-center py-10 bg-slate-50 rounded-xl text-slate-400">
-                                             <FiUsers className="w-10 h-10 mb-3" />
-                                             <p className="text-sm font-medium">Sin empleados en categoría Top o Good Performer</p>
-                                             <p className="text-xs mt-1">Todos los empleados están en categoría &apos;Needs Improvement&apos; o &apos;At Risk&apos;</p>
+                                         <div className="flex flex-col items-center justify-center py-10 bg-white border border-gray-200 rounded text-gray-400">
+                                             <FiUsers className="w-8 h-8 mb-2" />
+                                             <p className="text-xs font-medium text-gray-600">Sin empleados en categoría Top o Good Performer</p>
+                                             <p className="text-[11px] text-gray-400 mt-1">Todos están en categoría Needs Improvement o At Risk</p>
                                          </div>
                                      )}
                                  </div>
                              )}
 
                              {/* Análisis de Riesgo detallado */}
-                             <div>
-                                 <h3 className="text-xl font-bold text-slate-800 mb-4">Análisis de Riesgo de Rotación</h3>
-                                 {/* Fix #20: estado vacío si no hay empleados en riesgo */}
+                             <div className="space-y-3">
+                                 <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                                     <div>
+                                         <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">Análisis de Riesgo de Rotación</h3>
+                                         <p className="text-[11px] text-gray-400 mt-0.5">Empleados en riesgo alto o medio según modelo predictivo</p>
+                                     </div>
+                                 </div>
                                  {retention.analysis.filter(e => e.level === 'Alto Riesgo' || e.level === 'Riesgo Medio').length > 0 ? (
-                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                          {retention.analysis
                                              .filter(e => e.level === 'Alto Riesgo' || e.level === 'Riesgo Medio')
                                              .map((emp, idx) => (
-                                                 <div key={idx} className={`bg-white border-l-4 ${emp.level === 'Alto Riesgo' ? 'border-red-500' : 'border-yellow-400'} rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow`}>
+                                                 <div key={idx} className="bg-white border border-gray-200 rounded p-3 hover:border-gray-300 transition-colors">
                                                      <div className="flex justify-between items-start mb-2">
-                                                         <div>
-                                                             <h4 className="font-bold text-slate-900">{emp.employeeName}</h4>
-                                                             <p className="text-sm text-slate-600">{emp.position}</p>
+                                                         <div className="min-w-0 flex-1 mr-2">
+                                                             <h4 className="text-xs font-semibold text-gray-900 truncate">{emp.employeeName}</h4>
+                                                             <p className="text-[11px] text-gray-500 truncate">{emp.position}</p>
                                                          </div>
+                                                         <div className="flex items-center gap-1 shrink-0">
+                                                             <span className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded border ${
+                                                                 emp.level === 'Alto Riesgo'
+                                                                     ? 'text-red-700 bg-red-50 border-red-200'
+                                                                     : 'text-amber-700 bg-amber-50 border-amber-200'
+                                                             }`}>{emp.level}</span>
+                                                         </div>
+                                                     </div>
+                                                     <div className="mb-2">
                                                          <RiskScoreIndicator score={emp.score} level={emp.level} size="sm" />
                                                      </div>
-                                                     <div className="space-y-1">
+                                                     <div className="space-y-1 border-t border-gray-100 pt-2">
                                                          {emp.factors.slice(0, 3).map((factor, i) => (
-                                                             <div key={i} className="text-xs text-red-600 flex items-center gap-2">
-                                                                 <FiAlertTriangle className="w-3 h-3 shrink-0" />
+                                                             <div key={i} className="text-[11px] text-gray-600 flex items-center gap-1.5">
+                                                                 <FiAlertTriangle className="w-3 h-3 shrink-0 text-amber-500" />
                                                                  {factor.factor}
                                                              </div>
                                                          ))}
@@ -416,9 +430,9 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                              ))}
                                      </div>
                                  ) : (
-                                     <div className="flex flex-col items-center justify-center py-10 bg-green-50 rounded-xl text-green-600">
-                                         <FiTrendingUp className="w-10 h-10 mb-3" />
-                                         <p className="text-sm font-medium">¡Excelente! Ningún empleado en riesgo alto o medio de rotación.</p>
+                                     <div className="flex flex-col items-center justify-center py-10 bg-white border border-green-100 rounded text-green-700">
+                                         <FiTrendingUp className="w-8 h-8 mb-2" />
+                                         <p className="text-xs font-medium">Ningún empleado en riesgo alto o medio de rotación.</p>
                                      </div>
                                  )}
                              </div>
@@ -427,62 +441,69 @@ export default function IntelligentDashboard({ user, onLogout }) {
 
                      {/* TAB 5: ORGANIZACIÓN */}
                      {activeTab === 'organization' && (
-                        <div className="space-y-6">
-                            {/* Comparativa de Departamentos */}
-                            {departmentComparison && (
-                                <DepartmentComparison
-                                    departments={departmentComparison.departments}
-                                    summary={departmentComparison.summary}
-                                    anova={departmentComparison.anova}
-                                    pairwiseTTest={departmentComparison.pairwiseTTest}
-                                />
-                            )}
+                        <div className="space-y-5">
+                             {/* Comparativa de Departamentos */}
+                             {departmentComparison && (
+                                 <DepartmentComparison
+                                     departments={departmentComparison.departments}
+                                     summary={departmentComparison.summary}
+                                     anova={departmentComparison.anova}
+                                     pairwiseTTest={departmentComparison.pairwiseTTest}
+                                 />
+                             )}
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                {/* Gráfico de Impacto Asistencia */}
-                                <div className="bg-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-lg font-semibold text-slate-900 mb-4">Impacto de Ausentismo</h3>
-                                    <div className="h-64">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={departmentImpactData}>
-                                                <CartesianGrid strokeDasharray="3 3" />
-                                                <XAxis dataKey="department" />
-                                                <YAxis />
-                                                <Tooltip />
-                                                <Bar dataKey="absences" name="Ausencias" fill="#f97316" />
-                                                <Bar dataKey="lateDays" name="Retrasos" fill="#eab308" />
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                </div>
+                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                                 {/* Gráfico de Impacto Asistencia */}
+                                 <div className="bg-white p-5 rounded border border-gray-200 space-y-3">
+                                     <div className="border-b border-gray-100 pb-2.5">
+                                         <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">Impacto de Ausentismo</h3>
+                                         <p className="text-[11px] text-gray-400 mt-0.5">Ausencias y retrasos por departamento</p>
+                                     </div>
+                                     <div className="h-64">
+                                         <ResponsiveContainer width="100%" height="100%">
+                                             <BarChart data={departmentImpactData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                                                 <XAxis dataKey="department" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
+                                                 <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} />
+                                                 <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
+                                                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                                                 <Bar dataKey="absences" name="Ausencias" fill="#f97316" radius={[3, 3, 0, 0]} barSize={14} />
+                                                 <Bar dataKey="lateDays" name="Retrasos" fill="#eab308" radius={[3, 3, 0, 0]} barSize={14} />
+                                             </BarChart>
+                                         </ResponsiveContainer>
+                                     </div>
+                                 </div>
 
-                                {/* Gráfico de Riesgo Global */}
-                                <div className="bg-white p-6 rounded-xl shadow-lg">
-                                    <h3 className="text-lg font-semibold text-slate-900 mb-4">Distribución de Riesgo Global</h3>
-                                    <div className="h-64">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie
-                                                    data={retentionChartData}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    innerRadius={60}
-                                                    outerRadius={80}
-                                                    paddingAngle={5}
-                                                    dataKey="value"
-                                                >
-                                                    {retentionChartData.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip />
-                                                <Legend />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                 {/* Gráfico de Riesgo Global */}
+                                 <div className="bg-white p-5 rounded border border-gray-200 space-y-3">
+                                     <div className="border-b border-gray-100 pb-2.5">
+                                         <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">Distribución de Riesgo Global</h3>
+                                         <p className="text-[11px] text-gray-400 mt-0.5">Clasificación de empleados por nivel de riesgo de rotación</p>
+                                     </div>
+                                     <div className="h-64">
+                                         <ResponsiveContainer width="100%" height="100%">
+                                             <PieChart>
+                                                 <Pie
+                                                     data={retentionChartData}
+                                                     cx="50%"
+                                                     cy="50%"
+                                                     innerRadius={60}
+                                                     outerRadius={80}
+                                                     paddingAngle={5}
+                                                     dataKey="value"
+                                                 >
+                                                     {retentionChartData.map((entry, index) => (
+                                                         <Cell key={`cell-${index}`} fill={entry.color} />
+                                                     ))}
+                                                 </Pie>
+                                                 <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
+                                                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                                             </PieChart>
+                                         </ResponsiveContainer>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
                     )}
                 </motion.div>
             </motion.div>

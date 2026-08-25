@@ -278,17 +278,22 @@ const FTTransformerDashboard = () => {
 
             {/* Token Interaction Matrix (Heatmap) */}
             <div className="bg-white p-4.5 rounded border border-gray-200 space-y-3">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                <div className="flex items-start justify-between border-b border-gray-100 pb-2.5">
                     <div>
-                        <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
-                            Matriz de Interacción de Tokens (Multi-Head Self-Attention Map)
-                        </h3>
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
+                                Matriz de Interacción de Tokens (Multi-Head Self-Attention Map)
+                            </h3>
+                            <span className="text-[10px] font-mono font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                Referencia Arquitectónica
+                            </span>
+                        </div>
                         <p className="text-[11px] text-gray-400">
-                            Grado en que cada feature atiende a las demás a través de las cabezas de atención (explicabilidad de interacciones complejas).
+                            Valores de referencia canónicos de la arquitectura FT-Transformer (Gorishniy et al. 2021). Las métricas de rendimiento reales del modelo se muestran en las tarjetas K-Fold superiores.
                         </p>
                     </div>
-                    <span className="text-[10px] font-mono text-gray-500">
-                        Gorishniy et al. (2021)
+                    <span className="text-[10px] font-mono text-gray-500 shrink-0">
+                        NeurIPS 2021
                     </span>
                 </div>
 

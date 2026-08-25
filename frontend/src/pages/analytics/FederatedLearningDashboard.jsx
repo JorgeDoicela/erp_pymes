@@ -89,12 +89,27 @@ const FederatedLearningDashboard = () => {
         );
     }
 
+    if (!privacyStatus) {
+        return (
+            <div className="p-12 text-center space-y-3 bg-white rounded border border-gray-200">
+                <p className="text-sm font-semibold text-gray-700">Sin datos de sincronización disponibles</p>
+                <p className="text-xs text-gray-500">Ejecuta la primera sincronización con el mercado para activar el benchmarking federado.</p>
+                <button
+                    onClick={handleExecuteRound}
+                    disabled={actionLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded transition-colors cursor-pointer shadow-xs"
+                >
+                    Sincronizar con el Mercado
+                </button>
+            </div>
+        );
+    }
+
     const {
-        epsilonSpent = 0.52,
-        epsilonBudgetMax = 5.0,
+        epsilonSpent = 0,
+        epsilonBudgetMax = 10,
         roundsParticipated = 0,
-        privacyGuarantee = 'PRIVACIDAD 100% GARANTIZADA',
-        latestRound = { round: 1, globalBrierScore: 0.198, noiseScale: 1.05 }
+        latestRound = null
     } = privacyStatus || {};
 
     const chartData = roundsHistory.map(r => ({
@@ -196,7 +211,9 @@ const FederatedLearningDashboard = () => {
                     <div className="py-2 md:py-0 md:px-4 flex flex-col justify-between">
                         <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Última Sincronización</span>
                         <div className="mt-1 flex items-baseline space-x-2">
-                            <span className="text-xl font-semibold text-gray-900 font-mono">Ronda #{latestRound.round}</span>
+                            <span className="text-xl font-semibold text-gray-900 font-mono">
+                                {latestRound ? `Ronda #${latestRound.round}` : '—'}
+                            </span>
                         </div>
                         <span className="text-[11px] text-gray-400 mt-1">Aportes seguros: {roundsParticipated}</span>
                     </div>
@@ -204,7 +221,9 @@ const FederatedLearningDashboard = () => {
                     <div className="py-2 md:py-0 md:px-4 flex flex-col justify-between">
                         <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Margen de Error del Mercado</span>
                         <div className="mt-1 flex items-baseline space-x-2">
-                            <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">{latestRound.globalBrierScore}</span>
+                            <span className="text-xl font-semibold text-gray-900 font-mono tabular-nums">
+                                {latestRound ? latestRound.globalBrierScore : '—'}
+                            </span>
                         </div>
                         <span className="text-[11px] text-gray-400 mt-1">A menor valor, mayor exactitud</span>
                     </div>
