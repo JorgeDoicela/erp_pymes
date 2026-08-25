@@ -387,13 +387,21 @@ model PayrollDetail {
   bonuses        String
   deductions     String
   netSalary      Float
+  signatureStatus String    @default("PENDING") // PENDING, SIGNED, DISPUTED
+  signedAt        DateTime?
+  signatureType   String?   // QR_DIGITAL, ELECTRONIC_P12, PHYSICAL
+  signatureCode   String?
+  signatureToken  String?   @db.Text
+  signatureData   String?   @db.Text
+  disputeReason   String?   @db.Text
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee       Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   payroll        Payroll  @relation(fields: [payrollId], references: [id], onDelete: Cascade)
 
   @@index([payrollId])
   @@index([employeeId])
+  @@index([signatureStatus])
   @@map("payroll_details")
 }
 

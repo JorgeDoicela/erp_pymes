@@ -6,6 +6,7 @@ import { getMyAbsences, createAbsenceRequest } from '../../services/attendance/a
 import { clockIn, clockOut } from '../../services/attendance/attendanceService';
 import { generatePayslipPDF } from '../../utils/generatePayslipPDF';
 import { generateCertificatePDF } from '../../utils/generateCertificatePDF';
+import Modal from '../../components/common/Modal';
 import { 
     HomeIcon, 
     ClockIcon, 
@@ -365,90 +366,79 @@ const MobileEmployeePortal = ({ user }) => {
             </main>
 
             {/* Floating Request Modal */}
-            <AnimatePresence>
-                {requestModalOpen && (
-                    <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white border border-gray-200 rounded max-w-sm w-full p-5 space-y-4 shadow-xl text-xs"
+            <Modal
+                isOpen={requestModalOpen}
+                onClose={() => setRequestModalOpen(false)}
+                title="Solicitar Ausencia / Permiso"
+                size="sm"
+            >
+                <form onSubmit={handleCreateRequest} className="space-y-3 text-xs">
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-1">Tipo de Permiso</label>
+                        <select
+                            value={requestForm.type}
+                            onChange={(e) => setRequestForm({ ...requestForm, type: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                         >
-                            <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                                <h3 className="font-semibold text-sm text-gray-900">Solicitar Ausencia / Permiso</h3>
-                                <button onClick={() => setRequestModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
-                            </div>
-
-                            <form onSubmit={handleCreateRequest} className="space-y-3">
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-1">Tipo de Permiso</label>
-                                    <select
-                                        value={requestForm.type}
-                                        onChange={(e) => setRequestForm({ ...requestForm, type: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                    >
-                                        <option value="VACATION">Vacaciones</option>
-                                        <option value="SICK_LEAVE">Permiso Médico</option>
-                                        <option value="PERSONAL">Asuntos Personales / Calamidad</option>
-                                    </select>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="block text-gray-700 font-medium mb-1">Desde</label>
-                                        <input
-                                            type="date"
-                                            required
-                                            value={requestForm.startDate}
-                                            onChange={(e) => setRequestForm({ ...requestForm, startDate: e.target.value })}
-                                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-700 font-medium mb-1">Hasta</label>
-                                        <input
-                                            type="date"
-                                            required
-                                            value={requestForm.endDate}
-                                            onChange={(e) => setRequestForm({ ...requestForm, endDate: e.target.value })}
-                                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-1">Motivo / Detalle</label>
-                                    <textarea
-                                        rows={2}
-                                        required
-                                        placeholder="Describa el motivo de la solicitud..."
-                                        value={requestForm.reason}
-                                        onChange={(e) => setRequestForm({ ...requestForm, reason: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                    />
-                                </div>
-
-                                <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-                                    <button
-                                        type="button"
-                                        onClick={() => setRequestModalOpen(false)}
-                                        className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white text-gray-700 rounded text-xs"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={formLoading}
-                                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium"
-                                    >
-                                        {formLoading ? 'Enviando...' : 'Enviar Solicitud'}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
+                            <option value="VACATION">Vacaciones</option>
+                            <option value="SICK_LEAVE">Permiso Médico</option>
+                            <option value="PERSONAL">Asuntos Personales / Calamidad</option>
+                        </select>
                     </div>
-                )}
-            </AnimatePresence>
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-1">Desde</label>
+                            <input
+                                type="date"
+                                required
+                                value={requestForm.startDate}
+                                onChange={(e) => setRequestForm({ ...requestForm, startDate: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-1">Hasta</label>
+                            <input
+                                type="date"
+                                required
+                                value={requestForm.endDate}
+                                onChange={(e) => setRequestForm({ ...requestForm, endDate: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-1">Motivo / Detalle</label>
+                        <textarea
+                            rows={2}
+                            required
+                            placeholder="Describa el motivo de la solicitud..."
+                            value={requestForm.reason}
+                            onChange={(e) => setRequestForm({ ...requestForm, reason: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                        <button
+                            type="button"
+                            onClick={() => setRequestModalOpen(false)}
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white text-gray-700 rounded text-xs cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={formLoading}
+                            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium cursor-pointer"
+                        >
+                            {formLoading ? 'Enviando...' : 'Enviar Solicitud'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Bottom Mobile Tab Navigation Bar */}
             <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-6 flex justify-around items-center z-40 max-w-md mx-auto">

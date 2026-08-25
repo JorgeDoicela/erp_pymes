@@ -108,14 +108,13 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                                     {section.modules.map((mod, idx) => {
                                         const isActive = activeModule && activeModule.path === mod.path;
                                         return (
-                                            <button
+                                            <Link
                                                 key={idx}
-                                                type="button"
+                                                to={mod.path}
                                                 onClick={() => {
-                                                    navigate(mod.path);
                                                     if (onClose) onClose();
                                                 }}
-                                                className={`w-full flex items-center gap-3 px-3 py-2 rounded text-xs font-medium transition-all duration-150 group text-left cursor-pointer ${
+                                                className={`w-full flex items-center gap-3 px-3 py-2 rounded text-xs font-medium transition-all duration-150 group text-left cursor-pointer no-underline ${
                                                     isActive
                                                         ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600 pl-2.5'
                                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -125,7 +124,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                                                     {mod.icon}
                                                 </span>
                                                 <span className="text-left flex-1 leading-tight">{mod.title}</span>
-                                            </button>
+                                            </Link>
                                         );
                                     })}
                                 </div>
@@ -137,12 +136,12 @@ const Sidebar = ({ user, onLogout, onClose }) => {
 
             {/* Footer de Perfil y Cierre de Sesión */}
             <div className="p-3.5 border-t border-gray-200 bg-white">
-                <button
+                <Link
+                    to="/profile"
                     onClick={() => {
-                        navigate('/profile');
                         if (onClose) onClose();
                     }}
-                    className="flex items-center gap-2.5 mb-3 w-full text-left p-1.5 rounded border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all group cursor-pointer"
+                    className="flex items-center gap-2.5 mb-3 w-full text-left p-1.5 rounded border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all group cursor-pointer no-underline"
                     title="Ver mi perfil"
                 >
                     <div className="w-8 h-8 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center font-mono font-semibold text-xs shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-colors">
@@ -152,7 +151,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                         <p className="text-xs font-semibold text-gray-900 truncate leading-tight">{user?.firstName || 'Admin'}</p>
                         <p className="text-[11px] text-gray-400 truncate leading-tight">{getRoleLabel()}</p>
                     </div>
-                </button>
+                </Link>
                 <button
                     onClick={onLogout}
                     className="w-full py-1.5 px-3 rounded border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors text-xs font-medium bg-white cursor-pointer"

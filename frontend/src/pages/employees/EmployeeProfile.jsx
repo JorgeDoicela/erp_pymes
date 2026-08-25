@@ -18,6 +18,7 @@ import ContractsTab from './components/ContractsTab';
 import { InfoItem } from './components/EmployeeHelpers';
 import BiometricSettings from '../../components/attendance/BiometricSettings';
 import { CIVIL_STATUS_OPTIONS, CONTRACT_TYPES } from '../../constants/employeeOptions';
+import Modal from '../../components/common/Modal';
 import { validateEmail, validatePhone, validateSalary, validateDates } from '../../utils/validationUtils';
 import { isSuperAdmin as checkIsSuperAdmin } from '../../constants/roles.js';
 
@@ -744,124 +745,115 @@ const EmployeeProfile = ({ token, user }) => {
                 fieldErrors={fieldErrors}
             />
 
-            {/* Modal Sobrio de Baja de Colaborador (Elimina confirm/prompt) */}
-            {isTerminateOpen && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-md w-full overflow-hidden shadow-xl text-xs">
-                        <div className="px-5 py-4 border-b border-gray-200 bg-gray-50/50 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-semibold text-gray-900">Dar de Baja a Colaborador</h3>
-                                <p className="text-[11px] text-gray-500 mt-0.5">{employee.firstName} {employee.lastName}</p>
-                            </div>
-                            <button
-                                onClick={() => setIsTerminateOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleTerminateSubmit} className="p-5 space-y-3">
-                            <div>
-                                <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                                    Fecha Efectiva de Salida
-                                </label>
-                                <input
-                                    type="date"
-                                    required
-                                    value={terminateForm.exitDate}
-                                    onChange={e => setTerminateForm({ ...terminateForm, exitDate: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                                    Tipo de Desvinculación
-                                </label>
-                                <select
-                                    value={terminateForm.exitType}
-                                    onChange={e => setTerminateForm({ ...terminateForm, exitType: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                >
-                                    <option value="Voluntary">Voluntaria (Renuncia)</option>
-                                    <option value="Involuntary">Involuntaria (Despido)</option>
-                                    <option value="ContractEnd">Fin de Contrato a Plazo Fijo</option>
-                                    <option value="Retirement">Jubilación</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                                    Motivo / Justificación
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Ej. Renuncia voluntaria por nuevos proyectos"
-                                    value={terminateForm.exitReason}
-                                    onChange={e => setTerminateForm({ ...terminateForm, exitReason: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                                    Observaciones Adicionales
-                                </label>
-                                <textarea
-                                    rows={2}
-                                    placeholder="Detalles sobre entrega de activos, liquidación, etc."
-                                    value={terminateForm.notes}
-                                    onChange={e => setTerminateForm({ ...terminateForm, notes: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                />
-                            </div>
-
-                            <div className="pt-2 flex justify-end gap-2 border-t border-gray-100">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsTerminateOpen(false)}
-                                    className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white text-gray-700 rounded transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isTerminating}
-                                    className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded font-medium transition-colors cursor-pointer"
-                                >
-                                    {isTerminating ? 'Procesando...' : 'Confirmar Baja'}
-                                </button>
-                            </div>
-                        </form>
+            {/* Modal Sobrio de Baja de Colaborador */}
+            <Modal
+                isOpen={isTerminateOpen}
+                onClose={() => setIsTerminateOpen(false)}
+                title="Dar de Baja a Colaborador"
+                subtitle={`${employee.firstName} ${employee.lastName}`}
+                size="md"
+            >
+                <form onSubmit={handleTerminateSubmit} className="space-y-3">
+                    <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Fecha Efectiva de Salida
+                        </label>
+                        <input
+                            type="date"
+                            required
+                            value={terminateForm.exitDate}
+                            onChange={e => setTerminateForm({ ...terminateForm, exitDate: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                        />
                     </div>
-                </div>
-            )}
+
+                    <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Tipo de Desvinculación
+                        </label>
+                        <select
+                            value={terminateForm.exitType}
+                            onChange={e => setTerminateForm({ ...terminateForm, exitType: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                        >
+                            <option value="Voluntary">Voluntaria (Renuncia)</option>
+                            <option value="Involuntary">Involuntaria (Despido)</option>
+                            <option value="ContractEnd">Fin de Contrato a Plazo Fijo</option>
+                            <option value="Retirement">Jubilación</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Motivo / Justificación
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            placeholder="Ej. Renuncia voluntaria por nuevos proyectos"
+                            value={terminateForm.exitReason}
+                            onChange={e => setTerminateForm({ ...terminateForm, exitReason: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Observaciones Adicionales
+                        </label>
+                        <textarea
+                            rows={2}
+                            placeholder="Detalles sobre entrega de activos, liquidación, etc."
+                            value={terminateForm.notes}
+                            onChange={e => setTerminateForm({ ...terminateForm, notes: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div className="pt-2 flex justify-end gap-2 border-t border-gray-100">
+                        <button
+                            type="button"
+                            onClick={() => setIsTerminateOpen(false)}
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white text-gray-700 rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isTerminating}
+                            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded font-medium transition-colors cursor-pointer"
+                        >
+                            {isTerminating ? 'Procesando...' : 'Confirmar Baja'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Modal de Confirmación para Eliminar Documento */}
-            {docToDelete && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-sm w-full p-5 shadow-xl text-xs space-y-3">
-                        <h3 className="text-sm font-semibold text-gray-900">¿Eliminar documento adjunto?</h3>
-                        <p className="text-gray-500 text-[11px]">Esta acción eliminará el archivo del expediente digital del colaborador.</p>
-                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-                            <button
-                                onClick={() => setDocToDelete(null)}
-                                className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white text-gray-700 rounded cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleConfirmDeleteDoc}
-                                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded cursor-pointer font-medium"
-                            >
-                                Eliminar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={!!docToDelete}
+                onClose={() => setDocToDelete(null)}
+                title="¿Eliminar documento adjunto?"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setDocToDelete(null)}
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 bg-white text-gray-700 rounded cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleConfirmDeleteDoc}
+                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded cursor-pointer font-medium"
+                        >
+                            Eliminar
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-gray-500 text-xs">Esta acción eliminará el archivo del expediente digital del colaborador.</p>
+            </Modal>
         </div>
     );
 };

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import absenceService from '../../services/attendance/absenceService';
 import TeamCalendar from './TeamCalendar';
+import Modal from '../../components/common/Modal';
 
 const STATUS_MAP = {
     PENDING: { label: 'Pendiente', cls: 'text-amber-800 bg-amber-50 border-amber-200' },
@@ -346,84 +347,69 @@ const AdminAbsences = () => {
             )}
 
             {/* MODAL — Confirmación y Resolución de Ausencia */}
-            {resolutionModal.open && resolutionModal.request && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-md w-full overflow-hidden shadow-xl">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-semibold text-gray-900">
-                                    {resolutionModal.status === 'APPROVED' ? 'Aprobar Solicitud de Ausencia' : 'Rechazar Solicitud de Ausencia'}
-                                </h3>
-                                <p className="text-xs text-gray-500 mt-0.5">
-                                    {resolutionModal.request.employee?.firstName} {resolutionModal.request.employee?.lastName} · {resolutionModal.request.type}
-                                </p>
+            <Modal
+                isOpen={resolutionModal.open && !!resolutionModal.request}
+                onClose={() => setResolutionModal({ open: false, request: null, status: 'APPROVED', comment: '' })}
+                title={resolutionModal.status === 'APPROVED' ? 'Aprobar Solicitud de Ausencia' : 'Rechazar Solicitud de Ausencia'}
+                subtitle={resolutionModal.request ? `${resolutionModal.request.employee?.firstName} ${resolutionModal.request.employee?.lastName} · ${resolutionModal.request.type}` : ''}
+                size="md"
+            >
+                {resolutionModal.request && (
+                    <form onSubmit={handleConfirmResolution} className="space-y-4">
+                        <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs space-y-1">
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Período:</span>
+                                <span className="font-mono text-gray-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                    {new Date(resolutionModal.request.startDate).toLocaleDateString('es-EC')} — {new Date(resolutionModal.request.endDate).toLocaleDateString('es-EC')}
+                                </span>
                             </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-500">Días:</span>
+                                <span className="font-mono font-semibold text-gray-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                    {calculateDays(resolutionModal.request.startDate, resolutionModal.request.endDate)} días
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Comentario u Observación Administrativa (opcional)
+                            </label>
+                            <textarea
+                                rows="3"
+                                className={`${inputClass} resize-none`}
+                                placeholder="Ingrese una justificación o indicación para el colaborador..."
+                                value={resolutionModal.comment}
+                                onChange={e => setResolutionModal({ ...resolutionModal, comment: e.target.value })}
+                            />
+                            <p className="text-[11px] text-gray-400 mt-1">
+                                El colaborador recibirá una notificación en el sistema informando sobre esta resolución.
+                            </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
                             <button
                                 type="button"
                                 onClick={() => setResolutionModal({ open: false, request: null, status: 'APPROVED', comment: '' })}
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
+                                className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                             >
-                                ×
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={actionLoading}
+                                className={`px-3.5 py-2 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 ${
+                                    resolutionModal.status === 'APPROVED'
+                                        ? 'bg-blue-600 hover:bg-blue-700 shadow-xs'
+                                        : 'bg-red-600 hover:bg-red-700'
+                                }`}
+                            >
+                                {actionLoading ? 'Procesando...' : resolutionModal.status === 'APPROVED' ? 'Confirmar Aprobación' : 'Confirmar Rechazo'}
                             </button>
                         </div>
-                        <form onSubmit={handleConfirmResolution}>
-                            <div className="p-5 space-y-4">
-                                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs space-y-1">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">Período:</span>
-                                        <span className="font-mono text-gray-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                            {new Date(resolutionModal.request.startDate).toLocaleDateString('es-EC')} — {new Date(resolutionModal.request.endDate).toLocaleDateString('es-EC')}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">Días:</span>
-                                        <span className="font-mono font-semibold text-gray-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                            {calculateDays(resolutionModal.request.startDate, resolutionModal.request.endDate)} días
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                                        Comentario u Observación Administrativa (opcional)
-                                    </label>
-                                    <textarea
-                                        rows="3"
-                                        className={`${inputClass} resize-none`}
-                                        placeholder="Ingrese una justificación o indicación para el colaborador..."
-                                        value={resolutionModal.comment}
-                                        onChange={e => setResolutionModal({ ...resolutionModal, comment: e.target.value })}
-                                    />
-                                    <p className="text-[11px] text-gray-400 mt-1">
-                                        El colaborador recibirá una notificación en el sistema informando sobre esta resolución.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setResolutionModal({ open: false, request: null, status: 'APPROVED', comment: '' })}
-                                    className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={actionLoading}
-                                    className={`px-3.5 py-2 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 ${
-                                        resolutionModal.status === 'APPROVED'
-                                            ? 'bg-blue-600 hover:bg-blue-700 shadow-xs'
-                                            : 'bg-red-600 hover:bg-red-700'
-                                    }`}
-                                >
-                                    {actionLoading ? 'Procesando...' : resolutionModal.status === 'APPROVED' ? 'Confirmar Aprobación' : 'Confirmar Rechazo'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                    </form>
+                )}
+            </Modal>
         </div>
     );
 };

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getApplicationsByVacancy, deleteVacancy, deleteApplication, updateApplicationStatus } from '../../services/recruitment.service';
 import { FiArrowLeft, FiTrash2, FiCopy, FiCheck } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import Modal from '../../components/common/Modal';
 
 const STATUS_OPTIONS = [
     { key: 'ALL', label: 'Todos' },
@@ -291,70 +292,66 @@ const VacancyDetails = () => {
             )}
 
             {/* Modal Eliminar Candidato */}
-            {appToDelete && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded max-w-md w-full shadow-xl border border-gray-200 text-xs">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar candidato?</h3>
-                            <button onClick={() => setAppToDelete(null)} className="text-gray-400 hover:text-gray-600">✕</button>
-                        </div>
-                        <div className="p-5 space-y-2 text-gray-600 leading-relaxed">
-                            <p>
-                                Se eliminará la postulación de <strong className="text-gray-900">{appToDelete.firstName} {appToDelete.lastName}</strong> y sus registros asociados.
-                            </p>
-                        </div>
-                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
-                            <button
-                                disabled={deletingCandidate}
-                                onClick={() => setAppToDelete(null)}
-                                className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                disabled={deletingCandidate}
-                                onClick={handleDeleteCandidate}
-                                className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
-                            >
-                                {deletingCandidate ? 'Eliminando...' : 'Eliminar Candidato'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={!!appToDelete}
+                onClose={() => setAppToDelete(null)}
+                title="¿Eliminar candidato?"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            disabled={deletingCandidate}
+                            onClick={() => setAppToDelete(null)}
+                            className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            disabled={deletingCandidate}
+                            onClick={handleDeleteCandidate}
+                            className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
+                        >
+                            {deletingCandidate ? 'Eliminando...' : 'Eliminar Candidato'}
+                        </button>
+                    </>
+                }
+            >
+                {appToDelete && (
+                    <p className="text-gray-600 text-xs leading-relaxed">
+                        Se eliminará la postulación de <strong className="text-gray-900">{appToDelete.firstName} {appToDelete.lastName}</strong> y sus registros asociados.
+                    </p>
+                )}
+            </Modal>
 
             {/* Modal Eliminar Vacante */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded max-w-md w-full shadow-xl border border-gray-200 text-xs">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar vacante?</h3>
-                            <button onClick={() => setShowDeleteModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-                        </div>
-                        <div className="p-5 space-y-2 text-gray-600 leading-relaxed">
-                            <p>
-                                Esta acción eliminará permanentemente la vacante y las <strong className="text-gray-900">{applications.length} postulaciones</strong> recibidas.
-                            </p>
-                        </div>
-                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
-                            <button
-                                disabled={deleting}
-                                onClick={() => setShowDeleteModal(false)}
-                                className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                disabled={deleting}
-                                onClick={handleDeleteVacancy}
-                                className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
-                            >
-                                {deleting ? 'Eliminando...' : 'Eliminar Vacante'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="¿Eliminar vacante?"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            disabled={deleting}
+                            onClick={() => setShowDeleteModal(false)}
+                            className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            disabled={deleting}
+                            onClick={handleDeleteVacancy}
+                            className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
+                        >
+                            {deleting ? 'Eliminando...' : 'Eliminar Vacante'}
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-gray-600 text-xs leading-relaxed">
+                    Esta acción eliminará permanentemente la vacante y las <strong className="text-gray-900">{applications.length} postulaciones</strong> recibidas.
+                </p>
+            </Modal>
         </div>
     );
 };

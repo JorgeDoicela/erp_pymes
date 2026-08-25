@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { getMyGoals, createGoal, updateGoalProgress, deleteGoal } from '../../services/goals.service';
 import { FiPlus, FiTrash2, FiClock, FiTarget, FiActivity } from 'react-icons/fi';
+import Modal from '../../components/common/Modal';
 
 const MyGoals = () => {
     const [goals, setGoals] = useState([]);
@@ -179,117 +180,96 @@ const MyGoals = () => {
                 </div>
             )}
 
-            {/* Create Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-lg overflow-hidden text-xs space-y-4">
-                        <div className="px-5 py-4 bg-gray-50/50 border-b border-gray-200 flex justify-between items-center">
-                            <div>
-                                <h2 className="text-sm font-semibold text-gray-900">Nuevo Objetivo SMART</h2>
-                                <p className="text-[11px] text-gray-500 font-mono mt-0.5">Define indicadores específicos, medibles y temporales</p>
-                            </div>
-                            <button 
-                                onClick={() => setShowModal(false)} 
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                            >
-                                &times;
-                            </button>
-                        </div>
-                        <form onSubmit={handleSubmit} className="p-5 space-y-3">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Título del Objetivo</label>
-                                <input required type="text" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
-                                    value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ej. Optimizar tiempo de entrega de reportes" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Descripción / Justificación</label>
-                                <textarea className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 h-16 resize-none"
-                                    value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Detalles de la meta esperada..." />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">Métrica (KPI)</label>
-                                    <input required type="text" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
-                                        value={formData.metric} onChange={e => setFormData({ ...formData, metric: e.target.value })} placeholder="Ej. Entregas a tiempo" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">Unidad</label>
-                                    <input required type="text" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
-                                        value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} placeholder="Ej: %, USD, Horas, Casos" />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">Valor Meta Numérico</label>
-                                    <input required type="number" step="0.01" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
-                                        value={formData.targetValue} onChange={e => setFormData({ ...formData, targetValue: e.target.value })} placeholder="Ej. 100" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">Fecha Límite</label>
-                                    <input required type="date" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
-                                        value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Prioridad</label>
-                                <select className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
-                                    value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
-                                    <option value="LOW">Baja</option>
-                                    <option value="MEDIUM">Media</option>
-                                    <option value="HIGH">Alta</option>
-                                </select>
-                            </div>
-                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
-                                <button type="button" onClick={() => setShowModal(false)} className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer">Cancelar</button>
-                                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer shadow-xs">Crear Objetivo</button>
-                            </div>
-                        </form>
+            {/* Create Goal Modal */}
+            <Modal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                title="Nuevo Objetivo Individual"
+                subtitle="Define una meta cuantificable de rendimiento profesional."
+                size="md"
+            >
+                <form onSubmit={handleSubmit} className="space-y-3">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Título del Objetivo</label>
+                        <input required type="text" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
+                            value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="Ej. Optimizar tiempo de entrega de reportes" />
                     </div>
-                </div>
-            )}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Descripción / Justificación</label>
+                        <textarea className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 h-16 resize-none"
+                            value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Detalles de la meta esperada..." />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Métrica (KPI)</label>
+                            <input required type="text" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
+                                value={formData.metric} onChange={e => setFormData({ ...formData, metric: e.target.value })} placeholder="Ej. Entregas a tiempo" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Unidad</label>
+                            <input required type="text" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
+                                value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} placeholder="Ej: %, USD, Horas, Casos" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Valor Meta Numérico</label>
+                            <input required type="number" step="0.01" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
+                                value={formData.targetValue} onChange={e => setFormData({ ...formData, targetValue: e.target.value })} placeholder="Ej. 100" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Fecha Límite</label>
+                            <input required type="date" className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
+                                value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Prioridad</label>
+                        <select className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
+                            value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
+                            <option value="LOW">Baja</option>
+                            <option value="MEDIUM">Media</option>
+                            <option value="HIGH">Alta</option>
+                        </select>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                        <button type="button" onClick={() => setShowModal(false)} className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer">Cancelar</button>
+                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer shadow-xs">Crear Objetivo</button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Update Modal */}
-            {updateModal.show && (
-                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-sm overflow-hidden text-xs space-y-4">
-                        <div className="px-5 py-4 bg-gray-50/50 border-b border-gray-200 flex justify-between items-center">
-                            <div>
-                                <h2 className="text-sm font-semibold text-gray-900">Actualizar Progreso</h2>
-                                <p className="text-[11px] text-gray-500 font-mono mt-0.5">{updateModal.goal.title}</p>
-                            </div>
-                            <button 
-                                onClick={() => setUpdateModal({ show: false, goal: null })} 
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                            >
-                                &times;
-                            </button>
+            <Modal
+                isOpen={updateModal.show && !!updateModal.goal}
+                onClose={() => setUpdateModal({ show: false, goal: null })}
+                title="Actualizar Progreso"
+                subtitle={updateModal.goal?.title}
+                size="sm"
+            >
+                {updateModal.goal && (
+                    <form onSubmit={handleUpdateProgress} className="space-y-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Valor Actual ({updateModal.goal.unit})</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                autoFocus
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono font-semibold"
+                                value={progressData.currentValue}
+                                onChange={e => setProgressData({ currentValue: e.target.value })}
+                            />
+                            <p className="text-[11px] text-right text-gray-400 font-mono mt-0.5">Meta establecida: {updateModal.goal.targetValue} {updateModal.goal.unit}</p>
                         </div>
-                        <div className="p-5 space-y-3">
-                            <form onSubmit={handleUpdateProgress} className="space-y-3">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">Valor Actual ({updateModal.goal.unit})</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        autoFocus
-                                        className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-mono font-semibold"
-                                        value={progressData.currentValue}
-                                        onChange={e => setProgressData({ currentValue: e.target.value })}
-                                    />
-                                    <p className="text-[11px] text-right text-gray-400 font-mono mt-0.5">Meta establecida: {updateModal.goal.targetValue} {updateModal.goal.unit}</p>
-                                </div>
-                                <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
-                                    <button type="button" onClick={() => setUpdateModal({ show: false, goal: null })} className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer">Cancelar</button>
-                                    <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer shadow-xs">Guardar Progreso</button>
-                                </div>
-                            </form>
+                        <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                            <button type="button" onClick={() => setUpdateModal({ show: false, goal: null })} className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer">Cancelar</button>
+                            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer shadow-xs">Guardar Progreso</button>
                         </div>
-                    </div>
-                </div>
-            )}
+                    </form>
+                )}
+            </Modal>
         </div>
     );
 };
 
 export default MyGoals;
-

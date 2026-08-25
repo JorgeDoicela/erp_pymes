@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import shiftService from '../../services/attendance/shiftService';
 import * as employeeService from '../../services/employees/employee.service';
+import Modal from '../../components/common/Modal';
 
 const ALL_DAYS = [
     { key: 'Lunes', short: 'Lun' },
@@ -714,153 +715,135 @@ const ShiftManagement = () => {
             )}
 
             {/* MODAL — Crear / Editar Turno */}
-            {shiftModal.open && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-md w-full overflow-hidden shadow-xl">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-gray-900">
-                                {shiftModal.isEditing ? 'Editar Turno' : 'Nuevo Turno de Trabajo'}
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={() => setShiftModal({ open: false, isEditing: false, id: null, name: '', startTime: '08:00', endTime: '17:00', toleranceMinutes: 15, breakMinutes: 60 })}
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                            >
-                                ×
-                            </button>
+            <Modal
+                isOpen={shiftModal.open}
+                onClose={() => setShiftModal({ open: false, isEditing: false, id: null, name: '', startTime: '08:00', endTime: '17:00', toleranceMinutes: 15, breakMinutes: 60 })}
+                title={shiftModal.isEditing ? 'Editar Turno' : 'Nuevo Turno de Trabajo'}
+                size="md"
+            >
+                <form onSubmit={handleSaveShift}>
+                    <div className="space-y-4 text-xs">
+                        <div>
+                            <label className={labelClass}>Nombre del Turno</label>
+                            <input
+                                type="text"
+                                placeholder="Ej. Matutino Regular, Nocturno Operativo..."
+                                className={inputClass}
+                                value={shiftModal.name}
+                                onChange={e => setShiftModal({ ...shiftModal, name: e.target.value })}
+                                required
+                            />
                         </div>
-                        <form onSubmit={handleSaveShift}>
-                            <div className="p-5 space-y-4">
-                                <div>
-                                    <label className={labelClass}>Nombre del Turno</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Ej. Matutino Regular, Nocturno Operativo..."
-                                        className={inputClass}
-                                        value={shiftModal.name}
-                                        onChange={e => setShiftModal({ ...shiftModal, name: e.target.value })}
-                                        required
-                                    />
-                                </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className={labelClass}>Hora de Inicio</label>
-                                        <input
-                                            type="time"
-                                            className={`${inputClass} font-mono`}
-                                            value={shiftModal.startTime}
-                                            onChange={e => setShiftModal({ ...shiftModal, startTime: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Hora de Fin</label>
-                                        <input
-                                            type="time"
-                                            className={`${inputClass} font-mono`}
-                                            value={shiftModal.endTime}
-                                            onChange={e => setShiftModal({ ...shiftModal, endTime: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className={labelClass}>Tolerancia de Atraso (min)</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="120"
-                                            className={`${inputClass} font-mono`}
-                                            value={shiftModal.toleranceMinutes}
-                                            onChange={e => setShiftModal({ ...shiftModal, toleranceMinutes: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Tiempo de Almuerzo (min)</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="240"
-                                            className={`${inputClass} font-mono`}
-                                            value={shiftModal.breakMinutes}
-                                            onChange={e => setShiftModal({ ...shiftModal, breakMinutes: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-600 space-y-1">
-                                    <div className="flex justify-between">
-                                        <span>Jornada Calculada:</span>
-                                        <span className="font-mono font-medium text-gray-900">
-                                            {calculateShiftHours(shiftModal.startTime, shiftModal.endTime, shiftModal.breakMinutes)}
-                                        </span>
-                                    </div>
-                                </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className={labelClass}>Hora de Inicio</label>
+                                <input
+                                    type="time"
+                                    className={`${inputClass} font-mono`}
+                                    value={shiftModal.startTime}
+                                    onChange={e => setShiftModal({ ...shiftModal, startTime: e.target.value })}
+                                    required
+                                />
                             </div>
-
-                            <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShiftModal({ open: false, isEditing: false, id: null, name: '', startTime: '08:00', endTime: '17:00', toleranceMinutes: 15, breakMinutes: 60 })}
-                                    className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
-                                >
-                                    {shiftModal.isEditing ? 'Guardar Cambios' : 'Crear Turno'}
-                                </button>
+                            <div>
+                                <label className={labelClass}>Hora de Fin</label>
+                                <input
+                                    type="time"
+                                    className={`${inputClass} font-mono`}
+                                    value={shiftModal.endTime}
+                                    onChange={e => setShiftModal({ ...shiftModal, endTime: e.target.value })}
+                                    required
+                                />
                             </div>
-                        </form>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className={labelClass}>Tolerancia de Atraso (min)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="120"
+                                    className={`${inputClass} font-mono`}
+                                    value={shiftModal.toleranceMinutes}
+                                    onChange={e => setShiftModal({ ...shiftModal, toleranceMinutes: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Tiempo de Almuerzo (min)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="240"
+                                    className={`${inputClass} font-mono`}
+                                    value={shiftModal.breakMinutes}
+                                    onChange={e => setShiftModal({ ...shiftModal, breakMinutes: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-600 space-y-1">
+                            <div className="flex justify-between">
+                                <span>Jornada Calculada:</span>
+                                <span className="font-mono font-medium text-gray-900">
+                                    {calculateShiftHours(shiftModal.startTime, shiftModal.endTime, shiftModal.breakMinutes)}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
+
+                    <div className="pt-4 mt-4 border-t border-gray-200 flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShiftModal({ open: false, isEditing: false, id: null, name: '', startTime: '08:00', endTime: '17:00', toleranceMinutes: 15, breakMinutes: 60 })}
+                            className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
+                        >
+                            {shiftModal.isEditing ? 'Guardar Cambios' : 'Crear Turno'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Modal de Confirmación Estándar ERP */}
-            {confirmModal.open && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-md w-full overflow-hidden shadow-xl">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-gray-900">{confirmModal.title}</h3>
-                            <button
-                                type="button"
-                                onClick={() => setConfirmModal({ open: false, title: '', message: '', onConfirm: null })}
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                            >
-                                ×
-                            </button>
-                        </div>
-                        <div className="p-5 text-xs text-gray-600 leading-relaxed">
-                            {confirmModal.message}
-                        </div>
-                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setConfirmModal({ open: false, title: '', message: '', onConfirm: null })}
-                                className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={confirmModal.onConfirm}
-                                className={`px-3.5 py-2 text-white text-xs font-medium rounded transition-colors cursor-pointer ${
-                                    confirmModal.isDestructive
-                                        ? 'bg-red-600 hover:bg-red-700'
-                                        : 'bg-blue-600 hover:bg-blue-700 shadow-xs'
-                                }`}
-                            >
-                                {confirmModal.confirmText || 'Confirmar'}
-                            </button>
-                        </div>
-                    </div>
+            <Modal
+                isOpen={confirmModal.open}
+                onClose={() => setConfirmModal({ open: false, title: '', message: '', onConfirm: null })}
+                title={confirmModal.title}
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setConfirmModal({ open: false, title: '', message: '', onConfirm: null })}
+                            className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmModal.onConfirm}
+                            className={`px-3.5 py-2 text-white text-xs font-medium rounded transition-colors cursor-pointer ${
+                                confirmModal.isDestructive
+                                    ? 'bg-red-600 hover:bg-red-700'
+                                    : 'bg-blue-600 hover:bg-blue-700 shadow-xs'
+                            }`}
+                        >
+                            {confirmModal.confirmText || 'Confirmar'}
+                        </button>
+                    </>
+                }
+            >
+                <div className="text-xs text-gray-600 leading-relaxed">
+                    {confirmModal.message}
                 </div>
-            )}
+            </Modal>
         </div>
     );
 };

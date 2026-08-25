@@ -35,7 +35,9 @@
     "jspdf-autotable": "^5.0.7",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
+    "node-forge": "^1.4.0",
     "nodemailer": "^9.0.5",
+    "qrcode": "^1.5.4",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "uuid": "^11.1.1"

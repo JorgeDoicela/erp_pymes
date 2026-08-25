@@ -115,6 +115,10 @@ const SuperAdminDashboard = lazy(() => import('./pages/superadmin/SuperAdminDash
 const PublicResearchPage = lazy(() => import('./pages/PublicResearchPage.jsx'));
 const PublicResearchResultsPage = lazy(() => import('./pages/PublicResearchResultsPage.jsx'));
 
+// Módulo de Firmas Digitales QR y Firma Electrónica Oficial Ecuador (.p12)
+const DigitalSignatureCenter = lazy(() => import('./pages/signatures/DigitalSignatureCenter.jsx'));
+const PublicSignatureVerification = lazy(() => import('./pages/signatures/PublicSignatureVerification.jsx'));
+
 function App() {
   const [auth, setAuth] = useState(() => {
     // Intentar recuperar sesión al cargar
@@ -206,6 +210,7 @@ function App() {
         <Route path="/careers/:id" element={<JobApplication />} />
         <Route path="/investigacion" element={<PublicResearchPage />} />
         <Route path="/investigacion/resultados" element={<PublicResearchResultsPage />} />
+        <Route path="/signatures/verify/:token" element={<PublicSignatureVerification />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* Panel compartido para roles administrativos/especializados */}
@@ -241,6 +246,7 @@ function App() {
           <Route path="/admin/expedientes" element={<EmployeeExpedient />} />
           <Route path="/admin/expedientes/:employeeId" element={<EmployeeExpedient />} />
           <Route path="/admin/assets" element={<EmployeeAssetsManagement />} />
+          <Route path="/admin/signatures" element={<DigitalSignatureCenter />} />
           <Route path="/admin/offboarding" element={<OffboardingManagement />} />
           <Route path="/admin/compliance" element={<LegalComplianceDashboard />} />
           <Route path="/performance" element={<EvaluationDashboard />} />
@@ -313,6 +319,7 @@ function App() {
           <Route path="/notifications/settings" element={<NotificationSettings />} />
           <Route path="/performance/results/:id" element={<EvaluationResults />} />
           <Route path="/profile" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
+          <Route path="/signatures" element={<DigitalSignatureCenter />} />
           <Route path="/help" element={<HelpCenter />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

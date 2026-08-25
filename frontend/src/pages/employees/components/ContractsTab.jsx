@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { createContract } from '../../../services/employees/employee.service';
 import { EmptyState, InputField } from './EmployeeHelpers';
 import { CONTRACT_TYPES } from '../../../constants/employeeOptions';
+import Modal from '../../../components/common/Modal';
 
 const ContractsTab = ({ contracts, user, employeeId, token, onUpdate }) => {
     const [isCreatingContract, setIsCreatingContract] = useState(false);
@@ -132,80 +133,70 @@ const ContractsTab = ({ contracts, user, employeeId, token, onUpdate }) => {
             </div>
 
             {/* Create Contract Modal */}
-            {isCreatingContract && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto text-xs space-y-4">
-                        <div className="px-5 py-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
-                            <div>
-                                <h2 className="text-sm font-semibold text-gray-900">Registrar Nuevo Contrato Laboral</h2>
-                                <p className="text-[11px] text-gray-500 mt-0.5">Establece las condiciones formales, vigencia y remuneración pactada.</p>
-                            </div>
-                            <button 
-                                onClick={() => setIsCreatingContract(false)} 
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
+            <Modal
+                isOpen={isCreatingContract}
+                onClose={() => setIsCreatingContract(false)}
+                title="Registrar Nuevo Contrato Laboral"
+                subtitle="Establece las condiciones formales, vigencia y remuneración pactada."
+                size="lg"
+            >
+                <form onSubmit={handleCreateContract} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-700">Modalidad Contractual</label>
+                            <select 
+                                name="type" 
+                                value={contractForm.type} 
+                                onChange={handleContractChange} 
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                             >
-                                &times;
-                            </button>
+                                {CONTRACT_TYPES.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
                         </div>
-                        <form onSubmit={handleCreateContract} className="p-5 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-medium text-gray-700">Modalidad Contractual</label>
-                                    <select 
-                                        name="type" 
-                                        value={contractForm.type} 
-                                        onChange={handleContractChange} 
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                    >
-                                        {CONTRACT_TYPES.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <InputField label="Salario Base ($ USD)" name="salary" type="number" value={contractForm.salary} onChange={handleContractChange} help="Monto mensual pactado." />
-                                <InputField label="Fecha de Inicio" name="startDate" type="date" value={contractForm.startDate} onChange={handleContractChange} />
-                                <InputField label="Fecha de Finalización (Opcional)" name="endDate" type="date" value={contractForm.endDate} onChange={handleContractChange} />
-                                <div className="col-span-1 md:col-span-2">
-                                    <label className="text-xs font-medium text-gray-700 mb-1 block">Cláusulas Especiales / Anexos</label>
-                                    <textarea
-                                        name="clauses"
-                                        value={contractForm.clauses}
-                                        onChange={handleContractChange}
-                                        rows="2"
-                                        placeholder="Ej. Periodo de prueba de 90 días, confidencialidad estricta, jornada especial..."
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                    ></textarea>
-                                </div>
-                                <div className="col-span-1 md:col-span-2">
-                                    <label className="text-xs font-medium text-gray-700 mb-1 block">Documento PDF Firmado</label>
-                                    <input
-                                        type="file"
-                                        name="document"
-                                        accept="application/pdf"
-                                        onChange={handleContractChange}
-                                        className="block w-full text-xs text-gray-500 bg-white border border-gray-200 rounded px-2 py-1"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
-                                <button 
-                                    type="button" 
-                                    onClick={() => setIsCreatingContract(false)} 
-                                    className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer shadow-xs"
-                                >
-                                    Crear Contrato
-                                </button>
-                            </div>
-                        </form>
+                        <InputField label="Salario Base ($ USD)" name="salary" type="number" value={contractForm.salary} onChange={handleContractChange} help="Monto mensual pactado." />
+                        <InputField label="Fecha de Inicio" name="startDate" type="date" value={contractForm.startDate} onChange={handleContractChange} />
+                        <InputField label="Fecha de Finalización (Opcional)" name="endDate" type="date" value={contractForm.endDate} onChange={handleContractChange} />
+                        <div className="col-span-1 md:col-span-2">
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Cláusulas Especiales / Anexos</label>
+                            <textarea
+                                name="clauses"
+                                value={contractForm.clauses}
+                                onChange={handleContractChange}
+                                rows="2"
+                                placeholder="Ej. Periodo de prueba de 90 días, confidencialidad estricta, jornada especial..."
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                            ></textarea>
+                        </div>
+                        <div className="col-span-1 md:col-span-2">
+                            <label className="text-xs font-medium text-gray-700 mb-1 block">Documento PDF Firmado</label>
+                            <input
+                                type="file"
+                                name="document"
+                                accept="application/pdf"
+                                onChange={handleContractChange}
+                                className="block w-full text-xs text-gray-500 bg-white border border-gray-200 rounded px-2 py-1"
+                            />
+                        </div>
                     </div>
-                </div>
-            )}
+                    <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                        <button 
+                            type="button" 
+                            onClick={() => setIsCreatingContract(false)} 
+                            className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button 
+                            type="submit" 
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer shadow-xs"
+                        >
+                            Guardar Contrato
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

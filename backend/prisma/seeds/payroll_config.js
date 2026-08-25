@@ -27,8 +27,13 @@ export async function seedPayrollConfig(prisma) {
                 { name: 'Sueldo Base', type: 'EARNING', isMandatory: true, percentage: null, fixedValue: null },
                 { name: 'Horas Extras 50%', type: 'EARNING', isMandatory: false, percentage: null, fixedValue: null },
                 { name: 'Horas Extras 100%', type: 'EARNING', isMandatory: false, percentage: null, fixedValue: null },
+                { name: 'Décimo Tercer Sueldo', type: 'EARNING', isMandatory: true, percentage: 8.33, fixedValue: null },
+                { name: 'Décimo Cuarto Sueldo', type: 'EARNING', isMandatory: true, percentage: null, fixedValue: 38.33 },
+                { name: 'Fondo de Reserva', type: 'EARNING', isMandatory: false, percentage: 8.33, fixedValue: null },
                 { name: 'Bono por Desempeño', type: 'EARNING', isMandatory: false, percentage: null, fixedValue: null },
                 { name: 'Aporte IESS Personal', type: 'DEDUCTION', isMandatory: true, percentage: 9.45, fixedValue: null },
+                { name: 'Aporte IESS Patronal', type: 'DEDUCTION', isMandatory: false, percentage: 12.15, fixedValue: null },
+                { name: 'Anticipo Quincenal / Sueldo', type: 'DEDUCTION', isMandatory: false, percentage: null, fixedValue: null },
                 { name: 'Impuesto a la Renta', type: 'DEDUCTION', isMandatory: false, percentage: null, fixedValue: null },
                 { name: 'Préstamo Quirografario IESS', type: 'DEDUCTION', isMandatory: false, percentage: null, fixedValue: null }
             ];

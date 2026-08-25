@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactDOM from 'react-dom';
 import api from '../../api/axios.js';
 import toast from 'react-hot-toast';
 import { FiX } from 'react-icons/fi';
@@ -76,7 +77,9 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
         return 'bg-gray-100 text-gray-700 border-gray-200';
     };
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return ReactDOM.createPortal(
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -242,6 +245,7 @@ export default function TenantDetailDrawer({ tenantId, isOpen, onClose, onRefres
                     </motion.aside>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }

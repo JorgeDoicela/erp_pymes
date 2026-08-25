@@ -42,6 +42,7 @@ export const adminSections = [
             { title: 'Vencimiento de Contratos', icon: <FiFileText />, color: 'bg-amber-600', path: '/admin/contracts/expiring' },
             { title: 'Equipos y EPPs', icon: <FiPackage />, color: 'bg-purple-600', path: '/admin/assets' },
             { title: 'Salida de Personal y Liquidaciones', icon: <FiUserMinus />, color: 'bg-rose-600', path: '/admin/offboarding' },
+            { title: 'Firmas Digitales QR & .p12', icon: <FiFileText />, color: 'bg-indigo-600', path: '/admin/signatures' },
             { title: 'Cumplimiento Legal', icon: <FiShield />, color: 'bg-emerald-700', path: '/admin/compliance' },
         ]
     },
@@ -97,6 +98,7 @@ export const employeeSections = [
             { title: 'Comunicados y Anuncios', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/announcements' },
             { title: 'Notificaciones y Alertas', icon: <FiVolume2 />, color: 'bg-blue-600', path: '/notifications' },
             { title: 'Mi Expediente Digital', icon: <FiFolder />, color: 'bg-blue-600', path: '/my-expedient' },
+            { title: 'Firmas y Certificados Digitales', icon: <FiFileText />, color: 'bg-emerald-600', path: '/signatures' },
             { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
         ]
     },

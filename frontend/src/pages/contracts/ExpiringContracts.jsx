@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import Modal from '../../components/common/Modal';
 
 const ExpiringContracts = () => {
     const navigate = useNavigate();
@@ -442,110 +443,95 @@ const ExpiringContracts = () => {
             )}
 
             {/* Modal de Renovación Estándar ERP */}
-            {renewModalOpen && selectedContract && (
-                <div className="fixed inset-0 z-50 bg-gray-900/50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl">
-                        {/* Header Modal */}
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-base font-semibold text-gray-900">Renovación de Contrato</h3>
-                                <p className="text-xs text-gray-500 mt-0.5">
-                                    {selectedContract.employee?.firstName} {selectedContract.employee?.lastName} · {selectedContract.employee?.department}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setRenewModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 text-base font-bold cursor-pointer"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        {/* Formulario */}
-                        <form onSubmit={handleRenewSubmit}>
-                            <div className="p-5 space-y-4 text-xs">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Régimen Contractual:</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setRenewType('Indefinido')}
-                                            className={`p-3 rounded border text-left transition-colors cursor-pointer ${renewType === 'Indefinido' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}
-                                        >
-                                            <p className="font-semibold text-gray-900">Indefinido</p>
-                                            <p className="text-[11px] text-gray-500 mt-0.5">Sin fecha fin determinada.</p>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setRenewType('Temporal')}
-                                            className={`p-3 rounded border text-left transition-colors cursor-pointer ${renewType === 'Temporal' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}
-                                        >
-                                            <p className="font-semibold text-gray-900">Plazo Fijo / Temporal</p>
-                                            <p className="text-[11px] text-gray-500 mt-0.5">Extensión por período.</p>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {renewType === 'Temporal' && (
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Nueva Fecha de Vencimiento: *</label>
-                                        <input
-                                            type="date"
-                                            required
-                                            value={renewEndDate}
-                                            onChange={(e) => setRenewEndDate(e.target.value)}
-                                            min={new Date().toISOString().split('T')[0]}
-                                            className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                                        />
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Remuneración Mensual (USD):</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="Ej. 1800.00"
-                                        value={renewSalary}
-                                        onChange={(e) => setRenewSalary(e.target.value)}
-                                        className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono"
-                                    />
-                                    <p className="text-[11px] text-gray-400 mt-0.5">Opcional. Dejar vacío si mantiene el salario actual.</p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Observaciones / Cláusula:</label>
-                                    <textarea
-                                        rows="2"
-                                        placeholder="Motivo de renovación o adenda laboral..."
-                                        value={renewNotes}
-                                        onChange={(e) => setRenewNotes(e.target.value)}
-                                        className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Footer Modal */}
-                            <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
+            <Modal
+                isOpen={renewModalOpen && !!selectedContract}
+                onClose={() => setRenewModalOpen(false)}
+                title="Renovación de Contrato"
+                subtitle={selectedContract ? `${selectedContract.employee?.firstName} ${selectedContract.employee?.lastName} · ${selectedContract.employee?.department}` : ''}
+                size="md"
+            >
+                {selectedContract && (
+                    <form onSubmit={handleRenewSubmit} className="space-y-4 text-xs">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Régimen Contractual:</label>
+                            <div className="grid grid-cols-2 gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => setRenewModalOpen(false)}
-                                    className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
+                                    onClick={() => setRenewType('Indefinido')}
+                                    className={`p-3 rounded border text-left transition-colors cursor-pointer ${renewType === 'Indefinido' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}
                                 >
-                                    Cancelar
+                                    <p className="font-semibold text-gray-900">Indefinido</p>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">Sin fecha fin determinada.</p>
                                 </button>
                                 <button
-                                    type="submit"
-                                    disabled={renewing}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                                    type="button"
+                                    onClick={() => setRenewType('Temporal')}
+                                    className={`p-3 rounded border text-left transition-colors cursor-pointer ${renewType === 'Temporal' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}
                                 >
-                                    {renewing ? 'Guardando...' : 'Confirmar Renovación'}
+                                    <p className="font-semibold text-gray-900">Plazo Fijo / Temporal</p>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">Extensión por período.</p>
                                 </button>
                             </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                        </div>
+
+                        {renewType === 'Temporal' && (
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Nueva Fecha de Vencimiento: *</label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={renewEndDate}
+                                    onChange={(e) => setRenewEndDate(e.target.value)}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                                />
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Remuneración Mensual (USD):</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                placeholder="Ej. 1800.00"
+                                value={renewSalary}
+                                onChange={(e) => setRenewSalary(e.target.value)}
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono"
+                            />
+                            <p className="text-[11px] text-gray-400 mt-0.5">Opcional. Dejar vacío si mantiene el salario actual.</p>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Observaciones / Cláusula:</label>
+                            <textarea
+                                rows="2"
+                                placeholder="Motivo de renovación o adenda laboral..."
+                                value={renewNotes}
+                                onChange={(e) => setRenewNotes(e.target.value)}
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                            />
+                        </div>
+
+                        {/* Footer Modal */}
+                        <div className="pt-3 border-t border-gray-200 flex items-center justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setRenewModalOpen(false)}
+                                className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={renewing}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                            >
+                                {renewing ? 'Guardando...' : 'Confirmar Renovación'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
         </div>
     );
 };

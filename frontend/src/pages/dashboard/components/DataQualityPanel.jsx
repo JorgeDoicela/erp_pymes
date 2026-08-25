@@ -80,7 +80,7 @@ export default function DataQualityPanel() {
                     <div>
                         <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: "0 0 2px" }}>
                             {!dataReadyForAI
-                                ? "⚠ Datos insuficientes — El motor de IA requiere más información"
+                                ? "Datos insuficientes — El motor de IA requiere más información"
                                 : `Completitud de datos: ${completenessPercent}% · Confianza ${aiConfidenceLevel}`
                             }
                         </p>

@@ -116,6 +116,73 @@ class PayrollController {
             res.status(500).json({ success: false, message: error.message });
         }
     }
+
+    async signPayslip(req, res) {
+        try {
+            const { id } = req.params;
+            const employeeId = req.user?.employeeId || req.user?.id;
+            const { signatureType, notes, p12Data } = req.body;
+
+            const result = await payrollCalculationService.signPayslip({
+                detailId: id,
+                employeeId,
+                signatureType,
+                notes,
+                p12Data
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Rol de pagos firmado y aprobado con éxito',
+                data: result
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(400).json({ success: false, message: error.message || 'Error al firmar el rol' });
+        }
+    }
+
+    async disputePayslip(req, res) {
+        try {
+            const { id } = req.params;
+            const employeeId = req.user?.employeeId || req.user?.id;
+            const { reason } = req.body;
+
+            if (!reason) return res.status(400).json({ success: false, message: 'Debe especificar el motivo de la observación' });
+
+            const result = await payrollCalculationService.disputePayslip({
+                detailId: id,
+                employeeId,
+                reason
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Observación registrada y notificada a Recursos Humanos',
+                data: result
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(400).json({ success: false, message: error.message || 'Error al registrar observación' });
+        }
+    }
+
+    async notifyPendingSignatures(req, res) {
+        try {
+            const { id } = req.params;
+            const tenantId = req.tenantId || req.user?.tenantId;
+            const result = await payrollCalculationService.notifyPendingSignatures(id, tenantId);
+
+            res.status(200).json({
+                success: true,
+                message: `Se enviaron ${result.sentCount} recordatorios de firma a colaboradores pendientes`,
+                data: result
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ success: false, message: error.message || 'Error al enviar recordatorios' });
+        }
+    }
 }
 
 export default new PayrollController();

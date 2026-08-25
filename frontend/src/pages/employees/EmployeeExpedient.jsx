@@ -16,6 +16,7 @@ import {
     FiTrash2, 
     FiRefreshCw
 } from 'react-icons/fi';
+import Modal from '../../components/common/Modal';
 
 export default function EmployeeExpedient() {
     const { employeeId } = useParams();
@@ -678,213 +679,195 @@ export default function EmployeeExpedient() {
     )}
 
             {/* Modal de Subida de Documento */}
-            {uploadModalOpen && (
-                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md overflow-hidden">
-                        <div className="px-5 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                            <h3 className="text-sm font-bold text-gray-900">Cargar Documento al Expediente</h3>
-                            <button 
-                                onClick={() => setUploadModalOpen(false)} 
-                                className="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer"
+            <Modal
+                isOpen={uploadModalOpen}
+                onClose={() => setUploadModalOpen(false)}
+                title="Cargar Documento al Expediente"
+                size="md"
+            >
+                <form onSubmit={handleUploadSubmit} className="space-y-3.5">
+                    {!isDetailMode && (
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Colaborador Destino</label>
+                            <select
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500"
+                                value={targetEmployeeId}
+                                onChange={(e) => setTargetEmployeeId(e.target.value)}
+                                required
                             >
-                                &times;
-                            </button>
+                                <option value="">Selecciona un colaborador...</option>
+                                {(Array.isArray(directoryData) ? directoryData : (directoryData?.employees || [])).map(emp => (
+                                    <option key={emp.id} value={emp.id}>
+                                        {emp.fullName || `${emp.firstName} ${emp.lastName}`} ({emp.identityCard || 'S/N'})
+                                    </option>
+                                ))}
+                            </select>
                         </div>
-                        <form onSubmit={handleUploadSubmit} className="p-5 space-y-3.5">
-                            {!isDetailMode && (
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Colaborador Destino</label>
-                                    <select
-                                        className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500"
-                                        value={targetEmployeeId}
-                                        onChange={(e) => setTargetEmployeeId(e.target.value)}
-                                        required
-                                    >
-                                        <option value="">Selecciona un colaborador...</option>
-                                        {(Array.isArray(directoryData) ? directoryData : (directoryData?.employees || [])).map(emp => (
-                                            <option key={emp.id} value={emp.id}>
-                                                {emp.fullName || `${emp.firstName} ${emp.lastName}`} ({emp.identityCard || 'S/N'})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                    )}
 
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Categoría del Documento</label>
-                                <select
-                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500"
-                                    value={uploadCategory}
-                                    onChange={(e) => setUploadCategory(e.target.value)}
-                                >
-                                    <option value="IDENTIFICATION">Cédula de Identidad / DNI</option>
-                                    <option value="LABOR_CONTRACT">Contrato Laboral Firmado</option>
-                                    <option value="BANK_CERTIFICATE">Certificado Bancario de Nómina</option>
-                                    <option value="TITLE_DIPLOMA">Título Académico / Certificado de Estudios</option>
-                                    <option value="POLICE_RECORD">Certificado de Antecedentes Penales</option>
-                                    <option value="CURRICULUM">Hoja de Vida / Currículum Vitae</option>
-                                    <option value="SAFETY_CERTIFICATE">Certificado Médico / Salud Ocupacional</option>
-                                    <option value="IESS_AFFILIATION">Aviso de Entrada / Afiliación IESS</option>
-                                    <option value="DISCIPLINARY_RECORD">Memorando o Novedad Disciplinaria</option>
-                                    <option value="OTHER">Otro Documento</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Adjuntar Archivo Local (PDF o Imagen)</label>
-                                <input
-                                    type="file"
-                                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
-                                    onChange={handleFileUpload}
-                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">O Enlace / URL Digital Directa</label>
-                                <input
-                                    type="url"
-                                    placeholder="https://... (opcional si ya seleccionaste un archivo)"
-                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
-                                    value={uploadUrl}
-                                    onChange={(e) => setUploadUrl(e.target.value)}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Fecha de Caducidad / Vencimiento (Opcional)</label>
-                                <input
-                                    type="date"
-                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
-                                    value={expiryDate}
-                                    onChange={(e) => setExpiryDate(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
-                                <button 
-                                    type="button" 
-                                    onClick={() => setUploadModalOpen(false)} 
-                                    className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    disabled={actionLoading} 
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer disabled:opacity-50"
-                                >
-                                    {actionLoading ? 'Guardando...' : 'Guardar en Expediente'}
-                                </button>
-                            </div>
-                        </form>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Categoría del Documento</label>
+                        <select
+                            className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500"
+                            value={uploadCategory}
+                            onChange={(e) => setUploadCategory(e.target.value)}
+                        >
+                            <option value="IDENTIFICATION">Cédula de Identidad / DNI</option>
+                            <option value="LABOR_CONTRACT">Contrato Laboral Firmado</option>
+                            <option value="BANK_CERTIFICATE">Certificado Bancario de Nómina</option>
+                            <option value="TITLE_DIPLOMA">Título Académico / Certificado de Estudios</option>
+                            <option value="POLICE_RECORD">Certificado de Antecedentes Penales</option>
+                            <option value="CURRICULUM">Hoja de Vida / Currículum Vitae</option>
+                            <option value="SAFETY_CERTIFICATE">Certificado Médico / Salud Ocupacional</option>
+                            <option value="IESS_AFFILIATION">Aviso de Entrada / Afiliación IESS</option>
+                            <option value="DISCIPLINARY_RECORD">Memorando o Novedad Disciplinaria</option>
+                            <option value="OTHER">Otro Documento</option>
+                        </select>
                     </div>
-                </div>
-            )}
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Adjuntar Archivo Local (PDF o Imagen)</label>
+                        <input
+                            type="file"
+                            accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                            onChange={handleFileUpload}
+                            className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">O Enlace / URL Digital Directa</label>
+                        <input
+                            type="url"
+                            placeholder="https://... (opcional si ya seleccionaste un archivo)"
+                            className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
+                            value={uploadUrl}
+                            onChange={(e) => setUploadUrl(e.target.value)}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Fecha de Caducidad / Vencimiento (Opcional)</label>
+                        <input
+                            type="date"
+                            className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 font-mono"
+                            value={expiryDate}
+                            onChange={(e) => setExpiryDate(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+                        <button 
+                            type="button" 
+                            onClick={() => setUploadModalOpen(false)} 
+                            className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button 
+                            type="submit" 
+                            disabled={actionLoading} 
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {actionLoading ? 'Guardando...' : 'Guardar en Expediente'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Modal de Validación por RRHH / Admin */}
-            {reviewModalOpen && selectedItem && selectedItem.document && (
-                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md overflow-hidden">
-                        <div className="px-5 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                            <h3 className="text-sm font-bold text-gray-900">Validar Documento</h3>
-                            <button 
-                                onClick={() => setReviewModalOpen(false)} 
-                                className="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer"
+            <Modal
+                isOpen={reviewModalOpen && !!selectedItem?.document}
+                onClose={() => setReviewModalOpen(false)}
+                title="Validar Documento"
+                size="md"
+            >
+                {selectedItem?.document && (
+                    <div className="space-y-3.5">
+                        <p className="text-xs font-semibold text-gray-900">{selectedItem.label}</p>
+                        <a
+                            href={selectedItem.document.documentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 bg-gray-50 border border-gray-200 text-blue-600 text-xs text-center font-medium rounded hover:bg-gray-100 flex items-center justify-center gap-1.5"
+                        >
+                            Abrir Documento para Inspección <FiExternalLink className="w-3.5 h-3.5" />
+                        </a>
+
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Observaciones de Validación</label>
+                            <textarea
+                                rows="2"
+                                placeholder="Ej. Documento verificado correctamente / Falta firma / Ilegible..."
+                                className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 resize-none"
+                                value={reviewNotes}
+                                onChange={(e) => setReviewNotes(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+                            <button
+                                onClick={() => handleVerifyAction('REJECTED')}
+                                disabled={actionLoading}
+                                className="border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
                             >
-                                &times;
+                                Rechazar Documento
+                            </button>
+                            <button
+                                onClick={() => handleVerifyAction('VERIFIED')}
+                                disabled={actionLoading}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
+                            >
+                                Aprobar y Verificar
                             </button>
                         </div>
-                        <div className="p-5 space-y-3.5">
-                            <p className="text-xs font-semibold text-gray-900">{selectedItem.label}</p>
-                            <a
-                                href={selectedItem.document.documentUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-2.5 bg-gray-50 border border-gray-200 text-blue-600 text-xs text-center font-medium rounded hover:bg-gray-100 flex items-center justify-center gap-1.5"
-                            >
-                                Abrir Documento para Inspección <FiExternalLink className="w-3.5 h-3.5" />
-                            </a>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Observaciones de Validación</label>
-                                <textarea
-                                    rows="2"
-                                    placeholder="Ej. Documento verificado correctamente / Falta firma / Ilegible..."
-                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 resize-none"
-                                    value={reviewNotes}
-                                    onChange={(e) => setReviewNotes(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
-                                <button
-                                    onClick={() => handleVerifyAction('REJECTED')}
-                                    disabled={actionLoading}
-                                    className="border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
-                                >
-                                    Rechazar Documento
-                                </button>
-                                <button
-                                    onClick={() => handleVerifyAction('VERIFIED')}
-                                    disabled={actionLoading}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
-                                >
-                                    Aprobar y Verificar
-                                </button>
-                            </div>
-                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </Modal>
 
             {/* Modal de Confirmación Destructiva (Eliminar Documento) */}
-            {deleteConfirmModalOpen && documentToDelete && (
-                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-md overflow-hidden">
-                        <div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
-                            <h3 className="text-sm font-semibold text-gray-900">Eliminar Documento</h3>
-                            <button 
-                                onClick={() => {
-                                    setDeleteConfirmModalOpen(false);
-                                    setDocumentToDelete(null);
-                                }} 
-                                className="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer"
-                            >
-                                &times;
-                            </button>
-                        </div>
-                        <div className="p-5 space-y-2">
-                            <p className="text-xs text-gray-700 leading-relaxed">
-                                ¿Confirmas que deseas eliminar <strong className="text-gray-900 font-semibold">{documentToDelete.name}</strong> ({documentToDelete.category}) del expediente?
-                            </p>
-                            <p className="text-[11px] text-gray-400">
-                                Esta acción eliminará el archivo del registro y recalculará la completitud del colaborador.
-                            </p>
-                        </div>
-                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setDeleteConfirmModalOpen(false);
-                                    setDocumentToDelete(null);
-                                }}
-                                className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleDeleteDocumentConfirm}
-                                disabled={actionLoading}
-                                className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                                {actionLoading ? 'Eliminando...' : 'Eliminar Documento'}
-                            </button>
-                        </div>
+            <Modal
+                isOpen={deleteConfirmModalOpen && !!documentToDelete}
+                onClose={() => {
+                    setDeleteConfirmModalOpen(false);
+                    setDocumentToDelete(null);
+                }}
+                title="Eliminar Documento"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setDeleteConfirmModalOpen(false);
+                                setDocumentToDelete(null);
+                            }}
+                            className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleDeleteDocumentConfirm}
+                            disabled={actionLoading}
+                            className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {actionLoading ? 'Eliminando...' : 'Eliminar Documento'}
+                        </button>
+                    </>
+                }
+            >
+                {documentToDelete && (
+                    <div className="space-y-2">
+                        <p className="text-xs text-gray-700 leading-relaxed">
+                            ¿Confirmas que deseas eliminar <strong className="text-gray-900 font-semibold">{documentToDelete.name}</strong> ({documentToDelete.category}) del expediente?
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                            Esta acción eliminará el archivo del registro y recalculará la completitud del colaborador.
+                        </p>
                     </div>
-                </div>
-            )}
+                )}
+            </Modal>
         </div>
     );
 }

@@ -8,6 +8,7 @@ import {
     FiEye,
     FiFileText
 } from 'react-icons/fi';
+import Modal from '../../components/common/Modal';
 
 /**
  * Genera e imprime el acta formal de entrega-recepción de dotación/activos como PDF.
@@ -385,77 +386,67 @@ export default function MyAssets() {
             </div>
 
             {/* Modal: Vista Previa de Acta Oficial */}
-            {actaModalOpen && selectedAsset && (
-                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-2xl overflow-hidden my-8 text-xs space-y-4">
-                        <div className="px-5 py-4 bg-gray-50/50 border-b border-gray-200 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-sm font-semibold text-gray-900">Acta de Entrega - Recepción</h3>
-                                <p className="text-[11px] text-gray-500 font-mono mt-0.5">Comprobante de Dotación Individual</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => printActaPDF(selectedAsset)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer font-medium shadow-xs"
-                                >
-                                    <FiPrinter className="w-3.5 h-3.5" />
-                                    <span>Imprimir PDF</span>
-                                </button>
-                                <button 
-                                    onClick={() => setActaModalOpen(false)} 
-                                    className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                                >
-                                    &times;
-                                </button>
+            <Modal
+                isOpen={actaModalOpen && !!selectedAsset}
+                onClose={() => setActaModalOpen(false)}
+                title="Acta de Entrega - Recepción"
+                subtitle="Comprobante de Dotación Individual"
+                size="xl"
+                footer={
+                    <div className="flex items-center justify-between w-full">
+                        <button
+                            onClick={() => printActaPDF(selectedAsset)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded flex items-center gap-1.5 cursor-pointer font-medium shadow-xs"
+                        >
+                            <FiPrinter className="w-3.5 h-3.5" />
+                            <span>Imprimir PDF</span>
+                        </button>
+                        <button 
+                            onClick={() => setActaModalOpen(false)} 
+                            className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-4 py-1.5 rounded cursor-pointer transition-colors"
+                        >
+                            Cerrar
+                        </button>
+                    </div>
+                }
+            >
+                {selectedAsset && (
+                    <div className="space-y-4 text-xs text-gray-800 font-sans">
+                        <div className="border-b border-gray-200 pb-3 text-center">
+                            <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wide">ACTA DE ENTREGA - RECEPCIÓN Y CUSTODIA DE BIENES</h2>
+                            <p className="text-[11px] text-gray-500 font-mono mt-0.5">Código: ACT-EQ-{selectedAsset.id.slice(-6).toUpperCase()}</p>
+                        </div>
+
+                        <div className="bg-gray-50/70 p-3.5 rounded border border-gray-200 space-y-1.5">
+                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">1. Datos del Colaborador Receptor</h4>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div><span className="text-gray-500">Nombre:</span> <span className="font-semibold text-gray-900">{selectedAsset.employee?.firstName} {selectedAsset.employee?.lastName}</span></div>
+                                <div><span className="text-gray-500">Cédula:</span> <span className="font-mono font-semibold text-gray-900">{selectedAsset.employee?.identityCard || 'S/N'}</span></div>
                             </div>
                         </div>
 
-                        <div className="p-6 space-y-4 text-xs text-gray-800 font-sans">
-                            <div className="border-b border-gray-200 pb-3 text-center">
-                                <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wide">ACTA DE ENTREGA - RECEPCIÓN Y CUSTODIA DE BIENES</h2>
-                                <p className="text-[11px] text-gray-500 font-mono mt-0.5">Código: ACT-EQ-{selectedAsset.id.slice(-6).toUpperCase()}</p>
-                            </div>
-
-                            <div className="bg-gray-50/70 p-3.5 rounded border border-gray-200 space-y-1.5">
-                                <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">1. Datos del Colaborador Receptor</h4>
-                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <div><span className="text-gray-500">Nombre:</span> <span className="font-semibold text-gray-900">{selectedAsset.employee?.firstName} {selectedAsset.employee?.lastName}</span></div>
-                                    <div><span className="text-gray-500">Cédula:</span> <span className="font-mono font-semibold text-gray-900">{selectedAsset.employee?.identityCard || 'S/N'}</span></div>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-50/70 p-3.5 rounded border border-gray-200 space-y-1.5">
-                                <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">2. Detalle del Bien Asignado</h4>
-                                <table className="w-full text-left text-xs mt-1 border-collapse">
-                                    <tbody>
-                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500 w-40">Bien / Dotación:</td><td className="py-1 font-semibold text-gray-900">{selectedAsset.name}</td></tr>
-                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Categoría:</td><td className="py-1">{getCategoryLabel(selectedAsset.category)}</td></tr>
-                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Número de Serie:</td><td className="py-1 font-mono font-semibold text-gray-900">{selectedAsset.serialNumber || 'S/N'}</td></tr>
-                                        <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Estado de Entrega:</td><td className="py-1 font-semibold text-gray-900">{selectedAsset.condition === 'NEW' ? 'Nuevo' : 'Buen Estado'}</td></tr>
-                                        <tr><td className="py-1 text-gray-500">Fecha de Entrega:</td><td className="py-1 font-mono text-gray-900">{selectedAsset.deliveryDate ? new Date(selectedAsset.deliveryDate).toLocaleDateString('es-EC') : '—'}</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="text-[11px] text-gray-600 space-y-1 leading-relaxed border border-gray-200 p-3 rounded bg-white">
-                                <p className="font-semibold text-gray-800">3. Declaración de Custodia:</p>
-                                <p>
-                                    Declaro recibir en óptimas condiciones el bien especificado para el desempeño de mis funciones laborales, asumiendo su cuidado y custodia responsable.
-                                </p>
-                            </div>
+                        <div className="bg-gray-50/70 p-3.5 rounded border border-gray-200 space-y-1.5">
+                            <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">2. Detalle del Bien Asignado</h4>
+                            <table className="w-full text-left text-xs mt-1 border-collapse">
+                                <tbody>
+                                    <tr className="border-b border-gray-200"><td className="py-1 text-gray-500 w-40">Bien / Dotación:</td><td className="py-1 font-semibold text-gray-900">{selectedAsset.name}</td></tr>
+                                    <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Categoría:</td><td className="py-1">{getCategoryLabel(selectedAsset.category)}</td></tr>
+                                    <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Número de Serie:</td><td className="py-1 font-mono font-semibold text-gray-900">{selectedAsset.serialNumber || 'S/N'}</td></tr>
+                                    <tr className="border-b border-gray-200"><td className="py-1 text-gray-500">Estado de Entrega:</td><td className="py-1 font-semibold text-gray-900">{selectedAsset.condition === 'NEW' ? 'Nuevo' : 'Buen Estado'}</td></tr>
+                                    <tr><td className="py-1 text-gray-500">Fecha de Entrega:</td><td className="py-1 font-mono text-gray-900">{selectedAsset.deliveryDate ? new Date(selectedAsset.deliveryDate).toLocaleDateString('es-EC') : '—'}</td></tr>
+                                </tbody>
+                            </table>
                         </div>
 
-                        <div className="px-6 py-3 bg-gray-50/50 border-t border-gray-200 flex justify-end">
-                            <button 
-                                onClick={() => setActaModalOpen(false)} 
-                                className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-4 py-1.5 rounded cursor-pointer transition-colors"
-                            >
-                                Cerrar
-                            </button>
+                        <div className="text-[11px] text-gray-600 space-y-1 leading-relaxed border border-gray-200 p-3 rounded bg-white">
+                            <p className="font-semibold text-gray-800">3. Declaración de Custodia:</p>
+                            <p>
+                                Declaro recibir en óptimas condiciones el bien especificado para el desempeño de mis funciones laborales, asumiendo su cuidado y custodia responsable.
+                            </p>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </Modal>
         </div>
     );
 }

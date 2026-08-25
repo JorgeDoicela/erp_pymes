@@ -106,3 +106,30 @@ export const updatePayrollDetail = async (detailId, data) => {
         throw new Error(error.response?.data?.message || 'Error al actualizar detalle');
     }
 };
+
+export const signPayslipDetail = async (detailId, signatureData = {}) => {
+    try {
+        const response = await api.put(`/payroll/detail/${detailId}/sign`, signatureData);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al firmar rol de pagos');
+    }
+};
+
+export const disputePayslipDetail = async (detailId, reason) => {
+    try {
+        const response = await api.put(`/payroll/detail/${detailId}/dispute`, { reason });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al registrar observación');
+    }
+};
+
+export const notifyPendingPayrollSignatures = async (payrollId) => {
+    try {
+        const response = await api.post(`/payroll/${payrollId}/notify-pending`, {});
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || 'Error al notificar colaboradores');
+    }
+};

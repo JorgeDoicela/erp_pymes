@@ -10,6 +10,8 @@ import prisma from '../../database/db.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
 import { decrypt, safeDecrypt } from '../../utils/encryption.js';
 import { financial } from '../../utils/financialUtils.js';
+import qrSignatureService from '../signatures/qrSignatureService.js';
+import notificationService from '../notifications/notificationService.js';
 
 class PayrollCalculationService {
     /**
@@ -318,22 +320,32 @@ class PayrollCalculationService {
                 employeeBonuses.push({ name: 'Recargo Nocturno (25%)', amount: financial.round(nightSurchargeAmount) });
             }
 
-            // 2. Individual Benefits (Bonos, Comisiones, etc.)
+            // 2. Individual Benefits (Bonos, Comisiones, Beneficios Sociales)
             const benefits = benefitMap.get(emp.id) || [];
-            let individualBonusesTotal = financial.from(0);
+            let taxableBonusesTotal = financial.from(0);
+            let nonTaxableBenefitsTotal = financial.from(0);
+
             benefits.forEach(benefit => {
                 const benAmount = financial.from(benefit.amount);
-                individualBonusesTotal = individualBonusesTotal.plus(benAmount);
+                // En Ecuador: Los beneficios sociales en especie (Salud, Alimentación, Transporte, Viáticos) están exentos de IESS (Art. 14 Ley Seg. Social)
+                const isNonTaxable = ['HEALTH', 'MEAL', 'TRANSPORT', 'ALLOWANCE'].includes(benefit.type);
+                if (isNonTaxable) {
+                    nonTaxableBenefitsTotal = nonTaxableBenefitsTotal.plus(benAmount);
+                } else {
+                    taxableBonusesTotal = taxableBonusesTotal.plus(benAmount);
+                }
+
                 employeeBonuses.push({
                     name: benefit.name,
                     amount: financial.round(benAmount),
                     benefitId: benefit.id,
-                    frequency: benefit.frequency
+                    frequency: benefit.frequency,
+                    isTaxable: !isNonTaxable
                 });
             });
 
-            // Materia Gravada IESS (Sueldo ganado + Horas Extras + Recargo Nocturno + Comisiones/Bonos)
-            const taxableEarnings = earnedSalary.plus(overtimeTotalCost).plus(nightSurchargeAmount).plus(individualBonusesTotal);
+            // Materia Gravada IESS (Sueldo ganado + Horas Extras + Recargo Nocturno + Bonos Imponibles)
+            const taxableEarnings = earnedSalary.plus(overtimeTotalCost).plus(nightSurchargeAmount).plus(taxableBonusesTotal);
 
             // 1. Global Config Items (Deducciones IESS, Impuesto a la renta, etc.)
             config.items.forEach(item => {
@@ -385,6 +397,25 @@ class PayrollCalculationService {
 
             const finalNetSalary = financial.round(netSalary);
 
+            // Generar Sello Criptográfico QR único de emisión del Rol de Pagos
+            const periodStr = `${year}-${String(month).padStart(2, '0')}`;
+            const sig = await qrSignatureService.generateQrSignature({
+                docType: 'PAYSLIP',
+                docId: `${periodStr}-${emp.id.slice(-6)}`,
+                signerName: `${emp.firstName} ${emp.lastName}`,
+                signerId: emp.identityCard || 'S/N',
+                issuer: 'EMPLIFI S.A.',
+                content: {
+                    period: periodStr,
+                    employee: `${emp.firstName} ${emp.lastName}`,
+                    identityCard: emp.identityCard,
+                    baseSalary: roundedBaseSalary,
+                    netSalary: finalNetSalary,
+                    workedDays: workedDays
+                },
+                notes: `Rol Individual de Pagos correspondiente al período ${periodStr}`
+            });
+
             payrollDetails.push({
                 employeeId: emp.id,
                 baseSalary: roundedBaseSalary,
@@ -393,7 +424,15 @@ class PayrollCalculationService {
                 overtimeAmount: roundedOvertimeAmount,
                 bonuses: JSON.stringify(employeeBonuses),
                 deductions: JSON.stringify(employeeDeductions),
-                netSalary: finalNetSalary
+                netSalary: finalNetSalary,
+                signatureStatus: 'PENDING',
+                signatureCode: sig.verificationCode,
+                signatureToken: sig.token,
+                signatureData: JSON.stringify({
+                    qrDataUrl: sig.qrDataUrl,
+                    verificationUrl: sig.verificationUrl,
+                    docHash: sig.docHash
+                })
             });
             totalPayrollAmount = totalPayrollAmount.plus(finalNetSalary);
         }
@@ -407,7 +446,16 @@ class PayrollCalculationService {
                 totalAmount: financial.round(totalPayrollAmount),
                 status: 'DRAFT',
                 details: {
-                    create: payrollDetails
+                    create: payrollDetails.map(d => ({
+                        employeeId: d.employeeId,
+                        baseSalary: d.baseSalary,
+                        workedDays: d.workedDays,
+                        overtimeHours: d.overtimeHours,
+                        overtimeAmount: d.overtimeAmount,
+                        bonuses: d.bonuses,
+                        deductions: d.deductions,
+                        netSalary: d.netSalary
+                    }))
                 }
             },
             include: {
@@ -416,6 +464,23 @@ class PayrollCalculationService {
                 }
             }
         });
+
+        // Actualizar sellos y metadatos de firma en base de datos
+        for (const det of payroll.details) {
+            const matchData = payrollDetails.find(pd => pd.employeeId === det.employeeId);
+            if (matchData) {
+                await prisma.$executeRawUnsafe(
+                    `UPDATE payroll_details 
+                     SET "signatureStatus" = $1, "signatureCode" = $2, "signatureToken" = $3, "signatureData" = $4 
+                     WHERE id = $5`,
+                    matchData.signatureStatus || 'PENDING',
+                    matchData.signatureCode,
+                    matchData.signatureToken,
+                    matchData.signatureData,
+                    det.id
+                ).catch(err => console.error('Error guardando firma en detalle:', err));
+            }
+        }
 
         // Audit Log
         if (adminId) {
@@ -495,7 +560,7 @@ class PayrollCalculationService {
 
         if (!actualEmployeeId) return [];
 
-        return await prisma.payrollDetail.findMany({
+        const details = await prisma.payrollDetail.findMany({
             where: {
                 employeeId: actualEmployeeId,
                 payroll: {
@@ -510,6 +575,36 @@ class PayrollCalculationService {
                 payroll: { period: 'desc' }
             }
         });
+
+        // Enriquecer con campos de firma desde PostgreSQL
+        if (details.length > 0) {
+            try {
+                const detailIds = details.map(d => d.id);
+                const rawRows = await prisma.$queryRawUnsafe(
+                    `SELECT id, "signatureStatus", "signedAt", "signatureType", "signatureCode", "signatureToken", "signatureData", "disputeReason" 
+                     FROM payroll_details 
+                     WHERE id = ANY($1::text[])`,
+                    detailIds
+                );
+                const rawMap = new Map(rawRows.map(r => [r.id, r]));
+                details.forEach(d => {
+                    const raw = rawMap.get(d.id);
+                    if (raw) {
+                        d.signatureStatus = raw.signatureStatus || 'PENDING';
+                        d.signedAt = raw.signedAt;
+                        d.signatureType = raw.signatureType;
+                        d.signatureCode = raw.signatureCode;
+                        d.signatureToken = raw.signatureToken;
+                        d.signatureData = raw.signatureData;
+                        d.disputeReason = raw.disputeReason;
+                    }
+                });
+            } catch (err) {
+                console.error('Error enriqueciendo firmas en getPayrollsByEmployee:', err);
+            }
+        }
+
+        return details;
     }
 
     async getPayrollById(id, tenantId = null) {
@@ -535,6 +630,35 @@ class PayrollCalculationService {
         });
 
         if (!payroll) throw new Error('Nómina no encontrada');
+
+        // Enriquecer detalles con campos de firma desde PostgreSQL
+        if (payroll.details?.length > 0) {
+            try {
+                const detailIds = payroll.details.map(d => d.id);
+                const rawRows = await prisma.$queryRawUnsafe(
+                    `SELECT id, "signatureStatus", "signedAt", "signatureType", "signatureCode", "signatureToken", "signatureData", "disputeReason" 
+                     FROM payroll_details 
+                     WHERE id = ANY($1::text[])`,
+                    detailIds
+                );
+                const rawMap = new Map(rawRows.map(r => [r.id, r]));
+                payroll.details.forEach(d => {
+                    const raw = rawMap.get(d.id);
+                    if (raw) {
+                        d.signatureStatus = raw.signatureStatus || 'PENDING';
+                        d.signedAt = raw.signedAt;
+                        d.signatureType = raw.signatureType;
+                        d.signatureCode = raw.signatureCode;
+                        d.signatureToken = raw.signatureToken;
+                        d.signatureData = raw.signatureData;
+                        d.disputeReason = raw.disputeReason;
+                    }
+                });
+            } catch (err) {
+                console.error('Error enriqueciendo firmas en getPayrollById:', err);
+            }
+        }
+
         return payroll;
     }
 
@@ -616,6 +740,19 @@ class PayrollCalculationService {
                 where: { id },
                 data: { status: 'APPROVED' }
             });
+
+            // Notificar a todos los colaboradores que su rol está publicado y listo para firmar
+            const periodFormatted = new Date(payroll.period).toLocaleDateString('es-EC', { month: 'long', year: 'numeric' });
+            for (const detail of payroll.details) {
+                notificationService.createNotification({
+                    recipientId: detail.employeeId,
+                    title: 'Rol de Pagos Publicado',
+                    message: `Tu rol de pagos de ${periodFormatted} está disponible para revisión y firma de conformidad.`,
+                    type: 'PAYROLL_PUBLISHED',
+                    relatedEntity: 'PayrollDetail',
+                    relatedEntityId: detail.id
+                }).catch(err => console.error('Error enviando notificación de nómina:', err));
+            }
 
             // Audit Log
             if (adminId) {
@@ -807,6 +944,143 @@ class PayrollCalculationService {
 
             return deleted;
         });
+    }
+
+    /**
+     * Firma y aceptación de conformidad de un Rol de Pagos por parte del Colaborador.
+     */
+    async signPayslip({ detailId, employeeId, signatureType = 'QR_DIGITAL', notes = '', p12Data = null }) {
+        const detail = await prisma.payrollDetail.findUnique({
+            where: { id: detailId },
+            include: { employee: true, payroll: true }
+        });
+
+        if (!detail) throw new Error('Detalle de rol de pagos no encontrado');
+        if (detail.employeeId !== employeeId && detail.employee?.id !== employeeId) {
+            throw new Error('No tienes autorización para firmar este rol de pagos');
+        }
+
+        const signedAt = new Date();
+        let signatureDataObj = {};
+        try {
+            signatureDataObj = JSON.parse(detail.signatureData || '{}');
+        } catch {
+            signatureDataObj = {};
+        }
+
+        signatureDataObj.signedBy = `${detail.employee.firstName} ${detail.employee.lastName}`;
+        signatureDataObj.signedAt = signedAt.toISOString();
+        signatureDataObj.signatureType = signatureType;
+        signatureDataObj.notes = notes || 'Conformidad de rol de pagos';
+        if (p12Data) {
+            signatureDataObj.p12Stamp = p12Data;
+        }
+
+        const sigDataStr = JSON.stringify(signatureDataObj);
+
+        // Actualizar directamente en base de datos PostgreSQL
+        await prisma.$executeRawUnsafe(
+            `UPDATE payroll_details 
+             SET "signatureStatus" = $1, "signedAt" = $2, "signatureType" = $3, "signatureData" = $4, "updatedAt" = $5 
+             WHERE id = $6`,
+            'SIGNED',
+            signedAt,
+            signatureType,
+            sigDataStr,
+            new Date(),
+            detailId
+        );
+
+        const updated = await prisma.payrollDetail.findUnique({
+            where: { id: detailId },
+            include: { employee: true, payroll: true }
+        });
+
+        if (updated) {
+            updated.signatureStatus = 'SIGNED';
+            updated.signedAt = signedAt;
+            updated.signatureType = signatureType;
+            updated.signatureData = sigDataStr;
+        }
+
+        return updated;
+    }
+
+    /**
+     * Registro de observación o discrepancia en el Rol de Pagos por parte del Colaborador.
+     */
+    async disputePayslip({ detailId, employeeId, reason }) {
+        const detail = await prisma.payrollDetail.findUnique({
+            where: { id: detailId },
+            include: { employee: true, payroll: true }
+        });
+
+        if (!detail) throw new Error('Detalle de rol de pagos no encontrado');
+        if (detail.employeeId !== employeeId && detail.employee?.id !== employeeId) {
+            throw new Error('No tienes autorización para observar este rol');
+        }
+
+        // Actualizar directamente en base de datos PostgreSQL
+        await prisma.$executeRawUnsafe(
+            `UPDATE payroll_details 
+             SET "signatureStatus" = $1, "disputeReason" = $2, "updatedAt" = $3 
+             WHERE id = $4`,
+            'DISPUTED',
+            reason,
+            new Date(),
+            detailId
+        );
+
+        const updated = await prisma.payrollDetail.findUnique({
+            where: { id: detailId },
+            include: { employee: true, payroll: true }
+        });
+
+        if (updated) {
+            updated.signatureStatus = 'DISPUTED';
+            updated.disputeReason = reason;
+        }
+
+        return updated;
+    }
+
+    /**
+     * Enviar recordatorio masivo a los empleados con firma pendiente.
+     */
+    async notifyPendingSignatures(payrollId, tenantId = null) {
+        const payroll = await prisma.payroll.findFirst({
+            where: {
+                id: payrollId,
+                ...(tenantId ? { tenantId } : {})
+            }
+        });
+
+        if (!payroll) throw new Error('Nómina no encontrada');
+
+        const pendingDetails = await prisma.$queryRawUnsafe(
+            `SELECT pd.id, pd."employeeId", e."firstName", e."lastName" 
+             FROM payroll_details pd 
+             JOIN employees e ON pd."employeeId" = e.id 
+             WHERE pd."payrollId" = $1 AND (pd."signatureStatus" = 'PENDING' OR pd."signatureStatus" IS NULL)`,
+            payrollId
+        );
+
+        const periodFormatted = new Date(payroll.period).toLocaleDateString('es-EC', { month: 'long', year: 'numeric' });
+        let sentCount = 0;
+
+        for (const detail of pendingDetails) {
+            await notificationService.createNotification({
+                recipientId: detail.employeeId,
+                title: 'Recordatorio: Firma de Rol de Pagos',
+                message: `Por favor revisa y firma tu rol de pagos correspondiente al período ${periodFormatted}.`,
+                type: 'PAYROLL_SIGN_REMINDER',
+                relatedEntity: 'PayrollDetail',
+                relatedEntityId: detail.id
+            }).catch(err => console.error(err));
+            sentCount++;
+        }
+
+        return { sentCount, totalPending: pendingDetails.length };
     }
 }
 

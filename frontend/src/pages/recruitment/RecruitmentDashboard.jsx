@@ -6,6 +6,7 @@ import {
     updateVacancyStatus,
     deleteVacancy
 } from '../../services/recruitment.service';
+import Modal from '../../components/common/Modal';
 
 const RecruitmentDashboard = () => {
     const navigate = useNavigate();
@@ -375,35 +376,35 @@ const RecruitmentDashboard = () => {
             </div>
 
             {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
-            {vacancyToDelete && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-sm w-full overflow-hidden shadow-xl">
-                        <div className="p-5">
-                            <h3 className="text-sm font-semibold text-gray-900">¿Eliminar la vacante "{vacancyToDelete.title}"?</h3>
-                            <p className="text-xs text-gray-500 mt-2">
-                                Esta acción eliminará permanentemente la oferta de empleo y todas las postulaciones y hojas de vida asociadas.
-                            </p>
-                        </div>
-                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setVacancyToDelete(null)}
-                                className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                disabled={actionLoading}
-                                onClick={handleDeleteVacancy}
-                                className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                                {actionLoading ? 'Eliminando...' : 'Sí, Eliminar'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={!!vacancyToDelete}
+                onClose={() => setVacancyToDelete(null)}
+                title={vacancyToDelete ? `¿Eliminar la vacante "${vacancyToDelete.title}"?` : '¿Eliminar vacante?'}
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setVacancyToDelete(null)}
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            disabled={actionLoading}
+                            onClick={handleDeleteVacancy}
+                            className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {actionLoading ? 'Eliminando...' : 'Sí, Eliminar'}
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-xs text-gray-500">
+                    Esta acción eliminará permanentemente la oferta de empleo y todas las postulaciones y hojas de vida asociadas.
+                </p>
+            </Modal>
         </div>
     );
 };

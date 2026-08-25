@@ -1,5 +1,5 @@
 export async function seedBenefits(prisma, employees) {
-    console.log('[BENEFITS] Generando Beneficios...');
+    console.log('[BENEFITS] Generando Beneficios Legales y Corporativos Ecuatorianos...');
 
     const benefitsBatch = [];
     for (const emp of employees) {
@@ -9,16 +9,32 @@ export async function seedBenefits(prisma, employees) {
                 employeeId: emp.id,
                 name: 'Seguro Médico Privado',
                 amount: 150.00,
-                type: 'ALLOWANCE',
+                type: 'HEALTH',
                 frequency: 'RECURRING',
                 status: 'ACTIVE'
             },
             {
                 employeeId: emp.id,
-                name: 'Bono Gimnasio',
+                name: 'Incentivo Bienestar / Gimnasio',
                 amount: 30.00,
-                type: 'ALLOWANCE',
+                type: 'INCENTIVE',
                 frequency: 'RECURRING',
+                status: 'ACTIVE'
+            },
+            {
+                employeeId: emp.id,
+                name: 'Subsidio de Alimentación',
+                amount: 60.00,
+                type: 'MEAL',
+                frequency: 'RECURRING',
+                status: 'ACTIVE'
+            },
+            {
+                employeeId: emp.id,
+                name: 'Bono por Desempeño Operativo',
+                amount: 100.00,
+                type: 'BONUS',
+                frequency: 'ONE_TIME',
                 status: 'ACTIVE'
             }
         );

@@ -9,6 +9,7 @@ import {
     PlusIcon, 
     InformationCircleIcon
 } from '@heroicons/react/24/outline';
+import Modal from '../../components/common/Modal';
 
 const MySalaryAdvances = () => {
     const [advances, setAdvances] = useState([]);
@@ -286,107 +287,96 @@ const MySalaryAdvances = () => {
             </div>
 
             {/* Request Modal */}
-            {modalOpen && (
-                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-lg overflow-hidden">
-                        <div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                            <div>
-                                <h3 className="text-sm font-bold text-gray-900">Solicitar Anticipo / Préstamo</h3>
-                                <p className="text-[11px] text-gray-500 mt-0.5">Ingresa el monto deseado y número de cuotas requeridas</p>
-                            </div>
-                            <button
-                                onClick={() => setModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer"
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleFormSubmit} className="p-5 space-y-4">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                    Monto Solicitado ($ USD)
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="10"
-                                    required
-                                    placeholder="Ej. 300.00"
-                                    className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono"
-                                    value={form.amount}
-                                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                    Plazo de Pago (Cuotas Mensuales)
-                                </label>
-                                <select
-                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                                    value={form.installments}
-                                    onChange={(e) => setForm({ ...form, installments: e.target.value })}
-                                >
-                                    {[1, 2, 3, 4, 5, 6, 9, 12, 18, 24].map(n => (
-                                        <option key={n} value={n}>
-                                            {n} {n === 1 ? 'cuota (Deducción en próximo rol)' : `cuotas mensuales (${n} meses)`}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Preview Card */}
-                            {requestedAmount > 0 && (
-                                <div className="bg-gray-50 border border-gray-200 rounded p-3 flex justify-between items-center text-xs">
-                                    <div>
-                                        <p className="text-gray-500">Descuento Mensual:</p>
-                                        <p className="font-bold font-mono text-gray-900 mt-0.5">
-                                            -${calculatedMonthly} USD / mes
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-gray-500">Total a Deducción:</p>
-                                        <p className="font-semibold font-mono text-gray-800 mt-0.5">
-                                            ${requestedAmount.toFixed(2)} en {numInstallments} cuota(s)
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                    Motivo / Justificación
-                                </label>
-                                <textarea
-                                    rows="2"
-                                    placeholder="Describe brevemente el motivo..."
-                                    className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 resize-none"
-                                    value={form.reason}
-                                    onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
-                                <button
-                                    type="button"
-                                    onClick={() => setModalOpen(false)}
-                                    className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting || !requestedAmount}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer disabled:opacity-50"
-                                >
-                                    {submitting ? 'Enviando...' : 'Enviar Solicitud'}
-                                </button>
-                            </div>
-                        </form>
+            <Modal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                title="Solicitar Anticipo / Préstamo"
+                subtitle="Ingresa el monto deseado y número de cuotas requeridas"
+                size="md"
+            >
+                <form onSubmit={handleFormSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Monto Solicitado ($ USD)
+                        </label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="10"
+                            required
+                            placeholder="Ej. 300.00"
+                            className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono"
+                            value={form.amount}
+                            onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                        />
                     </div>
-                </div>
-            )}
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Plazo de Pago (Cuotas Mensuales)
+                        </label>
+                        <select
+                            className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                            value={form.installments}
+                            onChange={(e) => setForm({ ...form, installments: e.target.value })}
+                        >
+                            {[1, 2, 3, 4, 5, 6, 9, 12, 18, 24].map(n => (
+                                <option key={n} value={n}>
+                                    {n} {n === 1 ? 'cuota (Deducción en próximo rol)' : `cuotas mensuales (${n} meses)`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Preview Card */}
+                    {requestedAmount > 0 && (
+                        <div className="bg-gray-50 border border-gray-200 rounded p-3 flex justify-between items-center text-xs">
+                            <div>
+                                <p className="text-gray-500">Descuento Mensual:</p>
+                                <p className="font-bold font-mono text-gray-900 mt-0.5">
+                                    -${calculatedMonthly} USD / mes
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-gray-500">Total a Deducción:</p>
+                                <p className="font-semibold font-mono text-gray-800 mt-0.5">
+                                    ${requestedAmount.toFixed(2)} en {numInstallments} cuota(s)
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Motivo / Justificación
+                        </label>
+                        <textarea
+                            rows="2"
+                            placeholder="Describe brevemente el motivo..."
+                            className="w-full bg-white border border-gray-200 text-xs text-gray-800 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 resize-none"
+                            value={form.reason}
+                            onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+                        <button
+                            type="button"
+                            onClick={() => setModalOpen(false)}
+                            className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting || !requestedAmount}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {submitting ? 'Enviando...' : 'Enviar Solicitud'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

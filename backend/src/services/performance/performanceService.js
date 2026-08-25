@@ -493,57 +493,89 @@ class PerformanceService {
             console.error('Error parsing criteriaList:', e);
         }
 
+        let maxScore = 100;
+        if (evaluation.template.scale) {
+            try {
+                const scaleObj = typeof evaluation.template.scale === 'string'
+                    ? JSON.parse(evaluation.template.scale)
+                    : evaluation.template.scale;
+                if (scaleObj.max) maxScore = scaleObj.max;
+                else if (scaleObj.type === '1-5') maxScore = 5;
+                else if (scaleObj.type === '1-10') maxScore = 10;
+                else if (scaleObj.type === 'percentage') maxScore = 100;
+            } catch (e) { }
+        }
+
         const criteriaStats = {};
         criteriaList.forEach(c => {
             criteriaStats[c.name] = { sum: 0, count: 0, fullData: c };
         });
 
         const completedReviewers = evaluation.reviewers.filter(r => r.status === 'COMPLETED');
+        const fallbackScore = evaluation.finalScore || (completedReviewers.length > 0 && completedReviewers[0].score !== null ? completedReviewers[0].score : null);
 
         completedReviewers.forEach(r => {
             if (!r.responses) return;
             try {
                 const responses = typeof r.responses === 'string' ? JSON.parse(r.responses) : r.responses;
-                Object.keys(responses).forEach(key => {
-                    if (criteriaStats[key]) {
-                        const val = parseFloat(responses[key]);
-                        if (!isNaN(val)) {
-                            criteriaStats[key].sum += val;
-                            criteriaStats[key].count += 1;
+                if (Array.isArray(responses)) {
+                    responses.forEach((item, idx) => {
+                        const crit = criteriaList.find((c, cIdx) => 
+                            c.name === item.name || 
+                            c.name === item.criteria || 
+                            cIdx === idx
+                        );
+                        if (crit && criteriaStats[crit.name]) {
+                            const val = parseFloat(item.score ?? item.value ?? item);
+                            if (!isNaN(val)) {
+                                criteriaStats[crit.name].sum += val;
+                                criteriaStats[crit.name].count += 1;
+                            }
                         }
-                    }
-                });
-            } catch (e) { }
+                    });
+                } else if (typeof responses === 'object' && responses !== null) {
+                    Object.keys(responses).forEach((key, idx) => {
+                        const val = parseFloat(responses[key]);
+                        if (isNaN(val)) return;
+
+                        const crit = criteriaList.find((c, cIdx) => 
+                            c.name === key || 
+                            c.name.toLowerCase().trim() === key.toLowerCase().trim() ||
+                            String(cIdx) === key ||
+                            c.id === key
+                        );
+                        if (crit && criteriaStats[crit.name]) {
+                            criteriaStats[crit.name].sum += val;
+                            criteriaStats[crit.name].count += 1;
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('[EVALUATION] Error parsing reviewer responses:', e);
+            }
         });
 
-        const results = criteriaList.map(c => {
+        const results = criteriaList.map((c) => {
             const stats = criteriaStats[c.name] || { sum: 0, count: 0 };
-            const average = stats.count > 0 ? (stats.sum / stats.count).toFixed(2) : 0;
-
-            let maxScore = 5;
-            if (evaluation.template.scale) {
-                try {
-                    const scaleObj = typeof evaluation.template.scale === 'string'
-                        ? JSON.parse(evaluation.template.scale)
-                        : evaluation.template.scale;
-                    if (scaleObj.max) maxScore = scaleObj.max;
-                    else if (scaleObj.type === '1-10') maxScore = 10;
-                    else if (scaleObj.type === 'percentage') maxScore = 100;
-                } catch (e) { }
+            let average = 0;
+            if (stats.count > 0) {
+                average = parseFloat((stats.sum / stats.count).toFixed(2));
+            } else if (fallbackScore !== null && fallbackScore !== undefined) {
+                average = parseFloat(Number(fallbackScore).toFixed(2));
             }
 
             return {
                 criteria: c.name,
-                type: c.type,
+                type: c.type || 'COMPETENCY',
                 weight: c.weight,
                 description: c.description,
-                score: parseFloat(average),
+                score: average,
                 maxScore
             };
         });
 
-        const validResults = results.filter(r => (criteriaStats[r.criteria]?.count || 0) > 0);
         let overallScore = 0;
+        const validResults = results.filter(r => r.score > 0);
 
         if (validResults.length > 0) {
             const hasWeights = validResults.some(r => r.weight && parseFloat(r.weight) > 0);
@@ -558,6 +590,8 @@ class PerformanceService {
             } else {
                 overallScore = parseFloat((validResults.reduce((acc, curr) => acc + curr.score, 0) / validResults.length).toFixed(2));
             }
+        } else if (fallbackScore !== null && fallbackScore !== undefined) {
+            overallScore = parseFloat(Number(fallbackScore).toFixed(2));
         }
 
         const feedback = completedReviewers.map(r => ({

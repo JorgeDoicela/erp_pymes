@@ -8,6 +8,7 @@ import {
     deleteAnnouncement,
     getBirthdays
 } from '../../services/communication/announcement.service';
+import Modal from '../../components/common/Modal';
 
 const CATEGORY_MAP = {
     POLICY: { label: 'POLÍTICA / REGLAMENTO', cls: 'bg-gray-50 text-gray-700 border-gray-200' },
@@ -559,225 +560,234 @@ const AnnouncementsBoard = ({ user }) => {
             )}
 
             {/* MODAL: PUBLICAR COMUNICADO OFICIAL */}
-            {createModalOpen && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl text-xs">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
-                            <h3 className="text-base font-semibold text-gray-900">Publicar Comunicado Oficial</h3>
-                            <button onClick={() => setCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer">&times;</button>
+            <Modal
+                isOpen={createModalOpen}
+                onClose={() => setCreateModalOpen(false)}
+                title="Publicar Comunicado Oficial"
+                size="lg"
+            >
+                <form onSubmit={handlePublishSubmit}>
+                    <div className="space-y-3.5">
+                        <div>
+                            <label className="block font-medium text-gray-700 mb-1">Título del Comunicado</label>
+                            <input
+                                type="text"
+                                required
+                                placeholder="ej. Actualización de Políticas / Aviso Operativo"
+                                className={inputClass}
+                                value={form.title}
+                                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                            />
                         </div>
-                        <form onSubmit={handlePublishSubmit}>
-                            <div className="p-5 space-y-3.5">
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Título del Comunicado</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="ej. Actualización de Políticas / Aviso Operativo"
-                                        className={inputClass}
-                                        value={form.title}
-                                        onChange={(e) => setForm({ ...form, title: e.target.value })}
-                                    />
-                                </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block font-medium text-gray-700 mb-1">Categoría</label>
-                                        <select
-                                            className={inputClass}
-                                            value={form.category}
-                                            onChange={(e) => setForm({ ...form, category: e.target.value })}
-                                        >
-                                            <option value="GENERAL">Aviso General</option>
-                                            <option value="POLICY">Política / Reglamento</option>
-                                            <option value="HOLIDAY">Feriado / Asueto</option>
-                                            <option value="BIRTHDAY">Cumpleaños</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block font-medium text-gray-700 mb-1">Prioridad</label>
-                                        <select
-                                            className={inputClass}
-                                            value={form.priority}
-                                            onChange={(e) => setForm({ ...form, priority: e.target.value })}
-                                        >
-                                            <option value="NORMAL">Normal</option>
-                                            <option value="URGENT">Urgente</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Contenido</label>
-                                    <textarea
-                                        rows="4"
-                                        required
-                                        placeholder="Redacte el comunicado oficial..."
-                                        className={inputClass}
-                                        value={form.content}
-                                        onChange={(e) => setForm({ ...form, content: e.target.value })}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-gray-700 mb-1">Enlace de Archivo Adjunto (Opcional)</label>
-                                    <input
-                                        type="url"
-                                        placeholder="https://..."
-                                        className={inputClass}
-                                        value={form.attachmentUrl}
-                                        onChange={(e) => setForm({ ...form, attachmentUrl: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="pt-2 border-t border-gray-100">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={form.requiresAcknowledgment}
-                                            onChange={(e) => setForm({ ...form, requiresAcknowledgment: e.target.checked })}
-                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                        />
-                                        <span className="text-gray-700 font-medium">Requerir confirmación obligatoria de lectura (Acuse digital)</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setCreateModalOpen(false)}
-                                    className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors cursor-pointer"
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block font-medium text-gray-700 mb-1">Categoría</label>
+                                <select
+                                    className={inputClass}
+                                    value={form.category}
+                                    onChange={(e) => setForm({ ...form, category: e.target.value })}
                                 >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={actionLoading}
-                                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
+                                    <option value="GENERAL">Aviso General</option>
+                                    <option value="POLICY">Política / Reglamento</option>
+                                    <option value="HOLIDAY">Feriado / Asueto</option>
+                                    <option value="BIRTHDAY">Cumpleaños</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block font-medium text-gray-700 mb-1">Prioridad</label>
+                                <select
+                                    className={inputClass}
+                                    value={form.priority}
+                                    onChange={(e) => setForm({ ...form, priority: e.target.value })}
                                 >
-                                    {actionLoading ? 'Publicando...' : 'Publicar Comunicado'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* MODAL: ESTADÍSTICAS DE LECTURA (ADMIN) */}
-            {statsModalOpen && selectedStats && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl text-xs">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
-                            <div>
-                                <h3 className="text-sm font-semibold text-gray-900">Control de Lectura y Acuses</h3>
-                                <p className="text-[11px] text-gray-500 mt-0.5 truncate max-w-sm">{selectedStats.announcement?.title}</p>
-                            </div>
-                            <button onClick={() => setStatsModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer">&times;</button>
-                        </div>
-
-                        <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto">
-                            {/* Métricas */}
-                            <div className="grid grid-cols-2 gap-3 font-mono">
-                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Lecturas Confirmadas</span>
-                                    <span className="text-base font-semibold text-gray-900 tabular-nums">
-                                        {selectedStats.metrics?.totalReads} / {selectedStats.metrics?.totalActiveEmployees}
-                                    </span>
-                                    <span className="text-[11px] text-gray-500 block">({selectedStats.metrics?.readPercentage}%)</span>
-                                </div>
-                                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Acuses Firmados</span>
-                                    <span className="text-base font-semibold text-emerald-700 tabular-nums">
-                                        {selectedStats.metrics?.totalAcknowledged} / {selectedStats.metrics?.totalActiveEmployees}
-                                    </span>
-                                    <span className="text-[11px] text-gray-500 block">({selectedStats.metrics?.acknowledgedPercentage}%)</span>
-                                </div>
-                            </div>
-
-                            {/* Colaboradores con lectura registrada */}
-                            <div>
-                                <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-2">
-                                    Colaboradores que leyeron ({selectedStats.reads?.length || 0})
-                                </h4>
-                                <div className="divide-y divide-gray-100 border border-gray-200 rounded max-h-36 overflow-y-auto">
-                                    {selectedStats.reads && selectedStats.reads.length > 0 ? (
-                                        selectedStats.reads.map(r => (
-                                            <div key={r.id} className="p-2 flex items-center justify-between">
-                                                <span>{r.employee?.firstName} {r.employee?.lastName}</span>
-                                                <span className="font-mono text-[11px] text-gray-400">
-                                                    {new Date(r.readAt).toLocaleDateString('es-EC')}
-                                                </span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="p-3 text-center text-gray-400">Sin lecturas registradas</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Colaboradores pendientes */}
-                            <div>
-                                <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-2">
-                                    Colaboradores pendientes ({selectedStats.pendingEmployees?.length || 0})
-                                </h4>
-                                <div className="divide-y divide-gray-100 border border-gray-200 rounded max-h-36 overflow-y-auto">
-                                    {selectedStats.pendingEmployees && selectedStats.pendingEmployees.length > 0 ? (
-                                        selectedStats.pendingEmployees.map(emp => (
-                                            <div key={emp.id} className="p-2 flex items-center justify-between text-gray-600">
-                                                <span>{emp.firstName} {emp.lastName}</span>
-                                                <span className="text-[11px] text-gray-400">{emp.department || 'General'}</span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="p-3 text-center text-emerald-600 font-medium">¡Todos los colaboradores han leído el comunicado!</p>
-                                    )}
-                                </div>
+                                    <option value="LOW">Baja / Informativa</option>
+                                    <option value="NORMAL">Normal</option>
+                                    <option value="HIGH">Alta / Importante</option>
+                                    <option value="URGENT">Urgente</option>
+                                </select>
                             </div>
                         </div>
 
-                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
-                            <button
-                                onClick={() => setStatsModalOpen(false)}
-                                className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors cursor-pointer"
-                            >
-                                Cerrar
-                            </button>
+                        <div>
+                            <label className="block font-medium text-gray-700 mb-1">Contenido del Comunicado</label>
+                            <textarea
+                                rows="4"
+                                required
+                                placeholder="Escribe el mensaje o disposición para el personal..."
+                                className={inputClass}
+                                value={form.content}
+                                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                            ></textarea>
                         </div>
-                    </div>
-                </div>
-            )}
 
-            {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
-            {announcementToDelete && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-sm w-full overflow-hidden shadow-xl text-xs">
-                        <div className="p-5">
-                            <h3 className="text-sm font-semibold text-gray-900">¿Eliminar comunicado?</h3>
-                            <p className="text-xs text-gray-500 mt-2">
-                                Se retirará del tablón el comunicado "{announcementToDelete.title}" junto con todos sus registros de acuse de recibo.
+                        <div className="p-3 bg-gray-50 border border-gray-200 rounded space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    checked={form.requiresAcknowledge}
+                                    onChange={(e) => setForm({ ...form, requiresAcknowledge: e.target.checked })}
+                                />
+                                <span className="font-medium text-gray-900">Exigir Confirmación de Lectura Obligatoria</span>
+                            </label>
+                            <p className="text-[11px] text-gray-500 pl-6">
+                                Los colaboradores deberán pulsar el botón de acuse formal para registrar su conocimiento legal.
                             </p>
                         </div>
-                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setAnnouncementToDelete(null)}
-                                className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                disabled={actionLoading}
-                                onClick={handleDeleteAnnouncement}
-                                className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                                {actionLoading ? 'Eliminando...' : 'Sí, Eliminar'}
-                            </button>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block font-medium text-gray-700 mb-1">Fijar en Tablón Hasta</label>
+                                <input
+                                    type="date"
+                                    className={inputClass}
+                                    value={form.pinnedUntil}
+                                    onChange={(e) => setForm({ ...form, pinnedUntil: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block font-medium text-gray-700 mb-1">Fecha de Expiración</label>
+                                <input
+                                    type="date"
+                                    className={inputClass}
+                                    value={form.expiresAt}
+                                    onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+
+                    <div className="pt-4 mt-4 border-t border-gray-200 flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setCreateModalOpen(false)}
+                            className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={actionLoading}
+                            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {actionLoading ? 'Publicando...' : 'Publicar Comunicado'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* MODAL: ESTADÍSTICAS DE LECTURA (ADMIN) */}
+            <Modal
+                isOpen={statsModalOpen && !!selectedStats}
+                onClose={() => setStatsModalOpen(false)}
+                title="Control de Lectura y Acuses"
+                subtitle={selectedStats?.announcement?.title}
+                size="lg"
+                footer={
+                    <button
+                        onClick={() => setStatsModalOpen(false)}
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors cursor-pointer"
+                    >
+                        Cerrar
+                    </button>
+                }
+            >
+                {selectedStats && (
+                    <div className="space-y-4 max-h-[65vh] overflow-y-auto">
+                        {/* Métricas */}
+                        <div className="grid grid-cols-2 gap-3 font-mono">
+                            <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Lecturas Confirmadas</span>
+                                <span className="text-base font-semibold text-gray-900 tabular-nums">
+                                    {selectedStats.metrics?.totalReads} / {selectedStats.metrics?.totalActiveEmployees}
+                                </span>
+                                <span className="text-[11px] text-gray-500 block">({selectedStats.metrics?.readPercentage}%)</span>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Acuses Firmados</span>
+                                <span className="text-base font-semibold text-emerald-700 tabular-nums">
+                                    {selectedStats.metrics?.totalAcknowledged} / {selectedStats.metrics?.totalActiveEmployees}
+                                </span>
+                                <span className="text-[11px] text-gray-500 block">({selectedStats.metrics?.acknowledgedPercentage}%)</span>
+                            </div>
+                        </div>
+
+                        {/* Colaboradores con lectura registrada */}
+                        <div>
+                            <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                                Colaboradores que leyeron ({selectedStats.reads?.length || 0})
+                            </h4>
+                            <div className="divide-y divide-gray-100 border border-gray-200 rounded max-h-36 overflow-y-auto">
+                                {selectedStats.reads && selectedStats.reads.length > 0 ? (
+                                    selectedStats.reads.map(r => (
+                                        <div key={r.id} className="p-2 flex items-center justify-between">
+                                            <span>{r.employee?.firstName} {r.employee?.lastName}</span>
+                                            <span className="font-mono text-[11px] text-gray-400">
+                                                {new Date(r.readAt).toLocaleDateString('es-EC')}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="p-3 text-center text-gray-400">Sin lecturas registradas</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Colaboradores pendientes */}
+                        <div>
+                            <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                                Colaboradores pendientes ({selectedStats.pendingEmployees?.length || 0})
+                            </h4>
+                            <div className="divide-y divide-gray-100 border border-gray-200 rounded max-h-36 overflow-y-auto">
+                                {selectedStats.pendingEmployees && selectedStats.pendingEmployees.length > 0 ? (
+                                    selectedStats.pendingEmployees.map(emp => (
+                                        <div key={emp.id} className="p-2 flex items-center justify-between text-gray-600">
+                                            <span>{emp.firstName} {emp.lastName}</span>
+                                            <span className="text-[11px] text-gray-400">{emp.department || 'General'}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="p-3 text-center text-emerald-600 font-medium">¡Todos los colaboradores han leído el comunicado!</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+            <Modal
+                isOpen={!!announcementToDelete}
+                onClose={() => setAnnouncementToDelete(null)}
+                title="¿Eliminar comunicado?"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setAnnouncementToDelete(null)}
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            disabled={actionLoading}
+                            onClick={handleDeleteAnnouncement}
+                            className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {actionLoading ? 'Eliminando...' : 'Sí, Eliminar'}
+                        </button>
+                    </>
+                }
+            >
+                {announcementToDelete && (
+                    <p className="text-xs text-gray-500">
+                        Se retirará del tablón el comunicado "{announcementToDelete.title}" junto con todos sus registros de acuse de recibo.
+                    </p>
+                )}
+            </Modal>
         </div>
     );
 };

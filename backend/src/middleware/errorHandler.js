@@ -94,9 +94,16 @@ export function validateBodyNotEmpty(req, res, next) {
       return next();
     }
 
-    // Permitir cuerpos vacíos para acciones específicas de "trigger" (ej: mayorizar, activar/desactivar)
-    const isTriggerAction = req.path?.endsWith('/post') || req.path?.endsWith('/toggle');
-    if (isTriggerAction && req.method === 'PATCH') {
+    // Permitir cuerpos vacíos para acciones específicas de "trigger" (ej: notificaciones, mayorizar, activar/desactivar, etc.)
+    const isTriggerAction = 
+      req.path?.endsWith('/post') || 
+      req.path?.endsWith('/toggle') ||
+      req.path?.endsWith('/notify-pending') ||
+      req.path?.endsWith('/close') ||
+      req.path?.endsWith('/reopen') ||
+      req.path?.endsWith('/process');
+
+    if (isTriggerAction) {
       return next();
     }
 

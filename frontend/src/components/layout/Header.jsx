@@ -78,9 +78,9 @@ const Header = ({ user, onMenuClick, isSidebarOpen = true, title = "Panel de Con
 
                 <NotificationBell />
 
-                <button
-                    onClick={() => navigate('/profile')}
-                    className="hidden sm:flex items-center gap-2.5 text-right pl-4 border-l border-gray-200 hover:opacity-90 transition-opacity cursor-pointer group focus:outline-none"
+                <Link
+                    to="/profile"
+                    className="hidden sm:flex items-center gap-2.5 text-right pl-4 border-l border-gray-200 hover:opacity-90 transition-opacity cursor-pointer group focus:outline-none no-underline"
                     title="Ver mi perfil"
                 >
                     <div className="text-right">
@@ -94,7 +94,7 @@ const Header = ({ user, onMenuClick, isSidebarOpen = true, title = "Panel de Con
                     <div className="w-8 h-8 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center font-mono font-semibold text-xs shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-colors">
                         {user?.firstName?.[0] || 'A'}
                     </div>
-                </button>
+                </Link>
             </div>
         </header>
     );

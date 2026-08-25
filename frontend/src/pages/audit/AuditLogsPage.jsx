@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAuditLogs, getAuditStats } from '../../services/audit.service';
 import useAutoSync from '../../hooks/useAutoSync';
+import Modal from '../../components/common/Modal';
 
 const translations = {
     actions: {
@@ -417,67 +418,62 @@ const AuditLogsPage = () => {
             </div>
 
             {/* Modal de Detalle de Log */}
-            {selectedLog && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl text-xs">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
+            <Modal
+                isOpen={!!selectedLog}
+                onClose={() => setSelectedLog(null)}
+                title="Detalle de Registro de Auditoría"
+                subtitle={selectedLog ? `ID: ${selectedLog.id}` : ''}
+                size="lg"
+                footer={
+                    <button
+                        onClick={() => setSelectedLog(null)}
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors cursor-pointer text-xs"
+                    >
+                        Cerrar
+                    </button>
+                }
+            >
+                {selectedLog && (
+                    <div className="space-y-3 max-h-[65vh] overflow-y-auto text-xs">
+                        <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded border border-gray-200">
                             <div>
-                                <h3 className="text-sm font-semibold text-gray-900">Detalle de Registro de Auditoría</h3>
-                                <p className="text-[11px] text-gray-500 font-mono mt-0.5">ID: {selectedLog.id}</p>
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Fecha y Hora</span>
+                                <span className="font-mono text-gray-900 font-medium">
+                                    {new Date(selectedLog.timestamp).toLocaleString('es-EC')}
+                                </span>
                             </div>
-                            <button onClick={() => setSelectedLog(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer">&times;</button>
-                        </div>
-
-                        <div className="p-5 space-y-3 max-h-[65vh] overflow-y-auto">
-                            <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded border border-gray-200">
-                                <div>
-                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Fecha y Hora</span>
-                                    <span className="font-mono text-gray-900 font-medium">
-                                        {new Date(selectedLog.timestamp).toLocaleString('es-EC')}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Responsable</span>
-                                    <span className="font-semibold text-gray-900">{selectedLog.performedBy || 'Sistema'}</span>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Acción</span>
-                                    <span className="font-mono text-blue-700 font-semibold">{translations.actions[selectedLog.action] || selectedLog.action}</span>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Entidad / ID</span>
-                                    <span className="font-medium text-gray-800">{translations.entities[selectedLog.entity] || selectedLog.entity} (#{selectedLog.entityId})</span>
-                                </div>
-                            </div>
-
                             <div>
-                                <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                                    Payload y Parámetros
-                                </h4>
-                                <pre className="bg-gray-900 text-emerald-400 p-3 rounded text-[11px] font-mono overflow-x-auto whitespace-pre-wrap">
-                                    {(() => {
-                                        try {
-                                            const p = typeof selectedLog.details === 'string' ? JSON.parse(selectedLog.details) : selectedLog.details;
-                                            return JSON.stringify(p, null, 2);
-                                        } catch {
-                                            return selectedLog.details || 'Sin detalles adicionales';
-                                        }
-                                    })()}
-                                </pre>
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Responsable</span>
+                                <span className="font-semibold text-gray-900">{selectedLog.performedBy || 'Sistema'}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Acción</span>
+                                <span className="font-mono text-blue-700 font-semibold">{translations.actions[selectedLog.action] || selectedLog.action}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-sans">Entidad / ID</span>
+                                <span className="font-medium text-gray-800">{translations.entities[selectedLog.entity] || selectedLog.entity} (#{selectedLog.entityId})</span>
                             </div>
                         </div>
 
-                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end">
-                            <button
-                                onClick={() => setSelectedLog(null)}
-                                className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors cursor-pointer"
-                            >
-                                Cerrar
-                            </button>
+                        <div>
+                            <h4 className="text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                                Payload y Parámetros
+                            </h4>
+                            <pre className="bg-gray-900 text-emerald-400 p-3 rounded text-[11px] font-mono overflow-x-auto whitespace-pre-wrap">
+                                {(() => {
+                                    try {
+                                        const p = typeof selectedLog.details === 'string' ? JSON.parse(selectedLog.details) : selectedLog.details;
+                                        return JSON.stringify(p, null, 2);
+                                    } catch {
+                                        return selectedLog.details || 'Sin detalles adicionales';
+                                    }
+                                })()}
+                            </pre>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </Modal>
         </div>
     );
 };

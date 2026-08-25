@@ -1,35 +1,22 @@
 import React from 'react';
 import { InputField, SelectField } from './EmployeeHelpers';
 import { CIVIL_STATUS_OPTIONS, ACCOUNT_TYPES, BANK_OPTIONS, DEPARTMENTS } from '../../../constants/employeeOptions';
+import Modal from '../../../components/common/Modal';
 
 const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, employeeIdentityCard, fieldErrors = {} }) => {
-    if (!isOpen) return null;
-
     const isAdminOrHR = user?.role === 'admin' || user?.role === 'hr' || user?.role === 'superadmin';
 
     return (
-        <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded border border-gray-200 shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto text-xs space-y-4">
-                <div className="px-5 py-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
-                    <div>
-                        <h2 className="text-sm font-semibold text-gray-900">
-                            {isAdminOrHR ? 'Editar Ficha del Colaborador' : 'Editar Mi Información de Contacto'}
-                        </h2>
-                        <p className="text-[11px] text-gray-500 mt-0.5">
-                            {isAdminOrHR 
-                                ? 'Actualiza los parámetros laborales, contractuales y personales.' 
-                                : 'Mantén actualizada tu información de contacto personal y domicilio.'}
-                        </p>
-                    </div>
-                    <button 
-                        onClick={onClose} 
-                        className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                    >
-                        &times;
-                    </button>
-                </div>
-
-                <form onSubmit={onSave} className="p-5 space-y-4">
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={isAdminOrHR ? 'Editar Ficha del Colaborador' : 'Editar Mi Información de Contacto'}
+            subtitle={isAdminOrHR 
+                ? 'Actualiza los parámetros laborales, contractuales y personales.' 
+                : 'Mantén actualizada tu información de contacto personal y domicilio.'}
+            size="xl"
+        >
+            <form onSubmit={onSave} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Información Personal */}
                         <div className="col-span-1 md:col-span-2">
@@ -263,8 +250,7 @@ const EditEmployeeModal = ({ isOpen, onClose, onSave, editForm, onChange, user, 
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+        </Modal>
     );
 };
 

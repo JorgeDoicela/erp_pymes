@@ -14,6 +14,7 @@ import axios from 'axios';
 import { updateConsentTracking } from '../../services/employees/employee.service';
 import { FiShield, FiMapPin, FiCheckCircle, FiLock, FiX } from 'react-icons/fi';
 import { MdFingerprint } from 'react-icons/md';
+import Modal from '../common/Modal';
 
 const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     const storedUser = (() => {
@@ -596,38 +597,40 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
             )}
 
             {/* Confirmation Modal */}
-            {showConfirm && (
-                <div className="fixed inset-0 bg-gray-900/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-gray-200 rounded p-5 max-w-sm w-full shadow-xl">
-                        <h3 className="text-sm font-bold text-gray-900 mb-2">Confirmar {
-                            pendingAction === 'ENTRY' ? 'Entrada' :
-                                pendingAction === 'EXIT' ? 'Salida' :
-                                    pendingAction === 'BREAK_START' ? 'Inicio de Almuerzo' : 'Fin de Almuerzo'
-                        }</h3>
-                        <p className="text-xs text-gray-600 mb-5">
-                            ¿Confirmas registrar tu {
-                                pendingAction === 'ENTRY' ? 'entrada' :
-                                    pendingAction === 'EXIT' ? 'salida' :
-                                        pendingAction === 'BREAK_START' ? 'inicio de almuerzo' : 'fin de almuerzo'
-                            } a las <strong className="text-gray-900 font-mono">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>?
-                        </p>
-                        <div className="flex gap-2 justify-end">
-                            <button
-                                onClick={() => { setShowConfirm(false); setPendingAction(null); }}
-                                className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={confirmMark}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
-                            >
-                                Confirmar
-                            </button>
-                        </div>
+            <Modal
+                isOpen={showConfirm}
+                onClose={() => { setShowConfirm(false); setPendingAction(null); }}
+                title={`Confirmar ${
+                    pendingAction === 'ENTRY' ? 'Entrada' :
+                        pendingAction === 'EXIT' ? 'Salida' :
+                            pendingAction === 'BREAK_START' ? 'Inicio de Almuerzo' : 'Fin de Almuerzo'
+                }`}
+                size="sm"
+                footer={
+                    <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={() => { setShowConfirm(false); setPendingAction(null); }}
+                            className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={confirmMark}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
+                        >
+                            Confirmar
+                        </button>
                     </div>
-                </div>
-            )}
+                }
+            >
+                <p className="text-xs text-gray-600">
+                    ¿Confirmas registrar tu {
+                        pendingAction === 'ENTRY' ? 'entrada' :
+                            pendingAction === 'EXIT' ? 'salida' :
+                                pendingAction === 'BREAK_START' ? 'inicio de almuerzo' : 'fin de almuerzo'
+                    } a las <strong className="text-gray-900 font-mono">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>?
+                </p>
+            </Modal>
 
             {/* GPS Reminder */}
             <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
@@ -824,114 +827,76 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
             )}
 
             {/* Tracking Consent Modal */}
-            <AnimatePresence>
-                {showConsent && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[99] flex items-center justify-center p-4"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.98, opacity: 0, y: 6 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.98, opacity: 0, y: 6 }}
-                            transition={{ duration: 0.15, ease: "easeOut" }}
-                            className="bg-white rounded max-w-md w-full shadow-xl border border-gray-200 relative overflow-hidden my-auto text-xs"
+            <Modal
+                isOpen={showConsent}
+                onClose={() => setShowConsent(false)}
+                title="Protección de Datos y Consentimiento"
+                subtitle="Tratamiento de información laboral"
+                size="md"
+            >
+                <div className="space-y-4 text-xs">
+                    {/* Compact Features List */}
+                    <div className="space-y-2 text-xs bg-slate-50/80 p-3.5 rounded border border-slate-200/80">
+                        <div className="flex items-start gap-2.5">
+                            <MdFingerprint size={16} className="text-slate-700 shrink-0 mt-0.5" />
+                            <p className="text-slate-700 leading-snug">
+                                <strong className="text-slate-900">Biometría local:</strong> Confirmación de identidad de forma privada en tu dispositivo.
+                            </p>
+                        </div>
+                        <div className="flex items-start gap-2.5 border-t border-slate-200/60 pt-2">
+                            <FiMapPin size={15} className="text-slate-700 shrink-0 mt-0.5" />
+                            <p className="text-slate-700 leading-snug">
+                                <strong className="text-slate-900">Geolocalización:</strong> Captura de ubicación únicamente al registrar entrada/salida.
+                            </p>
+                        </div>
+                        <div className="flex items-start gap-2.5 border-t border-slate-200/60 pt-2">
+                            <FiLock size={15} className="text-slate-700 shrink-0 mt-0.5" />
+                            <p className="text-slate-700 leading-snug">
+                                <strong className="text-slate-900">Confidencialidad:</strong> Uso estrictamente laboral sin seguimiento fuera del marcado.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-2 pt-1">
+                        <button
+                            onClick={handleAcceptConsent}
+                            disabled={consenting}
+                            className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99] cursor-pointer"
                         >
+                            {consenting ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <>
+                                    <FiCheckCircle size={15} />
+                                    <span>{consentStatus ? 'Actualizar Consentimiento' : 'Aceptar y Autorizar'}</span>
+                                </>
+                            )}
+                        </button>
 
-                            <div className="p-5 space-y-4">
-                                {/* Header */}
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shrink-0">
-                                            <FiShield size={20} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-base font-bold text-slate-900 leading-tight">
-                                                Protección de Datos y Consentimiento
-                                            </h3>
-                                            <p className="text-xs text-slate-500">
-                                                Tratamiento de información laboral
-                                            </p>
-                                        </div>
-                                    </div>
-                                    {!consentStatus && (
-                                        <button
-                                            onClick={() => setShowConsent(false)}
-                                            className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition-colors"
-                                            title="Cerrar"
-                                        >
-                                            <FiX size={16} />
-                                        </button>
-                                    )}
-                                </div>
+                        {consentStatus ? (
+                            <button
+                                onClick={handleRejectConsent}
+                                disabled={consenting}
+                                className="w-full py-1.5 text-slate-500 hover:text-red-600 text-xs font-medium text-center transition-colors cursor-pointer"
+                            >
+                                Retirar consentimiento
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => setShowConsent(false)}
+                                className="w-full py-1 text-slate-400 hover:text-slate-600 text-xs font-medium text-center transition-colors cursor-pointer"
+                            >
+                                Cerrar sin aceptar
+                            </button>
+                        )}
 
-                                {/* Compact Features List */}
-                                <div className="space-y-2 text-xs bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80">
-                                    <div className="flex items-start gap-2.5">
-                                        <MdFingerprint size={16} className="text-slate-700 shrink-0 mt-0.5" />
-                                        <p className="text-slate-700 leading-snug">
-                                            <strong className="text-slate-900">Biometría local:</strong> Confirmación de identidad de forma privada en tu dispositivo.
-                                        </p>
-                                    </div>
-                                    <div className="flex items-start gap-2.5 border-t border-slate-200/60 pt-2">
-                                        <FiMapPin size={15} className="text-slate-700 shrink-0 mt-0.5" />
-                                        <p className="text-slate-700 leading-snug">
-                                            <strong className="text-slate-900">Geolocalización:</strong> Captura de ubicación únicamente al registrar entrada/salida.
-                                        </p>
-                                    </div>
-                                    <div className="flex items-start gap-2.5 border-t border-slate-200/60 pt-2">
-                                        <FiLock size={15} className="text-slate-700 shrink-0 mt-0.5" />
-                                        <p className="text-slate-700 leading-snug">
-                                            <strong className="text-slate-900">Confidencialidad:</strong> Uso estrictamente laboral sin seguimiento fuera del marcado.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="space-y-2 pt-1">
-                                    <button
-                                        onClick={handleAcceptConsent}
-                                        disabled={consenting}
-                                        className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99] cursor-pointer"
-                                    >
-                                        {consenting ? (
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        ) : (
-                                            <>
-                                                <FiCheckCircle size={15} />
-                                                <span>{consentStatus ? 'Actualizar Consentimiento' : 'Aceptar y Autorizar'}</span>
-                                            </>
-                                        )}
-                                    </button>
-
-                                    {consentStatus ? (
-                                        <button
-                                            onClick={handleRejectConsent}
-                                            disabled={consenting}
-                                            className="w-full py-1.5 text-slate-500 hover:text-red-600 text-xs font-medium text-center transition-colors cursor-pointer"
-                                        >
-                                            Retirar consentimiento
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => setShowConsent(false)}
-                                            className="w-full py-1 text-slate-400 hover:text-slate-600 text-xs font-medium text-center transition-colors cursor-pointer"
-                                        >
-                                            Cerrar sin aceptar
-                                        </button>
-                                    )}
-
-                                    <p className="text-[10px] text-center text-slate-400 pt-0.5 leading-tight">
-                                        Información tratada según la política de privacidad de la empresa.
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        <p className="text-[10px] text-center text-slate-400 pt-0.5 leading-tight">
+                            Información tratada según la política de privacidad de la empresa.
+                        </p>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

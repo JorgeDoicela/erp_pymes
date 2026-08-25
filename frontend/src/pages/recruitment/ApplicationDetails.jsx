@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getApplicationDetails, updateApplicationStatus, deleteApplication, addApplicationNote, scheduleInterview, evaluateCandidate, hireCandidate } from '../../services/recruitment.service';
 import { FiArrowLeft, FiMail, FiPhone, FiCalendar, FiFileText, FiTrash2, FiEye, FiExternalLink, FiSend, FiStar, FiCheckCircle, FiCopy, FiCheck, FiDownload } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import Modal from '../../components/common/Modal';
 
 const PIPELINE_STAGES = [
     { key: 'PENDING', label: '1. Postulado' },
@@ -613,364 +614,338 @@ const ApplicationDetails = () => {
             </div>
 
             {/* Modal: Agendar Entrevista */}
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded max-w-md w-full shadow-xl border border-gray-200 text-xs">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <div>
-                                <h3 className="font-semibold text-gray-900 text-sm">Agendar Entrevista</h3>
-                                <p className="text-[11px] text-gray-500 mt-0.5">Programar sesión con {app.firstName} {app.lastName}</p>
-                            </div>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+            <Modal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                title="Agendar Entrevista"
+                subtitle={`Programar sesión con ${app.firstName} ${app.lastName}`}
+                size="md"
+            >
+                <form onSubmit={handleSchedule} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+                            <input
+                                required
+                                type="date"
+                                value={interviewData.date}
+                                onChange={e => setInterviewData({ ...interviewData, date: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
+                            />
                         </div>
-
-                        <form onSubmit={handleSchedule} className="p-5 space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
-                                    <input
-                                        required
-                                        type="date"
-                                        value={interviewData.date}
-                                        onChange={e => setInterviewData({ ...interviewData, date: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Hora</label>
-                                    <input
-                                        required
-                                        type="time"
-                                        value={interviewData.time}
-                                        onChange={e => setInterviewData({ ...interviewData, time: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Modalidad</label>
-                                <select
-                                    value={interviewData.type}
-                                    onChange={e => setInterviewData({ ...interviewData, type: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                >
-                                    <option value="VIRTUAL">Videollamada (Google Meet / Zoom)</option>
-                                    <option value="PRESENTIAL">Presencial en Oficinas</option>
-                                    <option value="PHONE">Llamada Telefónica</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Ubicación o Enlace de Reunión</label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="Ej: https://meet.google.com/xyz o Sala de Juntas 2"
-                                    value={interviewData.location}
-                                    onChange={e => setInterviewData({ ...interviewData, location: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Notas Preparatorias (Opcional)</label>
-                                <textarea
-                                    placeholder="Puntos clave a evaluar en la sesión..."
-                                    value={interviewData.notes}
-                                    onChange={e => setInterviewData({ ...interviewData, notes: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded p-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500 h-16 resize-none"
-                                />
-                            </div>
-
-                            <div className="px-0 pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
-                                >
-                                    {submitting ? 'Guardando...' : 'Confirmar Entrevista'}
-                                </button>
-                            </div>
-                        </form>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Hora</label>
+                            <input
+                                required
+                                type="time"
+                                value={interviewData.time}
+                                onChange={e => setInterviewData({ ...interviewData, time: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                        </div>
                     </div>
-                </div>
-            )}
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Modalidad</label>
+                        <select
+                            value={interviewData.type}
+                            onChange={e => setInterviewData({ ...interviewData, type: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                        >
+                            <option value="VIRTUAL">Videollamada (Google Meet / Zoom)</option>
+                            <option value="PRESENTIAL">Presencial en Oficinas</option>
+                            <option value="PHONE">Llamada Telefónica</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Ubicación o Enlace de Reunión</label>
+                        <input
+                            required
+                            type="text"
+                            placeholder="Ej: https://meet.google.com/xyz o Sala de Juntas 2"
+                            value={interviewData.location}
+                            onChange={e => setInterviewData({ ...interviewData, location: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Notas Preparatorias (Opcional)</label>
+                        <textarea
+                            placeholder="Puntos clave a evaluar en la sesión..."
+                            value={interviewData.notes}
+                            onChange={e => setInterviewData({ ...interviewData, notes: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded p-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500 h-16 resize-none"
+                        />
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                            className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
+                        >
+                            {submitting ? 'Guardando...' : 'Confirmar Entrevista'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Modal: Evaluar Candidato */}
-            {showEvaModal && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded max-w-lg w-full shadow-xl border border-gray-200 text-xs max-h-[90vh] overflow-y-auto">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
-                            <div>
-                                <h3 className="font-semibold text-gray-900 text-sm">Evaluación de Selección</h3>
-                                <p className="text-[11px] text-gray-500 mt-0.5">Puntuación de {app.firstName} {app.lastName}</p>
-                            </div>
-                            <button onClick={() => setShowEvaModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+            <Modal
+                isOpen={showEvaModal}
+                onClose={() => setShowEvaModal(false)}
+                title="Evaluación de Selección"
+                subtitle={`Puntuación de ${app.firstName} ${app.lastName}`}
+                size="lg"
+            >
+                <form onSubmit={handleEvaluate} className="space-y-4">
+                    <div className="space-y-2.5">
+                        <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                            Criterios de Evaluación (1 al 5)
                         </div>
-
-                        <form onSubmit={handleEvaluate} className="p-5 space-y-4">
-                            <div className="space-y-2.5">
-                                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                                    Criterios de Evaluación (1 al 5)
-                                </div>
-                                {Object.keys(evaData.ratings).map(crit => (
-                                    <div key={crit} className="flex justify-between items-center p-2 bg-gray-50 border border-gray-200 rounded">
-                                        <span className="text-gray-700 font-medium">{crit}</span>
-                                        <div className="flex items-center gap-1">
-                                            {[1, 2, 3, 4, 5].map(star => (
-                                                <button
-                                                    key={star}
-                                                    type="button"
-                                                    onClick={() => updateRating(crit, star)}
-                                                    className={`w-6 h-6 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
-                                                        evaData.ratings[crit] >= star
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'bg-white border border-gray-200 text-gray-400 hover:border-gray-300'
-                                                    }`}
-                                                >
-                                                    {star}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="p-3 bg-gray-50 border border-gray-200 rounded flex justify-between items-center">
-                                <span className="font-medium text-gray-700">Promedio General</span>
-                                <span className="font-mono text-base font-bold text-blue-700 tabular-nums">
-                                    {evaData.overallScore} / 5.0
-                                </span>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Observaciones Finales</label>
-                                <textarea
-                                    required
-                                    placeholder="Detalles sobre fortalezas, debilidades y ajuste al puesto..."
-                                    value={evaData.comments}
-                                    onChange={e => setEvaData({ ...evaData, comments: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded p-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500 h-20 resize-none"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1.5">Recomendación del Evaluador</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { key: 'HIRE', label: 'Recomendar' },
-                                        { key: 'MAYBE', label: 'En Duda' },
-                                        { key: 'NO_HIRE', label: 'Descartar' }
-                                    ].map(opt => (
+                        {Object.keys(evaData.ratings).map(crit => (
+                            <div key={crit} className="flex justify-between items-center p-2 bg-gray-50 border border-gray-200 rounded">
+                                <span className="text-gray-700 font-medium">{crit}</span>
+                                <div className="flex items-center gap-1">
+                                    {[1, 2, 3, 4, 5].map(star => (
                                         <button
-                                            key={opt.key}
+                                            key={star}
                                             type="button"
-                                            onClick={() => setEvaData({ ...evaData, recommendation: opt.key })}
-                                            className={`py-2 px-2 rounded text-xs font-medium border text-center transition-colors cursor-pointer ${
-                                                evaData.recommendation === opt.key
-                                                    ? 'border-gray-900 bg-gray-900 text-white font-semibold'
-                                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                            onClick={() => updateRating(crit, star)}
+                                            className={`w-6 h-6 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
+                                                evaData.ratings[crit] >= star
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-white border border-gray-200 text-gray-400 hover:border-gray-300'
                                             }`}
                                         >
-                                            {opt.label}
+                                            {star}
                                         </button>
                                     ))}
                                 </div>
                             </div>
-
-                            <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowEvaModal(false)}
-                                    className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
-                                >
-                                    {submitting ? 'Guardando...' : 'Guardar Evaluación'}
-                                </button>
-                            </div>
-                        </form>
+                        ))}
                     </div>
-                </div>
-            )}
+
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded flex justify-between items-center">
+                        <span className="font-medium text-gray-700">Promedio General</span>
+                        <span className="font-mono text-base font-bold text-blue-700 tabular-nums">
+                            {evaData.overallScore} / 5.0
+                        </span>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Observaciones Finales</label>
+                        <textarea
+                            required
+                            placeholder="Detalles sobre fortalezas, debilidades y ajuste al puesto..."
+                            value={evaData.comments}
+                            onChange={e => setEvaData({ ...evaData, comments: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded p-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500 h-20 resize-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1.5">Recomendación del Evaluador</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {[
+                                { key: 'HIRE', label: 'Recomendar' },
+                                { key: 'MAYBE', label: 'En Duda' },
+                                { key: 'NO_HIRE', label: 'Descartar' }
+                            ].map(opt => (
+                                <button
+                                    key={opt.key}
+                                    type="button"
+                                    onClick={() => setEvaData({ ...evaData, recommendation: opt.key })}
+                                    className={`py-2 px-2 rounded text-xs font-medium border text-center transition-colors cursor-pointer ${
+                                        evaData.recommendation === opt.key
+                                            ? 'border-gray-900 bg-gray-900 text-white font-semibold'
+                                            : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowEvaModal(false)}
+                            className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
+                        >
+                            {submitting ? 'Guardando...' : 'Guardar Evaluación'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Modal: Contratar (Onboarding a Nómina) */}
-            {showHireModal && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded max-w-lg w-full shadow-xl border border-gray-200 text-xs max-h-[90vh] overflow-y-auto">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
-                            <div>
-                                <h3 className="font-semibold text-gray-900 text-sm">Contratación e Incorporación a Nómina</h3>
-                                <p className="text-[11px] text-gray-500 mt-0.5">Crear ficha de colaborador para {app.firstName} {app.lastName}</p>
-                            </div>
-                            <button onClick={() => setShowHireModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+            <Modal
+                isOpen={showHireModal}
+                onClose={() => setShowHireModal(false)}
+                title="Contratación e Incorporación a Nómina"
+                subtitle={`Crear ficha de colaborador para ${app.firstName} ${app.lastName}`}
+                size="lg"
+            >
+                <form onSubmit={handleHire} className="space-y-3.5">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Cédula de Identidad *</label>
+                            <input
+                                required
+                                type="text"
+                                maxLength={10}
+                                placeholder="17xxxxxxxx"
+                                value={hireData.identityCard}
+                                onChange={e => setHireData({ ...hireData, identityCard: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
+                            />
                         </div>
-
-                        <form onSubmit={handleHire} className="p-5 space-y-3.5">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Cédula de Identidad *</label>
-                                    <input
-                                        required
-                                        type="text"
-                                        maxLength={10}
-                                        placeholder="17xxxxxxxx"
-                                        value={hireData.identityCard}
-                                        onChange={e => setHireData({ ...hireData, identityCard: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Salario Mensual (USD) *</label>
-                                    <input
-                                        required
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="Ej: 1200.00"
-                                        value={hireData.salary}
-                                        onChange={e => setHireData({ ...hireData, salary: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono tabular-nums"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Contrato</label>
-                                    <select
-                                        value={hireData.contractType}
-                                        onChange={e => setHireData({ ...hireData, contractType: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                    >
-                                        <option value="Indefinido">Indefinido con periodo de prueba</option>
-                                        <option value="Eventual">Eventual / Obra cierta</option>
-                                        <option value="Plazo Fijo">Plazo Fijo</option>
-                                        <option value="Pasantía">Pasantía / Formativo</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Fecha de Ingreso *</label>
-                                    <input
-                                        required
-                                        type="date"
-                                        value={hireData.startDate}
-                                        onChange={e => setHireData({ ...hireData, startDate: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Contraseña Inicial de Acceso al Portal *</label>
-                                <input
-                                    required
-                                    type="password"
-                                    placeholder="Mínimo 8 caracteres..."
-                                    value={hireData.password}
-                                    onChange={e => setHireData({ ...hireData, password: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
-                                />
-                            </div>
-
-                            <div className="p-3 bg-gray-50 border border-gray-200 rounded text-gray-600 text-[11px] leading-relaxed">
-                                Al confirmar, el postulante será dado de alta como colaborador en el departamento de <strong className="text-gray-900">{app.vacancy?.department}</strong> y se creará su usuario para el portal de autoservicio y nómina.
-                            </div>
-
-                            <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowHireModal(false)}
-                                    className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
-                                >
-                                    {submitting ? 'Procesando Contrato...' : 'Confirmar Contratación'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Modal: Visualizador PDF Integrado */}
-            {showPdfModal && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded max-w-4xl w-full h-[85vh] shadow-xl border border-gray-200 text-xs flex flex-col">
-                        <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-                            <div className="font-semibold text-gray-900 text-xs">
-                                Currículum Vitae — {app.firstName} {app.lastName}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => window.open(getResumeUrl(app.resumeUrl), '_blank')}
-                                    className="px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium flex items-center gap-1 transition-colors"
-                                >
-                                    <FiExternalLink size={12} /> Abrir Externo
-                                </button>
-                                <button onClick={() => setShowPdfModal(false)} className="text-gray-400 hover:text-gray-600 text-sm font-bold">✕</button>
-                            </div>
-                        </div>
-                        <div className="flex-1 bg-gray-100 p-2">
-                            <iframe
-                                src={getResumeUrl(app.resumeUrl)}
-                                title="Visor CV"
-                                className="w-full h-full border border-gray-300 rounded bg-white"
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Salario Mensual (USD) *</label>
+                            <input
+                                required
+                                type="number"
+                                step="0.01"
+                                placeholder="Ej: 1200.00"
+                                value={hireData.salary}
+                                onChange={e => setHireData({ ...hireData, salary: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono tabular-nums"
                             />
                         </div>
                     </div>
-                </div>
-            )}
 
-            {/* Modal: Eliminar Candidato */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded max-w-md w-full shadow-xl border border-gray-200 text-xs">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar candidato?</h3>
-                            <button onClick={() => setShowDeleteModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-                        </div>
-                        <div className="p-5 space-y-2 text-gray-600 leading-relaxed">
-                            <p>
-                                Se eliminará la postulación de <strong className="text-gray-900">{app.firstName} {app.lastName}</strong> y todos sus archivos asociados.
-                            </p>
-                        </div>
-                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
-                            <button
-                                disabled={deletingCandidate}
-                                onClick={() => setShowDeleteModal(false)}
-                                className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Contrato</label>
+                            <select
+                                value={hireData.contractType}
+                                onChange={e => setHireData({ ...hireData, contractType: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                             >
-                                Cancelar
-                            </button>
-                            <button
-                                disabled={deletingCandidate}
-                                onClick={handleDeleteCandidate}
-                                className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
-                            >
-                                {deletingCandidate ? 'Eliminando...' : 'Eliminar Candidato'}
-                            </button>
+                                <option value="Indefinido">Indefinido con periodo de prueba</option>
+                                <option value="Eventual">Eventual / Obra cierta</option>
+                                <option value="Plazo Fijo">Plazo Fijo</option>
+                                <option value="Pasantía">Pasantía / Formativo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Fecha de Ingreso *</label>
+                            <input
+                                required
+                                type="date"
+                                value={hireData.startDate}
+                                onChange={e => setHireData({ ...hireData, startDate: e.target.value })}
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 font-mono"
+                            />
                         </div>
                     </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Contraseña Inicial de Acceso al Portal *</label>
+                        <input
+                            required
+                            type="password"
+                            placeholder="Mínimo 8 caracteres..."
+                            value={hireData.password}
+                            onChange={e => setHireData({ ...hireData, password: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded text-gray-600 text-[11px] leading-relaxed">
+                        Al confirmar, el postulante será dado de alta como colaborador en el departamento de <strong className="text-gray-900">{app.vacancy?.department}</strong> y se creará su usuario para el portal de autoservicio y nómina.
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowHireModal(false)}
+                            className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
+                        >
+                            {submitting ? 'Procesando Contrato...' : 'Confirmar Contratación'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Modal: Visualizador PDF Integrado */}
+            <Modal
+                isOpen={showPdfModal}
+                onClose={() => setShowPdfModal(false)}
+                title={`Currículum Vitae — ${app.firstName} ${app.lastName}`}
+                size="xl"
+                footer={
+                    <button
+                        onClick={() => window.open(getResumeUrl(app.resumeUrl), '_blank')}
+                        className="px-2.5 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium flex items-center gap-1 transition-colors"
+                    >
+                        <FiExternalLink size={12} /> Abrir Externo
+                    </button>
+                }
+            >
+                <div className="h-[70vh] bg-gray-100 p-2">
+                    <iframe
+                        src={getResumeUrl(app.resumeUrl)}
+                        title="Visor CV"
+                        className="w-full h-full border border-gray-300 rounded bg-white"
+                    />
                 </div>
-            )}
+            </Modal>
+
+            {/* Modal: Eliminar Candidato */}
+            <Modal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="¿Eliminar candidato?"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            disabled={deletingCandidate}
+                            onClick={() => setShowDeleteModal(false)}
+                            className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            disabled={deletingCandidate}
+                            onClick={handleDeleteCandidate}
+                            className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
+                        >
+                            {deletingCandidate ? 'Eliminando...' : 'Eliminar Candidato'}
+                        </button>
+                    </>
+                }
+            >
+                <p className="text-gray-600 text-xs leading-relaxed">
+                    Se eliminará la postulación de <strong className="text-gray-900">{app.firstName} {app.lastName}</strong> y todos sus archivos asociados.
+                </p>
+            </Modal>
         </div>
     );
 };

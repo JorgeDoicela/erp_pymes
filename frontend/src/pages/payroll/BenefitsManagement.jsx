@@ -8,6 +8,7 @@ import {
     deactivateBenefit,
     bulkCreateBenefit
 } from '../../services/payroll/benefits.service';
+import Modal from '../../components/common/Modal';
 
 const STATUS_MAP = {
     ACTIVE: { label: 'PENDIENTE', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
@@ -16,9 +17,13 @@ const STATUS_MAP = {
 };
 
 const TYPE_MAP = {
-    BONUS: 'Bono',
-    INCENTIVE: 'Incentivo',
-    ALLOWANCE: 'Viático / Otros'
+    BONUS: { label: 'Bono Imponible', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+    COMMISSION: { label: 'Comisión Ventas', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+    INCENTIVE: { label: 'Incentivo Bienestar', badge: 'bg-blue-50 text-blue-800 border-blue-200' },
+    HEALTH: { label: 'Salud / Seguro (Exento)', badge: 'bg-purple-50 text-purple-800 border-purple-200' },
+    MEAL: { label: 'Alimentación (Exento)', badge: 'bg-amber-50 text-amber-800 border-amber-200' },
+    TRANSPORT: { label: 'Movilización (Exento)', badge: 'bg-sky-50 text-sky-800 border-sky-200' },
+    ALLOWANCE: { label: 'Viáticos de Comisión', badge: 'bg-gray-50 text-gray-700 border-gray-200' }
 };
 
 const BenefitsManagement = () => {
@@ -538,9 +543,13 @@ const BenefitsManagement = () => {
                         className={inputClass + ' sm:w-44'}
                     >
                         <option value="">Todas las categorías</option>
-                        <option value="BONUS">Bonos</option>
-                        <option value="INCENTIVE">Incentivos</option>
-                        <option value="ALLOWANCE">Viáticos / Otros</option>
+                        <option value="BONUS">Bonos Imponibles (IESS)</option>
+                        <option value="COMMISSION">Comisiones de Venta (IESS)</option>
+                        <option value="INCENTIVE">Incentivos / Bienestar</option>
+                        <option value="HEALTH">Salud / Seguro Privado (Exento)</option>
+                        <option value="MEAL">Alimentación (Exento)</option>
+                        <option value="TRANSPORT">Movilización / Transporte</option>
+                        <option value="ALLOWANCE">Viáticos de Comisión</option>
                     </select>
                 </div>
             </div>
@@ -594,8 +603,8 @@ const BenefitsManagement = () => {
                                                 {b.name}
                                             </td>
                                             <td className="py-2.5 px-4">
-                                                <span className="px-2 py-0.5 rounded text-[11px] font-medium border bg-gray-50 text-gray-700 border-gray-200">
-                                                    {TYPE_MAP[b.type] || b.type}
+                                                <span className={`px-2 py-0.5 rounded text-[11px] font-medium border ${TYPE_MAP[b.type]?.badge || 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+                                                    {TYPE_MAP[b.type]?.label || b.type}
                                                 </span>
                                             </td>
                                             <td className="py-2.5 px-4 text-gray-500">
@@ -665,448 +674,419 @@ const BenefitsManagement = () => {
             </div>
 
             {/* MODAL ASIGNACIÓN INDIVIDUAL */}
-            {createModalOpen && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-base font-semibold text-gray-900">Nuevo Beneficio Individual</h3>
-                                <p className="text-xs text-gray-500 mt-0.5">Asigne un bono o viático a un colaborador específico.</p>
-                            </div>
-                            <button
-                                onClick={() => setCreateModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                            >
-                                ×
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSingleCreateSubmit} className="p-5 space-y-4">
-                            <div>
-                                <label className={labelClass}>Colaborador</label>
-                                <select
-                                    required
-                                    className={inputClass}
-                                    value={singleFormData.employeeId}
-                                    onChange={(e) => setSingleFormData({ ...singleFormData, employeeId: e.target.value })}
-                                >
-                                    <option value="">Seleccione un colaborador...</option>
-                                    {employees.map(emp => (
-                                        <option key={emp.id} value={emp.id}>
-                                            {emp.firstName} {emp.lastName} — {emp.department || 'General'} ({emp.position || 'Colaborador'})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className={labelClass}>Concepto / Descripción</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className={inputClass}
-                                    placeholder="Ej. Bono por Cumplimiento de Metas"
-                                    value={singleFormData.name}
-                                    onChange={(e) => setSingleFormData({ ...singleFormData, name: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className={labelClass}>Monto ($ USD)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0.01"
-                                        required
-                                        className={inputClass + ' font-mono'}
-                                        placeholder="0.00"
-                                        value={singleFormData.amount}
-                                        onChange={(e) => setSingleFormData({ ...singleFormData, amount: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Frecuencia</label>
-                                    <select
-                                        className={inputClass}
-                                        value={singleFormData.frequency}
-                                        onChange={(e) => setSingleFormData({ ...singleFormData, frequency: e.target.value })}
-                                    >
-                                        <option value="ONE_TIME">Pago Único (Próxima Nómina)</option>
-                                        <option value="RECURRING">Recurrente Mensual</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className={labelClass}>Categoría</label>
-                                <select
-                                    className={inputClass}
-                                    value={singleFormData.type}
-                                    onChange={(e) => setSingleFormData({ ...singleFormData, type: e.target.value })}
-                                >
-                                    <option value="BONUS">Bono</option>
-                                    <option value="INCENTIVE">Incentivo</option>
-                                    <option value="ALLOWANCE">Viático / Otros</option>
-                                </select>
-                            </div>
-
-                            <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setCreateModalOpen(false)}
-                                    className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={actionLoading}
-                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
-                                >
-                                    {actionLoading ? 'Guardando...' : 'Asignar Beneficio'}
-                                </button>
-                            </div>
-                        </form>
+            <Modal
+                isOpen={createModalOpen}
+                onClose={() => setCreateModalOpen(false)}
+                title="Nuevo Beneficio Individual"
+                subtitle="Asigne un bono o viático a un colaborador específico."
+                size="lg"
+            >
+                <form onSubmit={handleSingleCreateSubmit} className="space-y-4">
+                    <div>
+                        <label className={labelClass}>Colaborador</label>
+                        <select
+                            required
+                            className={inputClass}
+                            value={singleFormData.employeeId}
+                            onChange={(e) => setSingleFormData({ ...singleFormData, employeeId: e.target.value })}
+                        >
+                            <option value="">Seleccione un colaborador...</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>
+                                    {emp.firstName} {emp.lastName} — {emp.department || 'General'} ({emp.position || 'Colaborador'})
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                </div>
-            )}
+
+                    <div>
+                        <label className={labelClass}>Concepto / Descripción</label>
+                        <input
+                            type="text"
+                            required
+                            className={inputClass}
+                            placeholder="Ej. Bono de Cumplimiento de Metas, Viático Movilización..."
+                            value={singleFormData.name}
+                            onChange={(e) => setSingleFormData({ ...singleFormData, name: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className={labelClass}>Monto ($ USD)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                required
+                                className={inputClass + ' font-mono'}
+                                placeholder="0.00"
+                                value={singleFormData.amount}
+                                onChange={(e) => setSingleFormData({ ...singleFormData, amount: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Frecuencia</label>
+                            <select
+                                className={inputClass}
+                                value={singleFormData.frequency}
+                                onChange={(e) => setSingleFormData({ ...singleFormData, frequency: e.target.value })}
+                            >
+                                <option value="ONE_TIME">Pago Único (Próximo Rol)</option>
+                                <option value="RECURRING">Recurrente (Mensual Fijo)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className={labelClass}>Categoría Legal / Tributaria</label>
+                        <select
+                            className={inputClass}
+                            value={singleFormData.type}
+                            onChange={(e) => setSingleFormData({ ...singleFormData, type: e.target.value })}
+                        >
+                            <option value="BONUS">Bono Imponible (Aporta IESS 9.45%)</option>
+                            <option value="COMMISSION">Comisiones por Ventas (Aporta IESS)</option>
+                            <option value="INCENTIVE">Incentivo de Productividad / Bienestar</option>
+                            <option value="HEALTH">Seguro Médico / Asistencia Privada (Exento IESS)</option>
+                            <option value="MEAL">Alimentación / Almuerzos (Exento IESS)</option>
+                            <option value="TRANSPORT">Movilización / Transporte (No imponible)</option>
+                            <option value="ALLOWANCE">Viáticos por Comisión de Servicios</option>
+                        </select>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setCreateModalOpen(false)}
+                            className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={actionLoading}
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
+                        >
+                            {actionLoading ? 'Guardando...' : 'Asignar Beneficio'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* MODAL EDICIÓN */}
-            {editModalOpen && selectedBenefit && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-lg w-full overflow-hidden shadow-xl">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-base font-semibold text-gray-900">Editar Beneficio</h3>
-                                <p className="text-xs text-gray-500 mt-0.5">
-                                    Colaborador: {selectedBenefit.employee?.firstName} {selectedBenefit.employee?.lastName}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setEditModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
-                            >
-                                ×
-                            </button>
+            <Modal
+                isOpen={editModalOpen && !!selectedBenefit}
+                onClose={() => setEditModalOpen(false)}
+                title="Editar Beneficio"
+                subtitle={selectedBenefit ? `Colaborador: ${selectedBenefit.employee?.firstName} ${selectedBenefit.employee?.lastName}` : ''}
+                size="lg"
+            >
+                {selectedBenefit && (
+                    <form onSubmit={handleEditSubmit} className="space-y-4">
+                        <div>
+                            <label className={labelClass}>Concepto / Descripción</label>
+                            <input
+                                type="text"
+                                required
+                                className={inputClass}
+                                value={editFormData.name}
+                                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                            />
                         </div>
 
-                        <form onSubmit={handleEditSubmit} className="p-5 space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className={labelClass}>Concepto / Descripción</label>
+                                <label className={labelClass}>Monto ($ USD)</label>
                                 <input
-                                    type="text"
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
                                     required
-                                    className={inputClass}
-                                    value={editFormData.name}
-                                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                    className={inputClass + ' font-mono'}
+                                    value={editFormData.amount}
+                                    onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })}
                                 />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className={labelClass}>Monto ($ USD)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0.01"
-                                        required
-                                        className={inputClass + ' font-mono'}
-                                        value={editFormData.amount}
-                                        onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Frecuencia</label>
-                                    <select
-                                        className={inputClass}
-                                        value={editFormData.frequency}
-                                        onChange={(e) => setEditFormData({ ...editFormData, frequency: e.target.value })}
-                                    >
-                                        <option value="ONE_TIME">Pago Único</option>
-                                        <option value="RECURRING">Recurrente</option>
-                                    </select>
-                                </div>
-                            </div>
-
                             <div>
-                                <label className={labelClass}>Categoría</label>
+                                <label className={labelClass}>Frecuencia</label>
                                 <select
                                     className={inputClass}
-                                    value={editFormData.type}
-                                    onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
+                                    value={editFormData.frequency}
+                                    onChange={(e) => setEditFormData({ ...editFormData, frequency: e.target.value })}
                                 >
-                                    <option value="BONUS">Bono</option>
-                                    <option value="INCENTIVE">Incentivo</option>
-                                    <option value="ALLOWANCE">Viático / Otros</option>
+                                    <option value="ONE_TIME">Pago Único</option>
+                                    <option value="RECURRING">Recurrente</option>
                                 </select>
                             </div>
+                        </div>
 
-                            <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setEditModalOpen(false)}
-                                    className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={actionLoading}
-                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
-                                >
-                                    {actionLoading ? 'Actualizando...' : 'Guardar Cambios'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* MODAL ASIGNACIÓN MASIVA */}
-            {bulkModalOpen && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-2xl w-full overflow-hidden shadow-xl">
-                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-base font-semibold text-gray-900">Asignación Masiva de Beneficios</h3>
-                                <p className="text-xs text-gray-500 mt-0.5">Asigne beneficios fijos o cálculos de ley a múltiples colaboradores.</p>
-                            </div>
-                            <button
-                                onClick={() => setBulkModalOpen(false)}
-                                className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer"
+                        <div>
+                            <label className={labelClass}>Categoría Legal / Tributaria</label>
+                            <select
+                                className={inputClass}
+                                value={editFormData.type}
+                                onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
                             >
-                                ×
-                            </button>
+                                <option value="BONUS">Bono Imponible (Aporta IESS 9.45%)</option>
+                                <option value="COMMISSION">Comisiones por Ventas (Aporta IESS)</option>
+                                <option value="INCENTIVE">Incentivo de Productividad / Bienestar</option>
+                                <option value="HEALTH">Seguro Médico / Asistencia Privada (Exento IESS)</option>
+                                <option value="MEAL">Alimentación / Almuerzos (Exento IESS)</option>
+                                <option value="TRANSPORT">Movilización / Transporte (No imponible)</option>
+                                <option value="ALLOWANCE">Viáticos por Comisión de Servicios</option>
+                            </select>
                         </div>
 
-                        <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
-                            {/* Plantillas Legales */}
-                            <div>
-                                <label className={labelClass}>Plantillas Rápidas (Normativa Ecuador)</label>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => applyTemplate('DECIMO_3')}
-                                        className={`p-2.5 border rounded text-left transition-colors cursor-pointer ${
-                                            bulkData.specialType === 'DECIMO_TERCERO'
-                                                ? 'border-blue-500 bg-blue-50/50'
-                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <p className="font-semibold text-xs text-gray-800">Décimo Tercero</p>
-                                        <p className="text-[11px] text-gray-400">1 Sueldo Base</p>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => applyTemplate('DECIMO_4')}
-                                        className={`p-2.5 border rounded text-left transition-colors cursor-pointer ${
-                                            bulkData.specialType === 'DECIMO_CUARTO'
-                                                ? 'border-blue-500 bg-blue-50/50'
-                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <p className="font-semibold text-xs text-gray-800">Décimo Cuarto</p>
-                                        <p className="text-[11px] text-gray-400">1 SBU ($460.00)</p>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => applyTemplate('FONDO_RESERVA')}
-                                        className={`p-2.5 border rounded text-left transition-colors cursor-pointer ${
-                                            bulkData.specialType === 'FONDO_RESERVA'
-                                                ? 'border-blue-500 bg-blue-50/50'
-                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <p className="font-semibold text-xs text-gray-800">Fondo Reserva</p>
-                                        <p className="text-[11px] text-gray-400">8.33% mensual</p>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => applyTemplate('CUSTOM')}
-                                        className={`p-2.5 border rounded text-left transition-colors cursor-pointer ${
-                                            !bulkData.isSpecial
-                                                ? 'border-blue-500 bg-blue-50/50'
-                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <p className="font-semibold text-xs text-gray-800">Monto Manual</p>
-                                        <p className="text-[11px] text-gray-400">Valor fijo ($)</p>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <form id="bulkForm" onSubmit={handleBulkSubmit} className="space-y-3">
-                                <div>
-                                    <label className={labelClass}>Nombre / Concepto del Beneficio</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className={inputClass}
-                                        placeholder="Ej. Bono de Productividad Trimestral"
-                                        value={bulkData.name}
-                                        onChange={(e) => setBulkData({ ...bulkData, name: e.target.value })}
-                                    />
-                                </div>
-
-                                {!bulkData.isSpecial ? (
-                                    <div>
-                                        <label className={labelClass}>Monto Fijo por Colaborador ($ USD)</label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0.01"
-                                            required
-                                            className={inputClass + ' font-mono'}
-                                            placeholder="0.00"
-                                            value={bulkData.amount}
-                                            onChange={(e) => setBulkData({ ...bulkData, amount: e.target.value })}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-700">
-                                        <p className="font-medium text-gray-900">Cálculo Dinámico por Contrato</p>
-                                        <p className="text-[11px] text-gray-500 mt-0.5">
-                                            El sistema extraerá automáticamente el sueldo del contrato vigente de cada colaborador y computará el valor correspondiente.
-                                        </p>
-                                    </div>
-                                )}
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className={labelClass}>Categoría</label>
-                                        <select
-                                            className={inputClass}
-                                            value={bulkData.type}
-                                            onChange={(e) => setBulkData({ ...bulkData, type: e.target.value })}
-                                        >
-                                            <option value="BONUS">Bono</option>
-                                            <option value="INCENTIVE">Incentivo</option>
-                                            <option value="ALLOWANCE">Viático / Otros</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Frecuencia</label>
-                                        <select
-                                            className={inputClass}
-                                            value={bulkData.frequency}
-                                            onChange={(e) => setBulkData({ ...bulkData, frequency: e.target.value })}
-                                        >
-                                            <option value="ONE_TIME">Pago Único</option>
-                                            <option value="RECURRING">Recurrente</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </form>
-
-                            {/* Selección de Colaboradores */}
-                            <div className="space-y-2 pt-2 border-t border-gray-200">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                    <label className={labelClass}>Colaboradores Destino</label>
-                                    <div className="flex items-center gap-2">
-                                        <select
-                                            value={bulkData.selectedDepartment}
-                                            onChange={(e) => handleDepartmentFilterChange(e.target.value)}
-                                            className="text-xs bg-white border border-gray-200 rounded px-2 py-1"
-                                        >
-                                            <option value="ALL">Todos los Departamentos</option>
-                                            {departments.map(d => (
-                                                <option key={d} value={d}>{d}</option>
-                                            ))}
-                                        </select>
-                                        <span className="text-[11px] font-mono text-gray-500">
-                                            {bulkData.selectedEmployees.length} de {employees.length} seleccionados
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="border border-gray-200 rounded max-h-48 overflow-y-auto divide-y divide-gray-100">
-                                    <label className="p-2.5 flex items-center gap-2 cursor-pointer hover:bg-gray-50 text-xs font-semibold text-gray-800 bg-gray-50/50">
-                                        <input
-                                            type="checkbox"
-                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                            checked={
-                                                filteredBulkEmployees.length > 0 &&
-                                                filteredBulkEmployees.every(e => bulkData.selectedEmployees.includes(e.id))
-                                            }
-                                            onChange={handleSelectAllBulk}
-                                        />
-                                        <span>Seleccionar Visibles ({filteredBulkEmployees.length})</span>
-                                    </label>
-
-                                    {filteredBulkEmployees.map(emp => (
-                                        <label key={emp.id} className="p-2 flex items-center gap-2 cursor-pointer hover:bg-gray-50 text-xs text-gray-700">
-                                            <input
-                                                type="checkbox"
-                                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                                checked={bulkData.selectedEmployees.includes(emp.id)}
-                                                onChange={() => toggleBulkEmployee(emp.id)}
-                                            />
-                                            <span className="font-medium">{emp.firstName} {emp.lastName}</span>
-                                            <span className="text-[11px] text-gray-400 ml-auto">{emp.department || 'General'} · {emp.position || 'Colaborador'}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+                        <div className="pt-3 border-t border-gray-200 flex justify-end gap-2">
                             <button
                                 type="button"
-                                onClick={() => setBulkModalOpen(false)}
+                                onClick={() => setEditModalOpen(false)}
                                 className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button
-                                form="bulkForm"
                                 type="submit"
-                                disabled={actionLoading || bulkData.selectedEmployees.length === 0}
-                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
+                                disabled={actionLoading}
+                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
                             >
-                                {actionLoading ? 'Procesando...' : `Asignar a ${bulkData.selectedEmployees.length} Colaboradores`}
+                                {actionLoading ? 'Actualizando...' : 'Guardar Cambios'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
+
+            {/* MODAL ASIGNACIÓN MASIVA */}
+            <Modal
+                isOpen={bulkModalOpen}
+                onClose={() => setBulkModalOpen(false)}
+                title="Asignación Masiva de Beneficios"
+                subtitle="Asigne beneficios fijos o cálculos de ley a múltiples colaboradores."
+                size="xl"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setBulkModalOpen(false)}
+                            className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            form="bulkForm"
+                            type="submit"
+                            disabled={actionLoading || bulkData.selectedEmployees.length === 0}
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
+                        >
+                            {actionLoading ? 'Procesando...' : `Asignar a ${bulkData.selectedEmployees.length} Colaboradores`}
+                        </button>
+                    </>
+                }
+            >
+                <div className="space-y-4">
+                    {/* Plantillas Legales */}
+                    <div>
+                        <label className={labelClass}>Plantillas Rápidas (Normativa Ecuador)</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => applyTemplate('DECIMO_3')}
+                                className={`p-2.5 border rounded text-left transition-colors cursor-pointer ${
+                                    bulkData.specialType === 'DECIMO_TERCERO'
+                                        ? 'border-blue-500 bg-blue-50/50'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                                <p className="font-semibold text-xs text-gray-800">Décimo Tercero</p>
+                                <p className="text-[11px] text-gray-400">1 Sueldo Base</p>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => applyTemplate('DECIMO_4')}
+                                className={`p-2.5 border rounded text-left transition-colors cursor-pointer ${
+                                    bulkData.specialType === 'DECIMO_CUARTO'
+                                        ? 'border-blue-500 bg-blue-50/50'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                                <p className="font-semibold text-xs text-gray-800">Décimo Cuarto</p>
+                                <p className="text-[11px] text-gray-400">1 SBU ($470 USD)</p>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => applyTemplate('BONO_DESEMPENO')}
+                                className={`p-2.5 border rounded text-left transition-colors cursor-pointer ${
+                                    bulkData.name === 'Bono por Desempeño'
+                                        ? 'border-blue-500 bg-blue-50/50'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                                <p className="font-semibold text-xs text-gray-800">Bono Desempeño</p>
+                                <p className="text-[11px] text-gray-400">$100 USD Fijo</p>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => applyTemplate('VIATICO_ALIMENTACION')}
+                                className={`p-2.5 border rounded text-left transition-colors cursor-pointer ${
+                                    bulkData.name === 'Alimentación Mensual'
+                                        ? 'border-blue-500 bg-blue-50/50'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                                <p className="font-semibold text-xs text-gray-800">Alimentación</p>
+                                <p className="text-[11px] text-gray-400">$60 USD Exento</p>
                             </button>
                         </div>
                     </div>
+
+                    <form id="bulkForm" onSubmit={handleBulkSubmit} className="space-y-4">
+                        <div>
+                            <label className={labelClass}>Concepto / Descripción</label>
+                            <input
+                                type="text"
+                                required
+                                className={inputClass}
+                                placeholder="Ej. Bono Anual de Resultados"
+                                value={bulkData.name}
+                                onChange={(e) => setBulkData({ ...bulkData, name: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className={labelClass}>Monto ($ USD)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    required
+                                    className={inputClass + ' font-mono'}
+                                    value={bulkData.amount}
+                                    onChange={(e) => setBulkData({ ...bulkData, amount: e.target.value, isCustomAmount: false })}
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Frecuencia</label>
+                                <select
+                                    className={inputClass}
+                                    value={bulkData.frequency}
+                                    onChange={(e) => setBulkData({ ...bulkData, frequency: e.target.value })}
+                                >
+                                    <option value="ONE_TIME">Pago Único</option>
+                                    <option value="RECURRING">Recurrente</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={labelClass}>Categoría Legal</label>
+                                <select
+                                    className={inputClass}
+                                    value={bulkData.type}
+                                    onChange={(e) => setBulkData({ ...bulkData, type: e.target.value })}
+                                >
+                                    <option value="BONUS">Bono Imponible</option>
+                                    <option value="COMMISSION">Comisión</option>
+                                    <option value="INCENTIVE">Incentivo</option>
+                                    <option value="HEALTH">Seguro Médico</option>
+                                    <option value="MEAL">Alimentación</option>
+                                    <option value="TRANSPORT">Movilización</option>
+                                    <option value="ALLOWANCE">Viático</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Selección de Colaboradores */}
+                        <div className="space-y-2 pt-2 border-t border-gray-200">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <label className={labelClass}>Colaboradores Destino</label>
+                                <div className="flex items-center gap-2">
+                                    <select
+                                        value={bulkData.selectedDepartment}
+                                        onChange={(e) => handleDepartmentFilterChange(e.target.value)}
+                                        className="text-xs bg-white border border-gray-200 rounded px-2 py-1"
+                                    >
+                                        <option value="ALL">Todos los Departamentos</option>
+                                        {departments.map(d => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </select>
+                                    <span className="text-[11px] font-mono text-gray-500">
+                                        {bulkData.selectedEmployees.length} de {employees.length} seleccionados
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="border border-gray-200 rounded max-h-48 overflow-y-auto divide-y divide-gray-100 bg-gray-50/50">
+                                <label className="p-2.5 flex items-center gap-2 cursor-pointer hover:bg-gray-50 text-xs font-semibold text-gray-800">
+                                    <input
+                                        type="checkbox"
+                                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        checked={
+                                            filteredBulkEmployees.length > 0 &&
+                                            filteredBulkEmployees.every(e => bulkData.selectedEmployees.includes(e.id))
+                                        }
+                                        onChange={handleSelectAllBulk}
+                                    />
+                                    <span>Seleccionar Visibles ({filteredBulkEmployees.length})</span>
+                                </label>
+
+                                {filteredBulkEmployees.map(emp => (
+                                    <label key={emp.id} className="p-2 flex items-center gap-2 cursor-pointer hover:bg-gray-50 text-xs text-gray-700">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            checked={bulkData.selectedEmployees.includes(emp.id)}
+                                            onChange={() => toggleBulkEmployee(emp.id)}
+                                        />
+                                        <span className="font-medium">{emp.firstName} {emp.lastName}</span>
+                                        <span className="text-[11px] text-gray-400 ml-auto">{emp.department || 'General'} · {emp.position || 'Colaborador'}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            )}
+            </Modal>
 
             {/* MODAL DE CONFIRMACIÓN DE CANCELACIÓN */}
-            {confirmModalOpen && selectedBenefit && (
-                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border border-gray-200 rounded max-w-sm w-full overflow-hidden shadow-xl">
-                        <div className="p-5">
-                            <h3 className="text-sm font-semibold text-gray-900">¿Cancelar este beneficio?</h3>
-                            <p className="text-xs text-gray-500 mt-2">
-                                Esta acción marcará el beneficio <span className="font-medium text-gray-800">"{selectedBenefit.name}"</span> (${selectedBenefit.amount.toFixed(2)}) de <span className="font-medium text-gray-800">{selectedBenefit.employee?.firstName} {selectedBenefit.employee?.lastName}</span> como cancelado y no se incluirá en el próximo rol de pagos.
-                            </p>
-                        </div>
-                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setConfirmModalOpen(false);
-                                    setSelectedBenefit(null);
-                                }}
-                                className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
-                            >
-                                Mantener
-                            </button>
-                            <button
-                                type="button"
-                                disabled={actionLoading}
-                                onClick={handleConfirmDeactivate}
-                                className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                                {actionLoading ? 'Cancelando...' : 'Confirmar Cancelación'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Modal
+                isOpen={confirmModalOpen && !!selectedBenefit}
+                onClose={() => { setConfirmModalOpen(false); setSelectedBenefit(null); }}
+                title="¿Cancelar este beneficio?"
+                size="sm"
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setConfirmModalOpen(false);
+                                setSelectedBenefit(null);
+                            }}
+                            className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                        >
+                            Mantener
+                        </button>
+                        <button
+                            type="button"
+                            disabled={actionLoading}
+                            onClick={handleConfirmDeactivate}
+                            className="px-3 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {actionLoading ? 'Cancelando...' : 'Confirmar Cancelación'}
+                        </button>
+                    </>
+                }
+            >
+                {selectedBenefit && (
+                    <p className="text-xs text-gray-500">
+                        Esta acción marcará el beneficio <span className="font-medium text-gray-800">"{selectedBenefit.name}"</span> (${selectedBenefit.amount.toFixed(2)}) de <span className="font-medium text-gray-800">{selectedBenefit.employee?.firstName} {selectedBenefit.employee?.lastName}</span> como cancelado y no se incluirá en el próximo rol de pagos.
+                    </p>
+                )}
+            </Modal>
         </div>
     );
 };

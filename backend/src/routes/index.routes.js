@@ -34,8 +34,12 @@ import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { requireTenant } from '../middleware/tenant.middleware.js';
 
 import researchRoutes from './research.routes.js';
+import signatureRoutes from './signatures/signature.routes.js';
 
 const router = Router();
+
+// Módulo Desacoplado de Firma Digital QR y Firma Electrónica Oficial Ecuador (.p12)
+router.use('/signatures', signatureRoutes);
 
 // Ruta de prueba
 router.get('/', (req, res) => {
