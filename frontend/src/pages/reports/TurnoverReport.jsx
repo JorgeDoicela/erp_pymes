@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getTurnoverReport } from '../../services/analytics.service';
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const TurnoverReport = () => {
     const [data, setData] = useState(null);
@@ -28,8 +30,8 @@ const TurnoverReport = () => {
         loadReport();
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-400 text-xs">Generando reporte de rotación...</div>;
-    if (!data) return <div className="p-8 text-center text-gray-400 text-xs">No hay datos de rotación disponibles.</div>;
+    if (loading) return <div className="p-8 text-center text-gray-400 text-xs font-mono">Generando reporte de rotación...</div>;
+    if (!data) return <div className="p-8 text-center text-gray-400 text-xs font-mono">No hay datos de rotación disponibles.</div>;
 
     const COLORS = ['#2563eb', '#d97706', '#166534', '#4b5563'];
 
@@ -38,12 +40,35 @@ const TurnoverReport = () => {
             {/* Header Limpio ERP */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-gray-200">
                 <div>
-                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analíticas · Talento</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Link
+                            to="/analytics"
+                            className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 font-medium transition-colors"
+                        >
+                            <FiArrowLeft className="w-3 h-3" />
+                            <span>Analíticas</span>
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider font-mono">Retención de Talento</span>
+                    </div>
                     <h1 className="text-xl font-semibold text-gray-900">Reporte de Rotación de Personal</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Indicadores de desvinculación, motivos de salida y tasa de rotación por periodo.</p>
                 </div>
 
-                <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-2 bg-white p-3 rounded border border-gray-200 w-full lg:w-auto text-xs">
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                        to="/analytics"
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiArrowLeft className="w-3.5 h-3.5" />
+                        <span>Volver a Analíticas</span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Filtros de Fecha */}
+            <div className="flex justify-end">
+                <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-2 bg-white p-3 rounded border border-gray-200 w-full lg:w-auto text-xs shadow-xs">
                     <div>
                         <label className="block font-medium text-gray-600 mb-1">Desde</label>
                         <input

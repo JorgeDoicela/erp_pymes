@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import systemService from '../../services/system/systemService.js';
-import { authenticate, authorize } from '../../middleware/auth.middleware.js';
+import { authenticate, authorize, optionalAuth } from '../../middleware/auth.middleware.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
 
 const router = Router();
@@ -56,10 +56,10 @@ router.get('/geocode', async (req, res) => {
     }
 });
 
-// Public endpoint - biometric setting (no auth needed for attendance page)
-router.get('/biometric-setting', async (req, res) => {
+// Endpoint biometría con detección multi-tenant y soporte público
+router.get('/biometric-setting', optionalAuth, async (req, res) => {
     try {
-        const tenantId = req.query.tenantId || null;
+        const tenantId = req.tenantId || req.user?.tenantId || req.query.tenantId || null;
         const settings = await systemService.getSettings(tenantId);
         res.json({ success: true, biometricEnabled: settings?.biometricEnabled ?? false });
     } catch (error) {

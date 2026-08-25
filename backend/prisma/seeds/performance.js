@@ -6,7 +6,7 @@ export async function seedPerformance(prisma, employees) {
     const periods = [`${year - 1}-Q3`, `${year - 1}-Q4`, `${year}-Q1`, activePeriod];
 
     const tenants = await prisma.tenant.findMany({
-        where: { slug: { in: ['empresa-demo', 'tech-solutions'] } }
+        where: { isActive: true }
     });
 
     for (const tenant of tenants) {

@@ -91,10 +91,16 @@ export const recruitmentService = {
             ];
         }
 
-        return recruitmentRepository.getVacancies(where, {
+        const vacancies = await recruitmentRepository.getVacancies(where, {
             postedBy: { select: { firstName: true, lastName: true } },
-            tenant: { select: { id: true, name: true, slug: true } }
+            tenant: { select: { id: true, name: true, slug: true } },
+            _count: { select: { applications: true } }
         });
+
+        return vacancies.map(v => ({
+            ...v,
+            applicationsCount: v._count?.applications ?? 0
+        }));
     },
 
     async getPublicVacancies(filters = {}) {

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getSatisfactionReport } from '../../services/analytics.service';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const SatisfactionReport = () => {
     const [data, setData] = useState(null);
@@ -22,13 +24,34 @@ const SatisfactionReport = () => {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-400 text-xs">Analizando indicador de clima laboral...</div>;
+    if (loading) return <div className="p-8 text-center text-gray-400 text-xs font-mono">Analizando indicador de clima laboral...</div>;
 
     if (!data || !data.surveyTitle) return (
         <div className="space-y-5">
-            <div className="pb-4 border-b border-gray-200">
-                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analíticas · Cultura</p>
-                <h1 className="text-xl font-semibold text-gray-900">Encuesta de Clima Laboral</h1>
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Link
+                            to="/analytics"
+                            className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 font-medium transition-colors"
+                        >
+                            <FiArrowLeft className="w-3 h-3" />
+                            <span>Analíticas</span>
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider font-mono">Cultura y Clima</span>
+                    </div>
+                    <h1 className="text-xl font-semibold text-gray-900">Encuesta de Clima Laboral</h1>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                        to="/analytics"
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiArrowLeft className="w-3.5 h-3.5" />
+                        <span>Volver a Analíticas</span>
+                    </Link>
+                </div>
             </div>
             <div className="bg-white p-12 rounded border border-gray-200 text-center text-xs text-gray-500">
                 <p className="font-medium text-gray-700">No hay encuestas activas o resultados disponibles.</p>
@@ -40,10 +63,31 @@ const SatisfactionReport = () => {
     return (
         <div className="space-y-5">
             {/* Header Limpio ERP */}
-            <div className="pb-4 border-b border-gray-200">
-                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analíticas · Cultura & Satisfacción</p>
-                <h1 className="text-xl font-semibold text-gray-900">Clima Laboral: {data.surveyTitle}</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Análisis de satisfacción interna, eNPS y percepción de la cultura organizacional.</p>
+            <div className="pb-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Link
+                            to="/analytics"
+                            className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 font-medium transition-colors"
+                        >
+                            <FiArrowLeft className="w-3 h-3" />
+                            <span>Analíticas</span>
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider font-mono">Cultura & Satisfacción</span>
+                    </div>
+                    <h1 className="text-xl font-semibold text-gray-900">Clima Laboral: {data.surveyTitle}</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Análisis de satisfacción interna, eNPS y percepción de la cultura organizacional.</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                        to="/analytics"
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiArrowLeft className="w-3.5 h-3.5" />
+                        <span>Volver a Analíticas</span>
+                    </Link>
+                </div>
             </div>
 
             {/* Resumen Estilo Informe Contable / Balance */}

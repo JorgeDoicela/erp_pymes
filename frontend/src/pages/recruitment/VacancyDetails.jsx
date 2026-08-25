@@ -1,33 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getApplicationsByVacancy, deleteVacancy, deleteApplication } from '../../services/recruitment.service';
-import { FiArrowLeft, FiUser, FiMail, FiPhone, FiCalendar, FiFileText, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
+import { getApplicationsByVacancy, deleteVacancy, deleteApplication, updateApplicationStatus } from '../../services/recruitment.service';
+import { FiArrowLeft, FiTrash2, FiCopy, FiCheck } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+
+const STATUS_OPTIONS = [
+    { key: 'ALL', label: 'Todos' },
+    { key: 'PENDING', label: 'Postulados' },
+    { key: 'REVIEWING', label: 'En Revisión' },
+    { key: 'INTERVIEW', label: 'Entrevistas' },
+    { key: 'TESTING', label: 'Pruebas' },
+    { key: 'OFFER', label: 'Oferta' },
+    { key: 'HIRED', label: 'Contratados' },
+    { key: 'REJECTED', label: 'Descartados' }
+];
 
 const VacancyDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('ALL');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [copied, setCopied] = useState(false);
+
+    // Modals
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleting, setDeleting] = useState(false);
-
-    // Modal state for deleting individual candidate
     const [appToDelete, setAppToDelete] = useState(null);
     const [deletingCandidate, setDeletingCandidate] = useState(false);
 
     useEffect(() => {
-        loadApplications();
+        loadData();
     }, [id]);
 
-    const loadApplications = async () => {
+    const loadData = async () => {
         try {
-            const data = await getApplicationsByVacancy(id);
-            setApplications(data);
+            setLoading(true);
+            const apps = await getApplicationsByVacancy(id);
+            setApplications(apps || []);
         } catch (error) {
-            console.error(error);
+            console.error('Error al cargar aplicaciones:', error);
+            toast.error('Error al cargar los candidatos de la vacante');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleStatusChange = async (appId, newStatus) => {
+        try {
+            await updateApplicationStatus(appId, newStatus, false);
+            setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: newStatus } : a));
+            toast.success('Estado del candidato actualizado');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Error al cambiar estado');
         }
     };
 
@@ -36,139 +62,248 @@ const VacancyDetails = () => {
         try {
             setDeletingCandidate(true);
             await deleteApplication(appToDelete.id);
-            toast.success("Candidato y sus archivos eliminados correctamente");
+            toast.success('Candidato eliminado');
             setApplications(prev => prev.filter(a => a.id !== appToDelete.id));
         } catch (error) {
-            console.error(error);
-            toast.error(error.response?.data?.message || "Error al eliminar el candidato");
+            toast.error(error.response?.data?.message || 'Error al eliminar el candidato');
         } finally {
             setDeletingCandidate(false);
             setAppToDelete(null);
         }
     };
 
-    const handleDelete = async () => {
+    const handleDeleteVacancy = async () => {
         try {
             setDeleting(true);
             await deleteVacancy(id);
-            toast.success("Vacante y todos sus archivos asociados eliminados correctamente");
+            toast.success('Vacante eliminada correctamente');
             navigate('/recruitment');
         } catch (error) {
-            console.error(error);
-            toast.error(error.response?.data?.message || "Error al eliminar la vacante");
+            toast.error(error.response?.data?.message || 'Error al eliminar la vacante');
         } finally {
             setDeleting(false);
             setShowDeleteModal(false);
         }
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-100';
-            case 'REVIEWING': return 'bg-blue-50 text-blue-700 border-blue-100';
-            case 'INTERVIEW': return 'bg-purple-50 text-purple-700 border-purple-100';
-            case 'TESTING': return 'bg-indigo-50 text-indigo-700 border-indigo-100';
-            case 'OFFER': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
-            case 'HIRED': return 'bg-blue-600 text-white border-blue-700';
-            case 'REJECTED': return 'bg-red-50 text-red-700 border-red-100';
-            default: return 'bg-slate-50 text-slate-600 border-slate-200';
-        }
+    const copyPublicLink = () => {
+        const url = `${window.location.origin}/careers/${id}`;
+        navigator.clipboard.writeText(url);
+        setCopied(true);
+        toast.success('Enlace de postulación copiado');
+        setTimeout(() => setCopied(false), 2500);
     };
 
-    const statusLabels = {
-        'PENDING': 'Pendiente',
-        'REVIEWING': 'En Revisión',
-        'INTERVIEW': 'Entrevista',
-        'TESTING': 'Pruebas',
-        'OFFER': 'Oferta',
-        'HIRED': 'Contratado',
-        'REJECTED': 'Rechazado'
-    };
+    // Filtered applications
+    const filteredApplications = useMemo(() => {
+        return applications.filter(app => {
+            const matchesTab = activeTab === 'ALL' || app.status === activeTab;
+            const searchLower = searchTerm.toLowerCase();
+            const fullName = `${app.firstName} ${app.lastName}`.toLowerCase();
+            const matchesSearch = !searchTerm || fullName.includes(searchLower) || app.email?.toLowerCase().includes(searchLower);
+            return matchesTab && matchesSearch;
+        });
+    }, [applications, activeTab, searchTerm]);
+
+    const statusCounts = useMemo(() => {
+        const counts = { ALL: applications.length };
+        STATUS_OPTIONS.forEach(opt => {
+            if (opt.key !== 'ALL') {
+                counts[opt.key] = applications.filter(a => a.status === opt.key).length;
+            }
+        });
+        return counts;
+    }, [applications]);
+
+    const vacancyTitle = applications[0]?.vacancy?.title || 'Proceso de Selección';
+    const vacancyDepartment = applications[0]?.vacancy?.department || 'General';
 
     return (
-        <div className="space-y-6">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-                    <button onClick={() => navigate('/recruitment')} className="flex items-center text-slate-500 hover:text-slate-800 transition-colors text-sm md:text-base font-medium">
-                        <FiArrowLeft className="mr-2" /> Volver al tablero
+        <div className="space-y-5">
+            {/* Header ERP */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-gray-200">
+                <div>
+                    <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <button
+                            onClick={() => navigate('/recruitment')}
+                            className="hover:text-gray-900 transition-colors flex items-center gap-1 text-gray-600 cursor-pointer"
+                        >
+                            <FiArrowLeft size={12} /> Reclutamiento y Vacantes
+                        </button>
+                        <span>·</span>
+                        <span>{vacancyDepartment}</span>
+                    </div>
+                    <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2.5">
+                        {vacancyTitle}
+                    </h1>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                        onClick={copyPublicLink}
+                        className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                        {copied ? <FiCheck className="text-emerald-600" size={13} /> : <FiCopy size={13} />}
+                        <span>{copied ? 'Enlace Copiado' : 'Copiar Enlace de Postulación'}</span>
                     </button>
 
                     <button
                         onClick={() => setShowDeleteModal(true)}
-                        className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold flex items-center transition-all border border-red-200 shadow-sm active:scale-95 text-sm"
+                        className="px-3 py-1.5 bg-white border border-red-200 hover:bg-red-50 text-red-600 rounded text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
-                        <FiTrash2 className="mr-2" size={18} /> Eliminar Vacante
+                        <FiTrash2 size={13} />
+                        <span>Eliminar</span>
                     </button>
                 </div>
-
-                <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-8 tracking-tight">Candidatos para la Vacante</h1>
-
-                {loading ? (
-                    <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p className="text-slate-500">Cargando...</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                        {applications.length === 0 && (
-                            <div className="text-center py-16 bg-white rounded-xl border border-slate-200 border-dashed">
-                                <FiUser className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                                <p className="text-slate-500 text-lg font-medium">No hay postulaciones aún para esta vacante.</p>
-                            </div>
-                        )}
-
-                        {applications.map(app => (
-                            <div key={app.id} onClick={() => navigate(`/recruitment/applications/${app.id}`)}
-                                className="bg-white p-5 md:p-6 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group">
-                                <div className="w-full sm:w-auto">
-                                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                                        <h3 className="font-bold text-base md:text-lg text-slate-800 group-hover:text-blue-600 transition-colors uppercase truncate max-w-[200px] sm:max-w-none">{app.firstName} {app.lastName}</h3>
-                                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold border shrink-0 ${getStatusColor(app.status)}`}>
-                                            {statusLabels[app.status] || app.status}
-                                        </span>
-                                    </div>
-                                    <div className="text-slate-500 text-xs md:text-sm flex flex-col sm:flex-row flex-wrap gap-2 md:gap-4 lg:gap-6">
-                                        <span className="flex items-center truncate"><FiMail className="mr-2 text-slate-400 shrink-0" /> <span className="truncate">{app.email}</span></span>
-                                        <span className="flex items-center"><FiPhone className="mr-2 text-slate-400 shrink-0" /> {app.phone}</span>
-                                        <span className="flex items-center"><FiCalendar className="mr-2 text-slate-400 shrink-0" /> {new Date(app.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="hidden sm:block text-slate-300 group-hover:text-blue-500 transition-colors">
-                                        <FiFileText className="text-2xl" />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        title="Eliminar Candidato"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setAppToDelete(app);
-                                        }}
-                                        className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                    >
-                                        <FiTrash2 size={18} />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
             </div>
 
-            {/* Modal Confirmar Eliminación de Candidato Individual */}
+            {/* Pipeline Tabs Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200">
+                <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
+                    {STATUS_OPTIONS.map(tab => {
+                        const count = statusCounts[tab.key] || 0;
+                        const isActive = activeTab === tab.key;
+                        return (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`px-3 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
+                                    isActive
+                                        ? 'border-gray-900 text-gray-900 font-semibold'
+                                        : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
+                                }`}
+                            >
+                                <span>{tab.label}</span>
+                                <span className="font-mono text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.2 rounded">
+                                    {count}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <div className="pb-2 sm:pb-0">
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre o correo..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="bg-white border border-gray-200 rounded px-2.5 py-1 text-xs text-gray-800 focus:outline-none focus:border-blue-500 w-full sm:w-56"
+                    />
+                </div>
+            </div>
+
+            {/* Candidates Table */}
+            {loading ? (
+                <div className="bg-white border border-gray-200 rounded p-12 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent mx-auto mb-2" />
+                    <p className="text-xs text-gray-500 font-medium">Cargando candidatos del proceso...</p>
+                </div>
+            ) : filteredApplications.length === 0 ? (
+                <div className="bg-white border border-gray-200 rounded p-12 text-center text-gray-400">
+                    <p className="text-sm font-medium text-gray-700">No se encontraron postulantes en esta etapa</p>
+                    <p className="text-xs text-gray-400 mt-1">Comparte el enlace público para recibir candidatos o ajusta el filtro de búsqueda.</p>
+                </div>
+            ) : (
+                <div className="bg-white border border-gray-200 rounded overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50/75 border-b border-gray-200 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                                    <th className="py-2.5 px-4">Candidato</th>
+                                    <th className="py-2.5 px-4">Contacto</th>
+                                    <th className="py-2.5 px-4">Fecha Postulación</th>
+                                    <th className="py-2.5 px-4">Etapa del Pipeline</th>
+                                    <th className="py-2.5 px-4 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {filteredApplications.map(app => {
+                                    const initials = `${app.firstName?.[0] || ''}${app.lastName?.[0] || ''}`.toUpperCase();
+
+                                    return (
+                                        <tr key={app.id} className="hover:bg-gray-50/60 transition-colors">
+                                            <td className="py-2.5 px-4">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-7 h-7 rounded bg-gray-100 text-gray-700 font-mono font-semibold text-xs flex items-center justify-center shrink-0">
+                                                        {initials}
+                                                    </div>
+                                                    <div>
+                                                        <button
+                                                            onClick={() => navigate(`/recruitment/applications/${app.id}`)}
+                                                            className="font-semibold text-gray-900 hover:text-blue-600 transition-colors text-left block cursor-pointer"
+                                                        >
+                                                            {app.firstName} {app.lastName}
+                                                        </button>
+                                                        <span className="text-[11px] text-gray-400">
+                                                            {app.coverLetter ? 'Carta adjunta' : 'Sin carta'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-2.5 px-4">
+                                                <div className="text-gray-800">{app.email}</div>
+                                                <div className="text-[11px] text-gray-500 font-mono tabular-nums">{app.phone || 'Sin teléfono'}</div>
+                                            </td>
+                                            <td className="py-2.5 px-4 font-mono text-gray-600 tabular-nums">
+                                                {new Date(app.createdAt).toLocaleDateString('es-EC')}
+                                            </td>
+                                            <td className="py-2.5 px-4">
+                                                <select
+                                                    value={app.status}
+                                                    onChange={e => handleStatusChange(app.id, e.target.value)}
+                                                    className="bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-800 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                                >
+                                                    <option value="PENDING">Postulado</option>
+                                                    <option value="REVIEWING">En Revisión</option>
+                                                    <option value="INTERVIEW">Entrevista</option>
+                                                    <option value="TESTING">Pruebas</option>
+                                                    <option value="OFFER">Oferta</option>
+                                                    <option value="HIRED">Contratado</option>
+                                                    <option value="REJECTED">Descartado</option>
+                                                </select>
+                                            </td>
+                                            <td className="py-2.5 px-4 text-right">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                    <button
+                                                        onClick={() => navigate(`/recruitment/applications/${app.id}`)}
+                                                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors cursor-pointer shadow-xs"
+                                                    >
+                                                        Ver Expediente →
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setAppToDelete(app)}
+                                                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                        title="Eliminar candidato"
+                                                    >
+                                                        <FiTrash2 size={13} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Eliminar Candidato */}
             {appToDelete && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded p-5 max-w-md w-full shadow-xl border border-gray-200 space-y-3.5 text-xs">
-                        <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
-                            <FiAlertTriangle className="text-red-600 w-5 h-5 shrink-0" />
+                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded max-w-md w-full shadow-xl border border-gray-200 text-xs">
+                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
                             <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar candidato?</h3>
+                            <button onClick={() => setAppToDelete(null)} className="text-gray-400 hover:text-gray-600">✕</button>
                         </div>
-
-                        <p className="text-gray-600 leading-relaxed">
-                            Se eliminará la postulación de <strong className="text-gray-900">{appToDelete.firstName} {appToDelete.lastName}</strong> y todos sus archivos adjuntos de currículum.
-                        </p>
-
-                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                        <div className="p-5 space-y-2 text-gray-600 leading-relaxed">
+                            <p>
+                                Se eliminará la postulación de <strong className="text-gray-900">{appToDelete.firstName} {appToDelete.lastName}</strong> y sus registros asociados.
+                            </p>
+                        </div>
+                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
                             <button
                                 disabled={deletingCandidate}
                                 onClick={() => setAppToDelete(null)}
@@ -181,27 +316,27 @@ const VacancyDetails = () => {
                                 onClick={handleDeleteCandidate}
                                 className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
                             >
-                                {deletingCandidate ? 'Eliminando...' : 'Eliminar Postulación'}
+                                {deletingCandidate ? 'Eliminando...' : 'Eliminar Candidato'}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Modal Confirmar Eliminación de Vacante Completa */}
+            {/* Modal Eliminar Vacante */}
             {showDeleteModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded p-5 max-w-md w-full shadow-xl border border-gray-200 space-y-3.5 text-xs">
-                        <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
-                            <FiAlertTriangle className="text-red-600 w-5 h-5 shrink-0" />
-                            <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar esta vacante?</h3>
+                <div className="fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded max-w-md w-full shadow-xl border border-gray-200 text-xs">
+                        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="font-semibold text-gray-900 text-sm">¿Eliminar vacante?</h3>
+                            <button onClick={() => setShowDeleteModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
                         </div>
-
-                        <p className="text-gray-600 leading-relaxed">
-                            Esta acción es irreversible. Se eliminará la vacante, las <strong className="text-gray-900">{applications.length} postulaciones</strong> recibidas y todos los archivos adjuntos.
-                        </p>
-
-                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                        <div className="p-5 space-y-2 text-gray-600 leading-relaxed">
+                            <p>
+                                Esta acción eliminará permanentemente la vacante y las <strong className="text-gray-900">{applications.length} postulaciones</strong> recibidas.
+                            </p>
+                        </div>
+                        <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-2">
                             <button
                                 disabled={deleting}
                                 onClick={() => setShowDeleteModal(false)}
@@ -211,7 +346,7 @@ const VacancyDetails = () => {
                             </button>
                             <button
                                 disabled={deleting}
-                                onClick={handleDelete}
+                                onClick={handleDeleteVacancy}
                                 className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
                             >
                                 {deleting ? 'Eliminando...' : 'Eliminar Vacante'}

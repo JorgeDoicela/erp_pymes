@@ -402,6 +402,291 @@ const EMPLOYEES_EMPRESA_1 = [
         accountType: 'Ahorros',
         vacationDays: 15,
     },
+    {
+        firstName: 'Gabriel',
+        lastName: 'Enríquez',
+        email: 'gabriel.enriquez@emplifi.com',
+        identityCard: '1715678902',
+        department: 'Tecnología',
+        position: 'Especialista en Ciberseguridad & SOC',
+        salary: 2750,
+        phone: '0981123456',
+        address: 'Av. Eloy Alfaro N34-12, Quito',
+        civilStatus: 'Soltero',
+        contractType: 'Indefinido',
+        birthDate: new Date('1989-11-04'),
+        hireDate: new Date('2021-01-15'),
+        bankName: 'Banco Pichincha',
+        accountNumber: '2211445566',
+        accountType: 'Corriente',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Valeria',
+        lastName: 'Cárdenas',
+        email: 'valeria.cardenas@emplifi.com',
+        identityCard: '1726789013',
+        department: 'Finanzas',
+        position: 'Contadora de Costos & Presupuestos',
+        salary: 2100,
+        phone: '0992234567',
+        address: 'Av. Brasil N42-19, Quito',
+        civilStatus: 'Casada',
+        contractType: 'Indefinido',
+        birthDate: new Date('1991-03-21'),
+        hireDate: new Date('2020-08-01'),
+        bankName: 'Produbanco',
+        accountNumber: '3322556677',
+        accountType: 'Ahorros',
+        vacationDays: 18,
+    },
+    {
+        firstName: 'Santiago',
+        lastName: 'Paredes',
+        email: 'santiago.paredes@emplifi.com',
+        identityCard: '1737890124',
+        department: 'Ventas',
+        position: 'Gerente Regional Sierra',
+        salary: 2900,
+        phone: '0973345678',
+        address: 'Av. Interoceánica Km 11, Cumbayá',
+        civilStatus: 'Casado',
+        contractType: 'Indefinido',
+        birthDate: new Date('1986-07-19'),
+        hireDate: new Date('2019-04-10'),
+        bankName: 'Banco Guayaquil',
+        accountNumber: '4433667788',
+        accountType: 'Corriente',
+        vacationDays: 20,
+    },
+    {
+        firstName: 'María Elena',
+        lastName: 'Noboa',
+        email: 'maria.noboa@emplifi.com',
+        identityCard: '1748901235',
+        department: 'Recursos Humanos',
+        position: 'Business Partner de Talento',
+        salary: 2250,
+        phone: '0984456789',
+        address: 'Calle La Niña E4-350, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Indefinido',
+        birthDate: new Date('1992-09-12'),
+        hireDate: new Date('2021-06-15'),
+        bankName: 'Banco Internacional',
+        accountNumber: '5544778899',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Cristian',
+        lastName: 'Benalcázar',
+        email: 'cristian.benalcazar@emplifi.com',
+        identityCard: '1759012346',
+        department: 'Operaciones',
+        position: 'Supervisor de Planta y Despachos',
+        salary: 1650,
+        phone: '0965567890',
+        address: 'Av. Panamericana Norte Km 8, Carcelén',
+        civilStatus: 'Casado',
+        contractType: 'Indefinido',
+        birthDate: new Date('1987-12-05'),
+        hireDate: new Date('2018-11-20'),
+        bankName: 'Banco del Pacífico',
+        accountNumber: '6655889900',
+        accountType: 'Ahorros',
+        vacationDays: 22,
+    },
+    {
+        firstName: 'Ximena',
+        lastName: 'Cordero',
+        email: 'ximena.cordero@emplifi.com',
+        identityCard: '1760123457',
+        department: 'Legal',
+        position: 'Oficial de Cumplimiento & Riesgos',
+        salary: 2600,
+        phone: '0976678901',
+        address: 'Av. González Suárez N27-40, Quito',
+        civilStatus: 'Casada',
+        contractType: 'Indefinido',
+        birthDate: new Date('1988-04-14'),
+        hireDate: new Date('2020-02-15'),
+        bankName: 'Produbanco',
+        accountNumber: '7766990011',
+        accountType: 'Corriente',
+        vacationDays: 18,
+    },
+    {
+        firstName: 'Mauricio',
+        lastName: 'Villacís',
+        email: 'mauricio.villacis@emplifi.com',
+        identityCard: '1771234568',
+        department: 'Tecnología',
+        position: 'Ingeniero de Frontend React Senior',
+        salary: 2350,
+        phone: '0987789012',
+        address: 'Av. Diego de Almagro N31-89, Quito',
+        civilStatus: 'Soltero',
+        contractType: 'Indefinido',
+        birthDate: new Date('1993-06-27'),
+        hireDate: new Date('2022-03-01'),
+        bankName: 'Banco Pichincha',
+        accountNumber: '8877001122',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Paulina',
+        lastName: 'Alarcón',
+        email: 'paulina.alarcon@emplifi.com',
+        identityCard: '1782345679',
+        department: 'Marketing',
+        position: 'Content Manager & Copywriter',
+        salary: 1500,
+        phone: '0998890123',
+        address: 'Calle Guipúzcoa E12-40, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Indefinido',
+        birthDate: new Date('1996-01-30'),
+        hireDate: new Date('2023-01-10'),
+        bankName: 'Banco Guayaquil',
+        accountNumber: '9988112233',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Roberto',
+        lastName: 'Cevallos',
+        email: 'roberto.cevallos@emplifi.com',
+        identityCard: '1793456780',
+        department: 'Operaciones',
+        position: 'Analista de Inventarios y Bodega',
+        salary: 1350,
+        phone: '0969901234',
+        address: 'Av. Galo Plaza Lasso N60-12, Quito',
+        civilStatus: 'Casado',
+        contractType: 'Indefinido',
+        birthDate: new Date('1994-08-11'),
+        hireDate: new Date('2022-07-01'),
+        bankName: 'Produbanco',
+        accountNumber: '1100223344',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Karina',
+        lastName: 'Santamaría',
+        email: 'karina.santamaria@emplifi.com',
+        identityCard: '1714567891',
+        department: 'Ventas',
+        position: 'Customer Success Specialist',
+        salary: 1450,
+        phone: '0971012345',
+        address: 'Calle Whymper N29-50, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Indefinido',
+        birthDate: new Date('1997-02-18'),
+        hireDate: new Date('2023-05-15'),
+        bankName: 'Banco Internacional',
+        accountNumber: '2211334455',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Alex',
+        lastName: 'Guayasamín',
+        email: 'alex.guayasamin@emplifi.com',
+        identityCard: '1725678902',
+        department: 'Tecnología',
+        position: 'DBA & Data Architect',
+        salary: 2700,
+        phone: '0982123456',
+        address: 'Av. Mariana de Jesús E7-40, Quito',
+        civilStatus: 'Casado',
+        contractType: 'Indefinido',
+        birthDate: new Date('1988-10-09'),
+        hireDate: new Date('2020-10-01'),
+        bankName: 'Banco Pichincha',
+        accountNumber: '3322445566',
+        accountType: 'Corriente',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Andrea',
+        lastName: 'Córdova',
+        email: 'andrea.cordova@emplifi.com',
+        identityCard: '1736789013',
+        department: 'Finanzas',
+        position: 'Analista de Cartera y Cobranzas',
+        salary: 1400,
+        phone: '0993234567',
+        address: 'Av. América N25-80, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Indefinido',
+        birthDate: new Date('1995-11-23'),
+        hireDate: new Date('2022-10-15'),
+        bankName: 'Banco del Pacífico',
+        accountNumber: '4433556677',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Marcelo',
+        lastName: 'Terán',
+        email: 'marcelo.teran@emplifi.com',
+        identityCard: '1747890124',
+        department: 'Innovación',
+        position: 'Product Designer & UX Researcher',
+        salary: 2200,
+        phone: '0974345678',
+        address: 'Calle Isabel La Católica N24-78, Quito',
+        civilStatus: 'Soltero',
+        contractType: 'Indefinido',
+        birthDate: new Date('1992-05-14'),
+        hireDate: new Date('2021-08-10'),
+        bankName: 'Produbanco',
+        accountNumber: '5544667788',
+        accountType: 'Corriente',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'Lucía',
+        lastName: 'Montesdeoca',
+        email: 'lucia.montesdeoca@emplifi.com',
+        identityCard: '1758901235',
+        department: 'Recursos Humanos',
+        position: 'Asistente de Bienestar Social',
+        salary: 1200,
+        phone: '0985456789',
+        address: 'Av. El Inca y 6 de Diciembre, Quito',
+        civilStatus: 'Soltera',
+        contractType: 'Plazo Fijo',
+        birthDate: new Date('1998-07-08'),
+        hireDate: new Date('2023-09-01'),
+        bankName: 'Banco Pichincha',
+        accountNumber: '6655778899',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
+    {
+        firstName: 'José Luis',
+        lastName: 'Echeverría',
+        email: 'joseluis.echeverria@emplifi.com',
+        identityCard: '1769012346',
+        department: 'Tecnología',
+        position: 'Mobile Engineer Flutter / React Native',
+        salary: 2150,
+        phone: '0996567890',
+        address: 'Calle Tamayo N22-30, Quito',
+        civilStatus: 'Soltero',
+        contractType: 'Indefinido',
+        birthDate: new Date('1994-12-16'),
+        hireDate: new Date('2022-04-18'),
+        bankName: 'Banco Guayaquil',
+        accountNumber: '7766889900',
+        accountType: 'Ahorros',
+        vacationDays: 15,
+    },
     // Ex-empleados Empresa 1
     {
         firstName: 'Carlos',
@@ -732,7 +1017,7 @@ export async function seedUsers(prisma) {
     console.log('[USERS] Configurando exactamente 2 Empresas SaaS con sus equipos completos...');
     const password = await bcrypt.hash('Emplifi2025!', 10);
 
-    // ── 1. EXACTAMENTE 2 TENANTS / EMPRESAS ───────────────────────────────────
+    // ── 1. EXACTAMENTE 7 TENANTS / EMPRESAS MULTI-SECTOR ─────────────────────
     const TENANTS_TO_SEED = [
         {
             name: 'Empresa Demo Ecuador S.A.',
@@ -751,10 +1036,55 @@ export async function seedUsers(prisma) {
             subscriptionStatus: 'ACTIVE',
             maxEmployees: 50,
             trialEndsAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+        },
+        {
+            name: 'Innovate Corp S.A.S.',
+            slug: 'innovate-corp',
+            ruc: '1799988776001',
+            plan: 'GROWTH',
+            subscriptionStatus: 'ACTIVE',
+            maxEmployees: 50,
+            trialEndsAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
+        },
+        {
+            name: 'Logística & Distribución Andina S.A.',
+            slug: 'logistica-andina',
+            ruc: '1791122334001',
+            plan: 'ENTERPRISE',
+            subscriptionStatus: 'ACTIVE',
+            maxEmployees: 100,
+            trialEndsAt: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+        },
+        {
+            name: 'Clínica Médica Santa Inés S.A.',
+            slug: 'clinica-santa-ines',
+            ruc: '1792233445001',
+            plan: 'ENTERPRISE',
+            subscriptionStatus: 'ACTIVE',
+            maxEmployees: 80,
+            trialEndsAt: new Date(Date.now() + 270 * 24 * 60 * 60 * 1000)
+        },
+        {
+            name: 'Comercializadora Retail del Pacífico S.A.',
+            slug: 'retail-pacifico',
+            ruc: '1793344556001',
+            plan: 'GROWTH',
+            subscriptionStatus: 'ACTIVE',
+            maxEmployees: 60,
+            trialEndsAt: new Date(Date.now() + 210 * 24 * 60 * 60 * 1000)
+        },
+        {
+            name: 'Manufacturas Industriales Pichincha Cía. Ltda.',
+            slug: 'manufacturas-pichincha',
+            ruc: '1794455667001',
+            plan: 'ESSENTIAL',
+            subscriptionStatus: 'ACTIVE',
+            maxEmployees: 40,
+            trialEndsAt: new Date(Date.now() + 150 * 24 * 60 * 60 * 1000)
         }
     ];
 
-    let tenant1, tenant2;
+    const createdTenants = {};
     for (const t of TENANTS_TO_SEED) {
         const created = await prisma.tenant.upsert({
             where: { slug: t.slug },
@@ -768,10 +1098,12 @@ export async function seedUsers(prisma) {
             },
             create: t
         });
-        if (t.slug === 'empresa-demo') tenant1 = created;
-        if (t.slug === 'tech-solutions') tenant2 = created;
+        createdTenants[t.slug] = created;
         console.log(`Tenant Creado/Actualizado: ${created.name} (${created.slug})`);
     }
+
+    const tenant1 = createdTenants['empresa-demo'];
+    const tenant2 = createdTenants['tech-solutions'];
 
     // ── 2. SUPERADMIN GLOBAL ──────────────────────────────────────────────────
     let superAdmin;
@@ -808,10 +1140,9 @@ export async function seedUsers(prisma) {
         superAdmin = await prisma.employee.findUnique({ where: { email: 'admin@emplifi.com' } });
     }
 
-    // ── 3. EMPRESA 1: Ecosistema de Usuarios y Roles ─────────────────────────
+    // ── 3. EMPRESA 1: Empresa Demo Ecuador S.A. ──────────────────────────────
     const tenant1Employees = [];
 
-    // Admin Empresa 1
     const admin1 = await prisma.employee.upsert({
         where: { email: 'admin.empresa@emplifi.com' },
         update: { password, tenantId: tenant1.id, role: 'admin' },
@@ -841,7 +1172,6 @@ export async function seedUsers(prisma) {
     });
     tenant1Employees.push(admin1);
 
-    // Contador Empresa 1
     const accountant1 = await prisma.employee.upsert({
         where: { email: 'contabilidad@emplifi.com' },
         update: { password, tenantId: tenant1.id, role: 'accounting' },
@@ -871,7 +1201,6 @@ export async function seedUsers(prisma) {
     });
     tenant1Employees.push(accountant1);
 
-    // Emprendedor Empresa 1
     const entrepreneur1 = await prisma.employee.upsert({
         where: { email: 'emprendedor@emplifi.com' },
         update: { password, tenantId: tenant1.id, role: 'entrepreneur' },
@@ -901,7 +1230,6 @@ export async function seedUsers(prisma) {
     });
     tenant1Employees.push(entrepreneur1);
 
-    // Empleados Empresa 1
     for (const emp of EMPLOYEES_EMPRESA_1) {
         const created = await prisma.employee.upsert({
             where: { email: emp.email },
@@ -935,10 +1263,9 @@ export async function seedUsers(prisma) {
     }
     console.log(`Empresa 1 (${tenant1.name}): ${tenant1Employees.length} colaboradores creados.`);
 
-    // ── 4. EMPRESA 2: Ecosistema de Usuarios y Roles ─────────────────────────
+    // ── 4. EMPRESA 2: TechSolutions Cía. Ltda. ─────────────────────────────────
     const tenant2Employees = [];
 
-    // Admin Empresa 2
     const admin2 = await prisma.employee.upsert({
         where: { email: 'admin.tech@techsolutions.ec' },
         update: { password, tenantId: tenant2.id, role: 'admin' },
@@ -968,7 +1295,6 @@ export async function seedUsers(prisma) {
     });
     tenant2Employees.push(admin2);
 
-    // Contador Empresa 2
     const accountant2 = await prisma.employee.upsert({
         where: { email: 'contabilidad.tech@techsolutions.ec' },
         update: { password, tenantId: tenant2.id, role: 'accounting' },
@@ -998,7 +1324,6 @@ export async function seedUsers(prisma) {
     });
     tenant2Employees.push(accountant2);
 
-    // Emprendedor Empresa 2
     const entrepreneur2 = await prisma.employee.upsert({
         where: { email: 'innovacion.tech@techsolutions.ec' },
         update: { password, tenantId: tenant2.id, role: 'entrepreneur' },
@@ -1028,7 +1353,6 @@ export async function seedUsers(prisma) {
     });
     tenant2Employees.push(entrepreneur2);
 
-    // Empleados Empresa 2
     for (const emp of EMPLOYEES_EMPRESA_2) {
         const created = await prisma.employee.upsert({
             where: { email: emp.email },
@@ -1062,27 +1386,144 @@ export async function seedUsers(prisma) {
     }
     console.log(`Empresa 2 (${tenant2.name}): ${tenant2Employees.length} colaboradores creados.`);
 
-    // ── System Settings por Tenant ───────────────────────────────────────────
-    await prisma.systemSetting.deleteMany({ where: { tenantId: { in: [tenant1.id, tenant2.id] } } });
-    await prisma.systemSetting.create({
-        data: {
-            id: 'setting-empresa-demo',
-            tenantId: tenant1.id,
-            maintenanceMode: false,
-            biometricEnabled: true,
-            maintenanceMessage: 'Empresa Demo Ecuador S.A. - Operativo',
+    // ── 5. DEMÁS EMPRESAS: Administradores y Equipos Sectoriales ───────────────
+    const OTHER_TENANTS_DATA = [
+        {
+            slug: 'innovate-corp',
+            admin: { firstName: 'Verónica', lastName: 'Paredes', email: 'admin.innovate@innovatecorp.ec', department: 'Dirección', position: 'Chief AI Officer', salary: 3400 },
+            employees: [
+                { firstName: 'Mauricio', lastName: 'Alarcón', email: 'mauricio.alarcon@innovatecorp.ec', identityCard: '1721984756', department: 'Tecnología', position: 'Líder Técnico AI', salary: 2600, phone: '0987123450' },
+                { firstName: 'Paulina', lastName: 'Vallejo', email: 'paulina.vallejo@innovatecorp.ec', identityCard: '1718293847', department: 'Tecnología', position: 'Data Scientist Senior', salary: 2400, phone: '0998234561' },
+                { firstName: 'Xavier', lastName: 'Cevallos', email: 'xavier.cevallos@innovatecorp.ec', identityCard: '1729384756', department: 'Tecnología', position: 'Ingeniero MLOps', salary: 2100, phone: '0989345672' },
+                { firstName: 'Lorena', lastName: 'Benítez', email: 'lorena.benitez@innovatecorp.ec', identityCard: '1710293847', department: 'Ventas', position: 'Directora Comercial', salary: 2100, phone: '0970456783' },
+                { firstName: 'Esteban', lastName: 'Guamán', email: 'esteban.guaman@innovatecorp.ec', identityCard: '1723849501', department: 'Ventas', position: 'Account Executive AI', salary: 1650, phone: '0961567894' },
+                { firstName: 'Byron', lastName: 'Paredes', email: 'byron.paredes@innovatecorp.ec', identityCard: '1729203148', department: 'Finanzas', position: 'Contador General', salary: 1800, phone: '0997123458' }
+            ]
+        },
+        {
+            slug: 'logistica-andina',
+            admin: { firstName: 'Fernando', lastName: 'Castro', email: 'admin@logisticaandina.ec', department: 'Gerencia', position: 'Gerente de Operaciones & Logística', salary: 3200 },
+            employees: [
+                { firstName: 'Hugo', lastName: 'Morán', email: 'hugo.moran@logisticaandina.ec', identityCard: '1713456782', department: 'Operaciones', position: 'Jefe de Flota y Rutas', salary: 1800, phone: '0981239901' },
+                { firstName: 'Teresa', lastName: 'Burbano', email: 'teresa.burbano@logisticaandina.ec', identityCard: '1724567893', department: 'Operaciones', position: 'Supervisora de Despachos', salary: 1500, phone: '0992349902' },
+                { firstName: 'Gonzalo', lastName: 'Pillajo', email: 'gonzalo.pillajo@logisticaandina.ec', identityCard: '1735678904', department: 'Operaciones', position: 'Coordinador de Almacenes', salary: 1400, phone: '0973459903' },
+                { firstName: 'Silvia', lastName: 'Revelo', email: 'silvia.revelo@logisticaandina.ec', identityCard: '1746789015', department: 'Finanzas', position: 'Analista de Costos de Transporte', salary: 1600, phone: '0984569904' },
+                { firstName: 'Ramiro', lastName: 'Guanoluisa', email: 'ramiro.guano@logisticaandina.ec', identityCard: '1757890126', department: 'Recursos Humanos', position: 'Generalista de Personal Logístico', salary: 1550, phone: '0965679905' }
+            ]
+        },
+        {
+            slug: 'clinica-santa-ines',
+            admin: { firstName: 'Dra. Carmen', lastName: 'Salas', email: 'admin@clinicasantaines.ec', department: 'Dirección Médica', position: 'Directora Médica & Administrativa', salary: 3600 },
+            employees: [
+                { firstName: 'Dr. Marco', lastName: 'Vinueza', email: 'marco.vinueza@clinicasantaines.ec', identityCard: '1719876543', department: 'Médica', position: 'Médico Ocupacional & Auditor', salary: 2800, phone: '0981987654' },
+                { firstName: 'Lic. Gladys', lastName: 'Yánez', email: 'gladys.yanez@clinicasantaines.ec', identityCard: '1728765432', department: 'Enfermería', position: 'Jefa de Enfermería', salary: 1750, phone: '0992876543' },
+                { firstName: 'Dra. Mónica', lastName: 'Espín', email: 'monica.espin@clinicasantaines.ec', identityCard: '1737654321', department: 'Farmacia', position: 'Química Farmacéutica', salary: 1900, phone: '0973765432' },
+                { firstName: 'Lorena', lastName: 'Quishpe', email: 'lorena.quishpe@clinicasantaines.ec', identityCard: '1746543210', department: 'Admisiones', position: 'Coordinadora de Admisiones y Caja', salary: 1250, phone: '0984654321' },
+                { firstName: 'Edison', lastName: 'Toapanta', email: 'edison.toapanta@clinicasantaines.ec', identityCard: '1755432109', department: 'Finanzas', position: 'Contador Hospitalario', salary: 1950, phone: '0965543210' }
+            ]
+        },
+        {
+            slug: 'retail-pacifico',
+            admin: { firstName: 'Guillermo', lastName: 'Lasso V.', email: 'admin@retailpacifico.ec', department: 'Gerencia', position: 'Gerente General Retail', salary: 3300 },
+            employees: [
+                { firstName: 'Raúl', lastName: 'Campoverde', email: 'raul.campo@retailpacifico.ec', identityCard: '1712233445', department: 'Comercial', position: 'Jefe Nacional de Compras', salary: 2200, phone: '0981223344' },
+                { firstName: 'Sonia', lastName: 'Intriago', email: 'sonia.intriago@retailpacifico.ec', identityCard: '1723344556', department: 'Ventas', position: 'Supervisora de Locales y Puntos de Venta', salary: 1600, phone: '0992334455' },
+                { firstName: 'Wilmer', lastName: 'Caicedo', email: 'wilmer.caicedo@retailpacifico.ec', identityCard: '1734455667', department: 'Operaciones', position: 'Líder de Merchandising y Góndolas', salary: 1300, phone: '0973445566' },
+                { firstName: 'Mayra', lastName: 'Baque', email: 'mayra.baque@retailpacifico.ec', identityCard: '1745566778', department: 'Recursos Humanos', position: 'Analista de Nómina Retail', salary: 1500, phone: '0984556778' }
+            ]
+        },
+        {
+            slug: 'manufacturas-pichincha',
+            admin: { firstName: 'Ing. Oswaldo', lastName: 'Guevara', email: 'admin@manufacturaspichincha.ec', department: 'Gerencia', position: 'Gerente de Planta y Producción', salary: 3100 },
+            employees: [
+                { firstName: 'Jaime', lastName: 'Cachipuendo', email: 'jaime.cachi@manufacturaspichincha.ec', identityCard: '1714455661', department: 'Producción', position: 'Supervisor de Turnos Industriales', salary: 1700, phone: '0981445561' },
+                { firstName: 'Ángel', lastName: 'Simbaña', email: 'angel.simbana@manufacturaspichincha.ec', identityCard: '1725566772', department: 'Seguridad', position: 'Especialista en Seguridad y Salud Ocupacional', salary: 1850, phone: '0992556772' },
+                { firstName: 'Nelson', lastName: 'Farías', email: 'nelson.farias@manufacturaspichincha.ec', identityCard: '1736677883', department: 'Calidad', position: 'Inspector de Control de Calidad', salary: 1400, phone: '0973667883' },
+                { firstName: 'Blanca', lastName: 'Molina', email: 'blanca.molina@manufacturaspichincha.ec', identityCard: '1747788994', department: 'Finanzas', position: 'Auxiliar Contable de Planta', salary: 1200, phone: '0984778994' }
+            ]
         }
-    });
+    ];
 
-    await prisma.systemSetting.create({
-        data: {
-            id: 'setting-tech-solutions',
-            tenantId: tenant2.id,
-            maintenanceMode: false,
-            biometricEnabled: true,
-            maintenanceMessage: 'TechSolutions Cía. Ltda. - Operativo',
+    for (const tData of OTHER_TENANTS_DATA) {
+        const tenant = createdTenants[tData.slug];
+        if (!tenant) continue;
+
+        // Admin
+        await prisma.employee.upsert({
+            where: { email: tData.admin.email },
+            update: { password, tenantId: tenant.id, role: 'admin' },
+            create: {
+                tenantId: tenant.id,
+                firstName: tData.admin.firstName,
+                lastName: tData.admin.lastName,
+                email: tData.admin.email,
+                role: 'admin',
+                department: tData.admin.department,
+                position: tData.admin.position,
+                salary: encryptSalary(tData.admin.salary),
+                password,
+                identityCard: `1799${Math.floor(100000 + Math.random() * 900000)}`,
+                birthDate: new Date('1984-06-15'),
+                hireDate: new Date('2020-01-10'),
+                isActive: true,
+                address: 'Quito, Ecuador',
+                phone: '0991234500',
+                civilStatus: 'Casado',
+                contractType: 'Indefinido',
+                bankName: encrypt('Banco Pichincha'),
+                accountNumber: encrypt('1234567890'),
+                accountType: 'Corriente',
+                vacationDays: 15,
+            }
+        });
+
+        // Empleados
+        for (const emp of tData.employees) {
+            await prisma.employee.upsert({
+                where: { email: emp.email },
+                update: { password, tenantId: tenant.id },
+                create: {
+                    tenantId: tenant.id,
+                    firstName: emp.firstName,
+                    lastName: emp.lastName,
+                    email: emp.email,
+                    password,
+                    role: 'employee',
+                    department: emp.department,
+                    position: emp.position,
+                    salary: encryptSalary(emp.salary),
+                    identityCard: emp.identityCard,
+                    birthDate: new Date('1992-05-10'),
+                    hireDate: new Date('2021-03-01'),
+                    isActive: true,
+                    address: 'Quito, Ecuador',
+                    phone: emp.phone,
+                    civilStatus: 'Casado',
+                    contractType: 'Indefinido',
+                    bankName: encrypt('Banco Guayaquil'),
+                    accountNumber: encrypt('9876543210'),
+                    accountType: 'Ahorros',
+                    vacationDays: 15,
+                }
+            });
         }
-    });
+        console.log(`Tenant ${tenant.name} poblado con ${tData.employees.length + 1} colaboradores.`);
+    }
+
+    // ── System Settings por Tenant ───────────────────────────────────────────
+    await prisma.systemSetting.deleteMany({});
+    for (const slug of Object.keys(createdTenants)) {
+        const t = createdTenants[slug];
+        await prisma.systemSetting.create({
+            data: {
+                id: `setting-${t.slug}`,
+                tenantId: t.id,
+                maintenanceMode: false,
+                biometricEnabled: true,
+                maintenanceMessage: `${t.name} - Operativo`,
+            }
+        });
+    }
 
     const allUsers = await prisma.employee.findMany();
 
@@ -1103,3 +1544,4 @@ export async function seedUsers(prisma) {
         employees: tenant1Employees
     };
 }
+

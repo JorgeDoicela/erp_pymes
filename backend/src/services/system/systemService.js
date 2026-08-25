@@ -12,7 +12,12 @@ class SystemService {
             }
 
             if (!settings) {
-                // Si no existe para el tenant, buscar 'default' o crearlo
+                // Si no se encontró por tenantId, intentar buscar el primer setting configurado
+                settings = await prisma.systemSetting.findFirst();
+            }
+
+            if (!settings) {
+                // Si la tabla está vacía, crear 'default'
                 settings = await prisma.systemSetting.upsert({
                     where: { id: 'default' },
                     update: {},

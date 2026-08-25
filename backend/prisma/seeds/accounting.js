@@ -1,8 +1,8 @@
 export async function seedAccounting(prisma) {
-    console.log('[ACCOUNTING] Cargando catálogo contable (PUG) para ambas empresas...');
+    console.log('[ACCOUNTING] Cargando catálogo contable (PUG) para todas las empresas...');
 
     const tenants = await prisma.tenant.findMany({
-        where: { slug: { in: ['empresa-demo', 'tech-solutions'] } }
+        where: { isActive: true }
     });
 
     for (const tenant of tenants) {
@@ -106,10 +106,10 @@ export async function seedAccounting(prisma) {
 }
 
 export async function seedJournalEntries(prisma) {
-    console.log('[ACCOUNTING] Generando transacciones contables para ambas empresas...');
+    console.log('[ACCOUNTING] Generando transacciones contables para todas las empresas...');
 
     const tenants = await prisma.tenant.findMany({
-        where: { slug: { in: ['empresa-demo', 'tech-solutions'] } }
+        where: { isActive: true }
     });
 
     const now = new Date();
@@ -127,7 +127,7 @@ export async function seedJournalEntries(prisma) {
         const ccMap = {};
         ccs.forEach(c => ccMap[c.code] = c.id);
 
-        const prefix = tenant.slug === 'empresa-demo' ? 'DEMO' : 'TECH';
+        const prefix = tenant.slug.toUpperCase().slice(0, 5);
 
         const entries = [
             {

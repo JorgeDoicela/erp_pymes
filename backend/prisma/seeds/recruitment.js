@@ -1,8 +1,8 @@
 export async function seedRecruitment(prisma) {
-    console.log('[RECRUITMENT] Generando Procesos de Reclutamiento para ambas empresas...');
+    console.log('[RECRUITMENT] Generando Procesos de Reclutamiento para todas las empresas...');
 
     const tenants = await prisma.tenant.findMany({
-        where: { slug: { in: ['empresa-demo', 'tech-solutions'] } }
+        where: { isActive: true }
     });
 
     for (const tenant of tenants) {
@@ -12,15 +12,21 @@ export async function seedRecruitment(prisma) {
 
         if (!adminUser) continue;
 
+        const defaultTemplates = [
+            { title: `Especialista en ${tenant.name.includes('Clínica') ? 'Atención Médica' : tenant.name.includes('Logística') ? 'Rutas y Transporte' : 'Operaciones'}`, department: 'Operaciones', location: 'Quito' },
+            { title: `Coordinador de Talento y RRHH`, department: 'Recursos Humanos', location: 'Quito' },
+            { title: `Ejecutivo Comercial Senior`, department: 'Ventas', location: 'Guayaquil / Quito' }
+        ];
+
         const vacancyTemplates = tenant.slug === 'empresa-demo' ? [
             { title: 'Desarrollador Fullstack Senior', department: 'Tecnología', location: 'Quito' },
             { title: 'Coordinador de Selección y RRHH', department: 'Recursos Humanos', location: 'Quito' },
             { title: 'Ejecutivo Comercial B2B', department: 'Ventas', location: 'Guayaquil' }
-        ] : [
+        ] : tenant.slug === 'tech-solutions' ? [
             { title: 'Ingeniero Cloud & DevOps', department: 'Infraestructura', location: 'Remoto - Ecuador' },
             { title: 'QA Automation Lead', department: 'Calidad', location: 'Quito' },
             { title: 'Product Manager SaaS', department: 'Producto', location: 'Remoto' }
-        ];
+        ] : defaultTemplates;
 
         for (const vData of vacancyTemplates) {
             try {

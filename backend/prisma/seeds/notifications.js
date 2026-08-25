@@ -8,7 +8,7 @@ export const seedNotifications = async (prisma, admin1, allEmployees) => {
 
     // Obtener tenants
     const tenants = await prisma.tenant.findMany({
-        where: { slug: { in: ['empresa-demo', 'tech-solutions', 'innovate-corp'] } }
+        where: { isActive: true }
     });
 
     for (const tenant of tenants) {

@@ -1,6 +1,7 @@
 import employeeService from '../../services/employees/employeeService.js';
 import bcrypt from 'bcryptjs';
 import { isSuperAdminRole } from '../../config/roles.js';
+import prisma from '../../database/db.js';
 
 /**
  * EmployeeController
@@ -411,8 +412,37 @@ export class EmployeeController {
    */
   async updateConsent(req, res) {
     try {
-      const id = req.user.id;
+      const isSuperAdmin = isSuperAdminRole(req.user?.role);
+      const id = req.user?.employeeId || req.user?.id;
       const { consent } = req.body;
+
+      if (!id || isSuperAdmin) {
+        return res.status(200).json({
+          success: true,
+          message: 'Consentimiento registrado',
+          data: {
+            trackingConsent: !!consent,
+            trackingConsentDate: new Date()
+          }
+        });
+      }
+
+      // Buscar si el empleado existe en la base de datos
+      const employeeExists = await prisma.employee.findUnique({
+        where: { id },
+        select: { id: true }
+      });
+
+      if (!employeeExists) {
+        return res.status(200).json({
+          success: true,
+          message: 'Consentimiento registrado',
+          data: {
+            trackingConsent: !!consent,
+            trackingConsentDate: new Date()
+          }
+        });
+      }
 
       const employee = await employeeService.updateEmployee(id, {
         trackingConsent: !!consent,
@@ -428,6 +458,7 @@ export class EmployeeController {
         }
       });
     } catch (error) {
+      console.error('[EmployeeController] updateConsent error:', error);
       res.status(500).json({
         success: false,
         message: error.message || 'Error al actualizar consentimiento'

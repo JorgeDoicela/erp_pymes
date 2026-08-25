@@ -17,9 +17,7 @@ const OPERATIONAL_REPORTS = [
         title: 'Reportes de Asistencia',
         path: '/admin/reports',
         category: 'Control de Jornada',
-        icon: <FiFileText className="w-5 h-5 text-blue-600" />,
-        badge: 'Operativo',
-        badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+        tag: 'Operativo',
         desc: 'Marcaciones biométricas, horas efectivas, atrasos justificados y horas extras.'
     },
     {
@@ -27,9 +25,7 @@ const OPERATIONAL_REPORTS = [
         title: 'Rotación de Personal',
         path: '/analytics/turnover',
         category: 'Retención de Talento',
-        icon: <FiUserMinus className="w-5 h-5 text-rose-600" />,
-        badge: 'Gestión',
-        badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+        tag: 'Gestión',
         desc: 'Tasas de salida voluntaria/involuntaria, antigüedad promedio y motivos de desvinculación.'
     },
     {
@@ -37,9 +33,7 @@ const OPERATIONAL_REPORTS = [
         title: 'Rendimiento y Desempeño',
         path: '/analytics/performance',
         category: 'Evaluación y Metas',
-        icon: <FiBarChart2 className="w-5 h-5 text-indigo-600" />,
-        badge: 'Estratégico',
-        badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        tag: 'Estratégico',
         desc: 'Resultados de evaluaciones por competencias, cumplimiento de KPIs y mapa de talento.'
     },
     {
@@ -47,9 +41,7 @@ const OPERATIONAL_REPORTS = [
         title: 'Costos Salariales & Masa Salarial',
         path: '/analytics/payroll-costs',
         category: 'Finanzas RRHH',
-        icon: <FiDollarSign className="w-5 h-5 text-emerald-600" />,
-        badge: 'Financiero',
-        badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        tag: 'Financiero',
         desc: 'Distribución de masa salarial por departamento, beneficios sociales y provisiones de ley.'
     },
     {
@@ -57,9 +49,7 @@ const OPERATIONAL_REPORTS = [
         title: 'Clima Laboral & Satisfacción',
         path: '/analytics/satisfaction',
         category: 'Cultura y Clima',
-        icon: <FiActivity className="w-5 h-5 text-purple-600" />,
-        badge: 'Encuestas',
-        badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+        tag: 'Encuestas',
         desc: 'Índices de satisfacción interna, prevención de burnout y eNPS organizacional.'
     }
 ];
@@ -70,9 +60,7 @@ const AI_MODELS = [
         title: 'Calibración RSI (Robust Stability Index)',
         path: '/analytics/rsi-optimization',
         category: 'Estabilidad Organizacional',
-        icon: <FiCpu className="w-5 h-5 text-emerald-600" />,
-        badge: 'MCMC / Bayesiano',
-        badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        tag: 'MCMC / Bayesiano',
         desc: 'Calibración estocástica de índices de salud organizacional con intervalos de credibilidad del 95%.'
     },
     {
@@ -80,9 +68,7 @@ const AI_MODELS = [
         title: 'Inferencia Causal (Do-Calculus)',
         path: '/analytics/causal-inference',
         category: 'Simulación de Políticas',
-        icon: <FiGitPullRequest className="w-5 h-5 text-blue-600" />,
-        badge: 'Causal AI',
-        badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+        tag: 'Causal AI',
         desc: 'Estimación contrafactual del impacto real de incrementos salariales y teletrabajo en la retención.'
     },
     {
@@ -90,9 +76,7 @@ const AI_MODELS = [
         title: 'Benchmarking & Aprendizaje Federado',
         path: '/analytics/federated-learning',
         category: 'Comparativa de Mercado',
-        icon: <FiShare2 className="w-5 h-5 text-teal-600" />,
-        badge: 'Differential Privacy',
-        badgeColor: 'bg-teal-50 text-teal-700 border-teal-200',
+        tag: 'Differential Privacy',
         desc: 'Comparación sectorial con empresas pares preservando el 100% de la privacidad de datos salariales.'
     },
     {
@@ -100,9 +84,7 @@ const AI_MODELS = [
         title: 'Optimización Multiobjetivo (MORL)',
         path: '/analytics/morl-pareto',
         category: 'Optimización Presupuestaria',
-        icon: <FiTarget className="w-5 h-5 text-amber-600" />,
-        badge: 'Pareto Front',
-        badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+        tag: 'Pareto Front',
         desc: 'Cálculo de compensación óptima en la frontera de Pareto entre costo empresarial y riesgo de fuga.'
     },
     {
@@ -110,9 +92,7 @@ const AI_MODELS = [
         title: 'Temporal Attention (12 Meses)',
         path: '/analytics/temporal-attention',
         category: 'Deep Learning Secuencial',
-        icon: <FiZap className="w-5 h-5 text-purple-600" />,
-        badge: 'Attention Mechanism',
-        badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+        tag: 'Attention Mechanism',
         desc: 'Redes con mecanismo de atención temporal sobre historial de asistencia, desempeño y feedback continuo.'
     },
     {
@@ -120,9 +100,7 @@ const AI_MODELS = [
         title: 'FT-Transformer Tabular',
         path: '/analytics/ft-transformer',
         category: 'Transformer Tabular',
-        icon: <FiLayers className="w-5 h-5 text-indigo-600" />,
-        badge: 'Feature Tokenizer',
-        badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        tag: 'Feature Tokenizer',
         desc: 'Arquitectura transformer de última generación adaptada para la detección temprana de anomalías en nómina.'
     }
 ];
@@ -130,7 +108,6 @@ const AI_MODELS = [
 const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
 const AnalyticsDashboard = () => {
-    const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -226,38 +203,57 @@ const AnalyticsDashboard = () => {
                 </div>
             </div>
 
-            {/* Grid de Gráficos Analíticos de Gestión Empresarial */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {/* Grid de Gráficos Analíticos de Gestión Empresarial (Diseño Espacioso) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* 1. Masa Salarial Mensual por Departamento */}
-                <div className="bg-white p-4.5 rounded border border-gray-200 shadow-2xs space-y-3">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                <div className="bg-white p-5 rounded border border-gray-200 space-y-4 flex flex-col justify-between">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                         <div>
                             <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                                 Masa Salarial por Área
                             </h3>
-                            <p className="text-[11px] text-gray-400">Distribución de nómina mensual ($)</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">Distribución de nómina mensual ($)</p>
                         </div>
-                        <span className="text-xs font-mono font-semibold text-emerald-700">
+                        <span className="text-sm font-mono font-semibold text-emerald-700 tabular-nums">
                             ${data?.kpis?.payrollTotal ? data.kpis.payrollTotal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}
                         </span>
                     </div>
 
-                    <div className="h-60 w-full">
+                    <div className="h-64 w-full">
                         {filteredPayrollData.length === 0 ? (
                             <div className="h-full flex items-center justify-center text-gray-400 text-xs">
                                 Sin registros de nómina activa en el filtro.
                             </div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={filteredPayrollData} margin={{ top: 10, right: 10, left: -15, bottom: 25 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                                    <XAxis dataKey="name" stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} interval={0} angle={-25} textAnchor="end" />
-                                    <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`} />
+                                <BarChart 
+                                    data={filteredPayrollData} 
+                                    layout="vertical"
+                                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
+                                    <XAxis 
+                                        type="number" 
+                                        stroke="#9ca3af" 
+                                        fontSize={10} 
+                                        tickLine={false} 
+                                        axisLine={false} 
+                                        tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`} 
+                                    />
+                                    <YAxis 
+                                        dataKey="name" 
+                                        type="category" 
+                                        stroke="#374151" 
+                                        fontSize={11} 
+                                        tickLine={false} 
+                                        axisLine={false} 
+                                        width={95} 
+                                    />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '11px' }}
+                                        contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '11px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
                                         formatter={(value) => [`$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 'Nómina']}
                                     />
-                                    <Bar dataKey="salary" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
+                                    <Bar dataKey="salary" fill="#10b981" radius={[0, 3, 3, 0]} barSize={16} />
                                 </BarChart>
                             </ResponsiveContainer>
                         )}
@@ -265,30 +261,49 @@ const AnalyticsDashboard = () => {
                 </div>
 
                 {/* 2. Distribución de Dotación de Personal */}
-                <div className="bg-white p-4.5 rounded border border-gray-200 shadow-2xs space-y-3">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                <div className="bg-white p-5 rounded border border-gray-200 space-y-4 flex flex-col justify-between">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                         <div>
                             <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                                 Dotación por Departamento
                             </h3>
-                            <p className="text-[11px] text-gray-400">Distribución de colaboradores</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">Distribución de colaboradores</p>
                         </div>
-                        <span className="text-xs font-mono font-semibold text-blue-700">
+                        <span className="text-sm font-mono font-semibold text-blue-700 tabular-nums">
                             {data?.kpis?.totalEmployees || 0} Total
                         </span>
                     </div>
 
-                    <div className="h-60 w-full">
+                    <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={filteredDeptData} layout="vertical" margin={{ top: 5, right: 15, left: 30, bottom: 5 }}>
+                            <BarChart 
+                                data={filteredDeptData} 
+                                layout="vertical" 
+                                margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                            >
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
-                                <XAxis type="number" stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} />
-                                <YAxis dataKey="name" type="category" stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} width={90} />
+                                <XAxis 
+                                    type="number" 
+                                    stroke="#9ca3af" 
+                                    fontSize={10} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    allowDecimals={false}
+                                />
+                                <YAxis 
+                                    dataKey="name" 
+                                    type="category" 
+                                    stroke="#374151" 
+                                    fontSize={11} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    width={95} 
+                                />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '11px' }}
+                                    contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '11px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
                                     formatter={(value) => [`${value} colaboradores`, 'Personal']}
                                 />
-                                <Bar dataKey="value" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={14}>
+                                <Bar dataKey="value" fill="#2563eb" radius={[0, 3, 3, 0]} barSize={16}>
                                     {filteredDeptData.map((_, index) => (
                                         <Cell key={`dept-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
@@ -299,35 +314,55 @@ const AnalyticsDashboard = () => {
                 </div>
 
                 {/* 3. Vacantes Abiertas y Procesos de Selección */}
-                <div className="bg-white p-4.5 rounded border border-gray-200 shadow-2xs space-y-3">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                <div className="bg-white p-5 rounded border border-gray-200 space-y-4 flex flex-col justify-between">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                         <div>
                             <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                                 Vacantes en Proceso
                             </h3>
-                            <p className="text-[11px] text-gray-400">Demanda de talento activo</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">Demanda de talento activo</p>
                         </div>
-                        <span className="text-xs font-mono font-semibold text-amber-700">
+                        <span className="text-sm font-mono font-semibold text-amber-700 tabular-nums">
                             {data?.kpis?.openVacancies || 0} Abiertas
                         </span>
                     </div>
 
-                    <div className="h-60 w-full">
+                    <div className="h-64 w-full">
                         {filteredVacancyData.length === 0 ? (
-                            <div className="h-full flex items-center justify-center text-gray-400 text-xs">
-                                No hay vacantes abiertas en el filtro seleccionado.
+                            <div className="h-full flex flex-col items-center justify-center text-gray-400 text-xs">
+                                <span className="font-mono">Sin vacantes activas</span>
+                                <span className="text-[11px] text-gray-400 mt-1">Todos los puestos cubiertos</span>
                             </div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={filteredVacancyData} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                                    <XAxis dataKey="name" stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} interval={0} angle={-25} textAnchor="end" />
-                                    <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
+                                <BarChart 
+                                    data={filteredVacancyData} 
+                                    layout="vertical"
+                                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
+                                    <XAxis 
+                                        type="number" 
+                                        stroke="#9ca3af" 
+                                        fontSize={10} 
+                                        tickLine={false} 
+                                        axisLine={false} 
+                                        allowDecimals={false} 
+                                    />
+                                    <YAxis 
+                                        dataKey="name" 
+                                        type="category"
+                                        stroke="#374151" 
+                                        fontSize={11} 
+                                        tickLine={false} 
+                                        axisLine={false} 
+                                        width={95}
+                                    />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '11px' }}
+                                        contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '11px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
                                         formatter={(value) => [`${value} vacantes`, 'Demanda']}
                                     />
-                                    <Bar dataKey="value" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} />
+                                    <Bar dataKey="value" fill="#d97706" radius={[0, 3, 3, 0]} barSize={16} />
                                 </BarChart>
                             </ResponsiveContainer>
                         )}
@@ -336,117 +371,115 @@ const AnalyticsDashboard = () => {
             </div>
 
             {/* Directorio de Herramientas y Motores Analíticos (Pestañas Segmentadas) */}
-            <div className="space-y-4 pt-1">
+            <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between border-b border-gray-200 pb-px">
                     {/* Tabs de Selección */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-4">
                         <button
                             type="button"
                             onClick={() => setActiveTab('operational')}
-                            className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
+                            className={`pb-3 text-sm font-medium border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
                                 activeTab === 'operational'
-                                    ? 'border-gray-900 text-gray-900'
+                                    ? 'border-gray-900 text-gray-900 font-semibold'
                                     : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                         >
                             <span>Reportes de Gestión Operativa</span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-gray-100 text-gray-700">
+                            <span className="text-xs font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-700 tabular-nums">
                                 {OPERATIONAL_REPORTS.length}
                             </span>
                         </button>
                         <button
                             type="button"
                             onClick={() => setActiveTab('ai')}
-                            className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
+                            className={`pb-3 text-sm font-medium border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
                                 activeTab === 'ai'
-                                    ? 'border-purple-600 text-purple-900'
+                                    ? 'border-gray-900 text-gray-900 font-semibold'
                                     : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                         >
                             <span>Motores de IA & Analítica Predictiva</span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                            <span className="text-xs font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-700 tabular-nums">
                                 {AI_MODELS.length}
                             </span>
                         </button>
                     </div>
 
-                    <span className="text-[11px] text-gray-400 hidden sm:inline-block font-mono">
+                    <span className="text-xs text-gray-400 hidden sm:inline-block font-mono">
                         {activeTab === 'operational' ? 'Informes consolidados de gestión' : 'Modelos de simulación y calibración'}
                     </span>
                 </div>
 
                 {/* Tarjetas de Reportes Operativos */}
                 {activeTab === 'operational' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {OPERATIONAL_REPORTS.map((rep) => (
-                            <div
+                            <Link
                                 key={rep.id}
-                                onClick={() => navigate(rep.path)}
-                                className="bg-white p-4 rounded border border-gray-200 hover:border-blue-500/50 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between space-y-3 group"
+                                to={rep.path}
+                                className="bg-white p-5 rounded border border-gray-200 hover:border-gray-300 hover:shadow-xs transition-all flex flex-col justify-between space-y-4 group text-left min-h-[170px]"
                             >
                                 <div className="space-y-2.5">
                                     <div className="flex items-center justify-between">
-                                        <div className="p-2 rounded bg-gray-50 border border-gray-100 group-hover:bg-blue-50 transition-colors">
-                                            {rep.icon}
-                                        </div>
-                                        <span className={`text-[10px] font-medium font-mono px-2 py-0.5 rounded border ${rep.badgeColor}`}>
-                                            {rep.badge}
+                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 font-mono">
+                                            {rep.category}
+                                        </span>
+                                        <span className="text-[11px] font-mono text-gray-500 font-medium bg-gray-50 px-2 py-0.5 rounded border border-gray-150">
+                                            {rep.tag}
                                         </span>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] uppercase font-semibold tracking-wider text-gray-400 mb-0.5">{rep.category}</p>
-                                        <h4 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                        <h4 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                                             {rep.title}
                                         </h4>
-                                        <p className="text-[11px] text-gray-500 leading-relaxed mt-1">
+                                        <p className="text-xs text-gray-500 leading-relaxed mt-1.5">
                                             {rep.desc}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-blue-600 font-medium group-hover:translate-x-0.5 transition-transform">
+                                <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-blue-600 font-medium group-hover:text-blue-700">
                                     <span>Acceder al reporte</span>
-                                    <FiArrowUpRight size={14} />
+                                    <FiArrowUpRight size={15} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 )}
 
                 {/* Tarjetas de Motores de IA */}
                 {activeTab === 'ai' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {AI_MODELS.map((ai) => (
-                            <div
+                            <Link
                                 key={ai.id}
-                                onClick={() => navigate(ai.path)}
-                                className="bg-white p-4 rounded border border-gray-200 hover:border-purple-500/50 hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between space-y-3 group"
+                                to={ai.path}
+                                className="bg-white p-5 rounded border border-gray-200 hover:border-gray-300 hover:shadow-xs transition-all flex flex-col justify-between space-y-4 group text-left min-h-[170px]"
                             >
                                 <div className="space-y-2.5">
                                     <div className="flex items-center justify-between">
-                                        <div className="p-2 rounded bg-purple-50/60 border border-purple-100 group-hover:bg-purple-100/80 transition-colors">
-                                            {ai.icon}
-                                        </div>
-                                        <span className={`text-[10px] font-medium font-mono px-2 py-0.5 rounded border ${ai.badgeColor}`}>
-                                            {ai.badge}
+                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 font-mono">
+                                            {ai.category}
+                                        </span>
+                                        <span className="text-[11px] font-mono text-gray-500 font-medium bg-gray-50 px-2 py-0.5 rounded border border-gray-150">
+                                            {ai.tag}
                                         </span>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] uppercase font-semibold tracking-wider text-purple-500/80 mb-0.5">{ai.category}</p>
-                                        <h4 className="text-xs font-semibold text-gray-900 group-hover:text-purple-700 transition-colors">
+                                        <h4 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                                             {ai.title}
                                         </h4>
-                                        <p className="text-[11px] text-gray-500 leading-relaxed mt-1">
+                                        <p className="text-xs text-gray-500 leading-relaxed mt-1.5">
                                             {ai.desc}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-purple-700 font-medium group-hover:translate-x-0.5 transition-transform">
+                                <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-blue-600 font-medium group-hover:text-blue-700">
                                     <span>Ejecutar motor analítico</span>
-                                    <FiArrowUpRight size={14} />
+                                    <FiArrowUpRight size={15} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 )}

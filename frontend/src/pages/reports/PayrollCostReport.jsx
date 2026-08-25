@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getPayrollCostReport } from '../../services/analytics.service';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const PayrollCostReport = () => {
     const [data, setData] = useState(null);
@@ -28,8 +30,8 @@ const PayrollCostReport = () => {
         loadReport();
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-400 text-xs">Calculando costos de nómina...</div>;
-    if (!data) return <div className="p-8 text-center text-gray-400 text-xs">No hay registros de nómina disponibles.</div>;
+    if (loading) return <div className="p-8 text-center text-gray-400 text-xs font-mono">Calculando costos de nómina...</div>;
+    if (!data) return <div className="p-8 text-center text-gray-400 text-xs font-mono">No hay registros de nómina disponibles.</div>;
 
     const COLORS = ['#2563eb', '#166534', '#d97706', '#4b5563'];
 
@@ -38,12 +40,35 @@ const PayrollCostReport = () => {
             {/* Header Limpio ERP */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-gray-200">
                 <div>
-                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analíticas · Finanzas</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Link
+                            to="/analytics"
+                            className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 font-medium transition-colors"
+                        >
+                            <FiArrowLeft className="w-3 h-3" />
+                            <span>Analíticas</span>
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider font-mono">Finanzas RRHH</span>
+                    </div>
                     <h1 className="text-xl font-semibold text-gray-900">Reporte de Costos de Nómina</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Análisis financiero de sueldos base, horas extra, aportes e impositivos.</p>
                 </div>
 
-                <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-2 bg-white p-3 rounded border border-gray-200 w-full lg:w-auto text-xs">
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                        to="/analytics"
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiArrowLeft className="w-3.5 h-3.5" />
+                        <span>Volver a Analíticas</span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Filtros */}
+            <div className="flex justify-end">
+                <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-2 bg-white p-3 rounded border border-gray-200 w-full lg:w-auto text-xs shadow-xs">
                     <div>
                         <label className="block font-medium text-gray-600 mb-1">Desde</label>
                         <input

@@ -296,7 +296,7 @@ const RecruitmentDashboard = () => {
                                     <tr key={v.id} className="hover:bg-gray-50/60 transition-colors">
                                         <td className="py-2.5 px-4">
                                             <button
-                                                onClick={() => navigate(`/recruitment/vacancy/${v.id}`)}
+                                                onClick={() => navigate(`/recruitment/${v.id}`)}
                                                 className="font-medium text-gray-900 hover:text-blue-600 transition-colors text-left cursor-pointer block"
                                             >
                                                 {v.title}
@@ -313,7 +313,7 @@ const RecruitmentDashboard = () => {
                                         </td>
                                         <td className="py-2.5 px-4 text-center">
                                             <button
-                                                onClick={() => navigate(`/recruitment/applications/${v.id}`)}
+                                                onClick={() => navigate(`/recruitment/${v.id}`)}
                                                 className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded font-mono font-medium text-gray-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                                             >
                                                 <span>{v.applicationsCount || 0} candidatos</span>

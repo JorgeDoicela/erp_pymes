@@ -410,7 +410,16 @@ export const attendanceService = {
             // It is an ID
             employee = await prisma.employee.findUnique({
                 where: { id: inputIdentifier },
-                select: { id: true, firstName: true, lastName: true, position: true, department: true }
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    position: true,
+                    department: true,
+                    trackingConsent: true,
+                    trackingConsentDate: true,
+                    biometricCredentials: { select: { id: true } }
+                }
             });
 
             if (!employee) throw new Error('Empleado no encontrado');
@@ -418,7 +427,16 @@ export const attendanceService = {
             // It is an identity card
             employee = await prisma.employee.findUnique({
                 where: { identityCard: inputIdentifier },
-                select: { id: true, firstName: true, lastName: true, position: true, department: true }
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    position: true,
+                    department: true,
+                    trackingConsent: true,
+                    trackingConsentDate: true,
+                    biometricCredentials: { select: { id: true } }
+                }
             });
 
             if (!employee) throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
@@ -444,7 +462,8 @@ export const attendanceService = {
             firstName: employee.firstName,
             lastName: employee.lastName,
             position: employee.position,
-            department: employee.department
+            department: employee.department,
+            hasBiometric: Boolean(employee.biometricCredentials && employee.biometricCredentials.length > 0)
         };
 
         // Fetch Active Schedule

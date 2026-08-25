@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import { useState, Suspense, lazy } from 'react'
+import { useState, useEffect, Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast';
 import Loading from './components/Loading.jsx';
@@ -142,6 +142,27 @@ function App() {
     localStorage.removeItem('token');
     setAuth({ user: null, token: null })
   }
+
+  useEffect(() => {
+    const handleUserUpdated = () => {
+      const savedUser = localStorage.getItem('user');
+      const savedToken = localStorage.getItem('token');
+      if (savedUser && savedToken) {
+        try {
+          setAuth({ user: JSON.parse(savedUser), token: savedToken });
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+
+    window.addEventListener('emplifi:user-updated', handleUserUpdated);
+    window.addEventListener('storage', handleUserUpdated);
+    return () => {
+      window.removeEventListener('emplifi:user-updated', handleUserUpdated);
+      window.removeEventListener('storage', handleUserUpdated);
+    };
+  }, []);
 
   const RequireAuth = ({ children, role }) => {
     if (!auth.user) {

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getPerformanceReport } from '../../services/analytics.service';
 import { getDepartments } from '../../services/employees/employee.service';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const PerformanceReport = () => {
     const [data, setData] = useState(null);
@@ -40,20 +42,43 @@ const PerformanceReport = () => {
         loadReport();
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-400 text-xs">Generando informe de desempeño...</div>;
-    if (!data) return <div className="p-8 text-center text-gray-400 text-xs">No hay datos de desempeño disponibles.</div>;
+    if (loading) return <div className="p-8 text-center text-gray-400 text-xs font-mono">Generando informe de desempeño...</div>;
+    if (!data) return <div className="p-8 text-center text-gray-400 text-xs font-mono">No hay datos de desempeño disponibles.</div>;
 
     return (
         <div className="space-y-5">
             {/* Header Limpio ERP */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-gray-200">
                 <div>
-                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-0.5">Analíticas · Desempeño</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Link
+                            to="/analytics"
+                            className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 font-medium transition-colors"
+                        >
+                            <FiArrowLeft className="w-3 h-3" />
+                            <span>Analíticas</span>
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider font-mono">Evaluación y Metas</span>
+                    </div>
                     <h1 className="text-xl font-semibold text-gray-900">Evaluación de Desempeño Organizacional</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Métricas de rendimiento por departamento, puntuaciones destacadas y planes de desarrollo.</p>
                 </div>
 
-                <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-2 bg-white p-3 rounded border border-gray-200 w-full lg:w-auto text-xs">
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                        to="/analytics"
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiArrowLeft className="w-3.5 h-3.5" />
+                        <span>Volver a Analíticas</span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Filtros */}
+            <div className="flex justify-end">
+                <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-2 bg-white p-3 rounded border border-gray-200 w-full lg:w-auto text-xs shadow-xs">
                     <div>
                         <label className="block font-medium text-gray-600 mb-1">Desde</label>
                         <input

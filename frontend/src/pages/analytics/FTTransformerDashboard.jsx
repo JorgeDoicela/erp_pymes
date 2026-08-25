@@ -1,18 +1,13 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
     getFTTransformerComparison, 
     trainFTTransformer 
 } from '../../services/intelligenceService';
 import { 
-    FiActivity, 
-    FiZap, 
     FiRefreshCw, 
-    FiCpu, 
-    FiLayers,
-    FiTrendingUp,
-    FiCheckCircle,
     FiSliders,
-    FiGrid
+    FiArrowLeft
 } from 'react-icons/fi';
 import { 
     XAxis, 
@@ -66,11 +61,8 @@ const FTTransformerDashboard = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="flex flex-col items-center gap-3">
-                    <FiRefreshCw className="w-8 h-8 text-primary-500 animate-spin" />
-                    <p className="text-sm text-gray-500 font-medium">Ejecutando FT-Transformer Tabular y K-Fold Cross-Validation (Gorishniy et al. 2021)...</p>
-                </div>
+            <div className="p-12 text-center text-gray-400 text-xs font-mono">
+                Ejecutando FT-Transformer Tabular y K-Fold Cross-Validation (Gorishniy et al. 2021)...
             </div>
         );
     }
@@ -81,7 +73,6 @@ const FTTransformerDashboard = () => {
         f1: Number((m.f1Score * 100).toFixed(1))
     }));
 
-    // Matriz de interacción sintética estructurada de acuerdo a pesos aprendidos
     const featureLabels = ['CLS', 'Salario', 'Antigüedad', 'Ausencias', 'Desempeño', 'Horas Extra', 'Tardanzas'];
     const interactionMatrix = [
         [0.22, 0.19, 0.14, 0.18, 0.15, 0.08, 0.04],
@@ -94,160 +85,170 @@ const FTTransformerDashboard = () => {
     ];
 
     return (
-        <div className="space-y-6 pb-12">
+        <div className="space-y-6">
             {/* Toast */}
             {toastMessage && (
-                <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-gray-700 animate-bounce">
-                    <FiZap className="text-amber-400 w-5 h-5" />
-                    <span className="text-sm font-medium">{toastMessage}</span>
+                <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-4 py-2.5 rounded shadow-xl text-xs font-mono flex items-center gap-2 border border-gray-800">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>{toastMessage}</span>
                 </div>
             )}
 
-            {/* Header */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-xs">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 rounded-full flex items-center gap-1">
-                                <FiLayers className="w-3 h-3" /> Feature Tokenizer + Transformer
-                            </span>
-                            <span className="px-2.5 py-0.5 text-xs font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 rounded-full">
-                                Multi-Head Self-Attention Tabular
-                            </span>
-                        </div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            FT-Transformer para Datos Tabulares de RRHH
-                        </h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Transformación de covariables socio-laborales en embeddings densos con interacción de atención multi-cabeza (Gorishniy et al. NeurIPS 2021).
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={handleTrain}
-                            disabled={training}
-                            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-sm font-medium transition-all shadow-sm flex items-center gap-2 disabled:opacity-50"
+            {/* Header Limpio ERP */}
+            <div className="pb-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Link
+                            to="/analytics"
+                            className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 font-medium transition-colors"
                         >
-                            <FiSliders className={`w-4 h-4 ${training ? 'animate-spin' : ''}`} />
-                            {training ? 'Optimizando Pesos...' : 'Entrenar FT-Transformer'}
-                        </button>
+                            <FiArrowLeft className="w-3 h-3" />
+                            <span>Analíticas</span>
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider font-mono">
+                            Transformer Tabular
+                        </span>
                     </div>
+                    <h1 className="text-xl font-semibold text-gray-900">
+                        FT-Transformer para Datos Tabulares de RRHH
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        Transformación de covariables socio-laborales en embeddings densos con atención multi-cabeza (Gorishniy et al. NeurIPS 2021).
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 shrink-0">
+                    <Link
+                        to="/analytics"
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiArrowLeft className="w-3.5 h-3.5" />
+                        <span>Volver a Analíticas</span>
+                    </Link>
+                    <button
+                        onClick={handleTrain}
+                        disabled={training}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                        <FiSliders className={`w-3.5 h-3.5 ${training ? 'animate-spin' : ''}`} />
+                        <span>{training ? 'Optimizando Pesos...' : 'Entrenar FT-Transformer'}</span>
+                    </button>
                 </div>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-xs">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-400 uppercase">F1-Score FT-Transformer</span>
-                        <FiCheckCircle className="w-4 h-4 text-emerald-500" />
-                    </div>
-                    <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+            {/* Fila de Métricas Clave ERP */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-4.5 rounded border border-gray-200 space-y-1">
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider font-mono">
+                        F1-Score FT-Transformer
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-xl font-semibold font-mono text-emerald-700 tabular-nums">
                             {comparisonData?.models?.find(m => m.name.includes('FT-Transformer'))?.f1Score || '0.880'}
                         </span>
-                        <span className="text-xs text-emerald-600 font-semibold">Out-of-sample</span>
+                        <span className="text-xs text-emerald-600 font-semibold font-mono">Out-of-sample</span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Stratified 5-Fold Cross Validation</p>
+                    <p className="text-[11px] text-gray-400">Stratified 5-Fold Cross Validation</p>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-xs">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-400 uppercase">Reducción de Error Brier</span>
-                        <FiTrendingUp className="w-4 h-4 text-indigo-500" />
-                    </div>
-                    <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                <div className="bg-white p-4.5 rounded border border-gray-200 space-y-1">
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider font-mono">
+                        Reducción de Error Brier
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-xl font-semibold font-mono text-blue-700 tabular-nums">
                             +{comparisonData?.brierImprovementOverBaselinePercent || '58.2'}%
                         </span>
-                        <span className="text-xs text-indigo-600 font-semibold">vs Heurístico</span>
+                        <span className="text-xs text-gray-500">vs Heurístico</span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Calibración probabilística superior</p>
+                    <p className="text-[11px] text-gray-400">Calibración probabilística superior</p>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-xs">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-400 uppercase">Dimensión de Tokens</span>
-                        <FiCpu className="w-4 h-4 text-purple-500" />
+                <div className="bg-white p-4.5 rounded border border-gray-200 space-y-1">
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider font-mono">
+                        Dimensión de Tokens
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-xl font-semibold font-mono text-gray-900 tabular-nums">
+                            d_token = 16
+                        </span>
                     </div>
-                    <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-gray-900 dark:text-white">d_token = 16</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">2 Cabezas de Atención (d_head = 8)</p>
+                    <p className="text-[11px] text-gray-400">2 Cabezas de Atención (d_head = 8)</p>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-xs">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-400 uppercase">Features Tokenizadas</span>
-                        <FiGrid className="w-4 h-4 text-amber-500" />
+                <div className="bg-white p-4.5 rounded border border-gray-200 space-y-1">
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider font-mono">
+                        Features Tokenizadas
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-xl font-semibold font-mono text-gray-900 tabular-nums">
+                            6 + [CLS]
+                        </span>
                     </div>
-                    <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-gray-900 dark:text-white">6 + [CLS]</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">Salario, Tenure, Ausencias, Perf, Tardanzas</p>
+                    <p className="text-[11px] text-gray-400">Salario, Tenure, Ausencias, Perf, Tardanzas</p>
                 </div>
             </div>
 
             {/* Comparativa de Modelos */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {/* Gráfico F1-Score Comparativo */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-xs space-y-4">
-                    <div>
-                        <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                <div className="bg-white p-4.5 rounded border border-gray-200 space-y-3">
+                    <div className="border-b border-gray-100 pb-2.5">
+                        <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                             Comparativa Fuera de Muestra: F1-Score (%)
-                        </h2>
-                        <p className="text-xs text-gray-500">
+                        </h3>
+                        <p className="text-[11px] text-gray-400">
                             Rendimiento out-of-sample evaluado independientemente en cada fold K=5.
                         </p>
                     </div>
                     <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={modelsData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} />
-                                <YAxis unit="%" tick={{ fontSize: 11 }} tickLine={false} domain={[0, 100]} />
+                            <BarChart data={modelsData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                                <XAxis dataKey="name" stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} axisLine={false} unit="%" domain={[0, 100]} />
                                 <Tooltip 
+                                    contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', color: '#111827', fontSize: '11px' }}
                                     formatter={(value) => [`${value}%`, 'F1-Score']}
-                                    contentStyle={{ backgroundColor: '#1F2937', color: '#FFF', borderRadius: '8px', border: 'none' }}
                                 />
-                                <Bar dataKey="f1" fill="#10B981" radius={[6, 6, 0, 0]} />
+                                <Bar dataKey="f1" fill="#2563eb" radius={[2, 2, 0, 0]} barSize={28} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
                 {/* Tabla Detallada K-Fold */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-xs space-y-4">
-                    <div>
-                        <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                <div className="bg-white rounded border border-gray-200 overflow-hidden flex flex-col justify-between">
+                    <div className="p-4.5 border-b border-gray-200 bg-gray-50/50">
+                        <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                             Métricas Estadísticas por Modelo (K=5)
-                        </h2>
-                        <p className="text-xs text-gray-500">
+                        </h3>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
                             Promedio y desviación estándar empírica entre pliegues de validación cruzada.
                         </p>
                     </div>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto flex-1">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-gray-50 dark:bg-gray-750 text-gray-500 uppercase font-semibold">
+                            <thead className="bg-gray-50/50 border-b border-gray-200 text-[10px] sm:text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
                                 <tr>
-                                    <th className="px-3 py-2.5 rounded-l-lg">Modelo</th>
-                                    <th className="px-3 py-2.5">Brier Score (std)</th>
-                                    <th className="px-3 py-2.5 rounded-r-lg">F1-Score (std)</th>
+                                    <th className="px-4 py-2.5">Modelo</th>
+                                    <th className="px-4 py-2.5">Brier Score (std)</th>
+                                    <th className="px-4 py-2.5">F1-Score (std)</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                            <tbody className="divide-y divide-gray-100">
                                 {(comparisonData?.models || []).map((m, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-gray-750/50">
-                                        <td className="px-3 py-3 font-semibold text-gray-900 dark:text-white">
+                                    <tr key={idx} className="hover:bg-gray-50/60 transition-colors">
+                                        <td className="px-4 py-3 font-semibold text-gray-900">
                                             {m.name}
                                         </td>
-                                        <td className="px-3 py-3 text-gray-700 dark:text-gray-300">
-                                            <span className="font-mono">{m.brierScore}</span>{' '}
+                                        <td className="px-4 py-3 text-gray-700 font-mono tabular-nums">
+                                            <span>{m.brierScore}</span>{' '}
                                             <span className="text-gray-400 text-[10px]">±{m.brierScoreStd}</span>
                                         </td>
-                                        <td className="px-3 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                                            <span className="font-mono">{m.f1Score}</span>{' '}
+                                        <td className="px-4 py-3 font-mono font-semibold text-emerald-700 tabular-nums">
+                                            <span>{m.f1Score}</span>{' '}
                                             <span className="text-gray-400 text-[10px]">±{m.f1ScoreStd}</span>
                                         </td>
                                     </tr>
@@ -259,45 +260,44 @@ const FTTransformerDashboard = () => {
             </div>
 
             {/* Token Interaction Matrix (Heatmap) */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
+            <div className="bg-white p-4.5 rounded border border-gray-200 space-y-3">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
                     <div>
-                        <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                        <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                             Matriz de Interacción de Tokens (Multi-Head Self-Attention Map)
-                        </h2>
-                        <p className="text-xs text-gray-500">
+                        </h3>
+                        <p className="text-[11px] text-gray-400">
                             Grado en que cada feature atiende a las demás a través de las cabezas de atención (explicabilidad de interacciones complejas).
                         </p>
                     </div>
-                    <span className="text-xs font-semibold px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-lg">
+                    <span className="text-[10px] font-mono text-gray-500">
                         Gorishniy et al. (2021)
                     </span>
                 </div>
 
-                <div className="overflow-x-auto pt-2">
-                    <div className="min-w-[600px]">
-                        <div className="grid grid-cols-8 gap-2 text-center text-xs font-medium">
-                            <div className="p-2 font-bold text-gray-400">Tokens</div>
+                <div className="overflow-x-auto pt-1">
+                    <div className="min-w-[620px]">
+                        <div className="grid grid-cols-8 gap-1.5 text-center text-xs font-medium">
+                            <div className="p-2 font-mono text-[11px] font-semibold text-gray-400">Tokens</div>
                             {featureLabels.map((lbl, idx) => (
-                                <div key={idx} className="p-2 font-bold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-750 rounded-lg">
+                                <div key={idx} className="p-2 font-mono text-[10px] font-semibold text-gray-700 bg-gray-50 rounded border border-gray-200">
                                     {lbl}
                                 </div>
                             ))}
                         </div>
 
                         {interactionMatrix.map((row, rIdx) => (
-                            <div key={rIdx} className="grid grid-cols-8 gap-2 mt-2 text-center text-xs">
-                                <div className="p-2 font-bold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-750 rounded-lg flex items-center justify-center">
+                            <div key={rIdx} className="grid grid-cols-8 gap-1.5 mt-1.5 text-center text-xs">
+                                <div className="p-2 font-mono text-[10px] font-semibold text-gray-700 bg-gray-50 rounded border border-gray-200 flex items-center justify-center">
                                     {featureLabels[rIdx]}
                                 </div>
                                 {row.map((val, cIdx) => {
-                                    // Intensidad de color esmeralda basada en el peso atencional
-                                    const intensity = Math.min(1.0, val * 2.2);
+                                    const intensity = Math.min(1.0, val * 2.0);
                                     return (
                                         <div 
                                             key={cIdx} 
-                                            style={{ backgroundColor: `rgba(16, 185, 129, ${Math.max(0.1, intensity)})` }}
-                                            className="p-3 rounded-lg font-mono font-bold text-gray-900 dark:text-white flex items-center justify-center transition-all hover:scale-105"
+                                            style={{ backgroundColor: `rgba(37, 99, 235, ${Math.max(0.06, intensity)})` }}
+                                            className="p-2.5 rounded border border-gray-100 font-mono text-xs font-semibold text-gray-900 flex items-center justify-center transition-colors"
                                             title={`Atención ${featureLabels[rIdx]} -> ${featureLabels[cIdx]}: ${(val * 100).toFixed(1)}%`}
                                         >
                                             {(val * 100).toFixed(0)}%
@@ -314,3 +314,4 @@ const FTTransformerDashboard = () => {
 };
 
 export default FTTransformerDashboard;
+

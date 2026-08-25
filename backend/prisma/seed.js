@@ -15,6 +15,7 @@ import { seedDocuments } from './seeds/documents.js';
 import { seedAudit } from './seeds/audit.js';
 import { seedPayrollConfig } from './seeds/payroll_config.js';
 import { seedNotifications } from './seeds/notifications.js';
+import { seedAnnouncements } from './seeds/announcements.js';
 import { seedAccounting, seedJournalEntries } from './seeds/accounting.js';
 import { seedEntrepreneurship } from './seeds/entrepreneurship.js';
 import { seedResearchData } from './seeds/research_data.js';
@@ -126,11 +127,13 @@ async function main() {
     await withRetry('PAYROLL', (prisma) => seedPayroll(prisma, allEmployees));
     await sleep(800);
 
-    // 9. Clima Laboral, Auditoría y Notificaciones
-    console.log('\n[9/12] Creando encuestas de clima, logs de auditoría y notificaciones...');
+    // 9. Clima Laboral, Auditoría, Comunicados y Notificaciones
+    console.log('\n[9/12] Creando encuestas de clima, comunicados, logs de auditoría y notificaciones...');
     await withRetry('CLIMATE', (prisma) => seedClimate(prisma));
     await sleep(800);
     await withRetry('AUDIT', (prisma) => seedAudit(prisma, allEmployees));
+    await sleep(800);
+    await withRetry('ANNOUNCEMENTS', (prisma) => seedAnnouncements(prisma, allEmployees));
     await sleep(800);
     await withRetry('NOTIFICATIONS', (prisma) => seedNotifications(prisma, admin1, allEmployees));
     await sleep(800);
@@ -152,17 +155,24 @@ async function main() {
     await withRetry('RESEARCH_DATA', (prisma) => seedResearchData(prisma));
 
     console.log('\n╔════════════════════════════════════════════════════════════╗');
-    console.log('║           SEED DE 2 EMPRESAS COMPLETADO                  ║');
+    console.log('║        SEED DE 7 EMPRESAS MULTI-SECTOR COMPLETADO          ║');
     console.log('╠════════════════════════════════════════════════════════════╣');
-    console.log('║  Empresa 1: Empresa Demo Ecuador S.A.                      ║');
-    console.log('║    Admin:   admin.empresa@emplifi.com (Pass: Emplifi2025!)  ║');
-    console.log('║    Contab:  contabilidad@emplifi.com   (Pass: Emplifi2025!)  ║');
-    console.log('║                                                            ║');
-    console.log('║  Empresa 2: TechSolutions Cía. Ltda.                       ║');
-    console.log('║    Admin:   admin.tech@techsolutions.ec (Pass: Emplifi2025!)║');
-    console.log('║    Contab:  contabilidad.tech@techsolutions.ec (Emplifi2025!)║');
-    console.log('║                                                            ║');
-    console.log('║  SuperAdmin Global: admin@emplifi.com (Pass: Emplifi2025!) ║');
+    console.log('║ 1. Empresa Demo Ecuador S.A. (Corporativo/Tech)            ║');
+    console.log('║    Admin: admin.empresa@emplifi.com  (Pass: Emplifi2025!)  ║');
+    console.log('║ 2. TechSolutions Cía. Ltda. (Software/Cloud)               ║');
+    console.log('║    Admin: admin.tech@techsolutions.ec (Pass: Emplifi2025!) ║');
+    console.log('║ 3. Innovate Corp S.A.S. (IA & Big Data)                    ║');
+    console.log('║    Admin: admin.innovate@innovatecorp.ec (Emplifi2025!)    ║');
+    console.log('║ 4. Logística & Distribución Andina S.A. (Transporte)       ║');
+    console.log('║    Admin: admin@logisticaandina.ec (Pass: Emplifi2025!)    ║');
+    console.log('║ 5. Clínica Médica Santa Inés S.A. (Salud/Hospitalario)     ║');
+    console.log('║    Admin: admin@clinicasantaines.ec (Pass: Emplifi2025!)   ║');
+    console.log('║ 6. Comercializadora Retail del Pacífico S.A. (Comercio)    ║');
+    console.log('║    Admin: admin@retailpacifico.ec (Pass: Emplifi2025!)     ║');
+    console.log('║ 7. Manufacturas Industriales Pichincha (Producción/EPPs)   ║');
+    console.log('║    Admin: admin@manufacturaspichincha.ec (Emplifi2025!)    ║');
+    console.log('╠════════════════════════════════════════════════════════════╣');
+    console.log('║ SuperAdmin Global: admin@emplifi.com (Pass: Emplifi2025!)  ║');
     console.log('╚════════════════════════════════════════════════════════════╝');
 }
 

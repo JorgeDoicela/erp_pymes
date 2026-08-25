@@ -31,12 +31,16 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     const [loading, setLoading] = useState(false);
     const [showConsent, setShowConsent] = useState(false);
     const [consenting, setConsenting] = useState(false);
-    const [consentStatus, setConsentStatus] = useState(currentUser?.trackingConsent || false);
+    const [consentStatus, setConsentStatus] = useState(() => {
+        const freshUser = (() => {
+            try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+        })();
+        return Boolean(freshUser?.trackingConsent ?? currentUser?.trackingConsent);
+    });
 
     const [message, setMessage] = useState({ type: '', text: '' });
     const [foundEmployee, setFoundEmployee] = useState(null);
     const [recordData, setRecordData] = useState(null);
-    const [locationName, setLocationName] = useState(null);
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [pendingAction, setPendingAction] = useState(null); // 'ENTRY' or 'EXIT'
@@ -46,16 +50,17 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
         try {
             await updateConsentTracking(true);
 
-            // Actualizar localStorage para que persista en la sesión actual
+            // Actualizar localStorage y disparar evento global para actualizar App.jsx
             const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
             savedUser.trackingConsent = true;
             localStorage.setItem('user', JSON.stringify(savedUser));
             setConsentStatus(true);
-
             setShowConsent(false);
+            window.dispatchEvent(new Event('emplifi:user-updated'));
+
             setMessage({ type: 'success', text: 'Consentimiento registrado correctamente.' });
         } catch (err) {
-            setMessage({ type: 'error', text: 'No se pudo registrar el consentimiento.' });
+            setMessage({ type: 'error', text: err?.message || 'No se pudo registrar el consentimiento.' });
         } finally {
             setConsenting(false);
         }
@@ -70,11 +75,12 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
             savedUser.trackingConsent = false;
             localStorage.setItem('user', JSON.stringify(savedUser));
             setConsentStatus(false);
-
             setShowConsent(false);
+            window.dispatchEvent(new Event('emplifi:user-updated'));
+
             setMessage({ type: 'info', text: 'Consentimiento retirado. No podrá marcar asistencia sin aceptar los términos.' });
         } catch (err) {
-            setMessage({ type: 'error', text: 'Error al procesar la solicitud.' });
+            setMessage({ type: 'error', text: err?.message || 'Error al procesar la solicitud.' });
         } finally {
             setConsenting(false);
         }
@@ -83,6 +89,8 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     // Biometric
     const [biometricEnabled, setBiometricEnabled] = useState(false);
     const [biometricSupported, setBiometricSupported] = useState(false);
+    const [hasBiometricRegistered, setHasBiometricRegistered] = useState(null);
+    const [registeringBiometric, setRegisteringBiometric] = useState(false);
 
     // Update clock every second
     useEffect(() => {
@@ -95,9 +103,17 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
         if (autoLoadUser && currentUser?.id) {
             setEmployeeId(currentUser.id);
             checkStatus(currentUser.id);
-            // Check if user has consented
-            if (currentUser.trackingConsent === false) {
+
+            const freshUser = (() => {
+                try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+            })();
+            const hasConsent = freshUser?.trackingConsent ?? currentUser?.trackingConsent;
+
+            if (hasConsent === false) {
                 setShowConsent(true);
+            } else if (hasConsent === true) {
+                setShowConsent(false);
+                setConsentStatus(true);
             }
         }
     }, [user, autoLoadUser]);
@@ -113,6 +129,22 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
             }
         };
         fetchBiometricSetting();
+
+        const fetchBiometricStatus = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/status`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.data) {
+                    setHasBiometricRegistered(Boolean(res.data.isRegistered));
+                }
+            } catch {
+                // Silently catch
+            }
+        };
+        fetchBiometricStatus();
 
         // Check if device has ANY user-verifying platform authenticator
         // (fingerprint, face ID, PIN, password, pattern — anything the OS security system offers)
@@ -135,6 +167,47 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
         checkSupport();
     }, []);
 
+    const handleQuickRegisterBiometric = async () => {
+        setRegisteringBiometric(true);
+        setMessage({ type: 'info', text: 'Preparando lector biométrico / Windows Hello...' });
+        try {
+            const token = localStorage.getItem('token');
+            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
+            const optionsRes = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/register/options`, config);
+            const options = optionsRes.data;
+
+            setMessage({ type: 'info', text: 'Por favor, coloque su huella o confirme con su sensor en pantalla...' });
+
+            const { startRegistration } = await import('@simplewebauthn/browser');
+            const regResp = await startRegistration({ optionsJSON: options });
+
+            const verifyRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/register/verify`, regResp, config);
+
+            if (verifyRes.data.verified) {
+                setHasBiometricRegistered(true);
+                setMessage({ type: 'success', text: '¡Biometría registrada exitosamente! Ya puedes registrar tu asistencia.' });
+                if (employeeId) checkStatus(employeeId);
+            } else {
+                setMessage({ type: 'error', text: 'No se pudo verificar la credencial biométrica.' });
+            }
+        } catch (err) {
+            console.error('Quick Biometric Reg Error:', err);
+            let msg = err.response?.data?.message || err.message || 'Error al registrar biometría.';
+            if (err.name === 'NotAllowedError') {
+                msg = 'La operación fue cancelada por el usuario o expiró el tiempo de espera del lector biométrico.';
+            } else if (err.name === 'InvalidStateError') {
+                msg = 'Esta credencial biométrica ya se encuentra registrada en este dispositivo.';
+                setHasBiometricRegistered(true);
+            } else if (err.name === 'NotSupportedError') {
+                msg = 'Este navegador o dispositivo no soporta autenticación biométrica WebAuthn.';
+            }
+            setMessage({ type: 'error', text: msg });
+        } finally {
+            setRegisteringBiometric(false);
+        }
+    };
+
     const checkStatus = async (id = employeeId) => {
         const cleanId = id?.toString().trim();
         if (!cleanId) return;
@@ -150,6 +223,22 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                 if (res.data.employee) {
                     setFoundEmployee(res.data.employee);
                     setEmployeeId(res.data.employee.id);
+                    if (res.data.employee.hasBiometric !== undefined) {
+                        setHasBiometricRegistered(Boolean(res.data.employee.hasBiometric));
+                    }
+                    if (res.data.employee.trackingConsent !== undefined) {
+                        const hasConsent = Boolean(res.data.employee.trackingConsent);
+                        setConsentStatus(hasConsent);
+                        if (hasConsent) {
+                            setShowConsent(false);
+                            const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                            if (savedUser && !savedUser.trackingConsent) {
+                                savedUser.trackingConsent = true;
+                                localStorage.setItem('user', JSON.stringify(savedUser));
+                                window.dispatchEvent(new Event('emplifi:user-updated'));
+                            }
+                        }
+                    }
                 }
             } else {
                 const errMsg = res.message || res.error || 'Empleado no encontrado. Verifique la cédula ingresada.';
@@ -163,27 +252,50 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     };
 
 
-    // Effect to reverse geocode when recordData has entryLocation
+    const [entryLocationName, setEntryLocationName] = useState(null);
+    const [exitLocationName, setExitLocationName] = useState(null);
+
+    // Effect to reverse geocode locations for Entry, Lunch and Exit
     useEffect(() => {
-        const fetchLocationName = async () => {
-            if (recordData?.entryLocation && !locationName) {
+        const fetchLocationNames = async () => {
+            if (recordData?.entryLocation && !entryLocationName) {
                 try {
                     const { lat, lng } = recordData.entryLocation;
-                    // Use backend proxy to avoid CORS and add User-Agent
                     const data = await systemService.reverseGeocode(lat, lng);
-
                     if (data && data.display_name) {
-                        // Clean up address: take first 3 parts or specific fields
                         const name = data.display_name.split(',').slice(0, 3).join(',');
-                        setLocationName(name);
+                        setEntryLocationName(name);
                     }
                 } catch (error) {
-                    console.error("Error creating address from coordinates:", error);
+                    console.error("Error reverse geocoding entry coordinates:", error);
+                }
+            }
+
+            if (recordData?.exitLocation && !exitLocationName) {
+                if (
+                    recordData.entryLocation &&
+                    recordData.exitLocation.lat === recordData.entryLocation.lat &&
+                    recordData.exitLocation.lng === recordData.entryLocation.lng
+                ) {
+                    if (entryLocationName) {
+                        setExitLocationName(entryLocationName);
+                    }
+                } else {
+                    try {
+                        const { lat, lng } = recordData.exitLocation;
+                        const data = await systemService.reverseGeocode(lat, lng);
+                        if (data && data.display_name) {
+                            const name = data.display_name.split(',').slice(0, 3).join(',');
+                            setExitLocationName(name);
+                        }
+                    } catch (error) {
+                        console.error("Error reverse geocoding exit coordinates:", error);
+                    }
                 }
             }
         };
-        fetchLocationName();
-    }, [recordData]);
+        fetchLocationNames();
+    }, [recordData, entryLocationName, exitLocationName]);
 
     const getLocation = () => {
         return new Promise((resolve, reject) => {
@@ -271,6 +383,13 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
             });
             return;
         }
+        if (biometricEnabled && hasBiometricRegistered === false) {
+            setMessage({
+                type: 'error',
+                text: 'Por favor vincula tu huella dactilar o FaceID en este dispositivo para continuar con el registro.'
+            });
+            return;
+        }
         setPendingAction(type);
         setShowConfirm(true);
     };
@@ -307,15 +426,9 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
 
         let location = null;
         try {
-            // Intentar obtener ubicación, pero no bloquear si falla (o sí, según requerimiento. Asumiremos obligatorio para este feature)
-            // Si el user pidió Geolocalización explícitamente, quizás sea obligatorio. 
-            // Hagámoslo "soft" por ahora: intentamos, si falla, avisamos pero permitimos marcar o no?
-            // User request: "Permite verificar..." -> Insinúa que debería estar.
-            // Voy a hacerlo obligatorio si el navegador lo soporta, para cumplir el requerimiento de seguridad.
             location = await getLocation();
         } catch (locError) {
             console.warn("Location error:", locError);
-            // Opción: Fallar si no hay ubicación
             setMessage({ type: 'error', text: `Error de Ubicación: ${locError.message}. Se requiere GPS activado.` });
             setLoading(false);
             return;
@@ -326,11 +439,9 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
             const res = await attendanceService.markAttendance(targetId, type, location);
             if (res.success) {
                 setMessage({ type: 'success', text: res.message + (res.workedHours ? ` (${res.workedHours} hrs)` : '') });
-                // Refresh status
                 await checkStatus(targetId);
             } else {
                 let errorMsg = res.message || 'Error al registrar asistencia.';
-                // Si el error es de ubicación (del backend), añadimos un link de ayuda
                 if (errorMsg.includes('Ubicación no permitida') && location) {
                     errorMsg += ` (Tus coordenadas: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)})`;
                     setMessage({
@@ -363,9 +474,17 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                 </div>
                 {/* Biometric badge */}
                 {biometricEnabled && (
-                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-gray-50 border border-gray-200 text-gray-700 text-[11px] font-medium">
-                        <FiLock className="w-3 h-3 text-blue-600" />
-                        Verificación biométrica activa
+                    <div className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium border ${
+                        hasBiometricRegistered === false
+                            ? 'bg-blue-50 text-blue-800 border-blue-200'
+                            : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    }`}>
+                        <MdFingerprint className={`w-3.5 h-3.5 ${hasBiometricRegistered === false ? 'text-blue-600' : 'text-emerald-600'}`} />
+                        <span>
+                            {hasBiometricRegistered === false
+                                ? 'Autenticación Biométrica (Sin vincular en este equipo)'
+                                : 'Verificación biométrica activa'}
+                        </span>
                     </div>
                 )}
             </div>
@@ -416,6 +535,41 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                             )}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Banner de Registro Biométrico In-Situ */}
+            {biometricEnabled && hasBiometricRegistered === false && (
+                <div className="w-full max-w-md mb-5 p-4 bg-slate-50 border border-slate-200 rounded text-xs space-y-2.5 text-slate-800 shadow-xs">
+                    <div className="flex items-start gap-2.5">
+                        <div className="w-8 h-8 rounded bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0 mt-0.5 text-blue-700">
+                            <MdFingerprint className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-slate-900 text-xs">Acceso Biométrico Rápido y Seguro</p>
+                            <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                                Agiliza el registro de tu jornada utilizando la huella dactilar, FaceID o PIN seguro de tu dispositivo. Vincula tu credencial en un solo paso.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleQuickRegisterBiometric}
+                        disabled={registeringBiometric}
+                        type="button"
+                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                    >
+                        {registeringBiometric ? (
+                            <span className="flex items-center gap-2">
+                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Esperando sensor biométrico del dispositivo...
+                            </span>
+                        ) : (
+                            <>
+                                <MdFingerprint className="w-4 h-4" />
+                                <span>Vincular Mi Huella / Passkey</span>
+                            </>
+                        )}
+                    </button>
                 </div>
             )}
 
@@ -493,15 +647,15 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                 {(status === 'NOT_STARTED' || status === 'COMPLETED' || status === null) && (
                     <button
                         onClick={() => initiateMark('ENTRY')}
-                        disabled={loading || status === 'COMPLETED' || !consentStatus}
+                        disabled={loading || status === 'COMPLETED' || !consentStatus || (biometricEnabled && hasBiometricRegistered === false)}
                         className={`
                             col-span-2 py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer
-                            ${(status === 'COMPLETED' || !consentStatus)
+                            ${(status === 'COMPLETED' || !consentStatus || (biometricEnabled && hasBiometricRegistered === false))
                                 ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
                                 : 'bg-blue-600 hover:bg-blue-700 text-white'}
                         `}
                     >
-                        {!consentStatus && <FiLock className="w-3.5 h-3.5" />}
+                        {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && <FiLock className="w-3.5 h-3.5" />}
                         REGISTRAR ENTRADA
                     </button>
                 )}
@@ -512,19 +666,19 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                         {!recordData?.breakStart && (
                             <button
                                 onClick={() => initiateMark('BREAK_START')}
-                                disabled={loading || !consentStatus}
-                                className={`py-3 rounded font-semibold text-xs border transition-colors flex items-center justify-center gap-2 cursor-pointer ${!consentStatus ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                                disabled={loading || !consentStatus || (biometricEnabled && hasBiometricRegistered === false)}
+                                className={`py-3 rounded font-semibold text-xs border transition-colors flex items-center justify-center gap-2 cursor-pointer ${(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                             >
-                                {!consentStatus && <FiLock className="w-3.5 h-3.5" />}
+                                {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && <FiLock className="w-3.5 h-3.5" />}
                                 INICIAR ALMUERZO
                             </button>
                         )}
                         <button
                             onClick={() => initiateMark('EXIT')}
-                            disabled={loading || !consentStatus}
-                            className={`py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${!consentStatus ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' : 'bg-blue-600 hover:bg-blue-700 text-white'} ${!recordData?.breakStart ? '' : 'col-span-2'}`}
+                            disabled={loading || !consentStatus || (biometricEnabled && hasBiometricRegistered === false)}
+                            className={`py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' : 'bg-blue-600 hover:bg-blue-700 text-white'} ${!recordData?.breakStart ? '' : 'col-span-2'}`}
                         >
-                            {!consentStatus && <FiLock className="w-3.5 h-3.5" />}
+                            {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && <FiLock className="w-3.5 h-3.5" />}
                             REGISTRAR SALIDA
                         </button>
                     </>
@@ -534,8 +688,8 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                 {status === 'ON_BREAK' && (
                     <button
                         onClick={() => initiateMark('BREAK_END')}
-                        disabled={loading}
-                        className="col-span-2 py-3 rounded font-semibold text-xs bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                        disabled={loading || (biometricEnabled && hasBiometricRegistered === false)}
+                        className={`col-span-2 py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${(biometricEnabled && hasBiometricRegistered === false) ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                     >
                         FINALIZAR ALMUERZO
                     </button>
@@ -576,64 +730,95 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
                     </h4>
                     <div className="space-y-3">
                         {/* Entry Info */}
-                        {recordData.checkIn && (
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-500">Entrada:</span>
-                                <div className="flex flex-col items-end">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-mono font-bold text-slate-800">
-                                            {new Date(recordData.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                        {/* Lateness Badge */}
-                                        {recordData.isLate ? (
-                                            <span className="bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded border border-amber-200">
-                                                Tardío
+                        {recordData.checkIn && (() => {
+                            const entryLocationDisplay = entryLocationName || (recordData.entryLocation ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}` : null);
+                            return (
+                                <div className="flex justify-between items-start">
+                                    <span className="text-slate-500 pt-0.5">Entrada:</span>
+                                    <div className="flex flex-col items-end">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono font-bold text-slate-800">
+                                                {new Date(recordData.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
-                                        ) : (
-                                            <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded border border-emerald-200">
-                                                Puntual
-                                            </span>
+                                            {/* Lateness Badge */}
+                                            {recordData.isLate ? (
+                                                <span className="bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded border border-amber-200">
+                                                    Tardío
+                                                </span>
+                                            ) : (
+                                                <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded border border-emerald-200">
+                                                    Puntual
+                                                </span>
+                                            )}
+                                        </div>
+                                        {/* Location Info */}
+                                        {entryLocationDisplay && (
+                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end" title={entryLocationDisplay}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0 text-slate-400">
+                                                    <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
+                                                </svg>
+                                                <span className="max-w-[250px] break-words">
+                                                    {entryLocationDisplay}
+                                                </span>
+                                            </div>
                                         )}
                                     </div>
-                                    {/* Location Info */}
-                                    {recordData.entryLocation && (
-                                        <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end" title={locationName || `${recordData.entryLocation.lat}, ${recordData.entryLocation.lng}`}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0">
-                                                <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
-                                            </svg>
-                                            <span className="max-w-[250px] break-words">
-                                                {locationName || `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}`}
-                                            </span>
-                                        </div>
-                                    )}
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Lunch Info if exists */}
-                        {recordData.breakStart && (
-                            <div className="flex justify-between items-center pt-2 border-t border-slate-200">
-                                <span className="text-slate-500">Almuerzo:</span>
-                                <div className="flex flex-col items-end">
-                                    <span className="font-mono text-slate-800">
-                                        {new Date(recordData.breakStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        {recordData.breakEnd && ` - ${new Date(recordData.breakEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                                    </span>
+                        {recordData.breakStart && (() => {
+                            const lunchLocationDisplay = entryLocationName || exitLocationName || (recordData.entryLocation ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}` : null);
+                            return (
+                                <div className="flex justify-between items-start pt-2 border-t border-slate-200">
+                                    <span className="text-slate-500 pt-0.5">Almuerzo:</span>
+                                    <div className="flex flex-col items-end">
+                                        <span className="font-mono text-slate-800">
+                                            {new Date(recordData.breakStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {recordData.breakEnd && ` - ${new Date(recordData.breakEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                                        </span>
+                                        {/* Location Info */}
+                                        {lunchLocationDisplay && (
+                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end" title={lunchLocationDisplay}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0 text-slate-400">
+                                                    <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
+                                                </svg>
+                                                <span className="max-w-[250px] break-words">
+                                                    {lunchLocationDisplay}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Exit Info if exists */}
-                        {recordData.checkOut && (
-                            <div className="flex justify-between items-center pt-2 border-t border-slate-200">
-                                <span className="text-slate-500">Salida:</span>
-                                <div className="flex flex-col items-end">
-                                    <span className="font-mono font-bold text-slate-800">
-                                        {new Date(recordData.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
+                        {recordData.checkOut && (() => {
+                            const exitLocationDisplay = exitLocationName || (recordData.exitLocation ? `${recordData.exitLocation.lat.toFixed(4)}, ${recordData.exitLocation.lng.toFixed(4)}` : (entryLocationName || (recordData.entryLocation ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}` : null)));
+                            return (
+                                <div className="flex justify-between items-start pt-2 border-t border-slate-200">
+                                    <span className="text-slate-500 pt-0.5">Salida:</span>
+                                    <div className="flex flex-col items-end">
+                                        <span className="font-mono font-bold text-slate-800">
+                                            {new Date(recordData.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                        {/* Location Info */}
+                                        {exitLocationDisplay && (
+                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end" title={exitLocationDisplay}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0 text-slate-400">
+                                                    <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
+                                                </svg>
+                                                <span className="max-w-[250px] break-words">
+                                                    {exitLocationDisplay}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
                     </div>
                 </motion.div>
             )}

@@ -1,9 +1,9 @@
 export async function seedPayrollConfig(prisma) {
-    console.log('[PAYROLL_CONFIG] Generando Configuración de Nómina Ecuatoriana para ambas empresas...');
+    console.log('[PAYROLL_CONFIG] Generando Configuración de Nómina Ecuatoriana para todas las empresas...');
 
     try {
         const tenants = await prisma.tenant.findMany({
-            where: { slug: { in: ['empresa-demo', 'tech-solutions'] } }
+            where: { isActive: true }
         });
 
         for (const tenant of tenants) {

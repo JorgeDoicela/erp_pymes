@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { generateCustomReport } from '../../services/analytics.service';
 import { getDepartments } from '../../services/employees/employee.service';
-import { FiDatabase, FiCheckSquare, FiFilter, FiDownload, FiPlay } from 'react-icons/fi';
+import { FiDatabase, FiCheckSquare, FiFilter, FiDownload, FiPlay, FiArrowLeft } from 'react-icons/fi';
 
 const modules = [
     // 'salary' excluded: stored encrypted in DB — use the dedicated Excel export instead
@@ -102,35 +103,60 @@ const CustomReport = () => {
     const selectedModuleData = modules.find(m => m.id === config.module);
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6">
-            <h1 className="text-2xl md:text-3xl font-bold mb-6 flex items-center text-slate-800">
-                <FiDatabase className="mr-3 text-cyan-600" /> Exportación Personalizada
-            </h1>
+        <div className="space-y-6">
+            {/* Header Limpio ERP */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-gray-200">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Link
+                            to="/analytics"
+                            className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 font-medium transition-colors"
+                        >
+                            <FiArrowLeft className="w-3 h-3" />
+                            <span>Analíticas</span>
+                        </Link>
+                        <span className="text-gray-300">/</span>
+                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider font-mono">Personalizado</span>
+                    </div>
+                    <h1 className="text-xl font-semibold text-gray-900">Exportación & Reportes a Medida</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Construye informes a medida seleccionando módulos, columnas y filtros específicos.</p>
+                </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Configuration Panel */}
-                <div className="lg:col-span-1 space-y-6">
-                    {/* Module Selection */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 className="font-bold mb-4 flex items-center text-cyan-600">1. Seleccionar Módulo</h3>
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                        to="/analytics"
+                        className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiArrowLeft className="w-3.5 h-3.5" />
+                        <span>Volver a Analíticas</span>
+                    </Link>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Panel de Configuración */}
+                <div className="lg:col-span-1 space-y-4">
+                    {/* Selección de Módulo */}
+                    <div className="bg-white p-4.5 rounded border border-gray-200 space-y-3">
+                        <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">1. Seleccionar Módulo</h3>
                         <div className="space-y-2">
                             {modules.map(m => (
-                                <label key={m.id} className={`flex items-center p-3 rounded-lg cursor-pointer border transition-all ${config.module === m.id ? 'bg-cyan-50 border-cyan-500 shadow-sm' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
-                                    <input type="radio" name="module" value={m.id} checked={config.module === m.id} onChange={handleModuleChange} className="mr-3 text-cyan-600 focus:ring-cyan-500" />
-                                    <span className="font-medium text-slate-700">{m.name}</span>
+                                <label key={m.id} className={`flex items-center p-2.5 rounded cursor-pointer border text-xs transition-colors ${config.module === m.id ? 'bg-blue-50/50 border-blue-500 font-medium text-gray-900' : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'}`}>
+                                    <input type="radio" name="module" value={m.id} checked={config.module === m.id} onChange={handleModuleChange} className="mr-2.5 text-blue-600 focus:ring-blue-500" />
+                                    <span>{m.name}</span>
                                 </label>
                             ))}
                         </div>
                     </div>
 
-                    {/* Fields Selection */}
+                    {/* Selección de Campos */}
                     {selectedModuleData && (
-                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                            <h3 className="font-bold mb-4 flex items-center text-cyan-600">2. Seleccionar Campos</h3>
+                        <div className="bg-white p-4.5 rounded border border-gray-200 space-y-3">
+                            <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">2. Seleccionar Campos</h3>
                             <div className="grid grid-cols-2 gap-2">
                                 {selectedModuleData.fields.map(field => (
-                                    <label key={field} className="flex items-center space-x-2 text-sm text-slate-600 cursor-pointer hover:text-cyan-600 transition-colors">
-                                        <input type="checkbox" checked={config.fields.includes(field)} onChange={() => toggleField(field)} className="rounded text-cyan-600 focus:ring-cyan-500 bg-white border-slate-300" />
+                                    <label key={field} className="flex items-center space-x-2 text-xs text-gray-700 cursor-pointer hover:text-blue-600 transition-colors">
+                                        <input type="checkbox" checked={config.fields.includes(field)} onChange={() => toggleField(field)} className="rounded text-blue-600 focus:ring-blue-500 border-gray-300" />
                                         <span>{fieldTranslations[field] || field}</span>
                                     </label>
                                 ))}
@@ -138,15 +164,15 @@ const CustomReport = () => {
                         </div>
                     )}
 
-                    {/* Filters (Simplified for Demo) */}
+                    {/* Filtros Opcionales */}
                     {config.module && (
-                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                            <h3 className="font-bold mb-4 flex items-center text-cyan-600">3. Filtros Opcionales</h3>
+                        <div className="bg-white p-4.5 rounded border border-gray-200 space-y-3">
+                            <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider">3. Filtros Opcionales</h3>
                             <div className="space-y-3">
                                 <div>
-                                    <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Departamento</label>
+                                    <label className="text-[11px] font-medium text-gray-600 block mb-1">Departamento</label>
                                     <select
-                                        className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm mt-1 text-slate-800 focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                                        className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                                         onChange={e => setConfig({ ...config, filters: { ...config.filters, department: e.target.value } })}
                                     >
                                         <option value="">Todos</option>
@@ -155,9 +181,10 @@ const CustomReport = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="pt-4">
-                                    <button onClick={handleGenerate} disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-lg flex justify-center items-center shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100">
-                                        {loading ? <span className="animate-spin mr-2">⏳</span> : <FiPlay className="mr-2" />} Generar Reporte
+                                <div className="pt-2">
+                                    <button onClick={handleGenerate} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2 rounded flex justify-center items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50">
+                                        <FiPlay className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                                        <span>{loading ? 'Generando...' : 'Generar Reporte'}</span>
                                     </button>
                                 </div>
                             </div>
@@ -165,41 +192,45 @@ const CustomReport = () => {
                     )}
                 </div>
 
-                {/* Preview Panel */}
+                {/* Panel de Vista Previa */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm h-full flex flex-col overflow-hidden">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h3 className="font-bold text-lg flex items-center text-slate-800"><FiCheckSquare className="mr-2" /> Vista Previa</h3>
+                    <div className="bg-white rounded border border-gray-200 h-full flex flex-col overflow-hidden">
+                        <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+                            <h3 className="text-xs font-semibold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <FiCheckSquare className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Vista Previa de Resultados</span>
+                            </h3>
                             {results && (
-                                <button onClick={downloadCSV} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold flex items-center text-sm shadow-md transition-all active:scale-95">
-                                    <FiDownload className="mr-2" /> Descargar CSV
+                                <button onClick={downloadCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs">
+                                    <FiDownload className="w-3.5 h-3.5" />
+                                    <span>Descargar CSV</span>
                                 </button>
                             )}
                         </div>
 
-                        <div className="p-0 flex-grow overflow-auto custom-scrollbar">
+                        <div className="p-0 flex-grow overflow-auto">
                             {!results ? (
-                                <div className="h-64 flex flex-col items-center justify-center text-slate-400">
-                                    <FiDatabase size={48} className="mb-4 opacity-30" />
-                                    <p className="font-medium italic text-center px-4">Selecciona un módulo y los campos, luego genera el reporte para ver los datos.</p>
+                                <div className="h-64 flex flex-col items-center justify-center text-gray-400 text-xs">
+                                    <FiDatabase className="w-8 h-8 mb-2 opacity-30" />
+                                    <p className="font-mono text-center px-4">Selecciona un módulo y los campos, luego genera el reporte para previsualizar los datos.</p>
                                 </div>
                             ) : results.length === 0 ? (
-                                <div className="h-64 flex items-center justify-center text-slate-400 italic">No hay datos que coincidan con los filtros.</div>
+                                <div className="h-64 flex items-center justify-center text-gray-400 text-xs italic">No hay datos que coincidan con los filtros.</div>
                             ) : (
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm min-w-[600px]">
-                                        <thead className="bg-slate-50 text-slate-500 uppercase sticky top-0 font-semibold shadow-sm">
+                                    <table className="w-full text-left text-xs min-w-[600px]">
+                                        <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase text-[10px] font-semibold sticky top-0">
                                             <tr>
                                                 {Object.keys(results[0]).map(header => (
-                                                    <th key={header} className="p-4 border-b border-slate-100 whitespace-nowrap text-xs tracking-wider">{fieldTranslations[header] || header}</th>
+                                                    <th key={header} className="py-2.5 px-4 whitespace-nowrap tracking-wider">{fieldTranslations[header] || header}</th>
                                                 ))}
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100">
+                                        <tbody className="divide-y divide-gray-100">
                                             {results.map((row, idx) => (
-                                                <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                                                <tr key={idx} className="hover:bg-gray-50/60 transition-colors">
                                                     {Object.values(row).map((val, i) => (
-                                                        <td key={i} className="p-4 whitespace-nowrap text-slate-600">
+                                                        <td key={i} className="py-2.5 px-4 whitespace-nowrap text-gray-700">
                                                             {val instanceof Date || (typeof val === 'string' && val.includes('T') && !isNaN(Date.parse(val)))
                                                                 ? new Date(val).toLocaleDateString()
                                                                 : typeof val === 'boolean'
@@ -217,8 +248,8 @@ const CustomReport = () => {
                             )}
                         </div>
                         {results && (
-                            <div className="p-4 border-t border-slate-100 text-xs text-slate-400 text-right bg-slate-50/30">
-                                Mostrando {results.length} registros
+                            <div className="p-3 border-t border-gray-100 text-[11px] font-mono text-gray-400 text-right bg-gray-50/30">
+                                Total: {results.length} registros
                             </div>
                         )}
                     </div>
@@ -229,3 +260,4 @@ const CustomReport = () => {
 };
 
 export default CustomReport;
+

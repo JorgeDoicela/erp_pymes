@@ -54,7 +54,11 @@ export async function seedCleanup(prisma) {
         'causalIntervention',
         'rsiPredictionAudit',
         'rsiCalibration',
+        'attentionCalibration',
+        'fTTransformerWeights',
+        'federatedRound',
         'tenantPrivacyBudget',
+        'researchSurveyResponse',
 
         // 4. Clima y Evaluaciones
         'climateResponse',
@@ -70,7 +74,8 @@ export async function seedCleanup(prisma) {
         'jobApplication',
         'jobVacancy',
 
-        // 6. Nómina
+        // 6. Nómina y Anticipos
+        'salaryAdvance',
         'payrollDetail',
         'payrollItem',
         'payrollConfig',
@@ -80,7 +85,9 @@ export async function seedCleanup(prisma) {
         'attendance',
         'absenceRequest',
 
-        // 8. Horarios, Metas y Registros Core
+        // 8. Horarios, Metas, Activos y Registros Core
+        'employeeAsset',
+        'offboardingProcess',
         'employeeGoal',
         'employeeSchedule',
         'shift',
@@ -88,7 +95,9 @@ export async function seedCleanup(prisma) {
         'skill',
         'workHistory',
 
-        // 9. Documentos, Notificaciones, Ajustes y Auditoría
+        // 9. Documentos, Comunicados, Notificaciones, Ajustes y Auditoría
+        'announcementRead',
+        'announcement',
         'document',
         'auditLog',
         'employeeBenefit',

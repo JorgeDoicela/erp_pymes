@@ -1,10 +1,10 @@
 import { getRandomElement, departments } from './utils.js';
 
 export async function seedClimate(prisma) {
-    console.log('[CLIMATE] Generando Encuestas de Clima Laboral para ambas empresas...');
+    console.log('[CLIMATE] Generando Encuestas de Clima Laboral para todas las empresas...');
 
     const tenants = await prisma.tenant.findMany({
-        where: { slug: { in: ['empresa-demo', 'tech-solutions'] } }
+        where: { isActive: true }
     });
 
     const currentYear = new Date().getFullYear();
