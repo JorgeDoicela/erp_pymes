@@ -49,16 +49,15 @@ api.interceptors.response.use(
                 
                 toast.error(msg, {
                     duration: 4000,
-                    icon: '🚫',
                     style: {
-                        borderRadius: '14px',
-                        background: '#0f172a',
-                        color: '#f8fafc',
-                        border: '1px solid #334155',
-                        padding: '14px 18px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3)'
+                        borderRadius: '4px',
+                        background: '#ffffff',
+                        color: '#111827',
+                        border: '1px solid #e5e7eb',
+                        padding: '12px 16px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }
                 });
 

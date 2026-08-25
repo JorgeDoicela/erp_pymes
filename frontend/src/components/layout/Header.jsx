@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiMenu, FiGlobe, FiBriefcase } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import NotificationBell from '../common/NotificationBell';
 import api from '../../api/axios.js';
 import toast from 'react-hot-toast';

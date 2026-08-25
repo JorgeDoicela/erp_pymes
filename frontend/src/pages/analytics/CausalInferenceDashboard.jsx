@@ -12,8 +12,10 @@ import {
     FiLayers, 
     FiSliders, 
     FiBarChart2,
-    FiArrowLeft
+    FiArrowLeft,
+    FiBookOpen
 } from 'react-icons/fi';
+import AnalyticsMethodologyModal from '../../components/analytics/AnalyticsMethodologyModal';
 import { 
     BarChart, 
     Bar, 
@@ -29,6 +31,7 @@ const CausalInferenceDashboard = () => {
     const [activeSimulation, setActiveSimulation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [simulating, setSimulating] = useState(false);
+    const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
 
     // Formulario de Simulación de Medidas
     const [treatmentType, setTreatmentType] = useState('SALARY_INCREASE');
@@ -135,7 +138,7 @@ const CausalInferenceDashboard = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     <Link
                         to="/analytics"
                         className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
@@ -143,6 +146,13 @@ const CausalInferenceDashboard = () => {
                         <FiArrowLeft className="w-3.5 h-3.5" />
                         <span>Volver a Analíticas</span>
                     </Link>
+                    <button
+                        onClick={() => setIsMethodologyOpen(true)}
+                        className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiBookOpen className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Ficha Técnica & Congreso</span>
+                    </button>
                     <button
                         onClick={() => exportAcademicDataset('csv')}
                         className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
@@ -152,6 +162,13 @@ const CausalInferenceDashboard = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Modal de Ficha Técnica Contextual */}
+            <AnalyticsMethodologyModal
+                isOpen={isMethodologyOpen}
+                onClose={() => setIsMethodologyOpen(false)}
+                defaultSection="causal"
+            />
 
             {/* Explicación de Negocio Clara para PyMEs */}
             <div className="bg-white border border-gray-200 rounded p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

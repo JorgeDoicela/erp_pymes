@@ -3,9 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import * as reportService from '../../services/reports/reportService';
 import { getEmployees, getDepartments } from '../../services/employees/employee.service';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiBookOpen } from 'react-icons/fi';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import AnalyticsMethodologyModal from '../../components/analytics/AnalyticsMethodologyModal';
 
 const AttendanceReports = () => {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ const AttendanceReports = () => {
     const [employees, setEmployees] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [expandedRow, setExpandedRow] = useState(null);
+    const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
 
     const today = new Date();
     const thirtyDaysAgo = new Date();
@@ -177,8 +179,22 @@ const AttendanceReports = () => {
                         <FiArrowLeft className="w-3.5 h-3.5" />
                         <span>Volver a Analíticas</span>
                     </Link>
+                    <button
+                        onClick={() => setIsMethodologyOpen(true)}
+                        className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiBookOpen className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Ficha Técnica & Congreso</span>
+                    </button>
                 </div>
             </div>
+
+            {/* Modal de Ficha Técnica Contextual */}
+            <AnalyticsMethodologyModal
+                isOpen={isMethodologyOpen}
+                onClose={() => setIsMethodologyOpen(false)}
+                defaultSection="attendance"
+            />
 
             {/* Barra de Filtros Form System ERP */}
             <div className="bg-white p-4 rounded border border-gray-200 space-y-3">

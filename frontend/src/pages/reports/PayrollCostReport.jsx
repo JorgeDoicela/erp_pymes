@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getPayrollCostReport } from '../../services/analytics.service';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiBookOpen } from 'react-icons/fi';
+import AnalyticsMethodologyModal from '../../components/analytics/AnalyticsMethodologyModal';
 
 const PayrollCostReport = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [dates, setDates] = useState({ startDate: '', endDate: '' });
+    const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
 
     useEffect(() => {
         loadReport();
@@ -63,8 +65,22 @@ const PayrollCostReport = () => {
                         <FiArrowLeft className="w-3.5 h-3.5" />
                         <span>Volver a Analíticas</span>
                     </Link>
+                    <button
+                        onClick={() => setIsMethodologyOpen(true)}
+                        className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiBookOpen className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Ficha Técnica & Congreso</span>
+                    </button>
                 </div>
             </div>
+
+            {/* Modal de Ficha Técnica Contextual */}
+            <AnalyticsMethodologyModal
+                isOpen={isMethodologyOpen}
+                onClose={() => setIsMethodologyOpen(false)}
+                defaultSection="payroll_costs"
+            />
 
             {/* Filtros */}
             <div className="flex justify-end">

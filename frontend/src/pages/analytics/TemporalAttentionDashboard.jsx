@@ -7,8 +7,10 @@ import {
 import { 
     FiRefreshCw, 
     FiSliders,
-    FiArrowLeft
+    FiArrowLeft,
+    FiBookOpen
 } from 'react-icons/fi';
+import AnalyticsMethodologyModal from '../../components/analytics/AnalyticsMethodologyModal';
 import { 
     XAxis, 
     YAxis, 
@@ -27,6 +29,7 @@ const TemporalAttentionDashboard = () => {
     const [calibrating, setCalibrating] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [toastMessage, setToastMessage] = useState(null);
+    const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -115,7 +118,7 @@ const TemporalAttentionDashboard = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex items-center gap-2.5 flex-wrap shrink-0">
                     <Link
                         to="/analytics"
                         className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
@@ -123,6 +126,13 @@ const TemporalAttentionDashboard = () => {
                         <FiArrowLeft className="w-3.5 h-3.5" />
                         <span>Volver a Analíticas</span>
                     </Link>
+                    <button
+                        onClick={() => setIsMethodologyOpen(true)}
+                        className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiBookOpen className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Ficha Técnica & Congreso</span>
+                    </button>
                     <button
                         onClick={handleCalibrate}
                         disabled={calibrating}
@@ -133,6 +143,13 @@ const TemporalAttentionDashboard = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Modal de Ficha Técnica Contextual */}
+            <AnalyticsMethodologyModal
+                isOpen={isMethodologyOpen}
+                onClose={() => setIsMethodologyOpen(false)}
+                defaultSection="temporal"
+            />
 
             {/* Fila de Métricas Clave ERP */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

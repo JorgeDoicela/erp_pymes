@@ -108,8 +108,8 @@ export default function RecommendationsList({ recommendations, onActionClick }) 
 
                                 {/* Categoría */}
                                 {rec.category && (
-                                    <span className="inline-block px-2 py-1 bg-white rounded text-xs text-gray-600 mb-3">
-                                        📁 {rec.category}
+                                    <span className="inline-block px-2 py-0.5 border border-gray-200 bg-white rounded text-[11px] font-medium text-gray-600 mb-3 uppercase tracking-wider">
+                                        {rec.category}
                                     </span>
                                 )}
 

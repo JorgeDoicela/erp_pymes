@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
@@ -50,24 +50,8 @@ export default function IntelligentDashboard({ user, onLogout }) {
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    // Estado para las pestañas
-    const [activeTab, setActiveTab] = useState('overview');
-
-    const handleExportDataset = async (format = 'csv') => {
-        try {
-            setIsExporting(true);
-            toast.loading(`Generando dataset académico anonimizado (${format.toUpperCase()})...`, { id: 'export-toast' });
-            await intelligenceService.exportAcademicDataset(format);
-            toast.success(`Dataset académico (${format.toUpperCase()}) descargado con éxito`, { id: 'export-toast' });
-        } catch (err) {
-            console.error('Error al exportar dataset:', err);
-            toast.error('No se pudo descargar el dataset académico', { id: 'export-toast' });
-        } finally {
-            setIsExporting(false);
-        }
-    };
-
-
+    
+    // Pestañas disponibles
     const tabs = [
         { id: 'overview', label: 'Resumen Ejecutivo de Negocio', icon: FiTrendingUp },
         { id: 'analytics', label: 'Tendencias y Proyecciones', icon: FiActivity },
@@ -77,6 +61,15 @@ export default function IntelligentDashboard({ user, onLogout }) {
         { id: 'alerts', label: 'Alertas y Acciones', icon: FiAlertTriangle },
         { id: 'organization', label: 'Organización', icon: FiBriefcase },
     ];
+
+    // Estado de pestañas sincronizado con la URL
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentTabParam = searchParams.get('tab') || 'overview';
+    const activeTab = tabs.some(t => t.id === currentTabParam) ? currentTabParam : 'overview';
+
+    const handleTabChange = (tabId) => {
+        setSearchParams({ tab: tabId });
+    };
 
     useEffect(() => {
         loadDashboard();
@@ -109,6 +102,20 @@ export default function IntelligentDashboard({ user, onLogout }) {
             toast.error(message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleExportDataset = async (format = 'csv') => {
+        try {
+            setIsExporting(true);
+            toast.loading(`Generando dataset académico anonimizado (${format.toUpperCase()})...`, { id: 'export-toast' });
+            await intelligenceService.exportAcademicDataset(format);
+            toast.success(`Dataset académico (${format.toUpperCase()}) descargado con éxito`, { id: 'export-toast' });
+        } catch (err) {
+            console.error('Error al exportar dataset:', err);
+            toast.error('No se pudo descargar el dataset académico', { id: 'export-toast' });
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -255,17 +262,18 @@ export default function IntelligentDashboard({ user, onLogout }) {
                         {tabs.map((tab) => {
                             const isActive = activeTab === tab.id;
                             return (
-                                <button
+                                <Link
                                     key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`pb-2.5 font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                                    to={`/intelligence?tab=${tab.id}`}
+                                    onClick={() => handleTabChange(tab.id)}
+                                    className={`pb-2.5 font-medium transition-colors whitespace-nowrap cursor-pointer no-underline ${
                                         isActive
                                             ? 'border-b-2 border-gray-900 text-gray-900 font-semibold'
                                             : 'text-gray-500 hover:text-gray-800'
                                     }`}
                                 >
                                     {tab.label}
-                                </button>
+                                </Link>
                             );
                         })}
                     </div>

@@ -4,12 +4,14 @@ import { getDashboardData } from '../../services/analytics.service';
 import {
     FiDollarSign, FiLayers,
     FiBarChart2, FiUserMinus, FiActivity, FiDatabase, FiFileText,
-    FiCpu, FiGitPullRequest, FiShare2, FiTarget, FiArrowUpRight, FiZap
+    FiCpu, FiGitPullRequest, FiShare2, FiTarget, FiArrowUpRight, FiZap,
+    FiBookOpen
 } from 'react-icons/fi';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     Cell
 } from 'recharts';
+import AnalyticsMethodologyModal from '../../components/analytics/AnalyticsMethodologyModal';
 
 const OPERATIONAL_REPORTS = [
     {
@@ -114,6 +116,8 @@ const AnalyticsDashboard = () => {
     // Pestaña activa del directorio: 'operational' | 'ai'
     const [activeTab, setActiveTab] = useState('operational');
     const [selectedDept, setSelectedDept] = useState('ALL');
+    const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
+    const [modalDefaultSection, setModalDefaultSection] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -193,15 +197,34 @@ const AnalyticsDashboard = () => {
                         ))}
                     </select>
 
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setModalDefaultSection(null);
+                            setIsMethodologyOpen(true);
+                        }}
+                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                        <FiBookOpen className="w-3.5 h-3.5" />
+                        <span>Ficha Técnica & Congreso</span>
+                    </button>
+
                     <Link
                         to="/analytics/custom"
-                        className="px-3.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5"
+                        className="px-3.5 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
                     >
                         <FiDatabase className="w-3.5 h-3.5 text-gray-500" />
                         <span>Exportar Datos</span>
                     </Link>
                 </div>
             </div>
+
+            {/* Modal de Ficha Metodológica de Analíticas */}
+            <AnalyticsMethodologyModal
+                isOpen={isMethodologyOpen}
+                onClose={() => setIsMethodologyOpen(false)}
+                defaultSection={modalDefaultSection}
+            />
 
             {/* Grid de Gráficos Analíticos de Gestión Empresarial (Diseño Espacioso) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

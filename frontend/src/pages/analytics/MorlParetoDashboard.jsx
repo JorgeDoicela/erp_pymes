@@ -13,8 +13,10 @@ import {
     FiSliders, 
     FiPieChart, 
     FiActivity,
-    FiArrowLeft
+    FiArrowLeft,
+    FiBookOpen
 } from 'react-icons/fi';
+import AnalyticsMethodologyModal from '../../components/analytics/AnalyticsMethodologyModal';
 import { 
     ScatterChart, 
     Scatter, 
@@ -32,6 +34,7 @@ const MorlParetoDashboard = () => {
     const [selectedPointIndex, setSelectedPointIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [optimizing, setOptimizing] = useState(false);
+    const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
 
     // Formulario de Optimización — budgetLimit se inicializa desde el ~5% de la nómina real
     const [budgetLimit, setBudgetLimit] = useState(0);
@@ -163,7 +166,7 @@ const MorlParetoDashboard = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     <Link
                         to="/analytics"
                         className="px-3.5 py-1.5 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs"
@@ -171,6 +174,13 @@ const MorlParetoDashboard = () => {
                         <FiArrowLeft className="w-3.5 h-3.5" />
                         <span>Volver a Analíticas</span>
                     </Link>
+                    <button
+                        onClick={() => setIsMethodologyOpen(true)}
+                        className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                        <FiBookOpen className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Ficha Técnica & Congreso</span>
+                    </button>
                     <button
                         onClick={() => exportAcademicDataset('csv')}
                         className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
@@ -180,6 +190,13 @@ const MorlParetoDashboard = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Modal de Ficha Técnica Contextual */}
+            <AnalyticsMethodologyModal
+                isOpen={isMethodologyOpen}
+                onClose={() => setIsMethodologyOpen(false)}
+                defaultSection="morl"
+            />
 
             {/* Explicación Sencilla de Negocio para PyMEs */}
             <div className="bg-white border border-gray-200 rounded p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
