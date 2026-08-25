@@ -4,12 +4,17 @@ import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({
     default: {
+        employee: {
+            findUnique: vi.fn(),
+            findFirst: vi.fn()
+        },
         contract: {
             findFirst: vi.fn()
         },
         salaryAdvance: {
             create: vi.fn(),
             findMany: vi.fn(),
+            findFirst: vi.fn(),
             findUnique: vi.fn(),
             count: vi.fn(),
             update: vi.fn()
@@ -19,7 +24,8 @@ vi.mock('../src/database/db.js', () => ({
 
 vi.mock('../src/repositories/audit/auditRepository.js', () => ({
     default: {
-        createLog: vi.fn().mockResolvedValue({})
+        createLog: vi.fn().mockResolvedValue({}),
+        log: vi.fn().mockResolvedValue({})
     }
 }));
 
@@ -76,16 +82,17 @@ describe('Salary Advance & Employee Loan Service Test Suite', () => {
 
     it('should reject advance request if employee has no active contract', async () => {
         prisma.contract.findFirst.mockResolvedValue(null);
+        prisma.employee.findUnique.mockResolvedValue(null);
 
         await expect(salaryAdvanceService.requestAdvance({
             employeeId: 'emp_2',
             amount: 200,
             installments: 1
-        })).rejects.toThrow('El empleado no posee un contrato activo vigente');
+        })).rejects.toThrow('No se encontró un salario base activo registrado para validar el límite de anticipo');
     });
 
     it('should approve advance and transition status from PENDING to APPROVED', async () => {
-        prisma.salaryAdvance.findUnique.mockResolvedValue({
+        prisma.salaryAdvance.findFirst.mockResolvedValue({
             id: 'adv_1',
             amount: 300,
             installments: 1,
@@ -106,7 +113,7 @@ describe('Salary Advance & Employee Loan Service Test Suite', () => {
     });
 
     it('should reject advance with reason and transition to REJECTED', async () => {
-        prisma.salaryAdvance.findUnique.mockResolvedValue({
+        prisma.salaryAdvance.findFirst.mockResolvedValue({
             id: 'adv_1',
             amount: 300,
             status: 'PENDING',

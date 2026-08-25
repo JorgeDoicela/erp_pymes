@@ -5,7 +5,8 @@ import recruitmentRepository from '../src/repositories/recruitment/recruitmentRe
 vi.mock('../src/repositories/recruitment/recruitmentRepository.js');
 vi.mock('../src/repositories/audit/auditRepository.js', () => ({
     default: {
-        createLog: vi.fn().mockResolvedValue({})
+        createLog: vi.fn().mockResolvedValue({}),
+        log: vi.fn().mockResolvedValue({})
     }
 }));
 vi.mock('../src/database/db.js', () => ({

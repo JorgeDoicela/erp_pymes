@@ -29,7 +29,8 @@ vi.mock('../src/repositories/employees/employeeRepository.js', () => ({
 
 vi.mock('../src/repositories/audit/auditRepository.js', () => ({
     default: {
-        createLog: vi.fn().mockResolvedValue({})
+        createLog: vi.fn().mockResolvedValue({}),
+        log: vi.fn().mockResolvedValue({})
     }
 }));
 
