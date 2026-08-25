@@ -19,6 +19,14 @@ export default function AdvancedBusinessAnalytics({ data }) {
 
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val || 0);
 
+    // Detectar departamento con mayor carga para recomendación contextual
+    const topBurnoutDept = burnout.departmentMetrics.length > 0
+        ? burnout.departmentMetrics.reduce((prev, curr) => (curr.burnoutScore > prev.burnoutScore ? curr : prev))
+        : null;
+    const projectedAbsenceRisk = topBurnoutDept
+        ? Math.round(topBurnoutDept.burnoutScore * 0.12)
+        : null;
+
     return (
         <div className="space-y-6">
             {/* Gráfico 1: Proyección Algorítmica de Nómina a 6 Meses */}
@@ -174,7 +182,10 @@ export default function AdvancedBusinessAnalytics({ data }) {
                         <div>
                             <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider block">Recomendación de Balance de Carga</span>
                             <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                                Mantener los niveles de horas extras controlados en Operaciones evita un incremento proyectado del 12% en ausentismo durante el próximo trimestre.
+                                {topBurnoutDept
+                                    ? `Controlar la sobrecarga en ${topBurnoutDept.department} (burnout: ${topBurnoutDept.burnoutScore}/100) puede evitar un incremento proyectado de hasta ${projectedAbsenceRisk}% en ausentismo durante el próximo trimestre.`
+                                    : 'Monitorea la distribución de horas extras por departamento para prevenir fatiga laboral y reducir el ausentismo proyectado.'
+                                }
                             </p>
                         </div>
                     </div>

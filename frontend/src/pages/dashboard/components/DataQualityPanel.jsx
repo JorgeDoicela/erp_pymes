@@ -2,14 +2,19 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDataQualityReport } from "../../../services/intelligenceService";
 import {
-    FiDatabase, FiAlertTriangle, FiCheckCircle, FiChevronDown,
-    FiChevronUp, FiUser, FiCalendar, FiDollarSign, FiClock,
-    FiArrowRight, FiRefreshCw, FiInfo
+    FiChevronDown,
+    FiChevronUp,
+    FiRefreshCw,
+    FiArrowRight,
+    FiCheckCircle
 } from "react-icons/fi";
 
 /**
- * Panel de Calidad de Datos — muestra la completitud real de datos
- * de cada empresa para que el motor de IA funcione con datos reales.
+ * Panel de Calidad y Auditoría de Datos
+ * Cumple con el estándar de diseño ERP PyME:
+ * - Sobrio, limpio, de alto contraste y sin decoraciones innecesarias
+ * - Tipografía Inter con cifras tabulares en font-mono
+ * - Tablas estructuradas y botones sin fondos chillones
  */
 export default function DataQualityPanel() {
     const navigate = useNavigate();
@@ -34,151 +39,277 @@ export default function DataQualityPanel() {
 
     if (loading) {
         return (
-            <div className="dq-panel dq-loading">
-                <FiDatabase />
-                <span>Verificando completitud de datos...</span>
+            <div className="bg-white border border-gray-200 rounded p-3 flex items-center gap-2.5 text-xs text-gray-500 font-mono">
+                <FiRefreshCw className="animate-spin text-gray-400 w-3.5 h-3.5" />
+                <span>Auditanado completitud de registros para IA...</span>
             </div>
         );
     }
 
     if (!report) return null;
 
-    const { completenessPercent, aiConfidenceLevel, summary, missingData, recommendations, totalEmployees, dataReadyForAI } = report;
-    const confidenceColor = completenessPercent >= 80 ? "#10b981" : completenessPercent >= 60 ? "#f59e0b" : "#ef4444";
+    const {
+        completenessPercent,
+        aiConfidenceLevel,
+        summary,
+        missingData,
+        recommendations,
+        totalEmployees,
+        dataReadyForAI
+    } = report;
 
     const tabs = [
-        { key: "evaluations", label: "Evaluaciones", count: summary.missingEvaluations, icon: FiUser, route: "/admin/performance", actionLabel: "Ir a Evaluaciones" },
-        { key: "attendance",  label: "Asistencia",   count: summary.missingAttendance,  icon: FiCalendar, route: "/admin/attendance", actionLabel: "Ir a Asistencia" },
-        { key: "salary",      label: "Salario",       count: summary.missingSalary,      icon: FiDollarSign, route: "/admin/employees", actionLabel: "Completar en Empleados" },
+        {
+            key: "evaluations",
+            label: "Evaluaciones",
+            count: summary.missingEvaluations,
+            route: "/performance",
+            actionLabel: "Registrar Evaluación"
+        },
+        {
+            key: "attendance",
+            label: "Asistencia",
+            count: summary.missingAttendance,
+            route: "/attendance",
+            actionLabel: "Cargar Asistencia"
+        },
+        {
+            key: "salary",
+            label: "Salario",
+            count: summary.missingSalary,
+            route: "/admin/employees",
+            actionLabel: "Completar Salario"
+        },
     ];
 
     const activeTab_ = tabs.find(t => t.key === activeTab);
     const activeList = missingData[activeTab] || [];
 
+    // Estado Colapsado por defecto si los datos están al 95%+
     if (completenessPercent >= 95 && !expanded) {
         return (
-            <div className="dq-panel dq-complete" onClick={() => setExpanded(true)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 12, marginBottom: 20, fontSize: 13, color: "#15803d" }}>
-                <FiCheckCircle />
-                <span><strong>Datos completos al {completenessPercent}%</strong> — Motor de IA operando con máxima precisión</span>
-                <FiChevronDown style={{ marginLeft: "auto", color: "#9ca3af" }} />
+            <div
+                onClick={() => setExpanded(true)}
+                className="bg-white border border-gray-200 hover:border-gray-300 rounded p-3 flex items-center justify-between gap-3 cursor-pointer transition-colors"
+            >
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
+                    <span className="text-xs text-gray-700">
+                        Completitud de datos al <strong className="font-mono font-semibold text-gray-900">{completenessPercent}%</strong> · Confianza {aiConfidenceLevel}
+                    </span>
+                    <span className="text-gray-300 hidden sm:inline">|</span>
+                    <span className="text-xs text-gray-500 font-mono hidden sm:inline">
+                        {totalEmployees} colaboradores analizados
+                    </span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="w-20 h-1.5 bg-gray-100 rounded overflow-hidden">
+                        <div
+                            className="h-full bg-emerald-600 rounded"
+                            style={{ width: `${completenessPercent}%` }}
+                        />
+                    </div>
+                    <span className="text-[11px] text-gray-500 font-medium hover:text-gray-900 flex items-center gap-1">
+                        Ver auditoría <FiChevronDown className="w-3.5 h-3.5" />
+                    </span>
+                </div>
             </div>
         );
     }
 
-    const panelBg = !dataReadyForAI ? "#fef2f2" : completenessPercent < 80 ? "#fffbeb" : "#f0fdf4";
-    const panelBorder = !dataReadyForAI ? "#fecaca" : completenessPercent < 80 ? "#fde68a" : "#bbf7d0";
-
     return (
-        <div style={{ background: panelBg, border: `1px solid ${panelBorder}`, borderRadius: 12, marginBottom: 20, overflow: "hidden", fontFamily: "Inter, sans-serif" }}>
-            {/* Header */}
-            <div onClick={() => setExpanded(!expanded)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", cursor: "pointer", gap: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
-                    {!dataReadyForAI
-                        ? <FiAlertTriangle style={{ color: "#ef4444", fontSize: 18, flexShrink: 0 }} />
-                        : <FiDatabase style={{ color: "#3b82f6", fontSize: 18, flexShrink: 0 }} />
-                    }
+        <div className="bg-white border border-gray-200 rounded overflow-hidden">
+            {/* Header del Panel */}
+            <div
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center justify-between p-3.5 border-b border-gray-100 cursor-pointer hover:bg-gray-50/50 transition-colors gap-3"
+            >
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                            !dataReadyForAI ? "bg-red-600" : completenessPercent < 80 ? "bg-amber-500" : "bg-emerald-600"
+                        }`}
+                    />
                     <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: "0 0 2px" }}>
-                            {!dataReadyForAI
-                                ? "Datos insuficientes — El motor de IA requiere más información"
-                                : `Completitud de datos: ${completenessPercent}% · Confianza ${aiConfidenceLevel}`
-                            }
-                        </p>
-                        <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>
+                        <div className="flex items-center gap-2">
+                            <h4 className="text-xs font-semibold text-gray-900 tracking-tight">
+                                Auditoría de Calidad de Datos
+                            </h4>
+                            <span className="text-[11px] font-mono font-semibold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
+                                {completenessPercent}% Completitud
+                            </span>
+                            <span className="text-[11px] text-gray-500">
+                                · Confianza {aiConfidenceLevel}
+                            </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 font-mono mt-0.5">
                             {totalEmployees} colaboradores · {summary.missingEvaluations} sin eval · {summary.missingAttendance} sin asistencia · {summary.missingSalary} sin salario
                         </p>
                     </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 100, height: 6, background: "#e5e7eb", borderRadius: 99, overflow: "hidden" }}>
-                            <div style={{ width: `${completenessPercent}%`, height: "100%", background: confidenceColor, borderRadius: 99, transition: "width 0.4s ease" }} />
+
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="hidden sm:flex items-center gap-2">
+                        <div className="w-24 h-1.5 bg-gray-100 rounded overflow-hidden">
+                            <div
+                                className={`h-full rounded ${
+                                    !dataReadyForAI ? "bg-red-600" : completenessPercent < 80 ? "bg-amber-500" : "bg-emerald-600"
+                                }`}
+                                style={{ width: `${completenessPercent}%` }}
+                            />
                         </div>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: confidenceColor }}>{completenessPercent}%</span>
+                        <span className="text-xs font-mono font-semibold text-gray-800">{completenessPercent}%</span>
                     </div>
-                    <button onClick={e => { e.stopPropagation(); load(); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 4 }}>
-                        <FiRefreshCw size={13} />
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            load();
+                        }}
+                        className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer transition-colors"
+                        title="Recalcular completitud"
+                    >
+                        <FiRefreshCw className="w-3.5 h-3.5" />
                     </button>
-                    {expanded ? <FiChevronUp style={{ color: "#9ca3af" }} /> : <FiChevronDown style={{ color: "#9ca3af" }} />}
+                    {expanded ? (
+                        <FiChevronUp className="w-4 h-4 text-gray-400" />
+                    ) : (
+                        <FiChevronDown className="w-4 h-4 text-gray-400" />
+                    )}
                 </div>
             </div>
 
-            {/* Body */}
+            {/* Contenido Expandido */}
             {expanded && (
-                <div style={{ padding: "0 16px 16px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                    {/* Métricas */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, margin: "14px 0 12px" }}>
+                <div className="p-4 space-y-4 bg-white">
+                    {/* Tarjetas de Métricas Cuantitativas */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {[
-                            { label: "Con Evaluaciones", value: summary.withEvaluations, color: "#10b981", Icon: FiUser },
-                            { label: "Con Asistencia",   value: summary.withAttendance,  color: "#3b82f6", Icon: FiCalendar },
-                            { label: "Con Salario",      value: summary.withSalary,      color: "#8b5cf6", Icon: FiDollarSign },
-                            { label: "Con Ausencias",    value: summary.withAbsenceRecords, color: "#f59e0b", Icon: FiClock },
-                        ].map(m => (
-                            <div key={m.label} style={{ background: "white", borderRadius: 8, padding: "10px 12px", display: "flex", alignItems: "center", gap: 10, border: "1px solid #e5e7eb" }}>
-                                <m.Icon size={16} style={{ color: m.color }} />
-                                <div>
-                                    <div style={{ fontSize: 18, fontWeight: 700, color: m.color, lineHeight: 1.1 }}>
-                                        {m.value}<span style={{ fontSize: 11, fontWeight: 400, color: "#9ca3af" }}>/{totalEmployees}</span>
-                                    </div>
-                                    <div style={{ fontSize: 10, color: "#6b7280", marginTop: 1 }}>{m.label}</div>
+                            { label: "Con Evaluaciones", value: summary.withEvaluations, missing: summary.missingEvaluations },
+                            { label: "Con Asistencia", value: summary.withAttendance, missing: summary.missingAttendance },
+                            { label: "Con Salario", value: summary.withSalary, missing: summary.missingSalary },
+                            { label: "Con Ausencias", value: summary.withAbsenceRecords, missing: 0 },
+                        ].map((m) => (
+                            <div key={m.label} className="bg-gray-50 border border-gray-200 rounded p-3">
+                                <span className="text-[10px] uppercase font-semibold tracking-wider text-gray-500 block">
+                                    {m.label}
+                                </span>
+                                <div className="mt-1 flex items-baseline gap-1">
+                                    <span className="text-lg font-bold font-mono text-gray-900">
+                                        {m.value}
+                                    </span>
+                                    <span className="text-xs font-mono text-gray-400">
+                                        /{totalEmployees}
+                                    </span>
                                 </div>
+                                <span className="text-[10px] font-mono text-gray-500 mt-0.5 block">
+                                    {m.missing > 0 ? `${m.missing} pendientes` : "100% completo"}
+                                </span>
                             </div>
                         ))}
                     </div>
 
-                    {/* Recomendaciones */}
+                    {/* Recomendaciones Técnicas */}
                     {recommendations.length > 0 && (
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 8, padding: "10px 12px", marginBottom: 14 }}>
-                            <FiInfo size={13} style={{ color: "#3b82f6", flexShrink: 0, marginTop: 2 }} />
-                            <div>{recommendations.map((rec, i) => <p key={i} style={{ fontSize: 12, color: "#374151", margin: "0 0 3px" }}>{rec}</p>)}</div>
+                        <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-700 space-y-1">
+                            <span className="text-[10px] uppercase font-bold text-gray-600 tracking-wider block">
+                                Recomendación de Gobierno de Datos
+                            </span>
+                            {recommendations.map((rec, i) => (
+                                <p key={i} className="text-xs text-gray-600">
+                                    • {rec}
+                                </p>
+                            ))}
                         </div>
                     )}
 
-                    {/* Tabs */}
-                    <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-                        {tabs.map(tab => (
-                            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 99, fontSize: 12, border: "1px solid", cursor: "pointer", transition: "all 0.15s",
-                                    background: activeTab === tab.key ? "#1e40af" : "white",
-                                    color:      activeTab === tab.key ? "white"   : "#374151",
-                                    borderColor: activeTab === tab.key ? "#1e40af" : "#e5e7eb" }}>
-                                <tab.icon size={12} /> {tab.label}
-                                {tab.count > 0 && <span style={{ background: activeTab === tab.key ? "rgba(255,255,255,0.3)" : "#ef4444", color: "white", borderRadius: 99, padding: "0 5px", fontSize: 10, fontWeight: 700 }}>{tab.count}</span>}
-                            </button>
-                        ))}
+                    {/* Pestañas de Filtro */}
+                    <div className="flex border-b border-gray-200 gap-5 text-xs pt-1">
+                        {tabs.map((tab) => {
+                            const isActive = activeTab === tab.key;
+                            return (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveTab(tab.key)}
+                                    className={`pb-2 font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+                                        isActive
+                                            ? "border-b-2 border-gray-900 text-gray-900 font-semibold"
+                                            : "text-gray-500 hover:text-gray-800"
+                                    }`}
+                                >
+                                    <span>{tab.label}</span>
+                                    <span className="text-[11px] font-mono text-gray-500">
+                                        ({tab.count})
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
 
-                    {/* Lista */}
-                    <div style={{ background: "white", borderRadius: 8, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                    {/* Tabla de Colaboradores con Datos Pendientes */}
+                    <div className="border border-gray-200 rounded overflow-hidden">
                         {activeList.length === 0 ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "16px 12px", fontSize: 13, color: "#10b981" }}>
-                                <FiCheckCircle /> Todos los colaboradores tienen {activeTab_?.label.toLowerCase()} registrada
+                            <div className="p-6 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
+                                <FiCheckCircle className="text-emerald-600 w-4 h-4" />
+                                <span>Todos los colaboradores cuentan con {activeTab_?.label.toLowerCase()} registrada</span>
                             </div>
                         ) : (
-                            <>
-                                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "8px 12px", fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid #f3f4f6" }}>
-                                    <span>Colaborador</span><span>Departamento</span><span>Cargo</span>
-                                </div>
-                                {activeList.slice(0, 8).map(emp => (
-                                    <div key={emp.employeeId} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "8px 12px", alignItems: "center", borderBottom: "1px solid #f9fafb", fontSize: 12, color: "#374151" }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 500 }}>
-                                            <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#667eea,#764ba2)", color: "white", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                {emp.name?.charAt(0) || "?"}
-                                            </div>
-                                            {emp.name}
-                                        </div>
-                                        <span style={{ color: "#6b7280", fontSize: 11 }}>{emp.department || "—"}</span>
-                                        <span style={{ color: "#9ca3af", fontSize: 11 }}>{emp.position || "—"}</span>
-                                    </div>
-                                ))}
-                                {activeList.length > 8 && <p style={{ fontSize: 11, color: "#9ca3af", padding: "6px 12px", textAlign: "center", borderTop: "1px solid #f3f4f6" }}>+ {activeList.length - 8} colaboradores más</p>}
-                                <div style={{ padding: "10px 12px" }}>
-                                    <button onClick={() => navigate(activeTab_?.route)}
-                                        style={{ width: "100%", padding: 8, background: "#1e40af", color: "white", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                                        {activeTab_?.actionLabel} <FiArrowRight size={13} />
-                                    </button>
-                                </div>
-                            </>
+                            <div>
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-gray-50 border-b border-gray-200 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                        <tr>
+                                            <th className="py-2 px-3">Colaborador</th>
+                                            <th className="py-2 px-3">Departamento</th>
+                                            <th className="py-2 px-3">Cargo</th>
+                                            <th className="py-2 px-3 text-right">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 text-gray-700">
+                                        {activeList.slice(0, 6).map((emp) => (
+                                            <tr key={emp.employeeId} className="hover:bg-gray-50/50 transition-colors">
+                                                <td className="py-2 px-3">
+                                                    <div className="flex items-center gap-2 font-medium text-gray-900">
+                                                        <div className="w-6 h-6 rounded bg-gray-100 text-gray-700 font-mono font-semibold text-xs flex items-center justify-center shrink-0">
+                                                            {emp.name?.charAt(0) || "?"}
+                                                        </div>
+                                                        <span>{emp.name}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-2 px-3 text-gray-600 font-normal">
+                                                    {emp.department || "—"}
+                                                </td>
+                                                <td className="py-2 px-3 text-gray-500 font-normal">
+                                                    {emp.position || "—"}
+                                                </td>
+                                                <td className="py-2 px-3 text-right">
+                                                    <button
+                                                        onClick={() => {
+                                                            if (activeTab === 'salary' && emp.employeeId) {
+                                                                navigate(`/admin/employees/${emp.employeeId}`);
+                                                            } else if (activeTab === 'evaluations') {
+                                                                navigate('/performance');
+                                                            } else if (activeTab === 'attendance') {
+                                                                navigate('/attendance');
+                                                            } else {
+                                                                navigate(activeTab_?.route || '/admin');
+                                                            }
+                                                        }}
+                                                        className="border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                    >
+                                                        <span>Gestionar</span>
+                                                        <FiArrowRight className="w-3 h-3" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                {activeList.length > 6 && (
+                                    <p className="text-[11px] text-gray-400 py-2 text-center border-t border-gray-100 font-mono">
+                                        + {activeList.length - 6} colaboradores adicionales
+                                    </p>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

@@ -172,7 +172,10 @@ export default function WhatIfScenarioSimulator({ initialData }) {
                         <div className="bg-gray-50 border border-gray-200 p-3.5 rounded">
                             <span className="text-[11px] font-medium text-gray-500 block">Reducción de Renuncias</span>
                             <p className="text-xl font-bold text-emerald-600 mt-0.5 font-mono">
-                                -{simulationResult?.meanRiskReductionPercent || 35}%
+                                {simulationResult?.meanRiskReductionPercent != null
+                                    ? `-${simulationResult.meanRiskReductionPercent}%`
+                                    : '--'
+                                }
                             </p>
                             <p className="text-[10px] text-gray-400 mt-0.5">Disminución de fugas</p>
                         </div>

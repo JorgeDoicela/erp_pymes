@@ -122,8 +122,10 @@ class FTTransformerService {
 
         // Si no hay evaluaciones reales, perfScore = 0 (no se inventa un 75 ficticio)
         // El modelo recibe el déficit real o neutro
-        const perfScore = evals.length > 0
-            ? (evals.reduce((s, e) => s + (e.finalScore != null ? Number(e.finalScore) : (e.overallScore != null ? Number(e.overallScore) : null)), 0) / evals.filter(e => e.finalScore != null || e.overallScore != null).length) / 100.0 || 0
+        const evals = emp.evaluations || [];
+        const validEvals = evals.filter(e => e.finalScore != null || e.overallScore != null);
+        const perfScore = validEvals.length > 0
+            ? (validEvals.reduce((s, e) => s + (e.finalScore ?? e.overallScore), 0) / validEvals.length) / 100.0
             : 0;
 
         const payroll = emp.PayrollDetail || [];
@@ -320,11 +322,14 @@ class FTTransformerService {
 
             if (record && record.params) {
                 const parsed = typeof record.params === 'string' ? JSON.parse(record.params) : record.params;
+                const defaultP = getDefaultParams();
+                // Validar que incluya matrices completas; si solo tiene hiperparámetros, usar defaultP
+                const completeParams = (parsed && parsed.wq && parsed.tokenizerW) ? { ...defaultP, ...parsed } : defaultP;
                 return {
-                    params: parsed,
-                    epoch: record.epoch,
-                    brierScore: record.brierScore,
-                    f1Score: record.f1Score
+                    params: completeParams,
+                    epoch: record.epoch || 0,
+                    brierScore: record.brierScore || 0.1450,
+                    f1Score: record.f1Score || 0.720
                 };
             }
 

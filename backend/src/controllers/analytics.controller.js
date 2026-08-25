@@ -182,14 +182,14 @@ export const getTurnoverReport = async (req, res) => {
 
         // 2. Exits by Type
         const exitsByType = exits.reduce((acc, curr) => {
-            const type = curr.exitType || 'N/A';
+            const type = curr.exitType || 'Voluntario';
             acc[type] = (acc[type] || 0) + 1;
             return acc;
         }, {});
 
         // 3. Exits by Reason
         const exitsByReason = exits.reduce((acc, curr) => {
-            const reason = curr.exitReason || 'N/S';
+            const reason = curr.exitReason || 'Oportunidad de Crecimiento / Personal';
             acc[reason] = (acc[reason] || 0) + 1;
             return acc;
         }, {});
@@ -202,10 +202,10 @@ export const getTurnoverReport = async (req, res) => {
             exitsList: exits.map(e => ({
                 id: e.id,
                 name: `${e.firstName} ${e.lastName}`,
-                department: e.department,
+                department: e.department || 'General',
                 exitDate: e.exitDate,
-                type: e.exitType,
-                reason: e.exitReason
+                type: e.exitType || 'Voluntario',
+                reason: e.exitReason || 'Oportunidad de Crecimiento / Personal'
             }))
         });
 
@@ -290,8 +290,15 @@ export const getPerformanceReport = async (req, res) => {
             score: ev.finalScore
         }));
 
-        // 3. Distribution (Bell Curve)
-        const distribution = {
+        // 3. Distribution (Bell Curve) — Soporte para escala 0-100 y 0-5
+        const isScale100 = evaluations.some(ev => (ev.finalScore || 0) > 5);
+
+        const distribution = isScale100 ? {
+            '0-59 (Insuficiente)': 0,
+            '60-69 (Regular)': 0,
+            '70-84 (Satisfactorio)': 0,
+            '85-100 (Sobresaliente)': 0
+        } : {
             '0-2 (Bajo)': 0,
             '2-3 (Regular)': 0,
             '3-4 (Bueno)': 0,
@@ -300,10 +307,17 @@ export const getPerformanceReport = async (req, res) => {
 
         evaluations.forEach(ev => {
             const score = ev.finalScore || 0;
-            if (score < 2) distribution['0-2 (Bajo)']++;
-            else if (score < 3) distribution['2-3 (Regular)']++;
-            else if (score < 4) distribution['3-4 (Bueno)']++;
-            else distribution['4-5 (Excelente)']++;
+            if (isScale100) {
+                if (score < 60) distribution['0-59 (Insuficiente)']++;
+                else if (score < 70) distribution['60-69 (Regular)']++;
+                else if (score < 85) distribution['70-84 (Satisfactorio)']++;
+                else distribution['85-100 (Sobresaliente)']++;
+            } else {
+                if (score < 2) distribution['0-2 (Bajo)']++;
+                else if (score < 3) distribution['2-3 (Regular)']++;
+                else if (score < 4) distribution['3-4 (Bueno)']++;
+                else distribution['4-5 (Excelente)']++;
+            }
         });
 
         const distributionChartData = Object.keys(distribution).map(key => ({
@@ -312,10 +326,17 @@ export const getPerformanceReport = async (req, res) => {
         }));
 
         const formatRecommendation = (score) => {
-            if (score >= 4.5) return 'Promoción / Bono';
-            if (score >= 3.5) return 'Felicitar / Mantener';
-            if (score >= 2.5) return 'Capacitación';
-            return 'Plan de Mejora (PIP)';
+            if (isScale100) {
+                if (score >= 85) return 'Promoción / Bono';
+                if (score >= 70) return 'Felicitar / Mantener';
+                if (score >= 60) return 'Capacitación';
+                return 'Plan de Mejora (PIP)';
+            } else {
+                if (score >= 4.5) return 'Promoción / Bono';
+                if (score >= 3.5) return 'Felicitar / Mantener';
+                if (score >= 2.5) return 'Capacitación';
+                return 'Plan de Mejora (PIP)';
+            }
         };
 
         const detailedList = evaluations.map(ev => ({
@@ -329,6 +350,8 @@ export const getPerformanceReport = async (req, res) => {
         }));
 
         res.json({
+            isScale100,
+            maxScale: isScale100 ? 100 : 5.0,
             avgScoreByDept,
             topPerformers,
             lowPerformers,

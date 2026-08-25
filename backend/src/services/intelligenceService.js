@@ -2473,3 +2473,14 @@ export async function getFTTransformerPrediction(employeeId, tenantId) {
     };
 }
 
+/**
+ * Función exportada para la validación cruzada estratificada K-Fold.
+ * Obtiene los empleados crudos directamente de la base de datos (con salary,
+ * absences y evaluations) para alimentar correctamente a evaluateBaselineVsAdvancedModel.
+ * Evita el bug de pasar objetos de análisis de riesgo ya procesados (sin _decryptedSalary).
+ */
+export async function runCrossValidation(tenantId = null) {
+    const employees = await fetchRawEmployees(tenantId);
+    const { employees: prepared } = prepareEmployeeData(employees);
+    return evaluateBaselineVsAdvancedModel(prepared);
+}

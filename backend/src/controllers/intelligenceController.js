@@ -511,9 +511,9 @@ export async function getMorlHistory(req, res) {
 export async function getCrossValidationMetrics(req, res) {
     try {
         const tenantId = req.tenantId || req.user?.tenantId;
-        const dashboard = await intelligenceService.getIntelligenceDashboard(tenantId);
-        const rawEmployees = dashboard.retention?.analysis || [];
-        const cvResult = intelligenceService.evaluateBaselineVsAdvancedModel(rawEmployees);
+        // Usa runCrossValidation que obtiene empleados crudos de BD con sus relaciones
+        // (salary, absences, evaluations) — no los objetos de análisis de riesgo procesados
+        const cvResult = await intelligenceService.runCrossValidation(tenantId);
         return res.json({
             success: true,
             data: cvResult

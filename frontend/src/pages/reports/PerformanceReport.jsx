@@ -148,7 +148,7 @@ const PerformanceReport = () => {
                                     <p className="text-[11px] text-gray-400">{p.department}</p>
                                 </div>
                                 <span className="font-mono font-semibold text-green-700 text-sm" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                    {p.score} / 5.0
+                                    {p.score} / {data.maxScale || (p.score > 5 ? 100 : 5.0)}
                                 </span>
                             </div>
                         ))}
@@ -170,7 +170,7 @@ const PerformanceReport = () => {
                                     <p className="text-[11px] text-gray-400">{p.department}</p>
                                 </div>
                                 <span className="font-mono font-semibold text-red-700 text-sm" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                    {p.score} / 5.0
+                                    {p.score} / {data.maxScale || (p.score > 5 ? 100 : 5.0)}
                                 </span>
                             </div>
                         ))}
@@ -187,7 +187,7 @@ const PerformanceReport = () => {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data.avgScoreByDept} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                                <XAxis type="number" domain={[0, 5]} stroke="#6b7280" fontSize={11} />
+                                <XAxis type="number" domain={[0, data.maxScale || 100]} stroke="#6b7280" fontSize={11} />
                                 <YAxis dataKey="department" type="category" width={90} stroke="#6b7280" fontSize={11} />
                                 <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11px' }} />
                                 <Bar dataKey="average" fill="#2563eb" name="Promedio" radius={[0, 2, 2, 0]} />
@@ -247,27 +247,31 @@ const PerformanceReport = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {data.detailedList.map(item => (
-                                <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
-                                    <td className="py-2.5 px-4 font-medium text-gray-900">{item.employeeName}</td>
-                                    <td className="py-2.5 px-4 text-gray-600">{item.department}</td>
-                                    <td className="py-2.5 px-4 text-gray-500">{item.position}</td>
-                                    <td className="py-2.5 px-4 text-center font-mono font-semibold" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                                        <span className={item.score >= 4 ? 'text-green-700' : item.score >= 3 ? 'text-amber-700' : 'text-red-700'}>
-                                            {item.score}
-                                        </span>
-                                    </td>
-                                    <td className="py-2.5 px-4">
-                                        <span className={`px-2 py-0.5 rounded text-[11px] font-mono ${
-                                            item.score >= 4 ? 'bg-green-50 text-green-800 border border-green-200' :
-                                            item.score >= 3 ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-                                            'bg-red-50 text-red-800 border border-red-200'
-                                        }`}>
-                                            {item.recommendation}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
+                            {data.detailedList.map(item => {
+                                const isHigh = data.isScale100 ? item.score >= 85 : item.score >= 4;
+                                const isMid = data.isScale100 ? item.score >= 70 : item.score >= 3;
+                                return (
+                                    <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
+                                        <td className="py-2.5 px-4 font-medium text-gray-900">{item.employeeName}</td>
+                                        <td className="py-2.5 px-4 text-gray-600">{item.department}</td>
+                                        <td className="py-2.5 px-4 text-gray-500">{item.position}</td>
+                                        <td className="py-2.5 px-4 text-center font-mono font-semibold" style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                                            <span className={isHigh ? 'text-green-700' : isMid ? 'text-amber-700' : 'text-red-700'}>
+                                                {item.score}
+                                            </span>
+                                        </td>
+                                        <td className="py-2.5 px-4">
+                                            <span className={`px-2 py-0.5 rounded text-[11px] font-mono ${
+                                                isHigh ? 'bg-green-50 text-green-800 border border-green-200' :
+                                                isMid ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+                                                'bg-red-50 text-red-800 border border-red-200'
+                                            }`}>
+                                                {item.recommendation}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                             {data.detailedList.length === 0 && (
                                 <tr>
                                     <td colSpan="5" className="p-8 text-center text-gray-400 text-xs">No hay evaluaciones completadas en este periodo.</td>

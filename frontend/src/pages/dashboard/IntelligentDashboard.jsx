@@ -4,18 +4,15 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
     FiUsers, FiTrendingUp, FiClock, FiDollarSign, FiBriefcase,
-    FiAlertTriangle, FiArrowLeft, FiRefreshCw, FiSliders, FiCpu, FiPrinter, FiActivity, FiDownload, FiBookOpen,
-    FiFileText, FiPackage
+    FiAlertTriangle, FiArrowLeft, FiSliders, FiActivity
 } from 'react-icons/fi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 import * as intelligenceService from '../../services/intelligenceService.js';
 import useAutoSync from '../../hooks/useAutoSync.js';
 import IntelligentInsightCard from '../../components/IntelligentInsightCard.jsx';
-import RecommendationsList from '../../components/RecommendationsList.jsx';
 import RiskScoreIndicator from '../../components/RiskScoreIndicator.jsx';
 import DepartmentComparison from '../../components/DepartmentComparison.jsx';
-import AlertsPanel from '../../components/AlertsPanel.jsx';
 import HealthMeter from '../../components/HealthMeter.jsx';
 import EmployeeScoreCard from '../../components/EmployeeScoreCard.jsx';
 import PredictiveTrendChart from '../../components/PredictiveTrendChart.jsx';
@@ -24,7 +21,6 @@ import ErrorState from '../../components/ErrorState.jsx';
 import ExecutiveKPIBanner from '../../components/ExecutiveKPIBanner.jsx';
 import WhatIfScenarioSimulator from '../../components/WhatIfScenarioSimulator.jsx';
 import DataQualityPanel from './components/DataQualityPanel.jsx';
-import StrategicAIAdvisor from '../../components/StrategicAIAdvisor.jsx';
 import ExecutiveReportModal from '../../components/ExecutiveReportModal.jsx';
 import AdvancedBusinessAnalytics from '../../components/AdvancedBusinessAnalytics.jsx';
 import MethodologyModal from '../../components/MethodologyModal.jsx';
@@ -51,14 +47,12 @@ export default function IntelligentDashboard({ user, onLogout }) {
     const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     
-    // Pestañas disponibles
+    // Pestañas disponibles (5 Pestañas Cuantitativas y Rigor Estadístico)
     const tabs = [
         { id: 'overview', label: 'Resumen Ejecutivo de Negocio', icon: FiTrendingUp },
         { id: 'analytics', label: 'Tendencias y Proyecciones', icon: FiActivity },
         { id: 'simulator', label: 'Simulador de Escenarios', icon: FiSliders },
-        { id: 'ai_advisor', label: 'Recomendaciones y Consejero', icon: FiCpu },
         { id: 'talent', label: 'Talento y Desempeño', icon: FiUsers },
-        { id: 'alerts', label: 'Alertas y Acciones', icon: FiAlertTriangle },
         { id: 'organization', label: 'Organización', icon: FiBriefcase },
     ];
 
@@ -316,7 +310,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                         description={`${retention.stats.highRisk} empleados en riesgo alto`}
                                         color="red"
                                         priority={retention.stats.highRisk > 5 ? 'high' : 'medium'}
-                                        onAction={() => setActiveTab('talent')}
+                                        onAction={() => handleTabChange('talent')}
                                     />
                                     <IntelligentInsightCard
                                         icon={FiTrendingUp}
@@ -325,7 +319,7 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                         description={`${performance.declining.length} tendencias negativas`}
                                         color="yellow"
                                         priority={performance.declining.length > 3 ? 'high' : 'medium'}
-                                        onAction={() => setActiveTab('talent')}
+                                        onAction={() => handleTabChange('talent')}
                                     />
                                     <IntelligentInsightCard
                                         icon={FiClock}
@@ -334,159 +328,105 @@ export default function IntelligentDashboard({ user, onLogout }) {
                                         description="Patrones irregulares detectados"
                                         color="orange"
                                         priority={attendance.suspiciousAbsences.length > 3 ? 'high' : 'medium'}
-                                        onAction={() => setActiveTab('organization')}
+                                        onAction={() => handleTabChange('organization')}
                                     />
-                                    {/* Fix #15: Anomalías de nómina */}
+                                    {/* Anomalías de nómina */}
                                     {payroll.overtimeAnomalies && payroll.overtimeAnomalies.length > 0 && (
-                                        <IntelligentInsightCard
-                                            icon={FiDollarSign}
-                                            title="Anomalías de Nómina"
-                                            value={payroll.overtimeAnomalies.length}
-                                            description="Empleados con horas extras atípicas"
-                                            color="purple"
-                                            priority="medium"
-                                            onAction={() => setActiveTab('alerts')}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                                         <IntelligentInsightCard
+                                             icon={FiDollarSign}
+                                             title="Anomalías de Nómina"
+                                             value={payroll.overtimeAnomalies.length}
+                                             description="Empleados con horas extras atípicas"
+                                             color="purple"
+                                             priority="medium"
+                                             onAction={() => handleTabChange('analytics')}
+                                         />
+                                     )}
+                                 </div>
+                             </div>
+                         </div>
+                     )}
 
-                    {/* TAB: PROYECCIÓN & ALGORITMOS DE NEGOCIO */}
-                    {activeTab === 'analytics' && (
-                        <AdvancedBusinessAnalytics data={dashboard} />
-                    )}
+                     {/* TAB 2: PROYECCIÓN & ALGORITMOS DE NEGOCIO */}
+                     {activeTab === 'analytics' && (
+                         <AdvancedBusinessAnalytics data={dashboard} />
+                     )}
 
-                    {/* TAB: SIMULADOR DE ESCENARIOS (WHAT-IF) */}
-                    {activeTab === 'simulator' && (
-                        <WhatIfScenarioSimulator initialData={dashboard} />
-                    )}
+                     {/* TAB 3: SIMULADOR DE ESCENARIOS (WHAT-IF) */}
+                     {activeTab === 'simulator' && (
+                         <WhatIfScenarioSimulator initialData={dashboard} />
+                     )}
 
-                    {/* TAB: ASISTENTE IA CONSULTOR ESTRATÉGICO */}
-                    {activeTab === 'ai_advisor' && (
-                        <StrategicAIAdvisor dashboardData={dashboard} />
-                    )}
+                     {/* TAB 4: TALENTO Y DESEMPEÑO */}
+                     {activeTab === 'talent' && (
+                         <div className="space-y-8">
+                             {/* Top Performers */}
+                             {employeeScoring && employeeScoring.employees && (
+                                 <div>
+                                     <div className="flex items-center justify-between mb-4">
+                                         <h3 className="text-xl font-bold text-slate-800">Talento Top &amp; Desempeño</h3>
+                                         <span className="text-sm text-slate-500">Scoring Multidimensional</span>
+                                     </div>
+                                     {/* Fix #14: estado vacío si no hay top performers */}
+                                     {employeeScoring.employees.filter(e => e.category === 'Top Performer' || e.category === 'Good Performer').length > 0 ? (
+                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                             {employeeScoring.employees
+                                                 .filter(emp => emp.category === 'Top Performer' || emp.category === 'Good Performer')
+                                                 .slice(0, 6)
+                                                 .map((employee, idx) => (
+                                                     <EmployeeScoreCard key={idx} employee={employee} />
+                                                 ))}
+                                         </div>
+                                     ) : (
+                                         <div className="flex flex-col items-center justify-center py-10 bg-slate-50 rounded-xl text-slate-400">
+                                             <FiUsers className="w-10 h-10 mb-3" />
+                                             <p className="text-sm font-medium">Sin empleados en categoría Top o Good Performer</p>
+                                             <p className="text-xs mt-1">Todos los empleados están en categoría &apos;Needs Improvement&apos; o &apos;At Risk&apos;</p>
+                                         </div>
+                                     )}
+                                 </div>
+                             )}
 
-                    {/* TAB 2: TALENTO Y DESEMPEÑO */}
-                    {activeTab === 'talent' && (
-                        <div className="space-y-8">
-                            {/* Top Performers */}
-                            {employeeScoring && employeeScoring.employees && (
-                                <div>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-xl font-bold text-slate-800">Talento Top &amp; Desempeño</h3>
-                                        <span className="text-sm text-slate-500">Scoring Multidimensional</span>
-                                    </div>
-                                    {/* Fix #14: estado vacío si no hay top performers */}
-                                    {employeeScoring.employees.filter(e => e.category === 'Top Performer' || e.category === 'Good Performer').length > 0 ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {employeeScoring.employees
-                                                .filter(emp => emp.category === 'Top Performer' || emp.category === 'Good Performer')
-                                                .slice(0, 6)
-                                                .map((employee, idx) => (
-                                                    <EmployeeScoreCard key={idx} employee={employee} />
-                                                ))}
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-10 bg-slate-50 rounded-xl text-slate-400">
-                                            <FiUsers className="w-10 h-10 mb-3" />
-                                            <p className="text-sm font-medium">Sin empleados en categoría Top o Good Performer</p>
-                                            <p className="text-xs mt-1">Todos los empleados están en categoría &apos;Needs Improvement&apos; o &apos;At Risk&apos;</p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                             {/* Análisis de Riesgo detallado */}
+                             <div>
+                                 <h3 className="text-xl font-bold text-slate-800 mb-4">Análisis de Riesgo de Rotación</h3>
+                                 {/* Fix #20: estado vacío si no hay empleados en riesgo */}
+                                 {retention.analysis.filter(e => e.level === 'Alto Riesgo' || e.level === 'Riesgo Medio').length > 0 ? (
+                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                         {retention.analysis
+                                             .filter(e => e.level === 'Alto Riesgo' || e.level === 'Riesgo Medio')
+                                             .map((emp, idx) => (
+                                                 <div key={idx} className={`bg-white border-l-4 ${emp.level === 'Alto Riesgo' ? 'border-red-500' : 'border-yellow-400'} rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow`}>
+                                                     <div className="flex justify-between items-start mb-2">
+                                                         <div>
+                                                             <h4 className="font-bold text-slate-900">{emp.employeeName}</h4>
+                                                             <p className="text-sm text-slate-600">{emp.position}</p>
+                                                         </div>
+                                                         <RiskScoreIndicator score={emp.score} level={emp.level} size="sm" />
+                                                     </div>
+                                                     <div className="space-y-1">
+                                                         {emp.factors.slice(0, 3).map((factor, i) => (
+                                                             <div key={i} className="text-xs text-red-600 flex items-center gap-2">
+                                                                 <FiAlertTriangle className="w-3 h-3 shrink-0" />
+                                                                 {factor.factor}
+                                                             </div>
+                                                         ))}
+                                                     </div>
+                                                 </div>
+                                             ))}
+                                     </div>
+                                 ) : (
+                                     <div className="flex flex-col items-center justify-center py-10 bg-green-50 rounded-xl text-green-600">
+                                         <FiTrendingUp className="w-10 h-10 mb-3" />
+                                         <p className="text-sm font-medium">¡Excelente! Ningún empleado en riesgo alto o medio de rotación.</p>
+                                     </div>
+                                 )}
+                             </div>
+                         </div>
+                     )}
 
-                            {/* Análisis de Riesgo detallado */}
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-800 mb-4">Análisis de Riesgo de Rotación</h3>
-                                {/* Fix #20: estado vacío si no hay empleados en riesgo */}
-                                {retention.analysis.filter(e => e.level === 'Alto Riesgo' || e.level === 'Riesgo Medio').length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {retention.analysis
-                                            .filter(e => e.level === 'Alto Riesgo' || e.level === 'Riesgo Medio')
-                                            .map((emp, idx) => (
-                                                <div key={idx} className={`bg-white border-l-4 ${emp.level === 'Alto Riesgo' ? 'border-red-500' : 'border-yellow-400'} rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow`}>
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <div>
-                                                            <h4 className="font-bold text-slate-900">{emp.employeeName}</h4>
-                                                            <p className="text-sm text-slate-600">{emp.position}</p>
-                                                        </div>
-                                                        <RiskScoreIndicator score={emp.score} level={emp.level} size="sm" />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        {emp.factors.slice(0, 3).map((factor, i) => (
-                                                            <div key={i} className="text-xs text-red-600 flex items-center gap-2">
-                                                                <FiAlertTriangle className="w-3 h-3 shrink-0" />
-                                                                {factor.factor}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-10 bg-green-50 rounded-xl text-green-600">
-                                        <FiTrendingUp className="w-10 h-10 mb-3" />
-                                        <p className="text-sm font-medium">¡Excelente! Ningún empleado en riesgo alto o medio de rotación.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TAB 3: ALERTAS Y ACCIONES */}
-                    {activeTab === 'alerts' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {/* Panel de Alertas (2 columnas) */}
-                            <div className="lg:col-span-2">
-                                {alerts && alerts.alerts && (
-                                    <AlertsPanel
-                                        alerts={alerts.alerts}
-                                        summary={alerts.summary}
-                                        onAlertAction={(alert) => {
-                                            // Fix #16: navegar según el tipo de alerta
-                                            const routes = {
-                                                RETENTION: '/admin/employees',
-                                                PERFORMANCE: '/admin/performance',
-                                                ATTENDANCE: '/admin/attendance',
-                                                DEPARTMENT: '/intelligence',
-                                            };
-                                            const route = routes[alert.type];
-                                            if (route) navigate(route);
-                                        }}
-                                    />
-                                )}
-                            </div>
-
-                            {/* Recomendaciones (1 columna) */}
-                            <div>
-                                <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24 border border-slate-100">
-                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Recomendaciones Priorizadas</h3>
-                                    <RecommendationsList
-                                        recommendations={recommendations}
-                                        onActionClick={(rec) => {
-                                            if (rec.route) {
-                                                navigate(rec.route);
-                                            } else if (rec.category === 'Nómina') {
-                                                navigate('/admin/payroll/generator');
-                                            } else if (rec.category === 'Retención') {
-                                                navigate('/admin/employees');
-                                            } else if (rec.category === 'Desempeño' || rec.category === 'Objetivos') {
-                                                navigate('/admin/performance');
-                                            } else if (rec.category === 'Asistencia') {
-                                                navigate('/admin/attendance');
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TAB 4: ORGANIZACIÓN */}
-                    {activeTab === 'organization' && (
+                     {/* TAB 5: ORGANIZACIÓN */}
+                     {activeTab === 'organization' && (
                         <div className="space-y-6">
                             {/* Comparativa de Departamentos */}
                             {departmentComparison && (

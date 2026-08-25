@@ -63,160 +63,131 @@ export default function MethodologyModal({ isOpen, onClose }) {
         {
             id: 'weibull',
             num: '1',
-            title: 'Riesgo de Rotacion Instantanea (Modelo de Weibull Generalizado)',
-            tabName: 'Pestana 1: Resumen Ejecutivo & Pestana 5: Talento',
-            actions: 'Calculo en tiempo real en tarjetas de colaboradores, panel de retencion y factores de riesgo',
-            summary: 'Modela la tasa instantanea de renuncia voluntaria h(t) considerando antiguedad, compresion salarial interna, ausentismo con decaimiento temporal y deficit de desempeno 360.',
+            title: 'Riesgo de Rotación Instantánea (Modelo de Weibull Generalizado)',
+            tabName: 'Pestaña 1: Resumen Ejecutivo & Pestaña 4: Talento',
+            actions: 'Cálculo en tiempo real en tarjetas de colaboradores, panel de retención y factores de riesgo',
+            summary: 'Modela la tasa instantánea de renuncia voluntaria h(t) considerando antigüedad, compresión salarial interna, ausentismo con decaimiento temporal y déficit de desempeño 360.',
             formula: FORMULAS.weibull,
-            formulaLabel: 'Funcion de Peligro Multivariada h(t)',
+            formulaLabel: 'Función de Peligro Multivariada h(t)',
             details: [
-                'k: Parametro de forma (k > 1 indica aceleracion del riesgo de fuga a mayor antiguedad).',
-                'lambda: Parametro de escala base del periodo.',
-                'beta_sal: Ponderador de compresion salarial respecto a la mediana departamental ln(S_emp / S_dept).',
+                'k: Parámetro de forma (k > 1 indica aceleración del riesgo de fuga a mayor antigüedad).',
+                'lambda: Parámetro de escala base del período.',
+                'beta_sal: Ponderador de compresión salarial respecto a la mediana departamental ln(S_emp / S_dept).',
                 'beta_abs: Ponderador de ausentismo con decaimiento temporal acumulado exp(-lambda_decay * Delta t).',
-                'beta_perf: Ponderador del deficit de competencias en la evaluacion 360.'
+                'beta_perf: Ponderador del déficit de competencias en la evaluación 360.'
             ]
         },
         {
             id: 'survival',
             num: '2',
-            title: 'Curva de Supervivencia Actuarial a 30 / 60 / 90 Dias y Varianza de Greenwood',
-            tabName: 'Pestana 2: Tendencias y Proyecciones',
-            actions: 'Grafico de lineas con intervalos de confianza al 95% y botones de corte temporal a 30, 60 y 90 dias',
-            summary: 'Estima la probabilidad de retencion acumulada R(t) a lo largo del tiempo y calcula intervalos de confianza actuariales al 95% mediante la formula de Greenwood.',
+            title: 'Curva de Supervivencia Actuarial a 30 / 60 / 90 Días y Varianza de Greenwood',
+            tabName: 'Pestaña 2: Tendencias y Proyecciones',
+            actions: 'Gráfico de líneas con intervalos de confianza al 95% y botones de corte temporal a 30, 60 y 90 días',
+            summary: 'Estima la probabilidad de retención acumulada R(t) a lo largo del tiempo y calcula intervalos de confianza actuariales al 95% mediante la fórmula de Greenwood.',
             formula: FORMULAS.survival,
-            formulaLabel: 'Funcion de Supervivencia R(t) e Intervalos de Confianza Greenwood',
+            formulaLabel: 'Función de Supervivencia R(t) e Intervalos de Confianza Greenwood',
             details: [
                 'R(t): Probabilidad estimada de que el colaborador permanezca activo en el tiempo t.',
-                'Delta H(t): Incremento acumulado de la funcion de riesgo integrada.',
-                'sigma_R: Error estandar actuarial estimado a partir del numero de eventos y colaboradores en riesgo.'
+                'Delta H(t): Incremento acumulado de la función de riesgo integrada.',
+                'sigma_R: Error estándar actuarial estimado a partir del número de eventos y colaboradores en riesgo.'
             ]
         },
         {
             id: 'montecarlo',
             num: '3',
-            title: 'Simulacion Estocastica de Monte Carlo y CVaR al 95% (Simulador What-If)',
-            tabName: 'Pestana 3: Simulador de Escenarios',
-            actions: 'Boton "Ejecutar Simulacion Monte Carlo", sliders de presupuesto, aumento salarial y teletrabajo',
-            summary: 'Genera 2,000 iteraciones estocasticas con perturbaciones normales Box-Muller para proyectar el retorno de inversion (ROI), percentiles de distribucion (P10, P50, P90) y el Valor en Riesgo Condicional (CVaR 95%).',
+            title: 'Simulación Estocástica de Monte Carlo y CVaR al 95% (Simulador What-If)',
+            tabName: 'Pestaña 3: Simulador de Escenarios',
+            actions: 'Sliders interactivos en pantalla: Aumento Salarial Preventivo (0-15%), Presupuesto Bienestar ($0-$500) y Reducción de Horas Extras (0-40%) con cálculo estocástico automático',
+            summary: 'Genera 2,000 iteraciones estocásticas con perturbaciones normales Box-Muller para proyectar el retorno de inversión (ROI), percentiles de distribución (P10, P50, P90) y el Valor en Riesgo Condicional (CVaR 95%).',
             formula: FORMULAS.montecarlo,
-            formulaLabel: 'Retorno de Inversion Simulado (ROI)',
+            formulaLabel: 'Retorno de Inversión Simulado (ROI)',
             extraFormula: FORMULAS.cvar,
             extraFormulaLabel: 'Valor en Riesgo Condicional (CVaR 95%)',
             details: [
-                'Transformada Box-Muller: Genera variaciones continuas normales N(mu, sigma^2) sobre rotacion y costos.',
-                'Delta C_rotacion: Ahorro financiero proyectado por disminucion de despidos y liquidaciones.',
-                'Delta H_ahorro: Beneficio monetario por reduccion de absentismo no justificado.',
-                'I_total: Inversion presupuestaria total asignada a la estrategia de retencion.',
-                'CVaR_95%: Perdida esperada en el 5% de los peores escenarios simulados.'
-            ]
-        },
-        {
-            id: 'ai_advisor',
-            num: '4',
-            title: 'Consejero Estrategico AI (LLM) y Motor Heuristico Prescriptivo',
-            tabName: 'Pestana 4: Recomendaciones y Consejero',
-            actions: 'Asistente interactivo LLM, prompts estrategicos ejecutivos y tarjetas de recomendacion con accion directa',
-            summary: 'Genera recomendaciones prescriptivas priorizadas por impacto financiero y urgencia operativa, combinando heuristicas directivas con prompts enriquecidos del modelo de lenguaje.',
-            formula: FORMULAS.payrollProjection,
-            formulaLabel: 'Optimizacion de Recomendaciones y Matriz Impacto / Esfuerzo',
-            details: [
-                'Priorizacion por Matriz: Clasifica acciones en Quick Wins, Proyectos Mayores y Tareas de Mantenimiento.',
-                'Contexto Enriquecido: Alimenta al LLM con los KPIs agregados en tiempo real (OHI, tasa de absentismo, masa salarial).',
-                'Navegacion Asistida: Permite saltar con un clic al modulo operativo responsable de implementar la sugerencia.'
+                'Transformada Box-Muller: Genera variaciones continuas normales N(mu, sigma^2) sobre rotación y costos.',
+                'Delta C_rotacion: Ahorro financiero proyectado por disminución de despidos y liquidaciones.',
+                'Delta H_ahorro: Beneficio monetario por reducción de absentismo no justificado.',
+                'I_total: Inversión presupuestaria total asignada a la estrategia de retención.',
+                'CVaR_95%: Pérdida esperada en el 5% de los peores escenarios simulados.',
+                'Diagrama de Tornado: Sensibilidad e impacto relativo de cada variable sobre la retención neta.'
             ]
         },
         {
             id: 'talent_scoring',
-            num: '5',
-            title: 'Scoring Multidimensional 360 y Deteccion de Top Performers',
-            tabName: 'Pestana 5: Talento y Desempeno',
-            actions: 'Tarjetas de empleados destacados, indicadores de score multidimensional y alertas de talento en riesgo',
-            summary: 'Evalua el desempeno integral del colaborador combinando notas de autoevaluacion, pares, subordinados y supervisores ponderadas por fiabilidad.',
+            num: '4',
+            title: 'Scoring Multidimensional 360° y Detección de Top Performers',
+            tabName: 'Pestaña 4: Talento y Desempeño',
+            actions: 'Tarjetas de empleados destacados, indicadores de score multidimensional y detección temprana de fuga',
+            summary: 'Evalúa el desempeño integral del colaborador combinando notas de autoevaluación, pares, subordinados y supervisores ponderadas por fiabilidad.',
             formula: FORMULAS.ohi,
-            formulaLabel: 'Indice Multidimensional de Desempeno y Retencion',
+            formulaLabel: 'Índice Multidimensional de Desempeño y Retención',
             details: [
-                'Top Performer: Puntuacion compuesta superior al percentil 85 con bajo riesgo de rotacion.',
-                'Needs Improvement: Deteccion temprana de brechas de rendimiento antes del ciclo anual de despido.',
-                'Consistencia Evaluativa: Normalizacion estadistica para evitar sesgos de evaluadores estrictos o permisivos.'
-            ]
-        },
-        {
-            id: 'alerts_engine',
-            num: '6',
-            title: 'Sistema de Alertas Tempranas y Deteccion de Fuga de Talento',
-            tabName: 'Pestana 6: Alertas y Acciones',
-            actions: 'Panel de alertas en tiempo real con niveles de severidad (Critico, Medio, Informativo) y enlaces directos a resolucion',
-            summary: 'Monitorea 24/7 los indicadores de RRHH y dispara notificaciones inmediatas ante superacion de limites de control estadistico (SPC) en nomina, absentismo o riesgo de renuncia.',
-            formula: FORMULAS.weibull,
-            formulaLabel: 'Limites de Control y Activacion de Alertas (SPC)',
-            details: [
-                'Alerta Critica: Empleados clave con riesgo de fuga > 70% o retrasos reiterados en el mes.',
-                'Anomalia de Nomina: Deteccion automatica de colaboradores con horas extras que superan el 30% del salario base.',
-                'Despacho Proactivo: Asigna tareas de mitigacion directamente al departamento responsable.'
+                'Top Performer: Puntuación compuesta superior al percentil 85 con bajo riesgo de rotación.',
+                'Needs Improvement: Detección temprana de brechas de rendimiento antes del ciclo anual de desvinculación.',
+                'Consistencia Evaluativa: Normalización estadística para evitar sesgos de evaluadores estrictos o permisivos.'
             ]
         },
         {
             id: 'anova',
-            num: '7',
-            title: 'Analisis de Varianza Interdepartamental (ANOVA Unidireccional & Pairwise T-Test)',
-            tabName: 'Pestana 7: Organizacion',
-            actions: 'Tabla de significancia estadistica ANOVA, test post-hoc entre areas y grafico de barras comparativo',
-            summary: 'Determina si las disparidades en satisfaccion, rotacion y absentismo entre departamentos son estadisticamente significativas o producto del azar.',
+            num: '5',
+            title: 'Análisis de Varianza Interdepartamental (ANOVA Unidireccional & Welch\'s T-Test)',
+            tabName: 'Pestaña 5: Organización',
+            actions: 'Tabla de significancia estadística ANOVA, estadístico F de Snedecor y test post-hoc de Welch entre áreas',
+            summary: 'Determina si las disparidades en satisfacción, rotación y absentismo entre departamentos son estadísticamente significativas o producto del azar.',
             formula: FORMULAS.anova,
-            formulaLabel: 'Estadistico F de Snedecor y Aproximacion Wilson-Hilferty',
+            formulaLabel: 'Estadístico F de Snedecor y Aproximación Wilson-Hilferty',
             details: [
                 'MS_between: Varianza entre las medias de los distintos departamentos de la empresa.',
                 'MS_within: Varianza residual interna de los empleados dentro de su propio departamento.',
-                'Valor p < 0.05: Confirma heterogeneidad estructural real, justificando intervenciones diferenciadas por area.',
-                'Pairwise T-Test: Identifica exactamente que pares de departamentos presentan diferencias criticas.'
+                'Valor p < 0.05: Confirma heterogeneidad estructural real, justificando intervenciones diferenciadas por área.',
+                'Welch\'s T-Test: Identifica exactamente qué pares de departamentos presentan diferencias críticas sin asumir varianzas iguales.'
             ]
         },
         {
             id: 'payroll_burnout',
-            num: '8',
-            title: 'Proyeccion Presupuestaria de Nomina a 6 Meses y Diagnostico de Burnout',
-            tabName: 'Pestana 1: Resumen Ejecutivo de Negocio',
-            actions: 'Tarjeta "Proyeccion a 6 Meses", grafico de tendencia y alerta de fatiga laboral',
-            summary: 'Proyecta el gasto mensual de nomina considerando crecimiento organico e incrementos previstos, y calcula un indice predictivo de Burnout a partir del ratio de horas extras y ausentismo acumulado.',
+            num: '6',
+            title: 'Proyección Presupuestaria de Nómina a 6 Meses y Diagnóstico de Burnout',
+            tabName: 'Pestaña 2: Tendencias y Proyecciones',
+            actions: 'Gráfico de área de evolución salarial a 6 meses y matriz de diagnóstico de sobrecarga operativa',
+            summary: 'Proyecta el gasto mensual de nómina considerando crecimiento orgánico e incrementos previstos, y calcula un índice predictivo de Burnout a partir del ratio de horas extras y ausentismo acumulado.',
             formula: FORMULAS.payrollProjection,
-            formulaLabel: 'Ecuacion de Proyeccion Presupuestaria y Ratio de Burnout',
+            formulaLabel: 'Ecuación de Proyección Presupuestaria y Ratio de Burnout',
             details: [
-                'P_t: Masa salarial actual en el periodo base.',
-                'g_org: Tasa mensual de crecimiento organico de la plantilla.',
+                'P_t: Masa salarial actual en el período base.',
+                'g_org: Tasa mensual de crecimiento orgánico de la plantilla.',
                 'Burnout_idx: Riesgo de agotamiento derivado de sobrecarga horaria prolongada.'
             ]
         },
         {
             id: 'ohi_scoring',
-            num: '9',
-            title: 'Salud Organizacional (OHI) y Calibracion de Estabilidad Corporativa',
-            tabName: 'Pestana 1: Resumen Ejecutivo de Negocio',
-            actions: 'Tarjeta "Salud Organizacional OHI", barra de progreso y desglose de los 4 pilares corporativos',
-            summary: 'Sintetiza la salud corporativa en un indice compuesto OHI (0-100) calibrando la solidez de la empresa en clima, retencion, equidad salarial y puntualidad.',
+            num: '7',
+            title: 'Salud Organizacional (OHI) y Calibración de Estabilidad Corporativa',
+            tabName: 'Pestaña 1: Resumen Ejecutivo de Negocio',
+            actions: 'Velocímetro OHI (0-100), barra de progreso y desglose de los 4 pilares corporativos',
+            summary: 'Sintetiza la salud corporativa en un índice compuesto OHI (0-100) calibrando la solidez de la empresa en clima, retención, equidad salarial y puntualidad.',
             formula: FORMULAS.ohi,
-            formulaLabel: 'Indice de Salud Organizacional (OHI)',
+            formulaLabel: 'Índice de Salud Organizacional (OHI)',
             extraFormula: FORMULAS.rsi,
-            extraFormulaLabel: 'Formula de Estabilidad y Normalizacion de Permanencia',
+            extraFormulaLabel: 'Fórmula de Estabilidad y Normalización de Permanencia',
             details: [
-                'OHI: Ponderacion de 4 pilares: Clima (30%), Retencion (30%), Equidad (20%) y Asistencia (20%).',
-                'Diagnostico Integral: Permite a los directivos evaluar de un vistazo el bienestar operativo y clima de la compania.'
+                'OHI: Ponderación de 4 pilares: Clima (30%), Retención (30%), Equidad (20%) y Asistencia (20%).',
+                'Diagnóstico Integral: Permite a los directivos evaluar de un vistazo el bienestar operativo y clima de la compañía.'
             ]
         },
         {
             id: 'dataquality_export',
-            num: '10',
-            title: 'Motor de Integridad de Datos y Generador de Dataset Academico Anonimizado',
+            num: '8',
+            title: 'Motor de Integridad de Datos y Generador de Dataset Académico Anonimizado',
             tabName: 'Header Principal de Inteligencia',
-            actions: 'Boton "Exportar Dataset", selector de formato (CSV / JSON) y panel de completitud',
-            summary: 'Audita continuamente la completitud y frescura de las fuentes de datos (expedientes, contratos, biometrico, nomina) y genera datasets con k-anonimato para investigacion empirica y auditorias externas.',
+            actions: 'Botón "Exportar Dataset", selector de formato (CSV / JSON) y panel de completitud',
+            summary: 'Audita continuamente la completitud y frescura de las fuentes de datos (expedientes, contratos, biométrico, nómina) y genera datasets con k-anonimato para investigación empírica y auditorías externas.',
             formula: FORMULAS.dataQuality,
-            formulaLabel: 'Indice Global de Calidad e Integridad de Datos (Q_data)',
+            formulaLabel: 'Índice Global de Calidad e Integridad de Datos (Q_data)',
             details: [
-                'Completitud (40%): Porcentaje de campos criticos no nulos en expedientes y contratos.',
-                'Frescura (35%): Antiguedad y frecuencia de sincronizacion de marcaciones biometricas.',
-                'Consistencia (25%): Integridad referencial entre nomina, departamentos y evaluaciones.',
-                'Exportacion Anonimizada: Anonimiza identificadores directos (nombres, cedulas) preservando propiedades estadisticas.'
+                'Completitud (40%): Porcentaje de campos críticos no nulos en expedientes y contratos.',
+                'Frescura (35%): Antigüedad y frecuencia de sincronización de marcaciones biométricas.',
+                'Consistencia (25%): Integridad referencial entre nómina, departamentos y evaluaciones.',
+                'Exportación Anonimizada: Anonimiza identificadores directos (nombres, cédulas) preservando propiedades estadísticas.'
             ]
         }
     ];
@@ -237,8 +208,8 @@ export default function MethodologyModal({ isOpen, onClose }) {
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Ficha Metodológica — Agente Inteligente (/intelligence)"
-            subtitle="Fundamentación matemática rigurosa de las 7 pestañas, algoritmos econométricos y simuladores del Agente Inteligente"
+            title="Ficha Metodológica — Centro de Inteligencia de Negocio (/intelligence)"
+            subtitle="Fundamentación matemática rigurosa de las 5 pestañas, algoritmos econométricos y simuladores del Centro de Inteligencia"
             size="5xl"
             bodyClassName="p-4 flex flex-col overflow-hidden"
             footer={

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { FiX, FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import { getSectionsByRole, getModulesByRole } from '../../constants/modules';
@@ -10,6 +10,7 @@ const STORAGE_KEY = 'erp_sidebar_collapsed_sections';
 const Sidebar = ({ user, onLogout, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const activeItemRef = useRef(null);
 
     const isSuperAdminUser = checkIsSuperAdmin(user);
     const getRoleLabel = () => getRoleTitle(user);
@@ -35,9 +36,42 @@ const Sidebar = ({ user, onLogout, onClose }) => {
             return current.path.length > best.path.length ? current : best;
         }, null);
 
+    // Auto-expandir la sección activa si estuviera colapsada y auto-scroll
+    useEffect(() => {
+        if (!activeModule) return;
+
+        const parentSection = sections.find(sec => 
+            sec.modules.some(mod => mod.path === activeModule.path)
+        );
+
+        if (parentSection && collapsedSections[parentSection.title]) {
+            setCollapsedSections(prev => {
+                const next = { ...prev, [parentSection.title]: false };
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+                } catch {
+                    // ignore
+                }
+                return next;
+            });
+        }
+
+        // Auto-scroll del sidebar hacia el módulo activo
+        const timer = setTimeout(() => {
+            if (activeItemRef.current) {
+                activeItemRef.current.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
+            }
+        }, 150);
+
+        return () => clearTimeout(timer);
+    }, [location.pathname, activeModule]);
+
     const toggleSection = (title) => {
         setCollapsedSections(prev => {
-            const isCurrentlyCollapsed = !!prev[title];
+            const isCurrentlyCollapsed = !prev[title];
             const next = { ...prev, [title]: !isCurrentlyCollapsed };
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -110,6 +144,7 @@ const Sidebar = ({ user, onLogout, onClose }) => {
                                         return (
                                             <Link
                                                 key={idx}
+                                                ref={isActive ? activeItemRef : null}
                                                 to={mod.path}
                                                 onClick={() => {
                                                     if (onClose) onClose();
