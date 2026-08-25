@@ -3,16 +3,18 @@ import { createPortal } from 'react-dom';
 import { FiX } from 'react-icons/fi';
 
 const SIZE_CLASSES = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    sm: 'max-w-md w-full',
+    md: 'max-w-lg w-full',
+    lg: 'max-w-2xl w-full',
+    xl: 'max-w-4xl w-full',
     '2xl': 'max-w-5xl w-full',
     '3xl': 'max-w-6xl w-full',
     '4xl': 'max-w-7xl w-full',
-    '5xl': 'max-w-[94vw] w-full',
-    full: 'max-w-[96vw] w-[96vw]',
-    screen: 'max-w-[98vw] w-[98vw] h-[95vh]'
+    '5xl': 'max-w-[92vw] xl:max-w-[1440px] w-full',
+    '6xl': 'w-[95vw] max-w-[1780px] h-[93vh] max-h-[94vh]',
+    '7xl': 'w-[96vw] max-w-[1880px] h-[94vh] max-h-[95vh]',
+    full: 'w-[97vw] h-[95vh] max-h-[95vh]',
+    screen: 'w-[98vw] h-[97vh] max-h-[97vh]'
 };
 
 /**
@@ -72,7 +74,7 @@ const Modal = ({
     if (!isOpen) return null;
 
     const modalContent = (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-x-hidden overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-3 md:p-4 overflow-x-hidden overflow-y-auto">
             {/* Backdrop / Fondo Oscuro que cubre TODA la pantalla */}
             <div
                 className="fixed inset-0 bg-gray-950/60 backdrop-blur-[2px] transition-opacity duration-200"
@@ -82,7 +84,7 @@ const Modal = ({
 
             {/* Contenedor del Diálogo */}
             <div
-                className={`relative w-full ${SIZE_CLASSES[size] || SIZE_CLASSES.md} bg-white border border-gray-200 rounded shadow-2xl z-10 my-auto flex flex-col max-h-[92vh] overflow-hidden transform transition-all duration-200 animate-in fade-in zoom-in-95 ${className}`}
+                className={`relative w-full ${SIZE_CLASSES[size] || SIZE_CLASSES.md} bg-white border border-gray-200 rounded shadow-2xl z-10 my-auto flex flex-col max-h-[95vh] overflow-hidden transform transition-all duration-200 animate-in fade-in zoom-in-95 ${className}`}
                 role="dialog"
                 aria-modal="true"
                 onClick={(e) => e.stopPropagation()}
@@ -117,7 +119,7 @@ const Modal = ({
                 )}
 
                 {/* Body con scroll independiente */}
-                <div className={`p-5 overflow-y-auto text-xs text-gray-700 flex-1 ${bodyClassName}`}>
+                <div className={`p-5 overflow-y-auto text-xs text-gray-700 flex-1 min-h-0 ${bodyClassName}`}>
                     {children}
                 </div>
 

@@ -80,7 +80,7 @@ const PerformanceReport = () => {
                         className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
                     >
                         <FiBookOpen className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Ficha Técnica & Congreso</span>
+                        <span>Ficha Técnica</span>
                     </button>
                 </div>
             </div>

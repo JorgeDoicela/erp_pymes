@@ -14,9 +14,9 @@ import {
 } from 'react-icons/fi';
 
 const STATUS_SIGNATURE_MAP = {
-    SIGNED: { label: 'Firmado de Conformidad', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: FiCheckCircle },
-    PENDING: { label: 'Pendiente de Firma', badge: 'bg-amber-50 text-amber-800 border-amber-200', icon: FiClock },
-    DISPUTED: { label: 'Observación Registrada', badge: 'bg-red-50 text-red-800 border-red-200', icon: FiAlertCircle }
+    SIGNED: { label: 'Firmado de Conformidad', badge: 'text-emerald-700 font-medium' },
+    PENDING: { label: 'Pendiente de Firma', badge: 'text-amber-700 font-medium' },
+    DISPUTED: { label: 'Observación Registrada', badge: 'text-red-700 font-medium' }
 };
 
 const MyPayments = ({ user }) => {
@@ -47,66 +47,67 @@ const MyPayments = ({ user }) => {
         }
     };
 
-    // Firmar Rol de Pagos (Sello Digital de Conformidad)
     const handleSign = async () => {
         if (!activeDetail) return;
         setSigning(true);
         try {
             const res = await signPayslipDetail(activeDetail.id, {
-                signatureType: 'QR_DIGITAL',
+                signatureType: 'DIGITAL_CONFORMITY',
                 notes: 'Aceptación y conformidad de rol de pagos mensual'
             });
             if (res.success) {
-                toast.success('Rol de pagos firmado y aprobado con éxito');
+                toast.success('Rol de pagos firmado exitosamente');
                 setSignModalOpen(false);
                 loadData();
+            } else {
+                toast.error(res.message || 'No se pudo firmar');
             }
         } catch (error) {
-            toast.error(error.message || 'Error al firmar rol de pagos');
+            toast.error(error.message || 'Error al firmar');
         } finally {
             setSigning(false);
         }
     };
 
-    // Reportar Discrepancia / Observación
-    const handleDispute = async (e) => {
-        e.preventDefault();
-        if (!disputeReason.trim()) return toast.error('Ingrese el motivo de la observación');
-
+    const handleDispute = async () => {
+        if (!activeDetail || !disputeReason.trim()) {
+            toast.error('Indica el motivo de la observación');
+            return;
+        }
         setSigning(true);
         try {
-            const res = await disputePayslipDetail(activeDetail.id, disputeReason.trim());
+            const res = await disputePayslipDetail(activeDetail.id, disputeReason);
             if (res.success) {
-                toast.success('Observación registrada y notificada a Recursos Humanos');
+                toast.success('Observación enviada a Talento Humano');
                 setDisputeModalOpen(false);
                 setDisputeReason('');
                 loadData();
+            } else {
+                toast.error(res.message || 'No se pudo enviar la observación');
             }
         } catch (error) {
-            toast.error(error.message || 'Error al enviar observación');
+            toast.error(error.message || 'Error al procesar');
         } finally {
             setSigning(false);
         }
     };
 
     return (
-        <div className="space-y-6 max-w-[1400px] mx-auto">
-            {/* Header Sobrio ERP */}
-            <div className="bg-white p-5 rounded border border-gray-200">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 font-mono mb-1">
-                    Mi Portal · Nómina y Compensaciones
+        <div className="max-w-7xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
+                <div>
+                    <h1 className="text-xl font-bold text-gray-900 tracking-tight">Mis Roles de Pago</h1>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                        Consulta tus recibos de nómina mensuales, firma de conformidad o registra observaciones.
+                    </p>
                 </div>
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                    Mis Recibos de Pago y Conformidad Legal
-                </h1>
-                <p className="text-xs text-gray-500 mt-0.5">
-                    Revise sus roles mensuales, firme de conformidad digitalmente o descargue sus comprobantes con Sello QR oficial.
-                </p>
             </div>
 
+            {/* Listado de Roles */}
             {loading ? (
-                <div className="p-12 text-center text-xs text-gray-400 font-mono">
-                    Cargando recibos de pago...
+                <div className="bg-white p-8 rounded border border-gray-200 text-center text-gray-500 text-xs">
+                    Cargando tus recibos de pago...
                 </div>
             ) : payrolls.length === 0 ? (
                 <div className="bg-white p-12 rounded border border-gray-200 text-center text-gray-400 text-xs">
@@ -128,7 +129,6 @@ const MyPayments = ({ user }) => {
 
                         const sigStatus = detail.signatureStatus || 'PENDING';
                         const sigConfig = STATUS_SIGNATURE_MAP[sigStatus] || STATUS_SIGNATURE_MAP.PENDING;
-                        const SigIcon = sigConfig.icon;
 
                         return (
                             <div key={detail.id} className="bg-white p-4 rounded border border-gray-200 flex flex-col justify-between space-y-4">
@@ -142,8 +142,8 @@ const MyPayments = ({ user }) => {
                                                 {periodName}
                                             </h3>
                                         </div>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium border flex items-center gap-1 ${sigConfig.badge}`}>
-                                            <SigIcon size={11} /> {sigConfig.label}
+                                        <span className={`text-xs font-medium ${sigConfig.badge}`}>
+                                            {sigConfig.label}
                                         </span>
                                     </div>
 
@@ -261,15 +261,15 @@ const MyPayments = ({ user }) => {
                 }
             >
                 {selectedPayroll && (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 border border-gray-200 rounded text-[11px]">
+                    <div className="space-y-4 text-xs text-gray-700">
+                        <div className="flex justify-between py-2 border-b border-gray-100 text-xs">
                             <div>
-                                <span className="text-gray-500 block">Días Laborados Base 30:</span>
-                                <span className="font-mono font-bold text-gray-900">{selectedPayroll.workedDays} días</span>
+                                <span className="text-gray-500">Días Laborados Base 30: </span>
+                                <span className="font-mono font-medium text-gray-900">{selectedPayroll.workedDays} días</span>
                             </div>
                             <div>
-                                <span className="text-gray-500 block">Sueldo Base Mensual:</span>
-                                <span className="font-mono font-bold text-gray-900">${Number(selectedPayroll.baseSalary || 0).toFixed(2)}</span>
+                                <span className="text-gray-500">Sueldo Base Mensual: </span>
+                                <span className="font-mono font-medium text-gray-900">${Number(selectedPayroll.baseSalary || 0).toFixed(2)}</span>
                             </div>
                         </div>
 
@@ -279,12 +279,12 @@ const MyPayments = ({ user }) => {
                             <div className="space-y-1.5">
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Sueldo Ganado</span>
-                                    <span className="font-mono font-medium text-emerald-800">${Number(selectedPayroll.baseSalary || 0).toFixed(2)}</span>
+                                    <span className="font-mono text-gray-900">${Number(selectedPayroll.baseSalary || 0).toFixed(2)}</span>
                                 </div>
                                 {selectedPayroll.overtimeAmount > 0 && (
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Horas Extras ({selectedPayroll.overtimeHours} hrs)</span>
-                                        <span className="font-mono font-medium text-emerald-800">+${Number(selectedPayroll.overtimeAmount).toFixed(2)}</span>
+                                        <span className="font-mono text-gray-900">+${Number(selectedPayroll.overtimeAmount).toFixed(2)}</span>
                                     </div>
                                 )}
                                 {(() => {
@@ -293,7 +293,7 @@ const MyPayments = ({ user }) => {
                                         return bonuses.map((b, i) => (
                                             <div key={i} className="flex justify-between">
                                                 <span className="text-gray-600">{b.name || b.concept}</span>
-                                                <span className="font-mono font-medium text-emerald-800">+${Number(b.amount || 0).toFixed(2)}</span>
+                                                <span className="font-mono text-gray-900">+${Number(b.amount || 0).toFixed(2)}</span>
                                             </div>
                                         ));
                                     } catch { return null; }
@@ -301,7 +301,7 @@ const MyPayments = ({ user }) => {
                             </div>
                         </div>
 
-                        {/* Egresos */}
+                        {/* Deducciones */}
                         <div>
                             <h4 className="font-semibold text-gray-900 border-b border-gray-100 pb-1 mb-2">Deducciones de Ley</h4>
                             <div className="space-y-1.5">
@@ -311,7 +311,7 @@ const MyPayments = ({ user }) => {
                                         return deductions.map((d, i) => (
                                             <div key={i} className="flex justify-between">
                                                 <span className="text-gray-600">{d.name || d.concept}</span>
-                                                <span className="font-mono font-medium text-rose-700">−${Number(d.amount || 0).toFixed(2)}</span>
+                                                <span className="font-mono text-gray-900">−${Number(d.amount || 0).toFixed(2)}</span>
                                             </div>
                                         ));
                                     } catch { return null; }
@@ -319,49 +319,36 @@ const MyPayments = ({ user }) => {
                             </div>
                         </div>
 
-                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded flex justify-between items-center text-sm font-bold text-emerald-950">
+                        {/* Total Neto */}
+                        <div className="py-2.5 border-t border-b border-gray-200 flex justify-between items-center text-sm font-semibold text-gray-900">
                             <span>Total Neto a Recibir:</span>
-                            <span className="font-mono text-base">${Number(selectedPayroll.netSalary || 0).toFixed(2)} USD</span>
+                            <span className="font-mono text-base font-bold text-gray-900">${Number(selectedPayroll.netSalary || 0).toFixed(2)} USD</span>
                         </div>
 
-                        {/* Bloque de Sellos y Firmas Electrónicas */}
-                        <div className="pt-2 border-t border-gray-200">
+                        {/* Bloque de Sellos y Firmas */}
+                        <div className="pt-2">
                             <h5 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Firmas y Validez Legal</h5>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                 {/* Sello Empleador */}
-                                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-xs">
-                                    <span className="inline-block px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[9px] font-semibold mb-1">
-                                        FIRMADO ELECTRÓNICAMENTE
-                                    </span>
-                                    <p className="font-semibold text-gray-900 text-xs">{selectedPayroll.employee?.tenant?.name || 'EMPLIFI S.A.'}</p>
+                                <div className="p-3 border border-gray-200 rounded">
+                                    <p className="font-semibold text-gray-900">{selectedPayroll.employee?.tenant?.name || 'EMPLIFI S.A.'}</p>
                                     <p className="text-[11px] text-gray-500">Dpto. Talento Humano y Nómina</p>
-                                    <p className="text-[10px] text-emerald-700 font-medium mt-1">Autorización y Emisión Conforme</p>
+                                    <p className="text-[11px] text-gray-600 mt-1">Autorización y Emisión Conforme</p>
                                 </div>
 
                                 {/* Sello Colaborador */}
-                                <div className={`p-2.5 rounded text-xs border ${
-                                    selectedPayroll.signatureStatus === 'SIGNED'
-                                        ? 'bg-emerald-50/70 border-emerald-200'
-                                        : 'bg-amber-50/70 border-amber-200'
-                                }`}>
-                                    <span className={`inline-block px-1.5 py-0.5 rounded font-mono text-[9px] font-semibold mb-1 ${
-                                        selectedPayroll.signatureStatus === 'SIGNED'
-                                            ? 'bg-emerald-200 text-emerald-800'
-                                            : 'bg-amber-200 text-amber-800'
-                                    }`}>
-                                        {selectedPayroll.signatureStatus === 'SIGNED' ? 'FIRMADO ELECTRÓNICAMENTE' : 'PENDIENTE DE FIRMA'}
-                                    </span>
-                                    <p className="font-semibold text-gray-900 text-xs">
+                                <div className="p-3 border border-gray-200 rounded">
+                                    <p className="font-semibold text-gray-900">
                                         {selectedPayroll.employee?.firstName} {selectedPayroll.employee?.lastName}
                                     </p>
                                     <p className="text-[11px] text-gray-500">C.I.: {selectedPayroll.employee?.identityCard || 'S/N'}</p>
                                     {selectedPayroll.signatureStatus === 'SIGNED' ? (
-                                        <p className="text-[10px] text-emerald-700 font-medium mt-1">
+                                        <p className="text-[11px] text-emerald-700 font-medium mt-1">
                                             Firmado el {selectedPayroll.signedAt ? new Date(selectedPayroll.signedAt).toLocaleDateString('es-EC') : 'Digital'}
                                         </p>
                                     ) : (
-                                        <p className="text-[10px] text-amber-700 font-medium mt-1">
-                                            Pendiente de aceptación y firma del colaborador
+                                        <p className="text-[11px] text-amber-700 font-medium mt-1">
+                                            Pendiente de firma del colaborador
                                         </p>
                                     )}
                                 </div>

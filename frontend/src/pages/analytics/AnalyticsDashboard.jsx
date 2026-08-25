@@ -206,7 +206,7 @@ const AnalyticsDashboard = () => {
                         className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
                     >
                         <FiBookOpen className="w-3.5 h-3.5" />
-                        <span>Ficha Técnica & Congreso</span>
+                        <span>Ficha Técnica</span>
                     </button>
 
                     <Link

@@ -19,15 +19,15 @@ import Modal from '../../components/common/Modal';
 import { FiBell } from 'react-icons/fi';
 
 const STATUS_MAP = {
-    APPROVED: { label: 'Aprobado', cls: 'text-green-800 bg-green-50 border-green-200' },
-    PAID: { label: 'Pagado', cls: 'text-blue-800 bg-blue-50 border-blue-200' },
-    DRAFT: { label: 'Borrador', cls: 'text-amber-800 bg-amber-50 border-amber-200' }
+    APPROVED: { label: 'Aprobado', cls: 'text-green-800 bg-transparent border-green-300' },
+    PAID: { label: 'Pagado', cls: 'text-blue-800 bg-transparent border-blue-300' },
+    DRAFT: { label: 'Borrador', cls: 'text-amber-800 bg-transparent border-amber-300' }
 };
 
 const SIG_STATUS_MAP = {
-    SIGNED: { label: 'Firmado', cls: 'text-emerald-800 bg-emerald-50 border-emerald-200' },
-    PENDING: { label: 'Pendiente', cls: 'text-amber-800 bg-amber-50 border-amber-200' },
-    DISPUTED: { label: 'Observado', cls: 'text-red-800 bg-red-50 border-red-200' }
+    SIGNED: { label: 'Firmado', cls: 'text-emerald-800 bg-transparent border-emerald-300' },
+    PENDING: { label: 'Pendiente', cls: 'text-amber-800 bg-transparent border-amber-300' },
+    DISPUTED: { label: 'Observado', cls: 'text-red-800 bg-transparent border-red-300' }
 };
 
 const PayrollGenerator = () => {
