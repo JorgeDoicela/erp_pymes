@@ -46,7 +46,7 @@ const FORMULAS = {
 // Componente de Bloque de Formula
 function FormulaBlock({ latex, label }) {
     return (
-        <div className="py-3 border-y border-gray-100 overflow-x-auto text-center font-mono text-gray-900 my-2">
+        <div className="py-3 border-y border-gray-100 overflow-x-auto max-w-full text-center font-mono text-gray-900 my-2 px-1">
             {label && (
                 <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     {label}
@@ -291,8 +291,25 @@ export default function MethodologyModal({ isOpen, onClose }) {
             size="7xl"
             bodyClassName="p-0 flex flex-col flex-1 min-h-0 overflow-hidden"
         >
-            <div className="flex flex-col lg:flex-row h-full text-xs min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
-                <div className="w-full lg:w-56 xl:w-60 shrink-0 bg-gray-50/60 p-2 space-y-1 overflow-y-auto h-full">
+            <div className="flex flex-col sm:flex-row h-full text-xs min-h-0 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+                {/* Selector móvil (pantallas < sm) */}
+                <div className="sm:hidden p-3 bg-gray-50 border-b border-gray-200 shrink-0">
+                    <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider block mb-1.5">
+                        Seleccionar Motor ({sections.length}):
+                    </label>
+                    <select
+                        value={selectedEngineId}
+                        onChange={(e) => setSelectedEngineId(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-xs font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 cursor-pointer shadow-2xs"
+                    >
+                        {sections.map(sec => (
+                            <option key={sec.id} value={sec.id}>{sec.title}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Barra lateral para pantallas >= sm (Split screen y Desktop) */}
+                <div className="hidden sm:block w-48 md:w-56 lg:w-60 shrink-0 bg-gray-50/60 p-2 space-y-1 overflow-y-auto h-full">
                     <div className="px-2.5 py-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 bg-gray-50/95 z-10 border-b border-gray-200/80 mb-1">
                         Motores ({sections.length})
                     </div>
@@ -315,21 +332,22 @@ export default function MethodologyModal({ isOpen, onClose }) {
                     })}
                 </div>
 
+                {/* Columna de Contenido Principal (visible SIEMPRE) */}
                 <div className="flex-1 min-w-0 bg-white overflow-y-auto h-full">
                     {activeEngine ? (
                         <div>
-                            <div className="sticky top-0 z-10 px-6 py-3.5 bg-white/95 backdrop-blur-xs border-b border-gray-200 flex items-center justify-between">
+                            <div className="sticky top-0 z-10 px-4 sm:px-6 py-3.5 bg-white/95 backdrop-blur-xs border-b border-gray-200 flex items-center justify-between">
                                 <div>
-                                    <h3 className="text-base font-bold text-gray-900 tracking-tight">
+                                    <h3 className="text-sm sm:text-base font-bold text-gray-900 tracking-tight">
                                         {activeEngine.title}
                                     </h3>
-                                    <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mt-0.5">
+                                    <div className="text-[10px] sm:text-[11px] font-semibold text-gray-500 uppercase tracking-wider mt-0.5">
                                         {activeEngine.tabName}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-6 space-y-6 text-xs text-gray-700 leading-relaxed">
+                            <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 text-xs text-gray-700 leading-relaxed">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-gray-100">
                                     <div>
                                         <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
