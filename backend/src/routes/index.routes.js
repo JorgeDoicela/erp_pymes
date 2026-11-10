@@ -8,7 +8,12 @@
 
 import { Router } from 'express';
 import { login, forgotPassword, resetPassword } from '../controllers/auth/authController.js';
-import employeeRoutes from './employees/employee.routes.js';
+// Módulos de Negocio (Monolito Modular / Clean Architecture)
+import {
+  employeeRoutes,
+  payrollRoutes as payrollConfigRoutes,
+  accountingRoutes,
+} from '../modules/index.js';
 import onboardingOffboardingRoutes from './employees/onboardingOffboarding.routes.js';
 import contractRoutes from './contracts/contract.routes.js';
 import documentRoutes from './documents/document.routes.js';
@@ -16,7 +21,6 @@ import attendanceRoutes from './attendance/attendance.routes.js';
 import shiftRoutes from './attendance/shift.routes.js';
 import absenceRoutes from './attendance/absence.routes.js';
 import reportRoutes from './reports/report.routes.js';
-import payrollConfigRoutes from './payroll/payrollConfig.routes.js';
 import benefitsRoutes from './payroll/benefits.routes.js';
 import salaryAdvanceRoutes from './payroll/salaryAdvance.routes.js';
 import evaluationRoutes from './performance/evaluation.routes.js';
@@ -28,7 +32,6 @@ import notificationRoutes from './notifications/notification.routes.js';
 import auditRoutes from './audit.routes.js';
 import exportRoutes from './export/export.routes.js';
 import intelligenceRoutes from './intelligence.routes.js';
-import accountingRoutes from './accounting.routes.js';
 import { runSeed } from '../controllers/admin/seedController.js';
 import biometricRoutes from './biometric/biometric.routes.js';
 import * as biometricPublicController from '../controllers/biometric.controller.js';
