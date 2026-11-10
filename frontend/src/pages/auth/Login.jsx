@@ -15,6 +15,27 @@ import DeveloperCard from '../../components/common/DeveloperCard';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+const IconFingerprint = ({ className = 'w-4 h-4' }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M12 10a4 4 0 0 0-4 4c0 1.03.13 2.15.4 3.19" />
+    <path d="M11 10a4 4 0 0 1 4 4c0 .49-.13.95-.34 1.35" />
+    <path d="M7 19c1.03 1.23 2.4 2 4 2 3.09 0 6-2.61 6-9a7 7 0 1 0-14 0c0 .99.13 1.94.39 2.85" />
+    <path d="M11 14a2 2 0 1 0 2 2" />
+    <path d="M11 2a11 11 0 0 0-11 11c0 1.93.41 3.76 1.15 5.4" />
+    <path d="M11 5a8 8 0 0 1 8 8c0 2.45-.64 4.74-1.74 6.7" />
+  </svg>
+);
+
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -192,27 +213,6 @@ function Login({ onLogin }) {
     }
   };
 
-  const IconFingerprint = ({ className = 'w-4 h-4' }) => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 10a4 4 0 0 0-4 4c0 1.03.13 2.15.4 3.19" />
-      <path d="M11 10a4 4 0 0 1 4 4c0 .49-.13.95-.34 1.35" />
-      <path d="M7 19c1.03 1.23 2.4 2 4 2 3.09 0 6-2.61 6-9a7 7 0 1 0-14 0c0 .99.13 1.94.39 2.85" />
-      <path d="M11 14a2 2 0 1 0 2 2" />
-      <path d="M11 2a11 11 0 0 0-11 11c0 1.93.41 3.76 1.15 5.4" />
-      <path d="M11 5a8 8 0 0 1 8 8c0 2.45-.64 4.74-1.74 6.7" />
-    </svg>
-  );
-
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#f9fafb] text-[#374151] p-4 font-sans antialiased">
       <div className="w-full max-w-sm sm:max-w-md">
@@ -331,35 +331,21 @@ function Login({ onLogin }) {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200" />
                 </div>
-                <div className="relative flex justify-center text-[10px] font-mono uppercase tracking-wider">
-                  <span className="bg-white px-2.5 text-gray-400">o continuar con</span>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-white px-2.5 text-gray-400">o</span>
                 </div>
               </div>
 
-              {/* Botón de Acceso Biométrico / Passkey Estándar FIDO2 */}
+              {/* Botón de acceso con huella o rostro */}
               <button
                 type="button"
                 onClick={handleBiometricLogin}
                 disabled={loading}
-                aria-label="Acceder con biometría o llave de seguridad FIDO2"
-                className="w-full py-2 px-3 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50/80 text-gray-800 rounded transition-colors flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                aria-label="Ingresar con huella digital o rostro"
+                className="w-full py-2.5 px-4 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 text-xs font-medium rounded transition-colors flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                <span className="flex items-center gap-2.5">
-                  <span className="w-7 h-7 rounded flex items-center justify-center bg-gray-50 border border-gray-200 text-gray-500 group-hover:text-blue-600 group-hover:border-blue-200 group-hover:bg-blue-50/50 transition-colors">
-                    <IconFingerprint className="w-4 h-4" />
-                  </span>
-                  <span className="text-left">
-                    <span className="block text-xs font-medium text-gray-900 leading-tight">
-                      Biometría o Llave FIDO2
-                    </span>
-                    <span className="block text-[10px] text-gray-400 font-normal">
-                      Touch ID · Face ID · Clave de seguridad
-                    </span>
-                  </span>
-                </span>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 border border-gray-200 px-1.5 py-0.5 rounded bg-gray-50 group-hover:text-gray-600 group-hover:border-gray-300 transition-colors">
-                  WebAuthn
-                </span>
+                <IconFingerprint className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                <span>Ingresar con huella digital o reconocimiento facial</span>
               </button>
 
               {/* Links */}

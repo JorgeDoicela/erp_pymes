@@ -6,19 +6,12 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import prisma from '../../database/db.js';
+import payrollRepository from '../../repositories/payroll/payrollRepository.js';
 
 class PayrollConfigService {
   async getConfig(tenantId = null) {
-    // Return the most recent active configuration for the tenant
-    const config = await prisma.payrollConfig.findFirst({
-      where: {
-        isActive: true,
-        ...(tenantId ? { tenantId } : {}),
-      },
-      orderBy: { createdAt: 'desc' },
-      include: { items: true },
-    });
+    // Return the most recent active configuration for the tenant via repository
+    const config = await payrollRepository.getActiveConfig(tenantId);
 
     // If no config exists, return default structure for frontend
     if (!config) {
