@@ -106,12 +106,16 @@ jobs:
           node-version: 22
           cache: 'npm'
 
-      - name: Instalar Dependencias, Pruebas Unitarias y Auditoria de Seguridad
-        run: |
-          npm ci --ignore-scripts
-          npx --prefix backend prisma generate
-          npm --prefix backend run test
-          npm audit --audit-level=high || true
+      - name: Instalar Dependencias y Generar Cliente Prisma
+        run: npm ci
+
+      - name: Ejecutar Suite de Pruebas Unitarias y de Integracion (Vitest)
+        run: npm --prefix backend run test
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-super-secret-jwt-key-for-unit-tests
+          JWT_EXPIRATION: 1h
+          DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/testdb'
 
   # =========================================================================
   # 3. Verificacion, Compilacion y Calidad de Codigo (Frontend)
@@ -131,9 +135,9 @@ jobs:
           node-version: 22
           cache: 'npm'
 
-      - name: Instalar Dependencias, Linter, Pruebas y Compilacion React
+      - name: Instalar Dependencias, Pruebas y Compilacion React
         run: |
-          npm ci --ignore-scripts
+          npm ci
           npm --prefix frontend run test
           npm --prefix frontend run build
 
