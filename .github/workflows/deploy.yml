@@ -100,19 +100,17 @@ jobs:
       - name: Checkout Codigo Fuente
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js 20
+      - name: Configurar Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
-          cache-dependency-path: backend/package.json
 
       - name: Instalar Dependencias, Pruebas Unitarias y Auditoria de Seguridad
         run: |
-          cd backend
-          npm install
-          npm install @rollup/rollup-linux-x64-gnu --no-save || true
-          npm test
+          npm ci --ignore-scripts
+          npx --prefix backend prisma generate
+          npm --prefix backend run test
           npm audit --audit-level=high || true
 
   # =========================================================================
@@ -127,21 +125,17 @@ jobs:
       - name: Checkout Codigo Fuente
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js 20
+      - name: Configurar Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
-          cache-dependency-path: frontend/package.json
 
       - name: Instalar Dependencias, Linter, Pruebas y Compilacion React
         run: |
-          cd frontend
-          npm install
-          npm install @rollup/rollup-linux-x64-gnu --no-save || true
-          npm run lint || true
-          npm test
-          npm run build
+          npm ci --ignore-scripts
+          npm --prefix frontend run test
+          npm --prefix frontend run build
 
   # =========================================================================
   # 4. Build, Escaneo de Vulnerabilidades y Push (Backend Docker Image)
