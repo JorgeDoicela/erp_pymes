@@ -9,7 +9,8 @@
 import { Router } from 'express';
 import employeeController from '../../controllers/employees/employeeController.js';
 import { authenticate, authorize } from '../../middleware/auth.middleware.js';
-import { validateEmployeeData } from '../../middleware/validation.middleware.js';
+import { validate } from '../../middleware/validate.middleware.js';
+import { createEmployeeDto, updateEmployeeDto } from '../../dto/employees/employee.dto.js';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.post(
   '/',
   authenticate,
   authorize(['admin', 'hr']),
-  validateEmployeeData,
+  validate(createEmployeeDto),
   employeeController.create
 );
 router.get('/', authenticate, authorize(['admin', 'hr', 'accounting']), employeeController.getAll);
@@ -53,7 +54,7 @@ router.put(
   '/:id',
   authenticate,
   authorize(['admin', 'hr', 'employee']),
-  validateEmployeeData,
+  validate(updateEmployeeDto),
   employeeController.update
 );
 router.post(

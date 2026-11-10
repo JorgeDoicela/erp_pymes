@@ -13,6 +13,16 @@
 export function errorHandler(err, req, res, next) {
   console.error('Error:', err);
 
+  // Errores de Zod (Validación de Esquema)
+  if (err.name === 'ZodError' || (err.issues && Array.isArray(err.issues))) {
+    return res.status(400).json({
+      success: false,
+      message: 'Error de validación en la solicitud',
+      errors: err.issues.map((i) => ({ field: i.path.join('.'), message: i.message })),
+      type: 'ValidationError',
+    });
+  }
+
   // Errores de validación
   if (
     err.message.includes('Nombre') ||

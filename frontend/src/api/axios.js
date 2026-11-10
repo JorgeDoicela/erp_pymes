@@ -1,89 +1,12 @@
 /**
  * @file axios.js
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @description Capa puente de compatibilidad hacia el cliente HTTP unificado (src/core/api/httpClient.js)
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import axios from 'axios';
+import httpClient from '../core/api/httpClient.js';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Interceptor to include token and optional superadmin tenant context in requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const selectedTenantId = localStorage.getItem('superadmin_selected_tenant_id');
-    if (selectedTenantId) {
-      config.headers['x-tenant-id'] = selectedTenantId;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-import toast from 'react-hot-toast';
-
-// Interceptor to handle expired sessions or suspended subscriptions (402 Payment Required / 403 Tenant Inactive)
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response) {
-      const { status, data, config } = error.response;
-      const isSuperAdminRoute = config?.url?.includes('/superadmin');
-      const isSuspendedOrInactive =
-        status === 402 ||
-        data?.code === 'SUBSCRIPTION_SUSPENDED' ||
-        data?.code === 'TRIAL_EXPIRED' ||
-        data?.code === 'TENANT_INACTIVE' ||
-        data?.code === 'SUBSCRIPTION_CANCELLED';
-
-      if (isSuspendedOrInactive && !isSuperAdminRoute) {
-        const msg =
-          data?.message || 'La suscripción de la empresa se encuentra suspendida o inactiva.';
-
-        toast.error(msg, {
-          duration: 4000,
-          style: {
-            borderRadius: '4px',
-            background: '#ffffff',
-            color: '#111827',
-            border: '1px solid #e5e7eb',
-            padding: '12px 16px',
-            fontSize: '12px',
-            fontWeight: '500',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          },
-        });
-
-        sessionStorage.setItem('auth_error_toast', msg);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 1600);
-      } else if (status === 401 && data?.code === 'AUTH_INVALID_TOKEN') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default api;
+export { httpClient };
+export default httpClient;

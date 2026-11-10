@@ -84,28 +84,11 @@ class PayrollConfigService {
       };
     });
 
-    return await prisma.$transaction(async (tx) => {
-      // 1. Deactivate previous active config FOR THIS TENANT ONLY
-      await tx.payrollConfig.updateMany({
-        where: {
-          isActive: true,
-          ...(tenantId ? { tenantId } : {}),
-        },
-        data: { isActive: false },
-      });
-
-      // 2. Create new config with tenantId
-      return await tx.payrollConfig.create({
-        data: {
-          tenantId,
-          workingDays: parsedWorkingDays,
-          items: {
-            create: formattedItems,
-          },
-        },
-        include: { items: true },
-      });
-    });
+    return await payrollRepository.createConfigWithItems(
+      { workingDays: parsedWorkingDays },
+      formattedItems,
+      tenantId
+    );
   }
 }
 

@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import prisma from '../../database/db.js';
+import accountingRepository from '../../repositories/accounting/accountingRepository.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
 import { financial } from '../../utils/financialUtils.js';
 
@@ -20,10 +20,7 @@ const getTenantId = (req) => req.tenantId || req.user?.tenantId || null;
 export const getPeriods = async (req, res) => {
   try {
     const tenantId = getTenantId(req);
-    const periods = await prisma.accountingPeriod.findMany({
-      where: tenantId ? { tenantId } : {},
-      orderBy: [{ year: 'desc' }, { month: 'desc' }],
-    });
+    const periods = await accountingRepository.getPeriods(tenantId);
     res.status(200).json(periods);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching periods', error: error.message });
@@ -36,27 +33,19 @@ export const createPeriod = async (req, res) => {
     const tenantId = getTenantId(req);
 
     // Validar si ya existe en la empresa actual
-    const existing = await prisma.accountingPeriod.findFirst({
-      where: {
-        year: parseInt(year),
-        month: parseInt(month),
-        ...(tenantId ? { tenantId } : {}),
-      },
-    });
+    const existing = await accountingRepository.findPeriodByMonthYear(year, month, tenantId);
 
     if (existing) {
       return res.status(400).json({ message: 'El periodo ya existe.' });
     }
 
-    const period = await prisma.accountingPeriod.create({
-      data: {
-        tenantId,
-        year: parseInt(year),
-        month: parseInt(month),
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        status: 'OPEN',
-      },
+    const period = await accountingRepository.createPeriod({
+      tenantId,
+      year: parseInt(year),
+      month: parseInt(month),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      status: 'OPEN',
     });
 
     auditRepository
@@ -78,13 +67,12 @@ export const createPeriod = async (req, res) => {
 export const togglePeriodStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const period = await prisma.accountingPeriod.findUnique({ where: { id } });
+    const period = await accountingRepository.findPeriodById(id);
 
     if (!period) return res.status(404).json({ message: 'Periodo no encontrado' });
 
-    const updated = await prisma.accountingPeriod.update({
-      where: { id },
-      data: { status: period.status === 'OPEN' ? 'CLOSED' : 'OPEN' },
+    const updated = await accountingRepository.updatePeriod(id, {
+      status: period.status === 'OPEN' ? 'CLOSED' : 'OPEN',
     });
 
     auditRepository
@@ -106,16 +94,7 @@ export const togglePeriodStatus = async (req, res) => {
 export const deletePeriod = async (req, res) => {
   try {
     const { id } = req.params;
-    // Consideramos que no se puede eliminar si tiene transacciones (JournalLine indirectamente)
-    const entries = await prisma.journalEntry.count({
-      where: {
-        date: {
-          // Simulación de búsqueda por rango de fecha del periodo si no hay FK directa
-        },
-      },
-    });
-    // Por ahora simplificar a eliminación directa si el usuario insiste, o validar por existencia de periodId si se agrega
-    await prisma.accountingPeriod.delete({ where: { id } });
+    await accountingRepository.deletePeriod(id);
     res.status(200).json({ message: 'Periodo eliminado' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting period', error: error.message });
@@ -129,11 +108,7 @@ export const deletePeriod = async (req, res) => {
 export const getAccounts = async (req, res) => {
   try {
     const tenantId = getTenantId(req);
-    const accounts = await prisma.accountingAccount.findMany({
-      where: tenantId ? { tenantId } : {},
-      include: { subAccounts: true },
-      orderBy: { code: 'asc' },
-    });
+    const accounts = await accountingRepository.getAccounts(tenantId);
     res.status(200).json(accounts);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching accounts', error: error.message });
@@ -145,25 +120,18 @@ export const createAccount = async (req, res) => {
     const { code, name, description, type, level, isTransactional, parentId } = req.body;
     const tenantId = getTenantId(req);
 
-    const existing = await prisma.accountingAccount.findFirst({
-      where: {
-        code,
-        ...(tenantId ? { tenantId } : {}),
-      },
-    });
+    const existing = await accountingRepository.findAccountByCode(code, tenantId);
     if (existing) return res.status(400).json({ message: 'El código de cuenta ya existe.' });
 
-    const account = await prisma.accountingAccount.create({
-      data: {
-        tenantId,
-        code,
-        name,
-        description,
-        type,
-        level: parseInt(level),
-        isTransactional,
-        parentId: parentId || null,
-      },
+    const account = await accountingRepository.createAccount({
+      tenantId,
+      code,
+      name,
+      description,
+      type,
+      level: parseInt(level),
+      isTransactional,
+      parentId: parentId || null,
     });
     auditRepository
       .createLog({
@@ -185,9 +153,10 @@ export const updateAccount = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, isTransactional } = req.body;
-    const updated = await prisma.accountingAccount.update({
-      where: { id },
-      data: { name, description, isTransactional },
+    const updated = await accountingRepository.updateAccount(id, {
+      name,
+      description,
+      isTransactional,
     });
 
     auditRepository
@@ -209,17 +178,17 @@ export const updateAccount = async (req, res) => {
 export const deleteAccount = async (req, res) => {
   try {
     const { id } = req.params;
-    const hasChildren = await prisma.accountingAccount.count({ where: { parentId: id } });
+    const hasChildren = await accountingRepository.countSubAccounts(id);
     if (hasChildren > 0)
       return res.status(400).json({ message: 'No se puede eliminar una cuenta con sub-cuentas.' });
 
-    const hasMovements = await prisma.journalLine.count({ where: { accountId: id } });
+    const hasMovements = await accountingRepository.countAccountMovements(id);
     if (hasMovements > 0)
       return res
         .status(400)
         .json({ message: 'No se puede eliminar una cuenta que ya tiene movimientos contables.' });
 
-    await prisma.accountingAccount.delete({ where: { id } });
+    await accountingRepository.deleteAccount(id);
 
     auditRepository
       .createLog({
@@ -244,10 +213,7 @@ export const deleteAccount = async (req, res) => {
 export const getCostCenters = async (req, res) => {
   try {
     const tenantId = getTenantId(req);
-    const centers = await prisma.costCenter.findMany({
-      where: tenantId ? { tenantId } : {},
-      orderBy: { code: 'asc' },
-    });
+    const centers = await accountingRepository.getCostCenters(tenantId);
     res.status(200).json(centers);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching cost centers', error: error.message });
@@ -258,17 +224,15 @@ export const createCostCenter = async (req, res) => {
   try {
     const { code, name, description } = req.body;
     const tenantId = getTenantId(req);
-    const existing = await prisma.costCenter.findFirst({
-      where: {
-        code,
-        ...(tenantId ? { tenantId } : {}),
-      },
-    });
+    const existing = await accountingRepository.findCostCenterByCode(code, tenantId);
     if (existing)
       return res.status(400).json({ message: 'El código de centro de costo ya existe.' });
 
-    const center = await prisma.costCenter.create({
-      data: { tenantId, code, name, description },
+    const center = await accountingRepository.createCostCenter({
+      tenantId,
+      code,
+      name,
+      description,
     });
     res.status(201).json(center);
   } catch (error) {
@@ -280,10 +244,7 @@ export const updateCostCenter = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description } = req.body;
-    const updated = await prisma.costCenter.update({
-      where: { id },
-      data: { name, description },
-    });
+    const updated = await accountingRepository.updateCostCenter(id, { name, description });
 
     auditRepository
       .createLog({
@@ -304,13 +265,13 @@ export const updateCostCenter = async (req, res) => {
 export const deleteCostCenter = async (req, res) => {
   try {
     const { id } = req.params;
-    const hasMovements = await prisma.journalLine.count({ where: { costCenterId: id } });
+    const hasMovements = await accountingRepository.countCostCenterMovements(id);
     if (hasMovements > 0)
       return res
         .status(400)
         .json({ message: 'No se puede eliminar un centro de costo con movimientos registrados.' });
 
-    await prisma.costCenter.delete({ where: { id } });
+    await accountingRepository.deleteCostCenter(id);
 
     auditRepository
       .createLog({
@@ -339,12 +300,7 @@ export const getJournalEntries = async (req, res) => {
     const where = tenantId ? { tenantId } : {};
 
     if (periodId && periodId !== 'undefined') {
-      const period = await prisma.accountingPeriod.findFirst({
-        where: {
-          id: periodId,
-          ...(tenantId ? { tenantId } : {}),
-        },
-      });
+      const period = await accountingRepository.findPeriodById(periodId, tenantId);
       if (period) {
         where.date = {
           gte: period.startDate,
@@ -354,17 +310,7 @@ export const getJournalEntries = async (req, res) => {
     }
 
     const maxTake = limit ? parseInt(limit) : 150;
-
-    const entries = await prisma.journalEntry.findMany({
-      where,
-      include: {
-        lines: {
-          include: { account: true, costCenter: true },
-        },
-      },
-      orderBy: { date: 'desc' },
-      take: maxTake,
-    });
+    const entries = await accountingRepository.getJournalEntries(where, maxTake);
     res.status(200).json(entries);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching journals', error: error.message });
@@ -394,14 +340,7 @@ export const createJournalEntry = async (req, res) => {
 
     // 2. Validar Periodo Abierto
     const entryDate = new Date(date);
-    const period = await prisma.accountingPeriod.findFirst({
-      where: {
-        year: entryDate.getFullYear(),
-        month: entryDate.getMonth() + 1,
-        status: 'OPEN',
-        ...(tenantId ? { tenantId } : {}),
-      },
-    });
+    const period = await accountingRepository.findOpenPeriodByDate(entryDate, tenantId);
 
     if (!period) {
       return res
@@ -409,34 +348,22 @@ export const createJournalEntry = async (req, res) => {
         .json({ message: 'No hay un periodo abierto para la fecha seleccionada.' });
     }
 
-    // 3. Crear Asiento y Líneas Transaccionalmente
-    const result = await prisma.$transaction(async (tx) => {
-      const entry = await tx.journalEntry.create({
-        data: {
-          tenantId,
-          entryNumber,
-          date: entryDate,
-          description,
-          type,
-          status: 'DRAFT', // Empieza como PENDIENTE/Borrador
-          totalDebit: financial.round(totalDebitFin),
-          totalCredit: financial.round(totalCreditFin),
-          referenceModule,
-          referenceId,
-          lines: {
-            create: lines.map((line) => ({
-              accountId: line.accountId,
-              costCenterId: line.costCenterId || null,
-              description: line.description || null,
-              debit: parseFloat(line.debit) || 0,
-              credit: parseFloat(line.credit) || 0,
-            })),
-          },
-        },
-        include: { lines: true },
-      });
-      return entry;
-    });
+    // 3. Crear Asiento y Líneas Transaccionalmente vía Repositorio
+    const result = await accountingRepository.createJournalEntryWithLines(
+      {
+        tenantId,
+        entryNumber,
+        date: entryDate,
+        description,
+        type,
+        status: 'DRAFT',
+        totalDebit: financial.round(totalDebitFin),
+        totalCredit: financial.round(totalCreditFin),
+        referenceModule,
+        referenceId,
+      },
+      lines
+    );
 
     auditRepository
       .createLog({
@@ -458,11 +385,8 @@ export const postJournalEntry = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Buscar el asiento con sus líneas
-    const entry = await prisma.journalEntry.findUnique({
-      where: { id },
-      include: { lines: true },
-    });
+    // 1. Buscar el asiento con sus líneas vía Repositorio
+    const entry = await accountingRepository.findJournalEntryById(id);
 
     if (!entry) {
       return res.status(404).json({ message: 'Asiento no encontrado.' });
@@ -470,22 +394,14 @@ export const postJournalEntry = async (req, res) => {
 
     // 2. Validar que esté en BORRADOR (DRAFT)
     if (entry.status !== 'DRAFT') {
-      return res
-        .status(400)
-        .json({
-          message: `No se puede mayorizar un asiento que ya está en estado ${entry.status}.`,
-        });
+      return res.status(400).json({
+        message: `No se puede mayorizar un asiento que ya está en estado ${entry.status}.`,
+      });
     }
 
     // 3. Validar que el periodo contable para la fecha del asiento esté ABIERTO
     const entryDate = new Date(entry.date);
-    const period = await prisma.accountingPeriod.findFirst({
-      where: {
-        year: entryDate.getFullYear(),
-        month: entryDate.getMonth() + 1,
-        status: 'OPEN',
-      },
-    });
+    const period = await accountingRepository.findOpenPeriodByDate(entryDate);
 
     if (!period) {
       return res.status(400).json({
@@ -493,11 +409,8 @@ export const postJournalEntry = async (req, res) => {
       });
     }
 
-    // 4. Actualizar estado a POSTED (Mayorizado)
-    const updatedEntry = await prisma.journalEntry.update({
-      where: { id },
-      data: { status: 'POSTED' },
-    });
+    // 4. Actualizar estado a POSTED (Mayorizado) vía Repositorio
+    const updatedEntry = await accountingRepository.updateJournalEntryStatus(id, 'POSTED');
 
     auditRepository
       .createLog({
@@ -521,12 +434,12 @@ export const postJournalEntry = async (req, res) => {
 export const deleteJournalEntry = async (req, res) => {
   try {
     const { id } = req.params;
-    const entry = await prisma.journalEntry.findUnique({ where: { id } });
+    const entry = await accountingRepository.findJournalEntryById(id);
     if (!entry) return res.status(404).json({ message: 'Asiento no encontrado' });
     if (entry.status === 'POSTED')
       return res.status(400).json({ message: 'No se puede eliminar un asiento ya mayorizado.' });
 
-    await prisma.journalEntry.delete({ where: { id } });
+    await accountingRepository.deleteJournalEntry(id);
 
     auditRepository
       .createLog({
@@ -555,7 +468,7 @@ export const getTrialBalance = async (req, res) => {
 
     // Mejora: Filtro por fecha basado en el periodo para mayor precisión
     if (periodId && periodId !== 'undefined') {
-      const period = await prisma.accountingPeriod.findUnique({ where: { id: periodId } });
+      const period = await accountingRepository.findPeriodById(periodId);
       if (period) {
         where.journalEntry.date = {
           gte: period.startDate,
@@ -564,10 +477,7 @@ export const getTrialBalance = async (req, res) => {
       }
     }
 
-    const lines = await prisma.journalLine.findMany({
-      where,
-      include: { account: true },
-    });
+    const lines = await accountingRepository.getTrialBalanceLines(where);
 
     // Sumarizar por ID de cuenta
     const sums = {};
@@ -624,7 +534,7 @@ export const getGeneralLedger = async (req, res) => {
     if (costCenterId) where.costCenterId = costCenterId;
 
     if (periodId && periodId !== 'undefined') {
-      const period = await prisma.accountingPeriod.findUnique({ where: { id: periodId } });
+      const period = await accountingRepository.findPeriodById(periodId);
       if (period) {
         where.journalEntry.date = {
           gte: period.startDate,
@@ -633,19 +543,7 @@ export const getGeneralLedger = async (req, res) => {
       }
     }
 
-    const movements = await prisma.journalLine.findMany({
-      where,
-      include: {
-        journalEntry: true,
-        account: true,
-        costCenter: true,
-      },
-      orderBy: {
-        journalEntry: {
-          date: 'asc',
-        },
-      },
-    });
+    const movements = await accountingRepository.getGeneralLedgerLines(where);
 
     res.status(200).json(movements);
   } catch (error) {
@@ -660,54 +558,31 @@ export const integratePayroll = async (req, res) => {
   const tenantId = getTenantId(req);
 
   try {
-    // 1. Obtener la nómina con detalles y departamentos de empleados con aislamiento de tenant
-    const payroll = await prisma.payroll.findFirst({
-      where: {
-        id: payrollId,
-        ...(tenantId ? { tenantId } : {}),
-      },
-      include: {
-        details: {
-          include: {
-            employee: {
-              select: { department: true, firstName: true, lastName: true },
-            },
-          },
-        },
-      },
-    });
+    // 1. Obtener la nómina con detalles y departamentos de empleados con aislamiento de tenant vía Repositorio
+    const payroll = await accountingRepository.getPayrollForIntegration(payrollId, tenantId);
 
     if (!payroll) return res.status(404).json({ message: 'Nómina no encontrada' });
     if (payroll.status === 'DRAFT')
       return res.status(400).json({ message: 'La nómina debe estar APROBADA para contabilizarse' });
 
-    // 2. Verificar si ya existe un asiento para esta nómina
-    const existingEntry = await prisma.journalEntry.findFirst({
-      where: {
-        referenceModule: 'PAYROLL',
-        referenceId: payrollId,
-        ...(tenantId ? { tenantId } : {}),
-      },
-    });
+    // 2. Verificar si ya existe un asiento para esta nómina vía Repositorio
+    const existingEntry = await accountingRepository.findJournalEntryByReference(
+      'PAYROLL',
+      payrollId,
+      tenantId
+    );
     if (existingEntry)
       return res
         .status(400)
         .json({ message: 'Esta nómina ya ha sido contabilizada', entryId: existingEntry.id });
 
-    // 3. Obtener Cuentas Contables y Centros de Costo filtradas por Tenant
+    // 3. Obtener Cuentas Contables y Centros de Costo filtradas por Tenant vía Repositorio
     const [accounts, allCostCenters] = await Promise.all([
-      prisma.accountingAccount.findMany({
-        where: {
-          code: { in: ['5.1.1', '5.1.2', '5.1.3', '2.1.1', '2.1.2'] },
-          ...(tenantId ? { tenantId } : {}),
-        },
-      }),
-      prisma.costCenter.findMany({
-        where: {
-          isActive: true,
-          ...(tenantId ? { tenantId } : {}),
-        },
-      }),
+      accountingRepository.findAccountsByCodes(
+        ['5.1.1', '5.1.2', '5.1.3', '2.1.1', '2.1.2'],
+        tenantId
+      ),
+      accountingRepository.getActiveCostCenters(tenantId),
     ]);
 
     const accMap = {};
@@ -837,20 +712,18 @@ export const integratePayroll = async (req, res) => {
       }
     }
 
-    const entry = await prisma.journalEntry.create({
-      data: {
-        tenantId,
-        entryNumber: `PAY-${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 9000) + 1000}`,
-        date: new Date(),
-        description: `Nexus: Importación de Nómina ${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`,
-        type: 'DAILY',
-        status: 'DRAFT',
-        referenceModule: 'PAYROLL',
-        referenceId: payrollId,
-        totalDebit: calculatedTotalDebit,
-        totalCredit: calculatedTotalCredit,
-        lines: { create: lines },
-      },
+    const entry = await accountingRepository.createJournalEntryRaw({
+      tenantId,
+      entryNumber: `PAY-${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 9000) + 1000}`,
+      date: new Date(),
+      description: `Nexus: Importación de Nómina ${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`,
+      type: 'DAILY',
+      status: 'DRAFT',
+      referenceModule: 'PAYROLL',
+      referenceId: payrollId,
+      totalDebit: calculatedTotalDebit,
+      totalCredit: calculatedTotalCredit,
+      lines: { create: lines },
     });
 
     auditRepository

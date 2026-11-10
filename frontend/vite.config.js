@@ -11,9 +11,9 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['favicon.webp'],
       manifest: {
-        name: 'Emplifi - ERP',
-        short_name: 'Emplifi',
-        description: 'Plataforma de gestión de erp',
+        name: 'Norma ERP - Gestión Empresarial',
+        short_name: 'Norma ERP',
+        description: 'Plataforma ERP de Gestión del Talento Humano y Nómina Legal',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
@@ -53,6 +53,32 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('canvg')) {
+              return 'vendor-pdf';
+            }
+            if (id.includes('katex')) {
+              return 'vendor-math';
+            }
+            if (id.includes('framer-motion')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('react-icons')) {
+              return 'vendor-icons';
+            }
+          }
+        },
+      },
+    },
+  },
   optimizeDeps: {
     include: [
       'react',

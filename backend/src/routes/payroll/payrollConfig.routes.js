@@ -10,6 +10,8 @@ import { Router } from 'express';
 import payrollConfigController from '../../controllers/payroll/payrollConfigController.js';
 import payrollController from '../../controllers/payroll/payrollController.js';
 import { authenticate, authorize } from '../../middleware/auth.middleware.js';
+import { validate } from '../../middleware/validate.middleware.js';
+import { generatePayrollDto, createPayrollConfigDto } from '../../dto/payroll/payroll.dto.js';
 
 const router = Router();
 
@@ -26,6 +28,7 @@ router.post(
   '/config',
   authenticate,
   authorize(['admin', 'hr', 'accounting']),
+  validate(createPayrollConfigDto),
   payrollConfigController.createConfig
 );
 
@@ -34,6 +37,7 @@ router.post(
   '/generate',
   authenticate,
   authorize(['admin', 'hr', 'accounting']),
+  validate(generatePayrollDto),
   payrollController.generate
 );
 router.get('/', authenticate, authorize(['admin', 'hr', 'accounting']), payrollController.getAll);
