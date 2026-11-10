@@ -50,10 +50,10 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://admin_rh:your_postgres_password_here@db:5432/db_recursos_humanos?schema=public}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_here}
-      CLIENT_URL: ${CLIENT_URL:-https://erp.jorgedoicela.com}
-      FRONTEND_URL: ${FRONTEND_URL:-https://erp.jorgedoicela.com}
-      ORIGIN: ${ORIGIN:-https://erp.jorgedoicela.com}
-      RP_ID: ${RP_ID:-erp.jorgedoicela.com}
+      CLIENT_URL: ${CLIENT_URL:-https://norma.doicela.dev}
+      FRONTEND_URL: ${FRONTEND_URL:-https://norma.doicela.dev}
+      ORIGIN: ${ORIGIN:-https://norma.doicela.dev}
+      RP_ID: ${RP_ID:-doicela.dev}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-your-32-byte-hex-key-here}
       SEED_SECRET: ${SEED_SECRET:-your-seed-secret-here}
       RUN_SEED: ${RUN_SEED:-true}
