@@ -23,7 +23,7 @@ initRequestMonitorCronJob();
 initDocumentCronJob();
 initPayrollCronJob();
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
 
@@ -32,5 +32,23 @@ socketService.init(server);
 
 server.listen(PORT, () => {
   console.log(`Backend EMPLIFI corriendo en http://localhost:${PORT}`);
-  console.log("Server updated at " + new Date().toISOString());
+  console.log('Server updated at ' + new Date().toISOString());
 });
+
+const gracefulShutdown = async (signal) => {
+  console.log(`[Server] Recibida senal ${signal}. Cerrando conexiones...`);
+  server.close(async () => {
+    try {
+      const { default: prisma } = await import('./database/db.js');
+      await prisma.$disconnect();
+      console.log('[Server] Conexion de base de datos cerrada.');
+      process.exit(0);
+    } catch (err) {
+      console.error('[Server] Error cerrando conexion de base de datos:', err);
+      process.exit(1);
+    }
+  });
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

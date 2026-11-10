@@ -1,0 +1,84 @@
+name: CI Enterprise Quality Gate & Automated Testing
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-audit:
+    name: Security & Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Instalar Dependencias
+        run: npm ci
+
+      - name: Escaneo de Secretos y Credenciales (Secretlint)
+        run: npx secretlint "**/*"
+
+  backend-qa:
+    name: Backend QA & Tests (API)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Instalar Dependencias y Generar Cliente Prisma
+        run: npm ci
+
+      - name: Ejecutar Linter del Backend
+        run: npm --prefix backend run lint
+
+      - name: Ejecutar Suite de Pruebas Unitarias y de Integracion (Vitest)
+        run: npm --prefix backend run test
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-super-secret-jwt-key-for-unit-tests
+          JWT_EXPIRATION: 1h
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
+
+  frontend-qa:
+    name: Frontend QA & Build (WEB)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Instalar Dependencias
+        run: npm ci
+
+      - name: Ejecutar Suite de Pruebas Frontend (Vitest)
+        run: npm --prefix frontend run test
+
+      - name: Compilacion de Produccion Frontend (Vite Build)
+        run: npm --prefix frontend run build

@@ -1,15 +1,38 @@
 {
-    "name": "hr-system-root",
-    "version": "1.0.0",
-    "author": "Jorge Doicela",
-    "license": "UNLICENSED",
-    "private": true,
-    "scripts": {},
-    "workspaces": [
-        "frontend",
-        "backend"
-    ],
-    "overrides": {
-        "uuid": "^11.1.1"
-    }
+  "name": "emplifi-erp-root",
+  "version": "1.0.0",
+  "author": "Jorge Doicela",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint && npm --prefix backend run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm --prefix backend run test && npm --prefix frontend run test",
+    "test:backend": "npm --prefix backend run test",
+    "test:frontend": "npm --prefix frontend run test",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "prepare": "husky"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "overrides": {
+    "uuid": "^11.1.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@secretlint/quick-start": "^13.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10"
+  }
 }

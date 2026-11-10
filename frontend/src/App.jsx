@@ -6,8 +6,8 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import { useState, useEffect, Suspense, lazy } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useState, useEffect, Suspense, lazy } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Loading from './components/Loading.jsx';
 import MaintenanceBanner from './components/common/MaintenanceBanner.jsx';
@@ -32,11 +32,15 @@ const RegisterEmployee = lazy(() => import('./pages/employees/RegisterEmployee.j
 const EmployeeList = lazy(() => import('./pages/employees/EmployeeList.jsx'));
 const EmployeeProfile = lazy(() => import('./pages/employees/EmployeeProfile.jsx'));
 const EmployeeExpedient = lazy(() => import('./pages/employees/EmployeeExpedient.jsx'));
-const EmployeeAssetsManagement = lazy(() => import('./pages/employees/EmployeeAssetsManagement.jsx'));
+const EmployeeAssetsManagement = lazy(
+  () => import('./pages/employees/EmployeeAssetsManagement.jsx')
+);
 const MyAssets = lazy(() => import('./pages/employees/MyAssets.jsx'));
 const OffboardingManagement = lazy(() => import('./pages/employees/OffboardingManagement.jsx'));
 const MobileEmployeePortal = lazy(() => import('./pages/dashboard/MobileEmployeePortal.jsx'));
-const LegalComplianceDashboard = lazy(() => import('./pages/compliance/LegalComplianceDashboard.jsx'));
+const LegalComplianceDashboard = lazy(
+  () => import('./pages/compliance/LegalComplianceDashboard.jsx')
+);
 const AnnouncementsBoard = lazy(() => import('./pages/communication/AnnouncementsBoard.jsx'));
 
 // Attendance
@@ -74,11 +78,19 @@ const ApplicationDetails = lazy(() => import('./pages/recruitment/ApplicationDet
 
 // Analytics
 const AnalyticsDashboard = lazy(() => import('./pages/analytics/AnalyticsDashboard.jsx'));
-const RsiOptimizationDashboard = lazy(() => import('./pages/analytics/RsiOptimizationDashboard.jsx'));
-const CausalInferenceDashboard = lazy(() => import('./pages/analytics/CausalInferenceDashboard.jsx'));
-const FederatedLearningDashboard = lazy(() => import('./pages/analytics/FederatedLearningDashboard.jsx'));
+const RsiOptimizationDashboard = lazy(
+  () => import('./pages/analytics/RsiOptimizationDashboard.jsx')
+);
+const CausalInferenceDashboard = lazy(
+  () => import('./pages/analytics/CausalInferenceDashboard.jsx')
+);
+const FederatedLearningDashboard = lazy(
+  () => import('./pages/analytics/FederatedLearningDashboard.jsx')
+);
 const MorlParetoDashboard = lazy(() => import('./pages/analytics/MorlParetoDashboard.jsx'));
-const TemporalAttentionDashboard = lazy(() => import('./pages/analytics/TemporalAttentionDashboard.jsx'));
+const TemporalAttentionDashboard = lazy(
+  () => import('./pages/analytics/TemporalAttentionDashboard.jsx')
+);
 const FTTransformerDashboard = lazy(() => import('./pages/analytics/FTTransformerDashboard.jsx'));
 const TurnoverReport = lazy(() => import('./pages/reports/TurnoverReport.jsx'));
 const PerformanceReport = lazy(() => import('./pages/reports/PerformanceReport.jsx'));
@@ -111,13 +123,43 @@ const EntrepreneurshipDetails = lazy(() => import('./pages/entrepreneurship/Proj
 const RegisterTenant = lazy(() => import('./pages/auth/RegisterTenant.jsx'));
 const SuperAdminDashboard = lazy(() => import('./pages/superadmin/SuperAdminDashboard.jsx'));
 
-// Módulo Público de Investigación Científica (Emplifi Research)
-const PublicResearchPage = lazy(() => import('./pages/PublicResearchPage.jsx'));
-const PublicResearchResultsPage = lazy(() => import('./pages/PublicResearchResultsPage.jsx'));
-
 // Módulo de Firmas Digitales QR y Firma Electrónica Oficial Ecuador (.p12)
 const DigitalSignatureCenter = lazy(() => import('./pages/signatures/DigitalSignatureCenter.jsx'));
-const PublicSignatureVerification = lazy(() => import('./pages/signatures/PublicSignatureVerification.jsx'));
+const PublicSignatureVerification = lazy(
+  () => import('./pages/signatures/PublicSignatureVerification.jsx')
+);
+
+const RequireAuth = ({ children, role, user }) => {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const userRole = (user.role || '').toLowerCase();
+  const superAdminUser = checkIsSuperAdmin(user);
+
+  if (role) {
+    const allowedRoles = Array.isArray(role)
+      ? role.map((r) => r.toLowerCase())
+      : [role.toLowerCase()];
+
+    // SuperAdmin supervisa funciones administrativas, pero no portales de autogestión personal de empleados
+    const isEmployeeOnlyRoute = allowedRoles.length === 1 && allowedRoles[0] === ROLES.EMPLOYEE;
+    const hasPermission =
+      (superAdminUser && !isEmployeeOnlyRoute) || allowedRoles.includes(userRole);
+
+    if (!hasPermission) {
+      // Redirigir según el rol real del usuario a su "home"
+      if (superAdminUser) return <Navigate to="/superadmin/dashboard" replace />;
+      if (userRole === ROLES.ADMIN || userRole === ROLES.HR)
+        return <Navigate to="/admin" replace />;
+      if (userRole === ROLES.ACCOUNTING) return <Navigate to="/admin/accounting" replace />;
+      if (userRole === ROLES.EMPLOYEE) return <Navigate to="/empleado" replace />;
+      return <Navigate to="/login" replace />;
+    }
+  }
+
+  return children;
+};
 
 function App() {
   const [auth, setAuth] = useState(() => {
@@ -127,7 +169,7 @@ function App() {
     if (savedUser && savedToken) {
       try {
         return { user: JSON.parse(savedUser), token: savedToken };
-      } catch (e) {
+      } catch {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
       }
@@ -138,14 +180,14 @@ function App() {
   const handleLogin = ({ user, token }) => {
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('token', token);
-    setAuth({ user, token })
-  }
+    setAuth({ user, token });
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    setAuth({ user: null, token: null })
-  }
+    setAuth({ user: null, token: null });
+  };
 
   useEffect(() => {
     const handleUserUpdated = () => {
@@ -154,7 +196,7 @@ function App() {
       if (savedUser && savedToken) {
         try {
           setAuth({ user: JSON.parse(savedUser), token: savedToken });
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
@@ -168,34 +210,6 @@ function App() {
     };
   }, []);
 
-  const RequireAuth = ({ children, role }) => {
-    if (!auth.user) {
-      return <Navigate to="/login" replace />
-    }
-
-    const userRole = (auth.user.role || '').toLowerCase();
-    const superAdminUser = checkIsSuperAdmin(auth.user);
-
-    if (role) {
-      const allowedRoles = Array.isArray(role) ? role.map(r => r.toLowerCase()) : [role.toLowerCase()];
-
-      // SuperAdmin supervisa funciones administrativas, pero no portales de autogestión personal de empleados
-      const isEmployeeOnlyRoute = allowedRoles.length === 1 && allowedRoles[0] === ROLES.EMPLOYEE;
-      const hasPermission = (superAdminUser && !isEmployeeOnlyRoute) || allowedRoles.includes(userRole);
-
-      if (!hasPermission) {
-        // Redirigir según el rol real del usuario a su "home"
-        if (superAdminUser) return <Navigate to="/superadmin/dashboard" replace />;
-        if (userRole === ROLES.ADMIN || userRole === ROLES.HR) return <Navigate to="/admin" replace />;
-        if (userRole === ROLES.ACCOUNTING) return <Navigate to="/admin/accounting" replace />;
-        if (userRole === ROLES.EMPLOYEE) return <Navigate to="/empleado" replace />;
-        return <Navigate to="/login" replace />;
-      }
-    }
-
-    return children
-  }
-
   return (
     <Suspense fallback={<Loading />}>
       <Toaster position="top-right" />
@@ -208,19 +222,29 @@ function App() {
         <Route path="/register-company" element={<RegisterTenant />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/careers/:id" element={<JobApplication />} />
-        <Route path="/investigacion" element={<PublicResearchPage />} />
-        <Route path="/investigacion/resultados" element={<PublicResearchResultsPage />} />
         <Route path="/signatures/verify/:token" element={<PublicSignatureVerification />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* Panel compartido para roles administrativos/especializados */}
-        <Route element={<RequireAuth role={['admin', 'hr', 'accounting', 'entrepreneur']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route
+          element={
+            <RequireAuth user={auth.user} role={['admin', 'hr', 'accounting', 'entrepreneur']}>
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
           <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
           <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
         </Route>
 
         {/* Solo SuperAdministrador (Backoffice SaaS) */}
-        <Route element={<RequireAuth role="superadmin"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route
+          element={
+            <RequireAuth user={auth.user} role="superadmin">
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
           <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
           <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
           <Route path="/superadmin/tenants" element={<SuperAdminDashboard />} />
@@ -229,14 +253,29 @@ function App() {
         </Route>
 
         {/* Administrador y Recursos Humanos (RRHH) */}
-        <Route element={<RequireAuth role={['admin', 'hr']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route
+          element={
+            <RequireAuth user={auth.user} role={['admin', 'hr']}>
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
           <Route path="/admin/shifts" element={<ShiftManagement />} />
           <Route path="/admin/reports" element={<AttendanceReports />} />
           <Route path="/admin/absences" element={<AdminAbsences />} />
-          <Route path="/admin/register-employee" element={<RegisterEmployee token={auth.token} />} />
+          <Route
+            path="/admin/register-employee"
+            element={<RegisterEmployee token={auth.token} />}
+          />
           <Route path="/admin/employees" element={<EmployeeList token={auth.token} />} />
-          <Route path="/admin/employees/ficha" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
-          <Route path="/admin/employees/:id" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
+          <Route
+            path="/admin/employees/ficha"
+            element={<EmployeeProfile token={auth.token} user={auth.user} />}
+          />
+          <Route
+            path="/admin/employees/:id"
+            element={<EmployeeProfile token={auth.token} user={auth.user} />}
+          />
           <Route path="/attendance" element={<AttendancePage user={auth.user} />} />
           <Route path="/admin/notifications" element={<NotificationsPage />} />
           <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
@@ -271,7 +310,13 @@ function App() {
         </Route>
 
         {/* Nómina (Compartido para Admin, HR y Contabilidad) */}
-        <Route element={<RequireAuth role={['admin', 'hr', 'accounting']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route
+          element={
+            <RequireAuth user={auth.user} role={['admin', 'hr', 'accounting']}>
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
           <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
           <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
           <Route path="/admin/payroll/advances" element={<SalaryAdvancesManagement />} />
@@ -279,7 +324,13 @@ function App() {
         </Route>
 
         {/* Contabilidad (Compartido para Contabilidad y Admin) */}
-        <Route element={<RequireAuth role={['accounting', 'admin']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route
+          element={
+            <RequireAuth user={auth.user} role={['accounting', 'admin']}>
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
           <Route path="/admin/accounting" element={<AccountingDashboard />} />
           <Route path="/admin/accounting/chart" element={<ChartOfAccounts />} />
           <Route path="/admin/accounting/journals" element={<JournalEntries />} />
@@ -289,14 +340,26 @@ function App() {
         </Route>
 
         {/* Emprendimiento (Compartido para Emprendedor y Admin) */}
-        <Route element={<RequireAuth role={['entrepreneur', 'admin']}><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route
+          element={
+            <RequireAuth user={auth.user} role={['entrepreneur', 'admin']}>
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
           <Route path="/admin/entrepreneurship" element={<EntrepreneurshipDashboard />} />
           <Route path="/admin/entrepreneurship/create" element={<EntrepreneurshipForm />} />
           <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
         </Route>
 
         {/* Employee Self-Service Routes - Solo para rol employee */}
-        <Route element={<RequireAuth role="employee"><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route
+          element={
+            <RequireAuth user={auth.user} role="employee">
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
           <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
           <Route path="/empleado/portal" element={<MobileEmployeePortal user={auth.user} />} />
           <Route path="/empleado/asistencia" element={<EmployeeAttendance user={auth.user} />} />
@@ -313,12 +376,21 @@ function App() {
           <Route path="/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
         </Route>
 
-        <Route element={<RequireAuth><MainLayout user={auth.user} onLogout={handleLogout} /></RequireAuth>}>
+        <Route
+          element={
+            <RequireAuth user={auth.user}>
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
           <Route path="/announcements" element={<AnnouncementsBoard user={auth.user} />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/notifications/settings" element={<NotificationSettings />} />
           <Route path="/performance/results/:id" element={<EvaluationResults />} />
-          <Route path="/profile" element={<EmployeeProfile token={auth.token} user={auth.user} />} />
+          <Route
+            path="/profile"
+            element={<EmployeeProfile token={auth.token} user={auth.user} />}
+          />
           <Route path="/signatures" element={<DigitalSignatureCenter />} />
           <Route path="/help" element={<HelpCenter />} />
         </Route>
@@ -328,7 +400,7 @@ function App() {
         &copy; {new Date().getFullYear()} Emplifi · Plataforma ERP para PYMEs
       </footer>
     </Suspense>
-  )
+  );
 }
 
-export default App
+export default App;

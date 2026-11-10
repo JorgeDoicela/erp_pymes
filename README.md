@@ -5,7 +5,7 @@ Sistema web de gestión del talento humano orientado a PyMEs, construido con arq
 ## Estructura del Repositorio
 
 ```
-recursos_humanos/
+erp_pymes/
 ├── backend/          # API REST (Node.js · Express · Prisma ORM)
 │   ├── prisma/       # Esquema de base de datos y migraciones
 │   ├── src/
@@ -23,29 +23,29 @@ recursos_humanos/
 │   └── tests/        # Pruebas de integración (Vitest · Supertest)
 ├── frontend/         # SPA React (Vite · Tailwind CSS · Recharts · Leaflet)
 │   └── src/
-│       ├── pages/    # 19 secciones de interfaz de usuario
+│       ├── pages/    # Secciones de interfaz de usuario
 │       ├── components/  # Componentes reutilizables
 │       ├── api/      # Clientes HTTP por dominio
 │       └── hooks/    # Custom hooks de estado
-├── docs/             # Documentación técnica por secciones
+├── docs/             # Biblioteca técnica Docs-as-Code (00-indice-general.md)
 └── docker-compose.yml  # Orquestación: PostgreSQL · Redis · Backend · Frontend/Nginx
 ```
 
 ## Módulos Funcionales
 
-| Módulo | Descripción |
-|--------|-------------|
-| Empleados | CRUD de empleados con perfil, expediente, historial laboral y activos |
-| Asistencia | Registro con validación de geocerca, VPN, biometría WebAuthn y turnos |
-| Contratos | Gestión de tipos contractuales con alertas de vencimiento automáticas |
-| Nómina | Cálculo automatizado con horas extra, recargo nocturno y anticipos |
-| Desempeño | Plantillas de evaluación 360°, objetivos SMART y tracking de progreso |
-| Reclutamiento | Portal de vacantes, aplicaciones y scoring de candidatos |
-| Inteligencia | Modelo Weibull de rotación, Monte Carlo, ANOVA y scoring multidimensional |
-| Contabilidad | Plan de cuentas, asientos contables, centros de costos y balance de comprobación |
-| Cumplimiento Legal | Vencimiento de documentos, checklist de compliance y trazabilidad |
-| Comunicación | Tablón de anuncios con lectura confirmada y reconocimiento |
-| Emprendimiento | Módulo de incubadora con rondas de inversión, hitos y análisis de mercado |
+| Módulo             | Descripción                                                                      |
+| ------------------ | -------------------------------------------------------------------------------- |
+| Empleados          | CRUD de empleados con perfil, expediente, historial laboral y activos            |
+| Asistencia         | Registro con validación de geocerca, VPN, biometría WebAuthn y turnos            |
+| Contratos          | Gestión de tipos contractuales con alertas de vencimiento automáticas            |
+| Nómina             | Cálculo automatizado con horas extra, recargo nocturno y anticipos               |
+| Desempeño          | Plantillas de evaluación 360°, objetivos SMART y tracking de progreso            |
+| Reclutamiento      | Portal de vacantes, aplicaciones y scoring de candidatos                         |
+| Inteligencia       | Modelo Weibull de rotación, Monte Carlo, ANOVA y scoring multidimensional        |
+| Contabilidad       | Plan de cuentas, asientos contables, centros de costos y balance de comprobación |
+| Cumplimiento Legal | Vencimiento de documentos, checklist de compliance y trazabilidad                |
+| Comunicación       | Tablón de anuncios con lectura confirmada y reconocimiento                       |
+| Emprendimiento     | Módulo de incubadora con rondas de inversión, hitos y análisis de mercado        |
 
 ## Pila Tecnológica
 
@@ -77,16 +77,17 @@ npm run dev   # Puerto 5173
 
 ## Documentación Técnica
 
-La documentación detallada se encuentra en [`/docs`](./docs/README.md), organizada en las siguientes secciones:
+La documentación técnica detallada se encuentra centralizada en [`docs/00-indice-general.md`](./docs/00-indice-general.md), estructurada bajo taxonomía jerárquica modular:
 
-- [`01-arquitectura/`](./docs/01-arquitectura/) — Arquitectura general, clean architecture y patrones de diseño
-- [`02-backend-servicios/`](./docs/02-backend-servicios/) — API REST, autenticación, gobernanza, nómina, seguridad
-- [`03-motores-especializados/`](./docs/03-motores-especializados/) — Motor de nómina y motor de liquidación legal
+- [`01-arquitectura/`](./docs/01-arquitectura/) — Arquitectura general, Clean Architecture y patrones de diseño
+- [`02-backend-servicios/`](./docs/02-backend-servicios/) — API REST, autenticación, gobernanza, nómina y seguridad
+- [`03-motores-especializados/`](./docs/03-motores-especializados/) — Nómina, liquidación, asistencia/geocercas, 360°, WebAuthn y PDF
 - [`04-base-de-datos/`](./docs/04-base-de-datos/) — Esquema relacional y catálogos normativos
-- [`05-frontend-web/`](./docs/05-frontend-web/) — Arquitectura React y componentes de UI
-- [`06-inteligencia-y-analitica/`](./docs/06-inteligencia-y-analitica/) — Modelos estadísticos y scoring multidimensional
-- [`07-despliegue-y-operaciones/`](./docs/07-despliegue-y-operaciones/) — Infraestructura Docker y operaciones
-- [`08-artefactos-scrum/`](./docs/08-artefactos-scrum/) — Backlog y épicas funcionales
+- [`05-frontend-web/`](./docs/05-frontend-web/) — Arquitectura React, componentes y resiliencia
+- [`06-inteligencia-y-analitica/`](./docs/06-inteligencia-y-analitica/) — Modelos predictivos, RSI, Causal AI, DP-FedAvg, MORL y FT-Transformer
+- [`07-despliegue-y-operaciones/`](./docs/07-despliegue-y-operaciones/) — Infraestructura Docker, AWS EC2, auditoría y DR
+- [`08-artefactos-scrum/`](./docs/08-artefactos-scrum/) — Backlog y artefactos de gestión
+- [`09-sostenibilidad-ods/`](./docs/09-sostenibilidad-ods/) — Alineación estratégica, metas y especificación de métricas para ODS 8 (Trabajo Decente)
 
 ## Variables de Entorno Requeridas
 

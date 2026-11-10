@@ -21,6 +21,7 @@ El sistema implementa una arquitectura de pruebas automatizadas con **Vitest**, 
 ## 2. Pruebas Backend (Vitest & Supertest)
 
 ### 2.1. Configuración de Entorno
+
 - **Framework**: `Vitest`
 - **Librería HTTP**: `Supertest`
 - **Ubicación de Tests**: `backend/tests/`
@@ -31,6 +32,7 @@ El sistema implementa una arquitectura de pruebas automatizadas con **Vitest**, 
   ```
 
 ### 2.2. Módulos Evaluados
+
 1. **Healthcheck & Status (`health.test.js`)**: Verifica la disponibilidad del servidor HTTP con respuesta `200 OK`.
 2. **Seguridad & Perímetro (`security.test.js`)**: Comprueba que la middleware Helmet inyecte los encabezados `X-Frame-Options: DENY` y `Strict-Transport-Security`.
 3. **Cifrado AES-256-GCM (`test-encryption.js`)**: Valida que la encriptación y desencriptación salarial mantengan la integridad del valor numérico original.
@@ -44,6 +46,7 @@ El sistema implementa una arquitectura de pruebas automatizadas con **Vitest**, 
 ## 3. Pruebas Frontend (React Testing Library)
 
 ### 3.1. Configuración de Entorno
+
 - **Framework**: `Vitest` + `@testing-library/react` + `jsdom`
 - **Ubicación de Tests**: `frontend/src/**/__tests__/`
 - **Comando de Ejecución**:
@@ -53,30 +56,23 @@ El sistema implementa una arquitectura de pruebas automatizadas con **Vitest**, 
   ```
 
 ### 3.2. Módulos Evaluados
+
 1. **Renderizado de Componentes (`ErrorState.test.jsx`)**: Comprueba la visualización de mensajes de error, botones de reintento y captura de props.
 2. **Navegación & Guards (`RequireAuth.test.jsx`)**: Garantiza la redirección de usuarios sin token hacia `/login`.
 
 ---
 
-## 4. Pruebas del Marco Científico de IA (Experimentos y Reportes)
+## 4. Pruebas de los Motores de Analítica e Inteligencia
 
-Para validar la convergencia de los motores de IA (RSI, Causal AI, MORL, Privacidad Diferencial) y generar el reporte estadístico de investigación:
+Para validar la convergencia de los motores de IA (RSI, Causal AI, MORL, Privacidad Diferencial):
 
-### 4.1. Pasos para la Ejecución de Experimentos
+```bash
+cd backend
+npm run seed
+npm test
+```
 
-1. **Poblado de datos y simulación de épocas SGD (3 Tenants, N=75):**
-   ```bash
-   cd backend
-   node prisma/seed_research.js
-   ```
-   *Este comando configura los 3 tenants de investigación, genera los 75 colaboradores con varianza interdepartamental y ejecuta la calibración SGD de 12 épocas para el motor RSI.*
-
-2. **Generación del Reporte Estadístico Científico:**
-   ```bash
-   cd backend
-   node src/scripts/print_ai_report.js
-   ```
-   *Imprime las métricas consolidadas: convergencia de Brier Score, ATE e IC95% causal, frontera de Pareto MORL, ronda federada, ANOVA interdepartamental y test de Kolmogorov-Smirnov.*
+_Imprime las métricas consolidadas: convergencia de Brier Score, ATE e IC95% causal, frontera de Pareto MORL, ronda federada, ANOVA interdepartamental y test de Kolmogorov-Smirnov._
 
 ---
 

@@ -11,7 +11,9 @@
     "prisma:dev": "npx prisma migrate dev",
     "prisma:studio": "npx prisma studio",
     "postinstall": "npx prisma generate",
-    "test": "vitest run"
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:stress": "node tests/stress/aiFrameworkStress.js"
   },
   "keywords": [],
   "author": "Jorge Doicela",
@@ -43,7 +45,10 @@
     "uuid": "^11.1.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "dotenv-cli": "^11.0.0",
+    "eslint": "^10.14.0",
+    "globals": "^16.5.0",
     "nodemon": "^3.1.11",
     "prisma": "^5.22.0",
     "supertest": "^7.0.0",

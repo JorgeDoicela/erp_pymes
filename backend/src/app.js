@@ -13,62 +13,67 @@ import indexRoutes from './routes/index.routes.js';
 import systemRoutes from './routes/system/system.routes.js';
 import { maintenanceMiddleware } from './middleware/maintenance.middleware.js';
 import { errorHandler, requestLogger, validateBodyNotEmpty } from './middleware/errorHandler.js';
-import { STORAGE_CONFIG } from './config/storage.config.js';
 
 const app = express();
 
 // Configuración de seguridad con Helmet
-app.use(helmet({
+app.use(
+  helmet({
     contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'"],
-            imgSrc: ["'self'", "data:", "https:"],
-        },
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
     },
     hsts: {
-        maxAge: 31536000, // 1 año
-        includeSubDomains: true,
-        preload: true,
+      maxAge: 31536000, // 1 año
+      includeSubDomains: true,
+      preload: true,
     },
     frameguard: {
-        action: 'sameorigin', // Permite visualizar PDFs en modales iframe dentro del mismo sistema
+      action: 'sameorigin', // Permite visualizar PDFs en modales iframe dentro del mismo sistema
     },
     referrerPolicy: {
-        policy: 'strict-origin-when-cross-origin',
+      policy: 'strict-origin-when-cross-origin',
     },
-}));
+  })
+);
 
 // Configuración de CORS
 const corsOptions = {
-    origin: function (origin, callback) {
-        // Permitir requests sin origin (como mobile apps o curl)
-        if (!origin) return callback(null, true);
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como mobile apps o curl)
+    if (!origin) return callback(null, true);
 
-        const allowedOrigins = [
-            'http://localhost:5173',  // Vite dev server principal
-            'http://localhost:5174',  // Vite dev server secundario
-            'http://localhost:3000',  // Alternativa
-            'https://erp.jorgedoicela.com', // Produccion EC2 HTTPS
-            'http://erp.jorgedoicela.com',  // Produccion EC2 HTTP
-            process.env.FRONTEND_URL, // Produccion
-            process.env.CLIENT_URL,   // Soporte CLIENT_URL
-            process.env.ORIGIN,       // Soporte dinamico para ORIGIN
-        ].filter(Boolean); // Eliminar undefined
+    const allowedOrigins = [
+      'http://localhost:5173', // Vite dev server principal
+      'http://localhost:5174', // Vite dev server secundario
+      'http://localhost:3000', // Alternativa
+      'https://erp.jorgedoicela.com', // Produccion EC2 HTTPS
+      'http://erp.jorgedoicela.com', // Produccion EC2 HTTP
+      process.env.FRONTEND_URL, // Produccion
+      process.env.CLIENT_URL, // Soporte CLIENT_URL
+      process.env.ORIGIN, // Soporte dinamico para ORIGIN
+    ].filter(Boolean); // Eliminar undefined
 
-        const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
-        if (allowedOrigins.indexOf(origin) !== -1 || (origin && origin.endsWith('jorgedoicela.com')) || isLocalhost) {
-            callback(null, true);
-        } else {
-            console.error(`[CORS] Blocked origin: ${origin}`);
-            callback(new Error(`No permitido por CORS: ${origin}`));
-        }
-    },
-    credentials: true, // Permitir cookies
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'X-Tenant-Id', 'x-api-key'],
+    if (
+      allowedOrigins.indexOf(origin) !== -1 ||
+      (origin && origin.endsWith('jorgedoicela.com')) ||
+      isLocalhost
+    ) {
+      callback(null, true);
+    } else {
+      console.error(`[CORS] Blocked origin: ${origin}`);
+      callback(new Error(`No permitido por CORS: ${origin}`));
+    }
+  },
+  credentials: true, // Permitir cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'X-Tenant-Id', 'x-api-key'],
 };
 
 app.use(cors(corsOptions));
@@ -103,56 +108,58 @@ app.use(validateBodyNotEmpty);
 
 // Seguridad y Desactivación de Caché
 app.use((req, res, next) => {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    // Desactivar totalmente la caché del navegador para prevenir respuestas obsoletas
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.setHeader('Surrogate-Control', 'no-store');
-    next();
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  // Desactivar totalmente la caché del navegador para prevenir respuestas obsoletas
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
 });
-
-// RNF-12: Proteger Uploads
-import { authenticate } from './middleware/auth.middleware.js';
-import { protectStaticFiles } from './middleware/security.middleware.js';
 
 // Servir archivos estáticos (uploads / CVs / documentos / evidencias / contratos)
 app.use(['/uploads', '/api/uploads'], (req, res, next) => {
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    
-    // Resolver ruta absoluta del archivo solicitado dentro del directorio de uploads
-    const cleanReqPath = req.path.startsWith('/') ? req.path : `/${req.path}`;
-    const fullPath = path.join(uploadsPath, cleanReqPath);
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
 
-    const fileExists = fs.existsSync(fullPath) && fs.statSync(fullPath).isFile();
+  // Resolver ruta absoluta y prevenir Path Traversal
+  const cleanReqPath = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+  const resolvedPath = path.resolve(uploadsPath, cleanReqPath);
 
-    if (fileExists) {
-        const ext = path.extname(fullPath).toLowerCase();
-        const mimeTypes = {
-            '.pdf': 'application/pdf',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.png': 'image/png',
-            '.webp': 'image/webp',
-            '.doc': 'application/msword',
-            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        };
-        const contentType = mimeTypes[ext] || 'application/octet-stream';
-        const filename = path.basename(fullPath);
+  if (!resolvedPath.startsWith(uploadsPath)) {
+    return res.status(403).json({ message: 'Acceso no permitido' });
+  }
 
-        res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-        return res.sendFile(fullPath);
-    }
+  const fileExists = fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isFile();
 
-    // Para otros archivos o fallbacks
-    express.static(uploadsPath)(req, res, next);
+  if (fileExists) {
+    const ext = path.extname(resolvedPath).toLowerCase();
+    const mimeTypes = {
+      '.pdf': 'application/pdf',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.webp': 'image/webp',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+    const filename = path.basename(resolvedPath);
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    return res.sendFile(resolvedPath);
+  }
+
+  // Para otros archivos o fallbacks
+  express.static(uploadsPath)(req, res, next);
 });
 
 // Healthcheck ligero para Docker / Nginx / Balanceadores (debe responder sin consultar la BD ni middleware)
-app.get('/health', (req, res) => res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() }));
+app.get('/health', (req, res) =>
+  res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() })
+);
 
 // Maintenance Middleware (Applied before main routes)
 app.use(maintenanceMiddleware);

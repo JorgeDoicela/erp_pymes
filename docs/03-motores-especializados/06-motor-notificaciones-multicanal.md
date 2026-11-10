@@ -70,12 +70,12 @@ Utiliza `Nodemailer` configurado con transporte SMTP (puerto, host, credenciales
 
 ## 4. Tipos de Alerta Soportados
 
-| Tipo de Alerta | Canales | Destinatarios | Disparador |
-|----------------|---------|---------------|------------|
-| `CONTRACT_EXPIRATION` | In-App + Email + Socket | Administradores de la empresa | `contractCronJob` (diario 08:00 AM) |
-| `EVALUATION_REMINDER` | In-App + Email + Socket | Evaluadores asignados | `performanceCronJob` |
-| `PAYROLL_CLOSING` | In-App + Socket | Administradores | `payrollCronJob` (5 días antes de cierre) |
-| `PAYROLL_REVIEW` | In-App + Socket | Administradores | `payrollCronJob` (3 días antes de pago) |
-| `PAYROLL_CONFIRM` | In-App + Socket | Administradores | `payrollCronJob` (1 día antes de pago) |
-| `ABSENCE_STATUS` | In-App + Socket | Empleado solicitante | Aprobación/Rechazo de ausencias |
-| `ANNOUNCEMENT_NEW` | In-App + Socket (Tenant) | Todos los empleados de la empresa | Creación de anuncio oficial |
+| Tipo de Alerta        | Canales                  | Destinatarios                     | Disparador                                |
+| --------------------- | ------------------------ | --------------------------------- | ----------------------------------------- |
+| `CONTRACT_EXPIRATION` | In-App + Email + Socket  | Administradores de la empresa     | `contractCronJob` (diario 08:00 AM)       |
+| `EVALUATION_REMINDER` | In-App + Email + Socket  | Evaluadores asignados             | `performanceCronJob`                      |
+| `PAYROLL_CLOSING`     | In-App + Socket          | Administradores                   | `payrollCronJob` (5 días antes de cierre) |
+| `PAYROLL_REVIEW`      | In-App + Socket          | Administradores                   | `payrollCronJob` (3 días antes de pago)   |
+| `PAYROLL_CONFIRM`     | In-App + Socket          | Administradores                   | `payrollCronJob` (1 día antes de pago)    |
+| `ABSENCE_STATUS`      | In-App + Socket          | Empleado solicitante              | Aprobación/Rechazo de ausencias           |
+| `ANNOUNCEMENT_NEW`    | In-App + Socket (Tenant) | Todos los empleados de la empresa | Creación de anuncio oficial               |

@@ -56,6 +56,7 @@ services:
       RP_ID: ${RP_ID:-erp.jorgedoicela.com}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-your-32-byte-hex-key-here}
       SEED_SECRET: ${SEED_SECRET:-your-seed-secret-here}
+      RUN_SEED: ${RUN_SEED:-true}
       EMAIL_USER: ${EMAIL_USER:-your-email@example.com}
       EMAIL_PASS: ${EMAIL_PASS:-your-app-password}
     healthcheck:
@@ -88,7 +89,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/www/recursos_humanos/certs:/etc/nginx/certs:ro
+      - ${CERTS_PATH:-/var/www/recursos_humanos/certs}:/etc/nginx/certs:ro
     depends_on:
       backend:
         # Nginx arranca solo cuando el backend ya responde — elimina el 502 en cold start

@@ -32,8 +32,6 @@ import superAdminRoutes from './admin/superAdmin.routes.js';
 import { rateLimit } from '../middleware/rateLimit.middleware.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { requireTenant } from '../middleware/tenant.middleware.js';
-
-import researchRoutes from './research.routes.js';
 import signatureRoutes from './signatures/signature.routes.js';
 
 const router = Router();
@@ -43,22 +41,19 @@ router.use('/signatures', signatureRoutes);
 
 // Ruta de prueba
 router.get('/', (req, res) => {
-    res.send('API EMPLIFI funcionando correctamente v1');
+  res.send('API EMPLIFI funcionando correctamente v1');
 });
-
-// Módulo de Investigación Científica (Encuestas públicas y estadísticas)
-router.use('/research', researchRoutes);
 
 // Seed Remoto (Protegido para SuperAdmin)
 router.post('/seed', authenticate, authorize(['superadmin']), (req, res, next) => {
-    runSeed(req, res).catch(next);
+  runSeed(req, res).catch(next);
 });
 
 // Migración Remota (Protegido para SuperAdmin)
 router.post('/migrate', authenticate, authorize(['superadmin']), (req, res, next) => {
-    import('../controllers/admin/seedController.js').then(ctrl => {
-        ctrl.runMigration(req, res).catch(next);
-    });
+  import('../controllers/admin/seedController.js').then((ctrl) => {
+    ctrl.runMigration(req, res).catch(next);
+  });
 });
 
 // Onboarding y Gestión de Empresas (Tenants)
@@ -67,7 +62,11 @@ router.use('/superadmin', superAdminRoutes);
 
 // Login y Recuperación (Con Rate Limiting: max 10 intentos cada 15 min)
 router.post('/auth/login', rateLimit({ windowMs: 15 * 60 * 1000, maxRequests: 10 }), login);
-router.post('/auth/forgot-password', rateLimit({ windowMs: 15 * 60 * 1000, maxRequests: 5 }), forgotPassword);
+router.post(
+  '/auth/forgot-password',
+  rateLimit({ windowMs: 15 * 60 * 1000, maxRequests: 5 }),
+  forgotPassword
+);
 router.post('/auth/reset-password', resetPassword);
 
 // Rutas de reclutamiento: las públicas no tienen auth, las admin aplican authenticate+authorize internamente

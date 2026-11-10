@@ -12,35 +12,41 @@ import axios from 'axios';
 const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 const intelligenceClient = axios.create({
-    baseURL: `${BASE_URL}/intelligence`,
-    timeout: 30000, // 30s — las peticiones de análisis pueden tardar
-    headers: { 'Content-Type': 'application/json' },
+  baseURL: `${BASE_URL}/intelligence`,
+  timeout: 30000, // 30s — las peticiones de análisis pueden tardar
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor de REQUEST: inyectar token automáticamente
+// Interceptor de REQUEST: inyectar token automáticamente y contexto multi-tenant
 intelligenceClient.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const selectedTenantId = localStorage.getItem('superadmin_selected_tenant_id');
+    if (selectedTenantId) {
+      config.headers['x-tenant-id'] = selectedTenantId;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
 // Interceptor de RESPONSE: manejar errores globales
 intelligenceClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            // Sesión expirada — limpiar estado y redirigir
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
-        }
-        return Promise.reject(error);
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Sesión expirada — limpiar estado y redirigir
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
+    return Promise.reject(error);
+  }
 );
 
 export default intelligenceClient;

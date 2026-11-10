@@ -4,7 +4,7 @@
 
 Los sistemas analíticos tradicionales de gestión del talento humano (People Analytics) operan mediante **modelos fijos y pasivos**. Una vez entrenados o configurados con ponderaciones estáticas, estos algoritmos no adaptan sus parámetros cuando sus predicciones difieren de los eventos reales acontecidos en la empresa (ej. desvinculaciones imprevistas o retención de personal clasificado como de alto riesgo).
 
-El **Motor de Automejora Recursiva (RSI Engine - Recursive Self-Improvement)** introduce un **bucle cerrado de auto-calibración en tiempo real (Closed-Loop Calibration)** sobre la arquitectura SaaS Multi-Tenant de Emplifi. Cada observación o desenlace de personal registrado en el sistema genera una señal de retroalimentación matemática que actualiza estocásticamente el vector de hiperparámetros del modelo \(\vec{\beta}\) y la función de riesgo de Weibull, reduciendo la Pérdida Cuadrática Media (*Brier Score*) de forma recursiva sin intervención humana.
+El **Motor de Automejora Recursiva (RSI Engine - Recursive Self-Improvement)** introduce un **bucle cerrado de auto-calibración en tiempo real (Closed-Loop Calibration)** sobre la arquitectura SaaS Multi-Tenant de Emplifi. Cada observación o desenlace de personal registrado en el sistema genera una señal de retroalimentación matemática que actualiza estocásticamente el vector de hiperparámetros del modelo \(\vec{\beta}\) y la función de riesgo de Weibull, reduciendo la Pérdida Cuadrática Media (_Brier Score_) de forma recursiva sin intervención humana.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
@@ -66,15 +66,17 @@ Durante cada época de calibración RSI ($t \to t+1$), el optimizador calcula la
 $$\Delta \beta_k = -\eta \cdot \frac{\partial \text{Loss}}{\partial \beta_k} + \xi$$
 
 Donde:
-* $\eta = 0.05$ es la tasa de aprendizaje (*learning rate*).
-* $\xi \sim \mathcal{N}(0, \sigma^2)$ representa un término de exploración estocástica con pequeña varianza ($\sigma = 0.01$).
+
+- $\eta = 0.05$ es la tasa de aprendizaje (_learning rate_).
+- $\xi \sim \mathcal{N}(0, \sigma^2)$ representa un término de exploración estocástica con pequeña varianza ($\sigma = 0.01$).
 
 Las cotas de espacio de parámetros se restringen rígidamente para garantizar la plausibilidad biológica y organizacional:
-* $\beta_{\text{salary}} \in [-1.50, -0.30]$
-* $\beta_{\text{absence}} \in [0.10, 0.90]$
-* $\beta_{\text{perf}} \in [0.50, 2.00]$
-* $k_{\text{weibull}} \in [1.00, 1.80]$
-* $\lambda_{\text{weibull}} \in [36, 60]$ (meses)
+
+- $\beta_{\text{salary}} \in [-1.50, -0.30]$
+- $\beta_{\text{absence}} \in [0.10, 0.90]$
+- $\beta_{\text{perf}} \in [0.50, 2.00]$
+- $k_{\text{weibull}} \in [1.00, 1.80]$
+- $\lambda_{\text{weibull}} \in [36, 60]$ (meses)
 
 ---
 
@@ -88,7 +90,7 @@ $$\text{Mejora \%} = \max\left(0, \frac{\text{Brier}_{\text{Época 1}} - \text{B
 
 ## 3. Arquitectura del Modelo de Datos Prisma (Multi-Tenant)
 
-El aislamiento multi-empresa (*Multi-Tenant*) se garantiza a nivel de esquema asignando cada época de calibración e historial de predicción al identificador `tenantId`.
+El aislamiento multi-empresa (_Multi-Tenant_) se garantiza a nivel de esquema asignando cada época de calibración e historial de predicción al identificador `tenantId`.
 
 ```prisma
 model RsiCalibration {
@@ -134,16 +136,18 @@ model RsiPredictionAudit {
 Todas las rutas están protegidas bajo autenticación Bearer JWT y roles `ADMIN`, `HR` o `ACCOUNTING`.
 
 ### 4.1 `GET /api/intelligence/rsi/metrics`
+
 Obtiene las métricas actuales del motor RSI, hiperparámetros activos e historial completo de épocas.
 
 **Respuesta Exitosa (200 OK):**
+
 ```json
 {
   "success": true,
   "data": {
     "currentEpoch": 4,
     "currentBrierScore": 0.0842,
-    "currentLogLoss": 0.2150,
+    "currentLogLoss": 0.215,
     "improvementPercentage": 54.5,
     "totalAuditedPredictions": 128,
     "resolvedOutcomeCount": 42,
@@ -166,12 +170,15 @@ Obtiene las métricas actuales del motor RSI, hiperparámetros activos e histori
 ```
 
 ### 4.2 `POST /api/intelligence/rsi/calibrate`
+
 Dispara manualmente una época de optimización estocástica RSI.
 
 ### 4.3 `POST /api/intelligence/rsi/simulate`
+
 Simula la resolución de un desenlace de empleado (Permanencia / Renuncia) y ejecuta la automejora en vivo.
 
 **Cuerpo de Petición:**
+
 ```json
 {
   "employeeId": "emp_clx98231",
@@ -184,6 +191,7 @@ Simula la resolución de un desenlace de empleado (Permanencia / Renuncia) y eje
 ## 5. Resultados Empíricos Ejecutados y Validación Experimental
 
 ### 5.1 Resultados Experimentales Ejecutados en el Sistema
+
 La evaluación empírica del Motor RSI ejecutada sobre los inquilinos de experimentación produjo los siguientes resultados reales registrados en base de datos:
 
 - **Línea Base (Baseline):** Brier Score inicial $Brier_0 = 0.1650$ antes de calibración estocástica.
@@ -196,20 +204,19 @@ La evaluación empírica del Motor RSI ejecutada sobre los inquilinos de experim
   - **F1-Score (Balance Precisión/Recall):** Mejora del **`+50.7%`** ($0.850 \pm 0.015$ vs $0.564 \pm 0.022$), demostrando que la ganancia matemática del modelo radica en clasificar correctamente a la cohorte de riesgo sin inflar falsos positivos.
 
 ### 5.2 Protocolo de Experimentación Futura (Trabajo Futuro)
+
 Para la ampliación de este estudio en publicaciones de mayor alcance (journals de mayor impacto), se define el siguiente trabajo futuro pendiente:
+
 1. **Bucle Extendido a Largo Plazo:** Ejecución del bucle de automejora a lo largo de 500 épocas continuas en producción real con acuerdos de confidencialidad.
 2. **Prueba de Hipótesis Infranqueable:** Test de rangos con signo de Wilcoxon entre las distribuciones de error de predicción del modelo baseline vs. modelo RSI continuo con nivel de significancia $\alpha = 0.01$.
 
 ---
 
-## 6. Instrucciones de Verificación y Ejecución de Experimentos
+## 6. Instrucciones de Verificación del Motor RSI
 
-Para reproducir la ejecución de los experimentos y comprobar los resultados del motor RSI y de la suite de investigación en la consola del backend:
+Para comprobar la inicialización y calibración del motor RSI en la consola del backend:
 
 ```bash
-# 1. Ejecución del pipeline de investigación (seeding y simulación de 12 épocas)
-cd backend && node prisma/seed_research.js
-
-# 2. Impresión del reporte científico consolidado
-cd backend && node src/scripts/print_ai_report.js
+# Ejecución del pipeline de siembra de base de datos
+cd backend && npm run seed
 ```

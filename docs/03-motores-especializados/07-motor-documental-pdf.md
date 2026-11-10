@@ -25,10 +25,12 @@ Datos de Entidad (JSON / Prisma)
 ## 2. Tipos de Documentos Generados
 
 ### 2.1. Comprobantes Individuales de Pago (Roles de Pago)
+
 - **Generador**: `generatePayslipPDF.js`
 - **Contenido**: Desglose de ingresos (salario proporcional a días laborados, recargos de horas extras al $50\%$ y $100\%$, comisiones, bonos) y egresos (aporte personal IESS del $9.45\%$, retenciones del Impuesto a la Renta, cuotas de anticipos de sueldo).
 
 ### 2.2. Actas de Finiquito y Liquidaciones Legales
+
 - **Generador**: `generateSettlementPDF.js`
 - **Contenido**: Cómputo de haberes por terminación de la relación laboral conforme al Código del Trabajo (Ecuador):
   - Proporcional de Décimo Tercer Sueldo (Art. 111).
@@ -38,6 +40,7 @@ Datos de Entidad (JSON / Prisma)
   - Indemnización por Despido Intempestivo (Art. 188).
 
 ### 2.3. Certificados Laborales con Verificación Digital QR
+
 - **Generador**: `generateCertificatePDF.js`
 - **Contenido**: Membrete oficial de la empresa (`Tenant`), nombres completos del trabajador, número de identificación (`identityCard`), cargo, departamento, salario mensual base y antigüedad acumulada.
 - **Mecanismo de Autenticidad QR**: Incorpora un código QR que codifica una dirección de validación pública con un hash SHA-256 único formado por `hash(tenantId + employeeId + issueTimestamp + SECRET)`.

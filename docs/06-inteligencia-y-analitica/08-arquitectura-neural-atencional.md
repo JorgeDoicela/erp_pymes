@@ -3,26 +3,27 @@
 **Autor:** Jorge Doicela  
 **Año:** 2026  
 **Línea de Investigación:** Ciencia de Datos, Machine Learning & People Analytics  
-**Área Temática:** Inteligencia Artificial Aplicada a la Gestión Estratégica del Talento Humano en Arquitecturas SaaS Multi-Tenant  
+**Área Temática:** Inteligencia Artificial Aplicada a la Gestión Estratégica del Talento Humano en Arquitecturas SaaS Multi-Tenant
 
 ---
 
 ## Resumen (Abstract)
 
-En este trabajo se presenta una arquitectura neuronal híbrida y atencional integrada a un software de gestión empresarial (ERP) bajo arquitectura SaaS multi-tenant. El sistema supera las limitaciones de los modelos lineales y paramétricos convencionales de People Analytics mediante dos innovaciones clave: 
+En este trabajo se presenta una arquitectura neuronal híbrida y atencional integrada a un software de gestión empresarial (ERP) bajo arquitectura SaaS multi-tenant. El sistema supera las limitaciones de los modelos lineales y paramétricos convencionales de People Analytics mediante dos innovaciones clave:
 
 1. **Temporal Self-Attention Auto-Supervisado:** Un mecanismo de atención que procesa secuencias de 12 meses de trayectoria socio-laboral ($\mathbf{X} \in \mathbb{R}^{12 \times 4}$), permitiendo al modelo aprender de manera no lineal qué ventanas temporales (ausencias recientes, caídas de desempeño, sobrecarga de horas extra) tienen mayor valor predictivo sobre el riesgo de rotación de personal.
-2. **FT-Transformer (Feature Tokenizer + Transformer) para Datos Tabulares:** Un modelo tabular basado en *embeddings* densos de covariables socio-laborales ($d=16$) y *Multi-Head Self-Attention* (2 cabezas), que captura interacciones complejas de orden superior entre variables salariales, de desempeño y de permanencia sin requerir ingeniería manual de características.
+2. **FT-Transformer (Feature Tokenizer + Transformer) para Datos Tabulares:** Un modelo tabular basado en _embeddings_ densos de covariables socio-laborales ($d=16$) y _Multi-Head Self-Attention_ (2 cabezas), que captura interacciones complejas de orden superior entre variables salariales, de desempeño y de permanencia sin requerir ingeniería manual de características.
 
-Ambos modelos son entrenados y calibrados de forma recursiva y desacoplada para cada empresa cliente (*tenant*) mediante Descenso de Gradiente Estocástico (SGD) con regularización $L_2$, manteniendo la privacidad de datos y logrando una reducción superior al **58% en el error cuadrático (Brier Score)** frente a modelos heurísticos basales.
+Ambos modelos son entrenados y calibrados de forma recursiva y desacoplada para cada empresa cliente (_tenant_) mediante Descenso de Gradiente Estocástico (SGD) con regularización $L_2$, manteniendo la privacidad de datos y logrando una reducción superior al **58% en el error cuadrático (Brier Score)** frente a modelos heurísticos basales.
 
 ---
 
 ## 1. Motivación y Problema de Investigación
 
 Los enfoques tradicionales de análisis predictivo de rotación en PYMES sufren de dos deficiencias estructurales:
-* **Agregación Temporal Ingenua:** Promediar o sumar métricas de 12 meses asume implícitamente que un evento ocurrido hace 11 meses tiene la misma relevancia que uno ocurrido hace 30 días, ignorando la dinámica secuencial del desgaste laboral.
-* **Supuesto de Independencia Lineal en Datos Tabulares:** Modelos como la regresión logística o árboles simples asumen interacciones aditivas o requieren parametrización manual de efectos cruzados (e.g., interacción entre baja remuneración relativa y alto rendimiento).
+
+- **Agregación Temporal Ingenua:** Promediar o sumar métricas de 12 meses asume implícitamente que un evento ocurrido hace 11 meses tiene la misma relevancia que uno ocurrido hace 30 días, ignorando la dinámica secuencial del desgaste laboral.
+- **Supuesto de Independencia Lineal en Datos Tabulares:** Modelos como la regresión logística o árboles simples asumen interacciones aditivas o requieren parametrización manual de efectos cruzados (e.g., interacción entre baja remuneración relativa y alto rendimiento).
 
 La integración de **Atención Temporal** y **FT-Transformer** resuelve ambos desafíos de forma matemática y empírica.
 
@@ -30,7 +31,7 @@ La integración de **Atención Temporal** y **FT-Transformer** resuelve ambos de
 
 ## 2. Formulación Matemática de Temporal Self-Attention
 
-Basado en la formulación canónica de *Vaswani et al. (2017)* adaptada a series temporales de RRHH:
+Basado en la formulación canónica de _Vaswani et al. (2017)_ adaptada a series temporales de RRHH:
 
 ### 2.1. Representación de Entrada y Codificación Posicional
 
@@ -59,7 +60,7 @@ El valor $\boldsymbol{\alpha}$ proporciona interpretabilidad directa: indica exp
 
 ## 3. Formulación Matemática de FT-Transformer Tabular
 
-Basado en la arquitectura *FT-Transformer (Gorishniy et al., NeurIPS 2021)* para datos tabulares:
+Basado en la arquitectura _FT-Transformer (Gorishniy et al., NeurIPS 2021)_ para datos tabulares:
 
 ### 3.1. Feature Tokenizer
 
@@ -75,11 +76,11 @@ Para $H=2$ cabezas de atención con dimensión $d_{head} = d_{token} / H = 8$:
 $$\text{Head}_h = \text{Softmax}\left(\frac{\mathbf{Q}_h \mathbf{K}_h^T}{\sqrt{d_{head}}}\right) \mathbf{V}_h$$
 $$\text{MHA}(\mathbf{T}) = \text{Concat}\big(\text{Head}_1, \text{Head}_2\big) \mathbf{W}_O$$
 
-Se aplica conexión residual y normalización de capa (*LayerNorm*):
+Se aplica conexión residual y normalización de capa (_LayerNorm_):
 $$\mathbf{T}' = \text{LayerNorm}\big(\mathbf{T}_0 + \text{MHA}(\mathbf{T}_0)\big)$$
 $$\mathbf{T}_{final} = \text{LayerNorm}\big(\mathbf{T}' + \text{FFN}(\mathbf{T}')\big)$$
 
-Donde la red *Feed-Forward* ($\text{FFN}$) utiliza activación no lineal $\text{GeLU}$:
+Donde la red _Feed-Forward_ ($\text{FFN}$) utiliza activación no lineal $\text{GeLU}$:
 $$\text{FFN}(\mathbf{z}) = \mathbf{W}_2 \cdot \text{GeLU}(\mathbf{W}_1 \mathbf{z} + \mathbf{b}_1) + \mathbf{b}_2$$
 
 ### 3.3. Clasificación y Explicabilidad por Interacción de Tokens
@@ -87,13 +88,13 @@ $$\text{FFN}(\mathbf{z}) = \mathbf{W}_2 \cdot \text{GeLU}(\mathbf{W}_1 \mathbf{z
 La predicción de rotación se obtiene exclusivamente a partir del token $[\text{CLS}]$ transformado en la posición 0:
 $$\hat{y} = \sigma\big( \mathbf{w}_{head}^T \mathbf{T}_{final}[0] + b_{head} \big) \in [0, 1]$$
 
-La matriz de atención $\mathbf{A} \in \mathbb{R}^{(M+1) \times (M+1)}$ revela directamente cómo interactúan las covariables entre sí (por ejemplo, el grado en que el token de *Salario* atiende al token de *Desempeño*).
+La matriz de atención $\mathbf{A} \in \mathbb{R}^{(M+1) \times (M+1)}$ revela directamente cómo interactúan las covariables entre sí (por ejemplo, el grado en que el token de _Salario_ atiende al token de _Desempeño_).
 
 ---
 
 ## 4. Pipeline de Entrenamiento y Calibración Continua en Producción
 
-Tanto las matrices de atención $\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V$ como los pesos del FT-Transformer se calibran autónomamente por tenant mediante el motor RSI (*Recursive Self-Improvement*):
+Tanto las matrices de atención $\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V$ como los pesos del FT-Transformer se calibran autónomamente por tenant mediante el motor RSI (_Recursive Self-Improvement_):
 
 1. **Recolección de Auditorías Reales:** Cada vez que se registra un desenlace (renuncia o permanencia), se guarda en `RsiPredictionAudit`.
 2. **Descenso de Gradiente con Regularización $L_2$:**
@@ -105,34 +106,35 @@ Tanto las matrices de atención $\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V$ como 
 
 ## 5. Validación Experimental Fuera de Muestra (K-Fold, K=5)
 
-La evaluación empírica se realiza mediante validación cruzada estratificada de 5 pliegues (*Stratified 5-Fold Cross Validation*), comparando:
-* **Modelo Heurístico Trivial:** Reglas estáticas (salario < media o ausencias $\ge 2$).
-* **Modelo Paramétrico Weibull + RSI:** Regresión de hazard exponencial calibrada.
-* **FT-Transformer Tabular:** Arquitectura neuronal atencional propuesta.
+La evaluación empírica se realiza mediante validación cruzada estratificada de 5 pliegues (_Stratified 5-Fold Cross Validation_), comparando:
+
+- **Modelo Heurístico Trivial:** Reglas estáticas (salario < media o ausencias $\ge 2$).
+- **Modelo Paramétrico Weibull + RSI:** Regresión de hazard exponencial calibrada.
+- **FT-Transformer Tabular:** Arquitectura neuronal atencional propuesta.
 
 ### Resultados Empíricos Promedio (Out-of-Sample):
 
-| Métrica | Heurístico Trivial | Weibull + RSI (SGD) | FT-Transformer Tabular |
-|---|---|---|---|
-| **Brier Score (std)** | 0.285 (±0.032) | 0.098 (±0.015) | **0.068 (±0.011)** |
-| **F1-Score (std)** | 0.540 (±0.045) | 0.812 (±0.028) | **0.880 (±0.022)** |
-| **Log-Loss** | 0.690 | 0.310 | **0.215** |
-| **Reducción Brier vs Baseline** | 0% | +65.6% | **+76.1%** |
+| Métrica                         | Heurístico Trivial | Weibull + RSI (SGD) | FT-Transformer Tabular |
+| ------------------------------- | ------------------ | ------------------- | ---------------------- |
+| **Brier Score (std)**           | 0.285 (±0.032)     | 0.098 (±0.015)      | **0.068 (±0.011)**     |
+| **F1-Score (std)**              | 0.540 (±0.045)     | 0.812 (±0.028)      | **0.880 (±0.022)**     |
+| **Log-Loss**                    | 0.690              | 0.310               | **0.215**              |
+| **Reducción Brier vs Baseline** | 0%                 | +65.6%              | **+76.1%**             |
 
 ---
 
 ## 6. Integridad de Datos Reales, Inferencia Sin Sesgo Sintético y Gobernanza
 
-Para garantizar validez científica en entornos de producción y congresos académicos, la arquitectura prohíbe explícitamente el uso de valores de respaldo arbitrarios (*hardcoded heuristics/fallbacks*) cuando existen registros incompletos:
+Para garantizar validez científica en entornos de producción y auditorías de rigor, la arquitectura prohíbe explícitamente el uso de valores de respaldo arbitrarios (_hardcoded heuristics/fallbacks_) cuando existen registros incompletos:
 
-1. **Tratamiento No Paramétrico de Valores Faltantes:** 
+1. **Tratamiento No Paramétrico de Valores Faltantes:**
    - Cuando un colaborador no cuenta con evaluaciones de desempeño históricas, el déficit de desempeño ($\text{perfDeficit}$) se fija neutralmente en $0$, evitando la inyección de puntajes sintéticos ficticios (e.g. 75 puntos por defecto).
-   - En *Temporal Attention*, los meses sin evaluación emplean interpolación backward del último registro formal observado o asignación nula sin distorsión sinusoidal.
+   - En _Temporal Attention_, los meses sin evaluación emplean interpolación backward del último registro formal observado o asignación nula sin distorsión sinusoidal.
 2. **Proyecciones Financieras por Regresión MCO (OLS):**
    - La proyección de masa salarial futura ($t+1 \dots t+5$) se computa mediante regresión por Mínimos Cuadrados Ordinarios sobre la serie temporal histórica de nóminas reales del tenant ($\beta_{OLS} = \frac{n\sum xy - \sum x \sum y}{n\sum x^2 - (\sum x)^2}$), abandonando tasas fijas lineales.
 3. **Intervalos de Confianza 95% Rigorosos:**
    - Para las series predictivas de rotación y nómina, los márgenes de confianza se determinan con el Error Estándar Residual del modelo:
-   $$\text{IC}_{95\%} = \hat{y} \pm 1.96 \cdot \text{SE}_{res} \sqrt{1 + \frac{1}{n} + \frac{(x^* - \bar{x})^2}{S_{xx}}}$$
+     $$\text{IC}_{95\%} = \hat{y} \pm 1.96 \cdot \text{SE}_{res} \sqrt{1 + \frac{1}{n} + \frac{(x^* - \bar{x})^2}{S_{xx}}}$$
 4. **Módulo de Auditoría de Calidad y Completitud:**
    - La plataforma expone un motor de diagnóstico (`getDataQualityReport`) que audita en tiempo real la completitud de los 4 pilares: Evaluaciones ($40\%$), Asistencia biométrica ($30\%$), Salarios reales ($20\%$) y Ausentismos ($10\%$), alertando visualmente en el panel si el índice de completitud no alcanza el umbral de confiabilidad ($\ge 60\%$).
 
@@ -140,12 +142,11 @@ Para garantizar validez científica en entornos de producción y congresos acad�
 
 ## 7. Referencias Bibliográficas
 
-1. **Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., & Polosukhin, I.** (2017). *Attention is all you need*. Advances in Neural Information Processing Systems (NeurIPS 2017), 30, 5998–6008.
-2. **Gorishniy, Y., Rubachev, I., Khrulkov, V., & Babenko, A.** (2021). *Revisiting deep learning models for tabular data*. Advances in Neural Information Processing Systems (NeurIPS 2021), 34, 18932–18943.
-3. **Bahdanau, D., Cho, K., & Bengio, Y.** (2015). *Neural machine translation by jointly learning to align and translate*. International Conference on Learning Representations (ICLR 2015).
-4. **Pearl, J.** (2009). *Causality: Models, Reasoning, and Inference* (2nd ed.). Cambridge University Press.
-5. **Robins, J. M., Rotnitzky, A., & Zhao, L. P.** (1994). *Estimation of regression coefficients when some regressors are not always observed*. Journal of the American Statistical Association, 89(427), 846–866.
-6. **McMahan, B., Moore, E., Ramage, D., Hampson, S., & y Arcas, B. A.** (2017). *Communication-efficient learning of deep networks from decentralized data*. Artificial Intelligence and Statistics (AISTATS 2017), 1273–1282.
-7. **Lundberg, S. M., & Lee, S. I.** (2017). *A unified approach to interpreting model predictions*. Advances in Neural Information Processing Systems (NeurIPS 2017), 30, 4765–4774.
-8. **SHRM Foundation** (2022). *The Real Cost of Employee Turnover: Recruitment, Onboarding, and Knowledge Loss*. Society for Human Resource Management.
-
+1. **Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., & Polosukhin, I.** (2017). _Attention is all you need_. Advances in Neural Information Processing Systems (NeurIPS 2017), 30, 5998–6008.
+2. **Gorishniy, Y., Rubachev, I., Khrulkov, V., & Babenko, A.** (2021). _Revisiting deep learning models for tabular data_. Advances in Neural Information Processing Systems (NeurIPS 2021), 34, 18932–18943.
+3. **Bahdanau, D., Cho, K., & Bengio, Y.** (2015). _Neural machine translation by jointly learning to align and translate_. International Conference on Learning Representations (ICLR 2015).
+4. **Pearl, J.** (2009). _Causality: Models, Reasoning, and Inference_ (2nd ed.). Cambridge University Press.
+5. **Robins, J. M., Rotnitzky, A., & Zhao, L. P.** (1994). _Estimation of regression coefficients when some regressors are not always observed_. Journal of the American Statistical Association, 89(427), 846–866.
+6. **McMahan, B., Moore, E., Ramage, D., Hampson, S., & y Arcas, B. A.** (2017). _Communication-efficient learning of deep networks from decentralized data_. Artificial Intelligence and Statistics (AISTATS 2017), 1273–1282.
+7. **Lundberg, S. M., & Lee, S. I.** (2017). _A unified approach to interpreting model predictions_. Advances in Neural Information Processing Systems (NeurIPS 2017), 30, 4765–4774.
+8. **SHRM Foundation** (2022). _The Real Cost of Employee Turnover: Recruitment, Onboarding, and Knowledge Loss_. Society for Human Resource Management.

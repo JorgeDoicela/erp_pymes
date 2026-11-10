@@ -32,7 +32,7 @@ db:
   container_name: rh_postgres
   restart: always
   healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+    test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
     interval: 5s
     timeout: 5s
     retries: 5
@@ -50,7 +50,7 @@ redis:
   container_name: rh_redis
   restart: always
   healthcheck:
-    test: ["CMD", "redis-cli", "ping"]
+    test: ['CMD', 'redis-cli', 'ping']
 ```
 
 Redis actualmente está configurado en el compose para disponibilidad futura como adaptador de Socket.IO y caché de sesiones.
@@ -70,7 +70,7 @@ backend:
     ENCRYPTION_KEY: ...
     RP_ID: erp.jorgedoicela.com
   healthcheck:
-    test: ["CMD-SHELL", "curl -sf http://localhost:5000/health || exit 1"]
+    test: ['CMD-SHELL', 'curl -sf http://localhost:5000/health || exit 1']
     interval: 30s
     timeout: 10s
     retries: 3
@@ -96,8 +96,8 @@ frontend:
   container_name: rh_frontend
   restart: always
   ports:
-    - "80:80"
-    - "443:443"
+    - '80:80'
+    - '443:443'
   volumes:
     - /var/www/recursos_humanos/certs:/etc/nginx/certs:ro
   depends_on:
@@ -110,6 +110,7 @@ El frontend solo arranca cuando el backend ya responde al healthcheck, eliminand
 ## 3. Dockerfile del Backend
 
 El proceso de build del backend:
+
 1. `node:20-alpine` como imagen base (ligera).
 2. `COPY package*.json ./` + `npm ci --only=production` para instalar dependencias de producción.
 3. `npx prisma generate` en el postinstall para generar el cliente Prisma.
@@ -124,6 +125,7 @@ Al arrancar, el servidor ejecuta `npx prisma migrate deploy` antes de iniciar Ex
 2. **Serve stage:** `nginx:alpine` para servir los activos estáticos del directorio `dist/`.
 
 La configuración de Nginx incluye:
+
 - Proxy inverso para `/api/*` → `http://backend:5000`
 - Proxy inverso para `/uploads/*` → `http://backend:5000`
 - `try_files $uri $uri/ /index.html` para soporte de rutas SPA (React Router).
@@ -132,18 +134,18 @@ La configuración de Nginx incluye:
 
 ## 5. Variables de Entorno de Producción
 
-| Variable | Descripción |
-|---------|-------------|
-| `DATABASE_URL` | URI completa de PostgreSQL (incluye host `db`, puerto, usuario, contraseña y base de datos) |
-| `REDIS_URL` | URI de Redis (`redis://redis:6379`) |
-| `JWT_SECRET` | Clave secreta para firmar JWT (mínimo 64 caracteres en producción) |
-| `ENCRYPTION_KEY` | Clave hex de 32 bytes para AES-256-GCM (datos sensibles) |
-| `RP_ID` | Relying Party ID para WebAuthn (dominio sin protocolo: `erp.jorgedoicela.com`) |
-| `ALLOWED_ORIGINS` | Lista de dominios HTTPS permitidos para CORS y WebAuthn |
-| `CLIENT_URL` | URL del frontend para redirecciones de correo (restablecimiento de contraseña) |
-| `EMAIL_USER` | Correo de envío para Nodemailer |
-| `EMAIL_PASS` | Contraseña de aplicación del correo (no la contraseña personal) |
-| `SEED_SECRET` | Clave para proteger el endpoint `/api/seed` |
+| Variable          | Descripción                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`    | URI completa de PostgreSQL (incluye host `db`, puerto, usuario, contraseña y base de datos) |
+| `REDIS_URL`       | URI de Redis (`redis://redis:6379`)                                                         |
+| `JWT_SECRET`      | Clave secreta para firmar JWT (mínimo 64 caracteres en producción)                          |
+| `ENCRYPTION_KEY`  | Clave hex de 32 bytes para AES-256-GCM (datos sensibles)                                    |
+| `RP_ID`           | Relying Party ID para WebAuthn (dominio sin protocolo: `erp.jorgedoicela.com`)              |
+| `ALLOWED_ORIGINS` | Lista de dominios HTTPS permitidos para CORS y WebAuthn                                     |
+| `CLIENT_URL`      | URL del frontend para redirecciones de correo (restablecimiento de contraseña)              |
+| `EMAIL_USER`      | Correo de envío para Nodemailer                                                             |
+| `EMAIL_PASS`      | Contraseña de aplicación del correo (no la contraseña personal)                             |
+| `SEED_SECRET`     | Clave para proteger el endpoint `/api/seed`                                                 |
 
 ## 6. Healthcheck y Resiliencia
 
@@ -155,6 +157,7 @@ La configuración de Nginx incluye:
 ## 7. Dominio de Producción
 
 El sistema está desplegado en:
+
 - **Dominio:** `https://erp.jorgedoicela.com`
 - **Servidor:** AWS EC2
 - **Proxy:** Nginx con certificados SSL/TLS
@@ -185,7 +188,7 @@ Las migraciones de Prisma se aplican automáticamente al iniciar el contenedor d
 
 Gracias a una arquitectura eficiente, modular y de baja huella de cómputo, la plataforma puede permitirse ofrecer **precios sumamente económicos y accesibles (\$0.50/emp) con 45 días de prueba gratuita**, democratizando el software para pequeñas y medianas empresas (PyMEs) sin comprometer la rentabilidad ni la estabilidad del servidor.
 
-Esta infraestructura optimizada garantiza el rendimiento durante campañas masivas o presentaciones en congresos mediante los siguientes mecanismos:
+Esta infraestructura optimizada garantiza el rendimiento durante periodos de alta demanda mediante los siguientes mecanismos:
 
 1. **Aislamiento Multi-Tenant y Licenciamiento:**
    - Interceptor de datos Prisma que fuerza el aislamiento lógico por `tenantId`.

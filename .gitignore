@@ -17,6 +17,7 @@ yarn-error.log*
 
 # Build outputs
 dist
+dev-dist
 build
 coverage
 
