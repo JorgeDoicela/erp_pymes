@@ -85,9 +85,25 @@ La documentación técnica detallada se encuentra centralizada en [`docs/00-indi
 - [`04-base-de-datos/`](./docs/04-base-de-datos/) — Esquema relacional y catálogos normativos
 - [`05-frontend-web/`](./docs/05-frontend-web/) — Arquitectura React, componentes y resiliencia
 - [`06-inteligencia-y-analitica/`](./docs/06-inteligencia-y-analitica/) — Modelos predictivos, RSI, Causal AI, DP-FedAvg, MORL y FT-Transformer
-- [`07-despliegue-y-operaciones/`](./docs/07-despliegue-y-operaciones/) — Infraestructura Docker, AWS EC2, auditoría y DR
+- [`07-despliegue-y-operaciones/`](./docs/07-despliegue-y-operaciones/) — Infraestructura Docker, AWS EC2, flujo Git/CI, auditoría y DR
 - [`08-artefactos-scrum/`](./docs/08-artefactos-scrum/) — Backlog y artefactos de gestión
 - [`09-sostenibilidad-ods/`](./docs/09-sostenibilidad-ods/) — Alineación estratégica, metas y especificación de métricas para ODS 8 (Trabajo Decente)
+
+## Flujo de Trabajo Git y Calidad de Código
+
+El proyecto implementa un flujo de integración continua estricto para garantizar estabilidad, seguridad y trazabilidad:
+
+- **Topología de Ramas:**
+  - `main`: Rama de producción protegida. Despliega automáticamente a AWS EC2. Push directo restringido exclusivamente a `JorgeDoicela` para hotfixes de emergencia.
+  - `develop`: Rama de integración protegida. Commits directos bloqueados; todo cambio debe ingresar obligatoriamente mediante Pull Request con suite de CI aprobada.
+  - `jorge_doicela` / `feature/*` / `fix/*`: Ramas de trabajo donde cada desarrollador implementa sus cambios partiendo de `develop`.
+- **Hooks Locales Automatizados (Husky):**
+  - `pre-commit`: Ejecuta `lint-staged` con ESLint (auto-fix), Prettier y escaneo de credenciales con Secretlint sobre archivos en staging.
+  - `commit-msg`: Valida la convención _Conventional Commits_ (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`) con Commitlint.
+  - `pre-push`: Ejecuta la suite de pruebas unitarias e integración de Vitest (backend y frontend) antes de enviar cambios al repositorio remoto.
+- **Integración Continua (GitHub Actions):** Todo Pull Request hacia `develop` o `main` ejecuta obligatoriamente el pipeline de CI ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)) con escaneo de seguridad, pruebas de backend y build de frontend.
+
+Guía operativa detallada: [`docs/07-despliegue-y-operaciones/06-estandar-git-flujo-ramas-y-calidad.md`](./docs/07-despliegue-y-operaciones/06-estandar-git-flujo-ramas-y-calidad.md).
 
 ## Variables de Entorno Requeridas
 

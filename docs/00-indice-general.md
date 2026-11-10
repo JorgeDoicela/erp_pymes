@@ -58,6 +58,7 @@ Documentación técnica del sistema de gestión de talento humano Emplifi. Cada 
 - [03 — Plan de Recuperación ante Desastres](./07-despliegue-y-operaciones/03-plan-recuperacion-desastres.md)
 - [04 — Guía de Testing](./07-despliegue-y-operaciones/04-guia-testing.md)
 - [05 — Infraestructura Docker y Despliegue AWS](./07-despliegue-y-operaciones/05-infraestructura-docker-aws.md)
+- [06 — Estándar de Flujo Git, Política de Ramas y Calidad](./07-despliegue-y-operaciones/06-estandar-git-flujo-ramas-y-calidad.md)
 
 ### 08 — Artefactos Scrum
 
