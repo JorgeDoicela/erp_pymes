@@ -284,35 +284,47 @@ sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
 # 5. Estructura de directorios con propiedad para el usuario admin
-sudo mkdir -p /var/www/recursos_humanos
+sudo mkdir -p /var/www/recursos_humanos/certs /var/www/recursos_humanos/backups
 sudo chown -R $USER:$USER /var/www/recursos_humanos
 
-# 6. Archivo de entorno de producción
-nano /var/www/recursos_humanos/.env
-```
-
-### Plantilla de Configuración `/var/www/recursos_humanos/.env`:
-
-```env
-# Claves criptográficas generadas con: openssl rand -hex 32
+# 6. Creación directa del archivo de entorno de producción
+cat << 'EOF' > /var/www/recursos_humanos/.env
 NODE_ENV=production
 PORT=5000
+
+# Registro de Imágenes GHCR
+BACKEND_IMAGE=ghcr.io/jorgedoicela/rh-backend:latest
+FRONTEND_IMAGE=ghcr.io/jorgedoicela/rh-frontend:latest
+GATEWAY_IMAGE=ghcr.io/jorgedoicela/rh-gateway:latest
+
+# Base de Datos PostgreSQL
 POSTGRES_USER=admin_rh
-POSTGRES_PASSWORD=CAMBIAR_POR_PASSWORD_POSTGRES_MUY_SEGURO
+POSTGRES_PASSWORD=password
 POSTGRES_DB=db_recursos_humanos
 DATABASE_URL="postgresql://admin_rh:password@db:5432/db_recursos_humanos?schema=public"
+
+# Cache Redis
 REDIS_URL="redis://redis:6379"
+
+# Claves Criptográficas Maestras (Generar con: openssl rand -hex 32)
 JWT_SECRET=CAMBIAR_POR_HEX_DE_64_CARACTERES
 ENCRYPTION_KEY=CAMBIAR_POR_HEX_DE_32_BYTES
 SEED_SECRET=CAMBIAR_POR_CLAVE_SEED
 RUN_SEED=true
+
+# Dominios y Seguridad WebAuthn
 CLIENT_URL="https://norma.doicela.dev"
 FRONTEND_URL="https://norma.doicela.dev"
 ORIGIN="https://norma.doicela.dev"
+APP_URL="https://norma.doicela.dev"
 RP_ID="doicela.dev"
 ALLOWED_ORIGINS="https://norma.doicela.dev"
-EMAIL_USER="tu-correo@gmail.com"
+BIOMETRIC_MAX_AGE_DAYS=90
+
+# Notificaciones por Correo SMTP
+EMAIL_USER="contacto@doicela.dev"
 EMAIL_PASS="tu-app-password-smtp"
+EOF
 ```
 
 ### Reglas de Firewall y Red (AWS Security Groups):
@@ -356,11 +368,11 @@ docker system prune -af
 curl -I https://norma.doicela.dev/health
 ```
 
-## 14. Optimización de Carga, Resiliencia y Protección de Recursos (SaaS PyME)
+## 14. Optimización de Carga, Resiliencia y Protección de Recursos
 
-Gracias a una arquitectura eficiente, modular y de baja huella de cómputo, la plataforma puede permitirse ofrecer **precios sumamente económicos y accesibles (\$0.50/emp) con 45 días de prueba gratuita**, democratizando el software para pequeñas y medianas empresas (PyMEs) sin comprometer la rentabilidad ni la estabilidad del servidor.
+La plataforma está diseñada bajo una arquitectura modular y de baja huella de cómputo, optimizada para operar de forma estable en instancias virtuales de recursos moderados (1 vCPU, 2 GB RAM con 2 GB Swap).
 
-Esta infraestructura optimizada garantiza el rendimiento durante periodos de alta demanda mediante los siguientes mecanismos:
+Esta infraestructura garantiza la estabilidad operativa mediante los siguientes mecanismos:
 
 1. **Aislamiento Multi-Tenant y Licenciamiento:**
    - Interceptor de datos Prisma que fuerza el aislamiento lógico por `tenantId`.
@@ -373,3 +385,38 @@ Esta infraestructura optimizada garantiza el rendimiento durante periodos de alt
 4. **Caché y Re-autosanación:**
    - Redis 7 gestiona el estado y WebSockets en memoria sin impactar el almacenamiento en disco de PostgreSQL.
    - Contenedores Docker configurados con `restart: always` y `healthcheck` activo para reinicios transparentes en milisegundos ante picos de uso inusuales.
+
+## 15. Procedimiento de Migración a un Nuevo Servidor (Turnkey Migration)
+
+Cuando se requiera trasladar el sistema completo a otro servidor (nueva instancia EC2 o cualquier VPS con Debian GNU/Linux):
+
+### Paso 1: Exportar Backup de Datos en el Servidor Actual
+
+```bash
+docker exec rh_postgres pg_dump -U admin_rh db_recursos_humanos > /var/www/recursos_humanos/backups/backup_migracion.sql
+```
+
+Descargar o transferir el archivo `backup_migracion.sql` al nuevo servidor mediante SCP.
+
+### Paso 2: Aprovisionar el Nuevo Servidor Debian
+
+Ejecutar los pasos de la Sección 12 en el nuevo host (instalar Docker, habilitar swap, crear `/var/www/recursos_humanos` y configurar el `.env`).
+
+### Paso 3: Desplegar Contenedores en el Nuevo Servidor
+
+```bash
+cd /var/www/recursos_humanos
+docker compose pull
+docker compose up -d
+```
+
+### Paso 4: Restaurar la Base de Datos
+
+```bash
+cat backup_migracion.sql | docker exec -i rh_postgres psql -U admin_rh db_recursos_humanos
+```
+
+### Paso 5: Reenrutar Tráfico en Cloudflare y Actualizar GitHub Actions
+
+1. **Cloudflare DNS:** Actualizar el registro `A` de `norma.doicela.dev` con la nueva IP pública del servidor.
+2. **GitHub Secrets:** En el repositorio de GitHub, actualizar `EC2_HOST` (y `EC2_SSH_KEY` si cambia la llave de acceso) para que los futuros despliegues automáticos apunten al nuevo servidor.
