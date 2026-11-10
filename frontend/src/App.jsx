@@ -1,6 +1,6 @@
 /**
  * @file App.jsx
- * @description Enrutamiento principal, control de acceso por roles (RBAC) y vistas de la plataforma Emplifi.
+ * @description Enrutamiento principal, control de acceso por roles (RBAC) y vistas de la plataforma Norma ERP.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -202,9 +202,11 @@ function App() {
       }
     };
 
+    window.addEventListener('norma:user-updated', handleUserUpdated);
     window.addEventListener('emplifi:user-updated', handleUserUpdated);
     window.addEventListener('storage', handleUserUpdated);
     return () => {
+      window.removeEventListener('norma:user-updated', handleUserUpdated);
       window.removeEventListener('emplifi:user-updated', handleUserUpdated);
       window.removeEventListener('storage', handleUserUpdated);
     };
@@ -397,7 +399,8 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <footer className="mt-12 text-gray-600 text-sm text-center w-full pb-6">
-        &copy; {new Date().getFullYear()} Emplifi · Plataforma ERP para PYMEs
+        &copy; {new Date().getFullYear()} Norma ERP · Sistema de Gestión y Cumplimiento Laboral para
+        PyMEs
       </footer>
     </Suspense>
   );

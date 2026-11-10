@@ -1,11 +1,11 @@
 {
-  "short_name": "Emplifi",
-  "name": "Emplifi - ERP de Recursos Humanos",
+  "short_name": "Norma ERP",
+  "name": "Norma ERP — Sistema de Gestión y Cumplimiento Laboral",
   "icons": [
     {
-      "src": "/favicon.webp",
-      "type": "image/webp",
-      "sizes": "512x512 192x192 64x64 32x32 16x16",
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
       "purpose": "any maskable"
     }
   ],

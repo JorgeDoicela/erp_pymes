@@ -3,7 +3,7 @@ import globals from 'globals';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['node_modules', 'dist', 'prisma/migrations', 'tests/**']),
+  globalIgnores(['node_modules', 'dist', 'prisma/migrations', 'prisma/seeds/**', 'tests/**']),
   {
     files: ['**/*.js'],
     extends: [js.configs.recommended],
@@ -18,6 +18,9 @@ export default defineConfig([
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-console': 'off',
+      'no-useless-assignment': 'warn',
+      'no-empty': ['warn', { allowEmptyCatch: true }],
+      'preserve-caught-error': 'off',
     },
   },
 ]);

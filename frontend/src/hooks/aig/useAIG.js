@@ -1,3 +1,11 @@
+/**
+ * @file useAIG.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { useState } from 'react';
 
 /**
@@ -5,20 +13,20 @@ import { useState } from 'react';
  * Encargado de diagnósticos y recomendaciones.
  */
 export const useAIG = () => {
-    const [recommendations, setRecommendations] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
 
-    const analyzeAttendance = (attendanceData) => {
-        // Lógica heurística placeholder
-        console.log("Analizando asistencia...", attendanceData);
-        // Ejemplo: si detecta muchas faltas
-        return {
-            alert: false,
-            message: "Análisis completado. Sin anomalías graves."
-        };
-    };
-
+  const analyzeAttendance = (attendanceData) => {
+    // Lógica heurística placeholder
+    console.log('Analizando asistencia...', attendanceData);
+    // Ejemplo: si detecta muchas faltas
     return {
-        recommendations,
-        analyzeAttendance
+      alert: false,
+      message: 'Análisis completado. Sin anomalías graves.',
     };
+  };
+
+  return {
+    recommendations,
+    analyzeAttendance,
+  };
 };

@@ -1,6 +1,6 @@
-# Documentación Técnica — Emplifi
+# Documentación Técnica — Norma ERP
 
-Documentación técnica del sistema de gestión de talento humano Emplifi. Cada sección corresponde a un dominio funcional o capa técnica del sistema.
+Documentación técnica del sistema de gestión de talento humano, nómina legal y contabilidad Norma ERP. Cada sección corresponde a un dominio funcional o capa técnica del sistema.
 
 ## Índice de Secciones
 
@@ -31,7 +31,7 @@ Documentación técnica del sistema de gestión de talento humano Emplifi. Cada 
 
 ### 04 — Base de Datos
 
-- [01 — Esquema Relacional Emplifi](./04-base-de-datos/01-esquema-relacional-emplifi.md)
+- [01 — Esquema Relacional Norma ERP](./04-base-de-datos/01-esquema-relacional-norma.md)
 - [02 — Catálogos y Normativa Laboral](./04-base-de-datos/02-catalogos-y-normativa-laboral.md)
 
 ### 05 — Frontend Web

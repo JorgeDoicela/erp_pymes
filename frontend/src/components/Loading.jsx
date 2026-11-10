@@ -1,3 +1,11 @@
+/**
+ * @file Loading.jsx
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 const Loading = ({ message = 'Cargando datos...' }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f9fafb]">

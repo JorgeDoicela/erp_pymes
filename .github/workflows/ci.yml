@@ -59,7 +59,7 @@ jobs:
           NODE_ENV: test
           JWT_SECRET: test-super-secret-jwt-key-for-unit-tests
           JWT_EXPIRATION: 1h
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
+          DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/testdb'
 
   frontend-qa:
     name: Frontend QA & Build (WEB)

@@ -2,16 +2,17 @@
 
 ## 1. Fundamento Teórico e Innovación Científica
 
-Los modelos analíticos tradicionales y las redes neuronales estándar estiman probabilidades condicionales observacionales $P(Y \mid X)$ (ej. "los empleados con mayores salarios tienen menor tasa de fuga"). Sin embargo, la correlación no implica causalidad: otorgar un aumento salarial masivo sin analizar variables confusoras (*confounders*) puede generar sesgos de selección (*confounding bias*).
+Los modelos analíticos tradicionales y las redes neuronales estándar estiman probabilidades condicionales observacionales $P(Y \mid X)$ (ej. "los empleados con mayores salarios tienen menor tasa de fuga"). Sin embargo, la correlación no implica causalidad: otorgar un aumento salarial masivo sin analizar variables confusoras (_confounders_) puede generar sesgos de selección (_confounding bias_).
 
-El **Motor de Inferencia Causal Contrafactual (Causal AI Engine)** de Emplifi adopta el **Causal Do-Calculus de Judea Pearl** y técnicas de **Puntaje de Propensión (Propensity Score Matching - PSM)** con **Ponderación de Probabilidad Inversa (Inverse Probability Weighting - IPW)**. Este módulo permite a los directivos evaluar preguntas contrafactuales de tipo *"¿Qué pasaría si...?"*:
+El **Motor de Inferencia Causal Contrafactual (Causal AI Engine)** de Norma ERP adopta el **Causal Do-Calculus de Judea Pearl** y técnicas de **Puntaje de Propensión (Propensity Score Matching - PSM)** con **Ponderación de Probabilidad Inversa (Inverse Probability Weighting - IPW)**. Este módulo permite a los directivos evaluar preguntas contrafactuales de tipo _"¿Qué pasaría si...?"_:
 
 $$P(Y \mid \text{do}(T = t))$$
 
 Donde:
-* **$T$ (Tratamiento):** Intervención organizacional propuesta (Aumento Salarial, Teletrabajo, Ascenso de Carrera, Capacitación).
-* **$Y$ (Resultado):** Probabilidad de rotación / fuga de personal y Retorno Financiero Neto (ROI).
-* **$\mathbf{X}$ (Covariables Confusoras):** Salario basal relativo, antigüedad en meses, índice de ausencias acumulado y nota promedio de desempeño.
+
+- **$T$ (Tratamiento):** Intervención organizacional propuesta (Aumento Salarial, Teletrabajo, Ascenso de Carrera, Capacitación).
+- **$Y$ (Resultado):** Probabilidad de rotación / fuga de personal y Retorno Financiero Neto (ROI).
+- **$\mathbf{X}$ (Covariables Confusoras):** Salario basal relativo, antigüedad en meses, índice de ausencias acumulado y nota promedio de desempeño.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
@@ -44,7 +45,7 @@ Bajo el criterio backdoor sobre el conjunto $Z = \{\text{Tenure}, \text{Salary},
 
 $$\mathbb{E}[Y \mid \text{do}(T = t)] = \frac{1}{N} \sum_{i=1}^N \mu(t, \mathbf{Z}_i)$$
 
-Donde $\mu(t, \mathbf{Z}_i) = P(Y = 1 \mid T = t, \mathbf{Z}_i)$ es el modelo de resultado (*outcome model*) logístico calibrado con los parámetros RSI del tenant y elasticidades salariales/laborales de la literatura académica (Ton 2014, Bloom et al. 2015, Allen et al. 2010).
+Donde $\mu(t, \mathbf{Z}_i) = P(Y = 1 \mid T = t, \mathbf{Z}_i)$ es el modelo de resultado (_outcome model_) logístico calibrado con los parámetros RSI del tenant y elasticidades salariales/laborales de la literatura académica (Ton 2014, Bloom et al. 2015, Allen et al. 2010).
 
 El **Efecto Promedio del Tratamiento (ATE)** se calcula como:
 
@@ -70,7 +71,7 @@ $$\text{IC}_{95\%} = \left[ \text{Percentil}_{2.5\%}\left(\{\text{ATE}_b\}_{b=1}
 
 ### 2.5. Modelo Financiero de Ahorro y ROI Neto
 
-1. **Costo de Reemplazo por Fuga ($\text{Costo}_{\text{reemplazo}}$):** Se estima en $5.5 \times \text{Salario Mensual Promedio}$ (Allen et al. 2010, SHRM Foundation).
+1. **Costo de Reemplazo por Fuga ($\text{Costo}\_{\text{reemplazo}}$):** Se estima en $5.5 \times \text{Salario Mensual Promedio}$ (Allen et al. 2010, SHRM Foundation).
 2. **Casos de Fuga Evitados ($\Delta N$):** $\Delta N = |\text{ATE}| \times N_{\text{muestra}}$
 3. **Ahorro Estimado por Retención ($\text{Ahorro}$):** $\text{Ahorro} = \Delta N \times \text{Costo}_{\text{reemplazo}}$
 4. **Retorno de Inversión Neto ($\text{ROI Neto}$):**
@@ -114,9 +115,11 @@ model CausalIntervention {
 ## 4. Especificación de Endpoints REST de la API
 
 ### 4.1 `POST /api/intelligence/causal/simulate`
+
 Ejecuta la simulación de una intervención contrafactual $do(T)$.
 
 **Cuerpo de Petición:**
+
 ```json
 {
   "treatmentType": "SALARY_INCREASE",
@@ -127,6 +130,7 @@ Ejecuta la simulación de una intervención contrafactual $do(T)$.
 ```
 
 **Respuesta Exitosa (200 OK):**
+
 ```json
 {
   "success": true,
@@ -155,10 +159,30 @@ Ejecuta la simulación de una intervención contrafactual $do(T)$.
       "avgPropensityTreated": 0.685,
       "avgPropensityControl": 0.312,
       "covariateBalanceTable": [
-        { "covariate": "Salario (USD)", "smdPreMatching": 0.485, "smdPostMatching": 0.042, "isBalanced": true },
-        { "covariate": "Antigüedad (Meses)", "smdPreMatching": 0.410, "smdPostMatching": 0.038, "isBalanced": true },
-        { "covariate": "Ausencias (Conteo)", "smdPreMatching": 0.395, "smdPostMatching": 0.031, "isBalanced": true },
-        { "covariate": "Desempeño (Score)", "smdPreMatching": 0.362, "smdPostMatching": 0.029, "isBalanced": true }
+        {
+          "covariate": "Salario (USD)",
+          "smdPreMatching": 0.485,
+          "smdPostMatching": 0.042,
+          "isBalanced": true
+        },
+        {
+          "covariate": "Antigüedad (Meses)",
+          "smdPreMatching": 0.41,
+          "smdPostMatching": 0.038,
+          "isBalanced": true
+        },
+        {
+          "covariate": "Ausencias (Conteo)",
+          "smdPreMatching": 0.395,
+          "smdPostMatching": 0.031,
+          "isBalanced": true
+        },
+        {
+          "covariate": "Desempeño (Score)",
+          "smdPreMatching": 0.362,
+          "smdPostMatching": 0.029,
+          "isBalanced": true
+        }
       ],
       "overallBiasReductionPercent": 91.4
     }
@@ -167,6 +191,7 @@ Ejecuta la simulación de una intervención contrafactual $do(T)$.
 ```
 
 ### 4.2 `GET /api/intelligence/causal/history`
+
 Obtiene el historial de intervenciones causales evaluadas previamente para el tenant.
 
 ---
@@ -174,13 +199,15 @@ Obtiene el historial de intervenciones causales evaluadas previamente para el te
 ## 5. Resultados Empíricos Ejecutados y Validación Experimental
 
 ### 5.1 Resultados Experimentales Ejecutados en el Sistema
+
 La ejecución real de la simulación causal contrafactual sobre el dataset del sistema registró los siguientes resultados empíricos en base de datos:
 
 - **Efecto Promedio del Tratamiento (ATE):** Estimación puntual de reducción de rotación de **`-2.37%`** a **`-2.39%`** ante una intervención contrafactual del 10% de aumento salarial global.
 - **Interpretación Rigurosa al $\alpha = 0.05$:** El Intervalo de Confianza al 95% ($\text{IC}_{95\%} = [-26.92\%, 19.23\%]$) abarca el efecto nulo ($0\%$). Por lo tanto, la estimación puntual **no es estadísticamente significativa**, lo que confirma científicamente que aumentos salariales masivos planos no focalizados no garantizan un retorno significativo frente al alto costo de la intervención.
 - **Balance Covariado Ajustado por IPW (Inverse Probability Weighting):**
   - **Reducción del Sesgo Acumulado:** Se logró una reducción del **`95.1%` - `97.2%`** del sesgo de confusión, alcanzando $\text{SMD} < 0.10$ en todas las covariables socio-laborales (Salario $\text{SMD} = 0.042$, Antigüedad $\text{SMD} = 0.016-0.038$, Ausencias $\text{SMD} = 0.000$, Desempeño $\text{SMD} = 0.029$).
-  - **Diagnóstico de Propensión:** Propensity Score en el rango $[\text{Mín}=0.25, \text{Máx}=0.768]$, media de propensión $\mu = 0.399 - 0.433$, con recortado de pesos (*clipping*) acotado en $[0.05, 0.95]$ para prevenir inestabilidades extremas.
+  - **Diagnóstico de Propensión:** Propensity Score en el rango $[\text{Mín}=0.25, \text{Máx}=0.768]$, media de propensión $\mu = 0.399 - 0.433$, con recortado de pesos (_clipping_) acotado en $[0.05, 0.95]$ para prevenir inestabilidades extremas.
 
 ### 5.2 Protocolo de Experimentación Futura (Trabajo Futuro)
+
 - **Pruebas A/B en Producción:** Implementación de ensayos controlados aleatorizados (RCTs) en organizaciones reales para validar el ATE simulado frente a decisiones reales de retención bajo acuerdo de confidencialidad.

@@ -4,7 +4,7 @@
 
 Los sistemas analíticos tradicionales de gestión del talento humano (People Analytics) operan mediante **modelos fijos y pasivos**. Una vez entrenados o configurados con ponderaciones estáticas, estos algoritmos no adaptan sus parámetros cuando sus predicciones difieren de los eventos reales acontecidos en la empresa (ej. desvinculaciones imprevistas o retención de personal clasificado como de alto riesgo).
 
-El **Motor de Automejora Recursiva (RSI Engine - Recursive Self-Improvement)** introduce un **bucle cerrado de auto-calibración en tiempo real (Closed-Loop Calibration)** sobre la arquitectura SaaS Multi-Tenant de Emplifi. Cada observación o desenlace de personal registrado en el sistema genera una señal de retroalimentación matemática que actualiza estocásticamente el vector de hiperparámetros del modelo \(\vec{\beta}\) y la función de riesgo de Weibull, reduciendo la Pérdida Cuadrática Media (_Brier Score_) de forma recursiva sin intervención humana.
+El **Motor de Automejora Recursiva (RSI Engine - Recursive Self-Improvement)** introduce un **bucle cerrado de auto-calibración en tiempo real (Closed-Loop Calibration)** sobre la arquitectura SaaS Multi-Tenant de Norma ERP. Cada observación o desenlace de personal registrado en el sistema genera una señal de retroalimentación matemática que actualiza estocásticamente el vector de hiperparámetros del modelo \(\vec{\beta}\) y la función de riesgo de Weibull, reduciendo la Pérdida Cuadrática Media (_Brier Score_) de forma recursiva sin intervención humana.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐

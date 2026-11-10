@@ -1,5 +1,5 @@
 {
-  "name": "emplifi-erp-root",
+  "name": "norma-erp-root",
   "version": "1.0.0",
   "author": "Jorge Doicela",
   "license": "UNLICENSED",
@@ -18,7 +18,11 @@
     "docker:up": "docker compose up --build -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "prepare": "husky"
+    "script:fix-slugs": "node scripts/maintenance/fix-corrupt-slugs.mjs",
+    "test:stress": "node scripts/test/stress-test.mjs",
+    "db:backup": "bash scripts/db/backup-db.sh",
+    "prepare": "husky",
+    "scan:secrets": "secretlint \"**/*\""
   },
   "workspaces": [
     "frontend",

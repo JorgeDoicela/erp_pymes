@@ -1,12 +1,20 @@
+/**
+ * @file announcement.routes.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { Router } from 'express';
 import {
-    createAnnouncement,
-    getBoardStats,
-    getAnnouncements,
-    markAnnouncementReadOrAcknowledge,
-    getAnnouncementStats,
-    deleteAnnouncement,
-    getBirthdays
+  createAnnouncement,
+  getBoardStats,
+  getAnnouncements,
+  markAnnouncementReadOrAcknowledge,
+  getAnnouncementStats,
+  deleteAnnouncement,
+  getBirthdays,
 } from '../../controllers/communication/announcementController.js';
 import { authenticate, authorize } from '../../middleware/auth.middleware.js';
 

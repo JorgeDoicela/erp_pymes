@@ -1,6 +1,6 @@
 # Estándar de Flujo Git, Política de Ramas y Calidad de Código
 
-Este documento establece las políticas de gobernanza de código, ciclo de vida de ramas en Git, hooks locales automatizados y requisitos de integración continua (CI) para el repositorio de Emplifi. Rige de manera vinculante para todos los desarrolladores y contribuidores del proyecto.
+Este documento establece las políticas de gobernanza de código, ciclo de vida de ramas en Git, hooks locales automatizados y requisitos de integración continua (CI) para el repositorio de Norma ERP. Rige de manera vinculante para todos los desarrolladores y contribuidores del proyecto.
 
 ---
 
@@ -177,7 +177,36 @@ flowchart LR
 
 ---
 
-## 4. Normalización Multiplataforma y Saltos de Línea (.gitattributes)
+## 4. Pipeline de Despliegue Continuo (CD) y Rollback Automatizado
+
+Una vez aprobado y fusionado el Pull Request en la rama **`main`**, se activa automáticamente el pipeline de Continuous Deployment ([.github/workflows/deploy.yml](../../.github/workflows/deploy.yml)):
+
+```mermaid
+flowchart LR
+    A["Push / Merge a main"] --> B["Detect Changes"]
+    B --> C["Build & Push Docker Images (GHCR)"]
+    C --> D["Deploy AWS EC2 por SSH"]
+    D --> E["Live Health Check (/health)"]
+    D --> F["Step Summary Report"]
+```
+
+### Protocolo de Automatización del Despliegue:
+
+1. **Compilación de Contenedores:** Las imágenes de `rh-backend`, `rh-frontend` y `rh-gateway` se compilan usando Docker Buildx en los runners de GitHub y se suben a GitHub Packages (`ghcr.io`).
+2. **Despliegue Remoto:** El action `appleboy/ssh-action` conecta por SSH con la instancia EC2 (`${{ secrets.EC2_HOST }}`), transfiere el `docker-compose.yml` actualizado y ejecuta `docker compose pull && docker compose up -d`.
+3. **Migraciones Automáticas:** El backend ejecuta `prisma migrate deploy` en su arranque antes de habilitar el servicio.
+4. **Verificación de Salud:** Se ejecuta un healthcheck HTTP final confirmando la disponibilidad del sistema en `https://norma.doicela.dev`.
+
+### Rollback Instantáneo ([.github/workflows/rollback.yml](../../.github/workflows/rollback.yml)):
+
+En caso de fallo crítico en producción, el equipo no requiere revertir código ni reconstruir imágenes:
+
+- Se ejecuta el workflow `Rollback - Instant AWS EC2 Deployment` indicando el SHA previo.
+- El servidor descarga la versión solicitada desde GHCR y reemplaza los contenedores en caliente en menos de 60 segundos.
+
+---
+
+## 5. Normalización Multiplataforma y Saltos de Línea (.gitattributes)
 
 Para prevenir fallos en entornos mixtos (desarrolladores en Windows y entornos de ejecución en Linux/Docker), el archivo [.gitattributes](../../.gitattributes) fuerza saltos de línea estrictamente en formato **LF (`\n`)** para:
 
@@ -189,13 +218,14 @@ Queda estrictamente prohibido alterar la configuración de `.gitattributes` o co
 
 ---
 
-## 5. Matriz de Comandos de Calidad Local
+## 6. Matriz de Comandos de Calidad Local
 
-| Comando                 | Acción técnica                                                 | Cuándo ejecutarlo                                        |
-| :---------------------- | :------------------------------------------------------------- | :------------------------------------------------------- |
-| `npm run lint`          | Ejecuta ESLint secuencialmente en `frontend` y `backend`.      | Antes de abrir un Pull Request o al finalizar cambios.   |
-| `npm run format`        | Aplica Prettier con auto-escritura en todo el repositorio.     | Para formatear archivos antes de hacer commit.           |
-| `npm run format:check`  | Verifica consistencia de formato sin alterar archivos.         | Ejecutado automáticamente en auditorías de CI.           |
-| `npm run test`          | Ejecuta la suite de Vitest de backend y frontend en secuencia. | Automatizado en hook `pre-push`.                         |
-| `npm run test:backend`  | Ejecuta exclusivamente las pruebas de la API (111 tests).      | Durante desarrollo de servicios o controladores backend. |
-| `npm run test:frontend` | Ejecuta exclusivamente las pruebas de interfaz (30 tests).     | Durante desarrollo de componentes React.                 |
+| Comando                 | Acción técnica                                                                 | Cuándo ejecutarlo                                        |
+| :---------------------- | :----------------------------------------------------------------------------- | :------------------------------------------------------- |
+| `npm run lint`          | Ejecuta ESLint secuencialmente en `frontend` y `backend`.                      | Antes de abrir un Pull Request o al finalizar cambios.   |
+| `npm run format`        | Aplica Prettier con auto-escritura en todo el repositorio.                     | Para formatear archivos antes de hacer commit.           |
+| `npm run format:check`  | Verifica consistencia de formato sin alterar archivos.                         | Ejecutado automáticamente en auditorías de CI.           |
+| `npm run scan:secrets`  | Escanea todo el repositorio con Secretlint en busca de credenciales expuestas. | En auditorías de seguridad y en pipeline de CI.          |
+| `npm run test`          | Ejecuta la suite de Vitest de backend y frontend en secuencia.                 | Automatizado en hook `pre-push`.                         |
+| `npm run test:backend`  | Ejecuta exclusivamente las pruebas de la API (111 tests).                      | Durante desarrollo de servicios o controladores backend. |
+| `npm run test:frontend` | Ejecuta exclusivamente las pruebas de interfaz (30 tests).                     | Durante desarrollo de componentes React.                 |

@@ -1,3 +1,11 @@
+/**
+ * @file employeeService.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import employeeRepository from '../../repositories/employees/employeeRepository.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
 import prisma from '../../database/db.js';
@@ -5,8 +13,8 @@ import prisma from '../../database/db.js';
 /**
  * EmployeeService
  * Gestiona la lógica de negocio para los empleados del sistema.
- * 
- * NOTA DE SEGURIDAD: Los campos bancarios (bankName, accountNumber) son encriptados 
+ *
+ * NOTA DE SEGURIDAD: Los campos bancarios (bankName, accountNumber) son encriptados
  * automáticamente por el repositorio antes de guardarse en la base de datos (AES-256-CBC).
  */
 const VALID_CIVIL_STATUSES = ['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Union Libre'];
@@ -26,14 +34,16 @@ export class EmployeeService {
     if (employeeData.tenantId) {
       const tenant = await prisma.tenant.findUnique({
         where: { id: employeeData.tenantId },
-        select: { maxEmployees: true, name: true, plan: true }
+        select: { maxEmployees: true, name: true, plan: true },
       });
       if (tenant) {
         const currentCount = await prisma.employee.count({
-          where: { tenantId: employeeData.tenantId, isActive: true }
+          where: { tenantId: employeeData.tenantId, isActive: true },
         });
         if (currentCount >= tenant.maxEmployees) {
-          throw new Error(`Has alcanzado el límite máximo de empleados activos (${tenant.maxEmployees}) para el plan ${tenant.plan} de '${tenant.name}'. Contacta con administración para ampliar tu plan.`);
+          throw new Error(
+            `Has alcanzado el límite máximo de empleados activos (${tenant.maxEmployees}) para el plan ${tenant.plan} de '${tenant.name}'. Contacta con administración para ampliar tu plan.`
+          );
         }
       }
     }
@@ -45,7 +55,9 @@ export class EmployeeService {
     }
 
     // Verificar que la cédula sea única
-    const existingIdentityCard = await employeeRepository.findByIdentityCard(employeeData.identityCard);
+    const existingIdentityCard = await employeeRepository.findByIdentityCard(
+      employeeData.identityCard
+    );
     if (existingIdentityCard) {
       throw new Error('La cédula ya está registrada');
     }
@@ -53,13 +65,19 @@ export class EmployeeService {
     const employee = await employeeRepository.create(employeeData);
 
     // Audit logging (Non-blocking)
-    auditRepository.createLog({
-      entity: 'Employee',
-      entityId: employee.id,
-      action: 'CREATE',
-      performedBy: 'System', // Often triggered by admin or recruitment
-      details: { firstName: employee.firstName, lastName: employee.lastName, department: employee.department }
-    }).catch(err => console.error('Error logging employee creation:', err));
+    auditRepository
+      .createLog({
+        entity: 'Employee',
+        entityId: employee.id,
+        action: 'CREATE',
+        performedBy: 'System', // Often triggered by admin or recruitment
+        details: {
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          department: employee.department,
+        },
+      })
+      .catch((err) => console.error('Error logging employee creation:', err));
 
     return employee;
   }
@@ -83,7 +101,7 @@ export class EmployeeService {
         id: user.id || 'system-admin',
         firstName: user.firstName || user.name || 'Usuario',
         lastName: user.lastName || 'Administrador',
-        email: user.email || 'admin@emplifi.com',
+        email: user.email || 'admin@normaerp.com',
         department: 'Administración',
         position: user.role || 'Administrador',
         role: user.role || 'admin',
@@ -94,7 +112,7 @@ export class EmployeeService {
         contracts: [],
         documents: [],
         skills: [],
-        workHistory: []
+        workHistory: [],
       };
     }
 
@@ -179,7 +197,7 @@ export class EmployeeService {
 
     // Calcular cambios para auditoría
     const changes = {};
-    Object.keys(updateData).forEach(key => {
+    Object.keys(updateData).forEach((key) => {
       if (JSON.stringify(updateData[key]) !== JSON.stringify(oldData[key])) {
         // Don't log sensitive salary if not needed, or log encrypted/masked?
         // Requirement says "Cambios de salario registrados en historial"
@@ -189,13 +207,15 @@ export class EmployeeService {
 
     // Audit logging (Non-blocking: No await)
     if (userId && Object.keys(changes).length > 0) {
-      auditRepository.createLog({
-        entity: 'Employee',
-        entityId: id,
-        action: 'UPDATE',
-        performedBy: userId,
-        details: changes
-      }).catch(err => console.error('Error logging employee update:', err));
+      auditRepository
+        .createLog({
+          entity: 'Employee',
+          entityId: id,
+          action: 'UPDATE',
+          performedBy: userId,
+          details: changes,
+        })
+        .catch((err) => console.error('Error logging employee update:', err));
     }
 
     return updatedEmployee;
@@ -213,13 +233,15 @@ export class EmployeeService {
     const deleted = await employeeRepository.delete(id);
 
     // Audit logging (Non-blocking)
-    auditRepository.createLog({
-      entity: 'Employee',
-      entityId: id,
-      action: 'DELETE',
-      performedBy: 'Admin',
-      details: `Deleted employee ${id}`
-    }).catch(err => console.error('Error logging employee deletion:', err));
+    auditRepository
+      .createLog({
+        entity: 'Employee',
+        entityId: id,
+        action: 'DELETE',
+        performedBy: 'Admin',
+        details: `Deleted employee ${id}`,
+      })
+      .catch((err) => console.error('Error logging employee deletion:', err));
 
     return deleted;
   }
@@ -245,9 +267,12 @@ export class EmployeeService {
 
     // 1. Reglas de contratación
     if (!isPartial) {
-      if (!firstName || typeof firstName !== 'string' || firstName.trim().length === 0) throw new Error('Nombre requerido y debe ser texto');
-      if (!lastName || typeof lastName !== 'string' || lastName.trim().length === 0) throw new Error('Apellido requerido y debe ser texto');
-      if (!email || typeof email !== 'string' || !this.isValidEmail(email)) throw new Error('Email inválido');
+      if (!firstName || typeof firstName !== 'string' || firstName.trim().length === 0)
+        throw new Error('Nombre requerido y debe ser texto');
+      if (!lastName || typeof lastName !== 'string' || lastName.trim().length === 0)
+        throw new Error('Apellido requerido y debe ser texto');
+      if (!email || typeof email !== 'string' || !this.isValidEmail(email))
+        throw new Error('Email inválido');
 
       // Validaciones de fechas
       if (!data.birthDate) throw new Error('Fecha de nacimiento requerida');
@@ -258,7 +283,8 @@ export class EmployeeService {
       const today = new Date();
 
       if (birthDate > today) throw new Error('La fecha de nacimiento no puede ser futura');
-      if (hireDate <= birthDate) throw new Error('La fecha de ingreso debe ser posterior a la fecha de nacimiento');
+      if (hireDate <= birthDate)
+        throw new Error('La fecha de ingreso debe ser posterior a la fecha de nacimiento');
       if (hireDate > today) throw new Error('La fecha de ingreso no puede ser futura');
 
       const ageAtHire = this.calculateAge(birthDate, hireDate);
@@ -266,7 +292,9 @@ export class EmployeeService {
 
       // "El empleado debe ser mayor de 18 años para poder ser contratado."
       if (ageAtHire < 18) {
-        throw new Error(`El empleado debe haber tenido al menos 18 años al momento de su contratación. Edad a esa fecha: ${ageAtHire} años.`);
+        throw new Error(
+          `El empleado debe haber tenido al menos 18 años al momento de su contratación. Edad a esa fecha: ${ageAtHire} años.`
+        );
       }
 
       if (ageToday < 18) {
@@ -274,7 +302,9 @@ export class EmployeeService {
       }
       // "La edad máxima para contratación será de 65 años..."
       if (ageToday > 65) {
-        throw new Error(`El empleado supera la edad máxima de contratación (65 años). Edad actual: ${ageToday} años.`);
+        throw new Error(
+          `El empleado supera la edad máxima de contratación (65 años). Edad actual: ${ageToday} años.`
+        );
       }
 
       // "Todo empleado debe contar con documentación de identidad válida..."
@@ -283,19 +313,25 @@ export class EmployeeService {
       }
 
       // 2. Reglas de cargos y puestos
-      if (!department || typeof department !== 'string' || department.trim().length === 0) throw new Error('Departamento requerido');
-      if (!position || typeof position !== 'string' || position.trim().length === 0) throw new Error('Puesto requerido');
+      if (!department || typeof department !== 'string' || department.trim().length === 0)
+        throw new Error('Departamento requerido');
+      if (!position || typeof position !== 'string' || position.trim().length === 0)
+        throw new Error('Puesto requerido');
 
       // "Para cargos de jefatura o supervisión..."
-      if (position.toLowerCase().includes('jefe') || position.toLowerCase().includes('supervisor')) {
+      if (
+        position.toLowerCase().includes('jefe') ||
+        position.toLowerCase().includes('supervisor')
+      ) {
         // TODO: Validar experiencia laboral previa (WorkHistory) > X años
       }
 
       // "Un cargo debe pertenecer obligatoriamente a un área o departamento."
-      // (Validado implícitamente al requerir ambos)    
+      // (Validado implícitamente al requerir ambos)
 
       // 3. Reglas salariales
-      if (salary === undefined || typeof salary !== 'number' || salary <= 0) throw new Error('Salario debe ser un número positivo');
+      if (salary === undefined || typeof salary !== 'number' || salary <= 0)
+        throw new Error('Salario debe ser un número positivo');
 
       // "El salario del empleado no puede ser menor al salario básico legal vigente."
       if (salary < 450) {
@@ -303,28 +339,50 @@ export class EmployeeService {
       }
 
       // Otras Validaciones (Address, Phone, Enums)
-      if (!data.address || typeof data.address !== 'string' || data.address.trim().length < 10) throw new Error('La dirección debe ser detallada (mínimo 10 caracteres)');
-      if (!data.phone || !/^\d{10}$/.test(data.phone)) throw new Error('El teléfono debe tener exactamente 10 dígitos numéricos');
+      if (!data.address || typeof data.address !== 'string' || data.address.trim().length < 10)
+        throw new Error('La dirección debe ser detallada (mínimo 10 caracteres)');
+      if (!data.phone || !/^\d{10}$/.test(data.phone))
+        throw new Error('El teléfono debe tener exactamente 10 dígitos numéricos');
 
-      if (!data.contractType || !VALID_CONTRACT_TYPES.includes(data.contractType)) throw new Error(`Tipo de contrato inválido. Valores permitidos: ${VALID_CONTRACT_TYPES.join(', ')}`);
-      if (!data.civilStatus || !VALID_CIVIL_STATUSES.includes(data.civilStatus)) throw new Error(`Estado civil inválido. Valores permitidos: ${VALID_CIVIL_STATUSES.join(', ')}`);
-
+      if (!data.contractType || !VALID_CONTRACT_TYPES.includes(data.contractType))
+        throw new Error(
+          `Tipo de contrato inválido. Valores permitidos: ${VALID_CONTRACT_TYPES.join(', ')}`
+        );
+      if (!data.civilStatus || !VALID_CIVIL_STATUSES.includes(data.civilStatus))
+        throw new Error(
+          `Estado civil inválido. Valores permitidos: ${VALID_CIVIL_STATUSES.join(', ')}`
+        );
     } else {
       // Validaciones parciales para actualizar
-      if (firstName !== undefined && (typeof firstName !== 'string' || firstName.trim().length === 0)) throw new Error('Nombre debe ser texto válido');
-      if (lastName !== undefined && (typeof lastName !== 'string' || lastName.trim().length === 0)) throw new Error('Apellido debe ser texto válido');
-      if (email !== undefined && (typeof email !== 'string' || !this.isValidEmail(email))) throw new Error('Email inválido');
-      if (department !== undefined && (typeof department !== 'string' || department.trim().length === 0)) throw new Error('Departamento debe ser texto válido');
-      if (position !== undefined && (typeof position !== 'string' || position.trim().length === 0)) throw new Error('Puesto debe ser texto válido');
+      if (
+        firstName !== undefined &&
+        (typeof firstName !== 'string' || firstName.trim().length === 0)
+      )
+        throw new Error('Nombre debe ser texto válido');
+      if (lastName !== undefined && (typeof lastName !== 'string' || lastName.trim().length === 0))
+        throw new Error('Apellido debe ser texto válido');
+      if (email !== undefined && (typeof email !== 'string' || !this.isValidEmail(email)))
+        throw new Error('Email inválido');
+      if (
+        department !== undefined &&
+        (typeof department !== 'string' || department.trim().length === 0)
+      )
+        throw new Error('Departamento debe ser texto válido');
+      if (position !== undefined && (typeof position !== 'string' || position.trim().length === 0))
+        throw new Error('Puesto debe ser texto válido');
 
       if (salary !== undefined) {
-        if (typeof salary !== 'number' || salary <= 0) throw new Error('Salario debe ser un número positivo');
-        if (salary < 450) throw new Error('El salario no puede ser inferior al salario básico unificado ($450)');
+        if (typeof salary !== 'number' || salary <= 0)
+          throw new Error('Salario debe ser un número positivo');
+        if (salary < 450)
+          throw new Error('El salario no puede ser inferior al salario básico unificado ($450)');
       }
 
       // Validate booleans if present
-      if (data.hasNightSurcharge !== undefined && typeof data.hasNightSurcharge !== 'boolean') throw new Error('Recargo nocturno debe ser booleano');
-      if (data.hasDoubleOvertime !== undefined && typeof data.hasDoubleOvertime !== 'boolean') throw new Error('Doble horas extras debe ser booleano');
+      if (data.hasNightSurcharge !== undefined && typeof data.hasNightSurcharge !== 'boolean')
+        throw new Error('Recargo nocturno debe ser booleano');
+      if (data.hasDoubleOvertime !== undefined && typeof data.hasDoubleOvertime !== 'boolean')
+        throw new Error('Doble horas extras debe ser booleano');
     }
   }
 
@@ -343,13 +401,13 @@ export class EmployeeService {
    * @param {string} id - ID del empleado
    * @returns {Promise<Array>} Historial de cambios
    */
-   async getEmployeeHistory(id) {
+  async getEmployeeHistory(id) {
     return await auditRepository.getLogsByEntityId(id);
   }
 
   /**
    * Calcular edad basada en fecha de nacimiento
-   * @param {Date} birthDate 
+   * @param {Date} birthDate
    * @param {Date} referenceDate - Fecha contra la cual comparar (por defecto hoy)
    * @returns {number} Edad en años
    */

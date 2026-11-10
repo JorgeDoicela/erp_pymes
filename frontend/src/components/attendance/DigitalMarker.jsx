@@ -17,888 +17,1084 @@ import { MdFingerprint } from 'react-icons/md';
 import Modal from '../common/Modal';
 
 const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
-    const storedUser = (() => {
-        try {
-            return JSON.parse(localStorage.getItem('user') || 'null');
-        } catch {
-            return null;
-        }
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  })();
+  const currentUser = user || storedUser;
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [employeeId, setEmployeeId] = useState(autoLoadUser ? currentUser?.id || '' : '');
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
+  const [consenting, setConsenting] = useState(false);
+  const [consentStatus, setConsentStatus] = useState(() => {
+    const freshUser = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('user') || 'null');
+      } catch {
+        return null;
+      }
     })();
-    const currentUser = user || storedUser;
+    return Boolean(freshUser?.trackingConsent ?? currentUser?.trackingConsent);
+  });
 
-    const [currentTime, setCurrentTime] = useState(new Date());
-    const [employeeId, setEmployeeId] = useState(autoLoadUser ? (currentUser?.id || '') : '');
-    const [status, setStatus] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [showConsent, setShowConsent] = useState(false);
-    const [consenting, setConsenting] = useState(false);
-    const [consentStatus, setConsentStatus] = useState(() => {
-        const freshUser = (() => {
-            try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
-        })();
-        return Boolean(freshUser?.trackingConsent ?? currentUser?.trackingConsent);
-    });
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [foundEmployee, setFoundEmployee] = useState(null);
+  const [recordData, setRecordData] = useState(null);
 
-    const [message, setMessage] = useState({ type: '', text: '' });
-    const [foundEmployee, setFoundEmployee] = useState(null);
-    const [recordData, setRecordData] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // 'ENTRY' or 'EXIT'
 
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [pendingAction, setPendingAction] = useState(null); // 'ENTRY' or 'EXIT'
+  const handleAcceptConsent = async () => {
+    setConsenting(true);
+    try {
+      await updateConsentTracking(true);
 
-    const handleAcceptConsent = async () => {
-        setConsenting(true);
+      // Actualizar localStorage y disparar evento global para actualizar App.jsx
+      const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      savedUser.trackingConsent = true;
+      localStorage.setItem('user', JSON.stringify(savedUser));
+      setConsentStatus(true);
+      setShowConsent(false);
+      window.dispatchEvent(new Event('norma:user-updated'));
+      window.dispatchEvent(new Event('emplifi:user-updated'));
+
+      setMessage({ type: 'success', text: 'Consentimiento registrado correctamente.' });
+    } catch (err) {
+      setMessage({
+        type: 'error',
+        text: err?.message || 'No se pudo registrar el consentimiento.',
+      });
+    } finally {
+      setConsenting(false);
+    }
+  };
+
+  const handleRejectConsent = async () => {
+    setConsenting(true);
+    try {
+      await updateConsentTracking(false);
+
+      const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      savedUser.trackingConsent = false;
+      localStorage.setItem('user', JSON.stringify(savedUser));
+      setConsentStatus(false);
+      setShowConsent(false);
+      window.dispatchEvent(new Event('norma:user-updated'));
+      window.dispatchEvent(new Event('emplifi:user-updated'));
+
+      setMessage({
+        type: 'info',
+        text: 'Consentimiento retirado. No podrá marcar asistencia sin aceptar los términos.',
+      });
+    } catch (err) {
+      setMessage({ type: 'error', text: err?.message || 'Error al procesar la solicitud.' });
+    } finally {
+      setConsenting(false);
+    }
+  };
+
+  // Biometric
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricSupported, setBiometricSupported] = useState(false);
+  const [hasBiometricRegistered, setHasBiometricRegistered] = useState(null);
+  const [registeringBiometric, setRegisteringBiometric] = useState(false);
+
+  // Update clock every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch status on mount if autoLoadUser is true and user exists
+  useEffect(() => {
+    if (autoLoadUser && currentUser?.id) {
+      setEmployeeId(currentUser.id);
+      checkStatus(currentUser.id);
+
+      const freshUser = (() => {
         try {
-            await updateConsentTracking(true);
-
-            // Actualizar localStorage y disparar evento global para actualizar App.jsx
-            const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
-            savedUser.trackingConsent = true;
-            localStorage.setItem('user', JSON.stringify(savedUser));
-            setConsentStatus(true);
-            setShowConsent(false);
-            window.dispatchEvent(new Event('emplifi:user-updated'));
-
-            setMessage({ type: 'success', text: 'Consentimiento registrado correctamente.' });
-        } catch (err) {
-            setMessage({ type: 'error', text: err?.message || 'No se pudo registrar el consentimiento.' });
-        } finally {
-            setConsenting(false);
+          return JSON.parse(localStorage.getItem('user') || 'null');
+        } catch {
+          return null;
         }
+      })();
+      const hasConsent = freshUser?.trackingConsent ?? currentUser?.trackingConsent;
+
+      if (hasConsent === false) {
+        setShowConsent(true);
+      } else if (hasConsent === true) {
+        setShowConsent(false);
+        setConsentStatus(true);
+      }
+    }
+  }, [user, autoLoadUser]);
+
+  // Fetch biometric setting on mount
+  useEffect(() => {
+    const fetchBiometricSetting = async () => {
+      try {
+        const res = await systemService.getBiometricSetting();
+        setBiometricEnabled(res.biometricEnabled ?? false);
+      } catch {
+        setBiometricEnabled(false);
+      }
     };
+    fetchBiometricSetting();
 
-    const handleRejectConsent = async () => {
-        setConsenting(true);
-        try {
-            await updateConsentTracking(false);
-
-            const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
-            savedUser.trackingConsent = false;
-            localStorage.setItem('user', JSON.stringify(savedUser));
-            setConsentStatus(false);
-            setShowConsent(false);
-            window.dispatchEvent(new Event('emplifi:user-updated'));
-
-            setMessage({ type: 'info', text: 'Consentimiento retirado. No podrá marcar asistencia sin aceptar los términos.' });
-        } catch (err) {
-            setMessage({ type: 'error', text: err?.message || 'Error al procesar la solicitud.' });
-        } finally {
-            setConsenting(false);
-        }
-    };
-
-    // Biometric
-    const [biometricEnabled, setBiometricEnabled] = useState(false);
-    const [biometricSupported, setBiometricSupported] = useState(false);
-    const [hasBiometricRegistered, setHasBiometricRegistered] = useState(null);
-    const [registeringBiometric, setRegisteringBiometric] = useState(false);
-
-    // Update clock every second
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    // Fetch status on mount if autoLoadUser is true and user exists
-    useEffect(() => {
-        if (autoLoadUser && currentUser?.id) {
-            setEmployeeId(currentUser.id);
-            checkStatus(currentUser.id);
-
-            const freshUser = (() => {
-                try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
-            })();
-            const hasConsent = freshUser?.trackingConsent ?? currentUser?.trackingConsent;
-
-            if (hasConsent === false) {
-                setShowConsent(true);
-            } else if (hasConsent === true) {
-                setShowConsent(false);
-                setConsentStatus(true);
-            }
-        }
-    }, [user, autoLoadUser]);
-
-    // Fetch biometric setting on mount
-    useEffect(() => {
-        const fetchBiometricSetting = async () => {
-            try {
-                const res = await systemService.getBiometricSetting();
-                setBiometricEnabled(res.biometricEnabled ?? false);
-            } catch {
-                setBiometricEnabled(false);
-            }
-        };
-        fetchBiometricSetting();
-
-        const fetchBiometricStatus = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) return;
-                const res = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/status`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (res.data) {
-                    setHasBiometricRegistered(Boolean(res.data.isRegistered));
-                }
-            } catch {
-                // Silently catch
-            }
-        };
-        fetchBiometricStatus();
-
-        // Check if device has ANY user-verifying platform authenticator
-        // (fingerprint, face ID, PIN, password, pattern — anything the OS security system offers)
-        const checkSupport = async () => {
-            try {
-                if (
-                    typeof window !== 'undefined' &&
-                    window.PublicKeyCredential &&
-                    typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
-                ) {
-                    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-                    setBiometricSupported(available);
-                } else {
-                    setBiometricSupported(false);
-                }
-            } catch {
-                setBiometricSupported(false);
-            }
-        };
-        checkSupport();
-    }, []);
-
-    const handleQuickRegisterBiometric = async () => {
-        setRegisteringBiometric(true);
-        setMessage({ type: 'info', text: 'Preparando lector biométrico / Windows Hello...' });
-        try {
-            const token = localStorage.getItem('token');
-            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-            const optionsRes = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/register/options`, config);
-            const options = optionsRes.data;
-
-            setMessage({ type: 'info', text: 'Por favor, coloque su huella o confirme con su sensor en pantalla...' });
-
-            const { startRegistration } = await import('@simplewebauthn/browser');
-            const regResp = await startRegistration({ optionsJSON: options });
-
-            const verifyRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/register/verify`, regResp, config);
-
-            if (verifyRes.data.verified) {
-                setHasBiometricRegistered(true);
-                setMessage({ type: 'success', text: '¡Biometría registrada exitosamente! Ya puedes registrar tu asistencia.' });
-                if (employeeId) checkStatus(employeeId);
-            } else {
-                setMessage({ type: 'error', text: 'No se pudo verificar la credencial biométrica.' });
-            }
-        } catch (err) {
-            console.error('Quick Biometric Reg Error:', err);
-            let msg = err.response?.data?.message || err.message || 'Error al registrar biometría.';
-            if (err.name === 'NotAllowedError') {
-                msg = 'La operación fue cancelada por el usuario o expiró el tiempo de espera del lector biométrico.';
-            } else if (err.name === 'InvalidStateError') {
-                msg = 'Esta credencial biométrica ya se encuentra registrada en este dispositivo.';
-                setHasBiometricRegistered(true);
-            } else if (err.name === 'NotSupportedError') {
-                msg = 'Este navegador o dispositivo no soporta autenticación biométrica WebAuthn.';
-            }
-            setMessage({ type: 'error', text: msg });
-        } finally {
-            setRegisteringBiometric(false);
-        }
-    };
-
-    const checkStatus = async (id = employeeId) => {
-        const cleanId = id?.toString().trim();
-        if (!cleanId) return;
-        setLoading(true);
-        setMessage({ type: '', text: '' });
-        try {
-            const res = await attendanceService.getStatus(cleanId);
-            if (res.success) {
-                setStatus(res.data.status);
-                if (res.data) {
-                    setRecordData(res.data);
-                }
-                if (res.data.employee) {
-                    setFoundEmployee(res.data.employee);
-                    setEmployeeId(res.data.employee.id);
-                    if (res.data.employee.hasBiometric !== undefined) {
-                        setHasBiometricRegistered(Boolean(res.data.employee.hasBiometric));
-                    }
-                    if (res.data.employee.trackingConsent !== undefined) {
-                        const hasConsent = Boolean(res.data.employee.trackingConsent);
-                        setConsentStatus(hasConsent);
-                        if (hasConsent) {
-                            setShowConsent(false);
-                            const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
-                            if (savedUser && !savedUser.trackingConsent) {
-                                savedUser.trackingConsent = true;
-                                localStorage.setItem('user', JSON.stringify(savedUser));
-                                window.dispatchEvent(new Event('emplifi:user-updated'));
-                            }
-                        }
-                    }
-                }
-            } else {
-                const errMsg = res.message || res.error || 'Empleado no encontrado. Verifique la cédula ingresada.';
-                setMessage({ type: 'error', text: errMsg });
-            }
-        } catch (err) {
-            setMessage({ type: 'error', text: err?.message || 'Error al buscar empleado.' });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    const [entryLocationName, setEntryLocationName] = useState(null);
-    const [exitLocationName, setExitLocationName] = useState(null);
-
-    // Effect to reverse geocode locations for Entry, Lunch and Exit
-    useEffect(() => {
-        const fetchLocationNames = async () => {
-            if (recordData?.entryLocation && !entryLocationName) {
-                try {
-                    const { lat, lng } = recordData.entryLocation;
-                    const data = await systemService.reverseGeocode(lat, lng);
-                    if (data && data.display_name) {
-                        const name = data.display_name.split(',').slice(0, 3).join(',');
-                        setEntryLocationName(name);
-                    }
-                } catch (error) {
-                    console.error("Error reverse geocoding entry coordinates:", error);
-                }
-            }
-
-            if (recordData?.exitLocation && !exitLocationName) {
-                if (
-                    recordData.entryLocation &&
-                    recordData.exitLocation.lat === recordData.entryLocation.lat &&
-                    recordData.exitLocation.lng === recordData.entryLocation.lng
-                ) {
-                    if (entryLocationName) {
-                        setExitLocationName(entryLocationName);
-                    }
-                } else {
-                    try {
-                        const { lat, lng } = recordData.exitLocation;
-                        const data = await systemService.reverseGeocode(lat, lng);
-                        if (data && data.display_name) {
-                            const name = data.display_name.split(',').slice(0, 3).join(',');
-                            setExitLocationName(name);
-                        }
-                    } catch (error) {
-                        console.error("Error reverse geocoding exit coordinates:", error);
-                    }
-                }
-            }
-        };
-        fetchLocationNames();
-    }, [recordData, entryLocationName, exitLocationName]);
-
-    const getLocation = () => {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-                reject(new Error('Geolocalización no soportada por su navegador'));
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    resolve({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    });
-                },
-                (error) => {
-                    let msg = 'Error obteniendo ubicación';
-                    if (error.code === error.PERMISSION_DENIED) msg = 'Permiso de ubicación denegado';
-                    else if (error.code === error.POSITION_UNAVAILABLE) msg = 'Ubicación no disponible';
-                    else if (error.code === error.TIMEOUT) msg = 'Tiempo de espera agotado al obtener ubicación';
-                    reject(new Error(msg));
-                },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-            );
+    const fetchBiometricStatus = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/status`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-    };
-
-    const triggerBiometric = async () => {
-        if (!biometricSupported) {
-            return {
-                passed: false,
-                reason: 'Este dispositivo no tiene seguridad configurada.'
-            };
+        if (res.data) {
+          setHasBiometricRegistered(Boolean(res.data.isRegistered));
         }
+      } catch {
+        // Silently catch
+      }
+    };
+    fetchBiometricStatus();
 
+    // Check if device has ANY user-verifying platform authenticator
+    // (fingerprint, face ID, PIN, password, pattern — anything the OS security system offers)
+    const checkSupport = async () => {
+      try {
+        if (
+          typeof window !== 'undefined' &&
+          window.PublicKeyCredential &&
+          typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
+        ) {
+          const available =
+            await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          setBiometricSupported(available);
+        } else {
+          setBiometricSupported(false);
+        }
+      } catch {
+        setBiometricSupported(false);
+      }
+    };
+    checkSupport();
+  }, []);
+
+  const handleQuickRegisterBiometric = async () => {
+    setRegisteringBiometric(true);
+    setMessage({ type: 'info', text: 'Preparando lector biométrico / Windows Hello...' });
+    try {
+      const token = localStorage.getItem('token');
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
+      const optionsRes = await axios.get(
+        `${import.meta.env.VITE_API_URL || '/api'}/biometric/register/options`,
+        config
+      );
+      const options = optionsRes.data;
+
+      setMessage({
+        type: 'info',
+        text: 'Por favor, coloque su huella o confirme con su sensor en pantalla...',
+      });
+
+      const { startRegistration } = await import('@simplewebauthn/browser');
+      const regResp = await startRegistration({ optionsJSON: options });
+
+      const verifyRes = await axios.post(
+        `${import.meta.env.VITE_API_URL || '/api'}/biometric/register/verify`,
+        regResp,
+        config
+      );
+
+      if (verifyRes.data.verified) {
+        setHasBiometricRegistered(true);
+        setMessage({
+          type: 'success',
+          text: '¡Biometría registrada exitosamente! Ya puedes registrar tu asistencia.',
+        });
+        if (employeeId) checkStatus(employeeId);
+      } else {
+        setMessage({ type: 'error', text: 'No se pudo verificar la credencial biométrica.' });
+      }
+    } catch (err) {
+      console.error('Quick Biometric Reg Error:', err);
+      let msg = err.response?.data?.message || err.message || 'Error al registrar biometría.';
+      if (err.name === 'NotAllowedError') {
+        msg =
+          'La operación fue cancelada por el usuario o expiró el tiempo de espera del lector biométrico.';
+      } else if (err.name === 'InvalidStateError') {
+        msg = 'Esta credencial biométrica ya se encuentra registrada en este dispositivo.';
+        setHasBiometricRegistered(true);
+      } else if (err.name === 'NotSupportedError') {
+        msg = 'Este navegador o dispositivo no soporta autenticación biométrica WebAuthn.';
+      }
+      setMessage({ type: 'error', text: msg });
+    } finally {
+      setRegisteringBiometric(false);
+    }
+  };
+
+  const checkStatus = async (id = employeeId) => {
+    const cleanId = id?.toString().trim();
+    if (!cleanId) return;
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const res = await attendanceService.getStatus(cleanId);
+      if (res.success) {
+        setStatus(res.data.status);
+        if (res.data) {
+          setRecordData(res.data);
+        }
+        if (res.data.employee) {
+          setFoundEmployee(res.data.employee);
+          setEmployeeId(res.data.employee.id);
+          if (res.data.employee.hasBiometric !== undefined) {
+            setHasBiometricRegistered(Boolean(res.data.employee.hasBiometric));
+          }
+          if (res.data.employee.trackingConsent !== undefined) {
+            const hasConsent = Boolean(res.data.employee.trackingConsent);
+            setConsentStatus(hasConsent);
+            if (hasConsent) {
+              setShowConsent(false);
+              const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+              if (savedUser && !savedUser.trackingConsent) {
+                savedUser.trackingConsent = true;
+                localStorage.setItem('user', JSON.stringify(savedUser));
+                window.dispatchEvent(new Event('norma:user-updated'));
+                window.dispatchEvent(new Event('emplifi:user-updated'));
+              }
+            }
+          }
+        }
+      } else {
+        const errMsg =
+          res.message || res.error || 'Empleado no encontrado. Verifique la cédula ingresada.';
+        setMessage({ type: 'error', text: errMsg });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: err?.message || 'Error al buscar empleado.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const [entryLocationName, setEntryLocationName] = useState(null);
+  const [exitLocationName, setExitLocationName] = useState(null);
+
+  // Effect to reverse geocode locations for Entry, Lunch and Exit
+  useEffect(() => {
+    const fetchLocationNames = async () => {
+      if (recordData?.entryLocation && !entryLocationName) {
         try {
-            // El usuario que valida con su huella/FaceID es la persona autenticada en el dispositivo (ej. Administrador/Supervisor)
-            const biometricUserId = currentUser?.id || foundEmployee?.id || employeeId;
-            // 1. Obtener opciones del servidor para la persona presente en el dispositivo
-            const optionsRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/login/options`, {
-                employeeId: biometricUserId
-            });
-
-            const options = optionsRes.data;
-
-            // 2. Ejecutar WebAuthn en el navegador
-            const { startAuthentication } = await import('@simplewebauthn/browser');
-
-            // Separar metadatos internos de las opciones de WebAuthn
-            const { internalUserId, ...webauthnOptions } = options;
-            const asseResp = await startAuthentication({ optionsJSON: webauthnOptions });
-
-            // 3. Verificar en el servidor
-            const verifyRes = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/biometric/login/verify`, {
-                body: asseResp,
-                internalUserId: options.internalUserId
-            });
-
-            if (verifyRes.data.verified) {
-                return { passed: true };
-            } else {
-                return { passed: false, reason: 'Error de verificación biométrica.' };
-            }
-        } catch (err) {
-            console.error('Biometric Auth Error:', err);
-            const data = err.response?.data;
-            if (data?.requiresReRegistration) {
-                return {
-                    passed: false,
-                    reason: data.message || 'Tu biometría ha cambiado. Ve a tu perfil y vuelve a configurar tu huella para continuar.'
-                };
-            }
-            const msg = data?.message || 'Error al verificar identidad.';
-            return { passed: false, reason: msg };
+          const { lat, lng } = recordData.entryLocation;
+          const data = await systemService.reverseGeocode(lat, lng);
+          if (data && data.display_name) {
+            const name = data.display_name.split(',').slice(0, 3).join(',');
+            setEntryLocationName(name);
+          }
+        } catch (error) {
+          console.error('Error reverse geocoding entry coordinates:', error);
         }
+      }
+
+      if (recordData?.exitLocation && !exitLocationName) {
+        if (
+          recordData.entryLocation &&
+          recordData.exitLocation.lat === recordData.entryLocation.lat &&
+          recordData.exitLocation.lng === recordData.entryLocation.lng
+        ) {
+          if (entryLocationName) {
+            setExitLocationName(entryLocationName);
+          }
+        } else {
+          try {
+            const { lat, lng } = recordData.exitLocation;
+            const data = await systemService.reverseGeocode(lat, lng);
+            if (data && data.display_name) {
+              const name = data.display_name.split(',').slice(0, 3).join(',');
+              setExitLocationName(name);
+            }
+          } catch (error) {
+            console.error('Error reverse geocoding exit coordinates:', error);
+          }
+        }
+      }
     };
+    fetchLocationNames();
+  }, [recordData, entryLocationName, exitLocationName]);
 
-    const isAdminOrSuperAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin' || currentUser?.email === 'admin@emplifi.com';
-    const isSuperAdmin = currentUser?.role === 'superadmin' || currentUser?.email === 'admin@emplifi.com';
+  const getLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocalización no soportada por su navegador'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          let msg = 'Error obteniendo ubicación';
+          if (error.code === error.PERMISSION_DENIED) msg = 'Permiso de ubicación denegado';
+          else if (error.code === error.POSITION_UNAVAILABLE) msg = 'Ubicación no disponible';
+          else if (error.code === error.TIMEOUT)
+            msg = 'Tiempo de espera agotado al obtener ubicación';
+          reject(new Error(msg));
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    });
+  };
 
-    const initiateMark = (type) => {
-        if (isSuperAdmin && !foundEmployee) {
-            setMessage({
-                type: 'error',
-                text: 'Modo Supervisión: El SuperAdministrador debe buscar la cédula del empleado para registrar su asistencia.'
-            });
-            return;
+  const triggerBiometric = async () => {
+    if (!biometricSupported) {
+      return {
+        passed: false,
+        reason: 'Este dispositivo no tiene seguridad configurada.',
+      };
+    }
+
+    try {
+      // El usuario que valida con su huella/FaceID es la persona autenticada en el dispositivo (ej. Administrador/Supervisor)
+      const biometricUserId = currentUser?.id || foundEmployee?.id || employeeId;
+      // 1. Obtener opciones del servidor para la persona presente en el dispositivo
+      const optionsRes = await axios.post(
+        `${import.meta.env.VITE_API_URL || '/api'}/biometric/login/options`,
+        {
+          employeeId: biometricUserId,
         }
-        if (biometricEnabled && hasBiometricRegistered === false) {
-            setMessage({
-                type: 'error',
-                text: 'Por favor vincula tu huella dactilar o FaceID en este dispositivo para continuar con el registro.'
-            });
-            return;
+      );
+
+      const options = optionsRes.data;
+
+      // 2. Ejecutar WebAuthn en el navegador
+      const { startAuthentication } = await import('@simplewebauthn/browser');
+
+      // Separar metadatos internos de las opciones de WebAuthn
+      const { internalUserId, ...webauthnOptions } = options;
+      const asseResp = await startAuthentication({ optionsJSON: webauthnOptions });
+
+      // 3. Verificar en el servidor
+      const verifyRes = await axios.post(
+        `${import.meta.env.VITE_API_URL || '/api'}/biometric/login/verify`,
+        {
+          body: asseResp,
+          internalUserId: options.internalUserId,
         }
-        setPendingAction(type);
-        setShowConfirm(true);
-    };
+      );
 
-    const confirmMark = async () => {
-        setShowConfirm(false);
-        if (!pendingAction) return;
+      if (verifyRes.data.verified) {
+        return { passed: true };
+      } else {
+        return { passed: false, reason: 'Error de verificación biométrica.' };
+      }
+    } catch (err) {
+      console.error('Biometric Auth Error:', err);
+      const data = err.response?.data;
+      if (data?.requiresReRegistration) {
+        return {
+          passed: false,
+          reason:
+            data.message ||
+            'Tu biometría ha cambiado. Ve a tu perfil y vuelve a configurar tu huella para continuar.',
+        };
+      }
+      const msg = data?.message || 'Error al verificar identidad.';
+      return { passed: false, reason: msg };
+    }
+  };
 
-        // If biometric is enabled, it is MANDATORY — no fallback
-        if (biometricEnabled) {
-            setMessage({ type: 'info', text: 'Verificando identidad biométrica...' });
-            const result = await triggerBiometric();
-            if (!result.passed) {
-                setMessage({ type: 'error', text: result.reason });
-                setPendingAction(null);
-                return;
-            }
-            setMessage({ type: '', text: '' });
-        }
+  const isAdminOrSuperAdmin =
+    currentUser?.role === 'admin' ||
+    currentUser?.role === 'superadmin' ||
+    currentUser?.email === 'admin@normaerp.com' ||
+    currentUser?.email === 'admin@emplifi.com';
+  const isSuperAdmin =
+    currentUser?.role === 'superadmin' ||
+    currentUser?.email === 'admin@normaerp.com' ||
+    currentUser?.email === 'admin@emplifi.com';
 
-        await handleMark(pendingAction);
+  const initiateMark = (type) => {
+    if (isSuperAdmin && !foundEmployee) {
+      setMessage({
+        type: 'error',
+        text: 'Modo Supervisión: El SuperAdministrador debe buscar la cédula del empleado para registrar su asistencia.',
+      });
+      return;
+    }
+    if (biometricEnabled && hasBiometricRegistered === false) {
+      setMessage({
+        type: 'error',
+        text: 'Por favor vincula tu huella dactilar o FaceID en este dispositivo para continuar con el registro.',
+      });
+      return;
+    }
+    setPendingAction(type);
+    setShowConfirm(true);
+  };
+
+  const confirmMark = async () => {
+    setShowConfirm(false);
+    if (!pendingAction) return;
+
+    // If biometric is enabled, it is MANDATORY — no fallback
+    if (biometricEnabled) {
+      setMessage({ type: 'info', text: 'Verificando identidad biométrica...' });
+      const result = await triggerBiometric();
+      if (!result.passed) {
+        setMessage({ type: 'error', text: result.reason });
         setPendingAction(null);
-    };
+        return;
+      }
+      setMessage({ type: '', text: '' });
+    }
 
-    const handleMark = async (type) => {
-        const targetId = foundEmployee?.id || currentUser?.id || employeeId;
+    await handleMark(pendingAction);
+    setPendingAction(null);
+  };
 
-        if (!targetId) {
-            setMessage({ type: 'error', text: 'Por favor ingrese su ID de empleado.' });
-            return;
+  const handleMark = async (type) => {
+    const targetId = foundEmployee?.id || currentUser?.id || employeeId;
+
+    if (!targetId) {
+      setMessage({ type: 'error', text: 'Por favor ingrese su ID de empleado.' });
+      return;
+    }
+    setLoading(true);
+    setMessage({ type: 'info', text: 'Obteniendo ubicación...' });
+
+    let location = null;
+    try {
+      location = await getLocation();
+    } catch (locError) {
+      console.warn('Location error:', locError);
+      setMessage({
+        type: 'error',
+        text: `Error de Ubicación: ${locError.message}. Se requiere GPS activado.`,
+      });
+      setLoading(false);
+      return;
+    }
+
+    setMessage({ type: '', text: '' });
+    try {
+      const res = await attendanceService.markAttendance(targetId, type, location);
+      if (res.success) {
+        setMessage({
+          type: 'success',
+          text: res.message + (res.workedHours ? ` (${res.workedHours} hrs)` : ''),
+        });
+        await checkStatus(targetId);
+      } else {
+        let errorMsg = res.message || 'Error al registrar asistencia.';
+        if (errorMsg.includes('Ubicación no permitida') && location) {
+          errorMsg += ` (Tus coordenadas: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)})`;
+          setMessage({
+            type: 'error',
+            text: errorMsg,
+            showMapLink: true,
+            lastCoords: location,
+          });
+        } else {
+          setMessage({ type: 'error', text: errorMsg });
         }
-        setLoading(true);
-        setMessage({ type: 'info', text: 'Obteniendo ubicación...' });
+      }
+    } catch (err) {
+      setMessage({
+        type: 'error',
+        text: err?.message || 'Error inesperado al registrar asistencia.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        let location = null;
-        try {
-            location = await getLocation();
-        } catch (locError) {
-            console.warn("Location error:", locError);
-            setMessage({ type: 'error', text: `Error de Ubicación: ${locError.message}. Se requiere GPS activado.` });
-            setLoading(false);
-            return;
-        }
-
-        setMessage({ type: '', text: '' });
-        try {
-            const res = await attendanceService.markAttendance(targetId, type, location);
-            if (res.success) {
-                setMessage({ type: 'success', text: res.message + (res.workedHours ? ` (${res.workedHours} hrs)` : '') });
-                await checkStatus(targetId);
-            } else {
-                let errorMsg = res.message || 'Error al registrar asistencia.';
-                if (errorMsg.includes('Ubicación no permitida') && location) {
-                    errorMsg += ` (Tus coordenadas: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)})`;
-                    setMessage({
-                        type: 'error',
-                        text: errorMsg,
-                        showMapLink: true,
-                        lastCoords: location
-                    });
-                } else {
-                    setMessage({ type: 'error', text: errorMsg });
-                }
-            }
-        } catch (err) {
-            setMessage({ type: 'error', text: err?.message || 'Error inesperado al registrar asistencia.' });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="flex flex-col items-center justify-center w-full bg-white border border-gray-200 text-gray-900 p-6 sm:p-8 rounded">
-            {/* Clock */}
-            <div className="mb-6 text-center">
-                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Marcador Digital de Jornada</div>
-                <div className="text-4xl sm:text-5xl font-bold font-mono tracking-tight text-gray-900 tabular-nums">
-                    {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                </div>
-                <div className="text-gray-500 mt-1 text-xs">
-                    {currentTime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                </div>
-                {/* Biometric badge */}
-                {biometricEnabled && (
-                    <div className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium border ${
-                        hasBiometricRegistered === false
-                            ? 'bg-blue-50 text-blue-800 border-blue-200'
-                            : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                    }`}>
-                        <MdFingerprint className={`w-3.5 h-3.5 ${hasBiometricRegistered === false ? 'text-blue-600' : 'text-emerald-600'}`} />
-                        <span>
-                            {hasBiometricRegistered === false
-                                ? 'Autenticación Biométrica (Sin vincular en este equipo)'
-                                : 'Verificación biométrica activa'}
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            {/* Buscador de Empleado (Público o Modo Administrador) */}
-            {allowSearch && (!user || isAdminOrSuperAdmin) && (
-                <div className="w-full mb-6 relative max-w-md mx-auto">
-                    {!foundEmployee ? (
-                        <>
-                            <label className="block text-xs font-medium text-gray-600 mb-1 text-center">
-                                {isAdminOrSuperAdmin ? 'Buscar Empleado por Número de Cédula' : 'Número de Cédula'}
-                            </label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={employeeId}
-                                    onChange={(e) => setEmployeeId(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') checkStatus(); }}
-                                    placeholder="Ingrese número de cédula..."
-                                    className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 text-center font-mono"
-                                />
-                                <button
-                                    onClick={() => checkStatus()}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
-                                >
-                                    Buscar
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="bg-gray-50 rounded p-3 border border-gray-200 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded bg-gray-200 text-gray-800 font-mono font-semibold text-xs flex items-center justify-center">
-                                    {foundEmployee.firstName[0]}
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-xs text-gray-900">{foundEmployee.firstName} {foundEmployee.lastName}</h3>
-                                    <p className="text-[11px] text-gray-500">{foundEmployee.position} • {foundEmployee.department}</p>
-                                </div>
-                            </div>
-                            {allowSearch && (
-                                <button
-                                    onClick={() => { setFoundEmployee(null); setEmployeeId(''); setStatus(null); setMessage({ type: '', text: '' }); }}
-                                    className="text-gray-600 hover:text-gray-900 px-2.5 py-1 bg-white border border-gray-200 rounded text-xs transition-colors cursor-pointer"
-                                >
-                                    Cambiar
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Banner de Registro Biométrico In-Situ */}
-            {biometricEnabled && hasBiometricRegistered === false && (
-                <div className="w-full max-w-md mb-5 p-4 bg-slate-50 border border-slate-200 rounded text-xs space-y-2.5 text-slate-800 shadow-xs">
-                    <div className="flex items-start gap-2.5">
-                        <div className="w-8 h-8 rounded bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0 mt-0.5 text-blue-700">
-                            <MdFingerprint className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-slate-900 text-xs">Acceso Biométrico Rápido y Seguro</p>
-                            <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                                Agiliza el registro de tu jornada utilizando la huella dactilar, FaceID o PIN seguro de tu dispositivo. Vincula tu credencial en un solo paso.
-                            </p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handleQuickRegisterBiometric}
-                        disabled={registeringBiometric}
-                        type="button"
-                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                    >
-                        {registeringBiometric ? (
-                            <span className="flex items-center gap-2">
-                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Esperando sensor biométrico del dispositivo...
-                            </span>
-                        ) : (
-                            <>
-                                <MdFingerprint className="w-4 h-4" />
-                                <span>Vincular Mi Huella / Passkey</span>
-                            </>
-                        )}
-                    </button>
-                </div>
-            )}
-
-            {/* Message */}
-            {message.text && (
-                <div className="w-full max-w-md mb-4">
-                    <div className={`px-3.5 py-2 rounded text-center text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : message.type === 'info' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
-                        {message.text}
-                    </div>
-
-                    {message.showMapLink && (
-                        <div className="mt-1.5 flex justify-center gap-3">
-                            <a
-                                href={`https://www.google.com/maps?q=${message.lastCoords.latitude},${message.lastCoords.longitude}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-[11px] text-blue-600 hover:underline flex items-center gap-1"
-                            >
-                                Ver ubicación en mapa (GPS)
-                            </a>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Confirmation Modal */}
-            <Modal
-                isOpen={showConfirm}
-                onClose={() => { setShowConfirm(false); setPendingAction(null); }}
-                title={`Confirmar ${
-                    pendingAction === 'ENTRY' ? 'Entrada' :
-                        pendingAction === 'EXIT' ? 'Salida' :
-                            pendingAction === 'BREAK_START' ? 'Inicio de Almuerzo' : 'Fin de Almuerzo'
-                }`}
-                size="sm"
-                footer={
-                    <div className="flex gap-2 justify-end">
-                        <button
-                            onClick={() => { setShowConfirm(false); setPendingAction(null); }}
-                            className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            onClick={confirmMark}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
-                        >
-                            Confirmar
-                        </button>
-                    </div>
-                }
-            >
-                <p className="text-xs text-gray-600">
-                    ¿Confirmas registrar tu {
-                        pendingAction === 'ENTRY' ? 'entrada' :
-                            pendingAction === 'EXIT' ? 'salida' :
-                                pendingAction === 'BREAK_START' ? 'inicio de almuerzo' : 'fin de almuerzo'
-                    } a las <strong className="text-gray-900 font-mono">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>?
-                </p>
-            </Modal>
-
-            {/* GPS Reminder */}
-            <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded border border-gray-200">
-                    <FiMapPin className="w-3 h-3 text-gray-500" />
-                    <span>GPS activo para validación</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded border border-gray-200">
-                    <FiShield className="w-3 h-3 text-gray-500" />
-                    <span>Protección VPN/Proxy activa</span>
-                </div>
-            </div>
-
-            {/* Buttons */}
-            <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-                {/* Entry Button */}
-                {(status === 'NOT_STARTED' || status === 'COMPLETED' || status === null) && (
-                    <button
-                        onClick={() => initiateMark('ENTRY')}
-                        disabled={loading || status === 'COMPLETED' || !consentStatus || (biometricEnabled && hasBiometricRegistered === false)}
-                        className={`
-                            col-span-2 py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer
-                            ${(status === 'COMPLETED' || !consentStatus || (biometricEnabled && hasBiometricRegistered === false))
-                                ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white'}
-                        `}
-                    >
-                        {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && <FiLock className="w-3.5 h-3.5" />}
-                        REGISTRAR ENTRADA
-                    </button>
-                )}
-
-                {/* Working Actions */}
-                {status === 'WORKING' && (
-                    <>
-                        {!recordData?.breakStart && (
-                            <button
-                                onClick={() => initiateMark('BREAK_START')}
-                                disabled={loading || !consentStatus || (biometricEnabled && hasBiometricRegistered === false)}
-                                className={`py-3 rounded font-semibold text-xs border transition-colors flex items-center justify-center gap-2 cursor-pointer ${(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                            >
-                                {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && <FiLock className="w-3.5 h-3.5" />}
-                                INICIAR ALMUERZO
-                            </button>
-                        )}
-                        <button
-                            onClick={() => initiateMark('EXIT')}
-                            disabled={loading || !consentStatus || (biometricEnabled && hasBiometricRegistered === false)}
-                            className={`py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' : 'bg-blue-600 hover:bg-blue-700 text-white'} ${!recordData?.breakStart ? '' : 'col-span-2'}`}
-                        >
-                            {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && <FiLock className="w-3.5 h-3.5" />}
-                            REGISTRAR SALIDA
-                        </button>
-                    </>
-                )}
-
-                {/* On Break Actions */}
-                {status === 'ON_BREAK' && (
-                    <button
-                        onClick={() => initiateMark('BREAK_END')}
-                        disabled={loading || (biometricEnabled && hasBiometricRegistered === false)}
-                        className={`col-span-2 py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${(biometricEnabled && hasBiometricRegistered === false) ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-                    >
-                        FINALIZAR ALMUERZO
-                    </button>
-                )}
-            </div>
-
-            {/* Status Footer */}
-            <div className="mt-6 flex flex-col items-center gap-3">
-                <span className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold tracking-wider uppercase border ${status === 'WORKING' ? 'bg-green-50 text-green-700 border-green-200' :
-                    status === 'COMPLETED' ? 'bg-gray-100 text-gray-700 border-gray-200' :
-                        status === 'ON_BREAK' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                            'bg-gray-50 text-gray-500 border-gray-200'
-                    }`}>
-                    {status === 'WORKING' ? 'Actualmente Trabajando' :
-                        status === 'ON_BREAK' ? 'En Hora de Almuerzo' :
-                            status === 'COMPLETED' ? 'Jornada Completada' :
-                                'Sin registrar entrada'}
-                </span>
-
-                <button
-                    onClick={() => setShowConsent(true)}
-                    className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-900 transition-colors uppercase tracking-wider font-semibold cursor-pointer"
-                >
-                    <FiShield className="w-3 h-3" />
-                    Privacidad y Consentimiento
-                </button>
-            </div>
-
-            {/* In-situ History & Details */}
-            {status !== 'NOT_STARTED' && status !== null && recordData && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 w-full max-w-md bg-slate-50 rounded-lg p-4 text-sm border border-slate-200"
-                >
-                    <h4 className="text-slate-500 text-xs uppercase tracking-wider font-bold mb-3 border-b border-slate-200 pb-2">
-                        Resumen de Hoy
-                    </h4>
-                    <div className="space-y-3">
-                        {/* Entry Info */}
-                        {recordData.checkIn && (() => {
-                            const entryLocationDisplay = entryLocationName || (recordData.entryLocation ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}` : null);
-                            return (
-                                <div className="flex justify-between items-start">
-                                    <span className="text-slate-500 pt-0.5">Entrada:</span>
-                                    <div className="flex flex-col items-end">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-mono font-bold text-slate-800">
-                                                {new Date(recordData.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                            {/* Lateness Badge */}
-                                            {recordData.isLate ? (
-                                                <span className="bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded border border-amber-200">
-                                                    Tardío
-                                                </span>
-                                            ) : (
-                                                <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded border border-emerald-200">
-                                                    Puntual
-                                                </span>
-                                            )}
-                                        </div>
-                                        {/* Location Info */}
-                                        {entryLocationDisplay && (
-                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end" title={entryLocationDisplay}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0 text-slate-400">
-                                                    <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
-                                                </svg>
-                                                <span className="max-w-[250px] break-words">
-                                                    {entryLocationDisplay}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-
-                        {/* Lunch Info if exists */}
-                        {recordData.breakStart && (() => {
-                            const lunchLocationDisplay = entryLocationName || exitLocationName || (recordData.entryLocation ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}` : null);
-                            return (
-                                <div className="flex justify-between items-start pt-2 border-t border-slate-200">
-                                    <span className="text-slate-500 pt-0.5">Almuerzo:</span>
-                                    <div className="flex flex-col items-end">
-                                        <span className="font-mono text-slate-800">
-                                            {new Date(recordData.breakStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            {recordData.breakEnd && ` - ${new Date(recordData.breakEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                                        </span>
-                                        {/* Location Info */}
-                                        {lunchLocationDisplay && (
-                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end" title={lunchLocationDisplay}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0 text-slate-400">
-                                                    <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
-                                                </svg>
-                                                <span className="max-w-[250px] break-words">
-                                                    {lunchLocationDisplay}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-
-                        {/* Exit Info if exists */}
-                        {recordData.checkOut && (() => {
-                            const exitLocationDisplay = exitLocationName || (recordData.exitLocation ? `${recordData.exitLocation.lat.toFixed(4)}, ${recordData.exitLocation.lng.toFixed(4)}` : (entryLocationName || (recordData.entryLocation ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}` : null)));
-                            return (
-                                <div className="flex justify-between items-start pt-2 border-t border-slate-200">
-                                    <span className="text-slate-500 pt-0.5">Salida:</span>
-                                    <div className="flex flex-col items-end">
-                                        <span className="font-mono font-bold text-slate-800">
-                                            {new Date(recordData.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                        {/* Location Info */}
-                                        {exitLocationDisplay && (
-                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end" title={exitLocationDisplay}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0 text-slate-400">
-                                                    <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z" clipRule="evenodd" />
-                                                </svg>
-                                                <span className="max-w-[250px] break-words">
-                                                    {exitLocationDisplay}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })()}
-                    </div>
-                </motion.div>
-            )}
-
-            {/* Tracking Consent Modal */}
-            <Modal
-                isOpen={showConsent}
-                onClose={() => setShowConsent(false)}
-                title="Protección de Datos y Consentimiento"
-                subtitle="Tratamiento de información laboral"
-                size="md"
-            >
-                <div className="space-y-4 text-xs">
-                    {/* Compact Features List */}
-                    <div className="space-y-2 text-xs bg-slate-50/80 p-3.5 rounded border border-slate-200/80">
-                        <div className="flex items-start gap-2.5">
-                            <MdFingerprint size={16} className="text-slate-700 shrink-0 mt-0.5" />
-                            <p className="text-slate-700 leading-snug">
-                                <strong className="text-slate-900">Biometría local:</strong> Confirmación de identidad de forma privada en tu dispositivo.
-                            </p>
-                        </div>
-                        <div className="flex items-start gap-2.5 border-t border-slate-200/60 pt-2">
-                            <FiMapPin size={15} className="text-slate-700 shrink-0 mt-0.5" />
-                            <p className="text-slate-700 leading-snug">
-                                <strong className="text-slate-900">Geolocalización:</strong> Captura de ubicación únicamente al registrar entrada/salida.
-                            </p>
-                        </div>
-                        <div className="flex items-start gap-2.5 border-t border-slate-200/60 pt-2">
-                            <FiLock size={15} className="text-slate-700 shrink-0 mt-0.5" />
-                            <p className="text-slate-700 leading-snug">
-                                <strong className="text-slate-900">Confidencialidad:</strong> Uso estrictamente laboral sin seguimiento fuera del marcado.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="space-y-2 pt-1">
-                        <button
-                            onClick={handleAcceptConsent}
-                            disabled={consenting}
-                            className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99] cursor-pointer"
-                        >
-                            {consenting ? (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    <FiCheckCircle size={15} />
-                                    <span>{consentStatus ? 'Actualizar Consentimiento' : 'Aceptar y Autorizar'}</span>
-                                </>
-                            )}
-                        </button>
-
-                        {consentStatus ? (
-                            <button
-                                onClick={handleRejectConsent}
-                                disabled={consenting}
-                                className="w-full py-1.5 text-slate-500 hover:text-red-600 text-xs font-medium text-center transition-colors cursor-pointer"
-                            >
-                                Retirar consentimiento
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => setShowConsent(false)}
-                                className="w-full py-1 text-slate-400 hover:text-slate-600 text-xs font-medium text-center transition-colors cursor-pointer"
-                            >
-                                Cerrar sin aceptar
-                            </button>
-                        )}
-
-                        <p className="text-[10px] text-center text-slate-400 pt-0.5 leading-tight">
-                            Información tratada según la política de privacidad de la empresa.
-                        </p>
-                    </div>
-                </div>
-            </Modal>
+  return (
+    <div className="flex flex-col items-center justify-center w-full bg-white border border-gray-200 text-gray-900 p-6 sm:p-8 rounded">
+      {/* Clock */}
+      <div className="mb-6 text-center">
+        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+          Marcador Digital de Jornada
         </div>
-    );
+        <div className="text-4xl sm:text-5xl font-bold font-mono tracking-tight text-gray-900 tabular-nums">
+          {currentTime.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })}
+        </div>
+        <div className="text-gray-500 mt-1 text-xs">
+          {currentTime.toLocaleDateString(undefined, {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </div>
+        {/* Biometric badge */}
+        {biometricEnabled && (
+          <div
+            className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium border ${
+              hasBiometricRegistered === false
+                ? 'bg-blue-50 text-blue-800 border-blue-200'
+                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            }`}
+          >
+            <MdFingerprint
+              className={`w-3.5 h-3.5 ${hasBiometricRegistered === false ? 'text-blue-600' : 'text-emerald-600'}`}
+            />
+            <span>
+              {hasBiometricRegistered === false
+                ? 'Autenticación Biométrica (Sin vincular en este equipo)'
+                : 'Verificación biométrica activa'}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Buscador de Empleado (Público o Modo Administrador) */}
+      {allowSearch && (!user || isAdminOrSuperAdmin) && (
+        <div className="w-full mb-6 relative max-w-md mx-auto">
+          {!foundEmployee ? (
+            <>
+              <label className="block text-xs font-medium text-gray-600 mb-1 text-center">
+                {isAdminOrSuperAdmin ? 'Buscar Empleado por Número de Cédula' : 'Número de Cédula'}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') checkStatus();
+                  }}
+                  placeholder="Ingrese número de cédula..."
+                  className="w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 text-center font-mono"
+                />
+                <button
+                  onClick={() => checkStatus()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
+                >
+                  Buscar
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="bg-gray-50 rounded p-3 border border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded bg-gray-200 text-gray-800 font-mono font-semibold text-xs flex items-center justify-center">
+                  {foundEmployee.firstName[0]}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-xs text-gray-900">
+                    {foundEmployee.firstName} {foundEmployee.lastName}
+                  </h3>
+                  <p className="text-[11px] text-gray-500">
+                    {foundEmployee.position} • {foundEmployee.department}
+                  </p>
+                </div>
+              </div>
+              {allowSearch && (
+                <button
+                  onClick={() => {
+                    setFoundEmployee(null);
+                    setEmployeeId('');
+                    setStatus(null);
+                    setMessage({ type: '', text: '' });
+                  }}
+                  className="text-gray-600 hover:text-gray-900 px-2.5 py-1 bg-white border border-gray-200 rounded text-xs transition-colors cursor-pointer"
+                >
+                  Cambiar
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Banner de Registro Biométrico In-Situ */}
+      {biometricEnabled && hasBiometricRegistered === false && (
+        <div className="w-full max-w-md mb-5 p-4 bg-slate-50 border border-slate-200 rounded text-xs space-y-2.5 text-slate-800 shadow-xs">
+          <div className="flex items-start gap-2.5">
+            <div className="w-8 h-8 rounded bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0 mt-0.5 text-blue-700">
+              <MdFingerprint className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Acceso Biométrico Rápido y Seguro</p>
+              <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                Agiliza el registro de tu jornada utilizando la huella dactilar, FaceID o PIN seguro
+                de tu dispositivo. Vincula tu credencial en un solo paso.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleQuickRegisterBiometric}
+            disabled={registeringBiometric}
+            type="button"
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+          >
+            {registeringBiometric ? (
+              <span className="flex items-center gap-2">
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Esperando sensor biométrico del dispositivo...
+              </span>
+            ) : (
+              <>
+                <MdFingerprint className="w-4 h-4" />
+                <span>Vincular Mi Huella / Passkey</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Message */}
+      {message.text && (
+        <div className="w-full max-w-md mb-4">
+          <div
+            className={`px-3.5 py-2 rounded text-center text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : message.type === 'info' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'}`}
+          >
+            {message.text}
+          </div>
+
+          {message.showMapLink && (
+            <div className="mt-1.5 flex justify-center gap-3">
+              <a
+                href={`https://www.google.com/maps?q=${message.lastCoords.latitude},${message.lastCoords.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-blue-600 hover:underline flex items-center gap-1"
+              >
+                Ver ubicación en mapa (GPS)
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={showConfirm}
+        onClose={() => {
+          setShowConfirm(false);
+          setPendingAction(null);
+        }}
+        title={`Confirmar ${
+          pendingAction === 'ENTRY'
+            ? 'Entrada'
+            : pendingAction === 'EXIT'
+              ? 'Salida'
+              : pendingAction === 'BREAK_START'
+                ? 'Inicio de Almuerzo'
+                : 'Fin de Almuerzo'
+        }`}
+        size="sm"
+        footer={
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => {
+                setShowConfirm(false);
+                setPendingAction(null);
+              }}
+              className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={confirmMark}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded transition-colors cursor-pointer"
+            >
+              Confirmar
+            </button>
+          </div>
+        }
+      >
+        <p className="text-xs text-gray-600">
+          ¿Confirmas registrar tu{' '}
+          {pendingAction === 'ENTRY'
+            ? 'entrada'
+            : pendingAction === 'EXIT'
+              ? 'salida'
+              : pendingAction === 'BREAK_START'
+                ? 'inicio de almuerzo'
+                : 'fin de almuerzo'}{' '}
+          a las{' '}
+          <strong className="text-gray-900 font-mono">
+            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </strong>
+          ?
+        </p>
+      </Modal>
+
+      {/* GPS Reminder */}
+      <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded border border-gray-200">
+          <FiMapPin className="w-3 h-3 text-gray-500" />
+          <span>GPS activo para validación</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded border border-gray-200">
+          <FiShield className="w-3 h-3 text-gray-500" />
+          <span>Protección VPN/Proxy activa</span>
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="grid grid-cols-2 gap-3 w-full max-w-md">
+        {/* Entry Button */}
+        {(status === 'NOT_STARTED' || status === 'COMPLETED' || status === null) && (
+          <button
+            onClick={() => initiateMark('ENTRY')}
+            disabled={
+              loading ||
+              status === 'COMPLETED' ||
+              !consentStatus ||
+              (biometricEnabled && hasBiometricRegistered === false)
+            }
+            className={`
+                            col-span-2 py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer
+                            ${
+                              status === 'COMPLETED' ||
+                              !consentStatus ||
+                              (biometricEnabled && hasBiometricRegistered === false)
+                                ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            }
+                        `}
+          >
+            {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && (
+              <FiLock className="w-3.5 h-3.5" />
+            )}
+            REGISTRAR ENTRADA
+          </button>
+        )}
+
+        {/* Working Actions */}
+        {status === 'WORKING' && (
+          <>
+            {!recordData?.breakStart && (
+              <button
+                onClick={() => initiateMark('BREAK_START')}
+                disabled={
+                  loading ||
+                  !consentStatus ||
+                  (biometricEnabled && hasBiometricRegistered === false)
+                }
+                className={`py-3 rounded font-semibold text-xs border transition-colors flex items-center justify-center gap-2 cursor-pointer ${!consentStatus || (biometricEnabled && hasBiometricRegistered === false) ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+              >
+                {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && (
+                  <FiLock className="w-3.5 h-3.5" />
+                )}
+                INICIAR ALMUERZO
+              </button>
+            )}
+            <button
+              onClick={() => initiateMark('EXIT')}
+              disabled={
+                loading || !consentStatus || (biometricEnabled && hasBiometricRegistered === false)
+              }
+              className={`py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${!consentStatus || (biometricEnabled && hasBiometricRegistered === false) ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' : 'bg-blue-600 hover:bg-blue-700 text-white'} ${!recordData?.breakStart ? '' : 'col-span-2'}`}
+            >
+              {(!consentStatus || (biometricEnabled && hasBiometricRegistered === false)) && (
+                <FiLock className="w-3.5 h-3.5" />
+              )}
+              REGISTRAR SALIDA
+            </button>
+          </>
+        )}
+
+        {/* On Break Actions */}
+        {status === 'ON_BREAK' && (
+          <button
+            onClick={() => initiateMark('BREAK_END')}
+            disabled={loading || (biometricEnabled && hasBiometricRegistered === false)}
+            className={`col-span-2 py-3 rounded font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${biometricEnabled && hasBiometricRegistered === false ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+          >
+            FINALIZAR ALMUERZO
+          </button>
+        )}
+      </div>
+
+      {/* Status Footer */}
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <span
+          className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold tracking-wider uppercase border ${
+            status === 'WORKING'
+              ? 'bg-green-50 text-green-700 border-green-200'
+              : status === 'COMPLETED'
+                ? 'bg-gray-100 text-gray-700 border-gray-200'
+                : status === 'ON_BREAK'
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-gray-50 text-gray-500 border-gray-200'
+          }`}
+        >
+          {status === 'WORKING'
+            ? 'Actualmente Trabajando'
+            : status === 'ON_BREAK'
+              ? 'En Hora de Almuerzo'
+              : status === 'COMPLETED'
+                ? 'Jornada Completada'
+                : 'Sin registrar entrada'}
+        </span>
+
+        <button
+          onClick={() => setShowConsent(true)}
+          className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-900 transition-colors uppercase tracking-wider font-semibold cursor-pointer"
+        >
+          <FiShield className="w-3 h-3" />
+          Privacidad y Consentimiento
+        </button>
+      </div>
+
+      {/* In-situ History & Details */}
+      {status !== 'NOT_STARTED' && status !== null && recordData && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 w-full max-w-md bg-slate-50 rounded-lg p-4 text-sm border border-slate-200"
+        >
+          <h4 className="text-slate-500 text-xs uppercase tracking-wider font-bold mb-3 border-b border-slate-200 pb-2">
+            Resumen de Hoy
+          </h4>
+          <div className="space-y-3">
+            {/* Entry Info */}
+            {recordData.checkIn &&
+              (() => {
+                const entryLocationDisplay =
+                  entryLocationName ||
+                  (recordData.entryLocation
+                    ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}`
+                    : null);
+                return (
+                  <div className="flex justify-between items-start">
+                    <span className="text-slate-500 pt-0.5">Entrada:</span>
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-slate-800">
+                          {new Date(recordData.checkIn).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        {/* Lateness Badge */}
+                        {recordData.isLate ? (
+                          <span className="bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 rounded border border-amber-200">
+                            Tardío
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded border border-emerald-200">
+                            Puntual
+                          </span>
+                        )}
+                      </div>
+                      {/* Location Info */}
+                      {entryLocationDisplay && (
+                        <div
+                          className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end"
+                          title={entryLocationDisplay}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="w-3 h-3 flex-shrink-0 text-slate-400"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="max-w-[250px] break-words">{entryLocationDisplay}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+            {/* Lunch Info if exists */}
+            {recordData.breakStart &&
+              (() => {
+                const lunchLocationDisplay =
+                  entryLocationName ||
+                  exitLocationName ||
+                  (recordData.entryLocation
+                    ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}`
+                    : null);
+                return (
+                  <div className="flex justify-between items-start pt-2 border-t border-slate-200">
+                    <span className="text-slate-500 pt-0.5">Almuerzo:</span>
+                    <div className="flex flex-col items-end">
+                      <span className="font-mono text-slate-800">
+                        {new Date(recordData.breakStart).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                        {recordData.breakEnd &&
+                          ` - ${new Date(recordData.breakEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      </span>
+                      {/* Location Info */}
+                      {lunchLocationDisplay && (
+                        <div
+                          className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end"
+                          title={lunchLocationDisplay}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="w-3 h-3 flex-shrink-0 text-slate-400"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="max-w-[250px] break-words">{lunchLocationDisplay}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+            {/* Exit Info if exists */}
+            {recordData.checkOut &&
+              (() => {
+                const exitLocationDisplay =
+                  exitLocationName ||
+                  (recordData.exitLocation
+                    ? `${recordData.exitLocation.lat.toFixed(4)}, ${recordData.exitLocation.lng.toFixed(4)}`
+                    : entryLocationName ||
+                      (recordData.entryLocation
+                        ? `${recordData.entryLocation.lat.toFixed(4)}, ${recordData.entryLocation.lng.toFixed(4)}`
+                        : null));
+                return (
+                  <div className="flex justify-between items-start pt-2 border-t border-slate-200">
+                    <span className="text-slate-500 pt-0.5">Salida:</span>
+                    <div className="flex flex-col items-end">
+                      <span className="font-mono font-bold text-slate-800">
+                        {new Date(recordData.checkOut).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                      {/* Location Info */}
+                      {exitLocationDisplay && (
+                        <div
+                          className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5 text-right w-full justify-end"
+                          title={exitLocationDisplay}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="w-3 h-3 flex-shrink-0 text-slate-400"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.62.829.799 1.654 1.38 2.274 1.766a11.267 11.267 0 00.758.434l.024.01.003.001zM6 9a4 4 0 118 0 4 4 0 01-8 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="max-w-[250px] break-words">{exitLocationDisplay}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Tracking Consent Modal */}
+      <Modal
+        isOpen={showConsent}
+        onClose={() => setShowConsent(false)}
+        title="Protección de Datos y Consentimiento"
+        subtitle="Tratamiento de información laboral"
+        size="md"
+      >
+        <div className="space-y-4 text-xs">
+          {/* Compact Features List */}
+          <div className="space-y-2 text-xs bg-slate-50/80 p-3.5 rounded border border-slate-200/80">
+            <div className="flex items-start gap-2.5">
+              <MdFingerprint size={16} className="text-slate-700 shrink-0 mt-0.5" />
+              <p className="text-slate-700 leading-snug">
+                <strong className="text-slate-900">Biometría local:</strong> Confirmación de
+                identidad de forma privada en tu dispositivo.
+              </p>
+            </div>
+            <div className="flex items-start gap-2.5 border-t border-slate-200/60 pt-2">
+              <FiMapPin size={15} className="text-slate-700 shrink-0 mt-0.5" />
+              <p className="text-slate-700 leading-snug">
+                <strong className="text-slate-900">Geolocalización:</strong> Captura de ubicación
+                únicamente al registrar entrada/salida.
+              </p>
+            </div>
+            <div className="flex items-start gap-2.5 border-t border-slate-200/60 pt-2">
+              <FiLock size={15} className="text-slate-700 shrink-0 mt-0.5" />
+              <p className="text-slate-700 leading-snug">
+                <strong className="text-slate-900">Confidencialidad:</strong> Uso estrictamente
+                laboral sin seguimiento fuera del marcado.
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="space-y-2 pt-1">
+            <button
+              onClick={handleAcceptConsent}
+              disabled={consenting}
+              className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.99] cursor-pointer"
+            >
+              {consenting ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <FiCheckCircle size={15} />
+                  <span>{consentStatus ? 'Actualizar Consentimiento' : 'Aceptar y Autorizar'}</span>
+                </>
+              )}
+            </button>
+
+            {consentStatus ? (
+              <button
+                onClick={handleRejectConsent}
+                disabled={consenting}
+                className="w-full py-1.5 text-slate-500 hover:text-red-600 text-xs font-medium text-center transition-colors cursor-pointer"
+              >
+                Retirar consentimiento
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowConsent(false)}
+                className="w-full py-1 text-slate-400 hover:text-slate-600 text-xs font-medium text-center transition-colors cursor-pointer"
+              >
+                Cerrar sin aceptar
+              </button>
+            )}
+
+            <p className="text-[10px] text-center text-slate-400 pt-0.5 leading-tight">
+              Información tratada según la política de privacidad de la empresa.
+            </p>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
 };
 
 export default DigitalMarker;

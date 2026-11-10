@@ -45,6 +45,8 @@ services:
     image: ${BACKEND_IMAGE:-rh-backend:latest}
     container_name: rh_backend
     restart: always
+    env_file:
+      - .env
     environment:
       PORT: 5000
       DATABASE_URL: ${DATABASE_URL:-postgresql://admin_rh:your_postgres_password_here@db:5432/db_recursos_humanos?schema=public}
@@ -77,13 +79,26 @@ services:
     networks:
       - rh_network
 
-  # Servidor Frontend React SPA + Reverse Proxy Nginx SSL 443
+  # Servidor Frontend Web React SPA (Nginx interno para activos estáticos)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     image: ${FRONTEND_IMAGE:-rh-frontend:latest}
     container_name: rh_frontend
+    restart: always
+    expose:
+      - "80"
+    networks:
+      - rh_network
+
+  # Reverse Proxy & API Gateway Perimetral (Nginx SSL 443 + HTTP 80)
+  gateway:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: ${GATEWAY_IMAGE:-rh-gateway:latest}
+    container_name: rh_gateway
     restart: always
     ports:
       - "80:80"
@@ -92,8 +107,9 @@ services:
       - ${CERTS_PATH:-/var/www/recursos_humanos/certs}:/etc/nginx/certs:ro
     depends_on:
       backend:
-        # Nginx arranca solo cuando el backend ya responde — elimina el 502 en cold start
         condition: service_healthy
+      frontend:
+        condition: service_started
     networks:
       - rh_network
 

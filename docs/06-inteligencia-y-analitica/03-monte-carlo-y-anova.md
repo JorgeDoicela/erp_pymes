@@ -2,9 +2,10 @@
 
 ## 1. Fundamento: Simulación Monte Carlo
 
-La **simulación Monte Carlo** es un método de cálculo numérico que utiliza muestreo aleatorio repetido para obtener distribuciones de resultados en presencia de incertidumbre. En el contexto del módulo de inteligencia de Emplifi, se aplica para modelar la incertidumbre en los parámetros de respuesta de los empleados a intervenciones de recursos humanos.
+La **simulación Monte Carlo** es un método de cálculo numérico que utiliza muestreo aleatorio repetido para obtener distribuciones de resultados en presencia de incertidumbre. En el contexto del módulo de inteligencia de Norma ERP, se aplica para modelar la incertidumbre en los parámetros de respuesta de los empleados a intervenciones de recursos humanos.
 
 El simulador implementado ejecuta **N=2,000 iteraciones** por defecto (configurable hasta límites del servidor). Cada iteración:
+
 1. Muestrea valores aleatorios de las variables estocásticas desde distribuciones normales.
 2. Calcula el ROI y el ahorro neto estimado para esa iteración.
 3. Acumula los resultados.
@@ -17,11 +18,12 @@ El servicio implementa el método de **transformación de Box-Muller** para gene
 
 ```javascript
 function randomNormal(mean, std) {
-    let u = 0, v = 0;
-    while (u === 0) u = Math.random();
-    while (v === 0) v = Math.random();
-    const n = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-    return mean + std * n;
+  let u = 0,
+    v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  const n = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  return mean + std * n;
 }
 ```
 
@@ -123,6 +125,7 @@ Este gráfico permite identificar qué parámetros tienen mayor impacto sobre el
 ### 4.2 Condiciones de Aplicación
 
 El ANOVA se ejecuta únicamente si:
+
 - `k_groups >= 2` (al menos 2 departamentos con empleados).
 - `totalN > k_groups` (más observaciones que grupos, necesario para estimar ssWithin).
 
@@ -198,6 +201,7 @@ df_W = (s²_A/n_A + s²_B/n_B)² / [(s²_A/n_A)²/(n_A−1) + (s²_B/n_B)²/(n_B
 $$d = \frac{\bar{x}_A - \bar{x}_B}{s_{\text{pooled}}}$$
 
 Donde $s_{\text{pooled}} = \sqrt{\frac{(n_A - 1)s_A^2 + (n_B - 1)s_B^2}{n_A + n_B - 2}}$.
+
 - **$|d| \ge 0.80$**: Efecto Grande (diferencia sustancial entre departamentos).
 
 ---
@@ -214,13 +218,13 @@ Si $D < D_{\text{crítico}} = \frac{1.36}{\sqrt{N}}$, la distribución de Weibul
 
 ## 7. Comparación del Modelo Avanzado vs. Baseline Trivial
 
-| Métrica | Modelo Heurístico Trivial (Baseline) | Marco Avanzado Weibull + RSI (Propuesto) | Mejora % |
-|:---|:---:|:---:|:---:|
-| **Accuracy** | `64.0%` | **`92.0%`** | **+28.0%** |
-| **Precision** | `58.3%` | **`88.9%`** | **+30.6%** |
-| **Recall** | `70.0%` | **`94.1%`** | **+24.1%** |
-| **F1-Score** | `0.636` | **`0.914`** | **+43.7%** |
-| **Brier Score (MSE)** | `0.2105` | **`0.0450`** | **-78.6% error** |
+| Métrica               | Modelo Heurístico Trivial (Baseline) | Marco Avanzado Weibull + RSI (Propuesto) |     Mejora %     |
+| :-------------------- | :----------------------------------: | :--------------------------------------: | :--------------: |
+| **Accuracy**          |               `64.0%`                |               **`92.0%`**                |    **+28.0%**    |
+| **Precision**         |               `58.3%`                |               **`88.9%`**                |    **+30.6%**    |
+| **Recall**            |               `70.0%`                |               **`94.1%`**                |    **+24.1%**    |
+| **F1-Score**          |               `0.636`                |               **`0.914`**                |    **+43.7%**    |
+| **Brier Score (MSE)** |               `0.2105`               |               **`0.0450`**               | **-78.6% error** |
 
 ---
 
@@ -274,4 +278,3 @@ El módulo de comparativa departamental entrega:
 ```
 
 La combinación de ANOVA (con $\eta^2$), t de Welch (con $d$), KS-test y comparativa contra el baseline trivial demuestra científicamente la validez y superioridad del modelo propuesto.
-

@@ -1,3 +1,11 @@
+/**
+ * @file OfflineIndicator.jsx
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiWifiOff, FiWifi, FiX } from 'react-icons/fi';

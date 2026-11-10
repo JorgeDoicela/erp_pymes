@@ -1,6 +1,6 @@
 # Metas y Mecanismos de Implementación — ODS 8
 
-Este documento detalla los mecanismos técnicos, reglas de negocio e implementaciones en el código fuente de **Emplifi** para el cumplimiento de las metas del **ODS 8 (Trabajo Decente y Crecimiento Económico)**.
+Este documento detalla los mecanismos técnicos, reglas de negocio e implementaciones en el código fuente de **Norma ERP** para el cumplimiento de las metas del **ODS 8 (Trabajo Decente y Crecimiento Económico)**.
 
 ---
 
@@ -29,7 +29,7 @@ Este documento detalla los mecanismos técnicos, reglas de negocio e implementac
 
 - **Ruta en Código:** `backend/src/utils/financialUtils.js`
 - **Fundamento:** El estándar binario IEEE 754 de punto flotante en JavaScript introduce errores acumulativos de redondeo (ej. `0.1 + 0.2 !== 0.3`). En software de nómina, esto provoca pérdidas monetarias que menoscaban el salario del trabajador.
-- **Solución Técnica:** Emplifi configura `Decimal.js` con precisión de 20 dígitos y estrategia de redondeo simétrico a la mitad hacia arriba (`Decimal.ROUND_HALF_UP`):
+- **Solución Técnica:** Norma ERP configura `Decimal.js` con precisión de 20 dígitos y estrategia de redondeo simétrico a la mitad hacia arriba (`Decimal.ROUND_HALF_UP`):
   ```javascript
   import { Decimal } from 'decimal.js';
   Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });

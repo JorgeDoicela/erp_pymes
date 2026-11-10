@@ -44,7 +44,7 @@ export default defineConfig({
         ],
         runtimeCaching: [
           {
-            // Solo interceptar peticiones del mismo origen (erp.jorgedoicela.com)
+            // Solo interceptar peticiones del mismo origen (norma.doicela.dev)
             // Los dominios externos pasan directamente sin pasar por el SW
             urlPattern: ({ url }) => url.origin === self.location.origin,
             handler: 'NetworkOnly',

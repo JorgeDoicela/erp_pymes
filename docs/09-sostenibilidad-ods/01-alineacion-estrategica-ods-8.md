@@ -1,6 +1,6 @@
 # Alineación Estratégica con el ODS 8 — Trabajo Decente y Crecimiento Económico
 
-Este documento formaliza la vinculación exclusiva y directa de la plataforma **Emplifi (ERP PYMES)** con el **Objetivo de Desarrollo Sostenible 8 de la Organización de las Naciones Unidas (ONU): Promover el crecimiento económico inclusivo y sostenible, el empleo y el trabajo decente para todos**.
+Este documento formaliza la vinculación exclusiva y directa de la plataforma **Norma ERP (ERP PYMES)** con el **Objetivo de Desarrollo Sostenible 8 de la Organización de las Naciones Unidas (ONU): Promover el crecimiento económico inclusivo y sostenible, el empleo y el trabajo decente para todos**.
 
 ---
 
@@ -13,7 +13,7 @@ En América Latina y el Ecuador, las Pequeñas y Medianas Empresas (PyMEs) gener
 3. **Evasión o Retraso en Seguridad Social:** Dificultad para conciliar y declarar oportunamente las aportaciones patronales y personales ante el Instituto Ecuatoriano de Seguridad Social (IESS).
 4. **Vulnerabilidad en Procesos de Desvinculación:** Liquidaciones arbitrarias, falta de transparencia en causales de despido o desahucio y liquidación inexacta de haberes pendientes.
 
-Emplifi aborda este problema estructurando un sistema de gestión empresarial y de recursos humanos que convierte la normativa laboral ecuatoriana en reglas de negocio programáticas, deterministas y auditables, garantizando el trabajo formal y digno en la pequeña y mediana empresa.
+Norma ERP aborda este problema estructurando un sistema de gestión empresarial y de recursos humanos que convierte la normativa laboral ecuatoriana en reglas de negocio programáticas, deterministas y auditables, garantizando el trabajo formal y digno en la pequeña y mediana empresa.
 
 ---
 
@@ -28,7 +28,7 @@ flowchart TD
         M88["Meta 8.8: Protección de Derechos Laborales"]
     end
 
-    subgraph Emplifi["Módulos Transaccionales de Emplifi"]
+    subgraph NormaERP["Módulos Transaccionales de Norma ERP"]
         C1["Gestión de Contratos y Expediente Digital"]
         C2["Módulo de Emprendimiento e Incubadora"]
         C3["Motor de Nómina de Alta Precisión (Decimal.js)"]
@@ -51,7 +51,7 @@ flowchart TD
 
 ## 3. Matriz de Trazabilidad Cruzada
 
-| Meta de la ONU                               | Requerimiento Operativo                                                         | Componente Técnico en Emplifi                                               | Impacto Demostrable                                                                                      |
+| Meta de la ONU                               | Requerimiento Operativo                                                         | Componente Técnico en Norma ERP                                             | Impacto Demostrable                                                                                      |
 | :------------------------------------------- | :------------------------------------------------------------------------------ | :-------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
 | **8.3 (Formalización y Crecimiento PyME)**   | Sustituir la informalidad laboral mediante contratos formalizados y auditables. | `contract.service.js`, `contractCronJob.js`                                 | 100% de colaboradores con contrato tipificado, expediente digital y alerta automática de vencimientos.   |
 | **8.3 (Emprendimiento e Innovación)**        | Apoyar la maduración y escalabilidad de nuevas empresas emergentes.             | `entrepreneurship.service.js`                                               | Registro de rondas de inversión, tablas de capitalización y seguimiento de hitos de crecimiento.         |

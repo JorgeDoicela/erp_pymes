@@ -2,13 +2,13 @@
 
 ## 1. Pre-requisitos
 
-| Herramienta | Versión mínima |
-|------------|----------------|
-| Node.js | 20 LTS |
-| npm | 10.x |
-| Docker Desktop | 4.x |
-| Docker Compose | 2.x |
-| Git | 2.x |
+| Herramienta    | Versión mínima |
+| -------------- | -------------- |
+| Node.js        | 20 LTS         |
+| npm            | 10.x           |
+| Docker Desktop | 4.x            |
+| Docker Compose | 2.x            |
+| Git            | 2.x            |
 
 ## 2. Clonación y Configuración
 
@@ -56,6 +56,7 @@ docker compose logs -f frontend
 ```
 
 La primera vez, Docker Compose:
+
 1. Descarga las imágenes de PostgreSQL 15 y Redis 7.
 2. Construye la imagen del backend (Node.js 20).
 3. Ejecuta `npx prisma migrate deploy` automáticamente.
@@ -98,6 +99,7 @@ curl -X POST http://localhost:5000/api/seed \
 ```
 
 El seed crea:
+
 - 1 empresa (tenant) de ejemplo con plan GROWTH.
 - 1 usuario administrador.
 - Empleados de ejemplo con diferentes departamentos.
@@ -135,9 +137,24 @@ npm test            # Ejecuta pruebas con Vitest + Testing Library
 
 ## 8. URLs de Desarrollo
 
-| Servicio | URL |
-|---------|-----|
-| Frontend (SPA) | http://localhost:5173 |
-| Backend API | http://localhost:5000/api |
-| Healthcheck | http://localhost:5000/health |
-| Prisma Studio | http://localhost:5555 |
+| Servicio       | URL                          |
+| -------------- | ---------------------------- |
+| Frontend (SPA) | http://localhost:5173        |
+| Backend API    | http://localhost:5000/api    |
+| Healthcheck    | http://localhost:5000/health |
+| Prisma Studio  | http://localhost:5555        |
+
+## 9. Scripts Operativos Centralizados (`scripts/`)
+
+El repositorio cuenta con scripts utilitarios centralizados en `scripts/` accesibles vía `npm`:
+
+```bash
+# Saneamiento de slugs de empresas (Tenant)
+npm run script:fix-slugs
+
+# Pruebas de estrés y benchmarking de modelos analíticos
+npm run test:stress
+
+# Respaldo comprimido de base de datos PostgreSQL
+npm run db:backup
+```

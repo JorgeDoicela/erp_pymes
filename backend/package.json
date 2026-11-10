@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Backend del sistema de recursos humanos con PERN",
+  "description": "Backend de Norma ERP con PERN",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

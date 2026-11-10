@@ -1,14 +1,22 @@
+/**
+ * @file evaluation.routes.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { Router } from 'express';
 import {
-    createEvaluationTemplate,
-    getEvaluationTemplates,
-    getEmployeeEvaluations,
-    getPerformanceStats,
-    assignEvaluation,
-    getMyEvaluations,
-    submitAssessment,
-    getEvaluationResults,
-    getMyResultsList
+  createEvaluationTemplate,
+  getEvaluationTemplates,
+  getEmployeeEvaluations,
+  getPerformanceStats,
+  assignEvaluation,
+  getMyEvaluations,
+  submitAssessment,
+  getEvaluationResults,
+  getMyResultsList,
 } from '../../controllers/performance/evaluation.controller.js';
 import { authenticate, authorize } from '../../middleware/auth.middleware.js';
 import { ROLES } from '../../config/roles.js';
@@ -26,11 +34,27 @@ router.get('/templates', authorize([ROLES.ADMIN, ROLES.HR]), getEvaluationTempla
 router.post('/assignments', authorize([ROLES.ADMIN, ROLES.HR]), assignEvaluation);
 
 // Evaluación del empleado (Autoevaluación o revisión de pares / subordinados)
-router.get('/my-pending', authorize([ROLES.ADMIN, ROLES.HR, ROLES.EMPLOYEE, ROLES.ACCOUNTING, ROLES.MANAGER]), getMyEvaluations);
-router.post('/submit', authorize([ROLES.ADMIN, ROLES.HR, ROLES.EMPLOYEE, ROLES.ACCOUNTING, ROLES.MANAGER]), submitAssessment);
+router.get(
+  '/my-pending',
+  authorize([ROLES.ADMIN, ROLES.HR, ROLES.EMPLOYEE, ROLES.ACCOUNTING, ROLES.MANAGER]),
+  getMyEvaluations
+);
+router.post(
+  '/submit',
+  authorize([ROLES.ADMIN, ROLES.HR, ROLES.EMPLOYEE, ROLES.ACCOUNTING, ROLES.MANAGER]),
+  submitAssessment
+);
 
 // Resultados
-router.get('/my-results', authorize([ROLES.ADMIN, ROLES.HR, ROLES.EMPLOYEE, ROLES.ACCOUNTING, ROLES.MANAGER]), getMyResultsList);
-router.get('/results/:id', authorize([ROLES.ADMIN, ROLES.HR, ROLES.EMPLOYEE, ROLES.ACCOUNTING, ROLES.MANAGER]), getEvaluationResults);
+router.get(
+  '/my-results',
+  authorize([ROLES.ADMIN, ROLES.HR, ROLES.EMPLOYEE, ROLES.ACCOUNTING, ROLES.MANAGER]),
+  getMyResultsList
+);
+router.get(
+  '/results/:id',
+  authorize([ROLES.ADMIN, ROLES.HR, ROLES.EMPLOYEE, ROLES.ACCOUNTING, ROLES.MANAGER]),
+  getEvaluationResults
+);
 
 export default router;

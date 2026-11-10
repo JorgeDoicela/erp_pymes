@@ -1,3 +1,11 @@
+/**
+ * @file shift.routes.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { Router } from 'express';
 import shiftController from '../../controllers/attendance/shiftController.js';
 import { authenticate, authorize } from '../../middleware/auth.middleware.js';
@@ -15,9 +23,17 @@ router.delete('/:id', authorize(['admin', 'hr', 'manager']), shiftController.del
 // /shifts/assign
 router.post('/assign', authorize(['admin', 'hr', 'manager']), shiftController.assignShifts);
 router.get('/schedules', authorize(['admin', 'hr', 'manager']), shiftController.getAllSchedules);
-router.delete('/schedule/:id', authorize(['admin', 'hr', 'manager']), shiftController.deleteSchedule);
+router.delete(
+  '/schedule/:id',
+  authorize(['admin', 'hr', 'manager']),
+  shiftController.deleteSchedule
+);
 
 // /shifts/employee/:employeeId
-router.get('/employee/:employeeId', authorize(['admin', 'hr', 'manager', 'employee']), shiftController.getEmployeeSchedule);
+router.get(
+  '/employee/:employeeId',
+  authorize(['admin', 'hr', 'manager', 'employee']),
+  shiftController.getEmployeeSchedule
+);
 
 export default router;

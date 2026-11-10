@@ -19,6 +19,16 @@ jobs:
       - name: Checkout Codigo Fuente
         uses: actions/checkout@v4
 
+      - name: Preparar Directorio en EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo mkdir -p /var/www/recursos_humanos/certs /var/www/recursos_humanos/backups
+            sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} /var/www/recursos_humanos
+
       - name: Transferir docker-compose.yml mas reciente via SCP
         run: |
           eval $(ssh-agent -s)
@@ -47,6 +57,7 @@ jobs:
             OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
             export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-backend:${{ inputs.target_sha }}
             export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/rh-frontend:${{ inputs.target_sha }}
+            export GATEWAY_IMAGE=ghcr.io/${OWNER_LOWER}/rh-gateway:${{ inputs.target_sha }}
 
             echo "Descargando imagenes para la version: ${{ inputs.target_sha }}..."
             docker compose pull
@@ -65,12 +76,12 @@ jobs:
       - name: Generar Reporte de Rollback en GitHub Summary
         run: |
           cat <<EOF >> $GITHUB_STEP_SUMMARY
-          # 🔄 Reporte Ejecutivo de Rollback
+          # Reporte Ejecutivo de Rollback
 
           | Parametro | Valor |
           | :--- | :--- |
           | **Estado** | **Rollback Ejecutado Exitosamente** |
-          | **Dominio Configurado** | [https://erp.jorgedoicela.com](https://erp.jorgedoicela.com) |
+          | **Dominio Configurado** | [https://norma.doicela.dev](https://norma.doicela.dev) |
           | **IP Servidor EC2** | \`${{ secrets.EC2_HOST }}\` |
           | **Target Commit SHA** | \`${{ inputs.target_sha }}\` |
           | **Ejecutado por** | @${{ github.actor }} |

@@ -1,5 +1,21 @@
+/**
+ * @file employeeRepository.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import prisma from '../../database/db.js';
-import { encrypt, decrypt, encryptSalary, decryptSalary, safeDecrypt, encryptCoordinate, decryptCoordinate } from '../../utils/encryption.js';
+import {
+  encrypt,
+  decrypt,
+  encryptSalary,
+  decryptSalary,
+  safeDecrypt,
+  encryptCoordinate,
+  decryptCoordinate,
+} from '../../utils/encryption.js';
 
 /**
  * EmployeeRepository
@@ -20,14 +36,8 @@ export class EmployeeRepository {
    */
   async create(data) {
     try {
-      const {
-        salary,
-        hasNightSurcharge,
-        hasDoubleOvertime,
-        contractType,
-        hireDate,
-        ...rest
-      } = data;
+      const { salary, hasNightSurcharge, hasDoubleOvertime, contractType, hireDate, ...rest } =
+        data;
 
       // Encriptar el salario para el registro de Empleado (Legacy/Seguridad)
       console.log(`[EmployeeRepository.create] Raw salary received: ${salary}`);
@@ -41,11 +51,12 @@ export class EmployeeRepository {
         salary: Number(salary), // Guardar como Float en Contrato para cálculos
         hasNightSurcharge: hasNightSurcharge ?? true,
         hasDoubleOvertime: hasDoubleOvertime ?? true,
-        status: 'Active'
+        status: 'Active',
       };
 
       if (rest.workLatitude !== undefined) rest.workLatitude = encryptCoordinate(rest.workLatitude);
-      if (rest.workLongitude !== undefined) rest.workLongitude = encryptCoordinate(rest.workLongitude);
+      if (rest.workLongitude !== undefined)
+        rest.workLongitude = encryptCoordinate(rest.workLongitude);
 
       const employee = await prisma.employee.create({
         data: {
@@ -56,8 +67,8 @@ export class EmployeeRepository {
           bankName: data.bankName ? encrypt(data.bankName) : null,
           accountNumber: data.accountNumber ? encrypt(data.accountNumber) : null,
           contracts: {
-            create: initialContract
-          }
+            create: initialContract,
+          },
         },
       });
 
@@ -88,13 +99,13 @@ export class EmployeeRepository {
           documents: true,
           skills: true,
           workHistory: {
-            orderBy: { startDate: 'desc' }
+            orderBy: { startDate: 'desc' },
           },
           contracts: {
             where: { status: 'Active' },
-            take: 1
-          }
-        }
+            take: 1,
+          },
+        },
       });
 
       if (!employee) return null;
@@ -164,7 +175,7 @@ export class EmployeeRepository {
           documents: { select: { id: true, type: true } }, // Si se necesita saber si tiene docs
           contractType: true,
           civilStatus: true,
-        }
+        },
       });
 
       // Ya no es necesario desencriptar nada porque no traemos el salario
@@ -271,12 +282,7 @@ export class EmployeeRepository {
    */
   async update(id, data) {
     try {
-      const {
-        salary,
-        hasNightSurcharge,
-        hasDoubleOvertime,
-        ...rest
-      } = data;
+      const { salary, hasNightSurcharge, hasDoubleOvertime, ...rest } = data;
 
       // Preparar datos a actualizar del Empleado
       const updateData = { ...rest };
@@ -307,21 +313,27 @@ export class EmployeeRepository {
         });
 
         // 2. Si hay datos de contrato/laborales, actualizar el Contrato Activo
-        if (hasNightSurcharge !== undefined || hasDoubleOvertime !== undefined || salary !== undefined) {
+        if (
+          hasNightSurcharge !== undefined ||
+          hasDoubleOvertime !== undefined ||
+          salary !== undefined
+        ) {
           const activeContract = await prisma.contract.findFirst({
             where: { employeeId: id, status: 'Active' },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
           });
 
           if (activeContract) {
             const contractUpdate = {};
-            if (hasNightSurcharge !== undefined) contractUpdate.hasNightSurcharge = hasNightSurcharge;
-            if (hasDoubleOvertime !== undefined) contractUpdate.hasDoubleOvertime = hasDoubleOvertime;
+            if (hasNightSurcharge !== undefined)
+              contractUpdate.hasNightSurcharge = hasNightSurcharge;
+            if (hasDoubleOvertime !== undefined)
+              contractUpdate.hasDoubleOvertime = hasDoubleOvertime;
             if (salary !== undefined) contractUpdate.salary = Number(salary);
 
             await prisma.contract.update({
               where: { id: activeContract.id },
-              data: contractUpdate
+              data: contractUpdate,
             });
           }
         }
@@ -388,9 +400,7 @@ export class EmployeeRepository {
         return { total: 0, sum: 0, average: 0, min: 0, max: 0 };
       }
 
-      const decryptedSalaries = employees.map((emp) =>
-        decryptSalary(emp.salary)
-      );
+      const decryptedSalaries = employees.map((emp) => decryptSalary(emp.salary));
 
       const total = decryptedSalaries.reduce((sum, sal) => sum + sal, 0);
       const average = total / decryptedSalaries.length;
@@ -418,9 +428,9 @@ export class EmployeeRepository {
       const departments = await prisma.employee.findMany({
         distinct: ['department'],
         select: { department: true },
-        where: { isActive: true }
+        where: { isActive: true },
       });
-      return departments.map(d => d.department);
+      return departments.map((d) => d.department);
     } catch (error) {
       throw new Error(`Error al obtener departamentos: ${error.message}`);
     }

@@ -1,3 +1,11 @@
+/**
+ * @file PWAInstallPrompt.jsx
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiDownload, FiX, FiSmartphone, FiMonitor } from 'react-icons/fi';
@@ -12,7 +20,9 @@ export default function PWAInstallPrompt() {
 
   useEffect(() => {
     // Detectar si ya está instalada o en modo standalone
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
     if (isStandalone) {
       setIsInstalled(true);
       return;
@@ -20,7 +30,9 @@ export default function PWAInstallPrompt() {
 
     // Detectar iOS / iPadOS
     const userAgent = window.navigator.userAgent.toLowerCase();
-    const iosDevice = /iphone|ipad|ipod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const iosDevice =
+      /iphone|ipad|ipod/.test(userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     setIsIOS(iosDevice);
 
     const handleBeforeInstallPrompt = (e) => {
@@ -96,16 +108,18 @@ export default function PWAInstallPrompt() {
             className="w-full max-w-sm md:max-w-md"
           >
             <div className="relative overflow-hidden rounded bg-white border border-gray-200 p-4 shadow-lg text-gray-800">
-
-              
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded bg-gray-100 p-0.5 border border-gray-200 shrink-0 flex items-center justify-center overflow-hidden">
-                    <img src="/favicon.webp" alt="Emplifi Logo" className="w-full h-full object-cover rounded" />
+                    <img
+                      src="/favicon.svg"
+                      alt="Norma Logo"
+                      className="w-full h-full object-contain rounded"
+                    />
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm text-gray-900 flex items-center gap-1.5">
-                      Instalar Aplicación Emplifi
+                      Instalar Aplicación Norma ERP
                       <span className="text-[10px] bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.2 rounded font-mono">
                         PWA
                       </span>
@@ -131,8 +145,14 @@ export default function PWAInstallPrompt() {
                     <FiSmartphone className="text-blue-600" /> Para instalar en iOS / iPhone / iPad:
                   </p>
                   <ol className="list-decimal list-inside space-y-1.5 text-slate-600">
-                    <li>Toca el botón <span className="font-bold text-slate-900">Compartir</span> (icono con flecha hacia arriba) en Safari.</li>
-                    <li>Desplázate hacia abajo y selecciona <span className="font-bold text-blue-600">"Agregar al inicio"</span>.</li>
+                    <li>
+                      Toca el botón <span className="font-bold text-slate-900">Compartir</span>{' '}
+                      (icono con flecha hacia arriba) en Safari.
+                    </li>
+                    <li>
+                      Desplázate hacia abajo y selecciona{' '}
+                      <span className="font-bold text-blue-600">"Agregar al inicio"</span>.
+                    </li>
                   </ol>
                 </div>
               ) : showManualInstructions ? (
@@ -141,8 +161,14 @@ export default function PWAInstallPrompt() {
                     <FiMonitor className="text-blue-600" /> Instalación desde el Navegador:
                   </p>
                   <ol className="list-decimal list-inside space-y-1.5 text-slate-600">
-                    <li>Haz clic en el icono de instalación en la barra de direcciones superior de tu navegador.</li>
-                    <li>O abre el menú del navegador y selecciona <span className="font-bold text-blue-600">"Instalar Emplifi App"</span>.</li>
+                    <li>
+                      Haz clic en el icono de instalación en la barra de direcciones superior de tu
+                      navegador.
+                    </li>
+                    <li>
+                      O abre el menú del navegador y selecciona{' '}
+                      <span className="font-bold text-blue-600">"Instalar Norma ERP"</span>.
+                    </li>
                   </ol>
                 </div>
               ) : (
@@ -170,7 +196,7 @@ export default function PWAInstallPrompt() {
       <button
         onClick={() => setShowPrompt((prev) => !prev)}
         className="border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-        title="Instalar Emplifi App PWA"
+        title="Instalar Norma ERP PWA"
       >
         <FiDownload size={13} className="text-blue-600" />
         <span>Instalar App</span>

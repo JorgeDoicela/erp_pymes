@@ -4,7 +4,7 @@
 
 En plataformas de software SaaS Multi-Tenant para gestión de talento humano (People Analytics), las normativas de protección de datos personales (**LOPDP Ecuador / GDPR Europa**) prohíben la centralización o transferencia de datos sensibles (salarios, ausencias, notas de desempeño, identidades) entre empresas. Sin embargo, las organizaciones pequeñas (PYMES) carecen del volumen de datos individual para entrenar modelos predictivos de alta precisión.
 
-El **Motor de Aprendizaje Federado con Privacidad Diferencial (Federated Meta-Learning Engine)** de Emplifi resuelve esta tensión combinando **Federated Averaging (FedAvg)** con **Descenso de Gradiente con Privacidad Diferencial (DP-SGD)**. Las empresas colaboran colectivamente en el entrenamiento de un meta-modelo global de rotación y desempeño **sin que ningún dato privado ni salario salga del esquema aislado de cada empresa**.
+El **Motor de Aprendizaje Federado con Privacidad Diferencial (Federated Meta-Learning Engine)** de Norma ERP resuelve esta tensión combinando **Federated Averaging (FedAvg)** con **Descenso de Gradiente con Privacidad Diferencial (DP-SGD)**. Las empresas colaboran colectivamente en el entrenamiento de un meta-modelo global de rotación y desempeño **sin que ningún dato privado ni salario salga del esquema aislado de cada empresa**.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
@@ -58,7 +58,7 @@ La acumulación de presupuesto de privacidad ya no utiliza constantes ad-hoc ni 
 $$\text{RDP}_\alpha(M_G) = \frac{\alpha}{2 \sigma_M^2}$$
 
 2. **Amplificación por Submuestreo de Poisson (Wang et al. 2019, Theorem 9):**
-Para una tasa de submuestreo $q = \frac{|batch|}{N} \in (0, 1]$, la garantía ajustada es:
+   Para una tasa de submuestreo $q = \frac{|batch|}{N} \in (0, 1]$, la garantía ajustada es:
 
 $$\text{RDP}_\alpha^{\text{subsample}} \le \frac{1}{\alpha - 1} \ln \left( 1 + q^2 \alpha \left( e^{(\alpha - 1) \text{RDP}_\alpha(M_G)} - 1 \right) \right)$$
 
@@ -72,7 +72,7 @@ $$\epsilon(\delta) = \min_{\alpha > 1} \left\{ \text{RDP}_\alpha^{(K)} - \frac{\
 
 Evaluado numéricamente sobre un conjunto amplio de órdenes $\alpha \in [1.25, 256]$.
 
-*Nota Metodológica:* Con $\sigma_M = 0.45, \delta = 10^{-5}$, el RDP Accountant computa de forma transparente $\epsilon \approx 12.8 - 16.3$ por ronda. Este valor refleja la garantía matemática real del mecanismo configurado para alta utilidad analítica.
+_Nota Metodológica:_ Con $\sigma_M = 0.45, \delta = 10^{-5}$, el RDP Accountant computa de forma transparente $\epsilon \approx 12.8 - 16.3$ por ronda. Este valor refleja la garantía matemática real del mecanismo configurado para alta utilidad analítica.
 
 ---
 
@@ -131,9 +131,11 @@ model TenantPrivacyBudget {
 ## 4. Especificación de Endpoints REST de la API
 
 ### 4.1 `GET /api/intelligence/federated/status`
+
 Retorna el presupuesto de privacidad acumulado $(\epsilon, \delta)$ y estado del tenant.
 
 **Respuesta Exitosa (200 OK):**
+
 ```json
 {
   "success": true,
@@ -150,26 +152,29 @@ Retorna el presupuesto de privacidad acumulado $(\epsilon, \delta)$ y estado del
 ```
 
 ### 4.2 `POST /api/intelligence/federated/round`
+
 Dispara una ronda global de agregación federada FedAvg + DP-SGD.
 
 ### 4.3 `GET /api/intelligence/federated/rounds-history`
+
 Obtiene el historial de rondas federadas globales y evolución del meta-modelo.
 
 ---
 
 ## 5. Matriz de Cumplimiento LOPDP & GDPR
 
-| Requisito Legal / Normativo | Solución con Aprendizaje Federado DP-SGD |
-| :--- | :--- |
-| **No Transferencia Transfronteriza de PII** | Los datos crudos (salarios, nombres, IDs) jamás abandonan la base de datos PostgreSQL del tenant. |
-| **Derecho al Olvido / Supresión** | Las desvinculaciones no alteran el meta-modelo global ya que solo se transmiten gradientes agregados. |
-| **Protección contra Membership Inference** | El ruido Gaussiano $\sigma = 0.45$ invalida matemáticamente la reconstrucción de registros individuales. |
+| Requisito Legal / Normativo                 | Solución con Aprendizaje Federado DP-SGD                                                                 |
+| :------------------------------------------ | :------------------------------------------------------------------------------------------------------- |
+| **No Transferencia Transfronteriza de PII** | Los datos crudos (salarios, nombres, IDs) jamás abandonan la base de datos PostgreSQL del tenant.        |
+| **Derecho al Olvido / Supresión**           | Las desvinculaciones no alteran el meta-modelo global ya que solo se transmiten gradientes agregados.    |
+| **Protección contra Membership Inference**  | El ruido Gaussiano $\sigma = 0.45$ invalida matemáticamente la reconstrucción de registros individuales. |
 
 ---
 
 ## 6. Resultados Empíricos Ejecutados y Validación Experimental
 
 ### 6.1 Resultados Experimentales Ejecutados en el Sistema
+
 La ejecución real del motor federado FedAvg + DP-SGD sobre los 3 tenants de investigación registró los siguientes resultados empíricos en base de datos:
 
 - **Evolución por Ronda Federada Global (3 Tenants Participantes):**
@@ -180,4 +185,5 @@ La ejecución real del motor federado FedAvg + DP-SGD sobre los 3 tenants de inv
 - **Convergencia del Meta-Modelo Global:** Actualización progresiva de los coeficientes globales ($\beta_{\text{salary}} = -0.852 \dots -0.908$, $\beta_{\text{absence}} = 0.329 \dots 0.384$, $\beta_{\text{perf}} = 1.022 \dots 1.141$, $k_{\text{weibull}} = 1.218 \dots 1.277$).
 
 ### 6.2 Protocolo de Experimentación Futura (Trabajo Futuro)
+
 - **Escalamiento Multitenant (N=100 Tenants):** Evaluación de convergencia y trade-off de precisión vs. ruido cuando el número de organizaciones federadas escala a 100 inquilinos heterogéneos.

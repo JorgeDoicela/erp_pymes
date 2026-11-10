@@ -4,7 +4,7 @@
 
 La toma de decisiones estratégicas de nómina y compensaciones en las organizaciones se enfrenta a un conflicto de objetivos intrínseco e ineludible: **minimizar el costo presupuestario total ($\text{Costo USD}$)** versus **maximizar la tasa de retención de talento clave ($\text{Retención \%}$)**. Las aproximaciones monocriterio tradicionales fallan al intentar comprimir ambos objetivos en un único valor, forzando soluciones arbitrarias.
 
-El **Motor de Aprendizaje por Refuerzo Multiobjetivo (Multi-Objective Reinforcement Learning - MORL)** de Emplifi aborda este desafío modelando las decisiones organizacionales como un Proceso de Decisión de Markov Vectorial (Vectorial MDP). En lugar de entregar una única recomendación rígida, el sistema utiliza **Vector Q-Learning** con escalarización lineal de preferencias $w_1 R_1 + w_2 R_2$ para calcular automáticamente la **Frontera de Eficiencia de Pareto completa**:
+El **Motor de Aprendizaje por Refuerzo Multiobjetivo (Multi-Objective Reinforcement Learning - MORL)** de Norma ERP aborda este desafío modelando las decisiones organizacionales como un Proceso de Decisión de Markov Vectorial (Vectorial MDP). En lugar de entregar una única recomendación rígida, el sistema utiliza **Vector Q-Learning** con escalarización lineal de preferencias $w_1 R_1 + w_2 R_2$ para calcular automáticamente la **Frontera de Eficiencia de Pareto completa**:
 
 ```
 Tasa de Retención (%)
@@ -23,15 +23,15 @@ Tasa de Retención (%)
 
 ### 2.1. Definición del Proceso de Decisión de Markov Vectorial (Vectorial MDP)
 
-* **Espacio de Estados $\mathcal{S}$:** Caracteriza la situación socio-laboral del empleado:
+- **Espacio de Estados $\mathcal{S}$:** Caracteriza la situación socio-laboral del empleado:
 
 $$s_i = (\text{CategoríaRiesgo}_i, \text{RangoSalario}_i, \text{EvaluaciónDesempeño}_i, \text{Antigüedad}_i)$$
 
-* **Espacio de Acciones $\mathcal{A}$:** Conjunto de intervenciones de retención disponibles:
+- **Espacio de Acciones $\mathcal{A}$:** Conjunto de intervenciones de retención disponibles:
 
 $$\mathcal{A} = \{\text{SinAcción}, \text{BecaCapacitación}, \text{Teletrabajo2d}, \text{Aumento5\%}, \text{Aumento10\%}, \text{AscensoConBono}\}$$
 
-* **Función de Recompensa Vectorial $\vec{R}(s, a)$:**
+- **Función de Recompensa Vectorial $\vec{R}(s, a)$:**
 
 $$\vec{R}(s, a) = \begin{bmatrix} R_1(s, a) \\ R_2(s, a) \end{bmatrix} = \begin{bmatrix} +\Delta \text{ProbabilidadRetención}(s, a) \\ -\text{CostoPresupuestarioUSD}(s, a) \end{bmatrix}$$
 
@@ -44,10 +44,11 @@ Para cada vector de peso de preferencia $\mathbf{w} = [w_1, w_2]$ tal que $w_1 +
 $$Q^{\mathbf{w}}(s, a) \leftarrow Q^{\mathbf{w}}(s, a) + \alpha \left[ \mathbf{w} \cdot \vec{R}(s, a) + \gamma \max_{a'} Q^{\mathbf{w}}(s', a') - Q^{\mathbf{w}}(s, a) \right]$$
 
 Donde:
-* $\alpha = 0.10$ es la tasa de aprendizaje.
-* $\gamma = 0.95$ es el factor de descuento temporal.
-* $w_1$ representa la ponderación otorgada a la **Retención**.
-* $w_2 = 1 - w_1$ representa la ponderación otorgada al **Ahorro Presupuestario**.
+
+- $\alpha = 0.10$ es la tasa de aprendizaje.
+- $\gamma = 0.95$ es el factor de descuento temporal.
+- $w_1$ representa la ponderación otorgada a la **Retención**.
+- $w_2 = 1 - w_1$ representa la ponderación otorgada al **Ahorro Presupuestario**.
 
 ---
 
@@ -57,7 +58,7 @@ Dadas dos políticas de intervención $\pi_A$ y $\pi_B$, decimos que $\pi_A$ **d
 
 $$\text{Costo}(\pi_A) \le \text{Costo}(\pi_B) \quad \land \quad \text{Retención}(\pi_A) \ge \text{Retención}(\pi_B)$$
 
-Con al menos una desigualdad estricta. La **Frontera Eficiente de Pareto $\mathcal{PF}^*$** está constituida por el conjunto inmejorable de todas las políticas no dominadas:
+Con al menos una desigualdad estricta. La **Frontera Eficiente de Pareto $\mathcal{PF}^\*$** está constituida por el conjunto inmejorable de todas las políticas no dominadas:
 
 $$\mathcal{PF}^* = \{ \pi \in \Pi \mid \nexists \pi' \in \Pi \text{ tal que } \pi' \succ \pi \}$$
 
@@ -106,9 +107,11 @@ model ParetoFrontierPoint {
 ## 4. Especificación de Endpoints REST de la API
 
 ### 4.1 `POST /api/intelligence/morl/optimize`
+
 Ejecuta la optimización multiobjetivo por Q-Learning y genera la Frontera de Pareto.
 
 **Cuerpo de Petición:**
+
 ```json
 {
   "budgetLimit": 15000,
@@ -118,6 +121,7 @@ Ejecuta la optimización multiobjetivo por Q-Learning y genera la Frontera de Pa
 ```
 
 **Respuesta Exitosa (200 OK):**
+
 ```json
 {
   "success": true,
@@ -138,12 +142,17 @@ Ejecuta la optimización multiobjetivo por Q-Learning y genera la Frontera de Pa
       },
       {
         "pointIndex": 1,
-        "weightRetention": 0.60,
-        "weightCost": 0.40,
+        "weightRetention": 0.6,
+        "weightCost": 0.4,
         "totalCostEstimate": 9800,
         "expectedRetentionRate": 88.2,
         "retainedEmployeeCount": 21,
-        "actionBreakdown": { "NO_ACTION": 5, "SALARY_BUMP_5": 8, "REMOTE_WORK_2D": 7, "PROMOTION_BONUS": 4 }
+        "actionBreakdown": {
+          "NO_ACTION": 5,
+          "SALARY_BUMP_5": 8,
+          "REMOTE_WORK_2D": 7,
+          "PROMOTION_BONUS": 4
+        }
       }
     ]
   }
@@ -155,13 +164,15 @@ Ejecuta la optimización multiobjetivo por Q-Learning y genera la Frontera de Pa
 ## 5. Resultados Empíricos Ejecutados y Validación Experimental
 
 ### 5.1 Resultados Experimentales Ejecutados en el Sistema
+
 La ejecución real de Vector Q-Learning sobre los 3 tenants de investigación registró los siguientes resultados empíricos en base de datos:
 
 - **Frontera Eficiente de Pareto Extraída:** Generación de **4 puntos óptimos no dominados** bajo un tope presupuestario de $\$12,000.00\text{ USD}$ por tenant:
-  - **Punto 1 ($w_{\text{ret}} = 0.00$):** Costo $\$0.00$ | Retención $76.2\% - 77.1\%$ | Acción predominante: `NO_ACTION`.
-  - **Punto 2 ($w_{\text{ret}} = 0.10$):** Costo $\$4,500.00 - \$6,660.00$ | Retención $94.2\% - 95.1\%$ | Acción predominante: `REMOTE_WORK_2D`.
-  - **Punto 3 ($w_{\text{ret}} = 0.45$):** Costo $\$5,342.40 - \$10,018.80$ | Retención $94.7\% - 95.6\%$ | Acción predominante: `REMOTE_WORK_2D`.
-  - **Punto 4 ($w_{\text{ret}} = 0.60$):** Costo $\$60,000.00 - \$88,800.00$ | Retención $100.0\%$ | Acción predominante: `PROMOTION_BONUS`.
+  - **Punto 1 ($w\_{\text{ret}} = 0.00$):** Costo $\$0.00$ | Retención $76.2\% - 77.1\%$ | Acción predominante: `NO_ACTION`.
+  - **Punto 2 ($w\_{\text{ret}} = 0.10$):** Costo $\$4,500.00 - \$6,660.00$ | Retención $94.2\% - 95.1\%$ | Acción predominante: `REMOTE_WORK_2D`.
+  - **Punto 3 ($w\_{\text{ret}} = 0.45$):** Costo $\$5,342.40 - \$10,018.80$ | Retención $94.7\% - 95.6\%$ | Acción predominante: `REMOTE_WORK_2D`.
+  - **Punto 4 ($w\_{\text{ret}} = 0.60$):** Costo $\$60,000.00 - \$88,800.00$ | Retención $100.0\%$ | Acción predominante: `PROMOTION_BONUS`.
 
 ### 5.2 Protocolo de Experimentación Futura (Trabajo Futuro)
+
 - **Deep MORL (Deep Q-Networks Multiobjetivo):** Implementación de redes neuronales profundas para aproximar la frontera de Pareto continua en organizaciones con más de 10,000 empleados y combinaciones complejas de beneficios.

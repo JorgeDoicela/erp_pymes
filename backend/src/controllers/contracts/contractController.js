@@ -1,105 +1,117 @@
+/**
+ * @file contractController.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import contractService from '../../services/contracts/contractService.js';
 import auditRepository from '../../repositories/audit/auditRepository.js';
 import path from 'path';
 
 class ContractController {
-    async create(req, res) {
-        try {
-            const { employeeId, type, startDate, endDate, salary, clauses } = req.body;
-            const file = req.file;
+  async create(req, res) {
+    try {
+      const { employeeId, type, startDate, endDate, salary, clauses } = req.body;
+      const file = req.file;
 
-            const contractData = {
-                employeeId,
-                type,
-                startDate: new Date(startDate),
-                endDate: endDate ? new Date(endDate) : null,
-                salary: parseFloat(salary),
-                clauses,
-                documentUrl: file ? file.filename : null
-            };
+      const contractData = {
+        employeeId,
+        type,
+        startDate: new Date(startDate),
+        endDate: endDate ? new Date(endDate) : null,
+        salary: parseFloat(salary),
+        clauses,
+        documentUrl: file ? file.filename : null,
+      };
 
-            const contract = await contractService.createContract(contractData);
+      const contract = await contractService.createContract(contractData);
 
-            auditRepository.createLog({
-                entity: 'Contract',
-                entityId: contract.id,
-                action: 'CREATE',
-                performedBy: req.user?.id || 'Admin',
-                details: `Contrato registrado para empleado ${employeeId}. Tipo: ${type}, Salario: ${salary}`
-            }).catch(err => console.error('Audit Log Error:', err));
+      auditRepository
+        .createLog({
+          entity: 'Contract',
+          entityId: contract.id,
+          action: 'CREATE',
+          performedBy: req.user?.id || 'Admin',
+          details: `Contrato registrado para empleado ${employeeId}. Tipo: ${type}, Salario: ${salary}`,
+        })
+        .catch((err) => console.error('Audit Log Error:', err));
 
-            res.status(201).json({
-                success: true,
-                data: contract,
-                message: 'Contrato registrado exitosamente'
-            });
-        } catch (error) {
-            res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
+      res.status(201).json({
+        success: true,
+        data: contract,
+        message: 'Contrato registrado exitosamente',
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
     }
+  }
 
-    async getByEmployee(req, res) {
-        try {
-            const { employeeId } = req.params;
-            const contracts = await contractService.getContractsByEmployee(employeeId);
-            res.json({ success: true, data: contracts });
-        } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
-        }
+  async getByEmployee(req, res) {
+    try {
+      const { employeeId } = req.params;
+      const contracts = await contractService.getContractsByEmployee(employeeId);
+      res.json({ success: true, data: contracts });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
+  }
 
-    async getExpiring(req, res) {
-        try {
-            const days = parseInt(req.query.days) || 30;
-            const tenantId = req.tenantId || req.user?.tenantId;
-            const contracts = await contractService.getExpiringContracts(days, tenantId);
-            res.json({ success: true, data: contracts });
-        } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
-        }
+  async getExpiring(req, res) {
+    try {
+      const days = parseInt(req.query.days) || 30;
+      const tenantId = req.tenantId || req.user?.tenantId;
+      const contracts = await contractService.getExpiringContracts(days, tenantId);
+      res.json({ success: true, data: contracts });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
+  }
 
-    async downloadContract(req, res) {
-        try {
-            const { filename } = req.params;
-            // Security check: prevent directory traversal
-            if (filename.includes('..')) {
-                return res.status(400).send('Nombre de archivo inválido');
-            }
+  async downloadContract(req, res) {
+    try {
+      const { filename } = req.params;
+      // Security check: prevent directory traversal
+      if (filename.includes('..')) {
+        return res.status(400).send('Nombre de archivo inválido');
+      }
 
-            const filePath = path.resolve('uploads/contracts', filename);
-            res.download(filePath);
-        } catch (error) {
-            res.status(404).json({ success: false, message: 'Archivo no encontrado' });
-        }
+      const filePath = path.resolve('uploads/contracts', filename);
+      res.download(filePath);
+    } catch (error) {
+      res.status(404).json({ success: false, message: 'Archivo no encontrado' });
     }
+  }
 
-    async renew(req, res) {
-        try {
-            const { id } = req.params;
-            const tenantId = req.tenantId || req.user?.tenantId;
-            const updated = await contractService.renewContract(id, req.body, tenantId);
+  async renew(req, res) {
+    try {
+      const { id } = req.params;
+      const tenantId = req.tenantId || req.user?.tenantId;
+      const updated = await contractService.renewContract(id, req.body, tenantId);
 
-            auditRepository.createLog({
-                entity: 'Contract',
-                entityId: id,
-                action: 'UPDATE',
-                performedBy: req.user?.id || 'Admin',
-                details: `Renovación de contrato ${id}. Nuevo tipo: ${req.body.newType || 'Indefinido'}, Nueva fecha fin: ${req.body.newEndDate || 'Indefinido'}`
-            }).catch(err => console.error('Audit Log Error:', err));
+      auditRepository
+        .createLog({
+          entity: 'Contract',
+          entityId: id,
+          action: 'UPDATE',
+          performedBy: req.user?.id || 'Admin',
+          details: `Renovación de contrato ${id}. Nuevo tipo: ${req.body.newType || 'Indefinido'}, Nueva fecha fin: ${req.body.newEndDate || 'Indefinido'}`,
+        })
+        .catch((err) => console.error('Audit Log Error:', err));
 
-            res.json({
-                success: true,
-                data: updated,
-                message: 'Contrato renovado exitosamente'
-            });
-        } catch (error) {
-            res.status(400).json({ success: false, message: error.message });
-        }
+      res.json({
+        success: true,
+        data: updated,
+        message: 'Contrato renovado exitosamente',
+      });
+    } catch (error) {
+      res.status(400).json({ success: false, message: error.message });
     }
+  }
 }
 
 export default new ContractController();

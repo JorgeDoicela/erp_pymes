@@ -1,16 +1,24 @@
+/**
+ * @file superAdmin.routes.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware.js';
 import { requireSuperAdmin } from '../../middleware/superAdmin.middleware.js';
 import {
-    getPlatformMetrics,
-    getAllTenants,
-    getTenantsList,
-    getTenantDetail,
-    updateTenantStatus,
-    updateTenantPlan,
-    getGlobalAuditLogs,
-    createTenantBySuperAdmin,
-    impersonateTenant
+  getPlatformMetrics,
+  getAllTenants,
+  getTenantsList,
+  getTenantDetail,
+  updateTenantStatus,
+  updateTenantPlan,
+  getGlobalAuditLogs,
+  createTenantBySuperAdmin,
+  impersonateTenant,
 } from '../../controllers/admin/superAdminController.js';
 
 const router = Router();
@@ -30,4 +38,3 @@ router.post('/tenants/:id/impersonate', impersonateTenant);
 router.get('/audit', getGlobalAuditLogs);
 
 export default router;
-

@@ -8,14 +8,14 @@ El sistema utiliza JSON Web Tokens (JWT) como mecanismo de autenticación statel
 
 ```json
 {
-  "id": "clx...",          // ID del empleado
+  "id": "clx...", // ID del empleado
   "email": "user@co.com",
   "role": "admin",
-  "tenantId": "clx...",    // ID de la empresa
+  "tenantId": "clx...", // ID de la empresa
   "firstName": "Jorge",
   "lastName": "Doicela",
   "iat": 1723456789,
-  "exp": 1723543189        // Expiración configurada en .env
+  "exp": 1723543189 // Expiración configurada en .env
 }
 ```
 
@@ -43,9 +43,9 @@ El sistema utiliza JSON Web Tokens (JWT) como mecanismo de autenticación statel
 ```javascript
 // auth.middleware.js
 export const authenticate = (req, res, next) => {
-    // Acepta token en Authorization header O en query param ?token=
-    // jwt.verify lanza excepción si el token es inválido o expirado
-    // req.user = decoded payload
+  // Acepta token en Authorization header O en query param ?token=
+  // jwt.verify lanza excepción si el token es inválido o expirado
+  // req.user = decoded payload
 };
 ```
 
@@ -70,7 +70,7 @@ export const ROLES = {
   SUPER_ADMIN: 'superadmin',
   ADMIN: 'admin',
   HR: 'hr',
-  EMPLOYEE: 'employee'
+  EMPLOYEE: 'employee',
 };
 
 export const isSuperAdminRole = (role) => role === 'superadmin';
@@ -89,18 +89,18 @@ router.get('/my', authenticate, getMyPayrolls); // Cualquier rol autenticado
 
 ### 3.3 Matriz de Permisos por Módulo
 
-| Módulo / Acción | SuperAdmin | Admin | HR | Employee |
-|----------------|-----------|-------|-----|----------|
-| Crear empleado | Lectura | ✓ | ✓ | ✗ |
-| Ver todos los empleados | Lectura | ✓ | ✓ | Solo propio |
-| Generar nómina | Lectura | ✓ | ✗ | ✗ |
-| Ver nómina | Lectura | ✓ | ✓ | Solo propia |
-| Aprobar ausencias | Lectura | ✓ | ✓ | ✗ |
-| Ver auditoría | Lectura | ✓ | ✓ | ✗ |
-| Dashboard de inteligencia | Lectura | ✓ | ✓ | ✗ |
-| Gestión de tenants | ✓ | ✗ | ✗ | ✗ |
-| Configuración del sistema | Lectura | ✓ | ✗ | ✗ |
-| Registrar asistencia | — | — | — | ✓ (propio) |
+| Módulo / Acción           | SuperAdmin | Admin | HR  | Employee    |
+| ------------------------- | ---------- | ----- | --- | ----------- |
+| Crear empleado            | Lectura    | ✓     | ✓   | ✗           |
+| Ver todos los empleados   | Lectura    | ✓     | ✓   | Solo propio |
+| Generar nómina            | Lectura    | ✓     | ✗   | ✗           |
+| Ver nómina                | Lectura    | ✓     | ✓   | Solo propia |
+| Aprobar ausencias         | Lectura    | ✓     | ✓   | ✗           |
+| Ver auditoría             | Lectura    | ✓     | ✓   | ✗           |
+| Dashboard de inteligencia | Lectura    | ✓     | ✓   | ✗           |
+| Gestión de tenants        | ✓          | ✗     | ✗   | ✗           |
+| Configuración del sistema | Lectura    | ✓     | ✗   | ✗           |
+| Registrar asistencia      | —          | —     | —   | ✓ (propio)  |
 
 ## 4. Restricciones del SuperAdmin
 
@@ -111,10 +111,10 @@ Esta restricción está implementada directamente en `tenant.middleware.js`:
 ```javascript
 // SuperAdmin + operación de escritura → 403
 if (isSuperAdmin && req.method !== 'GET') {
-    return res.status(403).json({
-        code: 'SUPERADMIN_READ_ONLY_SUPERVISION',
-        message: '...'
-    });
+  return res.status(403).json({
+    code: 'SUPERADMIN_READ_ONLY_SUPERVISION',
+    message: '...',
+  });
 }
 ```
 
@@ -154,7 +154,7 @@ El sistema implementa autenticación biométrica mediante el estándar WebAuthn 
 
 ### 5.3 Seguridad WebAuthn
 
-- **Relying Party ID (RP_ID):** Configurable via `process.env.RP_ID`. En producción: `erp.jorgedoicela.com`.
-- **Orígenes permitidos (ALLOWED_ORIGINS):** Lista explícita de dominios HTTPS autorizados.
+- **Relying Party ID (RP_ID):** Configurable via `process.env.RP_ID`. En producción: `doicela.dev`.
+- **Orígenes permitidos (ALLOWED_ORIGINS):** Lista explícita de dominios HTTPS autorizados (`https://norma.doicela.dev`).
 - **Counter:** Cada uso incrementa el `counter` almacenado. Si el counter recibido no es mayor al almacenado, la autenticación se rechaza (protección contra clonación de credencial).
 - **AAGUID:** Se almacena el identificador del hardware autenticador para auditoría.

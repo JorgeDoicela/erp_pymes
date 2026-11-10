@@ -1,3 +1,11 @@
+/**
+ * @file tenantContext.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { AsyncLocalStorage } from 'async_hooks';
 
 export const tenantStorage = new AsyncLocalStorage();
@@ -9,32 +17,34 @@ export const tenantStorage = new AsyncLocalStorage();
  * @param {boolean} isSuperAdmin - Indica si es un SuperAdmin
  */
 export const runWithTenant = (tenantId, callback, isSuperAdmin = false) => {
-    const currentStore = tenantStorage.getStore() || {};
-    return tenantStorage.run({ ...currentStore, tenantId, isSuperAdmin, bypassTenantFilter: false }, callback);
+  const currentStore = tenantStorage.getStore() || {};
+  return tenantStorage.run(
+    { ...currentStore, tenantId, isSuperAdmin, bypassTenantFilter: false },
+    callback
+  );
 };
 
 /**
  * Ejecuta una función deshabilitando temporalmente la interceptación de tenant en Prisma.
  * Esencial para verificaciones internas de existencia/permisos previa a mutaciones sin recursión.
- * @param {Function} callback 
+ * @param {Function} callback
  */
 export const runWithoutTenantFilter = (callback) => {
-    const currentStore = tenantStorage.getStore() || {};
-    return tenantStorage.run({ ...currentStore, bypassTenantFilter: true }, callback);
+  const currentStore = tenantStorage.getStore() || {};
+  return tenantStorage.run({ ...currentStore, bypassTenantFilter: true }, callback);
 };
 
 export const getTenantId = () => {
-    const store = tenantStorage.getStore();
-    return store?.tenantId || null;
+  const store = tenantStorage.getStore();
+  return store?.tenantId || null;
 };
 
 export const isSuperAdminContext = () => {
-    const store = tenantStorage.getStore();
-    return store?.isSuperAdmin || false;
+  const store = tenantStorage.getStore();
+  return store?.isSuperAdmin || false;
 };
 
 export const isTenantFilterBypassed = () => {
-    const store = tenantStorage.getStore();
-    return store?.bypassTenantFilter || false;
+  const store = tenantStorage.getStore();
+  return store?.bypassTenantFilter || false;
 };
-

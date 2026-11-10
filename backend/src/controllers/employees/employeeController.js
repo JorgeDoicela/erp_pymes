@@ -1,3 +1,11 @@
+/**
+ * @file employeeController.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import employeeService from '../../services/employees/employeeService.js';
 import bcrypt from 'bcryptjs';
 import { isSuperAdminRole } from '../../config/roles.js';
@@ -15,11 +23,26 @@ export class EmployeeController {
   async create(req, res) {
     try {
       const {
-        firstName, lastName, email, department, position, salary, password, role,
-        identityCard, birthDate, address, phone, hireDate, contractType, civilStatus,
-        bankName, accountNumber, accountType,
+        firstName,
+        lastName,
+        email,
+        department,
+        position,
+        salary,
+        password,
+        role,
+        identityCard,
+        birthDate,
+        address,
+        phone,
+        hireDate,
+        contractType,
+        civilStatus,
+        bankName,
+        accountNumber,
+        accountType,
         hasNightSurcharge,
-        hasDoubleOvertime
+        hasDoubleOvertime,
       } = req.body;
 
       if (!password || password.length < 8) {
@@ -72,7 +95,7 @@ export class EmployeeController {
         accountNumber,
         accountType,
         hasNightSurcharge,
-        hasDoubleOvertime
+        hasDoubleOvertime,
       });
 
       res.status(201).json({
@@ -105,7 +128,7 @@ export class EmployeeController {
           q,
           tenantId,
         }),
-        employeeService.countEmployees({ q, tenantId })
+        employeeService.countEmployees({ q, tenantId }),
       ]);
 
       res.status(200).json({
@@ -147,7 +170,7 @@ export class EmployeeController {
         return res.status(403).json({
           success: false,
           message: 'Acceso denegado: Solo puedes consultar tu propia información de empleado.',
-          code: 'FORBIDDEN_SELF_ONLY'
+          code: 'FORBIDDEN_SELF_ONLY',
         });
       }
 
@@ -209,7 +232,7 @@ export class EmployeeController {
           return res.status(403).json({
             success: false,
             message: 'Acceso denegado: Solo puedes actualizar tu propio perfil.',
-            code: 'FORBIDDEN_SELF_ONLY'
+            code: 'FORBIDDEN_SELF_ONLY',
           });
         }
         // Proteger campos sensibles frente a modificaciones no autorizadas
@@ -312,7 +335,7 @@ export class EmployeeController {
         return res.status(403).json({
           success: false,
           message: 'Acceso denegado: Solo puedes consultar tu propio historial.',
-          code: 'FORBIDDEN_SELF_ONLY'
+          code: 'FORBIDDEN_SELF_ONLY',
         });
       }
 
@@ -343,7 +366,7 @@ export class EmployeeController {
           success: true,
           data: null,
           isSuperAdmin: true,
-          message: 'Cuenta de SuperAdministrador SaaS Activa'
+          message: 'Cuenta de SuperAdministrador SaaS Activa',
         });
       }
       const id = req.user?.employeeId || req.user?.id;
@@ -352,10 +375,11 @@ export class EmployeeController {
       res.status(200).json({ success: true, data: employee });
     } catch (error) {
       console.error('[EmployeeController] Profile Error:', error);
-      res.status(500).json({ success: false, message: 'Error al obtener perfil: ' + error.message });
+      res
+        .status(500)
+        .json({ success: false, message: 'Error al obtener perfil: ' + error.message });
     }
   }
-
 
   /**
    * POST /employees/:id/terminate
@@ -366,19 +390,22 @@ export class EmployeeController {
       const { id } = req.params;
       const { exitDate, exitReason, exitType } = req.body;
 
-      const result = await employeeService.updateEmployee(id, {
-        isActive: false,
-        exitDate: new Date(exitDate),
-        exitReason,
-        exitType
-      }, req.user?.id);
+      const result = await employeeService.updateEmployee(
+        id,
+        {
+          isActive: false,
+          exitDate: new Date(exitDate),
+          exitReason,
+          exitType,
+        },
+        req.user?.id
+      );
 
       res.status(200).json({
         success: true,
         message: 'Empleado dado de baja exitosamente',
-        data: result
+        data: result,
       });
-
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -396,7 +423,7 @@ export class EmployeeController {
       const departments = await employeeService.getDepartments();
       res.status(200).json({
         success: true,
-        data: departments
+        data: departments,
       });
     } catch (error) {
       res.status(500).json({
@@ -422,15 +449,15 @@ export class EmployeeController {
           message: 'Consentimiento registrado',
           data: {
             trackingConsent: !!consent,
-            trackingConsentDate: new Date()
-          }
+            trackingConsentDate: new Date(),
+          },
         });
       }
 
       // Buscar si el empleado existe en la base de datos
       const employeeExists = await prisma.employee.findUnique({
         where: { id },
-        select: { id: true }
+        select: { id: true },
       });
 
       if (!employeeExists) {
@@ -439,29 +466,33 @@ export class EmployeeController {
           message: 'Consentimiento registrado',
           data: {
             trackingConsent: !!consent,
-            trackingConsentDate: new Date()
-          }
+            trackingConsentDate: new Date(),
+          },
         });
       }
 
-      const employee = await employeeService.updateEmployee(id, {
-        trackingConsent: !!consent,
-        trackingConsentDate: new Date()
-      }, id);
+      const employee = await employeeService.updateEmployee(
+        id,
+        {
+          trackingConsent: !!consent,
+          trackingConsentDate: new Date(),
+        },
+        id
+      );
 
       res.status(200).json({
         success: true,
         message: 'Consentimiento actualizado',
         data: {
           trackingConsent: employee.trackingConsent,
-          trackingConsentDate: employee.trackingConsentDate
-        }
+          trackingConsentDate: employee.trackingConsentDate,
+        },
       });
     } catch (error) {
       console.error('[EmployeeController] updateConsent error:', error);
       res.status(500).json({
         success: false,
-        message: error.message || 'Error al actualizar consentimiento'
+        message: error.message || 'Error al actualizar consentimiento',
       });
     }
   }

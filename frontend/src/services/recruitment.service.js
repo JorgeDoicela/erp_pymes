@@ -1,74 +1,82 @@
+/**
+ * @file recruitment.service.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import api from '../api/axios';
 
 // Public Vacancies
 export const getPublicVacancies = async (params = {}) => {
-    const response = await api.get('/recruitment/public', { params });
-    return response.data;
+  const response = await api.get('/recruitment/public', { params });
+  return response.data;
 };
 
 // Admin Vacancies & Stats
 export const getRecruitmentStats = async () => {
-    const response = await api.get('/recruitment/stats');
-    return response.data;
+  const response = await api.get('/recruitment/stats');
+  return response.data;
 };
 
 export const createVacancy = async (data) => {
-    const response = await api.post('/recruitment', data);
-    return response.data;
+  const response = await api.post('/recruitment', data);
+  return response.data;
 };
 
 export const getVacancies = async (params = {}) => {
-    const response = await api.get('/recruitment', { params });
-    return response.data;
+  const response = await api.get('/recruitment', { params });
+  return response.data;
 };
 
 export const updateVacancyStatus = async (id, status) => {
-    const response = await api.put(`/recruitment/${id}/status`, { status });
-    return response.data;
+  const response = await api.put(`/recruitment/${id}/status`, { status });
+  return response.data;
 };
 
 export const deleteVacancy = async (id) => {
-    const response = await api.delete(`/recruitment/${id}`);
-    return response.data;
+  const response = await api.delete(`/recruitment/${id}`);
+  return response.data;
 };
 
 // Admin Applications
 export const getApplicationsByVacancy = async (id) => {
-    const response = await api.get(`/recruitment/${id}/applications`);
-    return response.data;
+  const response = await api.get(`/recruitment/${id}/applications`);
+  return response.data;
 };
 
 export const getApplicationDetails = async (id) => {
-    const response = await api.get(`/recruitment/applications/${id}`);
-    return response.data;
+  const response = await api.get(`/recruitment/applications/${id}`);
+  return response.data;
 };
 
 export const updateApplicationStatus = async (id, status, sendEmail) => {
-    const response = await api.put(`/recruitment/applications/${id}/status`, { status, sendEmail });
-    return response.data;
+  const response = await api.put(`/recruitment/applications/${id}/status`, { status, sendEmail });
+  return response.data;
 };
 
 export const deleteApplication = async (id) => {
-    const response = await api.delete(`/recruitment/applications/${id}`);
-    return response.data;
+  const response = await api.delete(`/recruitment/applications/${id}`);
+  return response.data;
 };
 
 export const addApplicationNote = async (id, content) => {
-    const response = await api.post(`/recruitment/applications/${id}/notes`, { content });
-    return response.data;
+  const response = await api.post(`/recruitment/applications/${id}/notes`, { content });
+  return response.data;
 };
 
 export const scheduleInterview = async (id, data) => {
-    const response = await api.post(`/recruitment/applications/${id}/interviews`, data);
-    return response.data;
+  const response = await api.post(`/recruitment/applications/${id}/interviews`, data);
+  return response.data;
 };
 
 export const evaluateCandidate = async (id, data) => {
-    const response = await api.post(`/recruitment/applications/${id}/evaluations`, data);
-    return response.data;
+  const response = await api.post(`/recruitment/applications/${id}/evaluations`, data);
+  return response.data;
 };
 
 export const hireCandidate = async (id, data) => {
-    const response = await api.post(`/recruitment/applications/${id}/hire`, data);
-    return response.data;
+  const response = await api.post(`/recruitment/applications/${id}/hire`, data);
+  return response.data;
 };

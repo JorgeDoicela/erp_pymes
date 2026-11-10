@@ -1,6 +1,6 @@
 /**
  * @file server.js
- * @description Punto de entrada principal y servidor HTTP/WebSocket para la plataforma Emplifi.
+ * @description Punto de entrada principal y servidor HTTP/WebSocket para la plataforma Norma ERP.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -31,7 +31,7 @@ const server = http.createServer(app);
 socketService.init(server);
 
 server.listen(PORT, () => {
-  console.log(`Backend EMPLIFI corriendo en http://localhost:${PORT}`);
+  console.log(`Backend NORMA ERP corriendo en http://localhost:${PORT}`);
   console.log('Server updated at ' + new Date().toISOString());
 });
 

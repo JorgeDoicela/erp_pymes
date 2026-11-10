@@ -51,8 +51,8 @@ const corsOptions = {
       'http://localhost:5173', // Vite dev server principal
       'http://localhost:5174', // Vite dev server secundario
       'http://localhost:3000', // Alternativa
-      'https://erp.jorgedoicela.com', // Produccion EC2 HTTPS
-      'http://erp.jorgedoicela.com', // Produccion EC2 HTTP
+      'https://norma.doicela.dev', // Produccion VPS HTTPS
+      'http://norma.doicela.dev', // Produccion VPS HTTP
       process.env.FRONTEND_URL, // Produccion
       process.env.CLIENT_URL, // Soporte CLIENT_URL
       process.env.ORIGIN, // Soporte dinamico para ORIGIN

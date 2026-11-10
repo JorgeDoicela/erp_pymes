@@ -1,3 +1,11 @@
+/**
+ * @file useAutoSync.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
@@ -13,89 +21,89 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  * @returns {Object} { lastSynced, isSyncing, triggerSync }
  */
 export function useAutoSync(fetchFn, options = {}) {
-    const {
-        intervalMs = 30000,
-        enabled = true,
-        revalidateOnFocus = true,
-        revalidateOnReconnect = true
-    } = options;
+  const {
+    intervalMs = 30000,
+    enabled = true,
+    revalidateOnFocus = true,
+    revalidateOnReconnect = true,
+  } = options;
 
-    const [lastSynced, setLastSynced] = useState(() => new Date());
-    const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSynced, setLastSynced] = useState(() => new Date());
+  const [isSyncing, setIsSyncing] = useState(false);
 
-    // Guardar referencia a fetchFn para evitar recrear timers innecesariamente
-    const fetchRef = useRef(fetchFn);
-    useEffect(() => {
-        fetchRef.current = fetchFn;
-    }, [fetchFn]);
+  // Guardar referencia a fetchFn para evitar recrear timers innecesariamente
+  const fetchRef = useRef(fetchFn);
+  useEffect(() => {
+    fetchRef.current = fetchFn;
+  }, [fetchFn]);
 
-    const triggerSync = useCallback(async (isSilent = true) => {
-        if (!fetchRef.current) return;
-        try {
-            if (isSilent) setIsSyncing(true);
-            await fetchRef.current(isSilent);
-            setLastSynced(new Date());
-        } catch (err) {
-            console.error('[useAutoSync] Error durante la sincronización silenciosa:', err);
-        } finally {
-            if (isSilent) setIsSyncing(false);
-        }
-    }, []);
+  const triggerSync = useCallback(async (isSilent = true) => {
+    if (!fetchRef.current) return;
+    try {
+      if (isSilent) setIsSyncing(true);
+      await fetchRef.current(isSilent);
+      setLastSynced(new Date());
+    } catch (err) {
+      console.error('[useAutoSync] Error durante la sincronización silenciosa:', err);
+    } finally {
+      if (isSilent) setIsSyncing(false);
+    }
+  }, []);
 
-    // 1. Polling periódico silencioso en segundo plano
-    useEffect(() => {
-        if (!enabled || !intervalMs || intervalMs <= 0) return;
+  // 1. Polling periódico silencioso en segundo plano
+  useEffect(() => {
+    if (!enabled || !intervalMs || intervalMs <= 0) return;
 
-        const intervalId = setInterval(() => {
-            // Solo sincronizar si el documento está visible para no saturar CPU/Red en pestañas ocultas
-            if (!document.hidden) {
-                triggerSync(true);
-            }
-        }, intervalMs);
+    const intervalId = setInterval(() => {
+      // Solo sincronizar si el documento está visible para no saturar CPU/Red en pestañas ocultas
+      if (!document.hidden) {
+        triggerSync(true);
+      }
+    }, intervalMs);
 
-        return () => clearInterval(intervalId);
-    }, [enabled, intervalMs, triggerSync]);
+    return () => clearInterval(intervalId);
+  }, [enabled, intervalMs, triggerSync]);
 
-    // 2. Revalidación al enfocar pestaña o recuperar visibilidad
-    useEffect(() => {
-        if (!enabled || !revalidateOnFocus) return;
+  // 2. Revalidación al enfocar pestaña o recuperar visibilidad
+  useEffect(() => {
+    if (!enabled || !revalidateOnFocus) return;
 
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                triggerSync(true);
-            }
-        };
-
-        const handleFocus = () => {
-            triggerSync(true);
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('focus', handleFocus);
-
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('focus', handleFocus);
-        };
-    }, [enabled, revalidateOnFocus, triggerSync]);
-
-    // 3. Revalidación al reconectar a internet
-    useEffect(() => {
-        if (!enabled || !revalidateOnReconnect) return;
-
-        const handleOnline = () => {
-            triggerSync(true);
-        };
-
-        window.addEventListener('online', handleOnline);
-        return () => window.removeEventListener('online', handleOnline);
-    }, [enabled, revalidateOnReconnect, triggerSync]);
-
-    return {
-        lastSynced,
-        isSyncing,
-        triggerSync
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        triggerSync(true);
+      }
     };
+
+    const handleFocus = () => {
+      triggerSync(true);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [enabled, revalidateOnFocus, triggerSync]);
+
+  // 3. Revalidación al reconectar a internet
+  useEffect(() => {
+    if (!enabled || !revalidateOnReconnect) return;
+
+    const handleOnline = () => {
+      triggerSync(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [enabled, revalidateOnReconnect, triggerSync]);
+
+  return {
+    lastSynced,
+    isSyncing,
+    triggerSync,
+  };
 }
 
 export default useAutoSync;

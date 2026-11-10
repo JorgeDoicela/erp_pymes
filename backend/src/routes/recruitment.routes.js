@@ -1,21 +1,29 @@
+/**
+ * @file recruitment.routes.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { Router } from 'express';
 import {
-    createVacancy,
-    getRecruitmentStats,
-    getVacancies,
-    getPublicVacancies,
-    getVacancyById,
-    updateVacancyStatus,
-    deleteVacancy,
-    applyToVacancy,
-    getApplicationsByVacancy,
-    getApplicationDetails,
-    updateApplicationStatus,
-    deleteApplication,
-    addApplicationNote,
-    scheduleInterview,
-    evaluateCandidate,
-    hireCandidate
+  createVacancy,
+  getRecruitmentStats,
+  getVacancies,
+  getPublicVacancies,
+  getVacancyById,
+  updateVacancyStatus,
+  deleteVacancy,
+  applyToVacancy,
+  getApplicationsByVacancy,
+  getApplicationDetails,
+  updateApplicationStatus,
+  deleteApplication,
+  addApplicationNote,
+  scheduleInterview,
+  evaluateCandidate,
+  hireCandidate,
 } from '../controllers/recruitment.controller.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { requireTenant } from '../middleware/tenant.middleware.js';

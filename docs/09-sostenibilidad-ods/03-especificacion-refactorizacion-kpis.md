@@ -1,6 +1,6 @@
 # Especificación Técnica de Refactorización — Métricas y Dashboard ODS 8
 
-Este documento define la arquitectura de software, los contratos de API REST, la lógica del servicio de agregación y los requerimientos de interfaz para implementar formalmente el **Módulo de Métricas y Gobernanza del ODS 8 (Trabajo Decente y Crecimiento Económico)** en la plataforma **Emplifi**.
+Este documento define la arquitectura de software, los contratos de API REST, la lógica del servicio de agregación y los requerimientos de interfaz para implementar formalmente el **Módulo de Métricas y Gobernanza del ODS 8 (Trabajo Decente y Crecimiento Económico)** en la plataforma **Norma ERP**.
 
 ---
 

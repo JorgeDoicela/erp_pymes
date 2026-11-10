@@ -1,6 +1,6 @@
-# Emplifi — Sistema de Gestión de Talento Humano
+# Norma ERP — Sistema de Gestión y Cumplimiento Laboral
 
-Sistema web de gestión del talento humano orientado a PyMEs, construido con arquitectura multi-tenant sobre una pila PERN (PostgreSQL · Express.js · React · Node.js). Incorpora un motor de nómina conforme a la legislación laboral ecuatoriana, un módulo de inteligencia analítica con modelos estadísticos de supervivencia y scoring multidimensional, registro de asistencia con validación geoespacial y biométrica WebAuthn, y un módulo de contabilidad financiera aislado.
+Sistema web de gestión del talento humano, nómina legal y contabilidad orientado a PyMEs, construido con arquitectura multi-tenant sobre una pila PERN (PostgreSQL · Express.js · React · Node.js) y alineado con el **ODS 8 (Trabajo Decente y Crecimiento Económico)**. Incorpora un motor de nómina conforme a la legislación laboral ecuatoriana, registro de asistencia con validación geoespacial y biométrica WebAuthn FIDO2, módulo de contabilidad financiera aislada y gobernanza socio-laboral.
 
 ## Estructura del Repositorio
 
@@ -27,8 +27,10 @@ erp_pymes/
 │       ├── components/  # Componentes reutilizables
 │       ├── api/      # Clientes HTTP por dominio
 │       └── hooks/    # Custom hooks de estado
+├── nginx/            # Reverse Proxy & API Gateway perimetral (SSL/TLS · WebSockets)
+├── scripts/          # Utilidades operativas, mantenimiento y pruebas de estrés
 ├── docs/             # Biblioteca técnica Docs-as-Code (00-indice-general.md)
-└── docker-compose.yml  # Orquestación: PostgreSQL · Redis · Backend · Frontend/Nginx
+└── docker-compose.yml  # Orquestación: PostgreSQL · Redis · Backend · Frontend · Gateway
 ```
 
 ## Módulos Funcionales
@@ -55,25 +57,24 @@ erp_pymes/
 
 **Seguridad:** JWT (jsonwebtoken) · bcryptjs · AES-256-GCM (crypto nativo) · Helmet · WebAuthn (@simplewebauthn)
 
-**Infraestructura:** Docker Compose · Nginx (SSL/TLS) · Redis 7 · AWS EC2
+**Infraestructura:** Docker Compose · Nginx (SSL/TLS) · Redis 7 · AWS EC2 (Debian GNU/Linux)
 
-## Levantamiento Local
+## Levantamiento con Docker (Recomendado)
+
+El proyecto está 100% dockerizado y gestiona todos los servicios mediante una única fuente de verdad en la raíz:
 
 ```bash
-# Clonar y levantar con Docker Compose
+# 1. Crear el archivo de entorno desde la plantilla unificada
+cp .env.example .env
+
+# 2. Levantar la plataforma completa (Postgres, Redis, Backend, Frontend, Gateway)
 docker compose up --build -d
 
-# O levantamiento manual (desarrollo)
-# 1. Backend
-cd backend && cp .env.example .env  # Configurar variables
-npm install
-npx prisma migrate dev
-npm run dev   # Puerto 5000
-
-# 2. Frontend
-cd frontend && npm install
-npm run dev   # Puerto 5173
+# 3. Visualizar logs de los servicios
+docker compose logs -f
 ```
+
+La aplicación quedará disponible en `http://localhost` (o en `https://norma.doicela.dev` en el VPS de producción).
 
 ## Documentación Técnica
 

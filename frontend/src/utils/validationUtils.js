@@ -1,101 +1,108 @@
+/**
+ * @file validationUtils.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
 
 /**
  * Validador de Cédula Ecuatoriana (Front-end)
  */
 export const validateCedula = (cedula) => {
-    if (!cedula) return "La cédula es obligatoria";
-    if (cedula.length !== 10) return "La cédula debe tener 10 dígitos";
-    if (!/^\d+$/.test(cedula)) return "La cédula solo debe contener números";
+  if (!cedula) return 'La cédula es obligatoria';
+  if (cedula.length !== 10) return 'La cédula debe tener 10 dígitos';
+  if (!/^\d+$/.test(cedula)) return 'La cédula solo debe contener números';
 
-    const province = parseInt(cedula.substring(0, 2), 10);
-    if (province < 1 || province > 24) return "Provincia inválida en la cédula";
+  const province = parseInt(cedula.substring(0, 2), 10);
+  if (province < 1 || province > 24) return 'Provincia inválida en la cédula';
 
-    let sum = 0;
-    for (let i = 0; i < 9; i++) {
-        let digit = parseInt(cedula.charAt(i), 10);
-        if (i % 2 === 0) {
-            digit *= 2;
-            if (digit > 9) digit -= 9;
-        }
-        sum += digit;
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    let digit = parseInt(cedula.charAt(i), 10);
+    if (i % 2 === 0) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
     }
+    sum += digit;
+  }
 
-    const verifier = (Math.ceil(sum / 10) * 10) - sum;
-    const result = verifier === 10 ? 0 : verifier;
+  const verifier = Math.ceil(sum / 10) * 10 - sum;
+  const result = verifier === 10 ? 0 : verifier;
 
-    if (result !== parseInt(cedula.substring(9, 10), 10)) {
-        return "La cédula no es válida";
-    }
+  if (result !== parseInt(cedula.substring(9, 10), 10)) {
+    return 'La cédula no es válida';
+  }
 
-    return null;
+  return null;
 };
 
 /**
  * Validador de Email
  */
 export const validateEmail = (email) => {
-    if (!email) return "El correo es obligatorio";
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!regex.test(email)) return "Formato de correo inválido";
-    return null;
+  if (!email) return 'El correo es obligatorio';
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!regex.test(email)) return 'Formato de correo inválido';
+  return null;
 };
 
 /**
  * Validador de Teléfono
  */
 export const validatePhone = (phone) => {
-    if (!phone) return "El teléfono es obligatorio";
-    if (!/^0\d{9}$/.test(phone)) return "Debe tener 10 dígitos y empezar con 0";
-    return null;
+  if (!phone) return 'El teléfono es obligatorio';
+  if (!/^0\d{9}$/.test(phone)) return 'Debe tener 10 dígitos y empezar con 0';
+  return null;
 };
 
 /**
  * Validador de Salario
  */
 export const validateSalary = (salary) => {
-    if (salary === undefined || salary === "") return "El salario es obligatorio";
-    const num = parseFloat(salary);
-    if (isNaN(num) || num <= 0) return "Debe ser un número mayor a 0";
-    return null;
+  if (salary === undefined || salary === '') return 'El salario es obligatorio';
+  const num = parseFloat(salary);
+  if (isNaN(num) || num <= 0) return 'Debe ser un número mayor a 0';
+  return null;
 };
 
 /**
  * Validador de Edad (Mínimo 18 años)
- * @param {string} birthDate 
+ * @param {string} birthDate
  * @param {Date} referenceDate - Fecha contra la cual comparar (por defecto hoy)
  */
 export const validateAge = (birthDate, referenceDate = new Date()) => {
-    if (!birthDate) return "La fecha de nacimiento es obligatoria";
-    const birth = new Date(birthDate);
-    const ref = new Date(referenceDate);
-    
-    let age = ref.getFullYear() - birth.getFullYear();
-    const m = ref.getMonth() - birth.getMonth();
-    
-    if (m < 0 || (m === 0 && ref.getDate() < birth.getDate())) {
-        age--;
-    }
+  if (!birthDate) return 'La fecha de nacimiento es obligatoria';
+  const birth = new Date(birthDate);
+  const ref = new Date(referenceDate);
 
-    if (age < 18) {
-        const dateStr = ref.toLocaleDateString();
-        return `El empleado debe haber tenido al menos 18 años (Ley de Ecuador). Edad a la fecha ${dateStr}: ${age} años.`;
-    }
-    return null;
+  let age = ref.getFullYear() - birth.getFullYear();
+  const m = ref.getMonth() - birth.getMonth();
+
+  if (m < 0 || (m === 0 && ref.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  if (age < 18) {
+    const dateStr = ref.toLocaleDateString();
+    return `El empleado debe haber tenido al menos 18 años (Ley de Ecuador). Edad a la fecha ${dateStr}: ${age} años.`;
+  }
+  return null;
 };
 
 /**
  * Validador de Coherencia de Fechas
  */
 export const validateDates = (birthDate, hireDate) => {
-    if (!birthDate || !hireDate) return null;
-    const b = new Date(birthDate);
-    const h = new Date(hireDate);
+  if (!birthDate || !hireDate) return null;
+  const b = new Date(birthDate);
+  const h = new Date(hireDate);
 
-    if (b >= h) return "La fecha de nacimiento debe ser anterior a la de contratación";
-    
-    // Validar que al momento de contratación tuviera 18 años
-    const ageAtHireError = validateAge(birthDate, hireDate);
-    if (ageAtHireError) return ageAtHireError;
+  if (b >= h) return 'La fecha de nacimiento debe ser anterior a la de contratación';
 
-    return null;
+  // Validar que al momento de contratación tuviera 18 años
+  const ageAtHireError = validateAge(birthDate, hireDate);
+  if (ageAtHireError) return ageAtHireError;
+
+  return null;
 };

@@ -1,3 +1,11 @@
+/**
+ * @file index.routes.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
 import { Router } from 'express';
 import { login, forgotPassword, resetPassword } from '../controllers/auth/authController.js';
 import employeeRoutes from './employees/employee.routes.js';
@@ -41,7 +49,7 @@ router.use('/signatures', signatureRoutes);
 
 // Ruta de prueba
 router.get('/', (req, res) => {
-  res.send('API EMPLIFI funcionando correctamente v1');
+  res.send('API NORMA ERP funcionando correctamente v1');
 });
 
 // Seed Remoto (Protegido para SuperAdmin)

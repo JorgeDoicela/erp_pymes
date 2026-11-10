@@ -7,6 +7,7 @@ El frontend organiza los clientes HTTP en archivos por dominio funcional dentro 
 ### 1.1 Configuración de Axios
 
 La instancia base de Axios se configura con:
+
 - `baseURL`: URL del backend obtenida de `import.meta.env.VITE_API_URL` (variable de entorno de Vite).
 - `headers`: `Authorization: Bearer <token>` inyectado automáticamente desde `localStorage`.
 
@@ -15,21 +16,22 @@ La instancia base de Axios se configura con:
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 });
 
-api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 ```
 
 ### 1.2 Manejo de Errores
 
 Los errores HTTP son capturados en el interceptor de respuesta de Axios:
+
 - **HTTP 401:** Token expirado o inválido → Limpia `localStorage` y redirige a `/login`.
 - **HTTP 403:** Sin permisos → Muestra toast de error con el mensaje del servidor.
 - **HTTP 429:** Rate limit superado → Muestra toast de advertencia.
@@ -43,10 +45,10 @@ El tenant del usuario autenticado se transmite automáticamente en el payload JW
 
 El frontend establece una conexión Socket.IO con el backend para recibir notificaciones en tiempo real. Los eventos incluyen:
 
-| Evento | Descripción |
-|--------|-------------|
-| `notification` | Nueva notificación in-app |
-| `payroll_status` | Cambio de estado de una nómina |
+| Evento              | Descripción                           |
+| ------------------- | ------------------------------------- |
+| `notification`      | Nueva notificación in-app             |
+| `payroll_status`    | Cambio de estado de una nómina        |
 | `attendance_update` | Actualización de estado de asistencia |
 
 La conexión se establece al autenticarse y se cierra al hacer logout.
@@ -54,16 +56,17 @@ La conexión se establece al autenticarse y se cierra al hacer logout.
 ## 4. Progressive Web App (PWA)
 
 La configuración de PWA mediante `vite-plugin-pwa` genera un Service Worker que:
+
 - Cachea los activos estáticos (JS, CSS, imágenes) del bundle de Vite para carga offline.
 - Intercepta peticiones de red fallidas cuando el usuario está sin conexión y devuelve la versión cacheada.
 - El componente `OfflineIndicator` monitorea el evento `online/offline` del navegador y muestra un banner cuando la conexión se pierde.
 
 ## 5. Variables de Entorno del Frontend
 
-| Variable | Descripción |
-|---------|-------------|
-| `VITE_API_URL` | URL base del backend (`http://localhost:5000/api` en dev, `https://erp.jorgedoicela.com/api` en prod) |
-| `VITE_APP_NAME` | Nombre de la aplicación (para PWA manifest) |
+| Variable        | Descripción                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------- |
+| `VITE_API_URL`  | URL base del backend (`http://localhost:5000/api` en dev, `https://norma.doicela.dev/api` o `/api` en prod) |
+| `VITE_APP_NAME` | Nombre de la aplicación (para PWA manifest)                                                                 |
 
 ## 6. Visualización de Ecuaciones Matemáticas
 
@@ -73,12 +76,15 @@ El módulo de inteligencia analítica utiliza `react-katex` para renderizar las 
 import { InlineMath, BlockMath } from 'react-katex';
 
 // Fórmula de supervivencia Weibull
-<BlockMath math={`S(t) = \\exp\\left(-\\left(\\frac{t}{\\lambda}\\right)^k \\cdot e^{\\beta X}\\right)`} />
+<BlockMath
+  math={`S(t) = \\exp\\left(-\\left(\\frac{t}{\\lambda}\\right)^k \\cdot e^{\\beta X}\\right)`}
+/>;
 ```
 
 ## 7. Mapas de Geocerca (Leaflet)
 
 La pantalla de configuración del sistema y el perfil de empleado utilizan `react-leaflet` para:
+
 - Visualizar la ubicación del lugar de trabajo en un mapa interactivo.
 - Permitir al administrador configurar la geocerca arrastrando un marcador.
 - Mostrar el radio de geocerca como un círculo visual sobre el mapa.

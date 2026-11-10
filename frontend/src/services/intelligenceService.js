@@ -1,4 +1,12 @@
 /**
+ * @file intelligenceService.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
+/**
  * Servicio de API para el Agente Inteligente
  * Usa el cliente HTTP centralizado (intelligenceClient) que gestiona
  * automáticamente el token y los errores de autenticación.
@@ -10,235 +18,235 @@ import intelligenceClient from '../api/intelligenceClient.js';
  * Obtiene el dashboard completo con todos los insights
  */
 export async function getDashboard(refresh = false) {
-    const url = refresh ? '/dashboard?refresh=true' : '/dashboard';
-    const response = await intelligenceClient.get(url);
-    return response.data;
+  const url = refresh ? '/dashboard?refresh=true' : '/dashboard';
+  const response = await intelligenceClient.get(url);
+  return response.data;
 }
 
 /**
  * Obtiene análisis de riesgo de rotación
  */
 export async function getRetentionRisk() {
-    const response = await intelligenceClient.get('/retention-risk');
-    return response.data;
+  const response = await intelligenceClient.get('/retention-risk');
+  return response.data;
 }
 
 /**
  * Obtiene insights de desempeño
  */
 export async function getPerformanceInsights() {
-    const response = await intelligenceClient.get('/performance-insights');
-    return response.data;
+  const response = await intelligenceClient.get('/performance-insights');
+  return response.data;
 }
 
 /**
  * Obtiene patrones de asistencia
  */
 export async function getAttendancePatterns() {
-    const response = await intelligenceClient.get('/attendance-patterns');
-    return response.data;
+  const response = await intelligenceClient.get('/attendance-patterns');
+  return response.data;
 }
 
 /**
  * Obtiene optimización de nómina
  */
 export async function getPayrollOptimization() {
-    const response = await intelligenceClient.get('/payroll-optimization');
-    return response.data;
+  const response = await intelligenceClient.get('/payroll-optimization');
+  return response.data;
 }
 
 /**
  * Obtiene matching inteligente para una vacante
  */
 export async function getRecruitmentMatching(vacancyId) {
-    const response = await intelligenceClient.get(`/recruitment-matching/${vacancyId}`);
-    return response.data;
+  const response = await intelligenceClient.get(`/recruitment-matching/${vacancyId}`);
+  return response.data;
 }
 
 /**
  * Obtiene recomendaciones priorizadas
  */
 export async function getRecommendations() {
-    const response = await intelligenceClient.get('/recommendations');
-    return response.data;
+  const response = await intelligenceClient.get('/recommendations');
+  return response.data;
 }
 
 /**
  * Obtiene comparativa de departamentos
  */
 export async function getDepartmentComparison() {
-    const response = await intelligenceClient.get('/departments');
-    return response.data;
+  const response = await intelligenceClient.get('/departments');
+  return response.data;
 }
 
 /**
  * Obtiene alertas proactivas del sistema
  */
 export async function getProactiveAlerts() {
-    const response = await intelligenceClient.get('/alerts');
-    return response.data;
+  const response = await intelligenceClient.get('/alerts');
+  return response.data;
 }
 
 /**
  * Obtiene análisis predictivo
  */
 export async function getPredictiveAnalytics() {
-    const response = await intelligenceClient.get('/predictions');
-    return response.data;
+  const response = await intelligenceClient.get('/predictions');
+  return response.data;
 }
 
 /**
  * Obtiene scoring de empleados (todos o uno específico)
  */
 export async function getEmployeeScoring(employeeId = null) {
-    const url = employeeId ? `/employee-scoring/${employeeId}` : '/employee-scoring';
-    const response = await intelligenceClient.get(url);
-    return response.data;
+  const url = employeeId ? `/employee-scoring/${employeeId}` : '/employee-scoring';
+  const response = await intelligenceClient.get(url);
+  return response.data;
 }
 
 /**
  * Obtiene índice de salud organizacional
  */
 export async function getOrganizationalHealth() {
-    const response = await intelligenceClient.get('/organizational-health');
-    return response.data;
+  const response = await intelligenceClient.get('/organizational-health');
+  return response.data;
 }
 
 /**
  * Obtiene análisis de patrones y anomalías
  */
 export async function getPatternAnalysis() {
-    const response = await intelligenceClient.get('/patterns');
-    return response.data;
+  const response = await intelligenceClient.get('/patterns');
+  return response.data;
 }
 
 /**
  * Ejecuta simulación Monte Carlo estocástica para escenarios What-If
  */
 export async function runWhatIfMonteCarlo(params) {
-    const response = await intelligenceClient.post('/what-if-monte-carlo', params);
-    return response.data;
+  const response = await intelligenceClient.post('/what-if-monte-carlo', params);
+  return response.data;
 }
 
 /**
  * Exporta el dataset académico anonimizado en CSV o JSON y activa la descarga directa
  */
 export async function exportAcademicDataset(format = 'csv') {
-    const response = await intelligenceClient.get(`/export-academic?format=${format}`, {
-        responseType: format === 'csv' ? 'blob' : 'json'
-    });
+  const response = await intelligenceClient.get(`/export-academic?format=${format}`, {
+    responseType: format === 'csv' ? 'blob' : 'json',
+  });
 
-    if (format === 'csv') {
-        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `hr_academic_dataset_${Date.now()}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-    } else {
-        const jsonStr = JSON.stringify(response.data, null, 2);
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `hr_academic_dataset_${Date.now()}.json`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-    }
-    return true;
+  if (format === 'csv') {
+    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `hr_academic_dataset_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } else {
+    const jsonStr = JSON.stringify(response.data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `hr_academic_dataset_${Date.now()}.json`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }
+  return true;
 }
 
 /**
  * Obtiene métricas e historial de automejora del motor RSI
  */
 export async function getRsiMetrics() {
-    const response = await intelligenceClient.get('/rsi/metrics');
-    return response.data;
+  const response = await intelligenceClient.get('/rsi/metrics');
+  return response.data;
 }
 
 /**
  * Dispara una calibración manual del motor RSI
  */
 export async function calibrateRsiModel() {
-    const response = await intelligenceClient.post('/rsi/calibrate');
-    return response.data;
+  const response = await intelligenceClient.post('/rsi/calibrate');
+  return response.data;
 }
 
 /**
  * Simula la resolución de un desenlace de empleado (Permanencia / Renuncia)
  */
 export async function simulateRsiOutcome(data) {
-    const response = await intelligenceClient.post('/rsi/simulate', data);
-    return response.data;
+  const response = await intelligenceClient.post('/rsi/simulate', data);
+  return response.data;
 }
 
 /**
  * Ejecuta una simulación de intervención contrafactual (Causal AI)
  */
 export async function runCausalSimulation(data) {
-    const response = await intelligenceClient.post('/causal/simulate', data);
-    return response.data;
+  const response = await intelligenceClient.post('/causal/simulate', data);
+  return response.data;
 }
 
 /**
  * Obtiene el historial de intervenciones causales simuladas
  */
 export async function getCausalHistory() {
-    const response = await intelligenceClient.get('/causal/history');
-    return response.data;
+  const response = await intelligenceClient.get('/causal/history');
+  return response.data;
 }
 
 /**
  * Ejecuta una optimización multiobjetivo por refuerzo MORL (Frontera de Pareto)
  */
 export async function runMorlOptimization(data) {
-    const response = await intelligenceClient.post('/morl/optimize', data);
-    return response.data;
+  const response = await intelligenceClient.post('/morl/optimize', data);
+  return response.data;
 }
 
 /**
  * Obtiene el historial de optimizaciones MORL Pareto
  */
 export async function getMorlHistory() {
-    const response = await intelligenceClient.get('/morl/history');
-    return response.data;
+  const response = await intelligenceClient.get('/morl/history');
+  return response.data;
 }
 
 /**
  * Obtiene asesoría estratégica ejecutiva basada en datos reales del tenant
  */
 export async function getStrategicAdvice(queryType, customPrompt = '') {
-    const response = await intelligenceClient.post('/strategic-advice', { queryType, customPrompt });
-    return response.data;
+  const response = await intelligenceClient.post('/strategic-advice', { queryType, customPrompt });
+  return response.data;
 }
 
 /**
  * Obtiene métricas de validación cruzada estratificada K-Fold (Baseline vs Weibull+RSI)
  */
 export async function getCrossValidationMetrics() {
-    const response = await intelligenceClient.get('/rsi/cross-validation');
-    return response.data;
+  const response = await intelligenceClient.get('/rsi/cross-validation');
+  return response.data;
 }
 
 /**
  * Obtiene prueba de bondad de ajuste Kolmogorov-Smirnov con Bootstrap paramétrico
  */
 export async function getKolmogorovSmirnovAnalysis() {
-    const response = await intelligenceClient.get('/rsi/kolmogorov-smirnov');
-    return response.data;
+  const response = await intelligenceClient.get('/rsi/kolmogorov-smirnov');
+  return response.data;
 }
 
 /**
  * Obtiene simulación Monte Carlo con 5 semillas estocásticas (Sensibilidad Multi-Semilla)
  */
 export async function getMultiSeedSensitivity() {
-    const response = await intelligenceClient.get('/rsi/multi-seed-sensitivity');
-    return response.data;
+  const response = await intelligenceClient.get('/rsi/multi-seed-sensitivity');
+  return response.data;
 }
 
 // ==================== TEMPORAL ATTENTION (VASWANI 2017) ====================
@@ -247,24 +255,24 @@ export async function getMultiSeedSensitivity() {
  * Obtiene el resumen de atención temporal corporativa sobre secuencias de 12 meses
  */
 export async function getTemporalAttentionSummary() {
-    const response = await intelligenceClient.get('/temporal-attention/summary');
-    return response.data;
+  const response = await intelligenceClient.get('/temporal-attention/summary');
+  return response.data;
 }
 
 /**
  * Obtiene la trayectoria de atención temporal de 12 meses para un colaborador
  */
 export async function getTemporalAttentionByEmployee(employeeId) {
-    const response = await intelligenceClient.get(`/temporal-attention/${employeeId}`);
-    return response.data;
+  const response = await intelligenceClient.get(`/temporal-attention/${employeeId}`);
+  return response.data;
 }
 
 /**
  * Calibra manualmente las matrices de proyección Q/K/V de atención temporal
  */
 export async function calibrateTemporalAttention() {
-    const response = await intelligenceClient.post('/temporal-attention/calibrate');
-    return response.data;
+  const response = await intelligenceClient.post('/temporal-attention/calibrate');
+  return response.data;
 }
 
 // ==================== FT-TRANSFORMER (GORISHNIY 2021) ====================
@@ -273,24 +281,24 @@ export async function calibrateTemporalAttention() {
  * Obtiene la comparativa 5-Fold: FT-Transformer vs Weibull vs Heurístico
  */
 export async function getFTTransformerComparison() {
-    const response = await intelligenceClient.get('/ft-transformer/comparison');
-    return response.data;
+  const response = await intelligenceClient.get('/ft-transformer/comparison');
+  return response.data;
 }
 
 /**
  * Entrena y optimiza los pesos del FT-Transformer
  */
 export async function trainFTTransformer() {
-    const response = await intelligenceClient.post('/ft-transformer/train');
-    return response.data;
+  const response = await intelligenceClient.post('/ft-transformer/train');
+  return response.data;
 }
 
 /**
  * Predice el riesgo de rotación con FT-Transformer y mapa de interacción de features
  */
 export async function predictFTTransformer(employeeId) {
-    const response = await intelligenceClient.get(`/ft-transformer/predict/${employeeId}`);
-    return response.data;
+  const response = await intelligenceClient.get(`/ft-transformer/predict/${employeeId}`);
+  return response.data;
 }
 
 /**
@@ -299,12 +307,6 @@ export async function predictFTTransformer(employeeId) {
  * y el % global de completitud para alimentar el motor de IA correctamente.
  */
 export async function getDataQualityReport() {
-    const response = await intelligenceClient.get('/data-quality');
-    return response.data;
+  const response = await intelligenceClient.get('/data-quality');
+  return response.data;
 }
-
-
-
-
-
-

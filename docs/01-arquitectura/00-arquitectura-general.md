@@ -2,7 +2,7 @@
 
 ## 1. Descripción del Sistema
 
-Emplifi es una plataforma de gestión de talento humano diseñada para PyMEs, implementada como una aplicación web SaaS multi-tenant. El sistema permite que múltiples empresas (tenants) operen de forma completamente aislada sobre una única instancia de infraestructura, compartiendo la capa de aplicación pero manteniendo separación total de datos mediante aislamiento lógico a nivel de base de datos.
+Norma ERP es una plataforma de gestión de talento humano, nómina legal y contabilidad diseñada para PyMEs, implementada como una aplicación web SaaS multi-tenant. El sistema permite que múltiples empresas (tenants) operen de forma completamente aislada sobre una única instancia de infraestructura, compartiendo la capa de aplicación pero manteniendo separación total de datos mediante aislamiento lógico a nivel de base de datos.
 
 El sistema está compuesto por dos aplicaciones independientes que se comunican a través de una API REST:
 
@@ -13,49 +13,49 @@ El sistema está compuesto por dos aplicaciones independientes que se comunican 
 
 ### 2.1 Backend
 
-| Componente | Tecnología | Versión |
-|-----------|-----------|---------|
-| Runtime | Node.js | 20 LTS |
-| Framework HTTP | Express | 5.1.0 |
-| ORM | Prisma Client | 5.22.0 |
-| Base de datos | PostgreSQL | 15-alpine |
-| Caché / Mensajería | Redis | 7-alpine |
-| WebSockets | Socket.IO | 4.8.3 |
-| Tareas programadas | node-cron | 4.2.1 |
-| Autenticación | JSON Web Token (jsonwebtoken) | 9.0.2 |
-| Hashing de contraseñas | bcryptjs | 3.0.3 |
-| Encriptación | Node.js crypto (AES-256-GCM) | nativo |
-| Cabeceras de seguridad | Helmet | 8.1.0 |
-| Autenticación biométrica | @simplewebauthn/server | 13.2.3 |
-| Envío de correo | Nodemailer | 7.0.12 |
-| Subida de archivos | Multer | 2.0.2 |
-| Exportación Excel | ExcelJS | 4.4.0 |
-| Precisión financiera | Decimal.js | 10.6.0 |
+| Componente               | Tecnología                    | Versión   |
+| ------------------------ | ----------------------------- | --------- |
+| Runtime                  | Node.js                       | 20 LTS    |
+| Framework HTTP           | Express                       | 5.1.0     |
+| ORM                      | Prisma Client                 | 5.22.0    |
+| Base de datos            | PostgreSQL                    | 15-alpine |
+| Caché / Mensajería       | Redis                         | 7-alpine  |
+| WebSockets               | Socket.IO                     | 4.8.3     |
+| Tareas programadas       | node-cron                     | 4.2.1     |
+| Autenticación            | JSON Web Token (jsonwebtoken) | 9.0.2     |
+| Hashing de contraseñas   | bcryptjs                      | 3.0.3     |
+| Encriptación             | Node.js crypto (AES-256-GCM)  | nativo    |
+| Cabeceras de seguridad   | Helmet                        | 8.1.0     |
+| Autenticación biométrica | @simplewebauthn/server        | 13.2.3    |
+| Envío de correo          | Nodemailer                    | 7.0.12    |
+| Subida de archivos       | Multer                        | 2.0.2     |
+| Exportación Excel        | ExcelJS                       | 4.4.0     |
+| Precisión financiera     | Decimal.js                    | 10.6.0    |
 
 ### 2.2 Frontend
 
-| Componente | Tecnología | Versión |
-|-----------|-----------|---------|
-| Framework UI | React | 19.2.0 |
-| Bundler | Vite | 7.2.4 |
-| Enrutamiento | React Router DOM | 7.10.0 |
-| Gráficos | Recharts | 3.6.0 |
-| Mapas / Geocerca | Leaflet + React-Leaflet | 1.9.4 / 5.0.0 |
-| Animaciones | Framer Motion | 12.23.26 |
-| Renderizado matemático | KaTeX + React-KaTeX | 0.18.4 |
-| Biometría cliente | @simplewebauthn/browser | 13.2.2 |
-| Estilos | Tailwind CSS | 3.4.18 |
-| Notificaciones | react-hot-toast | 2.6.0 |
-| Generación PDF | jspdf + jspdf-autotable | 3.0.4 |
-| PWA | vite-plugin-pwa | 1.3.0 |
+| Componente             | Tecnología              | Versión       |
+| ---------------------- | ----------------------- | ------------- |
+| Framework UI           | React                   | 19.2.0        |
+| Bundler                | Vite                    | 7.2.4         |
+| Enrutamiento           | React Router DOM        | 7.10.0        |
+| Gráficos               | Recharts                | 3.6.0         |
+| Mapas / Geocerca       | Leaflet + React-Leaflet | 1.9.4 / 5.0.0 |
+| Animaciones            | Framer Motion           | 12.23.26      |
+| Renderizado matemático | KaTeX + React-KaTeX     | 0.18.4        |
+| Biometría cliente      | @simplewebauthn/browser | 13.2.2        |
+| Estilos                | Tailwind CSS            | 3.4.18        |
+| Notificaciones         | react-hot-toast         | 2.6.0         |
+| Generación PDF         | jspdf + jspdf-autotable | 3.0.4         |
+| PWA                    | vite-plugin-pwa         | 1.3.0         |
 
 ### 2.3 Infraestructura
 
-| Componente | Tecnología |
-|-----------|-----------|
-| Contenedores | Docker + Docker Compose |
-| Proxy inverso | Nginx (SSL/TLS en producción) |
-| Servidor en la nube | AWS EC2 |
+| Componente             | Tecnología                                |
+| ---------------------- | ----------------------------------------- |
+| Contenedores           | Docker + Docker Compose                   |
+| Proxy inverso          | Nginx (SSL/TLS en producción)             |
+| Servidor en la nube    | AWS EC2                                   |
 | Volúmenes persistentes | postgres_data · redis_data · uploads_data |
 
 ## 3. Arquitectura Multi-Tenant
@@ -87,23 +87,23 @@ Base de datos PostgreSQL
 
 El sistema cuenta con un esquema de precios de impacto social orientado al apoyo de pequeñas y medianas empresas (PyMEs) e Inclusión Tecnológica:
 
-| Plan | Descripción | Precio / Emp / Mes | Max. Empleados | Prueba Gratuita |
-|------|-------------|--------------------|----------------|-----------------|
-| ESSENTIAL | Plan base para microempresas | $0.50 / emp | 25 | 45 días completos |
-| GROWTH | Plan en crecimiento para PyMEs | $1.00 / emp | 100 | 45 días completos |
-| ENTERPRISE | Plan corporativo sin límites | $2.00 / emp | Ilimitado | 45 días completos |
+| Plan       | Descripción                    | Precio / Emp / Mes | Max. Empleados | Prueba Gratuita   |
+| ---------- | ------------------------------ | ------------------ | -------------- | ----------------- |
+| ESSENTIAL  | Plan base para microempresas   | $0.50 / emp        | 25             | 45 días completos |
+| GROWTH     | Plan en crecimiento para PyMEs | $1.00 / emp        | 100            | 45 días completos |
+| ENTERPRISE | Plan corporativo sin límites   | $2.00 / emp        | Ilimitado      | 45 días completos |
 
-* **Período de Prueba (Trial):** 45 días naturales sin necesidad de tarjeta de crédito. Este plazo está diseñado para permitir a las empresas completar un ciclo mensual integro de gestión de asistencia, solicitudes y cálculo/cierre de nómina.
-* Validaciones: El campo `maxEmployees` en el modelo `Tenant` es validado en tiempo de registro de empleados y gestión de licencias.
+- **Período de Prueba (Trial):** 45 días naturales sin necesidad de tarjeta de crédito. Este plazo está diseñado para permitir a las empresas completar un ciclo mensual integro de gestión de asistencia, solicitudes y cálculo/cierre de nómina.
+- Validaciones: El campo `maxEmployees` en el modelo `Tenant` es validado en tiempo de registro de empleados y gestión de licencias.
 
 ### 3.3 Roles del Sistema
 
-| Rol | Descripción | Nivel de Acceso |
-|-----|-------------|-----------------|
+| Rol          | Descripción                    | Nivel de Acceso                                                               |
+| ------------ | ------------------------------ | ----------------------------------------------------------------------------- |
 | `superadmin` | Administrador de la plataforma | Lectura global en modo supervisión, escritura exclusiva en gestión de tenants |
-| `admin` | Administrador de empresa | CRUD completo sobre todos los módulos de su tenant |
-| `hr` | Recursos Humanos | CRUD en nómina, evaluaciones, contratos, documentos |
-| `employee` | Colaborador | Lectura de su propio perfil, auto-marcado de asistencia, evaluaciones propias |
+| `admin`      | Administrador de empresa       | CRUD completo sobre todos los módulos de su tenant                            |
+| `hr`         | Recursos Humanos               | CRUD en nómina, evaluaciones, contratos, documentos                           |
+| `employee`   | Colaborador                    | Lectura de su propio perfil, auto-marcado de asistencia, evaluaciones propias |
 
 ## 4. Organización del Código Backend
 
@@ -209,10 +209,10 @@ Los archivos subidos (CV, contratos, documentos de identidad, firmas de activos)
 
 ## 8. Cron Jobs Registrados
 
-| Job | Expresión Cron | Función |
-|-----|----------------|---------|
-| contractCronJob | `0 8 * * *` | Alertas de contratos por vencer (30, 15, 7 días) |
-| payrollCronJob | `0 9 * * *` | Recordatorios de cierre y pago de nómina |
-| documentCronJob | Configurable | Alertas de documentos vencidos |
-| performanceCronJob | Configurable | Alertas de evaluaciones pendientes |
-| requestMonitorCronJob | Configurable | Monitoreo de solicitudes pendientes de aprobación |
+| Job                   | Expresión Cron | Función                                           |
+| --------------------- | -------------- | ------------------------------------------------- |
+| contractCronJob       | `0 8 * * *`    | Alertas de contratos por vencer (30, 15, 7 días)  |
+| payrollCronJob        | `0 9 * * *`    | Recordatorios de cierre y pago de nómina          |
+| documentCronJob       | Configurable   | Alertas de documentos vencidos                    |
+| performanceCronJob    | Configurable   | Alertas de evaluaciones pendientes                |
+| requestMonitorCronJob | Configurable   | Monitoreo de solicitudes pendientes de aprobación |

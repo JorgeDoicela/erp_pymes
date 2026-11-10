@@ -6,7 +6,7 @@ describe('API Health & System Integration Tests', () => {
   it('GET /api should return status 200 and greeting text', async () => {
     const response = await request(app).get('/api');
     expect(response.status).toBe(200);
-    expect(response.text).toContain('API EMPLIFI funcionando correctamente');
+    expect(response.text).toContain('API NORMA ERP funcionando correctamente');
   });
 
   it('GET /non-existent-route should return 404', async () => {

@@ -1,4 +1,12 @@
 /**
+ * @file errorHandler.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
+/**
  * Error Handling Middleware
  * Maneja errores globales de la aplicación
  */
@@ -6,9 +14,14 @@ export function errorHandler(err, req, res, next) {
   console.error('Error:', err);
 
   // Errores de validación
-  if (err.message.includes('Nombre') || err.message.includes('Apellido') ||
-    err.message.includes('Email') || err.message.includes('Departamento') ||
-    err.message.includes('Puesto') || err.message.includes('Salario')) {
+  if (
+    err.message.includes('Nombre') ||
+    err.message.includes('Apellido') ||
+    err.message.includes('Email') ||
+    err.message.includes('Departamento') ||
+    err.message.includes('Puesto') ||
+    err.message.includes('Salario')
+  ) {
     return res.status(400).json({
       success: false,
       message: err.message,
@@ -22,13 +35,13 @@ export function errorHandler(err, req, res, next) {
       return res.status(413).json({
         success: false,
         message: 'El archivo es demasiado grande. El límite es de 15MB.',
-        type: 'PayloadTooLarge'
+        type: 'PayloadTooLarge',
       });
     }
     return res.status(400).json({
       success: false,
       message: `Error al subir archivo: ${err.message}`,
-      type: 'UploadError'
+      type: 'UploadError',
     });
   }
 
@@ -63,9 +76,7 @@ export function errorHandler(err, req, res, next) {
   // Error genérico
   res.status(500).json({
     success: false,
-    message: process.env.NODE_ENV === 'production'
-      ? 'Error interno del servidor'
-      : err.message,
+    message: process.env.NODE_ENV === 'production' ? 'Error interno del servidor' : err.message,
     type: 'InternalServerError',
   });
 }
@@ -78,7 +89,9 @@ export function requestLogger(req, res, next) {
 
   res.on('finish', () => {
     const duration = Date.now() - start;
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
+    console.log(
+      `[${new Date().toISOString()}] ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`
+    );
   });
 
   next();
@@ -95,8 +108,8 @@ export function validateBodyNotEmpty(req, res, next) {
     }
 
     // Permitir cuerpos vacíos para acciones específicas de "trigger" (ej: notificaciones, mayorizar, activar/desactivar, etc.)
-    const isTriggerAction = 
-      req.path?.endsWith('/post') || 
+    const isTriggerAction =
+      req.path?.endsWith('/post') ||
       req.path?.endsWith('/toggle') ||
       req.path?.endsWith('/notify-pending') ||
       req.path?.endsWith('/close') ||
