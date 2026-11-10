@@ -1,8 +1,12 @@
-<svg width="140" height="36" viewBox="0 0 140 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="36" height="36" rx="5" fill="#0f172a"/>
-  <path d="M10 27V9H13.2L22.8 23.5V9H26V27H22.8L13.2 12.5V27H10Z" fill="#ffffff"/>
-  <rect x="23.2" y="24.8" width="2.8" height="2.2" fill="#2563eb"/>
-  <text x="46" y="24" fill="#0f172a" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="19" letter-spacing="-0.03em">NORMA</text>
-  <rect x="114" y="12" width="24" height="14" rx="3" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="1"/>
-  <text x="118" y="22.5" fill="#4b5563" font-family="monospace" font-weight="600" font-size="9" letter-spacing="0.05em">ERP</text>
+<svg width="150" height="32" viewBox="0 0 150 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Isotipo: 32x32, plano, alto contraste, sin gradientes (estilos-erp-pymes) -->
+  <rect width="32" height="32" rx="4" fill="#111827"/>
+  <rect x="7.5" y="7" width="3.5" height="18" rx="0.5" fill="#ffffff"/>
+  <polygon points="11,7 14.5,7 21,18.5 21,25 17.5,25 11,13.5" fill="#2563eb"/>
+  <rect x="21" y="7" width="3.5" height="18" rx="0.5" fill="#ffffff"/>
+
+  <!-- Wordmark tipográfico sobrio: NORMA · ERP -->
+  <text x="42" y="22" fill="#111827" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="17" letter-spacing="-0.03em">NORMA</text>
+  <text x="110" y="21" fill="#9ca3af" font-family="Inter, -apple-system, sans-serif" font-weight="400" font-size="14">·</text>
+  <text x="120" y="21" fill="#6b7280" font-family="'JetBrains Mono', Menlo, monospace" font-weight="600" font-size="11" letter-spacing="0.1em">ERP</text>
 </svg>

@@ -1,5 +1,13 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" rx="5" fill="#0f172a"/>
-  <path d="M8.5 24V8H11.5L20.5 21V8H23.5V24H20.5L11.5 11V24H8.5Z" fill="#ffffff"/>
-  <rect x="21" y="22" width="2.5" height="2" fill="#2563eb"/>
+  <!-- Superficie sobria según estándar estilos-erp-pymes (fondo plano #111827, esquinas rx=4) -->
+  <rect width="32" height="32" rx="4" fill="#111827"/>
+  
+  <!-- Pilar izquierdo (Blanco puro, 3.5px de ancho) -->
+  <rect x="7.5" y="7" width="3.5" height="18" rx="0.5" fill="#ffffff"/>
+  
+  <!-- Diagonal normativa en acento plano #2563eb con geometría paralela exacta -->
+  <polygon points="11,7 14.5,7 21,18.5 21,25 17.5,25 11,13.5" fill="#2563eb"/>
+  
+  <!-- Pilar derecho (Blanco puro, 3.5px de ancho) -->
+  <rect x="21" y="7" width="3.5" height="18" rx="0.5" fill="#ffffff"/>
 </svg>

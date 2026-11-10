@@ -22,7 +22,7 @@
     "test:stress": "node scripts/test/stress-test.mjs",
     "db:backup": "bash scripts/db/backup-db.sh",
     "prepare": "husky || true",
-    "scan:secrets": "secretlint \"**/*\""
+    "scan:secrets": "secretlint --secretlintignore .secretlintignore \"**/*\""
   },
   "workspaces": [
     "frontend",
