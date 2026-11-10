@@ -1,0 +1,206 @@
+/**
+ * @file PWAInstallPrompt.jsx
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiDownload, FiX, FiSmartphone, FiMonitor } from 'react-icons/fi';
+
+export default function PWAInstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
+
+  useEffect(() => {
+    // Detectar si ya está instalada o en modo standalone
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+    if (isStandalone) {
+      setIsInstalled(true);
+      return;
+    }
+
+    // Detectar iOS / iPadOS
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const iosDevice =
+      /iphone|ipad|ipod/.test(userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(iosDevice);
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setShowPrompt(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (isIOS) {
+      setShowIOSInstructions(true);
+      return;
+    }
+
+    if (!deferredPrompt) {
+      setShowManualInstructions(true);
+      return;
+    }
+
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+      }
+    } catch (err) {
+      console.warn('Error al activar el prompt de instalación PWA:', err);
+      setShowManualInstructions(true);
+    } finally {
+      setDeferredPrompt(null);
+      if (!showManualInstructions) {
+        setShowPrompt(false);
+      }
+    }
+  };
+
+  const handleDismiss = () => {
+    setShowPrompt(false);
+    setShowIOSInstructions(false);
+    setShowManualInstructions(false);
+    if (isIOS) {
+      localStorage.setItem('pwa_ios_prompt_dismissed', Date.now().toString());
+    } else {
+      localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
+    }
+  };
+
+  if (isInstalled) return null;
+
+  return (
+    <div className="fixed bottom-20 right-5 md:right-6 z-50 flex flex-col items-end gap-3 pointer-events-auto">
+      <AnimatePresence>
+        {showPrompt && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="w-full max-w-sm md:max-w-md"
+          >
+            <div className="relative overflow-hidden rounded bg-white border border-gray-200 p-4 shadow-lg text-gray-800">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded bg-gray-100 p-0.5 border border-gray-200 shrink-0 flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/favicon.svg"
+                      alt="Norma Logo"
+                      className="w-full h-full object-contain rounded"
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-900 flex items-center gap-1.5">
+                      Instalar Aplicación Norma ERP
+                      <span className="text-[10px] bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.2 rounded font-mono">
+                        PWA
+                      </span>
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-normal">
+                      Acceso directo y soporte sin conexión en su dispositivo.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleDismiss}
+                  className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                  title="Cerrar"
+                >
+                  <FiX size={18} />
+                </button>
+              </div>
+
+              {showIOSInstructions ? (
+                <div className="mt-4 p-3.5 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-200/80 space-y-2">
+                  <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                    <FiSmartphone className="text-blue-600" /> Para instalar en iOS / iPhone / iPad:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-600">
+                    <li>
+                      Toca el botón <span className="font-bold text-slate-900">Compartir</span>{' '}
+                      (icono con flecha hacia arriba) en Safari.
+                    </li>
+                    <li>
+                      Desplázate hacia abajo y selecciona{' '}
+                      <span className="font-bold text-blue-600">"Agregar al inicio"</span>.
+                    </li>
+                  </ol>
+                </div>
+              ) : showManualInstructions ? (
+                <div className="mt-4 p-3.5 bg-blue-50/70 rounded-xl text-xs text-slate-700 border border-blue-200/80 space-y-2">
+                  <p className="font-semibold text-blue-900 flex items-center gap-1.5">
+                    <FiMonitor className="text-blue-600" /> Instalación desde el Navegador:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-600">
+                    <li>
+                      Haz clic en el icono de instalación en la barra de direcciones superior de tu
+                      navegador.
+                    </li>
+                    <li>
+                      O abre el menú del navegador y selecciona{' '}
+                      <span className="font-bold text-blue-600">"Instalar Norma ERP"</span>.
+                    </li>
+                  </ol>
+                </div>
+              ) : (
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  <button
+                    onClick={handleDismiss}
+                    className="px-3.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                  >
+                    Ahora no
+                  </button>
+                  <button
+                    onClick={handleInstallClick}
+                    className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all transform active:scale-95"
+                  >
+                    <FiDownload size={15} />
+                    Instalar App
+                  </button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <button
+        onClick={() => setShowPrompt((prev) => !prev)}
+        className="border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+        title="Instalar Norma ERP PWA"
+      >
+        <FiDownload size={13} className="text-blue-600" />
+        <span>Instalar App</span>
+      </button>
+    </div>
+  );
+}

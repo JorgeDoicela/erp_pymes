@@ -16,13 +16,12 @@ El backend sigue una estructura en capas inspirada en los principios de Clean Ar
 └─────────────────────────────────────────────┘
 ```
 
-## 2. Capa HTTP: Rutas y Controladores
+## 2. Capa HTTP: Rutas, DTOs y Controladores
 
-Los controladores actúan como adaptadores delgados que:
+Los controladores actúan como adaptadores de entrada delgados respaldados por una capa previa de validación estricta con esquemas Zod (DTOs):
 
-1. Extraen y validan los parámetros de entrada (`req.body`, `req.params`, `req.query`).
-2. Delegan la ejecución a los servicios correspondientes.
-3. Transforman el resultado en una respuesta HTTP estandarizada.
+1. **Validación en los Bordes:** El middleware `validate(schema)` intercepta la solicitud y rechaza con HTTP 400 cualquier cuerpo de petición que no cumpla estrictamente con el DTO correspondiente (`src/dto/`), impidiendo que datos inválidos alcancen la lógica de negocio.
+2. **Controladores Delgados:** Extraen los parámetros saneados (`req.body`, `req.params`, `req.query`), delegan la ejecución a los servicios o repositorios y formatean la respuesta HTTP con códigos semánticos.
 
 Los controladores no contienen lógica de negocio. No acceden directamente a Prisma. Todo acceso a datos pasa por la capa de servicios o repositorios.
 
@@ -56,15 +55,34 @@ Los servicios contienen toda la lógica de negocio del dominio. Son clases o mó
 
 ## 4. Capa de Dominio: Repositorios
 
-Los repositorios abstraen el acceso a datos. El sistema implementa el patrón Repository para los dominios con mayor complejidad de consultas:
+Los repositorios abstraen el acceso a datos y encapsulan completamente las consultas a Prisma ORM, garantizando que los controladores y servicios no dependan de la infraestructura de persistencia directa:
 
-- `employeeRepository`: Creación con encriptación de campos bancarios y salarios.
-- `attendanceRepository`: Consultas optimizadas por empleado y fecha.
-- `auditRepository`: Registro no bloqueante de logs de auditoría.
+- `accountingRepository`: Operaciones transaccionales para asientos contables (partida doble), periodos fiscales, catálogo de cuentas, centros de costo y reportes.
+- `payrollRepository`: Gestión de configuración activa de nómina, creación transaccional de rubros e historial de liquidaciones por empleado.
+- `employeeRepository`: Creación y actualización con encriptación AES-256 de campos bancarios y salarios.
+- `attendanceRepository`: Consultas optimizadas de marcación por empleado y rango de fechas.
+- `auditRepository`: Registro asíncrono no bloqueante de eventos de auditoría y trazabilidad.
 
-Para los dominios de menor complejidad, los servicios acceden directamente a Prisma.
+## 5. Monolito Modular y Bounded Contexts (`src/modules/`)
 
-## 5. Capa de Infraestructura: Prisma + Multi-Tenant Interceptor
+Para evitar la dispersión de código y facilitar la mantenibilidad, los dominios centrales operan bajo el patrón de **Monolito Modular**:
+
+- `src/modules/accounting/`: Agrupa de forma autocontenida sus rutas, controlador, repositorio y DTOs de validación.
+- `src/modules/payroll/`: Agrupa rutas, controladores de liquidación y configuración, servicios de cálculo, repositorio y DTOs.
+- `src/modules/employees/`: Agrupa rutas, controlador, servicio, repositorio y DTOs de talento humano.
+- `src/modules/index.js`: Registro central unificado que expone los Bounded Contexts hacia el enrutador principal de la aplicación (`src/routes/index.routes.js`).
+
+## 6. Tipado Estático Progresivo (`src/types/`)
+
+El sistema cuenta con configuración de TypeScript (`tsconfig.json` con `allowJs: true` y `noEmit: true`) y definiciones formales de dominio:
+
+- `accounting.types.ts`: Contratos para asientos (`IJournalEntry`, `IJournalLine`), cuentas (`IAccountingAccount`) y balances.
+- `payroll.types.ts`: Contratos para configuraciones (`IPayrollConfig`) y detalles de nómina (`IPayrollDetail`).
+- `employee.types.ts`: Contratos de colaboradores y roles autorizados.
+
+La integridad de tipos se audita de forma continua mediante `npm run typecheck`.
+
+## 7. Capa de Infraestructura: Prisma + Multi-Tenant Interceptor
 
 La capa de infraestructura está representada por `db.js`, que instancia un único cliente Prisma y le configura un middleware (`$use`) que intercepta **todas** las operaciones de base de datos para aplicar automáticamente el filtro `WHERE tenantId`.
 
@@ -87,7 +105,7 @@ INDIRECT_RELATION_MAP = {
 }
 ```
 
-## 6. Patrón de Contexto Asíncrono (AsyncLocalStorage)
+## 8. Patrón de Contexto Asíncrono (AsyncLocalStorage)
 
 El `tenantContext.js` implementa el contexto asíncrono utilizando `AsyncLocalStorage` de Node.js. Este mecanismo propaga el `tenantId` a través de toda la cadena de promesas de una petición HTTP sin necesidad de pasarlo explícitamente como parámetro en cada función.
 
@@ -99,13 +117,11 @@ getTenantId()                                     // Lee el tenantId del context
 isTenantFilterBypassed()                          // Verifica si el bypass está activo
 ```
 
-## 7. Gestión de Errores Centralizada
+## 9. Gestión de Errores Centralizada y Jerarquía de Dominio
 
-El `errorHandler.js` actúa como middleware de Express capturando todos los errores no manejados. Distingue entre:
+El `errorHandler.js` actúa como middleware de Express capturando todos los errores no manejados. Se integra con la jerarquía de errores de dominio de `src/core/errors/appError.js`:
 
-- **Errores operacionales:** Errores de lógica de negocio (validaciones, datos no encontrados) → HTTP 400/404.
-- **Errores de infraestructura:** Errores de Prisma, de red → HTTP 500.
-- **Errores de autenticación:** JWT inválido o expirado → HTTP 401.
-- **Errores de autorización:** Rol insuficiente, tenant no encontrado → HTTP 403/404.
+- **Errores operacionales de dominio:** `ValidationError` (Zod / reglas de negocio) → HTTP 400; `NotFoundError` → HTTP 404; `UnauthorizedError` → HTTP 401; `ForbiddenError` → HTTP 403; `ConflictError` → HTTP 409.
+- **Errores de infraestructura:** Fallos de conexión o de base de datos no controlados → HTTP 500.
 
-El middleware también implementa el `requestLogger`, que registra cada petición entrante con método, ruta y timestamp.
+El middleware también implementa el `requestLogger`, que registra cada petición entrante con método, ruta, código de respuesta y duración en milisegundos.

@@ -14,8 +14,8 @@ vi.mock('../src/database/db.js', () => ({
     }
 }));
 
-vi.mock('../src/repositories/employees/employeeRepository.js', () => ({
-    default: {
+const { mockEmployeeRepo } = vi.hoisted(() => {
+    const repo = {
         findByEmail: vi.fn(),
         findByIdentityCard: vi.fn(),
         findById: vi.fn(),
@@ -23,8 +23,19 @@ vi.mock('../src/repositories/employees/employeeRepository.js', () => ({
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
-        countAll: vi.fn()
-    }
+        countAll: vi.fn(),
+        getTenantPlanLimits: vi.fn()
+    };
+    return { mockEmployeeRepo: repo };
+});
+
+vi.mock('../src/repositories/employees/employeeRepository.js', () => ({
+    default: mockEmployeeRepo
+}));
+
+vi.mock('../src/modules/employees/employee.repository.js', () => ({
+    default: mockEmployeeRepo,
+    EmployeeRepository: vi.fn().mockImplementation(() => mockEmployeeRepo)
 }));
 
 vi.mock('../src/repositories/audit/auditRepository.js', () => ({

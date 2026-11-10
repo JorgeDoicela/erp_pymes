@@ -7,9 +7,9 @@
  */
 
 import React from 'react';
-import { Modal } from '../../../core/ui/Modal.jsx';
-import { Button } from '../../../core/ui/Button.jsx';
-import { Input } from '../../../core/ui/Input.jsx';
+import { Modal } from '@/core/ui/Modal.jsx';
+import { Button } from '@/core/ui/Button.jsx';
+import { Input } from '@/core/ui/Input.jsx';
 
 export const EditPayrollDetailModal = ({
   isOpen,

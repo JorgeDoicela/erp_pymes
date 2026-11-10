@@ -141,6 +141,12 @@ export const adminSections = [
         color: 'bg-emerald-700',
         path: '/admin/compliance',
       },
+      {
+        title: 'Sostenibilidad ODS 8 & RAG',
+        icon: <FiBookOpen />,
+        color: 'bg-emerald-600',
+        path: '/admin/sustainability',
+      },
     ],
   },
   {

@@ -25,19 +25,27 @@ El sistema implementa una arquitectura de pruebas automatizadas con **Vitest**, 
 - **Framework**: `Vitest`
 - **Librería HTTP**: `Supertest`
 - **Ubicación de Tests**: `backend/tests/`
-- **Comando de Ejecución**:
+- **Comandos de Ejecución**:
   ```bash
   cd backend
-  npm test
+  npm test              # Ejecuta la suite completa de 135 pruebas en 26 archivos
+  npm run typecheck     # Verificación estricta de tipos con tsc --noEmit
   ```
 
 ### 2.2. Módulos Evaluados
 
 1. **Healthcheck & Status (`health.test.js`)**: Verifica la disponibilidad del servidor HTTP con respuesta `200 OK`.
-2. **Seguridad & Perímetro (`security.test.js`)**: Comprueba que la middleware Helmet inyecte los encabezados `X-Frame-Options: DENY` y `Strict-Transport-Security`.
-3. **Cifrado AES-256-GCM (`test-encryption.js`)**: Valida que la encriptación y desencriptación salarial mantengan la integridad del valor numérico original.
-4. **Servicios de Inteligencia Analítica (`intelligence.test.js`)**:
-   - Comprueba la convergencia de $2,000$ iteraciones en el simulador Monte Carlo.
+2. **Seguridad & Perímetro (`security.test.js`)**: Comprueba que la middleware Helmet inyecte los encabezados de seguridad y valide cuerpos JSON.
+3. **Cifrado AES-256-GCM (`encryption.test.js`)**: Valida que la encriptación y desencriptación salarial mantengan la integridad del valor numérico original.
+4. **Validación en los Bordes y DTOs (`validationDto.test.js`)**: Comprueba que el middleware con esquemas Zod intercepte y rechace peticiones inválidas con código 400.
+5. **Capa de Repositorios Desacoplada (`repositories.test.js`)**: Valida las interfaces de `AccountingRepository` y `PayrollRepository`.
+6. **Arquitectura Monolito Modular (`modularMonolith.test.js`)**: Comprueba la exportación cohesiva de módulos (`accounting`, `payroll`, `employees`) y jerarquía de errores de dominio.
+7. **Integración y Regresión (`integrationRegression.test.js`)**:
+   - Aislamiento multi-tenant concurrente con `AsyncLocalStorage`.
+   - Invariante de partida doble contable sin errores de coma flotante.
+   - Fórmulas laborales de nómina ecuatoriana (SBU, horas suplementarias, recargos, IESS, fondos de reserva).
+8. **Servicios de Inteligencia Analítica (`intelligenceService.test.js`)**:
+   - Comprueba la convergencia de iteraciones en el simulador Monte Carlo.
    - Verifica el cálculo del Score de Riesgo de Rotación mediante el modelo Weibull.
    - Valida el cómputo del estadístico $F$ y $p\text{-value}$ en la prueba ANOVA interdepartamental.
 

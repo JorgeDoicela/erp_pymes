@@ -1,6 +1,7 @@
 /**
  * @file App.jsx
  * @description Enrutamiento principal, control de acceso por roles (RBAC) y vistas de la plataforma Norma ERP.
+ * Arquitectura Modular por Dominio (Feature / Domain-Driven Architecture).
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -9,125 +10,134 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Loading from './components/Loading.jsx';
-import MaintenanceBanner from './components/common/MaintenanceBanner.jsx';
-import MainLayout from './components/layout/MainLayout.jsx';
-import PWAInstallPrompt from './components/pwa/PWAInstallPrompt.jsx';
-import OfflineIndicator from './components/pwa/OfflineIndicator.jsx';
-import PWAReloadPrompt from './components/pwa/PWAReloadPrompt.jsx';
-import { ROLES, isSuperAdmin as checkIsSuperAdmin } from './constants/roles.js';
 
-// Lazy Load Pages
-// Eager Load Critical Pages
-import Home from './pages/landing/Home.jsx';
-import Login from './pages/auth/Login.jsx';
-import AdminDashboard from './pages/dashboard/AdminDashboard.jsx';
-import EmployeeDashboard from './pages/dashboard/EmployeeDashboard.jsx';
-import ResetPassword from './pages/auth/ResetPassword.jsx';
+// Core Transversal
+import { Loading, MaintenanceBanner } from './core/feedback';
+import { MainLayout } from './core/layout';
+import { PWAInstallPrompt, OfflineIndicator, PWAReloadPrompt } from './core/pwa';
+import { ROLES, isSuperAdmin as checkIsSuperAdmin } from './core/constants';
 
-// Lazy Load Rest of the Pages
+// Módulos de Dominio (Carga Inmediata para Rutas Críticas)
+import { Home, AdminDashboard, EmployeeDashboard } from './modules/portal';
+import { Login, ResetPassword } from './modules/auth';
+
+// Módulos de Dominio (Lazy Loading)
+
+// Portal & Landing
+const MobileEmployeePortal = lazy(() => import('./modules/portal/pages/MobileEmployeePortal.jsx'));
+const AdminSettings = lazy(() => import('./modules/portal/pages/AdminSettings.jsx'));
+
+// Auth
+const RegisterTenant = lazy(() => import('./modules/auth/pages/RegisterTenant.jsx'));
 
 // Employees
-const RegisterEmployee = lazy(() => import('./pages/employees/RegisterEmployee.jsx'));
-const EmployeeList = lazy(() => import('./pages/employees/EmployeeList.jsx'));
-const EmployeeProfile = lazy(() => import('./pages/employees/EmployeeProfile.jsx'));
-const EmployeeExpedient = lazy(() => import('./pages/employees/EmployeeExpedient.jsx'));
+const RegisterEmployee = lazy(() => import('./modules/employees/pages/RegisterEmployee.jsx'));
+const EmployeeList = lazy(() => import('./modules/employees/pages/EmployeeList.jsx'));
+const EmployeeProfile = lazy(() => import('./modules/employees/pages/EmployeeProfile.jsx'));
+const EmployeeExpedient = lazy(() => import('./modules/employees/pages/EmployeeExpedient.jsx'));
 const EmployeeAssetsManagement = lazy(
-  () => import('./pages/employees/EmployeeAssetsManagement.jsx')
+  () => import('./modules/employees/pages/EmployeeAssetsManagement.jsx')
 );
-const MyAssets = lazy(() => import('./pages/employees/MyAssets.jsx'));
-const OffboardingManagement = lazy(() => import('./pages/employees/OffboardingManagement.jsx'));
-const MobileEmployeePortal = lazy(() => import('./pages/dashboard/MobileEmployeePortal.jsx'));
-const LegalComplianceDashboard = lazy(
-  () => import('./pages/compliance/LegalComplianceDashboard.jsx')
-);
-const AnnouncementsBoard = lazy(() => import('./pages/communication/AnnouncementsBoard.jsx'));
+const MyAssets = lazy(() => import('./modules/employees/pages/MyAssets.jsx'));
+const OffboardingManagement = lazy(() => import('./modules/employees/pages/OffboardingManagement.jsx'));
 
 // Attendance
-const AttendancePage = lazy(() => import('./pages/attendance/AttendancePage.jsx'));
-const EmployeeAttendance = lazy(() => import('./pages/dashboard/views/EmployeeAttendance.jsx'));
-const ShiftManagement = lazy(() => import('./pages/attendance/ShiftManagement.jsx'));
-const EmployeeAbsences = lazy(() => import('./pages/dashboard/views/EmployeeAbsences.jsx'));
-const AdminAbsences = lazy(() => import('./pages/attendance/AdminAbsences.jsx'));
-const AttendanceReports = lazy(() => import('./pages/reports/AttendanceReports.jsx'));
+const AttendancePage = lazy(() => import('./modules/attendance/pages/AttendancePage.jsx'));
+const EmployeeAttendance = lazy(() => import('./modules/attendance/pages/EmployeeAttendance.jsx'));
+const ShiftManagement = lazy(() => import('./modules/attendance/pages/ShiftManagement.jsx'));
+const EmployeeAbsences = lazy(() => import('./modules/attendance/pages/EmployeeAbsences.jsx'));
+const AdminAbsences = lazy(() => import('./modules/attendance/pages/AdminAbsences.jsx'));
 
 // Payroll
-const PayrollConfiguration = lazy(() => import('./pages/payroll/PayrollConfiguration.jsx'));
-const PayrollGenerator = lazy(() => import('./pages/payroll/PayrollGenerator.jsx'));
-const MyPayments = lazy(() => import('./pages/payroll/MyPayments.jsx'));
-const BenefitsManagement = lazy(() => import('./pages/payroll/BenefitsManagement.jsx'));
-const SalaryAdvancesManagement = lazy(() => import('./pages/payroll/SalaryAdvancesManagement.jsx'));
-const MySalaryAdvances = lazy(() => import('./pages/payroll/MySalaryAdvances.jsx'));
+const PayrollConfiguration = lazy(() => import('./modules/payroll/pages/PayrollConfiguration.jsx'));
+const PayrollGenerator = lazy(() => import('./modules/payroll/pages/PayrollGenerator.jsx'));
+const MyPayments = lazy(() => import('./modules/payroll/pages/MyPayments.jsx'));
+const BenefitsManagement = lazy(() => import('./modules/payroll/pages/BenefitsManagement.jsx'));
+const SalaryAdvancesManagement = lazy(() => import('./modules/payroll/pages/SalaryAdvancesManagement.jsx'));
+const MySalaryAdvances = lazy(() => import('./modules/payroll/pages/MySalaryAdvances.jsx'));
 
 // Performance
-const EvaluationDashboard = lazy(() => import('./pages/performance/EvaluationDashboard.jsx'));
-const CreateEvaluation = lazy(() => import('./pages/performance/CreateEvaluation.jsx'));
-const AssignEvaluation = lazy(() => import('./pages/performance/AssignEvaluation.jsx'));
-const MyEvaluations = lazy(() => import('./pages/performance/MyEvaluations.jsx'));
-const TakeEvaluation = lazy(() => import('./pages/performance/TakeEvaluation.jsx'));
-const EvaluationResults = lazy(() => import('./pages/performance/EvaluationResults.jsx'));
-const MyGoals = lazy(() => import('./pages/performance/MyGoals.jsx'));
+const EvaluationDashboard = lazy(() => import('./modules/performance/pages/EvaluationDashboard.jsx'));
+const CreateEvaluation = lazy(() => import('./modules/performance/pages/CreateEvaluation.jsx'));
+const AssignEvaluation = lazy(() => import('./modules/performance/pages/AssignEvaluation.jsx'));
+const MyEvaluations = lazy(() => import('./modules/performance/pages/MyEvaluations.jsx'));
+const TakeEvaluation = lazy(() => import('./modules/performance/pages/TakeEvaluation.jsx'));
+const EvaluationResults = lazy(() => import('./modules/performance/pages/EvaluationResults.jsx'));
+const MyGoals = lazy(() => import('./modules/performance/pages/MyGoals.jsx'));
 
 // Recruitment
-const RecruitmentDashboard = lazy(() => import('./pages/recruitment/RecruitmentDashboard.jsx'));
-const CreateJobVacancy = lazy(() => import('./pages/recruitment/CreateJobVacancy.jsx'));
-const CareersPage = lazy(() => import('./pages/recruitment/CareersPage.jsx'));
-const JobApplication = lazy(() => import('./pages/recruitment/JobApplication.jsx'));
-const VacancyDetails = lazy(() => import('./pages/recruitment/VacancyDetails.jsx'));
-const ApplicationDetails = lazy(() => import('./pages/recruitment/ApplicationDetails.jsx'));
+const RecruitmentDashboard = lazy(() => import('./modules/recruitment/pages/RecruitmentDashboard.jsx'));
+const CreateJobVacancy = lazy(() => import('./modules/recruitment/pages/CreateJobVacancy.jsx'));
+const CareersPage = lazy(() => import('./modules/recruitment/pages/CareersPage.jsx'));
+const JobApplication = lazy(() => import('./modules/recruitment/pages/JobApplication.jsx'));
+const VacancyDetails = lazy(() => import('./modules/recruitment/pages/VacancyDetails.jsx'));
+const ApplicationDetails = lazy(
+  () => import('./modules/recruitment/pages/ApplicationDetails.jsx')
+);
 
-// Analytics
-const AnalyticsDashboard = lazy(() => import('./pages/analytics/AnalyticsDashboard.jsx'));
+// Analytics & Intelligence
+const AnalyticsDashboard = lazy(() => import('./modules/analytics/pages/AnalyticsDashboard.jsx'));
 const RsiOptimizationDashboard = lazy(
-  () => import('./pages/analytics/RsiOptimizationDashboard.jsx')
+  () => import('./modules/analytics/pages/RsiOptimizationDashboard.jsx')
 );
 const CausalInferenceDashboard = lazy(
-  () => import('./pages/analytics/CausalInferenceDashboard.jsx')
+  () => import('./modules/analytics/pages/CausalInferenceDashboard.jsx')
 );
 const FederatedLearningDashboard = lazy(
-  () => import('./pages/analytics/FederatedLearningDashboard.jsx')
+  () => import('./modules/analytics/pages/FederatedLearningDashboard.jsx')
 );
-const MorlParetoDashboard = lazy(() => import('./pages/analytics/MorlParetoDashboard.jsx'));
+const MorlParetoDashboard = lazy(() => import('./modules/analytics/pages/MorlParetoDashboard.jsx'));
 const TemporalAttentionDashboard = lazy(
-  () => import('./pages/analytics/TemporalAttentionDashboard.jsx')
+  () => import('./modules/analytics/pages/TemporalAttentionDashboard.jsx')
 );
-const FTTransformerDashboard = lazy(() => import('./pages/analytics/FTTransformerDashboard.jsx'));
-const TurnoverReport = lazy(() => import('./pages/reports/TurnoverReport.jsx'));
-const PerformanceReport = lazy(() => import('./pages/reports/PerformanceReport.jsx'));
-const PayrollCostReport = lazy(() => import('./pages/reports/PayrollCostReport.jsx'));
-const SatisfactionReport = lazy(() => import('./pages/reports/SatisfactionReport.jsx'));
-const CustomReport = lazy(() => import('./pages/reports/CustomReport.jsx'));
+const FTTransformerDashboard = lazy(() => import('./modules/analytics/pages/FTTransformerDashboard.jsx'));
+const IntelligentDashboard = lazy(() => import('./modules/analytics/pages/IntelligentDashboard.jsx'));
 
-// Others
-const ExpiringContracts = lazy(() => import('./pages/contracts/ExpiringContracts.jsx'));
-const NotificationsPage = lazy(() => import('./pages/notifications/NotificationsPage.jsx'));
-const NotificationSettings = lazy(() => import('./pages/notifications/NotificationSettings.jsx'));
-const AuditLogsPage = lazy(() => import('./pages/audit/AuditLogsPage.jsx'));
-const HelpCenter = lazy(() => import('./pages/help/HelpCenter.jsx'));
-const IntelligentDashboard = lazy(() => import('./pages/dashboard/IntelligentDashboard.jsx'));
-const AdminSettings = lazy(() => import('./pages/dashboard/AdminSettings.jsx'));
+// Reports
+const TurnoverReport = lazy(() => import('./modules/reports/pages/TurnoverReport.jsx'));
+const PerformanceReport = lazy(() => import('./modules/reports/pages/PerformanceReport.jsx'));
+const PayrollCostReport = lazy(() => import('./modules/reports/pages/PayrollCostReport.jsx'));
+const SatisfactionReport = lazy(() => import('./modules/reports/pages/SatisfactionReport.jsx'));
+const CustomReport = lazy(() => import('./modules/reports/pages/CustomReport.jsx'));
+const AttendanceReports = lazy(() => import('./modules/reports/pages/AttendanceReports.jsx'));
 
-// Contabilidad (Aislado)
-const AccountingDashboard = lazy(() => import('./pages/accounting/AccountingDashboard.jsx'));
-const ChartOfAccounts = lazy(() => import('./pages/accounting/ChartOfAccounts.jsx'));
-const JournalEntries = lazy(() => import('./pages/accounting/JournalEntries.jsx'));
-const TrialBalance = lazy(() => import('./pages/accounting/TrialBalance.jsx'));
-const PeriodsManagement = lazy(() => import('./pages/accounting/PeriodsManagement.jsx'));
-const CostCenterManagement = lazy(() => import('./pages/accounting/CostCenterManagement.jsx'));
+// Accounting
+const AccountingDashboard = lazy(() => import('./modules/accounting/pages/AccountingDashboard.jsx'));
+const ChartOfAccounts = lazy(() => import('./modules/accounting/pages/ChartOfAccounts.jsx'));
+const JournalEntries = lazy(() => import('./modules/accounting/pages/JournalEntries.jsx'));
+const TrialBalance = lazy(() => import('./modules/accounting/pages/TrialBalance.jsx'));
+const PeriodsManagement = lazy(() => import('./modules/accounting/pages/PeriodsManagement.jsx'));
+const CostCenterManagement = lazy(() => import('./modules/accounting/pages/CostCenterManagement.jsx'));
 
-// Emprendimiento (Incubadora)
-const EntrepreneurshipDashboard = lazy(() => import('./pages/entrepreneurship/Dashboard.jsx'));
-const EntrepreneurshipForm = lazy(() => import('./pages/entrepreneurship/ProjectForm.jsx'));
-const EntrepreneurshipDetails = lazy(() => import('./pages/entrepreneurship/ProjectDetails.jsx'));
+// Communication & Compliance & Contracts
+const SustainabilityDashboard = lazy(() =>
+  import('./modules/sustainability/pages/SustainabilityDashboard.jsx')
+);
+const AnnouncementsBoard = lazy(
+  () => import('./modules/communication/pages/AnnouncementsBoard.jsx')
+);
+const LegalComplianceDashboard = lazy(
+  () => import('./modules/compliance/pages/LegalComplianceDashboard.jsx')
+);
+const ExpiringContracts = lazy(() => import('./modules/contracts/pages/ExpiringContracts.jsx'));
 
-const RegisterTenant = lazy(() => import('./pages/auth/RegisterTenant.jsx'));
-const SuperAdminDashboard = lazy(() => import('./pages/superadmin/SuperAdminDashboard.jsx'));
+// Notifications, Audit & Help
+const NotificationsPage = lazy(() => import('./modules/notifications/pages/NotificationsPage.jsx'));
+const NotificationSettings = lazy(() => import('./modules/notifications/pages/NotificationSettings.jsx'));
+const AuditLogsPage = lazy(() => import('./modules/audit/pages/AuditLogsPage.jsx'));
+const HelpCenter = lazy(() => import('./modules/help/pages/HelpCenter.jsx'));
 
-// Módulo de Firmas Digitales QR y Firma Electrónica Oficial Ecuador (.p12)
-const DigitalSignatureCenter = lazy(() => import('./pages/signatures/DigitalSignatureCenter.jsx'));
+// Signatures & SuperAdmin
+const DigitalSignatureCenter = lazy(() => import('./modules/signatures/pages/DigitalSignatureCenter.jsx'));
 const PublicSignatureVerification = lazy(
-  () => import('./pages/signatures/PublicSignatureVerification.jsx')
+  () => import('./modules/signatures/pages/PublicSignatureVerification.jsx')
 );
+const SuperAdminDashboard = lazy(() => import('./modules/superadmin/pages/SuperAdminDashboard.jsx'));
+
+// Entrepreneurship
+const EntrepreneurshipDashboard = lazy(() => import('./modules/entrepreneurship/pages/Dashboard.jsx'));
+const EntrepreneurshipForm = lazy(() => import('./modules/entrepreneurship/pages/ProjectForm.jsx'));
+const EntrepreneurshipDetails = lazy(() => import('./modules/entrepreneurship/pages/ProjectDetails.jsx'));
 
 const RequireAuth = ({ children, role, user }) => {
   if (!user) {
@@ -227,6 +237,7 @@ function App() {
         <Route path="/signatures/verify/:token" element={<PublicSignatureVerification />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        
         {/* Panel compartido para roles administrativos/especializados */}
         <Route
           element={
@@ -290,6 +301,7 @@ function App() {
           <Route path="/admin/signatures" element={<DigitalSignatureCenter />} />
           <Route path="/admin/offboarding" element={<OffboardingManagement />} />
           <Route path="/admin/compliance" element={<LegalComplianceDashboard />} />
+          <Route path="/admin/sustainability" element={<SustainabilityDashboard />} />
           <Route path="/performance" element={<EvaluationDashboard />} />
           <Route path="/performance/create" element={<CreateEvaluation />} />
           <Route path="/performance/assign" element={<AssignEvaluation />} />

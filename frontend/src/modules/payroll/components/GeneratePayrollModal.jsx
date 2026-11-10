@@ -7,10 +7,10 @@
  */
 
 import React from 'react';
-import { Modal } from '../../../core/ui/Modal.jsx';
-import { Button } from '../../../core/ui/Button.jsx';
-import { Select } from '../../../core/ui/Select.jsx';
-import { Input } from '../../../core/ui/Input.jsx';
+import { Modal } from '@/core/ui/Modal.jsx';
+import { Button } from '@/core/ui/Button.jsx';
+import { Select } from '@/core/ui/Select.jsx';
+import { Input } from '@/core/ui/Input.jsx';
 
 const MONTHS = [
   { value: 1, label: 'Enero' },

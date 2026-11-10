@@ -6,20 +6,59 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
+import { AppError } from '../core/errors/appError.js';
+
 /**
  * Error Handling Middleware
- * Maneja errores globales de la aplicación
+ * Maneja errores globales de la aplicación bajo estándar RFC 7807 y Clean Architecture
  */
 export function errorHandler(err, req, res, next) {
   console.error('Error:', err);
 
-  // Errores de Zod (Validación de Esquema)
+  // 1. Errores operacionales tipados de Dominio/Aplicación (AppError)
+  if (err instanceof AppError || (err.isOperational && err.statusCode)) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+      type: err.type || err.name || 'AppError',
+      ...(err.errors ? { errors: err.errors } : {}),
+    });
+  }
+
+  // 2. Errores de Zod (Validación de Esquema / DTOs)
   if (err.name === 'ZodError' || (err.issues && Array.isArray(err.issues))) {
     return res.status(400).json({
       success: false,
       message: 'Error de validación en la solicitud',
       errors: err.issues.map((i) => ({ field: i.path.join('.'), message: i.message })),
       type: 'ValidationError',
+    });
+  }
+
+  // 3. Errores de Base de Datos conocidos (Prisma ORM)
+  if (err.code === 'P2002') {
+    const target = err.meta?.target;
+    const fields = Array.isArray(target) ? target.join(', ') : target || 'campo';
+    return res.status(409).json({
+      success: false,
+      message: `Conflicto de unicidad: el registro con '${fields}' ya existe en el sistema.`,
+      type: 'ConflictError',
+    });
+  }
+
+  if (err.code === 'P2025') {
+    return res.status(404).json({
+      success: false,
+      message: err.meta?.cause || 'El recurso solicitado no fue encontrado.',
+      type: 'NotFoundError',
+    });
+  }
+
+  if (err.code === 'P2003') {
+    return res.status(400).json({
+      success: false,
+      message: 'Violación de integridad referencial: el registro relacionado no existe o se encuentra restringido.',
+      type: 'ForeignKeyConstraintError',
     });
   }
 

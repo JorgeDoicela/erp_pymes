@@ -1,0 +1,125 @@
+/**
+ * @file attendanceController.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
+import { attendanceService } from './attendance.service.js';
+
+const markAttendance = async (req, res, next) => {
+  try {
+    const { employeeId, type, location } = req.body;
+
+    if (!employeeId || !type) {
+      return res.status(400).json({
+        success: false,
+        message: 'employeeId y type (ENTRY/EXIT) son requeridos',
+      });
+    }
+
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const start = Date.now();
+
+    const userRole = (req.user?.role || '').toLowerCase();
+    const isAuthorizedSupervisor = ['admin', 'hr', 'manager', 'superadmin'].includes(userRole);
+
+    const isSupervisorOverride = !!(
+      req.user &&
+      isAuthorizedSupervisor &&
+      (req.user.id !== employeeId || isAuthorizedSupervisor)
+    );
+
+    const result = await attendanceService.registerAttendance(
+      employeeId,
+      type,
+      location,
+      ip,
+      isSupervisorOverride
+    );
+    const duration = Date.now() - start;
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: result.record,
+      workedHours: result.workedHours, // Puede ser undefined si es ENTRY
+      meta: {
+        latency: `${duration}ms`,
+      },
+    });
+  } catch (error) {
+    // Validation/Business errors (400) vs Internal errors (500)
+    const businessErrors = [
+      'Ubicación no permitida',
+      'La ubicación es requerida',
+      'No ha otorgado el consentimiento',
+      'Conexión no permitida',
+      'Conexión vía VPN/Proxy detectada',
+      'Ya se ha registrado',
+      'Debe registrar entrada',
+      'No se encontró registro de entrada',
+      'Tipo de registro no válido',
+      'No ha iniciado el almuerzo',
+      'Ya ha iniciado un inicio de almuerzo',
+      'Ya ha finalizado su almuerzo',
+    ];
+
+    const isBusinessError = businessErrors.some((msg) => error.message.includes(msg));
+
+    if (
+      isBusinessError ||
+      error.message.includes('No se encontró empleado') ||
+      error.message.includes('Empleado no encontrado')
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    console.error('[ATTENDANCE] Unexpected Server Error:', error);
+    next(error);
+  }
+};
+
+const getStatus = async (req, res, next) => {
+  try {
+    const { employeeId } = req.params;
+    const userRole = (req.user?.role || '').toLowerCase();
+    const currentUserId = req.user?.employeeId || req.user?.id;
+    const isStaff = ['admin', 'hr', 'manager', 'superadmin'].includes(userRole);
+
+    if (req.user && !isStaff && currentUserId !== employeeId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Acceso denegado: Solo puedes consultar tu propio estado de asistencia.',
+        code: 'FORBIDDEN_SELF_ONLY',
+      });
+    }
+
+    const status = await attendanceService.getStatus(employeeId);
+    res.json({ success: true, data: status });
+  } catch (error) {
+    console.error('Error en getStatus:', error);
+
+    if (
+      error.message.includes('Empleado no encontrado') ||
+      error.message.includes('No se encontró empleado')
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    next(error);
+  }
+};
+
+export default {
+  markAttendance,
+  getStatus,
+};
+

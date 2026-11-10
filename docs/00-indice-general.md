@@ -69,6 +69,7 @@ Documentación técnica del sistema de gestión de talento humano, nómina legal
 - [01 — Alineación Estratégica con el ODS 8](./09-sostenibilidad-ods/01-alineacion-estrategica-ods-8.md)
 - [02 — Metas y Mecanismos de Implementación ODS 8](./09-sostenibilidad-ods/02-metas-y-mecanismos-ods-8.md)
 - [03 — Especificación Técnica de Refactorización y KPIs](./09-sostenibilidad-ods/03-especificacion-refactorizacion-kpis.md)
+- [04 — Asistente de IA: RAG con Legislación Ecuatoriana y Fine-Tuning para ODS 8](./09-sostenibilidad-ods/04-asistente-ia-rag-y-fine-tuning-slm.md)
 
 ---
 

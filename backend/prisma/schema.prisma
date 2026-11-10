@@ -50,6 +50,7 @@ model Tenant {
   morlPolicyRuns      MorlPolicyRun[]
   attentionCalibrations AttentionCalibration[]
   ftTransformerWeights FTTransformerWeights[]
+  knowledgeDocuments   KnowledgeDocument[]
 
   @@map("tenants")
 }
@@ -1256,6 +1257,39 @@ model FTTransformerWeights {
 
   @@index([tenantId, epoch])
   @@map("ft_transformer_weights")
+}
+
+model KnowledgeDocument {
+  id          String           @id @default(cuid())
+  tenantId    String?          // null = Normativa pública Ecuador; valor = Políticas privadas del tenant
+  title       String
+  category    String           // "LABOR_CODE", "IESS_REGULATION", "MDT_AGREEMENT", "ODS_8_FRAMEWORK", "INTERNAL_POLICY"
+  sourceUrl   String?
+  version     String           @default("2026")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  tenant      Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  chunks      KnowledgeChunk[]
+
+  @@index([tenantId, category])
+  @@map("knowledge_documents")
+}
+
+model KnowledgeChunk {
+  id          String            @id @default(cuid())
+  documentId  String
+  content     String            @db.Text
+  articleCode String?           // Ej: "Art. 185", "Art. 188", "Meta 8.3"
+  odsTarget   String?           // "8.3", "8.5", "8.8"
+  metadata    Json?             // Palabras clave, régimen territorial (Sierra/Costa), jurisprudencia
+  createdAt   DateTime          @default(now())
+
+  document    KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([odsTarget])
+  @@map("knowledge_chunks")
 }
 
 

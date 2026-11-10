@@ -1,39 +1,9 @@
 /**
  * @file payrollConfigController.js
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
- * @author Jorge Doicela
- * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
- * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ * @deprecated Este archivo ha sido consolidado en src/modules/payroll/payrollConfig.controller.js.
+ * Se mantiene este re-export para compatibilidad retroactiva.
  */
 
-import payrollConfigService from '../../services/payroll/payrollConfigService.js';
-
-class PayrollConfigController {
-  async getConfig(req, res) {
-    try {
-      const tenantId = req.tenantId || req.user?.tenantId;
-      const config = await payrollConfigService.getConfig(tenantId);
-      res.status(200).json({ success: true, data: config });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: 'Error al obtener configuración de nómina' });
-    }
-  }
-
-  async createConfig(req, res) {
-    try {
-      const tenantId = req.tenantId || req.user?.tenantId;
-      const newConfig = await payrollConfigService.createConfig(req.body, tenantId);
-      res
-        .status(201)
-        .json({ success: true, data: newConfig, message: 'Configuración guardada correctamente' });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(400)
-        .json({ success: false, message: error.message || 'Error al guardar configuración' });
-    }
-  }
-}
-
-export default new PayrollConfigController();
+export * from '../../modules/payroll/payrollConfig.controller.js';
+import payrollConfigController from '../../modules/payroll/payrollConfig.controller.js';
+export default payrollConfigController;

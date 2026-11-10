@@ -26,19 +26,34 @@ vi.mock('../src/database/db.js', () => ({
     }
 }));
 
-vi.mock('../src/repositories/attendance/attendanceRepository.js', () => ({
-    attendanceRepository: {
+const { mockAttendanceRepo, mockEmpRepo } = vi.hoisted(() => ({
+    mockAttendanceRepo: {
         findByEmployeeAndDate: vi.fn(),
         createEntry: vi.fn(),
         updateExit: vi.fn()
-    }
-}));
-
-vi.mock('../src/repositories/employees/employeeRepository.js', () => ({
-    default: {
+    },
+    mockEmpRepo: {
         findById: vi.fn(),
         findByIdentityCard: vi.fn()
     }
+}));
+
+vi.mock('../src/repositories/attendance/attendanceRepository.js', () => ({
+    attendanceRepository: mockAttendanceRepo,
+    default: mockAttendanceRepo
+}));
+
+vi.mock('../src/modules/attendance/attendance.repository.js', () => ({
+    attendanceRepository: mockAttendanceRepo,
+    default: mockAttendanceRepo
+}));
+
+vi.mock('../src/repositories/employees/employeeRepository.js', () => ({
+    default: mockEmpRepo
+}));
+
+vi.mock('../src/modules/employees/employee.repository.js', () => ({
+    default: mockEmpRepo
 }));
 
 describe('Attendance Service & Geofencing Engine Test Suite', () => {

@@ -19,56 +19,53 @@
 | PDF cliente | jspdf + jspdf-autotable | 3.0.4 |
 | PWA | vite-plugin-pwa | 1.3.0 |
 
-## 2. Estructura de Directorios
+## 2. Estructura Arquitectónica Modular por Dominio (Feature/Domain-Driven)
 
 ```
 frontend/src/
-├── App.jsx              # Punto de entrada: rutas, guards de autenticación, estado global
-├── main.jsx             # Bootstrap: React DOM + Router + ThemeProvider
-├── index.css            # Variables CSS globales, reset, tema oscuro/claro
-├── constants/
-│   ├── roles.js         # Enumeración de roles (sincronizada con backend)
-│   └── ...
-├── api/                 # Clientes HTTP por dominio
-│   ├── auth.js          # Login, logout, forgot-password
-│   ├── employees.js     # CRUD de empleados
-│   ├── attendance.js    # Registro de asistencia
-│   ├── payroll.js       # Nómina
-│   ├── intelligence.js  # Dashboard de inteligencia
-│   └── ...              # Un archivo por módulo funcional
-├── components/          # Componentes reutilizables
-│   ├── layout/
-│   │   └── MainLayout.jsx    # Shell con sidebar, header y outlet de contenido
-│   ├── common/
-│   │   ├── MaintenanceBanner.jsx
-│   │   └── ...
-│   ├── pwa/
-│   │   ├── PWAInstallPrompt.jsx
-│   │   ├── OfflineIndicator.jsx
-│   │   └── PWAReloadPrompt.jsx
-│   └── Loading.jsx
-├── pages/               # Páginas por módulo funcional (19 subdirectorios)
-│   ├── auth/            # Login, ResetPassword, RegisterTenant
-│   ├── landing/         # Home (página pública de aterrizaje)
-│   ├── dashboard/       # AdminDashboard, EmployeeDashboard, IntelligentDashboard
-│   │   └── views/       # Vistas del portal de empleado
-│   ├── employees/       # EmployeeList, EmployeeProfile, EmployeeExpedient, Offboarding
-│   ├── attendance/      # AttendancePage, ShiftManagement, AdminAbsences
-│   ├── payroll/         # PayrollConfiguration, PayrollGenerator, MyPayments, Benefits
-│   ├── performance/     # EvaluationDashboard, CreateEvaluation, MyEvaluations
-│   ├── recruitment/     # RecruitmentDashboard, CareersPage (pública), JobApplication
-│   ├── analytics/       # AnalyticsDashboard
-│   ├── reports/         # TurnoverReport, PerformanceReport, PayrollCostReport
-│   ├── accounting/      # AccountingDashboard, ChartOfAccounts, JournalEntries
-│   ├── contracts/       # ExpiringContracts
-│   ├── notifications/   # NotificationsPage, NotificationSettings
-│   ├── audit/           # AuditLogsPage
-│   ├── compliance/      # LegalComplianceDashboard
-│   ├── communication/   # AnnouncementsBoard
-│   ├── help/            # HelpCenter
-│   └── superadmin/      # SuperAdminDashboard
-└── hooks/               # Custom hooks
+├── App.jsx                  # Orquestador: rutas por dominio, guards de autenticación (RBAC)
+├── main.jsx                 # Bootstrap: React DOM + Router + ThemeProvider
+├── index.css                # Variables CSS globales, reset, estándar estilos-erp-pymes
+├── core/                    # Núcleo Transversal Compartido (Agnóstico de Negocio)
+│   ├── api/                 # Cliente HTTP base centralizado (httpClient.js)
+│   ├── constants/           # Roles (roles.js), permisos globales
+│   ├── feedback/            # Loading, ErrorState, ErrorBoundary, MaintenanceBanner
+│   ├── layout/              # MainLayout, DashboardLayout, Header, Sidebar, Footer
+│   ├── pwa/                 # OfflineIndicator, PWAInstallPrompt, PWAReloadPrompt
+│   ├── ui/                  # Design System Atómico (Button, Input, Select, Table, Modal...)
+│   └── utils/               # Formateadores numéricos/fechas, validadores generales
+│
+└── modules/                 # Módulos Verticales Autónomos por Dominio
+    ├── accounting/          # Contabilidad, Plan de Cuentas, Asientos, Balances
+    ├── analytics/           # Inteligencia Predictiva (AIG), Advisor, Modelos ML, What-If
+    ├── attendance/          # Asistencia, Turnos, Ausencias, Biometría WebAuthn
+    ├── audit/               # Trazabilidad y Logs de Auditoría
+    ├── auth/                # Login, Registro de Tenant, Recuperación de Clave
+    ├── communication/       # Cartelera de Anuncios y Comunicados Corporativos
+    ├── compliance/          # Cumplimiento Legal y Normativa Laboral
+    ├── contracts/           # Contratos Laborales por Vencer
+    ├── employees/           # Empleados, Expedientes, Activos, Onboarding, Certificados PDF
+    ├── entrepreneurship/    # Incubadora de Emprendimientos y Proyectos
+    ├── help/                # Centro de Ayuda y Soporte
+    ├── notifications/       # Notificaciones Push / WebSocket en Tiempo Real
+    ├── payroll/             # Nómina, Roles de Pago, Beneficios, Anticipos, Finiquitos
+    ├── performance/         # Evaluaciones de Desempeño 360°, Metas y Objetivos
+    ├── portal/              # Home landing, Dashboards centrales (Admin, Empleado, Móvil)
+    ├── recruitment/         # Vacantes, Postulaciones, Candidatos y Entrevistas
+    ├── reports/             # Reportes Gerenciales Consolidados y Exportadores
+    ├── signatures/          # Centro de Firmas Electrónicas y Verificación Pública
+    └── superadmin/          # Backoffice Multi-Tenant, Auditoría SaaS y Planes
 ```
+
+### 2.1. Anatomía Canónica de un Módulo de Dominio (`src/modules/<dominio>/`)
+
+Cada módulo opera bajo el principio de **alta cohesión y encapsulamiento estricto** (*vertical slice*):
+* `pages/`: Vistas de usuario y páginas accesibles mediante enrutamiento.
+* `components/`: Componentes visuales y contenedores de uso exclusivo del dominio.
+* `services/`: Adaptadores HTTP y llamadas a endpoints del dominio.
+* `hooks/`: Custom hooks con lógica de negocio y estado del dominio.
+* `utils/`: Algoritmos, generadores y validadores específicos del dominio.
+* `index.js`: **Public API (Barril)** que expone formalmente los artefactos públicos para el resto de la aplicación.
 
 ## 3. Gestión de Estado Global
 

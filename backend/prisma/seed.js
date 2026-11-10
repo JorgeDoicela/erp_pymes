@@ -28,6 +28,7 @@ import { seedAccounting, seedJournalEntries } from './seeds/accounting.js';
 import { seedEntrepreneurship } from './seeds/entrepreneurship.js';
 import { seedResearchData } from './seeds/research_data.js';
 import { seedOffboarding } from './seeds/offboarding.js';
+import { seedSustainability } from './seeds/sustainability.js';
 
 function createPrisma() {
   return new PrismaClient({
@@ -171,6 +172,7 @@ async function main() {
     '\n[12/12] Configurando Módulos de IA (RSI, Causal, MORL, Privacidad Diferencial)...'
   );
   await withRetry('RESEARCH_DATA', (prisma) => seedResearchData(prisma));
+  await withRetry('SUSTAINABILITY', (prisma) => seedSustainability(prisma));
 
   console.log('\n╔════════════════════════════════════════════════════════════╗');
   console.log('║        SEED DE 7 EMPRESAS MULTI-SECTOR COMPLETADO          ║');

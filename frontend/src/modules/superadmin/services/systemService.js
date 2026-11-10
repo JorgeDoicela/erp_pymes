@@ -1,0 +1,48 @@
+/**
+ * @file systemService.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
+import api from '@/core/api/httpClient';
+
+const getSettings = async () => {
+  try {
+    const response = await api.get('/system/settings');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+const updateSettings = async (data) => {
+  try {
+    const response = await api.put('/system/settings', data);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+const getBiometricSetting = async () => {
+  try {
+    const response = await api.get('/system/biometric-setting');
+    return response.data;
+  } catch (error) {
+    return { success: true, biometricEnabled: false };
+  }
+};
+
+const reverseGeocode = async (lat, lng) => {
+  try {
+    const response = await api.get(`/system/geocode?lat=${lat}&lng=${lng}`);
+    return response.data;
+  } catch (error) {
+    console.error('Geocode error:', error);
+    return null;
+  }
+};
+
+export default { getSettings, updateSettings, getBiometricSetting, reverseGeocode };

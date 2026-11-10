@@ -31,6 +31,8 @@ El sistema está compuesto por dos aplicaciones independientes que se comunican 
 | Subida de archivos       | Multer                        | 2.0.2     |
 | Exportación Excel        | ExcelJS                       | 4.4.0     |
 | Precisión financiera     | Decimal.js                    | 10.6.0    |
+| Validación de esquemas   | Zod                           | 3.24.2    |
+| Tipado estático          | TypeScript (tsc --noEmit)     | 5.9.3     |
 
 ### 2.2 Frontend
 
@@ -114,6 +116,19 @@ backend/src/
 ├── config/
 │   ├── roles.js          # Enumeración de roles y helper isSuperAdminRole()
 │   └── storage.config.js # Configuración de almacenamiento local
+├── modules/              # Bounded Contexts independientes (Monolito Modular)
+│   ├── accounting/       # Contabilidad (Routes, Controller, Repository, DTOs)
+│   ├── payroll/          # Nómina y Liquidaciones (Routes, Controllers, Services, Repository, DTOs)
+│   ├── employees/        # Talento Humano (Routes, Controller, Service, Repository, DTOs)
+│   └── index.js          # Registro central de módulos
+├── types/                # Contratos estáticos TypeScript (accounting, payroll, employee)
+├── core/
+│   └── errors/           # Jerarquía de errores operacionales (AppError, ValidationError, etc.)
+├── dto/                  # Data Transfer Objects y esquemas Zod por dominio
+│   ├── common/           # Validadores base (Cédula ecuatoriana, montos, teléfonos)
+│   ├── accounting/       # Asientos, cuentas, periodos
+│   ├── payroll/          # Nómina y configuraciones
+│   └── employees/        # Creación y actualización de personal
 ├── controllers/          # Controladores HTTP (thin layer → delegan a services)
 │   ├── auth/             # Login, forgot/reset password
 │   ├── admin/            # Seed controller, SuperAdmin
@@ -153,7 +168,9 @@ backend/src/
 │   ├── storage/          # (almacenamiento de archivos)
 │   ├── system/           # (configuración del sistema)
 │   └── intelligenceService.js  # Motor de inteligencia analítica (1621 líneas)
-├── repositories/         # Acceso a datos (patrón Repository)
+├── repositories/         # Acceso a datos (patrón Repository desacoplado)
+│   ├── accounting/       # accountingRepository.js (Cuentas, Asientos, Periodos, Centros de Costo)
+│   ├── payroll/          # payrollRepository.js (Configuración activa, liquidaciones, historial)
 │   ├── employees/        # employeeRepository.js
 │   ├── attendance/       # attendanceRepository.js
 │   └── audit/            # auditRepository.js
@@ -162,14 +179,15 @@ backend/src/
 ├── middleware/
 │   ├── auth.middleware.js        # Verificación JWT, authorize(roles)
 │   ├── tenant.middleware.js      # Resolución y validación de tenant
-│   ├── errorHandler.js           # Manejo centralizado de errores, request logger
+│   ├── validate.middleware.js    # Validación en los bordes con esquemas Zod
+│   ├── errorHandler.js           # Manejo centralizado de errores, ZodError y logger
 │   ├── maintenance.middleware.js  # Modo mantenimiento programado
 │   ├── performance.middleware.js  # Logging de tiempos de respuesta
 │   ├── rateLimit.middleware.js    # Rate limiting configurable por ruta
 │   ├── security.middleware.js     # Protección de archivos estáticos
 │   ├── superAdmin.middleware.js   # Middleware exclusivo para SuperAdmin
 │   ├── upload.middleware.js       # Configuración Multer
-│   └── validation.middleware.js   # Validación de esquemas de entrada
+│   └── validation.middleware.js   # Validadores manuales legacy
 ├── database/
 │   ├── db.js             # PrismaClient singleton con interceptor multi-tenant ($use)
 │   └── tenantContext.js  # AsyncLocalStorage para contexto asíncrono de tenant

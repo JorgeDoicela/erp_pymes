@@ -39,6 +39,64 @@ describe('Fase 3: Arquitectura de Monolito Modular y Core de Errores', () => {
       expect(modules.employeeController).toBeDefined();
       expect(modules.employeeService).toBeDefined();
       expect(modules.employeeDto).toBeDefined();
+      expect(modules.onboardingOffboardingRoutes).toBeDefined();
+      expect(modules.assetService).toBeDefined();
+      expect(modules.expedientService).toBeDefined();
+      expect(modules.offboardingService).toBeDefined();
+      expect(modules.onboardingOffboardingController).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Attendance', () => {
+      expect(modules.attendanceRoutes).toBeDefined();
+      expect(modules.shiftRoutes).toBeDefined();
+      expect(modules.absenceRoutes).toBeDefined();
+      expect(modules.attendanceController).toBeDefined();
+      expect(modules.shiftController).toBeDefined();
+      expect(modules.absenceController).toBeDefined();
+      expect(modules.attendanceService).toBeDefined();
+      expect(modules.shiftService).toBeDefined();
+      expect(modules.absenceService).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Contracts', () => {
+      expect(modules.contractRoutes).toBeDefined();
+      expect(modules.contractRepository).toBeDefined();
+      expect(modules.contractController).toBeDefined();
+      expect(modules.contractService).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Documents', () => {
+      expect(modules.documentRoutes).toBeDefined();
+      expect(modules.documentRepository).toBeDefined();
+      expect(modules.documentController).toBeDefined();
+      expect(modules.documentService).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Compliance', () => {
+      expect(modules.complianceRoutes).toBeDefined();
+      expect(modules.complianceController).toBeDefined();
+      expect(modules.complianceService).toBeDefined();
+      expect(modules.statutoryBenefitsService).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Signatures', () => {
+      expect(modules.signatureRoutes).toBeDefined();
+      expect(modules.signatureController).toBeDefined();
+      expect(modules.qrSignatureService).toBeDefined();
+      expect(modules.ecuadorianElectronicSignatureService).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Performance', () => {
+      expect(modules.evaluationRoutes).toBeDefined();
+      expect(modules.goalsRoutes).toBeDefined();
+      expect(modules.performanceService).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Recruitment', () => {
+      expect(modules.recruitmentRoutes).toBeDefined();
+      expect(modules.recruitmentController).toBeDefined();
+      expect(modules.recruitmentService).toBeDefined();
+      expect(modules.recruitmentRepository).toBeDefined();
     });
   });
 

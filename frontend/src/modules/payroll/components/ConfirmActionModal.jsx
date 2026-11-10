@@ -7,8 +7,8 @@
  */
 
 import React from 'react';
-import { Modal } from '../../../core/ui/Modal.jsx';
-import { Button } from '../../../core/ui/Button.jsx';
+import { Modal } from '@/core/ui/Modal.jsx';
+import { Button } from '@/core/ui/Button.jsx';
 
 export const ConfirmActionModal = ({
   isOpen,

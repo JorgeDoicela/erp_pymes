@@ -1,30 +1,9 @@
 /**
  * @file absence.routes.js
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
- * @author Jorge Doicela
- * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
- * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ * @deprecated Este archivo ha sido consolidado en src/modules/attendance/absence.routes.js.
+ * Se mantiene este re-export para compatibilidad retroactiva.
  */
 
-import { Router } from 'express';
-import absenceController from '../../controllers/attendance/absenceController.js';
-import { authenticate, authorize } from '../../middleware/auth.middleware.js';
-
-const router = Router();
-
-// Todas las rutas requieren autenticación
-router.use(authenticate);
-
-// Crear (Upload file) - Empleado o Admin
-router.post('/', absenceController.uploadMiddleware, absenceController.createRequest);
-
-// Listar todas (Admin/HR/Manager/Accounting)
-router.get('/', authorize(['admin', 'hr', 'manager', 'accounting']), absenceController.getRequests);
-
-// Mis solicitudes (Empleado)
-router.get('/my-requests', absenceController.getMyRequests);
-
-// Aprobar/Rechazar (Admin/HR/Manager)
-router.patch('/:id/status', authorize(['admin', 'hr', 'manager']), absenceController.updateStatus);
-
-export default router;
+export * from '../../modules/attendance/absence.routes.js';
+import absenceRoutes from '../../modules/attendance/absence.routes.js';
+export default absenceRoutes;

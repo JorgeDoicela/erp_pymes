@@ -11,21 +11,24 @@ import { login, forgotPassword, resetPassword } from '../controllers/auth/authCo
 // Módulos de Negocio (Monolito Modular / Clean Architecture)
 import {
   employeeRoutes,
+  onboardingOffboardingRoutes,
   payrollRoutes as payrollConfigRoutes,
   accountingRoutes,
+  sustainabilityRoutes,
+  attendanceRoutes,
+  shiftRoutes,
+  absenceRoutes,
+  contractRoutes,
+  documentRoutes,
+  complianceRoutes,
+  signatureRoutes,
+  evaluationRoutes,
+  goalsRoutes,
+  recruitmentRoutes,
 } from '../modules/index.js';
-import onboardingOffboardingRoutes from './employees/onboardingOffboarding.routes.js';
-import contractRoutes from './contracts/contract.routes.js';
-import documentRoutes from './documents/document.routes.js';
-import attendanceRoutes from './attendance/attendance.routes.js';
-import shiftRoutes from './attendance/shift.routes.js';
-import absenceRoutes from './attendance/absence.routes.js';
 import reportRoutes from './reports/report.routes.js';
 import benefitsRoutes from './payroll/benefits.routes.js';
 import salaryAdvanceRoutes from './payroll/salaryAdvance.routes.js';
-import evaluationRoutes from './performance/evaluation.routes.js';
-import goalsRoutes from './performance/goals.routes.js';
-import recruitmentRoutes from './recruitment.routes.js';
 import analyticsRoutes from './analytics.routes.js';
 import skillRoutes from './skills/skill.routes.js';
 import notificationRoutes from './notifications/notification.routes.js';
@@ -36,14 +39,12 @@ import { runSeed } from '../controllers/admin/seedController.js';
 import biometricRoutes from './biometric/biometric.routes.js';
 import * as biometricPublicController from '../controllers/biometric.controller.js';
 import entrepreneurshipRoutes from './entrepreneurship.routes.js';
-import complianceRoutes from './compliance/compliance.routes.js';
 import announcementRoutes from './communication/announcement.routes.js';
 import tenantRoutes from './tenant/tenant.routes.js';
 import superAdminRoutes from './admin/superAdmin.routes.js';
 import { rateLimit } from '../middleware/rateLimit.middleware.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 import { requireTenant } from '../middleware/tenant.middleware.js';
-import signatureRoutes from './signatures/signature.routes.js';
 
 const router = Router();
 
@@ -114,6 +115,7 @@ router.post('/biometric/login/verify', biometricPublicController.verifyAuthentic
 router.use('/biometric', protectedTenant, biometricRoutes);
 router.use('/intelligence', protectedTenant, intelligenceRoutes);
 router.use('/accounting', protectedTenant, accountingRoutes);
+router.use('/sustainability', protectedTenant, sustainabilityRoutes);
 router.use('/entrepreneurship', protectedTenant, entrepreneurshipRoutes);
 router.use('/compliance', protectedTenant, complianceRoutes);
 router.use('/announcements', protectedTenant, announcementRoutes);

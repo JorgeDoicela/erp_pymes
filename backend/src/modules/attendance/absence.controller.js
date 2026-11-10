@@ -1,0 +1,168 @@
+/**
+ * @file absenceController.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
+import { absenceService } from './absence.service.js';
+import notificationService from '../../services/notifications/notificationService.js';
+import prisma from '../../database/db.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { STORAGE_CONFIG } from '../../config/storage.config.js';
+
+// --- Configuración de Multer ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.resolve(process.cwd(), STORAGE_CONFIG.PATHS.EVIDENCE);
+    // Crear directorio si no existe
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, 'evidence-' + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: STORAGE_CONFIG.MAX_FILE_SIZE }, // 5MB limit consolidated
+});
+
+// --- Controller Methods ---
+
+const createRequest = async (req, res, next) => {
+  try {
+    // req.body tiene los campos de texto, req.file el archivo
+    const { type, startDate, endDate, reason, employeeId } = req.body;
+
+    const userRole = (req.user?.role || '').toLowerCase();
+    const sessionUserId = req.user?.employeeId || req.user?.id;
+    const isAdminOrManager = ['admin', 'hr', 'manager', 'superadmin'].includes(userRole);
+
+    const targetEmployeeId = isAdminOrManager && employeeId ? employeeId : sessionUserId;
+
+    console.log('Creating Absence Request');
+    console.log('Body:', req.body);
+    console.log('File:', req.file); // DEBUG
+
+    const request = await absenceService.createRequest({
+      employeeId: targetEmployeeId,
+      type,
+      startDate,
+      endDate,
+      reason,
+      file: req.file,
+    });
+
+    // NOTIFICATION: Notify Admins (Approvers) of the same tenant (asynchronous / non-blocking)
+    prisma.employee
+      .findUnique({
+        where: { id: targetEmployeeId },
+        select: { firstName: true, lastName: true, tenantId: true },
+      })
+      .then(async (employee) => {
+        if (!employee) return;
+        const employeeTenantId = employee.tenantId || req.tenantId || req.user?.tenantId;
+        const admins = await prisma.employee.findMany({
+          where: {
+            role: 'admin',
+            isActive: true,
+            ...(employeeTenantId ? { tenantId: employeeTenantId } : {}),
+          },
+          select: { id: true },
+        });
+
+        await Promise.allSettled(
+          admins.map((admin) =>
+            notificationService.sendAbsenceRequested({
+              recipientId: admin.id,
+              employeeName: `${employee.firstName} ${employee.lastName}`,
+              type: type,
+              startDate: startDate,
+              endDate: endDate,
+              requestId: request.id,
+            })
+          )
+        );
+      })
+      .catch((err) => console.error('[AbsenceNotification] Error dispatching alerts:', err));
+
+    res.status(201).json({ success: true, data: request });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRequests = async (req, res, next) => {
+  try {
+    const { status, employeeId } = req.query;
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const filter = {};
+    if (status) filter.status = status;
+    if (employeeId) filter.employeeId = employeeId;
+    if (tenantId) filter.tenantId = tenantId;
+
+    const requests = await absenceService.getAllRequests(filter);
+    res.json({ success: true, data: requests });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, adminComment } = req.body;
+
+    if (!status || !['APPROVED', 'REJECTED', 'CANCELLED'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Estado inválido. Debe ser APPROVED, REJECTED o CANCELLED.',
+      });
+    }
+
+    const updated = await absenceService.updateRequestStatus(id, status, adminComment);
+
+    // Notify employee asynchronously
+    if (updated && updated.employeeId) {
+      notificationService
+        .sendAbsenceResolved({
+          recipientId: updated.employeeId,
+          type: updated.type,
+          status: status,
+          adminComment: adminComment,
+          requestId: updated.id,
+        })
+        .catch((err) => console.error('[AbsenceResolutionNotification] Error:', err));
+    }
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMyRequests = async (req, res, next) => {
+  try {
+    const requests = await absenceService.getEmployeeRequests(req.user.id);
+    res.json({ success: true, data: requests });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default {
+  createRequest,
+  getRequests,
+  updateStatus,
+  getMyRequests,
+  uploadMiddleware: upload.single('evidence'), // Middleware export
+};
+

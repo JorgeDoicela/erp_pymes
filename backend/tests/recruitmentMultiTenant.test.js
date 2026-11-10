@@ -2,7 +2,34 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { recruitmentService } from '../src/services/recruitment/recruitmentService.js';
 import recruitmentRepository from '../src/repositories/recruitment/recruitmentRepository.js';
 
-vi.mock('../src/repositories/recruitment/recruitmentRepository.js');
+const { mockRecruitmentRepo } = vi.hoisted(() => ({
+    mockRecruitmentRepo: {
+        createVacancy: vi.fn(),
+        getVacancies: vi.fn(),
+        getVacancyById: vi.fn(),
+        updateVacancy: vi.fn(),
+        deleteVacancy: vi.fn(),
+        createApplication: vi.fn(),
+        getApplications: vi.fn(),
+        getApplicationById: vi.fn(),
+        updateApplication: vi.fn(),
+        deleteApplication: vi.fn(),
+        createNote: vi.fn(),
+        createInterview: vi.fn(),
+        createEvaluation: vi.fn(),
+        executeTransaction: vi.fn()
+    }
+}));
+
+vi.mock('../src/repositories/recruitment/recruitmentRepository.js', () => ({
+    recruitmentRepository: mockRecruitmentRepo,
+    default: mockRecruitmentRepo
+}));
+
+vi.mock('../src/modules/recruitment/recruitment.repository.js', () => ({
+    recruitmentRepository: mockRecruitmentRepo,
+    default: mockRecruitmentRepo
+}));
 vi.mock('../src/repositories/audit/auditRepository.js', () => ({
     default: {
         createLog: vi.fn().mockResolvedValue({}),

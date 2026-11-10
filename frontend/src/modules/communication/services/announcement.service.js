@@ -1,0 +1,72 @@
+/**
+ * @file announcement.service.js
+ * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @author Jorge Doicela
+ * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
+ * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ */
+
+import api from '@/api/axios';
+
+export const getBoardStats = async () => {
+  try {
+    const response = await api.get('/announcements/board-stats');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error al cargar estadísticas del tablón');
+  }
+};
+
+export const getAnnouncements = async (params = {}) => {
+  try {
+    const response = await api.get('/announcements', { params });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error al cargar comunicados');
+  }
+};
+
+export const createAnnouncement = async (data) => {
+  try {
+    const response = await api.post('/announcements', data);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error al publicar comunicado');
+  }
+};
+
+export const markAnnouncementReadOrAcknowledge = async (id, acknowledge = false) => {
+  try {
+    const response = await api.post(`/announcements/${id}/read`, { acknowledge });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error al registrar acuse de recibo');
+  }
+};
+
+export const getAnnouncementStats = async (id) => {
+  try {
+    const response = await api.get(`/announcements/${id}/stats`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error al cargar métricas de lectura');
+  }
+};
+
+export const deleteAnnouncement = async (id) => {
+  try {
+    const response = await api.delete(`/announcements/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error al eliminar el comunicado');
+  }
+};
+
+export const getBirthdays = async () => {
+  try {
+    const response = await api.get('/announcements/birthdays');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error al cargar cumpleaños del mes');
+  }
+};
