@@ -42,7 +42,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: ${BACKEND_IMAGE:-rh-backend:latest}
+    image: ${BACKEND_IMAGE:-ghcr.io/jorgedoicela/rh-backend:latest}
     container_name: rh_backend
     restart: always
     env_file:
@@ -84,7 +84,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: ${FRONTEND_IMAGE:-rh-frontend:latest}
+    image: ${FRONTEND_IMAGE:-ghcr.io/jorgedoicela/rh-frontend:latest}
     container_name: rh_frontend
     restart: always
     expose:
@@ -97,7 +97,7 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile
-    image: ${GATEWAY_IMAGE:-rh-gateway:latest}
+    image: ${GATEWAY_IMAGE:-ghcr.io/jorgedoicela/rh-gateway:latest}
     container_name: rh_gateway
     restart: always
     ports:
