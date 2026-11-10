@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import 'dotenv/config';
+import './config/env.js';
 import http from 'http';
 import app from './app.js';
 import socketService from './services/notifications/socketService.js';

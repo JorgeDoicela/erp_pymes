@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import 'dotenv/config';
+import '../src/config/env.js';
 import { PrismaClient } from '@prisma/client';
 import { seedCleanup } from './seeds/cleanup.js';
 import { seedUsers } from './seeds/users.js';
