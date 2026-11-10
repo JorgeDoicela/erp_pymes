@@ -104,7 +104,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ${CERTS_PATH:-/var/www/recursos_humanos/certs}:/etc/nginx/certs:ro
+      - ${CERTS_PATH:-/var/www/recursos_humanos/certs}:/etc/nginx/certs:rw
     depends_on:
       backend:
         condition: service_healthy
