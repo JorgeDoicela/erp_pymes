@@ -7,6 +7,7 @@ El patrón Repository desacopla la lógica de negocio de los mecanismos de persi
 ### 1.1 employeeRepository
 
 Responsabilidades:
+
 - **`create(data)`:** Crea un empleado. Encripta automáticamente los campos `salary`, `bankName` y `accountNumber` usando AES-256-GCM antes de persistir.
 - **`findById(id)`:** Recupera un empleado con todos sus datos relacionados (contratos, habilidades, historial laboral).
 - **`findByEmail(email)`:** Búsqueda por email para validación de unicidad.

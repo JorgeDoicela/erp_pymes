@@ -12,6 +12,7 @@ El plan de recuperación ante desastres establece las siguientes métricas de co
 ## 2. Matriz de Escenarios de Fallo y Protocolos de Respuesta
 
 ### 2.1. Caída de la Instancia de la API (Backend Node.js)
+
 - **Diagnóstico**: Interrupción de respuestas HTTP con código `502 Bad Gateway` o `503 Service Unavailable`.
 - **Procedimiento de Recuperación**:
   1. Verificar el gestor de procesos del sistema (`systemctl status hr-backend` o PM2).
@@ -19,6 +20,7 @@ El plan de recuperación ante desastres establece las siguientes métricas de co
   3. Ejecutar reinicio del servicio: `systemctl restart hr-backend`.
 
 ### 2.2. Corrupción o Pérdida de Base de Datos PostgreSQL
+
 - **Diagnóstico**: Excepciones de conexión Prisma Client (`P1001: Can't reach database server`).
 - **Procedimiento de Restauración**:
   1. Detener las peticiones entrantes hacia la API REST.
@@ -30,8 +32,9 @@ El plan de recuperación ante desastres establece las siguientes métricas de co
   4. Reiniciar el backend y verificar la integridad de claves cifradas AES-256-GCM.
 
 ### 2.3. Fallo durante Transacciones Críticas (Nómina o Evaluaciones)
+
 - **Mecanismo Preventivo**: El motor de nómina y procesamiento de pagos ejecuta transacciones atómicas mediante `prisma.$transaction([])`.
-- **Garantía de Consistencia**: Si ocurre una interrupción durante la generación de detalles de nómina, la transacción realiza un *rollback* completo a nivel de base de datos, impidiendo estados inconsistentes o duplicidades.
+- **Garantía de Consistencia**: Si ocurre una interrupción durante la generación de detalles de nómina, la transacción realiza un _rollback_ completo a nivel de base de datos, impidiendo estados inconsistentes o duplicidades.
 
 ---
 

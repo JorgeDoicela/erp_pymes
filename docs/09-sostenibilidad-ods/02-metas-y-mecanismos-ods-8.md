@@ -8,15 +8,15 @@ Este documento detalla los mecanismos técnicos, reglas de negocio e implementac
 
 ### 1.1. Estandarización del Expediente y Contratación Laboral
 
-- **Ruta en Código:** `backend/src/services/employees/contract.service.js`
+- **Ruta en Código:** `backend/src/modules/contracts/contract.service.js`
 - **Lógica Operativa:**
   - Toda vinculación laboral requiere el registro de un tipo contractual tipificado en la legislación ecuatoriana (Indefinido, Eventual, Ocasional, Por Temporada, Obra Cierta, Aprendizaje).
-  - Monitoreo automatizado con `contractCronJob.js` que audita contratos próximos a vencer a 30, 15 y 5 días, notificando al departamento de RRHH para su renovación formal o terminación en plazos legales, erradicando contratos en el limbo jurídico.
+  - Monitoreo automatizado con `contract.jobs.js` que audita contratos próximos a vencer a 30, 15 y 5 días, notificando al departamento de RRHH para su renovación formal o terminación en plazos legales, erradicando contratos en el limbo jurídico.
   - Expediente digital único con almacenamiento de identificaciones, títulos, certificaciones y comprobantes de afiliación al IESS.
 
 ### 1.2. Módulo de Incubación y Formalización de Emprendimientos
 
-- **Ruta en Código:** `backend/src/services/entrepreneurship/entrepreneurship.service.js`
+- **Ruta en Código:** `backend/src/modules/intelligence/entrepreneurship/entrepreneurship.service.js`
 - **Lógica Operativa:**
   - Brinda a los fundadores de PyMEs y microempresas un marco estructurado para gestionar su capital social (`EntrepreneurshipEquity`), rondas de inversión (`EntrepreneurshipFundingRound`) y metas operativas (`EntrepreneurshipMilestone`).
   - Facilita la transición de emprendimientos informales a empresas formalmente constituidas con estructura organizativa, métricas de gobernanza y roles de personal claros.
@@ -27,7 +27,7 @@ Este documento detalla los mecanismos técnicos, reglas de negocio e implementac
 
 ### 2.1. Aritmética Financiera de Alta Precisión
 
-- **Ruta en Código:** `backend/src/utils/financialUtils.js`
+- **Ruta en Código:** `backend/src/core/utils/financialUtils.js`
 - **Fundamento:** El estándar binario IEEE 754 de punto flotante en JavaScript introduce errores acumulativos de redondeo (ej. `0.1 + 0.2 !== 0.3`). En software de nómina, esto provoca pérdidas monetarias que menoscaban el salario del trabajador.
 - **Solución Técnica:** Norma ERP configura `Decimal.js` con precisión de 20 dígitos y estrategia de redondeo simétrico a la mitad hacia arriba (`Decimal.ROUND_HALF_UP`):
   ```javascript
@@ -37,7 +37,7 @@ Este documento detalla los mecanismos técnicos, reglas de negocio e implementac
 
 ### 2.2. Liquidación Automatizada de Beneficios Sociales de Ley
 
-- **Ruta en Código:** `backend/src/services/payroll/payrollCalculationService.js`
+- **Ruta en Código:** `backend/src/modules/payroll/calculation/payrollCalculation.service.js`
 - **Reglas Aplicadas:**
   1. **Décimo Tercer Sueldo (Bono Navideño):** Cálculo equivalente a la doceava parte de todas las remuneraciones percibidas durante el año calendario (1 de diciembre a 30 de noviembre). Opción de pago mensualizado o acumulado.
   2. **Décimo Cuarto Sueldo (Bono Escolar):** Provisión de una doceava parte del Salario Básico Unificado (SBU) vigente en el régimen correspondiente (Sierra o Costa).
@@ -71,7 +71,7 @@ sequenceDiagram
 
 ### 3.1. Control Fidedigno de Jornadas y Horas Extras
 
-- **Ruta en Código:** `backend/src/services/attendance/attendanceService.js`
+- **Ruta en Código:** `backend/src/modules/attendance/tracking/attendance.service.js`
 - **Lógica Operativa:**
   - Marcación biométrica mediante estándares abiertos FIDO2 / WebAuthn, garantizando que el registro de asistencia sea personal e infalsificable.
   - Geocercas geográficas que validan que la jornada se desempeñe en los puntos de trabajo autorizados.
@@ -83,7 +83,7 @@ sequenceDiagram
 
 ### 3.2. Motor de Desvinculación Justa (Offboarding Legal)
 
-- **Ruta en Código:** `backend/src/services/employees/offboardingService.js`
+- **Ruta en Código:** `backend/src/modules/employees/lifecycle/offboarding.service.js`
 - **Lógica Operativa:**
   - Elimina la fijación arbitraria de finiquitos aplicando directamente las fórmulas del Código del Trabajo:
     - **Desahucio (Art. 185):** Bonificación del 25% de la última remuneración mensual por cada año completo de servicio.

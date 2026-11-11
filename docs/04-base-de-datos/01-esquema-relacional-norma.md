@@ -137,3 +137,37 @@ const existing = await runWithoutTenantFilter(() =>
 );
 if (!existing) throw new Error('Acceso Denegado (Multi-Tenant)');
 ```
+
+---
+
+## 4. Arquitectura Modular de Semillas de Datos (`backend/prisma/seeds/`)
+
+Las semillas de base de datos se encuentran desacopladas bajo una taxonomía modular organizada en 11 dominios temáticos, expuestos mediante el contrato público `seeds/index.js` y consumidos de forma unificada en el punto de entrada `prisma/seed.js`:
+
+```
+backend/prisma/seeds/
+├── common/             # cleanup.js (limpieza idempotente), utils.js (helpers de inserción)
+├── tenants/            # users.js (organizaciones demo, SuperAdmin, admins de inquilino)
+├── employees/          # core_records.js, documents.js, offboarding.js
+├── attendance/         # attendance.js (marcas biométricas y geocercas), absences.js (permisos)
+├── payroll/            # payroll_config.js, payroll.js, benefits.js
+├── performance/        # goals.js (OKRs), performance.js (evaluaciones 360°), climate.js
+├── recruitment/        # recruitment.js (vacantes, postulaciones y candidatos)
+├── accounting/         # accounting.js (catálogo de cuentas, periodos fiscales y asientos)
+├── communication/      # announcements.js, audit.js, notifications.js
+├── entrepreneurship/   # entrepreneurship.js (proyectos y simulaciones)
+├── intelligence/       # research_data.js, sustainability.js
+└── index.js            # Barril canónico de importación y exportación de semillas por dominio
+```
+
+El script maestro `seed.js` orquesta la ejecución secuencial respetando la integridad referencial y las claves foráneas de PostgreSQL:
+
+1. Limpieza inicial idempotente (`cleanup`).
+2. Provisión de Tenants y usuarios principales (`tenants`).
+3. Registros base de colaboradores y contratos (`employees`).
+4. Catálogo de cuentas y periodos contables (`accounting`).
+5. Horarios, turnos y marcaciones asistenciales (`attendance`).
+6. Configuraciones patronales y emisión de nómina (`payroll`).
+7. Evaluaciones de desempeño y clima laboral (`performance`).
+8. Vacantes y procesos de selección (`recruitment`).
+9. Módulos de analítica, investigación y sostenibilidad ODS 8 (`intelligence`).

@@ -6,58 +6,59 @@ Sistema web de gestión del talento humano, nómina legal y contabilidad orienta
 
 ```
 erp_pymes/
-├── backend/          # API REST (Node.js · Express · Prisma ORM)
-│   ├── prisma/       # Esquema de base de datos y migraciones
+├── backend/            # API REST (Node.js · Express 5 · Prisma ORM · TypeScript check)
+│   ├── prisma/         # Esquema relacional, migraciones y semillas modulares en 11 dominios
 │   ├── src/
-│   │   ├── app.js            # Configuración Express y middleware stack
-│   │   ├── server.js         # Punto de entrada (HTTP + Socket.IO)
-│   │   ├── config/           # Variables de entorno y roles
-│   │   ├── controllers/      # Controladores por dominio
-│   │   ├── services/         # Lógica de negocio por dominio
-│   │   ├── repositories/     # Capa de acceso a datos (patrón Repository)
-│   │   ├── routes/           # Definición de rutas REST
-│   │   ├── middleware/       # Auth · Tenant · Error · Rate Limit · Maintenance
-│   │   ├── database/         # Cliente Prisma con interceptor multi-tenant
-│   │   ├── jobs/             # Cron jobs automatizados (node-cron)
-│   │   └── utils/            # Encriptación AES-256-GCM · Utilidades financieras
-│   └── tests/        # Pruebas de integración (Vitest · Supertest)
-├── frontend/         # SPA React (Vite · Tailwind CSS · Recharts · Leaflet)
+│   │   ├── app.js      # Configuración de Express, middlewares globales y montaje de router central
+│   │   ├── server.js   # Punto de entrada HTTP, Socket.IO y orquestación de cron jobs
+│   │   ├── core/       # Núcleo transversal (router, errors, middleware, security, storage, utils, validators)
+│   │   └── modules/    # Monolito Modular con Pure Nested Vertical Slices (21 Bounded Contexts)
+│   └── tests/          # Suite jerárquica en 5 categorías (architecture, core, integration, modules, stress)
+├── frontend/           # SPA React 19 (Vite · Tailwind CSS · Recharts · Leaflet · PWA)
 │   └── src/
-│       ├── pages/    # Secciones de interfaz de usuario
-│       ├── components/  # Componentes reutilizables
-│       ├── api/      # Clientes HTTP por dominio
-│       └── hooks/    # Custom hooks de estado
-├── nginx/            # Reverse Proxy & API Gateway perimetral (SSL/TLS · WebSockets)
-├── scripts/          # Utilidades operativas, mantenimiento y pruebas de estrés
-├── docs/             # Biblioteca técnica Docs-as-Code (00-indice-general.md)
-└── docker-compose.yml  # Orquestación: PostgreSQL · Redis · Backend · Frontend · Gateway
+│       ├── core/       # Design System atómico (ui), layout, feedback, hooks y utilidades centrales
+│       └── modules/    # Bounded Contexts de cliente (vistas, componentes y hooks por dominio)
+├── nginx/              # Reverse Proxy Gateway perimetral (SSL/TLS 443 · HTTP/2 · WebSockets)
+├── scripts/            # Mantenimiento, respaldos de base de datos y pruebas de estrés
+├── docs/               # Biblioteca técnica Docs-as-Code (00-indice-general.md)
+└── docker-compose.yml  # Orquestación multi-contenedor: Postgres · Redis · Backend · Frontend · Gateway
 ```
 
-## Módulos Funcionales
+## Módulos Funcionales (Bounded Contexts)
 
-| Módulo             | Descripción                                                                      |
-| ------------------ | -------------------------------------------------------------------------------- |
-| Empleados          | CRUD de empleados con perfil, expediente, historial laboral y activos            |
-| Asistencia         | Registro con validación de geocerca, VPN, biometría WebAuthn y turnos            |
-| Contratos          | Gestión de tipos contractuales con alertas de vencimiento automáticas            |
-| Nómina             | Cálculo automatizado con horas extra, recargo nocturno y anticipos               |
-| Desempeño          | Plantillas de evaluación 360°, objetivos SMART y tracking de progreso            |
-| Reclutamiento      | Portal de vacantes, aplicaciones y scoring de candidatos                         |
-| Inteligencia       | Modelo Weibull de rotación, Monte Carlo, ANOVA y scoring multidimensional        |
-| Contabilidad       | Plan de cuentas, asientos contables, centros de costos y balance de comprobación |
-| Cumplimiento Legal | Vencimiento de documentos, checklist de compliance y trazabilidad                |
-| Comunicación       | Tablón de anuncios con lectura confirmada y reconocimiento                       |
-| Emprendimiento     | Módulo de incubadora con rondas de inversión, hitos y análisis de mercado        |
+| Módulo             | Tipo de Slice | Descripción                                                                      |
+| ------------------ | ------------- | -------------------------------------------------------------------------------- |
+| Asistencia         | Anidado       | Marcación geocercada Haversine, turnos rotativos, permisos médicos y ausencias   |
+| Nómina             | Anidado       | Cálculo legal batch, rubros patronales/IESS, anticipos y beneficios corporativos |
+| Empleados          | Anidado       | Directorio de personal, expedientes digitales, inventario EPPs y finiquitos      |
+| Desempeño          | Anidado       | Rúbricas cuantitativas 360°, tableros de OKRs y jobs cron de evaluación          |
+| Reportes           | Anidado       | Analítica de rotación/clima y exportaciones consolidadas en CSV (BOM) y PDF      |
+| Tenants            | Anidado       | Aislamiento multi-tenant por software, onboarding y consola SuperAdmin           |
+| Cumplimiento Legal | Anidado       | Provisiones de ley (13er, 14to, fondos de reserva) y alertas preventivas         |
+| Notificaciones     | Anidado       | WebSockets Socket.IO en tiempo real, canales SMTP y preferencias in-app          |
+| Inteligencia       | Anidado       | Motor predictivo Weibull, Monte Carlo, ANOVA, RSI, Causal AI, DP-SGD y MORL      |
+| Contabilidad       | Atómico       | Plan de cuentas, libro diario (partida doble), periodos y balance comprobación   |
+| Auditoría          | Atómico       | Trazabilidad inmutable de eventos sensibles con metadatos de red                 |
+| Autenticación      | Atómico       | Emisión/validación de tokens JWT, reseteo de contraseñas y control RBAC          |
+| Biometría          | Atómico       | Desafíos criptográficos WebAuthn / FIDO2 servidor (@simplewebauthn/server)       |
+| Comunicación       | Atómico       | Tablón de comunicados oficiales con confirmación de lectura digitalizada         |
+| Contratos          | Atómico       | Tipos contractuales ecuatorianos y jobs de alerta de vencimiento                 |
+| Documentos         | Atómico       | Repositorio documental con validación de caducidades                             |
+| Reclutamiento      | Atómico       | Portal público de vacantes, postulaciones y calificación de entrevistas          |
+| Firmas             | Atómico       | Certificados digitales y sellado QR conforme a la normativa ecuatoriana          |
+| Habilidades        | Atómico       | Matriz de competencias técnicas por colaborador                                  |
+| Sostenibilidad     | Atómico       | Indicadores socio-laborales ODS 8, asistente RAG legal y fine-tuning SLM         |
+| Sistema            | Atómico       | Parámetros operativos de tenant y middleware de modo mantenimiento programado    |
 
 ## Pila Tecnológica
 
-**Backend:** Node.js 20 · Express 5 · Prisma ORM 5.22 · PostgreSQL 15 · Socket.IO 4 · node-cron 4
+**Backend:** Node.js 20/22 · Express 5 · Prisma ORM 5.22 · PostgreSQL 15 · Redis 7 · Socket.IO 4 · Decimal.js · Zod · TypeScript check (159 pruebas en 26 suites Vitest)
 
-**Frontend:** React 19 · Vite 7 · React Router DOM 7 · Recharts 3 · Leaflet 1.9 · Framer Motion 12 · TailwindCSS 3
+**Frontend:** React 19 · Vite 7 · React Router DOM 7 · TailwindCSS 3 · Recharts 3 · Leaflet 1.9 · Framer Motion 12 · react-icons (Feather & Hi2) · PWA (30 pruebas en 9 suites Vitest)
 
-**Seguridad:** JWT (jsonwebtoken) · bcryptjs · AES-256-GCM (crypto nativo) · Helmet · WebAuthn (@simplewebauthn)
+**Seguridad:** JWT (jsonwebtoken) · bcryptjs · AES-256-GCM (crypto nativo) · Helmet · WebAuthn FIDO2 · Secretlint
 
-**Infraestructura:** Docker Compose · Nginx (SSL/TLS) · Redis 7 · AWS EC2 (Debian GNU/Linux)
+**Infraestructura:** Docker Compose · Nginx Gateway (SSL/TLS) · AWS EC2 (Debian GNU/Linux) · GitHub Actions CI/CD DAG
 
 ## Levantamiento con Docker (Recomendado)
 

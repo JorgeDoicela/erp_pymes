@@ -37,13 +37,13 @@ El sistema garantiza un **aislamiento absoluto multi-tenant** en base de datos, 
 
 ## 3. Notificaciones en Tiempo Real (WebSockets / Socket.io)
 
-### 3.1 Servidor de Sockets (`backend/src/services/notifications/socketService.js`)
+### 3.1 Servidor de Sockets (`backend/src/modules/notifications/channels/socket.service.js`)
 
 - Autenticación mediante tokens JWT.
 - Salas aisladas por empresa: `tenant_${tenantId}`.
 - Emisión punto a punto (`sendToUser`) y por empresa (`sendToTenant`).
 
-### 3.2 Cliente Frontend (`frontend/src/hooks/useNotificationSocket.js`)
+### 3.2 Cliente Frontend (`frontend/src/modules/notifications/hooks/useNotificationSocket.js`)
 
 - Hook reactivo en cliente que gestiona la conexión Socket.io, autenticación de sesión y recepción instantánea del evento `'new_notification'`.
 - Notificaciones flotantes en UI mediante `react-hot-toast` y actualización del contador sin necesidad de _polling_ constante.

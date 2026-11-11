@@ -1,90 +1,99 @@
-# Catálogo Técnico de Vistas y Componentes UI
+# Catálogo Técnico de Vistas y Componentes UI (Design System)
 
-## 1. Estructura de Vistas del Cliente Frontend
+## 1. Estructura Modular del Cliente Frontend
 
-La aplicación SPA contiene vistas organizadas por módulos en `src/pages/`:
+El frontend está estructurado bajo una arquitectura modular desacoplada en dos capas principales: el núcleo transversal (`src/core/`) y los dominios funcionales (`src/modules/`):
 
 ```
-src/pages/
-├── landing/ # Home.jsx (Página pública principal)
-├── auth/ # Login.jsx, ResetPassword.jsx
-├── dashboard/ # AdminDashboard, EmployeeDashboard, IntelligentDashboard, AdminSettings
-├── employees/ # RegisterEmployee, EmployeeList, EmployeeProfile
-├── attendance/ # AttendancePage, ShiftManagement, AdminAbsences
-├── payroll/ # PayrollConfiguration, PayrollGenerator, MyPayments, BenefitsManagement
-├── performance/ # EvaluationDashboard, CreateEvaluation, AssignEvaluation, MyEvaluations, TakeEvaluation, EvaluationResults, MyGoals
-├── recruitment/ # RecruitmentDashboard, CreateJobVacancy, CareersPage, JobApplication, VacancyDetails, ApplicationDetails
-├── analytics/ # AnalyticsDashboard, IntelligenceDashboard, MonteCarloSimulator, AcademicDatasetExport
-├── reports/ # TurnoverReport, PerformanceReport, PayrollCostReport, SatisfactionReport, CustomReport, AttendanceReports
-├── contracts/ # ExpiringContracts
-├── notifications/ # NotificationsPage, NotificationSettings
-├── audit/ # AuditLogsPage
-├── accounting/ # AccountingDashboard, ChartOfAccounts, JournalEntries, TrialBalance, PeriodsManagement, CostCenterManagement
-└── onboarding-offboarding/ # EmployeeExpedient, EmployeeAssetsManagement, OffboardingManagement, MobileEmployeePortal, LegalComplianceDashboard, AnnouncementsBoard
+frontend/src/
+├── core/                                   # Capa transversal y Design System atómico
+│   ├── api/                                # Cliente Axios con interceptores de autenticación y tenant (httpClient.js)
+│   ├── constants/                          # Constantes globales, roles y definición de módulos
+│   ├── feedback/                           # Estados de carga y error (Loading, ErrorState, ErrorBoundary, MaintenanceBanner)
+│   ├── hooks/                              # Hooks transversales de sincronización (useAutoSync)
+│   ├── layout/                             # Shells de navegación (MainLayout, DashboardLayout, Header, Sidebar, Footer)
+│   ├── pwa/                                # Componentes de ciclo de vida PWA (PWAInstallPrompt, PWAReloadPrompt, OfflineIndicator)
+│   ├── ui/                                 # Design System Atómico (Holded / Xero / Linear)
+│   │   ├── Button.jsx                      # Botón estándar con variantes primaria, secundaria, peligro y outline
+│   │   ├── Input.jsx                       # Input atómico con soporte de label, error, helperText, help tooltip e icono
+│   │   ├── InputField.jsx                  # Alias retrocompatible de Input.jsx
+│   │   ├── Select.jsx                      # Select atómico con soporte de label, options, help tooltip y placeholder
+│   │   ├── SelectField.jsx                 # Alias retrocompatible de Select.jsx
+│   │   ├── Table.jsx                       # Primitivas de tabla (Table, TableHeader, TableBody, TableRow, TableHead, TableCell)
+│   │   ├── Modal.jsx                       # Diálogo modal accesible con backdrop y escape
+│   │   ├── Tabs.jsx                        # Pestañas de navegación de contexto interno
+│   │   ├── EmptyState.jsx                  # Estado vacío sobrio con soporte de título, descripción y acción
+│   │   ├── Skeleton.jsx                    # Esqueletos de carga para tarjetas y tablas
+│   │   ├── MaskedText.jsx                  # Ocultamiento de información sensible con botón de revelación
+│   │   ├── LiveSyncBadge.jsx               # Indicador de estado de sincronización en tiempo real
+│   │   ├── LocationPickerMap.jsx           # Selector interactivo de geolocalización sobre Leaflet
+│   │   ├── ExportButtons.jsx               # Barra de botones para exportación tabular a CSV y PDF
+│   │   └── index.js                        # Barril central del Design System
+│   └── utils/                              # Utilidades (formatCurrency, formatDate, validateCedula, moduleTracker)
+│
+└── modules/                                # Bounded Contexts de la aplicación
+    ├── analytics/                          # Dashboards ejecutivos, simuladores What-If y exportaciones académicas
+    ├── attendance/                         # Marcación GPS, turnos y administración de ausencias
+    ├── auth/                               # Login, recuperación de contraseña y autenticación biométrica
+    ├── compliance/                         # Tablero de cumplimiento legal y provisiones patronales
+    ├── contracts/                          # Gestión de contratos y alertas de expiración
+    ├── employees/                          # Directorio, expedientes digitales, inventario de activos y offboarding
+    ├── entrepreneurship/                   # Simulación y valoración de proyectos de innovación
+    ├── notifications/                      # Centro de avisos y preferencias multicanal
+    ├── payroll/                            # Configuración de nómina, cálculo batch, recibos y anticipos
+    ├── performance/                        # Evaluaciones 360°, plantillas y tableros de OKRs
+    ├── portal/                             # Portal móvil de autoservicio para el colaborador
+    ├── recruitment/                        # Vacantes, portal de empleos público y seguimiento de candidatos
+    ├── reports/                            # Reportes de rotación, ausentismo y costes
+    ├── superadmin/                         # Panel de supervisión global de tenants e infraestructura
+    └── sustainability/                     # Dashboard de indicadores ODS 8 y asistente IA legal
 ```
 
 ---
 
-## 2. Descripción Técnica por Módulo de Pantallas
+## 2. Sistema de Formularios y Design System Atómico
 
-### 2.1. Autenticación y Dashboards Principales
-- **`Home.jsx`**: Portada de acceso público e información institucional.
-- **`Login.jsx`**: Formulario de autenticación con `handleLogin`, almacenamiento de JWT en `localStorage` y redirección condicional por rol.
-- **`ResetPassword.jsx`**: Formulario de restablecimiento de contraseña validando el token de la URL.
-- **`AdminDashboard.jsx`**: Tablero general para roles `admin` y `hr` con contadores de personal activo, asistencias del día, contratos por vencer y ausencias pendientes.
-- **`EmployeeDashboard.jsx`**: Tablero de autogestión para el rol `employee` con accesos rápidos a marcación GPS, permisos y roles de pago.
-- **`AdminSettings.jsx`**: Configuración de parámetros globales del sistema (modo mantenimiento, geocercas globales, IPs permitidas).
+El sistema visual sigue estrictamente el estándar de diseño empresarial de referencia (estilo Holded / Linear / Xero):
 
-### 2.2. Gestión de Empleados
-- **`RegisterEmployee.jsx`**: Formulario de alta de personal con campos cifrados (`salary`, `identityCard`, `accountNumber`).
-- **`EmployeeList.jsx`**: Tabla con filtros por departamento, rol, estado activo/inactivo, búsqueda por texto y exportación.
-- **`EmployeeProfile.jsx`**: Ficha técnica individual con pestañas de Datos Personales, Habilidades (`Skill`), Historial Laboral (`WorkHistory`), Contratos (`Contract`) y Documentos (`Document`).
+- **Superficies:** Fondos `#ffffff` con bordes finos de `1px solid #e5e7eb` y esquinas controladas (`rounded` a `rounded-md`).
+- **Tipografía Financiera:** Todo valor monetario, RUC, cédula y fecha utiliza `font-mono tabular-nums`.
+- **Cero Emojis y Cero Falsos Affordances:** Iconografía exclusivamente técnica provista por `react-icons` (Feather Icons `Fi*` y Heroicons Outline `Hi*` vía `react-icons/hi2`).
+- **Componentes de Entrada Unificados:**
+  - `Input.jsx`: Componente de entrada de texto, número y contraseña. Soporta propiedades `label`, `error`, `helperText`, tooltip explicativo `help` (con icono `FiInfo` flotante) e icono decorativo a la izquierda.
+  - `Select.jsx`: Componente de selección desplegable. Soporta `options` estructuradas (`[{ value, label }]`), `children` nativos, `placeholder` desactivado inicial y tooltip `help`.
+  - `InputField.jsx` y `SelectField.jsx`: Operan como alias retrocompatibles que reenvían props directamente a los componentes atómicos principales sin duplicación de lógica ni dependencias.
+  - `EmptyState.jsx`: Componente unificado para estados sin datos que acepta tanto mensajes simples (`message`) como estructuras compuestas (`title`, `description`, `action`).
 
-### 2.3. Asistencia, Ausencias y Turnos
-- **`AttendancePage.jsx`**: Componente de marcación GPS interactivo que obtiene las coordenadas del navegador (`navigator.geolocation`) y valida el radio de geocerca contra la API.
-- **`ShiftManagement.jsx`**: Grilla de configuración de turnos de trabajo, horarios de entrada/salida, minutos de descanso y tolerancias.
-- **`AdminAbsences.jsx`**: Panel de revisión de solicitudes de permisos con visualización de evidencias adjuntas y botones de Aprobación/Rechazo.
+---
 
-### 2.4. Nómina y Beneficios
-- **`PayrollConfiguration.jsx`**: Panel de ajuste de días laborales base, porcentajes IESS y rubros obligatorios/opcionales.
-- **`PayrollGenerator.jsx`**: Interfaz de procesamiento masivo de nómina mensual con pre-calculadora de horas extras y deducciones.
-- **`MyPayments.jsx`**: Vista de consulta y descarga de comprobantes individuales de pago para el empleado.
-- **`BenefitsManagement.jsx`**: Asignación de beneficios adicionales (bonos, seguro médico, fondo de reserva).
+## 3. Descripción Técnica de Vistas por Módulo
 
-### 2.5. Evaluaciones de Desempeño y Objetivos
-- **`EvaluationDashboard.jsx`**: Consolidado de procesos de evaluación activos.
-- **`CreateEvaluation.jsx`**: Creador de plantillas de evaluación con rúbricas cuantitativas y cualitativas.
-- **`AssignEvaluation.jsx`**: Matriz de asignación de evaluadores (pares/supervisores).
-- **`TakeEvaluation.jsx`**: Formulario de llenado de evaluación asignada.
-- **`EvaluationResults.jsx`**: Gráficos spider/radar de competencias y puntuación final.
-- **`MyGoals.jsx`**: Tablero de gestión de OKRs/KPIs con barra de progreso interactiva.
+### 3.1. Autenticación y Administración de Plataforma
 
-### 2.6. Reclutamiento y Selección
-- **`RecruitmentDashboard.jsx`**: Pipeline Kanban de candidatos por etapa de selección (Postulado, Entrevista, Evaluado, Contratado).
-- **`CreateJobVacancy.jsx`**: Publicador de ofertas de trabajo con requerimientos y rango salarial.
-- **`CareersPage.jsx`**: Portal público de empleos para postulantes externos.
-- **`JobApplication.jsx`**: Formulario de postulación con subida de archivo PDF CV.
-- **`ApplicationDetails.jsx`**: Expediente del candidato con notas internas, agenda de entrevistas y calificaciones.
+- **`Login.jsx` (`modules/auth/pages/`):** Formulario de autenticación con soporte para credenciales tradicionales y Passkeys WebAuthn/FIDO2.
+- **`SuperAdminDashboard.jsx` (`modules/superadmin/pages/`):** Consola de supervisión global para la creación de empresas, control de suscripciones y asignación de licencias.
 
-### 2.7. Contabilidad Financiera (Módulo `acc_*`)
-- **`AccountingDashboard.jsx`**: Panel de control contable con resumen de activos, pasivos, ingresos y egresos.
-- **`ChartOfAccounts.jsx`**: Árbol interactivo del plan de cuentas contables.
-- **`JournalEntries.jsx`**: Registro y consulta de asientos contables del libro diario.
-- **`TrialBalance.jsx`**: Reporte de balance de comprobación de sumas y saldos.
-- **`PeriodsManagement.jsx`**: Apertura y cierre de períodos contables mensuales/anuales.
-- **`CostCenterManagement.jsx`**: Gestión de centros de costos operativos.
+### 3.2. Gestión de Talento Humano (`modules/employees/pages/`)
 
-### 2.8. Inteligencia Analítica y Scoring Multidimensional
-- **`IntelligentDashboard.jsx`**: Tablero principal de analítica avanzada con predicción estocástica de rotación (Weibull), scoring multidimensional y salud organizacional.
-- **`MonteCarloSimulator.jsx`**: Interfaz interactiva de simulación "What-If" ($2,000$ iteraciones) con gráficos Tornado de sensibilidad de inversión.
-- **`AcademicDatasetExport.jsx`**: Generador de datasets anonimizados para investigación estadística exportables en CSV o JSON.
+- **`RegisterEmployee.jsx`:** Formulario integral de alta de colaboradores con validación de cédula ecuatoriana (Módulo 10).
+- **`EmployeeProfile.jsx`:** Ficha integral del colaborador organizada en pestañas de Datos Personales, Habilidades, Contratos y Expediente.
+- **`OffboardingManagement.jsx`:** Panel de desvinculación asistida con simulación y liquidación legal oficial conforme a los Arts. 185 y 188 del Código de Trabajo.
 
-### 2.9. Anticipos, Expediente Digital, EPPs, Offboarding, Cumplimiento y Comunicados
-- **`SalaryAdvancesManagement.jsx`**: Panel de administración para aprobar o rechazar solicitudes de anticipos de sueldo con filtros por estado.
-- **`MySalaryAdvances.jsx`**: Vista de autoservicio para que el empleado solicite anticipos quincenales y consulte la amortización de cuotas.
-- **`EmployeeExpedient.jsx`**: Expediente digital del empleado con tarjeta de progreso de onboarding (%) y visualizador de documentos.
-- **`EmployeeAssetsManagement.jsx`**: Control de inventario de equipos tecnológicos, herramientas y EPPs asignados.
-- **`OffboardingManagement.jsx`**: Tablero de desvinculación con simulador de liquidaciones legales (13er, 14to SBU, vacaciones, desahucio Art. 185 e indemnización Art. 188).
-- **`MobileEmployeePortal.jsx`**: Aplicación de autoservicio estilo App Móvil para personal operativo con marcación GPS en 1 toque y emisión de certificados laborales con QR.
-- **`LegalComplianceDashboard.jsx`**: Tablero de alertas preventivas de cumplimiento laboral y matriz de provisiones mensuales patronales de ley.
-- **`AnnouncementsBoard.jsx`**: Tablón de comunicados oficiales con firma digital de acuse de recibo y métricas de lectura.
+### 3.3. Asistencia y Control Horario (`modules/attendance/pages/`)
+
+- **`AttendancePage.jsx`:** Marcación en tiempo real con validación geocercada y detección anti-spoofing / anti-VPN.
+- **`ShiftManagement.jsx`:** Matriz de asignación de turnos rotativos, minutos de receso y tolerancias de entrada.
+- **`AdminAbsences.jsx`:** Bandeja de resolución de solicitudes de vacaciones y permisos médicos con adjuntos.
+
+### 3.4. Nómina Legal y Remuneraciones (`modules/payroll/pages/`)
+
+- **`PayrollConfiguration.jsx`:** Ajuste de parámetros impositivos, aportes patronales/personales al IESS y rubros corporativos.
+- **`PayrollGenerator.jsx`:** Procesamiento masivo de nómina mensual con cálculo de horas extras, fondos de reserva y generación de rol de pagos.
+- **`MyPayments.jsx`:** Portal individual para consulta y descarga de comprobantes de pago en PDF.
+- **`MySalaryAdvances.jsx`:** Autoservicio de solicitud de anticipos de nómina con cálculo automático de amortización en cuotas.
+
+### 3.5. Analítica e Inteligencia Artificial (`modules/analytics/pages/` y `modules/intelligence/`)
+
+- **`IntelligentDashboard.jsx`:** Tablero analítico con motor Weibull de riesgo de rotación, scoring multidimensional y ROI proyectado.
+- **`ExecutiveKPIBanner.jsx`:** Banner ejecutivo de oportunidad de ahorro financiero formateado con precisión de moneda centralizada.
+- **`MonteCarloSimulator.jsx`:** Simulación estocástica de escenarios financieros y sensibilidad de retención.

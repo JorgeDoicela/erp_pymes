@@ -61,16 +61,16 @@ flowchart TD
 
 ### 2.1 Backend (`backend/src/modules/sustainability/`)
 
-| Archivo | Responsabilidad Técnica |
-| :--- | :--- |
-| `sustainability.dto.js` | Validación Zod para consultas RAG, ingestión de documentos y opciones de exportación JSONL. |
-| `sustainability.repository.js` | Consultas agregadas multi-tabla en PostgreSQL y matching semántico de artículos normativos. |
-| `sustainability.service.js` | Cálculo con `Decimal.js` (20 dígitos `ROUND_HALF_UP`) de los 5 KPIs del ODS 8 (8.3.1, 8.5.1, 8.5.2, 8.8.1, 8.8.2). |
-| `sustainabilityRag.service.js` | Orquestador RAG que vincula fragmentos normativos ecuatorianos con las métricas en tiempo real de la empresa. |
-| `sustainabilityFineTuning.service.js` | Ensamblador de pares de instrucción y respuesta en formato Alpaca/Unsloth (Llama/Qwen) y OpenAI JSONL. |
-| `sustainability.controller.js` | Controladores HTTP para `/ods8`, `/advisor/query`, `/knowledge/ingest` y `/fine-tuning/export`. |
-| `sustainability.routes.js` | Enrutador protegido por autenticación (`authenticate`) y aislamiento de tenant (`requireTenant`). |
-| `index.js` | Barrel export público del módulo. |
+| Archivo                               | Responsabilidad Técnica                                                                                            |
+| :------------------------------------ | :----------------------------------------------------------------------------------------------------------------- |
+| `sustainability.dto.js`               | Validación Zod para consultas RAG, ingestión de documentos y opciones de exportación JSONL.                        |
+| `sustainability.repository.js`        | Consultas agregadas multi-tabla en PostgreSQL y matching semántico de artículos normativos.                        |
+| `sustainability.service.js`           | Cálculo con `Decimal.js` (20 dígitos `ROUND_HALF_UP`) de los 5 KPIs del ODS 8 (8.3.1, 8.5.1, 8.5.2, 8.8.1, 8.8.2). |
+| `sustainabilityRag.service.js`        | Orquestador RAG que vincula fragmentos normativos ecuatorianos con las métricas en tiempo real de la empresa.      |
+| `sustainabilityFineTuning.service.js` | Ensamblador de pares de instrucción y respuesta en formato Alpaca/Unsloth (Llama/Qwen) y OpenAI JSONL.             |
+| `sustainability.controller.js`        | Controladores HTTP para `/ods8`, `/advisor/query`, `/knowledge/ingest` y `/fine-tuning/export`.                    |
+| `sustainability.routes.js`            | Enrutador protegido por autenticación (`authenticate`) y aislamiento de tenant (`requireTenant`).                  |
+| `index.js`                            | Barrel export público del módulo.                                                                                  |
 
 ### 2.2 Base de Datos (`backend/prisma/`)
 
@@ -80,17 +80,17 @@ flowchart TD
 
 ### 2.3 Frontend (`frontend/src/modules/sustainability/`)
 
-| Archivo | Responsabilidad en la UI (Estándar Holded/Linear) |
-| :--- | :--- |
-| `SustainabilityDashboard.jsx` | Tablero ejecutivo en `/admin/sustainability` con porcentaje de cumplimiento global. |
-| `SustainabilityKPIGrid.jsx` | Grilla de tarjetas de indicadores con estados `CONFORME` y `ATENCIÓN`. |
-| `SustainabilityKPICard.jsx` | Tarjeta individual con valores monoespaciados (`font-mono`, `tabular-nums`) y meta. |
-| `SustainabilityAIAdvisor.jsx` | Consola conversacional con presets legales, historial de diálogo y badges de citación. |
-| `LegalCitationDrawer.jsx` | Panel lateral para lectura del artículo oficial del Código del Trabajo o resolución del IESS. |
-| `FineTuningExportModal.jsx` | Modal interactivo para seleccionar la arquitectura LLM y descargar el `.jsonl`. |
-| `sustainability.service.js` | Cliente HTTP que consume los endpoints `/api/sustainability/*`. |
-| `useSustainabilityMetrics.js` | Hook para ciclo de vida y recálculo de métricas ODS 8. |
-| `useSustainabilityAdvisor.js` | Hook de interacción conversacional del asistente. |
+| Archivo                       | Responsabilidad en la UI (Estándar Holded/Linear)                                             |
+| :---------------------------- | :-------------------------------------------------------------------------------------------- |
+| `SustainabilityDashboard.jsx` | Tablero ejecutivo en `/admin/sustainability` con porcentaje de cumplimiento global.           |
+| `SustainabilityKPIGrid.jsx`   | Grilla de tarjetas de indicadores con estados `CONFORME` y `ATENCIÓN`.                        |
+| `SustainabilityKPICard.jsx`   | Tarjeta individual con valores monoespaciados (`font-mono`, `tabular-nums`) y meta.           |
+| `SustainabilityAIAdvisor.jsx` | Consola conversacional con presets legales, historial de diálogo y badges de citación.        |
+| `LegalCitationDrawer.jsx`     | Panel lateral para lectura del artículo oficial del Código del Trabajo o resolución del IESS. |
+| `FineTuningExportModal.jsx`   | Modal interactivo para seleccionar la arquitectura LLM y descargar el `.jsonl`.               |
+| `sustainability.service.js`   | Cliente HTTP que consume los endpoints `/api/sustainability/*`.                               |
+| `useSustainabilityMetrics.js` | Hook para ciclo de vida y recálculo de métricas ODS 8.                                        |
+| `useSustainabilityAdvisor.js` | Hook de interacción conversacional del asistente.                                             |
 
 ---
 
@@ -98,18 +98,19 @@ flowchart TD
 
 Los documentos fuente están alojados en `docs/09-sostenibilidad-ods/corpus-legal/` y versionados con Git:
 
-| Documento | Archivo en Repositorio | Tamaño | Aspectos Normativos Extraídos |
-| :--- | :--- | :--- | :--- |
-| **Constitución del Ecuador** | `01-constitucion-republica-ecuador-2008.pdf` | 370 KB | Arts. 33, 325-329: Principio de no precarización, afiliación obligatoria a seguridad social, igualdad remunerativa. |
-| **Código del Trabajo** | `02-codigo-del-trabajo-ecuador.pdf` | 419 KB | Arts. 11-19 (Contratos y prueba de 90 días), Art. 47 (Jornada 40h), Art. 55 (Horas suplementarias 50% y extraordinarias 100%), Art. 185 (Desahucio 25%), Art. 188 (Despido intempestivo escalonado). |
-| **Ley de Seguridad Social** | `03-ley-de-seguridad-social-iess.pdf` | 618 KB | Ley 2001-55: Seguro General Obligatorio, aportaciones (9.45% personal / 11.15% patronal), fondos de reserva (8.33% mes 13). |
-| **Metodología ODS 8 (OIT)** | `04-oit-metodologia-ods8-trabajo-decente.pdf` | 2.17 MB | Informe técnico de las metas 8.3, 8.5 y 8.8 de la Agenda 2030 para trabajo decente y erradicación de informalidad. |
+| Documento                    | Archivo en Repositorio                        | Tamaño  | Aspectos Normativos Extraídos                                                                                                                                                                        |
+| :--------------------------- | :-------------------------------------------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Constitución del Ecuador** | `01-constitucion-republica-ecuador-2008.pdf`  | 370 KB  | Arts. 33, 325-329: Principio de no precarización, afiliación obligatoria a seguridad social, igualdad remunerativa.                                                                                  |
+| **Código del Trabajo**       | `02-codigo-del-trabajo-ecuador.pdf`           | 419 KB  | Arts. 11-19 (Contratos y prueba de 90 días), Art. 47 (Jornada 40h), Art. 55 (Horas suplementarias 50% y extraordinarias 100%), Art. 185 (Desahucio 25%), Art. 188 (Despido intempestivo escalonado). |
+| **Ley de Seguridad Social**  | `03-ley-de-seguridad-social-iess.pdf`         | 618 KB  | Ley 2001-55: Seguro General Obligatorio, aportaciones (9.45% personal / 11.15% patronal), fondos de reserva (8.33% mes 13).                                                                          |
+| **Metodología ODS 8 (OIT)**  | `04-oit-metodologia-ods8-trabajo-decente.pdf` | 2.17 MB | Informe técnico de las metas 8.3, 8.5 y 8.8 de la Agenda 2030 para trabajo decente y erradicación de informalidad.                                                                                   |
 
 ---
 
 ## 4. Estrategia de Entrenamiento (Google Colab con GPU A100)
 
 ### 4.1 Selección del Modelo: Qwen 2.5 14B Instruct
+
 - **Justificación:** Capacidades superiores en razonamiento contable/laboral en español, formato de salida JSON y ventana de contexto de hasta 128k tokens.
 - **Rendimiento en A100:** Tiempo estimado de entrenamiento con LoRA / QLoRA mediante **Unsloth**: 45 a 70 minutos.
 
@@ -183,6 +184,7 @@ model.save_pretrained_gguf("qwen2.5-14b-ecuador-ods8", tokenizer, quantization_m
 Para mantener el sistema operativo durante 7 días (168 horas continuas) sin exceder los $100 USD de crédito:
 
 ### Opción Recomendada: Instancia Spot con GPU (`g5.xlarge`)
+
 - **Tipo de Instancia:** `g5.xlarge` (NVIDIA A10G 24GB VRAM, 4 vCPUs, 16GB RAM).
 - **Modalidad:** EC2 Spot Instance en región `us-east-1` o `us-west-2`.
 - **Costo por Hora:** ~$0.35 - $0.40 USD.
@@ -190,6 +192,7 @@ Para mantener el sistema operativo durante 7 días (168 horas continuas) sin exc
 - **Rendimiento:** Inferencia en streaming con GPU a ~60 tokens/segundo.
 
 ### Despliegue en el Servidor AWS:
+
 ```bash
 # 1. Instalar Ollama en la instancia EC2
 curl -fsSL https://ollama.com/install.sh | sh
@@ -212,6 +215,7 @@ OLLAMA_HOST=0.0.0.0:11434 ollama serve
 ```
 
 ### Configuración en Norma ERP (`backend/.env`):
+
 ```env
 AI_LLM_URL=http://<IP_PUBLICA_O_DNS_AWS>:11434
 AI_LLM_MODEL=ecuador-erp-ai

@@ -20,7 +20,7 @@ El backend sigue una estructura en capas inspirada en los principios de Clean Ar
 
 Los controladores actúan como adaptadores de entrada delgados respaldados por una capa previa de validación estricta con esquemas Zod (DTOs):
 
-1. **Validación en los Bordes:** El middleware `validate(schema)` intercepta la solicitud y rechaza con HTTP 400 cualquier cuerpo de petición que no cumpla estrictamente con el DTO correspondiente (`src/dto/`), impidiendo que datos inválidos alcancen la lógica de negocio.
+1. **Validación en los Bordes:** El middleware `validate(schema)` (`src/core/middleware/validate.middleware.js`) intercepta la solicitud y rechaza con HTTP 400 cualquier cuerpo de petición que no cumpla estrictamente con el DTO correspondiente ubicado dentro de cada módulo o en los validadores universales (`src/core/validators.js`), impidiendo que datos inválidos alcancen la lógica de negocio.
 2. **Controladores Delgados:** Extraen los parámetros saneados (`req.body`, `req.params`, `req.query`), delegan la ejecución a los servicios o repositorios y formatean la respuesta HTTP con códigos semánticos.
 
 Los controladores no contienen lógica de negocio. No acceden directamente a Prisma. Todo acceso a datos pasa por la capa de servicios o repositorios.
@@ -46,41 +46,38 @@ Los servicios contienen toda la lógica de negocio del dominio. Son clases o mó
 
 **Ejemplos de servicios críticos:**
 
-| Servicio | Responsabilidad |
-|---------|-----------------|
-| `PayrollCalculationService` | Motor de cálculo de nómina batch con precisión financiera Decimal.js |
-| `OffboardingService` | Simulador de liquidación legal conforme al Código de Trabajo ecuatoriano |
-| `attendanceService` | Registro de asistencia con validación de geocerca Haversine, VPN y consentimiento |
-| `intelligenceService` | Motor estadístico: Weibull, Monte Carlo, ANOVA, scoring multidimensional |
+| Servicio                    | Ubicación                              | Responsabilidad                                                                   |
+| --------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
+| `PayrollCalculationService` | `src/modules/payroll/calculation/`     | Motor de cálculo de nómina batch con precisión financiera Decimal.js              |
+| `OffboardingService`        | `src/modules/employees/lifecycle/`     | Simulador de liquidación legal conforme al Código de Trabajo ecuatoriano          |
+| `attendanceService`         | `src/modules/attendance/tracking/`     | Registro de asistencia con validación de geocerca Haversine, VPN y consentimiento |
+| `intelligenceService`       | `src/modules/intelligence/predictive/` | Motor estadístico: Weibull, Monte Carlo, ANOVA, scoring multidimensional          |
 
 ## 4. Capa de Dominio: Repositorios
 
 Los repositorios abstraen el acceso a datos y encapsulan completamente las consultas a Prisma ORM, garantizando que los controladores y servicios no dependan de la infraestructura de persistencia directa:
 
-- `accountingRepository`: Operaciones transaccionales para asientos contables (partida doble), periodos fiscales, catálogo de cuentas, centros de costo y reportes.
-- `payrollRepository`: Gestión de configuración activa de nómina, creación transaccional de rubros e historial de liquidaciones por empleado.
-- `employeeRepository`: Creación y actualización con encriptación AES-256 de campos bancarios y salarios.
-- `attendanceRepository`: Consultas optimizadas de marcación por empleado y rango de fechas.
-- `auditRepository`: Registro asíncrono no bloqueante de eventos de auditoría y trazabilidad.
+- `accountingRepository`: Operaciones transaccionales para asientos contables (partida doble), periodos fiscales, catálogo de cuentas, centros de costo y reportes (`src/modules/accounting/`).
+- `payrollRepository`: Gestión de configuración activa de nómina, creación transaccional de rubros e historial de liquidaciones por empleado (`src/modules/payroll/`).
+- `employeeRepository`: Creación y actualización con encriptación AES-256 de campos bancarios y salarios (`src/modules/employees/directory/`).
+- `attendanceRepository`: Consultas optimizadas de marcación por empleado y rango de fechas (`src/modules/attendance/tracking/`).
+- `auditRepository`: Registro asíncrono no bloqueante de eventos de auditoría y trazabilidad (`src/modules/audit/`).
 
-## 5. Monolito Modular y Bounded Contexts (`src/modules/`)
+## 5. Monolito Modular y Rebanadas Verticales Anidadas (`src/modules/`)
 
-Para evitar la dispersión de código y facilitar la mantenibilidad, los dominios centrales operan bajo el patrón de **Monolito Modular**:
+Para evitar la dispersión de código y desacoplar las capas, el backend opera bajo el patrón de **Monolito Modular con Rebanadas Verticales Anidadas (Pure Nested Vertical Slices)**:
 
-- `src/modules/accounting/`: Agrupa de forma autocontenida sus rutas, controlador, repositorio y DTOs de validación.
-- `src/modules/payroll/`: Agrupa rutas, controladores de liquidación y configuración, servicios de cálculo, repositorio y DTOs.
-- `src/modules/employees/`: Agrupa rutas, controlador, servicio, repositorio y DTOs de talento humano.
-- `src/modules/index.js`: Registro central unificado que expone los Bounded Contexts hacia el enrutador principal de la aplicación (`src/routes/index.routes.js`).
+- **Módulos Compuestos (`attendance`, `payroll`, `employees`, `performance`, `reports`, `tenants`, `compliance`, `notifications`, `intelligence`):** Albergan subdirectorios de vertical slices (`/tracking`, `/absences`, `/shifts`, `/calculation`, `/config`, etc.), cada uno encapsulando su propio controlador, servicio, repositorio y rutas.
+- **Módulos Atómicos (`accounting`, `audit`, `auth`, `biometrics`, `communication`, `contracts`, `documents`, `recruitment`, `signatures`, `skills`, `sustainability`, `system`):** Operan como single-slices directos y autocontenidos.
+- **Contratos Públicos Limpios:** Cada módulo expone su API pública a través de su propio archivo `index.js`, impidiendo importaciones internas cruzadas no autorizadas entre dominios.
+- **Enrutador Central (`src/core/router.js`):** Monta y distribuye de forma centralizada los 21 módulos bajo el prefijo unificado `/api`.
 
-## 6. Tipado Estático Progresivo (`src/types/`)
+## 6. Tipado Estático Progresivo
 
-El sistema cuenta con configuración de TypeScript (`tsconfig.json` con `allowJs: true` y `noEmit: true`) y definiciones formales de dominio:
+El sistema cuenta con configuración de TypeScript (`tsconfig.json` con `allowJs: true` y `noEmit: true`) y definiciones formales de dominio co-ubicadas en sus respectivos Bounded Contexts:
 
-- `accounting.types.ts`: Contratos para asientos (`IJournalEntry`, `IJournalLine`), cuentas (`IAccountingAccount`) y balances.
-- `payroll.types.ts`: Contratos para configuraciones (`IPayrollConfig`) y detalles de nómina (`IPayrollDetail`).
-- `employee.types.ts`: Contratos de colaboradores y roles autorizados.
-
-La integridad de tipos se audita de forma continua mediante `npm run typecheck`.
+- `src/modules/accounting/accounting.types.ts`: Contratos para asientos (`IJournalEntry`, `IJournalLine`), cuentas (`IAccountingAccount`) y balances.
+- La integridad de tipos se audita de forma continua mediante `npm run typecheck` (`tsc --noEmit`), garantizando cero errores de tipos en tiempo de compilación.
 
 ## 7. Capa de Infraestructura: Prisma + Multi-Tenant Interceptor
 
@@ -111,10 +108,10 @@ El `tenantContext.js` implementa el contexto asíncrono utilizando `AsyncLocalSt
 
 ```javascript
 // Funciones exportadas
-runWithTenant(tenantId, callback, isSuperAdmin)  // Establece contexto
-runWithoutTenantFilter(callback)                  // Bypass temporal para validaciones internas
-getTenantId()                                     // Lee el tenantId del contexto activo
-isTenantFilterBypassed()                          // Verifica si el bypass está activo
+runWithTenant(tenantId, callback, isSuperAdmin); // Establece contexto
+runWithoutTenantFilter(callback); // Bypass temporal para validaciones internas
+getTenantId(); // Lee el tenantId del contexto activo
+isTenantFilterBypassed(); // Verifica si el bypass está activo
 ```
 
 ## 9. Gestión de Errores Centralizada y Jerarquía de Dominio

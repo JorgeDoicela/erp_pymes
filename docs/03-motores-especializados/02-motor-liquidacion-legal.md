@@ -2,20 +2,21 @@
 
 ## 1. Descripción General
 
-El `OffboardingService` implementa el simulador y calculador oficial de Acta de Finiquito conforme al Código de Trabajo de Ecuador. Se encuentra en `backend/src/services/employees/offboardingService.js`.
+El `OffboardingService` implementa el simulador y calculador oficial de Acta de Finiquito conforme al Código de Trabajo de Ecuador. Se encuentra en `backend/src/modules/employees/lifecycle/offboarding.service.js`.
 
 El servicio ofrece dos funcionalidades principales:
+
 1. **Simulación de liquidación** (`simulateSettlement`): Calcula el monto total sin persistir cambios. Útil para que el administrador revise antes de iniciar el proceso oficial.
 2. **Inicio del proceso de offboarding** (`startOffboarding`): Confirma la liquidación, genera un checklist de tareas de desvinculación y persiste el proceso en la base de datos.
 
 ## 2. Causales de Salida
 
-| Causal | Código | Aplica Desahucio | Aplica Indemnización |
-|--------|--------|-----------------|---------------------|
-| Renuncia Voluntaria | `VOLUNTARY_RESIGNATION` | ✓ (si ≥1 año) | ✗ |
-| Despido Intempestivo | `UNFAIR_DISMISSAL` | ✓ (si ≥1 año) | ✓ |
-| Fin de Contrato | `CONTRACT_END` | ✓ (si ≥1 año) | ✗ |
-| Jubilación / Otros | Otros | ✗ | ✗ |
+| Causal               | Código                  | Aplica Desahucio | Aplica Indemnización |
+| -------------------- | ----------------------- | ---------------- | -------------------- |
+| Renuncia Voluntaria  | `VOLUNTARY_RESIGNATION` | ✓ (si ≥1 año)    | ✗                    |
+| Despido Intempestivo | `UNFAIR_DISMISSAL`      | ✓ (si ≥1 año)    | ✓                    |
+| Fin de Contrato      | `CONTRACT_END`          | ✓ (si ≥1 año)    | ✗                    |
+| Jubilación / Otros   | Otros                   | ✗                | ✗                    |
 
 ## 3. Algoritmo de Cálculo del Finiquito
 
@@ -25,9 +26,9 @@ Todos los cálculos utilizan el wrapper `financial` (Decimal.js, 20 dígitos, RO
 
 ```javascript
 const daysWorkedTotal = ceil(abs(endDate - startDate) / (1000 * 60 * 60 * 24));
-const yearsWorked = daysWorkedTotal / 365.25;    // Considera años bisiestos
+const yearsWorked = daysWorkedTotal / 365.25; // Considera años bisiestos
 const fullYearsWorked = floor(yearsWorked);
-const monthsWorked = daysWorkedTotal / 30.4375;  // Mes promedio gregoriano
+const monthsWorked = daysWorkedTotal / 30.4375; // Mes promedio gregoriano
 ```
 
 El denominador `365.25` se utiliza para el conteo de años (incluye años bisiestos). El denominador `30.4375` (365.25 / 12) para el conteo de meses.
@@ -65,7 +66,7 @@ Días de Vacaciones Ganadas = mesesTrabajados × 1.25
 
 ```javascript
 // Cálculo de días por cada ausencia aprobada
-const days = max(1, round((endDate - startDate) / (1000*60*60*24)) + 1);
+const days = max(1, round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1);
 takenDays += days;
 ```
 
@@ -123,13 +124,14 @@ El checklist se construye dinámicamente con tareas predeterminadas más las tar
 
 **Tareas fijas:**
 
-| ID | Categoría | Tarea |
-|----|-----------|-------|
-| `IT_REVOKE` | IT | Revocación de correos corporativos y accesos a sistemas IT |
-| `EXIT_INTERVIEW` | HR | Realización de entrevista de salida con RRHH |
-| `SIGN_SETTLEMENT` | LEGAL | Firma de Acta de Finiquito y acreditación de fondos |
+| ID                | Categoría | Tarea                                                      |
+| ----------------- | --------- | ---------------------------------------------------------- |
+| `IT_REVOKE`       | IT        | Revocación de correos corporativos y accesos a sistemas IT |
+| `EXIT_INTERVIEW`  | HR        | Realización de entrevista de salida con RRHH               |
+| `SIGN_SETTLEMENT` | LEGAL     | Firma de Acta de Finiquito y acreditación de fondos        |
 
 **Tareas dinámicas (por cada `EmployeeAsset` con `status = 'DELIVERED'`):**
+
 - `ASSET_RETURN_{assetId}`: Devolución de activo/EPP con nombre y categoría.
 
 El checklist se serializa como JSON en el campo `OffboardingProcess.checklist`.
@@ -150,11 +152,12 @@ Cuando se marca una tarea como completada:
 ### 4.3 Registro de Auditoría
 
 El inicio del proceso de offboarding genera un log de auditoría asíncrono:
+
 ```javascript
 auditRepository.createLog({
-    entity: 'OffboardingProcess',
-    action: 'START_OFFBOARDING',
-    details: `Iniciado proceso de salida para ${nombre}. Causal: ${causal}. Total finiquito: $${total}`
+  entity: 'OffboardingProcess',
+  action: 'START_OFFBOARDING',
+  details: `Iniciado proceso de salida para ${nombre}. Causal: ${causal}. Total finiquito: $${total}`,
 });
 ```
 
@@ -162,16 +165,16 @@ auditRepository.createLog({
 
 **Datos:** Empleado con 2 años, 3 meses y 15 días de servicio. Salario: $800 USD. Causal: Despido Intempestivo.
 
-| Componente | Cálculo | Resultado |
-|-----------|---------|-----------|
-| mesesTrabajados | 2.375 años × 12 | 27.29 meses |
-| Décimo Tercero Proporcional | ($800 × 12) / 12 | $800.00 |
-| Décimo Cuarto Proporcional | ($460 × 12) / 12 | $460.00 |
-| Vacaciones Ganadas | 27.29 × 1.25 | 34.11 días |
-| Vacaciones Tomadas | (consultado en BD) | 15 días |
-| Vacaciones Pendientes | 34.11 - 15 | 19.11 días |
-| Salario Diario | $800 / 30 | $26.67 |
-| Monto Vacaciones | 19.11 × $26.67 | $509.61 |
-| Desahucio (2 años) | $800 × 0.25 × 2 | $400.00 |
-| Indemnización (≤3 años) | $800 × 3 | $2,400.00 |
-| **TOTAL FINIQUITO** | | **$4,569.61** |
+| Componente                  | Cálculo            | Resultado     |
+| --------------------------- | ------------------ | ------------- |
+| mesesTrabajados             | 2.375 años × 12    | 27.29 meses   |
+| Décimo Tercero Proporcional | ($800 × 12) / 12   | $800.00       |
+| Décimo Cuarto Proporcional  | ($460 × 12) / 12   | $460.00       |
+| Vacaciones Ganadas          | 27.29 × 1.25       | 34.11 días    |
+| Vacaciones Tomadas          | (consultado en BD) | 15 días       |
+| Vacaciones Pendientes       | 34.11 - 15         | 19.11 días    |
+| Salario Diario              | $800 / 30          | $26.67        |
+| Monto Vacaciones            | 19.11 × $26.67     | $509.61       |
+| Desahucio (2 años)          | $800 × 0.25 × 2    | $400.00       |
+| Indemnización (≤3 años)     | $800 × 3           | $2,400.00     |
+| **TOTAL FINIQUITO**         |                    | **$4,569.61** |

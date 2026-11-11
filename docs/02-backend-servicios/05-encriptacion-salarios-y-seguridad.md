@@ -16,7 +16,7 @@ El sistema aplica encriptación simétrica AES-256-GCM a los campos que contiene
 
 ```javascript
 // encryption.js — función encrypt(value)
-const iv = crypto.randomBytes(12);                            // IV aleatorio por operación
+const iv = crypto.randomBytes(12); // IV aleatorio por operación
 const cipher = crypto.createCipheriv('aes-256-gcm', MASTER_KEY, iv);
 let encrypted = cipher.update(String(value), 'utf8', 'hex');
 encrypted += cipher.final('hex');
@@ -30,26 +30,26 @@ return `${iv.toString('hex')}:${authTag}:${encrypted}`;
 // encryption.js — función decrypt(encryptedValue)
 const [ivHex, authTagHex, encrypted] = encryptedValue.split(':');
 const decipher = crypto.createDecipheriv('aes-256-gcm', MASTER_KEY, iv);
-decipher.setAuthTag(authTag);                                 // Verifica autenticidad
+decipher.setAuthTag(authTag); // Verifica autenticidad
 let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-decrypted += decipher.final('utf8');                          // Lanza error si authTag inválido
+decrypted += decipher.final('utf8'); // Lanza error si authTag inválido
 ```
 
 ## 2. Campos Encriptados
 
-| Modelo | Campo | Función | Descripción |
-|--------|-------|---------|-------------|
-| `Employee` | `salary` | `encryptSalary` | Salario mensual en USD |
-| `Employee` | `bankName` | `encrypt` | Nombre del banco |
-| `Employee` | `accountNumber` | `encrypt` | Número de cuenta bancaria |
-| `Attendance` | `entryLatitude` | `encryptCoordinate` | Latitud del registro de entrada |
-| `Attendance` | `entryLongitude` | `encryptCoordinate` | Longitud del registro de entrada |
-| `Attendance` | `exitLatitude` | `encryptCoordinate` | Latitud del registro de salida |
-| `Attendance` | `exitLongitude` | `encryptCoordinate` | Longitud del registro de salida |
-| `Employee` | `workLatitude` | `encryptCoordinate` | Latitud del lugar de trabajo configurado |
-| `Employee` | `workLongitude` | `encryptCoordinate` | Longitud del lugar de trabajo configurado |
-| `SystemSetting` | `globalLatitude` | `encryptCoordinate` | Latitud geocerca global de la empresa |
-| `SystemSetting` | `globalLongitude` | `encryptCoordinate` | Longitud geocerca global de la empresa |
+| Modelo          | Campo             | Función             | Descripción                               |
+| --------------- | ----------------- | ------------------- | ----------------------------------------- |
+| `Employee`      | `salary`          | `encryptSalary`     | Salario mensual en USD                    |
+| `Employee`      | `bankName`        | `encrypt`           | Nombre del banco                          |
+| `Employee`      | `accountNumber`   | `encrypt`           | Número de cuenta bancaria                 |
+| `Attendance`    | `entryLatitude`   | `encryptCoordinate` | Latitud del registro de entrada           |
+| `Attendance`    | `entryLongitude`  | `encryptCoordinate` | Longitud del registro de entrada          |
+| `Attendance`    | `exitLatitude`    | `encryptCoordinate` | Latitud del registro de salida            |
+| `Attendance`    | `exitLongitude`   | `encryptCoordinate` | Longitud del registro de salida           |
+| `Employee`      | `workLatitude`    | `encryptCoordinate` | Latitud del lugar de trabajo configurado  |
+| `Employee`      | `workLongitude`   | `encryptCoordinate` | Longitud del lugar de trabajo configurado |
+| `SystemSetting` | `globalLatitude`  | `encryptCoordinate` | Latitud geocerca global de la empresa     |
+| `SystemSetting` | `globalLongitude` | `encryptCoordinate` | Longitud geocerca global de la empresa    |
 
 ### 2.1 Encriptación de Coordenadas GPS
 
@@ -57,7 +57,7 @@ Las coordenadas se sanitizan a **4 decimales** (~11 metros de precisión) antes 
 
 ```javascript
 // encryptCoordinate(coord)
-const sanitized = parseFloat(num.toFixed(4));  // 4 decimales ≈ 11m precisión
+const sanitized = parseFloat(num.toFixed(4)); // 4 decimales ≈ 11m precisión
 return encrypt(sanitized);
 ```
 
@@ -92,23 +92,23 @@ bcrypt incorpora automáticamente un salt aleatorio en cada hash, garantizando q
 
 La configuración de Helmet en `app.js` establece:
 
-| Header | Valor | Propósito |
-|--------|-------|-----------|
-| `Content-Security-Policy` | `default-src 'self'` | Previene XSS y carga de recursos externos no autorizados |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | Fuerza HTTPS por 1 año, incluye subdominios |
-| `X-Frame-Options` | `SAMEORIGIN` | Permite iframes solo desde el mismo dominio (para visualizar PDFs en modales) |
-| `X-Content-Type-Options` | `nosniff` | Previene MIME-type sniffing |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Controla información enviada en el header Referer |
-| `Cache-Control` | `no-store, no-cache, must-revalidate` | Previene caché de datos sensibles en el navegador |
+| Header                      | Valor                                          | Propósito                                                                     |
+| --------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------- |
+| `Content-Security-Policy`   | `default-src 'self'`                           | Previene XSS y carga de recursos externos no autorizados                      |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | Fuerza HTTPS por 1 año, incluye subdominios                                   |
+| `X-Frame-Options`           | `SAMEORIGIN`                                   | Permite iframes solo desde el mismo dominio (para visualizar PDFs en modales) |
+| `X-Content-Type-Options`    | `nosniff`                                      | Previene MIME-type sniffing                                                   |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`              | Controla información enviada en el header Referer                             |
+| `Cache-Control`             | `no-store, no-cache, must-revalidate`          | Previene caché de datos sensibles en el navegador                             |
 
 ## 5. Rate Limiting
 
 El middleware `rateLimit.middleware.js` implementa un contador en memoria por IP de origen. Configuraciones aplicadas:
 
-| Endpoint | Ventana | Máx. Peticiones |
-|---------|---------|-----------------|
-| `POST /api/auth/login` | 15 minutos | 10 |
-| `POST /api/auth/forgot-password` | 15 minutos | 5 |
+| Endpoint                         | Ventana    | Máx. Peticiones |
+| -------------------------------- | ---------- | --------------- |
+| `POST /api/auth/login`           | 15 minutos | 10              |
+| `POST /api/auth/forgot-password` | 15 minutos | 5               |
 
 Al superarse el límite, responde con HTTP 429 (Too Many Requests).
 

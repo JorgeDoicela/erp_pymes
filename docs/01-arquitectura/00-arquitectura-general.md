@@ -107,99 +107,107 @@ El sistema cuenta con un esquema de precios de impacto social orientado al apoyo
 | `hr`         | Recursos Humanos               | CRUD en nómina, evaluaciones, contratos, documentos                           |
 | `employee`   | Colaborador                    | Lectura de su propio perfil, auto-marcado de asistencia, evaluaciones propias |
 
-## 4. Organización del Código Backend
+## 4. Organización del Código Backend (Monolito Modular & Pure Nested Vertical Slices)
+
+El backend está estructurado bajo una arquitectura de **Monolito Modular con Rebanadas Verticales Anidadas (Pure Nested Vertical Slices)**. Cada dominio funcional (Bounded Context) encapsula completamente sus controladores, servicios, repositorios, rutas y definiciones dentro de su propio módulo, exponiendo su contrato público a través de un archivo `index.js`. La lógica transversal reside de forma aislada en el directorio `core/`.
 
 ```
 backend/src/
-├── app.js                # Express app: CORS, Helmet, middleware stack, rutas
-├── server.js             # Punto entrada: HTTP server + Socket.IO init + Cron jobs
-├── config/
-│   ├── roles.js          # Enumeración de roles y helper isSuperAdminRole()
-│   └── storage.config.js # Configuración de almacenamiento local
-├── modules/              # Bounded Contexts independientes (Monolito Modular)
-│   ├── accounting/       # Contabilidad (Routes, Controller, Repository, DTOs)
-│   ├── payroll/          # Nómina y Liquidaciones (Routes, Controllers, Services, Repository, DTOs)
-│   ├── employees/        # Talento Humano (Routes, Controller, Service, Repository, DTOs)
-│   └── index.js          # Registro central de módulos
-├── types/                # Contratos estáticos TypeScript (accounting, payroll, employee)
-├── core/
-│   └── errors/           # Jerarquía de errores operacionales (AppError, ValidationError, etc.)
-├── dto/                  # Data Transfer Objects y esquemas Zod por dominio
-│   ├── common/           # Validadores base (Cédula ecuatoriana, montos, teléfonos)
-│   ├── accounting/       # Asientos, cuentas, periodos
-│   ├── payroll/          # Nómina y configuraciones
-│   └── employees/        # Creación y actualización de personal
-├── controllers/          # Controladores HTTP (thin layer → delegan a services)
-│   ├── auth/             # Login, forgot/reset password
-│   ├── admin/            # Seed controller, SuperAdmin
-│   ├── attendance/       # Asistencia, Turnos, Ausencias
-│   ├── employees/        # Empleados, Expediente, Activos, Offboarding
-│   ├── payroll/          # Nómina, Configuración, Beneficios, Anticipos
-│   ├── performance/      # Evaluaciones, Objetivos
-│   ├── contracts/        # Contratos
-│   ├── documents/        # Documentos
-│   ├── notifications/    # Notificaciones, Preferencias
-│   ├── compliance/       # Cumplimiento legal
-│   ├── communication/    # Anuncios
-│   ├── tenant/           # Gestión de tenants
-│   ├── reports/          # Reportes
-│   ├── export/           # Exportación
-│   ├── skills/           # Habilidades
-│   ├── recruitment.controller.js  # Reclutamiento
-│   ├── analytics.controller.js    # Analítica general
-│   ├── intelligenceController.js  # Motor de inteligencia
-│   ├── audit.controller.js        # Logs de auditoría
-│   ├── biometric.controller.js    # WebAuthn
-│   └── notification.preferences.controller.js
-├── services/             # Lógica de negocio (capa de dominio)
-│   ├── attendance/       # attendanceService.js · absenceService.js · shiftService.js
-│   ├── employees/        # employeeService.js · offboardingService.js · assetService.js · expedientService.js
-│   ├── payroll/          # payrollCalculationService.js · payrollConfigService.js · salaryAdvanceService.js
-│   ├── performance/      # (evaluaciones y objetivos)
-│   ├── contracts/        # (gestión de contratos)
-│   ├── documents/        # (gestión de documentos)
-│   ├── compliance/       # (cumplimiento normativo)
-│   ├── notifications/    # notificationService.js
-│   ├── recruitment/      # (reclutamiento)
-│   ├── reports/          # (generación de reportes)
-│   ├── export/           # (exportación de datos)
-│   ├── skills/           # (habilidades)
-│   ├── communication/    # (anuncios)
-│   ├── storage/          # (almacenamiento de archivos)
-│   ├── system/           # (configuración del sistema)
-│   └── intelligenceService.js  # Motor de inteligencia analítica (1621 líneas)
-├── repositories/         # Acceso a datos (patrón Repository desacoplado)
-│   ├── accounting/       # accountingRepository.js (Cuentas, Asientos, Periodos, Centros de Costo)
-│   ├── payroll/          # payrollRepository.js (Configuración activa, liquidaciones, historial)
-│   ├── employees/        # employeeRepository.js
-│   ├── attendance/       # attendanceRepository.js
-│   └── audit/            # auditRepository.js
-├── routes/               # Definición de rutas REST agrupadas por dominio
-│   └── index.routes.js   # Router principal con montaje de todos los sub-routers
-├── middleware/
-│   ├── auth.middleware.js        # Verificación JWT, authorize(roles)
-│   ├── tenant.middleware.js      # Resolución y validación de tenant
-│   ├── validate.middleware.js    # Validación en los bordes con esquemas Zod
-│   ├── errorHandler.js           # Manejo centralizado de errores, ZodError y logger
-│   ├── maintenance.middleware.js  # Modo mantenimiento programado
-│   ├── performance.middleware.js  # Logging de tiempos de respuesta
-│   ├── rateLimit.middleware.js    # Rate limiting configurable por ruta
-│   ├── security.middleware.js     # Protección de archivos estáticos
-│   ├── superAdmin.middleware.js   # Middleware exclusivo para SuperAdmin
-│   ├── upload.middleware.js       # Configuración Multer
-│   └── validation.middleware.js   # Validadores manuales legacy
-├── database/
-│   ├── db.js             # PrismaClient singleton con interceptor multi-tenant ($use)
-│   └── tenantContext.js  # AsyncLocalStorage para contexto asíncrono de tenant
-├── jobs/                 # Tareas programadas con node-cron
-│   ├── contractCronJob.js     # Alertas de vencimiento de contratos (diario 08:00)
-│   ├── documentCronJob.js     # Alertas de documentos vencidos
-│   ├── payrollCronJob.js      # Recordatorios de cierre y pago de nómina (diario 09:00)
-│   ├── performanceCronJob.js  # Alertas de evaluaciones pendientes
-│   └── requestMonitorCronJob.js # Monitoreo de solicitudes pendientes
-└── utils/
-    ├── encryption.js     # AES-256-GCM: encrypt/decrypt para salarios, coordenadas y datos bancarios
-    └── financialUtils.js # Decimal.js wrapper para cálculos financieros con precisión de 20 dígitos
+├── app.js                          # Configuración Express: Helmet, CORS, parser y montaje de router central
+├── server.js                       # Entrada del servidor HTTP, inicialización Socket.IO y jobs cron
+├── config/                         # Configuraciones estáticas y entorno (roles, storage)
+│   ├── roles.js                    # Enumeración de roles del sistema y helper isSuperAdminRole()
+│   └── storage.config.js           # Rutas y configuración de almacenamiento de archivos
+│
+├── core/                           # Núcleo transversal compartido (Cross-cutting Concerns)
+│   ├── index.js                    # Barril de exportación canónica del núcleo
+│   ├── router.js                   # Enrutador central que monta los 21 módulos bajo prefijo /api
+│   ├── validators.js               # Esquemas Zod universales (Cédula ecuatoriana Módulo 10, teléfonos)
+│   ├── errors/
+│   │   └── appError.js             # Jerarquía de errores operacionales (AppError, NotFoundError, etc.)
+│   ├── middleware/
+│   │   ├── errorHandler.js         # Manejador centralizado de errores con mapeo HTTP semántico
+│   │   ├── performance.middleware.js # Auditoría y logging de latencias con alertas SLA (>2000ms)
+│   │   ├── rateLimit.middleware.js # Rate limiting por IP y ruta
+│   │   └── validate.middleware.js  # Validación de esquemas Zod en los bordes de entrada
+│   ├── security/
+│   │   └── encryption.js           # Criptografía AES-256-GCM para datos sensibles (salarios, cuentas)
+│   ├── storage/
+│   │   ├── blob.service.js         # Abstracción de persistencia de archivos binarios
+│   │   └── upload.middleware.js    # Middleware Multer para subida multipart/form-data
+│   └── utils/
+│       ├── asyncHandler.js         # Envoltorio de captura de excepciones asíncronas para Express
+│       └── financialUtils.js       # Motor de aritmética de precisión arbitraria Decimal.js (ROUND_HALF_UP)
+│
+└── modules/                        # Bounded Contexts Modulares (21 dominios)
+    ├── index.js                    # Barril maestro de exportación de contratos de todos los módulos
+    │
+    │   # --- Módulos Compuestos (Rebanadas Verticales Anidadas) ---
+    ├── attendance/                 # Control Asistencial y Geofencing
+    │   ├── absences/               # Slice de ausencias, permisos e incidencias (Controller, Service, Repo, Routes)
+    │   ├── shifts/                 # Slice de turnos y tolerancias horarias (Controller, Service, Repo, Routes)
+    │   ├── tracking/               # Slice de marcación GPS y geocercas (Controller, Service, Repo, Routes, Jobs)
+    │   └── index.js                # Contrato público del módulo attendance
+    │
+    ├── payroll/                    # Nómina Legal y Remuneraciones
+    │   ├── advances/               # Slice de anticipos quincenales (Controller, Service, Repo, Routes)
+    │   ├── benefits/               # Slice de beneficios corporativos (Controller, Service, Repo, Routes)
+    │   ├── calculation/            # Slice de motor de cálculo batch de rol de pagos (Controller, Service, Repo, Routes)
+    │   ├── config/                 # Slice de configuración de parámetros patronales/IESS (Controller, Service, Repo, Routes)
+    │   ├── payroll.jobs.js         # Jobs cron para cierre de nómina
+    │   └── index.js                # Contrato público del módulo payroll
+    │
+    ├── employees/                  # Talento Humano y Gestión de Personal
+    │   ├── directory/              # Slice de nómina de colaboradores y perfiles (Controller, Service, Repo, Routes)
+    │   ├── lifecycle/              # Slice de onboarding y liquidaciones de offboarding (Controller, Service, Repo, Routes)
+    │   ├── records/                # Slice de expedientes digitales y asignación de activos/EPPs
+    │   └── index.js                # Contrato público del módulo employees
+    │
+    ├── performance/                # Desempeño y OKRs
+    │   ├── evaluations/            # Slice de evaluaciones 360°, plantillas y rúbricas (Controller, Service, Repo, Routes)
+    │   ├── goals/                  # Slice de metas y KPIs organizacionales (Controller, Service, Repo, Routes)
+    │   ├── performance.jobs.js     # Jobs cron de recordatorios de evaluación
+    │   └── index.js                # Contrato público del módulo performance
+    │
+    ├── reports/                    # Inteligencia de Negocio y Reportes Operativos
+    │   ├── analytics/              # Slice de métricas de rotación y clima laboral (Controller, Service, Repo, Routes)
+    │   ├── exports/                # Slice de generación de archivos CSV (BOM UTF-8) y PDF
+    │   └── index.js                # Contrato público del módulo reports
+    │
+    ├── tenants/                    # Multitenancy y Administración de Plataforma
+    │   ├── organization/           # Slice de configuración de empresas y onboarding de inquilinos
+    │   ├── superadmin/             # Slice de control global de tenants para SuperAdmin
+    │   └── index.js                # Contrato público del módulo tenants
+    │
+    ├── compliance/                 # Cumplimiento Laboral Ecuatoriano
+    │   ├── labor/                  # Slice de alertas de inspección y normativas (Controller, Service, Repo, Routes)
+    │   ├── statutory/              # Slice de provisiones legales patronales (13er, 14to, Fondos de Reserva)
+    │   └── index.js                # Contrato público del módulo compliance
+    │
+    ├── notifications/              # Notificaciones y Mensajería
+    │   ├── alerts/                 # Slice de avisos in-app y preferencias de usuario (Controller, Service, Repo, Routes)
+    │   ├── channels/               # Slice de WebSockets (Socket.IO) y transporte de correo SMTP (Nodemailer)
+    │   └── index.js                # Contrato público del módulo notifications
+    │
+    ├── intelligence/               # Inteligencia Artificial y Analítica Predictiva
+    │   ├── analytics/              # Slice de dashboards inteligentes y scoring multidimensional
+    │   ├── entrepreneurship/       # Slice de simuladores What-If y valoración de proyectos
+    │   ├── predictive/             # Slice de motores estadísticos (RSI, Causal AI, DP-SGD, MORL, FT-Transformer)
+    │   └── index.js                # Contrato público del módulo intelligence
+    │
+    │   # --- Módulos Atómicos (Single Slice Directo) ---
+    ├── accounting/                 # Contabilidad gubernamental y NIIF (Controller, Service, Repo, Routes, DTOs, Types)
+    ├── audit/                      # Trazabilidad inmutable de eventos de auditoría (Controller, Repo, Routes)
+    ├── auth/                       # Autenticación JWT, recuperación de contraseña y middleware de sesión
+    ├── biometrics/                 # Autenticación biométrica WebAuthn / FIDO2 del lado del servidor (@simplewebauthn/server)
+    ├── communication/              # Comunicados oficiales institucionales y confirmaciones de lectura
+    ├── contracts/                  # Gestión de contratos laborales y alertas de vencimiento
+    ├── documents/                  # Archivos digitales del colaborador y control de caducidades
+    ├── recruitment/                # Pipeline de vacantes, postulaciones y selección de candidatos
+    ├── signatures/                 # Firma electrónica ecuatoriana conforme a Ley de Comercio Electrónico
+    ├── skills/                     # Matriz de habilidades y competencias técnicas
+    ├── sustainability/             # Indicadores ODS 8, RAG legal ecuatoriano y pipeline de fine-tuning SLM
+    └── system/                     # Parámetros del sistema y middleware de mantenimiento programado
 ```
 
 ## 5. Seguridad por Capas

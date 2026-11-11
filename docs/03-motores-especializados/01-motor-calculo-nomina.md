@@ -2,7 +2,7 @@
 
 ## 1. Descripción General
 
-El `PayrollCalculationService` implementa el motor de cálculo de nómina en `backend/src/services/payroll/payrollCalculationService.js` (736 líneas). El motor procesa en batch todos los empleados activos de un tenant para un período mensual, calculando el salario neto de cada uno aplicando la normativa laboral vigente en Ecuador.
+El `PayrollCalculationService` implementa el motor de cálculo de nómina en `backend/src/modules/payroll/calculation/payrollCalculation.service.js`. El motor procesa en batch todos los empleados activos de un tenant para un período mensual, calculando el salario neto de cada uno aplicando la normativa laboral vigente en Ecuador.
 
 Todas las operaciones aritméticas utilizan `Decimal.js` con 20 dígitos de precisión y redondeo `ROUND_HALF_UP` mediante el wrapper `financial` para evitar errores de punto flotante en cálculos monetarios.
 
@@ -26,6 +26,7 @@ Días Elegibles:
 ```
 
 La proporcionalización por contrato parcial considera:
+
 - `effectiveStart = max(contract.startDate, period.startDate)`
 - `effectiveEnd = min(contract.endDate, period.endDate)` si el contrato no es indefinido
 - `effectiveDaysInPeriod = ceil((effectiveEnd - effectiveStart) / MS_PER_DAY) + 1`
@@ -45,11 +46,13 @@ Las horas extra se determinan por registro de asistencia:
 **Fuente primaria:** `Attendance.overtimeHours` (campo calculado al marcar salida en el servicio de asistencia comparando la hora de salida vs. la hora de fin del turno).
 
 **Fuente secundaria:** Si `overtimeHours` no está presente, se calcula como:
+
 ```
 Horas Extra Diarias = max(0, Horas Trabajadas − Horas Esperadas del Turno)
 ```
 
 Las **Horas Esperadas del Turno** se obtienen del `EmployeeSchedule` activo para esa fecha:
+
 ```
 Duración Turno = Hora Fin − Hora Inicio (corregido si cruza medianoche)
 Horas Esperadas = Duración Turno − (Minutos de Descanso / 60)
@@ -59,11 +62,11 @@ Si no hay turno asignado, se asume 8 horas esperadas por defecto.
 
 **Multiplicadores de horas extra:**
 
-| Condición | Multiplicador |
-|-----------|--------------|
-| Día de semana (Lun-Vie) | 1.5× tarifa horaria |
+| Condición                                                         | Multiplicador       |
+| ----------------------------------------------------------------- | ------------------- |
+| Día de semana (Lun-Vie)                                           | 1.5× tarifa horaria |
 | Fin de semana (Sáb-Dom) y contrato con `hasDoubleOvertime = true` | 2.0× tarifa horaria |
-| Fin de semana y `hasDoubleOvertime = false` | 1.5× tarifa horaria |
+| Fin de semana y `hasDoubleOvertime = false`                       | 1.5× tarifa horaria |
 
 ```
 Costo Total Horas Extra = Σ (HE_diarias × Tarifa Horaria × Multiplicador)
@@ -96,6 +99,7 @@ Descuento Undertime = Σ(Horas No Trabajadas Diarias) × Tarifa Horaria
 ### 2.6 Ítems de Configuración Global (PayrollItem)
 
 Para cada ítem activo en `PayrollConfig.items`:
+
 - `type = 'EARNING'` → Se agrega a las bonificaciones.
 - `type = 'DEDUCTION'` → Se agrega a las deducciones.
 - `fixedValue` → Monto fijo independiente del salario.
@@ -108,6 +112,7 @@ Los `EmployeeBenefit[]` activos del empleado se agregan íntegramente a las boni
 ### 2.8 Anticipos de Sueldo
 
 Los `SalaryAdvance[]` en estado `APPROVED` generan deducciones automáticas por la cuota correspondiente al período:
+
 ```
 Cuota Actual = paidInstallments + 1
 Si CuotaActual <= totalInstallments → Deducción de monthlyDeduction
@@ -146,25 +151,25 @@ Esta validación garantiza que ninguna edición manual de un detalle individual 
 
 ### Modelo `Payroll` (Cabecera)
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `period` | DateTime | Primer día del mes de la nómina |
-| `endDate` | DateTime | Último día del mes |
-| `status` | String | DRAFT · APPROVED · PAID |
-| `totalAmount` | Float | Suma total de salarios netos del período |
-| `paymentDate` | DateTime? | Fecha en que se marcó como pagada |
+| Campo         | Tipo      | Descripción                              |
+| ------------- | --------- | ---------------------------------------- |
+| `period`      | DateTime  | Primer día del mes de la nómina          |
+| `endDate`     | DateTime  | Último día del mes                       |
+| `status`      | String    | DRAFT · APPROVED · PAID                  |
+| `totalAmount` | Float     | Suma total de salarios netos del período |
+| `paymentDate` | DateTime? | Fecha en que se marcó como pagada        |
 
 ### Modelo `PayrollDetail` (Registro por Empleado)
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `baseSalary` | Float | Salario ganado proporcional |
-| `workedDays` | Int | Días efectivamente trabajados |
-| `overtimeHours` | Float | Total de horas extra del período |
-| `overtimeAmount` | Float | Costo monetario de horas extra |
-| `bonuses` | String (JSON) | Array de bonificaciones: `[{name, amount, benefitId?, frequency?}]` |
-| `deductions` | String (JSON) | Array de deducciones: `[{name, amount, advanceId?}]` |
-| `netSalary` | Float | Salario neto final |
+| Campo            | Tipo          | Descripción                                                         |
+| ---------------- | ------------- | ------------------------------------------------------------------- |
+| `baseSalary`     | Float         | Salario ganado proporcional                                         |
+| `workedDays`     | Int           | Días efectivamente trabajados                                       |
+| `overtimeHours`  | Float         | Total de horas extra del período                                    |
+| `overtimeAmount` | Float         | Costo monetario de horas extra                                      |
+| `bonuses`        | String (JSON) | Array de bonificaciones: `[{name, amount, benefitId?, frequency?}]` |
+| `deductions`     | String (JSON) | Array de deducciones: `[{name, amount, advanceId?}]`                |
+| `netSalary`      | Float         | Salario neto final                                                  |
 
 ## 5. Generación de Archivo Bancario
 

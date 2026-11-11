@@ -7,6 +7,7 @@ La función `getEmployeeScoring` genera un **score compuesto por empleado** a pa
 ## 2. Fuentes de Datos
 
 Para cada empleado activo, el sistema recupera:
+
 - Últimas 30 ausencias registradas.
 - Últimas 5 evaluaciones de desempeño.
 - Últimos 10 objetivos registrados.
@@ -43,6 +44,7 @@ attendanceScore = max(0, 100 − (totalAbsences × 7) − (totalLates × 2))
 ```
 
 Donde:
+
 - `totalAbsences` = número de ausencias registradas en el período analizado.
 - `totalLates` = número de registros de asistencia con `isLate = true` en 90 días.
 - Cada ausencia penaliza 7 puntos (indicativa de días sin trabajar).
@@ -88,6 +90,7 @@ overallScore = retentionScore  × 0.25
 ```
 
 **Justificación de pesos:**
+
 - **Desempeño (30%):** Es la dimensión principal de valor del colaborador.
 - **Retención (25%):** El riesgo de abandono impacta directamente en la continuidad.
 - **Asistencia (20%):** Presencia física es requisito base de productividad.
@@ -96,12 +99,12 @@ overallScore = retentionScore  × 0.25
 
 ## 5. Clasificación de Categorías
 
-| overallScore | Categoría |
-|-------------|-----------|
-| ≥ 80 | Top Performer |
-| 60-79 | Good Performer |
-| 40-59 | Needs Improvement |
-| < 40 | At Risk |
+| overallScore | Categoría         |
+| ------------ | ----------------- |
+| ≥ 80         | Top Performer     |
+| 60-79        | Good Performer    |
+| 40-59        | Needs Improvement |
+| < 40         | At Risk           |
 
 ## 6. Estructura de Respuesta
 
@@ -153,14 +156,15 @@ overallHealth = retentionHealth    × 0.30
               + departmentHealth   × 0.25
 ```
 
-| overallHealth | Nivel |
-|--------------|-------|
-| ≥ 80 | Excelente |
-| 60-79 | Bueno |
-| 40-59 | Regular |
-| < 40 | Crítico |
+| overallHealth | Nivel     |
+| ------------- | --------- |
+| ≥ 80          | Excelente |
+| 60-79         | Bueno     |
+| 40-59         | Regular   |
+| < 40          | Crítico   |
 
 Los KPIs organizacionales calculados incluyen:
+
 - `totalEmployees`: Total de empleados activos.
 - `avgTenure`: Antigüedad media en años (calculada sobre `hireDate`).
 - `rotationRate`: Porcentaje de empleados en "Alto Riesgo" respecto al total.

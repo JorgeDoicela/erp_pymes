@@ -30,6 +30,7 @@ EvaluationTemplate (criteria: JSON, scale: JSON, period, instructions)
 ### 1.2 Estructura de Criterios (EvaluationTemplate.criteria)
 
 Los criterios se almacenan como JSON en el campo `criteria` del modelo `EvaluationTemplate`. Cada criterio define:
+
 - `id`: Identificador único del criterio.
 - `name`: Nombre del criterio (ej: "Trabajo en Equipo").
 - `weight`: Peso relativo en el cálculo del puntaje final (0-100, suma debe ser 100).
@@ -38,16 +39,19 @@ Los criterios se almacenan como JSON en el campo `criteria` del modelo `Evaluati
 ### 1.3 Escala de Evaluación (EvaluationTemplate.scale)
 
 El campo `scale` define la escala de puntuación en formato JSON:
+
 - Escala numérica: `{ "min": 1, "max": 5, "labels": {"1": "Deficiente", ..., "5": "Excelente"} }`
 - Escala porcentual: `{ "min": 0, "max": 100 }`
 
 ### 1.4 Alertas Automáticas de Evaluaciones
 
 El `performanceCronJob.js` ejecuta una verificación periódica para detectar:
+
 - Evaluaciones en estado `PENDING` cuya `endDate` ya pasó.
 - Genera notificaciones a los administradores y revisores indicando el número de días de retraso.
 
 El módulo de inteligencia también detecta estas evaluaciones vencidas como parte de las **alertas proactivas** del dashboard (`getProactiveAlerts`), clasificándolas por severidad según días de retraso:
+
 - `LOW`: 1-7 días de retraso.
 - `MEDIUM`: 8-14 días de retraso.
 - `HIGH`: Más de 14 días de retraso.
@@ -80,6 +84,7 @@ Carga la `PayrollConfig` activa del tenant, incluyendo los `PayrollItem[]` (íte
 
 **Etapa 3: Selección de Empleados**  
 Carga todos los empleados del tenant con al menos un contrato activo que tenga vigencia dentro del período solicitado. Un contrato es vigente si:
+
 ```
 contract.startDate <= period.endDate
 AND (contract.endDate IS NULL OR contract.endDate >= period.startDate)
@@ -88,6 +93,7 @@ AND contract.status = 'Active'
 
 **Etapa 4: Carga Batch de Datos**  
 Con los IDs de los empleados seleccionados, realiza 4 consultas batch paralelas:
+
 - `Attendance[]` del período → indexado en `Map<employeeId, Attendance[]>`
 - `EmployeeSchedule[]` activos → indexado en `Map<employeeId, Schedule[]>`
 - `EmployeeBenefit[]` activos → indexado en `Map<employeeId, Benefit[]>`
@@ -127,10 +133,10 @@ Solo se incluyen empleados que tienen `bankName` y `accountNumber` configurados.
 
 El `payrollCronJob.js` se ejecuta diariamente a las 09:00 AM y envía notificaciones a todos los administradores activos en los siguientes momentos:
 
-| Trigger | Condición | Mensaje |
-|---------|-----------|---------|
-| Aviso de cierre | Faltan 5 días para el cierre de novedades | `PAYROLL_CLOSING` |
-| Alerta de revisión | Faltan 3 días para la fecha de pago | `PAYROLL_REVIEW` |
-| Confirmación urgente | Falta 1 día para la fecha de pago | `PAYROLL_CONFIRM` |
+| Trigger              | Condición                                 | Mensaje           |
+| -------------------- | ----------------------------------------- | ----------------- |
+| Aviso de cierre      | Faltan 5 días para el cierre de novedades | `PAYROLL_CLOSING` |
+| Alerta de revisión   | Faltan 3 días para la fecha de pago       | `PAYROLL_REVIEW`  |
+| Confirmación urgente | Falta 1 día para la fecha de pago         | `PAYROLL_CONFIRM` |
 
 La fecha de pago se calcula como el último día del mes en curso (`new Date(year, month + 1, 0)`). La fecha de cierre es 5 días antes de la fecha de pago.

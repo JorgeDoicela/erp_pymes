@@ -3,6 +3,7 @@
 ## 1. Descripción General
 
 El `attendanceService.js` gestiona el registro de asistencia de empleados con validaciones de:
+
 - **Geocerca:** Verificación geoespacial de la ubicación usando la fórmula de Haversine.
 - **Anti-VPN:** Detección de proxies, VPNs y hosting mediante IP de origen.
 - **IP permitida:** Lista blanca de IPs configurada por la empresa.
@@ -12,6 +13,7 @@ El `attendanceService.js` gestiona el registro de asistencia de empleados con va
 ## 2. Resolución de Empleado
 
 El empleado puede ser identificado por:
+
 1. `identifier` que coincide exactamente con `employee.identityCard`.
 2. `identifier` que coincide con `employee.id`.
 3. Correo electrónico del usuario autenticado (`req.user.email`).
@@ -24,18 +26,18 @@ Si no se encuentra al empleado, el registro es rechazado con HTTP 404.
 
 ```javascript
 function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3;  // Radio de la Tierra en metros
-    const φ1 = lat1 * Math.PI / 180;
-    const φ2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
-    const Δλ = (lon2 - lon1) * Math.PI / 180;
+  const R = 6371e3; // Radio de la Tierra en metros
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return R * c;  // Distancia en metros
+  return R * c; // Distancia en metros
 }
 ```
 
@@ -51,6 +53,7 @@ El sistema verifica **en cascada** hasta encontrar una geocerca válida:
 ### 3.3 Activación de Geocerca
 
 La geocerca se valida si se cumple alguna de estas condiciones:
+
 - El empleado tiene `enforceGeofence = true` en su registro.
 - `SystemSetting.globalLatitude` y `SystemSetting.globalLongitude` están configuradas.
 
@@ -60,14 +63,16 @@ Si el empleado tiene `trackingConsent = false` y la geocerca está activa, el re
 
 ```javascript
 const distance = getDistance(
-    requestLat, requestLon,     // Coordenadas del cliente (enviadas en la petición)
-    decryptCoordinate(workLat), decryptCoordinate(workLon)  // Geocerca (desencriptada)
+  requestLat,
+  requestLon, // Coordenadas del cliente (enviadas en la petición)
+  decryptCoordinate(workLat),
+  decryptCoordinate(workLon) // Geocerca (desencriptada)
 );
 
 if (distance > workRadius) {
-    return res.status(400).json({
-        message: `Estás a ${distance.toFixed(0)}m del lugar de trabajo. Debes estar a menos de ${workRadius}m.`
-    });
+  return res.status(400).json({
+    message: `Estás a ${distance.toFixed(0)}m del lugar de trabajo. Debes estar a menos de ${workRadius}m.`,
+  });
 }
 ```
 
@@ -77,17 +82,18 @@ Antes de registrar la entrada o salida, el servicio consulta el API de ip-api.co
 
 ```javascript
 const response = await axios.get(
-    `http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`,
-    { timeout: 3000 }
+  `http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`,
+  { timeout: 3000 }
 );
 ```
 
-| Campo | Significado |
-|-------|-------------|
-| `proxy` | `true` si la IP es un proxy/VPN conocido |
+| Campo     | Significado                                                 |
+| --------- | ----------------------------------------------------------- |
+| `proxy`   | `true` si la IP es un proxy/VPN conocido                    |
 | `hosting` | `true` si la IP pertenece a un datacenter o proveedor cloud |
 
 Si alguno es `true`, el registro se rechaza:
+
 ```json
 { "message": "Acceso bloqueado: Se ha detectado el uso de VPN o Proxy." }
 ```
@@ -107,26 +113,26 @@ Cuando un empleado marca entrada (`type = 'ENTRY'`), el sistema determina si lle
 ```javascript
 // Obtener turno activo del empleado para la fecha actual
 const schedule = await prisma.employeeSchedule.findFirst({
-    where: {
-        employeeId: employee.id,
-        status: 'ACTIVE',
-        startDate: { lte: today },
-        OR: [{ endDate: null }, { endDate: { gte: today } }]
-    },
-    include: { shift: true }
+  where: {
+    employeeId: employee.id,
+    status: 'ACTIVE',
+    startDate: { lte: today },
+    OR: [{ endDate: null }, { endDate: { gte: today } }],
+  },
+  include: { shift: true },
 });
 
 if (schedule) {
-    // shift.startTime: hora de inicio del turno (ej: "08:00")
-    const [startHour, startMinute] = schedule.shift.startTime.split(':').map(Number);
-    const shiftStart = new Date(today);
-    shiftStart.setHours(startHour, startMinute, 0, 0);
+  // shift.startTime: hora de inicio del turno (ej: "08:00")
+  const [startHour, startMinute] = schedule.shift.startTime.split(':').map(Number);
+  const shiftStart = new Date(today);
+  shiftStart.setHours(startHour, startMinute, 0, 0);
 
-    // shift.lateTolerance: minutos de gracia (ej: 10)
-    const lateThreshold = new Date(shiftStart.getTime() + (schedule.shift.lateTolerance * 60 * 1000));
+  // shift.lateTolerance: minutos de gracia (ej: 10)
+  const lateThreshold = new Date(shiftStart.getTime() + schedule.shift.lateTolerance * 60 * 1000);
 
-    const isLate = entryTime > lateThreshold;
-    const minutesLate = isLate ? Math.floor((entryTime - shiftStart) / 60000) : 0;
+  const isLate = entryTime > lateThreshold;
+  const minutesLate = isLate ? Math.floor((entryTime - shiftStart) / 60000) : 0;
 }
 ```
 
@@ -151,21 +157,21 @@ Los valores `hoursWorked` y `overtimeHours` se almacenan en el registro de `Atte
 
 ## 7. Tipos de Registro de Asistencia
 
-| Tipo | Descripción |
-|------|-------------|
-| `ENTRY` | Marcación de entrada (inicio de jornada). Crea un nuevo registro de `Attendance`. |
-| `EXIT` | Marcación de salida (fin de jornada). Actualiza el registro existente del día. |
-| `BREAK_START` | Inicio de descanso. Actualiza `breakStartTime`. |
-| `BREAK_END` | Fin de descanso. Actualiza `breakEndTime`, calcula duración del descanso. |
+| Tipo          | Descripción                                                                       |
+| ------------- | --------------------------------------------------------------------------------- |
+| `ENTRY`       | Marcación de entrada (inicio de jornada). Crea un nuevo registro de `Attendance`. |
+| `EXIT`        | Marcación de salida (fin de jornada). Actualiza el registro existente del día.    |
+| `BREAK_START` | Inicio de descanso. Actualiza `breakStartTime`.                                   |
+| `BREAK_END`   | Fin de descanso. Actualiza `breakEndTime`, calcula duración del descanso.         |
 
 ## 8. Estados del Empleado
 
-| Estado | Descripción |
-|--------|-------------|
-| `NOT_STARTED` | Sin registro de asistencia en el día actual |
-| `WORKING` | Con entrada registrada, sin salida |
-| `ON_BREAK` | Con `breakStartTime` registrado y sin `breakEndTime` |
-| `COMPLETED` | Con entrada y salida registradas |
+| Estado        | Descripción                                          |
+| ------------- | ---------------------------------------------------- |
+| `NOT_STARTED` | Sin registro de asistencia en el día actual          |
+| `WORKING`     | Con entrada registrada, sin salida                   |
+| `ON_BREAK`    | Con `breakStartTime` registrado y sin `breakEndTime` |
+| `COMPLETED`   | Con entrada y salida registradas                     |
 
 ## 9. Consentimiento Explícito de Geolocalización
 
