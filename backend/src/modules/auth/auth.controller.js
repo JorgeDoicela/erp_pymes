@@ -26,7 +26,9 @@ export const login = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
   try {
-    const result = await authService.forgotPassword(req.body.email);
+    const origin =
+      req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : null);
+    const result = await authService.forgotPassword(req.body.email, origin);
     res.status(200).json(result);
   } catch (error) {
     if (error.statusCode) {
@@ -49,4 +51,3 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al restablecer la contraseña' });
   }
 };
-

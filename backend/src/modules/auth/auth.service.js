@@ -144,7 +144,7 @@ export class AuthService {
     };
   }
 
-  async forgotPassword(email) {
+  async forgotPassword(email, originUrl = null) {
     if (!email) {
       throw new AuthHttpError(400, { success: false, message: 'El correo es requerido' });
     }
@@ -162,19 +162,26 @@ export class AuthService {
 
     await authRepository.setResetPasswordToken(user.id, token, expires);
 
-    const resetUrl = `${process.env.FRONTEND_URL || process.env.ORIGIN || 'http://localhost:5173'}/reset-password?token=${token}`;
+    const cleanOrigin = originUrl ? originUrl.replace(/\/+$/, '') : null;
+    const baseUrl =
+      cleanOrigin || process.env.FRONTEND_URL || process.env.ORIGIN || 'http://localhost:5173';
+    const resetUrl = `${baseUrl}/reset-password?token=${token}`;
     const html = `
-        <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-            <h2 style="color: #1e293b; text-align: center;">Recuperación de Contraseña</h2>
-            <p>Hola <strong>${user.firstName}</strong>,</p>
-            <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en <strong>Norma ERP</strong>.</p>
-            <p>Haz clic en el botón de abajo para elegir una nueva contraseña. Este enlace es válido por 1 hora.</p>
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Restablecer Contraseña</a>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
+            <h2 style="color: #0f172a; text-align: center; margin-top: 0; font-size: 20px;">Recuperación de Contraseña · Norma ERP</h2>
+            <p style="color: #334155; font-size: 14px;">Hola <strong>${user.firstName}</strong>,</p>
+            <p style="color: #334155; font-size: 14px; line-height: 1.5;">Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en <strong>Norma ERP</strong>.</p>
+            <p style="color: #334155; font-size: 14px; line-height: 1.5;">Haz clic en el botón de abajo para definir una nueva contraseña. Este enlace es de un solo uso y expirará en 1 hora.</p>
+            <div style="text-align: center; margin: 28px 0;">
+                <a href="${resetUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block;">Restablecer Contraseña</a>
             </div>
-            <p style="color: #64748b; font-size: 14px;">Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
-            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
-            <p style="font-size: 11px; color: #94a3b8; text-align: center;">© ${new Date().getFullYear()} Norma ERP · Sistema de Gestión y Cumplimiento Laboral para PyMEs.</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #64748b; line-height: 1.5; word-break: break-all;">
+              Si el botón no funciona, copia y pega el siguiente enlace directo en tu navegador:<br>
+              <a href="${resetUrl}" style="color: #2563eb; text-decoration: underline;">${resetUrl}</a>
+            </p>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 24px 0 16px 0;">
+            <p style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Si no solicitaste este cambio, puedes ignorar este correo de forma segura. Tu contraseña no cambiará.</p>
+            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 16px;">© ${new Date().getFullYear()} Norma ERP · Plataforma de Gestión y Nómina para PyMEs.</p>
         </div>
         `;
 
