@@ -97,7 +97,7 @@ export default function PWAInstallPrompt() {
   if (isInstalled) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 md:right-5 z-50 flex flex-col items-end gap-3 pointer-events-auto">
+    <div className="fixed bottom-[76px] right-5 z-40 flex flex-col items-end gap-2 pointer-events-auto">
       <AnimatePresence>
         {showPrompt && (
           <motion.div
