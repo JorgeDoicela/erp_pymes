@@ -12,7 +12,7 @@ import {
   getEvaluationTemplates,
   getEmployeeEvaluations,
   getPerformanceStats,
-} from '@/services/evaluation.service';
+} from '../services/evaluation.service';
 import EvaluationDetailModal from '../components/EvaluationDetailModal';
 
 const STATUS_MAP = {

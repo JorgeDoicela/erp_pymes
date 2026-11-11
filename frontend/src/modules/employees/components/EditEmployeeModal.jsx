@@ -13,8 +13,8 @@ import {
   ACCOUNT_TYPES,
   BANK_OPTIONS,
   DEPARTMENTS,
-} from '../../../constants/employeeOptions';
-import Modal from '../../../components/common/Modal';
+} from '../constants/employeeOptions';
+import Modal from '@core/ui/Modal';
 
 const EditEmployeeModal = ({
   isOpen,

@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '@/api/axios';
+import api from '@core/api/httpClient';
 
 const EVENT_CATALOG = [
   {

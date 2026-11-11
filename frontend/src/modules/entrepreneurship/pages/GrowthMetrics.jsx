@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import entrepreneurshipService from '@/services/entrepreneurship.service';
+import entrepreneurshipService from '../services/entrepreneurship.service';
 import {
   FiTrendingUp,
   FiActivity,

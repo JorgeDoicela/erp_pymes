@@ -19,15 +19,15 @@ import {
   deletePayroll,
   updatePayrollDetail,
   notifyPendingPayrollSignatures,
-} from '@/services/payroll/payrollConfig.service';
-import { integratePayroll } from '@/services/accounting.service';
-import ExportButtons from '@/components/common/ExportButtons';
+} from '../services/payrollConfig.service';
+import { integratePayroll } from '@modules/accounting';
+import ExportButtons from '@core/ui/ExportButtons';
 import { FiBell } from 'react-icons/fi';
 
 // Subcomponentes Modulares Extraídos (core/ui y modules/payroll)
-import { Button } from '@/core/ui/Button.jsx';
-import { GeneratePayrollModal } from '@/modules/payroll/components/GeneratePayrollModal.jsx';
-import { EditPayrollDetailModal } from '@/modules/payroll/components/EditPayrollDetailModal.jsx';
+import { Button } from '@core/ui';
+import GeneratePayrollModal from '../components/GeneratePayrollModal.jsx';
+import EditPayrollDetailModal from '../components/EditPayrollDetailModal.jsx';
 import { ConfirmActionModal } from '@/modules/payroll/components/ConfirmActionModal.jsx';
 import { PayrollDetailsTable } from '@/modules/payroll/components/PayrollDetailsTable.jsx';
 

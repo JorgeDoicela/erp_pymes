@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import api from '@/api/axios';
+import api from '@core/api/httpClient';
 
 export const createEmployee = async (employeeData, token) => {
   // If using the interceptor to get token from storage, we might not need to pass it.
@@ -177,3 +177,24 @@ export const updateConsentTracking = async (consent, token) => {
     throw new Error(error.response?.data?.message || 'Error al actualizar consentimiento');
   }
 };
+
+const employeeService = {
+  createEmployee,
+  getEmployees,
+  getEmployeeById,
+  updateEmployee,
+  getEmployeeHistory,
+  createContract,
+  getContracts,
+  uploadDocument,
+  getDocuments,
+  deleteDocument,
+  getProfile,
+  createSkill,
+  deleteSkill,
+  terminateEmployee,
+  getDepartments,
+  updateConsentTracking,
+};
+
+export default employeeService;

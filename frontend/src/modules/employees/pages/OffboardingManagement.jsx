@@ -13,10 +13,10 @@ import {
   startOffboarding,
   updateChecklistStep,
   getOffboardings,
-} from '@/services/employees/onboardingOffboarding.service';
-import { getEmployees } from '@/services/employees/employee.service';
-import { generateSettlementPDF } from '@/utils/generateSettlementPDF';
-import useAutoSync from '@/hooks/useAutoSync.js';
+} from '../services/onboardingOffboarding.service';
+import { getEmployees } from '../services/employee.service';
+import { generateSettlementPDF } from '@modules/payroll';
+import useAutoSync from '@core/hooks/useAutoSync';
 import {
   UserMinusIcon,
   CalculatorIcon,

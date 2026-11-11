@@ -13,10 +13,10 @@ import {
   deleteVacancy,
   deleteApplication,
   updateApplicationStatus,
-} from '@/services/recruitment.service';
+} from '../services/recruitment.service';
 import { FiArrowLeft, FiTrash2, FiCopy, FiCheck } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import Modal from '@/components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 const STATUS_OPTIONS = [
   { key: 'ALL', label: 'Todos' },

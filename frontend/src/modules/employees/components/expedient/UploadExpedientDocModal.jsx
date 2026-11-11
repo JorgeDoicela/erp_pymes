@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import Modal from '../../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 export const UploadExpedientDocModal = ({
   isOpen,
@@ -31,12 +31,7 @@ export const UploadExpedientDocModal = ({
     : directoryData?.employees || [];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Cargar Documento al Expediente"
-      size="md"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Cargar Documento al Expediente" size="md">
       <form onSubmit={onSubmit} className="space-y-3.5 text-xs">
         {!isDetailMode && (
           <div>

@@ -685,5 +685,5 @@ class PerformanceService {
   }
 }
 
+export { PerformanceService };
 export default new PerformanceService();
-

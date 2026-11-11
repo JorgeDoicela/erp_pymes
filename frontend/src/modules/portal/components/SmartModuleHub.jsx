@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { FiSearch } from 'react-icons/fi';
-import { getFrequentModules, getRecentModules, recordModuleVisit } from '@/utils/moduleTracker';
+import { getFrequentModules, getRecentModules, recordModuleVisit } from '@core/utils/moduleTracker';
 
 /**
  * SmartModuleHub — Consola de Navegación Inteligente ERP

@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getPeriods, createPeriod, togglePeriod } from '@/services/accounting.service';
+import { getPeriods, createPeriod, togglePeriod } from '../services/accounting.service';
 import { FiCalendar, FiPlus, FiLock, FiCheckCircle, FiClock } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 

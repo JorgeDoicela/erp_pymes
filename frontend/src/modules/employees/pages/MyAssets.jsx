@@ -8,9 +8,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { getMyAssets } from '@/services/employees/onboardingOffboarding.service';
+import { getMyAssets } from '../services/onboardingOffboarding.service';
 import { FiSearch, FiRefreshCw, FiPrinter, FiEye, FiFileText } from 'react-icons/fi';
-import Modal from '@/components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 /**
  * Genera e imprime el acta formal de entrega-recepción de dotación/activos como PDF.

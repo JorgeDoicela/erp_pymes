@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactDOM from 'react-dom';
-import api from '@/api/axios.js';
+import api from '@core/api/httpClient';
 import toast from 'react-hot-toast';
 import { FiX } from 'react-icons/fi';
 

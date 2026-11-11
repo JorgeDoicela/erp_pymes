@@ -16,7 +16,7 @@ import {
   scheduleInterview,
   evaluateCandidate,
   hireCandidate,
-} from '@/services/recruitment.service';
+} from '../services/recruitment.service';
 import {
   FiArrowLeft,
   FiMail,
@@ -34,7 +34,7 @@ import {
   FiDownload,
 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
-import Modal from '@/components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 const PIPELINE_STAGES = [
   { key: 'PENDING', label: '1. Postulado' },

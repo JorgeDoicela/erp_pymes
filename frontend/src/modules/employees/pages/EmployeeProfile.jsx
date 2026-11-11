@@ -19,19 +19,19 @@ import {
   deleteDocument,
   getProfile,
   terminateEmployee,
-} from '@/services/employees/employee.service';
+} from '../services/employee.service';
 import EditEmployeeModal from '../components/EditEmployeeModal';
 import SkillsTab from '../components/SkillsTab';
 import ContractsTab from '../components/ContractsTab';
-import BiometricSettings from '@/components/attendance/BiometricSettings';
-import Modal from '@/components/common/Modal';
+import { BiometricSettings } from '@modules/attendance';
+import Modal from '@core/ui/Modal';
 import {
   validateEmail,
   validatePhone,
   validateSalary,
   validateDates,
-} from '@/utils/validationUtils';
-import { isSuperAdmin as checkIsSuperAdmin } from '@/constants/roles.js';
+} from '@core/utils/validationUtils';
+import { isSuperAdmin as checkIsSuperAdmin } from '@core/constants/roles';
 
 // Componentes modulares desacoplados del dominio employees
 import SuperAdminProfileView from '@/modules/employees/components/SuperAdminProfileView';
@@ -132,38 +132,37 @@ const EmployeeProfile = ({ token, user }) => {
     fetchEmployee();
   }, [fetchEmployee]);
 
+  const targetEmployeeId = id || employee?.id;
+
   const fetchHistory = useCallback(async () => {
-    const targetId = id || employee?.id;
-    if (!targetId) return;
+    if (!targetEmployeeId) return;
     try {
-      const data = await getEmployeeHistory(targetId, token);
+      const data = await getEmployeeHistory(targetEmployeeId, token);
       setHistory(data.data || []);
     } catch (err) {
       console.error(err);
     }
-  }, [id, employee?.id, token]);
+  }, [targetEmployeeId, token]);
 
   const fetchContracts = useCallback(async () => {
-    const targetId = id || employee?.id;
-    if (!targetId) return;
+    if (!targetEmployeeId) return;
     try {
-      const data = await getContracts(targetId, token);
+      const data = await getContracts(targetEmployeeId, token);
       setContracts(data.data || []);
     } catch (err) {
       console.error(err);
     }
-  }, [id, employee?.id, token]);
+  }, [targetEmployeeId, token]);
 
   const fetchDocuments = useCallback(async () => {
-    const targetId = id || employee?.id;
-    if (!targetId) return;
+    if (!targetEmployeeId) return;
     try {
-      const data = await getDocuments(targetId, token);
+      const data = await getDocuments(targetEmployeeId, token);
       setDocuments(data.data || []);
     } catch (err) {
       console.error(err);
     }
-  }, [id, employee?.id, token]);
+  }, [targetEmployeeId, token]);
 
   useEffect(() => {
     if (activeTab === 'history') fetchHistory();

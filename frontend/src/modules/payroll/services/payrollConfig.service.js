@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import api from '@/api/axios';
+import api from '@core/api/httpClient';
 
 export const getPayrollConfig = async () => {
   try {
@@ -141,3 +141,22 @@ export const notifyPendingPayrollSignatures = async (payrollId) => {
     throw new Error(error.response?.data?.message || 'Error al notificar colaboradores');
   }
 };
+
+const payrollConfigService = {
+  getPayrollConfig,
+  savePayrollConfig,
+  generatePayroll,
+  getPayrolls,
+  getMyPayrolls,
+  getPayrollById,
+  confirmPayroll,
+  downloadBankFile,
+  markPayrollAsPaid,
+  deletePayroll,
+  updatePayrollDetail,
+  signPayslipDetail,
+  disputePayslipDetail,
+  notifyPendingPayrollSignatures,
+};
+
+export default payrollConfigService;

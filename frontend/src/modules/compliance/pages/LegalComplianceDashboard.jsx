@@ -9,12 +9,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import {
-  getComplianceAlerts,
-  getStatutoryProvisions,
-} from '@/services/compliance/compliance.service';
-import ExportButtons from '@/components/common/ExportButtons';
-import useAutoSync from '@/hooks/useAutoSync.js';
+import { getComplianceAlerts, getStatutoryProvisions } from '../services/compliance.service';
+import ExportButtons from '@core/ui/ExportButtons';
+import useAutoSync from '@core/hooks/useAutoSync';
 import {
   ShieldExclamationIcon,
   ExclamationTriangleIcon,

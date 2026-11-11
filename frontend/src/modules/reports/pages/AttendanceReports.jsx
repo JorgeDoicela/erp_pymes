@@ -8,8 +8,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import * as reportService from '@/services/reports/reportService';
-import { getEmployees, getDepartments } from '@/services/employees/employee.service';
+import * as reportService from '../services/reportService';
+import { getEmployees, getDepartments } from '@modules/employees';
 import {
   BarChart,
   Bar,
@@ -23,7 +23,7 @@ import {
 import { FiArrowLeft, FiBookOpen } from 'react-icons/fi';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
+import { AnalyticsMethodologyModal } from '@modules/analytics';
 
 const AttendanceReports = () => {
   const navigate = useNavigate();

@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { getPayrollConfig, savePayrollConfig } from '@/services/payroll/payrollConfig.service';
+import { getPayrollConfig, savePayrollConfig } from '../services/payrollConfig.service';
 import {
   FiCheck,
   FiInfo,
@@ -21,7 +21,7 @@ import {
   FiShield,
   FiBriefcase,
 } from 'react-icons/fi';
-import Modal from '@/components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 const SYSTEM_DYNAMIC_RUBROS = {
   'Sueldo Base': {

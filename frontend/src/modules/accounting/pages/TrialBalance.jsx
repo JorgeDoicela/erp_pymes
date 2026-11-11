@@ -7,10 +7,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getTrialBalance, getPeriods, getGeneralLedger } from '@/services/accounting.service';
+import { getTrialBalance, getPeriods, getGeneralLedger } from '../services/accounting.service';
 import { FiFileText, FiPrinter, FiEye, FiX, FiBookOpen } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import useAutoSync from '@/hooks/useAutoSync.js';
+import useAutoSync from '@core/hooks/useAutoSync';
 
 const TrialBalance = () => {
   const [balance, setBalance] = useState([]);

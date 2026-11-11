@@ -15,8 +15,8 @@ import {
   verifyExpedientDocument,
   uploadExpedientDocument,
   deleteExpedientDocument,
-} from '@/services/employees/onboardingOffboarding.service';
-import Modal from '@/components/common/Modal';
+} from '../services/onboardingOffboarding.service';
+import Modal from '@core/ui/Modal';
 
 // Componentes modulares desacoplados de employees/expedient
 import ExpedientDirectoryView from '@/modules/employees/components/expedient/ExpedientDirectoryView';
@@ -110,7 +110,15 @@ export default function EmployeeExpedient() {
     } else {
       loadDirectory();
     }
-  }, [employeeId, isDetailMode, isMyExpedient, isAdmin, navigate, loadExpedientDetail, loadDirectory]);
+  }, [
+    employeeId,
+    isDetailMode,
+    isMyExpedient,
+    isAdmin,
+    navigate,
+    loadExpedientDetail,
+    loadDirectory,
+  ]);
 
   // Manejo de Subida de Archivos
   const handleFileUpload = (e) => {

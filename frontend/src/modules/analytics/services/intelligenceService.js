@@ -12,7 +12,7 @@
  * automáticamente el token y los errores de autenticación.
  */
 
-import intelligenceClient from '@/modules/analytics/api/intelligenceClient';
+import intelligenceClient from '../api/intelligenceClient';
 
 /**
  * Obtiene el dashboard completo con todos los insights

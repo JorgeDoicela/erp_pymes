@@ -13,7 +13,7 @@ import {
   updateAccount,
   deleteAccount,
   getGeneralLedger,
-} from '@/services/accounting.service';
+} from '../services/accounting.service';
 import {
   FiPlus,
   FiFolder,
@@ -27,7 +27,7 @@ import {
   FiBookOpen,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import useAutoSync from '@/hooks/useAutoSync.js';
+import useAutoSync from '@core/hooks/useAutoSync';
 
 const ChartOfAccounts = () => {
   const [accounts, setAccounts] = useState([]);

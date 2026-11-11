@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyPendingEvaluations, getMyResultsList } from '@/services/evaluation.service';
+import { getMyPendingEvaluations, getMyResultsList } from '../services/evaluation.service';
 import { FiCheckCircle, FiArrowRight, FiList, FiBarChart2, FiCalendar } from 'react-icons/fi';
 
 const MyEvaluations = () => {

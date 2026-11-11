@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { FiExternalLink } from 'react-icons/fi';
-import Modal from '../../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 export const ReviewExpedientDocModal = ({
   isOpen,

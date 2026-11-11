@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createEvaluationTemplate } from '@/services/evaluation.service';
+import { createEvaluationTemplate } from '../services/evaluation.service';
 import { FiPlus, FiTrash2, FiSave, FiArrowLeft, FiFileText } from 'react-icons/fi';
 
 const CreateEvaluation = () => {

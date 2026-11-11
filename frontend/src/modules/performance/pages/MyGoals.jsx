@@ -8,14 +8,9 @@
 
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import {
-  getMyGoals,
-  createGoal,
-  updateGoalProgress,
-  deleteGoal,
-} from '@/services/goals.service';
+import { getMyGoals, createGoal, updateGoalProgress, deleteGoal } from '../services/goals.service';
 import { FiPlus, FiTrash2, FiClock, FiTarget, FiActivity } from 'react-icons/fi';
-import Modal from '@/components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 const MyGoals = () => {
   const [goals, setGoals] = useState([]);

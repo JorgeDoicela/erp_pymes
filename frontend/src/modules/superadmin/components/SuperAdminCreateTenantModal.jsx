@@ -7,9 +7,9 @@
  */
 
 import { useState } from 'react';
-import api from '@/api/axios.js';
+import api from '@core/api/httpClient';
 import toast from 'react-hot-toast';
-import Modal from '../common/Modal.jsx';
+import Modal from '@core/ui/Modal';
 
 export default function SuperAdminCreateTenantModal({ isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({

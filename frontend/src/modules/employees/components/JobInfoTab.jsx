@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { InfoItem } from './EmployeeHelpers';
-import { CONTRACT_TYPES } from '../../../constants/employeeOptions';
+import { CONTRACT_TYPES } from '../constants/employeeOptions';
 
 export const JobInfoTab = ({ employee }) => {
   return (
@@ -17,9 +17,7 @@ export const JobInfoTab = ({ employee }) => {
       <InfoItem label="Cargo / Posición" value={employee.position} />
       <InfoItem
         label="Fecha de Ingreso"
-        value={
-          employee.hireDate ? new Date(employee.hireDate).toLocaleDateString('es-EC') : 'N/A'
-        }
+        value={employee.hireDate ? new Date(employee.hireDate).toLocaleDateString('es-EC') : 'N/A'}
       />
       <InfoItem
         label="Modalidad de Contrato"

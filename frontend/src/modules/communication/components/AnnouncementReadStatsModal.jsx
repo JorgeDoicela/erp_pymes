@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import Modal from '../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 export const AnnouncementReadStatsModal = ({ isOpen, onClose, selectedStats }) => {
   return (
@@ -35,8 +35,7 @@ export const AnnouncementReadStatsModal = ({ isOpen, onClose, selectedStats }) =
                 Lecturas Confirmadas
               </span>
               <span className="text-base font-semibold text-gray-900 tabular-nums">
-                {selectedStats.metrics?.totalReads} /{' '}
-                {selectedStats.metrics?.totalActiveEmployees}
+                {selectedStats.metrics?.totalReads} / {selectedStats.metrics?.totalActiveEmployees}
               </span>
               <span className="text-[11px] text-gray-500 block">
                 ({selectedStats.metrics?.readPercentage}%)
@@ -94,9 +93,7 @@ export const AnnouncementReadStatsModal = ({ isOpen, onClose, selectedStats }) =
                     <span>
                       {emp.firstName} {emp.lastName}
                     </span>
-                    <span className="text-[11px] text-gray-400">
-                      {emp.department || 'General'}
-                    </span>
+                    <span className="text-[11px] text-gray-400">{emp.department || 'General'}</span>
                   </div>
                 ))
               ) : (

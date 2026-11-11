@@ -80,3 +80,22 @@ export const hireCandidate = async (id, data) => {
   const response = await api.post(`/recruitment/applications/${id}/hire`, data);
   return response.data;
 };
+
+const recruitmentService = {
+  getPublicVacancies,
+  getRecruitmentStats,
+  createVacancy,
+  getVacancies,
+  updateVacancyStatus,
+  deleteVacancy,
+  getApplicationsByVacancy,
+  getApplicationDetails,
+  updateApplicationStatus,
+  deleteApplication,
+  addApplicationNote,
+  scheduleInterview,
+  evaluateCandidate,
+  hireCandidate,
+};
+
+export default recruitmentService;

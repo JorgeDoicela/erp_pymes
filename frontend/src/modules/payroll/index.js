@@ -23,9 +23,12 @@ export { default as GeneratePayrollModal } from './components/GeneratePayrollMod
 export { default as PayrollDetailsTable } from './components/PayrollDetailsTable.jsx';
 
 // Servicios
-export * as payrollConfigService from './services/payrollConfig.service.js';
+export { default as payrollConfigService } from './services/payrollConfig.service.js';
+export * from './services/payrollConfig.service.js';
 export * as benefitsService from './services/benefits.service.js';
+export * from './services/benefits.service.js';
 export * as salaryAdvanceService from './services/salaryAdvance.service.js';
+export * from './services/salaryAdvance.service.js';
 
 // Utils
 export * from './utils/generatePayslipPDF.js';

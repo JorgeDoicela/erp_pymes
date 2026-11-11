@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import Modal from '../../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 export const LegalGuideModal = ({ isOpen, onClose }) => {
   return (
@@ -46,12 +46,12 @@ export const LegalGuideModal = ({ isOpen, onClose }) => {
               06h00.
             </li>
             <li>
-              <strong>Horas Suplementarias (50%):</strong> Trabajo posterior a la jornada hasta
-              las 24h00 (<span className="font-mono">Hora × 1.50</span>).
+              <strong>Horas Suplementarias (50%):</strong> Trabajo posterior a la jornada hasta las
+              24h00 (<span className="font-mono">Hora × 1.50</span>).
             </li>
             <li>
-              <strong>Horas Extraordinarias (100%):</strong> Fines de semana, feriados o de 24h00
-              a 06h00 (<span className="font-mono">Hora × 2.00</span>).
+              <strong>Horas Extraordinarias (100%):</strong> Fines de semana, feriados o de 24h00 a
+              06h00 (<span className="font-mono">Hora × 2.00</span>).
             </li>
           </ul>
         </div>
@@ -60,20 +60,20 @@ export const LegalGuideModal = ({ isOpen, onClose }) => {
           <h4 className="font-bold text-gray-900 text-xs">3. Aportes IESS y Beneficios de Ley</h4>
           <ul className="list-disc pl-4 text-[11px] text-gray-600 space-y-1">
             <li>
-              <strong>Aporte Personal IESS (9.45%):</strong> Descuento sobre sueldo + horas extras
-              + comisiones.
+              <strong>Aporte Personal IESS (9.45%):</strong> Descuento sobre sueldo + horas extras +
+              comisiones.
             </li>
             <li>
               <strong>Aporte Patronal IESS (12.15%):</strong> Costo a cargo de la empresa (no se
               descuenta al trabajador).
             </li>
             <li>
-              <strong>Décimo Tercero (8.33%):</strong> Bono navideño equivalente a la doceava
-              parte de lo ganado.
+              <strong>Décimo Tercero (8.33%):</strong> Bono navideño equivalente a la doceava parte
+              de lo ganado.
             </li>
             <li>
-              <strong>Décimo Cuarto ($38.33):</strong> Bono escolar equivalente a 1/12 del SBU
-              ($470 / 12).
+              <strong>Décimo Cuarto ($38.33):</strong> Bono escolar equivalente a 1/12 del SBU ($470
+              / 12).
             </li>
             <li>
               <strong>Fondos de Reserva (8.33%):</strong> A partir del año (mes 13) de labores

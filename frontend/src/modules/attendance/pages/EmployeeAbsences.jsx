@@ -7,8 +7,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import absenceService from '../../../services/attendance/absenceService';
-import * as employeeService from '../../../services/employees/employee.service';
+import absenceService from '../services/absenceService';
+import { employeeService } from '@modules/employees';
 import { FiCalendar, FiPlus, FiX } from 'react-icons/fi';
 
 const EmployeeAbsences = () => {

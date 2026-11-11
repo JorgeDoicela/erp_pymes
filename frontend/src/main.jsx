@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App.jsx';
-import ErrorBoundary from './components/common/ErrorBoundary.jsx';
+import ErrorBoundary from '@core/feedback/ErrorBoundary';
 
 // En desarrollo: desregistrar SW y limpiar caches automáticamente
 // Evita logs de Workbox y conflictos con Vite HMR

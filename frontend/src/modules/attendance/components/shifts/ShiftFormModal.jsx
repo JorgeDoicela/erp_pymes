@@ -7,15 +7,9 @@
  */
 
 import React from 'react';
-import Modal from '../../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
-export const ShiftFormModal = ({
-  isOpen,
-  onClose,
-  shiftModal,
-  setShiftModal,
-  onSaveShift,
-}) => {
+export const ShiftFormModal = ({ isOpen, onClose, shiftModal, setShiftModal, onSaveShift }) => {
   const calculateShiftHours = (start, end, breakMin = 60) => {
     try {
       if (!start || !end) return '';
@@ -88,9 +82,7 @@ export const ShiftFormModal = ({
                 max="120"
                 className={`${inputClass} font-mono tabular-nums`}
                 value={shiftModal.toleranceMinutes}
-                onChange={(e) =>
-                  setShiftModal({ ...shiftModal, toleranceMinutes: e.target.value })
-                }
+                onChange={(e) => setShiftModal({ ...shiftModal, toleranceMinutes: e.target.value })}
               />
             </div>
             <div>

@@ -9,8 +9,8 @@
 import React, { useState } from 'react';
 import { FiMapPin, FiShield, FiLock, FiCheckCircle } from 'react-icons/fi';
 import { MdFingerprint } from 'react-icons/md';
-import { updateConsentTracking } from '../../../services/employees/employee.service';
-import Modal from '../../../components/common/Modal';
+import { updateConsentTracking } from '@modules/employees';
+import Modal from '@core/ui/Modal';
 
 export const TrackingConsentModal = ({
   isOpen,
@@ -93,15 +93,15 @@ export const TrackingConsentModal = ({
           <div className="flex items-start gap-2.5">
             <MdFingerprint size={16} className="text-gray-700 shrink-0 mt-0.5" />
             <p className="text-gray-700 leading-snug">
-              <strong className="text-gray-900">Biometría local:</strong> Confirmación de
-              identidad privada en tu dispositivo sin transmitir plantillas dactilares.
+              <strong className="text-gray-900">Biometría local:</strong> Confirmación de identidad
+              privada en tu dispositivo sin transmitir plantillas dactilares.
             </p>
           </div>
           <div className="flex items-start gap-2.5 border-t border-gray-200 pt-2.5">
             <FiMapPin size={15} className="text-gray-700 shrink-0 mt-0.5" />
             <p className="text-gray-700 leading-snug">
-              <strong className="text-gray-900">Geolocalización:</strong> Captura de coordenadas
-              GPS exclusivamente en el instante exacto del registro de jornada.
+              <strong className="text-gray-900">Geolocalización:</strong> Captura de coordenadas GPS
+              exclusivamente en el instante exacto del registro de jornada.
             </p>
           </div>
           <div className="flex items-start gap-2.5 border-t border-gray-200 pt-2.5">

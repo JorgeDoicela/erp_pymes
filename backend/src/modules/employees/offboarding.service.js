@@ -404,4 +404,5 @@ class OffboardingService {
   }
 }
 
+export { OffboardingService };
 export default new OffboardingService();

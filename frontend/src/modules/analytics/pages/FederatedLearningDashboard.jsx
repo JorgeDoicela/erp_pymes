@@ -8,8 +8,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { exportAcademicDataset } from '@/services/intelligenceService';
-import intelligenceClient from '@/api/intelligenceClient';
+import { exportAcademicDataset } from '../services/intelligenceService';
+import intelligenceClient from '../api/intelligenceClient';
 import {
   FiShield,
   FiCpu,
@@ -26,7 +26,7 @@ import {
   FiArrowLeft,
   FiBookOpen,
 } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
+import AnalyticsMethodologyModal from '../components/AnalyticsMethodologyModal';
 import {
   AreaChart,
   Area,

@@ -9,13 +9,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { FiX, FiChevronDown, FiChevronRight } from 'react-icons/fi';
-import { getSectionsByRole, getModulesByRole } from '@/constants/modules';
-import NormaLogo from '@/core/ui/NormaLogo';
+import { getSectionsByRole, getModulesByRole } from '@core/constants/modules.jsx';
+import { NormaLogo } from '@core/ui';
 import {
   isSuperAdmin as checkIsSuperAdmin,
   getRoleLabel as getRoleTitle,
   ROLES,
-} from '@/core/constants/roles.js';
+} from '@core/constants/roles';
 
 const STORAGE_KEY = 'erp_sidebar_collapsed_sections';
 

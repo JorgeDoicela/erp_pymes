@@ -9,10 +9,10 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import DeveloperCard from '@/core/ui/DeveloperCard';
+import { DeveloperCard } from '@core/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { isSuperAdmin as checkIsSuperAdmin } from '@/core/constants/roles.js';
+import { isSuperAdmin as checkIsSuperAdmin } from '@core/constants/roles';
 
 const DashboardLayout = ({ children, user, onLogout, title }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

@@ -8,9 +8,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import shiftService from '@/services/attendance/shiftService';
-import * as employeeService from '@/services/employees/employee.service';
-import Modal from '@/components/common/Modal';
+import shiftService from '../services/shiftService';
+import { employeeService } from '@modules/employees';
+import Modal from '@core/ui/Modal';
 
 const ALL_DAYS = [
   { key: 'Lunes', short: 'Lun' },

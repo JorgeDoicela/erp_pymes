@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import api from '@/api/axios';
+import api from '@core/api/httpClient';
 
 // --- EXPEDIENTE DIGITAL ---
 export const getAllExpedientsSummary = async () => {
@@ -171,3 +171,25 @@ export const getOffboardings = async (params = {}) => {
     throw new Error(error.response?.data?.message || 'Error al cargar lista de salidas');
   }
 };
+
+const onboardingOffboardingService = {
+  getAllExpedientsSummary,
+  getMyExpedient,
+  getEmployeeExpedient,
+  uploadExpedientDocument,
+  verifyExpedientDocument,
+  deleteExpedientDocument,
+  getAllAssets,
+  getMyAssets,
+  getEmployeeAssets,
+  deliverAsset,
+  returnAsset,
+  updateAsset,
+  deleteAsset,
+  simulateSettlement,
+  startOffboarding,
+  updateChecklistStep,
+  getOffboardings,
+};
+
+export default onboardingOffboardingService;

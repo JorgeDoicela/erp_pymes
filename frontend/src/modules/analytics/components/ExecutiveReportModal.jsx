@@ -7,7 +7,7 @@
  */
 
 import { FiPrinter, FiShield, FiDollarSign } from 'react-icons/fi';
-import Modal from './common/Modal';
+import Modal from '@core/ui/Modal';
 
 /**
  * Modal de Generación e Impresión de Informe Ejecutivo para Directivos / Junta

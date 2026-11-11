@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { FiPrinter } from 'react-icons/fi';
-import Modal from '../../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 const CATEGORY_MAP = {
   EQUIPMENT: 'Cómputo y Tecnología',
@@ -71,9 +71,7 @@ export const AssetActaModal = ({ isOpen, onClose, selectedAsset }) => {
                 Empresa / Empleador
               </span>
               <p className="font-semibold text-gray-900">NORMA ERP S.A.</p>
-              <p className="text-gray-500 text-[11px] font-mono tabular-nums">
-                RUC: 1792345678001
-              </p>
+              <p className="text-gray-500 text-[11px] font-mono tabular-nums">RUC: 1792345678001</p>
             </div>
 
             <div className="p-3 bg-gray-50 border border-gray-200 rounded-[4px] space-y-1">
@@ -137,10 +135,10 @@ export const AssetActaModal = ({ isOpen, onClose, selectedAsset }) => {
           <div className="p-3 bg-gray-50/70 border border-gray-200 rounded-[4px] text-[11px] text-gray-600 space-y-1.5 leading-relaxed text-justify">
             <p className="font-semibold text-gray-900">TÉRMINOS Y CONDICIONES DE CUSTODIA:</p>
             <p>
-              El colaborador declara recibir en perfecto estado de funcionamiento el bien
-              descrito, comprometiéndose a utilizarlo exclusivamente para fines laborales y a velar
-              por su adecuado cuidado y custodia. En caso de desvinculación laboral, el bien deberá
-              ser devuelto a la empresa de forma obligatoria e inmediata.
+              El colaborador declara recibir en perfecto estado de funcionamiento el bien descrito,
+              comprometiéndose a utilizarlo exclusivamente para fines laborales y a velar por su
+              adecuado cuidado y custodia. En caso de desvinculación laboral, el bien deberá ser
+              devuelto a la empresa de forma obligatoria e inmediata.
             </p>
           </div>
 

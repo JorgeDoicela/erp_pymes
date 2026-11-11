@@ -8,13 +8,9 @@
 
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import {
-  requestAdvance,
-  getMyAdvances,
-  cancelAdvance,
-} from '@/services/payroll/salaryAdvance.service';
+import { requestAdvance, getMyAdvances, cancelAdvance } from '../services/salaryAdvance.service';
 import { PlusIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
-import Modal from '@/components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 const MySalaryAdvances = () => {
   const [advances, setAdvances] = useState([]);

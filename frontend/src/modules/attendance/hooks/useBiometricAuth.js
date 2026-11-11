@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import systemService from '../../../services/systemService';
+import { systemService } from '@modules/superadmin';
 
 export function useBiometricAuth() {
   const [biometricEnabled, setBiometricEnabled] = useState(false);
@@ -101,7 +101,8 @@ export function useBiometricAuth() {
       console.error('Biometric registration error:', err);
       let msg = err.response?.data?.message || err.message || 'Error al registrar biometría.';
       if (err.name === 'NotAllowedError') {
-        msg = 'La operación fue cancelada por el usuario o expiró el tiempo de espera del lector biométrico.';
+        msg =
+          'La operación fue cancelada por el usuario o expiró el tiempo de espera del lector biométrico.';
       } else if (err.name === 'InvalidStateError') {
         msg = 'Esta credencial biométrica ya se encuentra registrada en este dispositivo.';
         setHasBiometricRegistered(true);

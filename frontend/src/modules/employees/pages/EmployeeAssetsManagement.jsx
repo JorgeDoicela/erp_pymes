@@ -13,8 +13,8 @@ import {
   updateAsset,
   returnAsset,
   deleteAsset,
-} from '@/services/employees/onboardingOffboarding.service';
-import { getEmployees } from '@/services/employees/employee.service';
+} from '../services/onboardingOffboarding.service';
+import { getEmployees } from '../services/employee.service';
 import { FiSearch, FiPlus, FiRefreshCw } from 'react-icons/fi';
 
 // Componentes modulares desacoplados de employees/assets
@@ -309,8 +309,7 @@ export default function EmployeeAssetsManagement() {
                   : 'text-gray-500 hover:text-gray-800'
               }`}
             >
-              Todos{' '}
-              <span className="font-mono tabular-nums text-gray-400">({counts.total})</span>
+              Todos <span className="font-mono tabular-nums text-gray-400">({counts.total})</span>
             </button>
             <button
               type="button"

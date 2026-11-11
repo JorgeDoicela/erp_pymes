@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import absenceService from '@/services/attendance/absenceService';
+import absenceService from '../services/absenceService';
 
 const MONTH_NAMES = [
   'Enero',

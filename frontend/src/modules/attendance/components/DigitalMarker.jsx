@@ -7,10 +7,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import attendanceService from '@/services/attendance/attendanceService';
+import attendanceService from '../services/attendanceService';
 import { FiShield, FiMapPin } from 'react-icons/fi';
 import { MdFingerprint } from 'react-icons/md';
-import Modal from '../common/Modal';
+import Modal from '@core/ui/Modal';
 
 // Subcomponentes y hooks desacoplados del dominio attendance
 import { useBiometricAuth } from '@/modules/attendance/hooks/useBiometricAuth';
@@ -46,7 +46,12 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     return Boolean(freshUser?.trackingConsent ?? currentUser?.trackingConsent);
   });
 
-  const [message, setMessage] = useState({ type: '', text: '', showMapLink: false, lastCoords: null });
+  const [message, setMessage] = useState({
+    type: '',
+    text: '',
+    showMapLink: false,
+    lastCoords: null,
+  });
   const [foundEmployee, setFoundEmployee] = useState(null);
   const [recordData, setRecordData] = useState(null);
 
@@ -107,52 +112,50 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     }
   };
 
-  const checkStatus = useCallback(
-    async (id = employeeId) => {
-      const cleanId = id?.toString().trim();
-      if (!cleanId) return;
-      setLoading(true);
-      setMessage({ type: '', text: '' });
-      try {
-        const res = await attendanceService.getStatus(cleanId);
-        if (res.success) {
-          setStatus(res.data.status);
-          if (res.data) setRecordData(res.data);
-          if (res.data.employee) {
-            setFoundEmployee(res.data.employee);
-            setEmployeeId(res.data.employee.id);
-            if (res.data.employee.hasBiometric !== undefined) {
-              setHasBiometricRegistered(Boolean(res.data.employee.hasBiometric));
-            }
-            if (res.data.employee.trackingConsent !== undefined) {
-              const hasConsent = Boolean(res.data.employee.trackingConsent);
-              setConsentStatus(hasConsent);
-              if (hasConsent) {
-                setShowConsent(false);
-                const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
-                if (savedUser && !savedUser.trackingConsent) {
-                  savedUser.trackingConsent = true;
-                  localStorage.setItem('user', JSON.stringify(savedUser));
-                  window.dispatchEvent(new Event('norma:user-updated'));
-                  window.dispatchEvent(new Event('emplifi:user-updated'));
-                }
+  const checkStatus = async (targetId) => {
+    const cleanId = (targetId || employeeId)?.toString().trim();
+    if (!cleanId) return;
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const res = await attendanceService.getStatus(cleanId);
+      if (res.success) {
+        setStatus(res.data.status);
+        if (res.data) setRecordData(res.data);
+        if (res.data.employee) {
+          setFoundEmployee(res.data.employee);
+          setEmployeeId(res.data.employee.id);
+          if (res.data.employee.hasBiometric !== undefined) {
+            setHasBiometricRegistered(Boolean(res.data.employee.hasBiometric));
+          }
+          if (res.data.employee.trackingConsent !== undefined) {
+            const hasConsent = Boolean(res.data.employee.trackingConsent);
+            setConsentStatus(hasConsent);
+            if (hasConsent) {
+              setShowConsent(false);
+              const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+              if (savedUser && !savedUser.trackingConsent) {
+                savedUser.trackingConsent = true;
+                localStorage.setItem('user', JSON.stringify(savedUser));
+                window.dispatchEvent(new Event('norma:user-updated'));
+                window.dispatchEvent(new Event('emplifi:user-updated'));
               }
             }
           }
-        } else {
-          setMessage({
-            type: 'error',
-            text: res.message || res.error || 'Empleado no encontrado. Verifique la cédula ingresada.',
-          });
         }
-      } catch (err) {
-        setMessage({ type: 'error', text: err?.message || 'Error al buscar empleado.' });
-      } finally {
-        setLoading(false);
+      } else {
+        setMessage({
+          type: 'error',
+          text:
+            res.message || res.error || 'Empleado no encontrado. Verifique la cédula ingresada.',
+        });
       }
-    },
-    [employeeId, setHasBiometricRegistered]
-  );
+    } catch (err) {
+      setMessage({ type: 'error', text: err?.message || 'Error al buscar empleado.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getLocation = () => {
     return new Promise((resolve, reject) => {
@@ -171,7 +174,8 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
           let msg = 'Error obteniendo ubicación';
           if (error.code === error.PERMISSION_DENIED) msg = 'Permiso de ubicación denegado';
           else if (error.code === error.POSITION_UNAVAILABLE) msg = 'Ubicación no disponible';
-          else if (error.code === error.TIMEOUT) msg = 'Tiempo de espera agotado al obtener ubicación';
+          else if (error.code === error.TIMEOUT)
+            msg = 'Tiempo de espera agotado al obtener ubicación';
           reject(new Error(msg));
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }

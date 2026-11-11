@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { useEmployees } from '@/hooks/employees/useEmployees';
+import { useEmployees } from '../hooks/useEmployees';
 import { InputField, SelectField } from '../components/EmployeeHelpers';
 import {
   CIVIL_STATUS_OPTIONS,
@@ -18,7 +18,7 @@ import {
   BANK_OPTIONS,
   DEPARTMENTS,
   ROLE_OPTIONS,
-} from '@/constants/employeeOptions';
+} from '../constants/employeeOptions';
 import {
   validateCedula,
   validateEmail,
@@ -26,7 +26,7 @@ import {
   validateSalary,
   validateDates,
   validateAge,
-} from '@/utils/validationUtils';
+} from '@core/utils/validationUtils';
 
 const RegisterEmployee = ({ token }) => {
   const navigate = useNavigate();

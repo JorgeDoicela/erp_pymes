@@ -8,9 +8,15 @@
 
 import React from 'react';
 import { FiExternalLink } from 'react-icons/fi';
-import Modal from '../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
-export const CandidateResumeModal = ({ isOpen, onClose, candidateName, resumeUrl, getResumeUrl }) => {
+export const CandidateResumeModal = ({
+  isOpen,
+  onClose,
+  candidateName,
+  resumeUrl,
+  getResumeUrl,
+}) => {
   const finalUrl = getResumeUrl(resumeUrl);
 
   return (

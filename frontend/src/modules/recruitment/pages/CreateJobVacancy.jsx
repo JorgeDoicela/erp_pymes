@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { createVacancy } from '@/services/recruitment.service';
+import { createVacancy } from '../services/recruitment.service';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiSave } from 'react-icons/fi';
 import toast from 'react-hot-toast';

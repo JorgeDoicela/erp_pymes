@@ -7,8 +7,7 @@
  */
 
 import React from 'react';
-import { Modal } from '../../../../core/ui/Modal.jsx';
-import { Button } from '../../../../core/ui/Button.jsx';
+import { Modal, Button } from '@core/ui';
 
 export const ConfirmDeactivateModal = ({
   isOpen,
@@ -34,12 +33,7 @@ export const ConfirmDeactivateModal = ({
           <Button variant="secondary" onClick={onClose} disabled={loading}>
             Mantener
           </Button>
-          <Button
-            variant="destructive"
-            onClick={onConfirm}
-            loading={loading}
-            disabled={loading}
-          >
+          <Button variant="destructive" onClick={onConfirm} loading={loading} disabled={loading}>
             Confirmar Cancelación
           </Button>
         </>
@@ -48,8 +42,8 @@ export const ConfirmDeactivateModal = ({
       <div className="text-xs text-gray-600 leading-relaxed space-y-2">
         <p>
           Se cancelará el beneficio <strong>"{benefit.name}"</strong> por un monto de{' '}
-          <strong className="font-mono">${Number(benefit.amount || 0).toFixed(2)}</strong> asignado a{' '}
-          <strong>{employeeName}</strong>.
+          <strong className="font-mono">${Number(benefit.amount || 0).toFixed(2)}</strong> asignado
+          a <strong>{employeeName}</strong>.
         </p>
         <p className="text-gray-400">
           Esta bonificación dejará de liquidarse en los próximos roles de pago.

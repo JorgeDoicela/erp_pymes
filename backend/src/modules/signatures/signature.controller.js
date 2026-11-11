@@ -193,5 +193,5 @@ class SignatureController {
   }
 }
 
+export { SignatureController };
 export default new SignatureController();
-

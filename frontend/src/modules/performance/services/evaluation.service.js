@@ -52,3 +52,17 @@ export const getMyResultsList = async () => {
   const response = await api.get('/performance/my-results');
   return response.data;
 };
+
+const evaluationService = {
+  getPerformanceStats,
+  getEmployeeEvaluations,
+  createEvaluationTemplate,
+  getEvaluationTemplates,
+  assignEvaluation,
+  getMyPendingEvaluations,
+  submitAssessment,
+  getEvaluationResults,
+  getMyResultsList,
+};
+
+export default evaluationService;

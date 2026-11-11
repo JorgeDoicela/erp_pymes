@@ -8,8 +8,8 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getEvaluationTemplates, assignEvaluation } from '@/services/evaluation.service';
-import { getEmployees } from '@/services/employees/employee.service';
+import { getEvaluationTemplates, assignEvaluation } from '../services/evaluation.service';
+import { getEmployees } from '@modules/employees';
 import { FiSave, FiArrowLeft, FiSearch, FiCheckSquare, FiSquare } from 'react-icons/fi';
 
 const AssignEvaluation = () => {

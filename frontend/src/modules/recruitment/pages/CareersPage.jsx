@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { getPublicVacancies } from '@/services/recruitment.service';
+import { getPublicVacancies } from '../services/recruitment.service';
 import {
   FiBriefcase,
   FiMapPin,

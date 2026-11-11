@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import entrepreneurshipService from '@/services/entrepreneurship.service';
+import entrepreneurshipService from '../services/entrepreneurship.service';
 import { FiPieChart, FiUsers, FiPlus, FiBriefcase, FiTrash2 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 

@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { Button } from '../../../../core/ui/Button.jsx';
+import { Button } from '@core/ui';
 
 const STATUS_MAP = {
   ACTIVE: { label: 'PENDIENTE', cls: 'text-emerald-800 border-emerald-300' },
@@ -25,12 +25,7 @@ const TYPE_MAP = {
   ALLOWANCE: { label: 'Viático Comisión' },
 };
 
-export const BenefitsTable = ({
-  benefits = [],
-  loading = false,
-  onEdit,
-  onCancel,
-}) => {
+export const BenefitsTable = ({ benefits = [], loading = false, onEdit, onCancel }) => {
   if (loading) {
     return (
       <div className="p-12 text-center text-gray-400 text-xs">
@@ -75,7 +70,9 @@ export const BenefitsTable = ({
                 <span className="text-[11px] text-gray-500 font-medium">{tp.label}</span>
               </div>
               <div className="flex justify-between items-center pt-1">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-medium border bg-transparent ${st.cls}`}>
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-medium border bg-transparent ${st.cls}`}
+                >
                   {st.label}
                 </span>
                 <div className="flex gap-1.5">
@@ -126,7 +123,8 @@ export const BenefitsTable = ({
                       {b.employee?.firstName} {b.employee?.lastName}
                     </p>
                     <p className="text-[11px] text-gray-400 font-mono">
-                      {b.employee?.department || 'General'} · {b.employee?.position || 'Colaborador'}
+                      {b.employee?.department || 'General'} ·{' '}
+                      {b.employee?.position || 'Colaborador'}
                     </p>
                   </td>
                   <td className="py-2.5 px-4 font-medium text-gray-800">{b.name}</td>
@@ -138,7 +136,9 @@ export const BenefitsTable = ({
                     ${Number(b.amount || 0).toFixed(2)}
                   </td>
                   <td className="py-2.5 px-4 text-center">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border bg-transparent ${st.cls}`}>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-medium border bg-transparent ${st.cls}`}
+                    >
                       {st.label}
                     </span>
                   </td>

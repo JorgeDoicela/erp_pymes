@@ -19,7 +19,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import * as intelligenceService from '../services/intelligenceService.js';
+import * as intelligenceService from '../services/intelligenceService';
 
 /**
  * Simulador de Escenarios Financieros y Retención de Talento

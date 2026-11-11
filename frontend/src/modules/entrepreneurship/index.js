@@ -17,3 +17,4 @@ export { default as KanbanRoadmap } from './pages/KanbanRoadmap.jsx';
 export { default as PitchOptimizer } from './pages/PitchOptimizer.jsx';
 
 export { default as entrepreneurshipService } from './services/entrepreneurship.service.js';
+export * from './services/entrepreneurship.service.js';

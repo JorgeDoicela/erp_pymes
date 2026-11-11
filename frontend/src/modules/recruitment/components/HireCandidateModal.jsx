@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import Modal from '../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 export const HireCandidateModal = ({
   isOpen,
@@ -61,9 +61,7 @@ export const HireCandidateModal = ({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-              Tipo de Contrato
-            </label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Contrato</label>
             <select
               value={hireData.contractType}
               onChange={(e) => setHireData({ ...hireData, contractType: e.target.value })}

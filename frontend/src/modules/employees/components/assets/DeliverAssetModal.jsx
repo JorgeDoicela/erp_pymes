@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import Modal from '../../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 export const DeliverAssetModal = ({
   isOpen,
@@ -19,12 +19,7 @@ export const DeliverAssetModal = ({
   actionLoading,
 }) => {
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Registrar Entrega de Activo / EPP"
-      size="lg"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Registrar Entrega de Activo / EPP" size="lg">
       <form onSubmit={onSubmit} className="space-y-3.5 text-xs">
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -106,9 +101,7 @@ export const DeliverAssetModal = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-              Fecha de Entrega
-            </label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Fecha de Entrega</label>
             <input
               type="date"
               className="w-full bg-white border border-gray-200 rounded-[4px] px-3 py-1.5 text-xs text-gray-800 font-mono focus:outline-none focus:border-blue-600 tabular-nums"

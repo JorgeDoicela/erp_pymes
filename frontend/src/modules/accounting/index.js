@@ -16,3 +16,4 @@ export { default as PeriodsManagement } from './pages/PeriodsManagement.jsx';
 
 // Servicios
 export { default as accountingService } from './services/accounting.service.js';
+export * from './services/accounting.service.js';

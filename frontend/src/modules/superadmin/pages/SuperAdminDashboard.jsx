@@ -8,15 +8,15 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import api from '@/api/axios.js';
+import api from '@core/api/httpClient';
 import toast from 'react-hot-toast';
 import { FiSearch, FiChevronLeft, FiChevronRight, FiLogIn, FiEye } from 'react-icons/fi';
-import TenantDetailDrawer from '@/components/superadmin/TenantDetailDrawer.jsx';
-import SuperAdminOverview from '@/components/superadmin/SuperAdminOverview.jsx';
-import SuperAdminMetricsView from '@/components/superadmin/SuperAdminMetricsView.jsx';
-import SuperAdminAuditView from '@/components/superadmin/SuperAdminAuditView.jsx';
-import SuperAdminCreateTenantModal from '@/components/superadmin/SuperAdminCreateTenantModal.jsx';
-import useAutoSync from '@/hooks/useAutoSync.js';
+import TenantDetailDrawer from '../components/TenantDetailDrawer';
+import SuperAdminOverview from '../components/SuperAdminOverview';
+import SuperAdminMetricsView from '../components/SuperAdminMetricsView';
+import SuperAdminAuditView from '../components/SuperAdminAuditView';
+import SuperAdminCreateTenantModal from '../components/SuperAdminCreateTenantModal';
+import useAutoSync from '@core/hooks/useAutoSync';
 
 const PLAN_LIMITS = {
   ESSENTIAL: 25,

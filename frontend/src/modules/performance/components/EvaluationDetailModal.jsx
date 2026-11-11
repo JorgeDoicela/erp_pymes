@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import Modal from '../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 const EvaluationDetailModal = ({ isOpen, onClose, template }) => {
   if (!template) return null;

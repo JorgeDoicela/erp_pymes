@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { InfoItem } from './EmployeeHelpers';
-import { CIVIL_STATUS_OPTIONS } from '../../../constants/employeeOptions';
+import { CIVIL_STATUS_OPTIONS } from '../constants/employeeOptions';
 
 export const PersonalInfoTab = ({ employee }) => {
   return (
@@ -21,9 +21,7 @@ export const PersonalInfoTab = ({ employee }) => {
       <InfoItem
         label="Fecha de Nacimiento"
         value={
-          employee.birthDate
-            ? new Date(employee.birthDate).toLocaleDateString('es-EC')
-            : 'N/A'
+          employee.birthDate ? new Date(employee.birthDate).toLocaleDateString('es-EC') : 'N/A'
         }
       />
       <InfoItem

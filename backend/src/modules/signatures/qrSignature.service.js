@@ -220,5 +220,5 @@ class QrSignatureService {
   }
 }
 
+export { QrSignatureService };
 export default new QrSignatureService();
-

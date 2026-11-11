@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import Modal from '../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 export const PublishAnnouncementModal = ({
   isOpen,
@@ -21,12 +21,7 @@ export const PublishAnnouncementModal = ({
     'w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors';
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Publicar Comunicado Oficial"
-      size="lg"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Publicar Comunicado Oficial" size="lg">
       <form onSubmit={onSubmit}>
         <div className="space-y-3.5">
           <div>
@@ -71,9 +66,7 @@ export const PublishAnnouncementModal = ({
           </div>
 
           <div>
-            <label className="block font-medium text-gray-700 mb-1">
-              Contenido del Comunicado
-            </label>
+            <label className="block font-medium text-gray-700 mb-1">Contenido del Comunicado</label>
             <textarea
               rows="4"
               required
@@ -104,9 +97,7 @@ export const PublishAnnouncementModal = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-medium text-gray-700 mb-1">
-                Fijar en Tablón Hasta
-              </label>
+              <label className="block font-medium text-gray-700 mb-1">Fijar en Tablón Hasta</label>
               <input
                 type="date"
                 className={inputClass}

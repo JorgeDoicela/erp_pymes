@@ -8,7 +8,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getEvaluationResults } from '@/services/evaluation.service';
+import { getEvaluationResults } from '../services/evaluation.service';
 import {
   FiDownload,
   FiArrowLeft,

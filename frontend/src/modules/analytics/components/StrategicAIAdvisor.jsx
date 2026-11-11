@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiCpu, FiSend, FiCheckCircle, FiTrendingUp, FiZap, FiBriefcase } from 'react-icons/fi';
-import * as intelligenceService from '../services/intelligenceService.js';
+import * as intelligenceService from '../services/intelligenceService';
 
 /**
  * Asistente Ejecutivo de Inteligencia Artificial para RRHH y Directores

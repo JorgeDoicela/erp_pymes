@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '@/api/axios'; // Direct axios call or service update needed
+import api from '@core/api/httpClient'; // Direct axios call or service update needed
 import { FiBriefcase, FiMapPin, FiClock, FiUpload, FiCheckCircle } from 'react-icons/fi';
 
 const JobApplication = () => {

@@ -7,10 +7,7 @@
  */
 
 import React from 'react';
-import { Modal } from '../../../../core/ui/Modal.jsx';
-import { Button } from '../../../../core/ui/Button.jsx';
-import { Input } from '../../../../core/ui/Input.jsx';
-import { Select } from '../../../../core/ui/Select.jsx';
+import { Modal, Button, Input, Select } from '@core/ui';
 
 const BENEFIT_TYPES = [
   { value: 'BONUS', label: 'Bono Imponible' },
@@ -137,7 +134,9 @@ export const BulkBenefitModal = ({
             loading={loading}
             disabled={loading || bulkData.selectedEmployees.length === 0}
           >
-            {loading ? 'Procesando...' : `Asignar a ${bulkData.selectedEmployees.length} Colaboradores`}
+            {loading
+              ? 'Procesando...'
+              : `Asignar a ${bulkData.selectedEmployees.length} Colaboradores`}
           </Button>
         </>
       }

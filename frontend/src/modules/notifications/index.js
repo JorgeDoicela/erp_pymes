@@ -11,4 +11,5 @@ export { default as NotificationSettings } from './pages/NotificationSettings.js
 export { default as NotificationBell } from './components/NotificationBell.jsx';
 
 export * as notificationService from './services/notification.service.js';
+export { default as notificationServiceDefault } from './services/notification.service.js';
 export { default as useNotificationSocket } from './hooks/useNotificationSocket.js';

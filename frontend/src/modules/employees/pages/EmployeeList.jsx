@@ -8,9 +8,9 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useEmployees } from '@/hooks/employees/useEmployees';
+import { useEmployees } from '../hooks/useEmployees';
 import { FiDownload } from 'react-icons/fi';
-import MaskedText from '@/components/common/MaskedText';
+import MaskedText from '@core/ui/MaskedText';
 
 const EmployeeList = ({ token }) => {
   const navigate = useNavigate();

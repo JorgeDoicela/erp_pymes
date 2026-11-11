@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { generatePayslipPDF } from '../../../utils/generatePayslipPDF';
+import { generatePayslipPDF } from '../utils/generatePayslipPDF';
 
 const SIG_STATUS_MAP = {
   SIGNED: { label: 'Firmado', cls: 'text-emerald-800 bg-transparent border-emerald-300' },

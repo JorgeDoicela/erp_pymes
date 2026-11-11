@@ -10,8 +10,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
-import NormaLogo from '../../../components/common/NormaLogo';
-import DeveloperCard from '../../../components/common/DeveloperCard';
+import NormaLogo from '@core/ui/NormaLogo';
+import DeveloperCard from '@core/ui/DeveloperCard';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 

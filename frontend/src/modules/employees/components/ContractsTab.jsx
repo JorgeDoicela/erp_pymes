@@ -8,10 +8,10 @@
 
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { createContract } from '../../../services/employees/employee.service';
+import { createContract } from '../services/employee.service';
 import { EmptyState, InputField } from './EmployeeHelpers';
-import { CONTRACT_TYPES } from '../../../constants/employeeOptions';
-import Modal from '../../../components/common/Modal';
+import { CONTRACT_TYPES } from '../constants/employeeOptions';
+import Modal from '@core/ui/Modal';
 
 const ContractsTab = ({ contracts, user, employeeId, token, onUpdate }) => {
   const [isCreatingContract, setIsCreatingContract] = useState(false);

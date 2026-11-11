@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { getEmployees } from '@/services/employees/employee.service';
+import { getEmployees } from '@modules/employees';
 import {
   getBenefits,
   getBenefitStats,
@@ -15,8 +15,8 @@ import {
   updateBenefit,
   deactivateBenefit,
   bulkCreateBenefit,
-} from '@/services/payroll/benefits.service';
-import Modal from '@/components/common/Modal';
+} from '../services/benefits.service';
+import Modal from '@core/ui/Modal';
 
 const STATUS_MAP = {
   ACTIVE: { label: 'PENDIENTE', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },

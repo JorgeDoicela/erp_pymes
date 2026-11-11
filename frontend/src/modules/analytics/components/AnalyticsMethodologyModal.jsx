@@ -19,7 +19,7 @@ import {
   FiTarget,
   FiZap,
 } from 'react-icons/fi';
-import Modal from '../common/Modal';
+import Modal from '@core/ui/Modal';
 import 'katex/dist/katex.min.css';
 import {
   RsiCalibrationInteractive,
@@ -28,7 +28,7 @@ import {
   MorlParetoInteractive,
   TemporalAttentionInteractive,
   FTTransformerInteractive,
-} from '../methodology/AnalyticsVisualizers.jsx';
+} from './AnalyticsVisualizers.jsx';
 
 /**
  * =========================================================================================

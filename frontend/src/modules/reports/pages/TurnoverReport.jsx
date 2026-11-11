@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getTurnoverReport } from '@/services/analytics.service';
+import { getTurnoverReport, AnalyticsMethodologyModal } from '@modules/analytics';
 import {
   PieChart,
   Pie,
@@ -23,7 +23,6 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { FiArrowLeft, FiBookOpen } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
 
 const TurnoverReport = () => {
   const [data, setData] = useState(null);

@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getMyPendingEvaluations, submitAssessment } from '@/services/evaluation.service';
+import { getMyPendingEvaluations, submitAssessment } from '../services/evaluation.service';
 import { FiSave, FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 
 const TakeEvaluation = () => {

@@ -19,3 +19,4 @@ export * from './components';
 
 // Servicios
 export { default as recruitmentService } from './services/recruitment.service.js';
+export * from './services/recruitment.service.js';

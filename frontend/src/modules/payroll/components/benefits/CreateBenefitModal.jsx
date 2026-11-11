@@ -7,10 +7,7 @@
  */
 
 import React from 'react';
-import { Modal } from '../../../../core/ui/Modal.jsx';
-import { Button } from '../../../../core/ui/Button.jsx';
-import { Input } from '../../../../core/ui/Input.jsx';
-import { Select } from '../../../../core/ui/Select.jsx';
+import { Modal, Button, Input, Select } from '@core/ui';
 
 const BENEFIT_TYPES = [
   { value: 'BONUS', label: 'Bono Imponible (Aporta IESS 9.45%)' },

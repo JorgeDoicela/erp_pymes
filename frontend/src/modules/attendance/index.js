@@ -19,9 +19,12 @@ export { default as BiometricSettings } from './components/BiometricSettings.jsx
 export * from './components';
 
 // Servicios
-export * as attendanceService from './services/attendanceService.js';
-export * as absenceService from './services/absenceService.js';
-export * as shiftService from './services/shiftService.js';
+export { default as attendanceService } from './services/attendanceService.js';
+export * from './services/attendanceService.js';
+export { default as absenceService } from './services/absenceService.js';
+export * from './services/absenceService.js';
+export { default as shiftService } from './services/shiftService.js';
+export * from './services/shiftService.js';
 
 // Hooks
 export * from './hooks/useBiometricAuth.js';

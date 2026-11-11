@@ -8,10 +8,10 @@
 
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { createSkill, deleteSkill } from '../../../services/employees/employee.service';
+import { createSkill, deleteSkill } from '../services/employee.service';
 import { getLevelColor, EmptyState, InputField } from './EmployeeHelpers';
-import { SKILL_LEVELS } from '../../../constants/employeeOptions';
-import Modal from '../../../components/common/Modal';
+import { SKILL_LEVELS } from '../constants/employeeOptions';
+import Modal from '@core/ui/Modal';
 
 const SkillsTab = ({ skills, user, employeeId, token, onUpdate, onAddSkill, onDeleteSkill }) => {
   const [isAddingSkill, setIsAddingSkill] = useState(false);

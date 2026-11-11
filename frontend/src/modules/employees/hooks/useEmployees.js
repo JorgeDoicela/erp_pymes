@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getEmployees, createEmployee } from '@/services/employees/employee.service';
+import { getEmployees, createEmployee } from '../services/employee.service';
 
 export const useEmployees = (token) => {
   const [employees, setEmployees] = useState([]);

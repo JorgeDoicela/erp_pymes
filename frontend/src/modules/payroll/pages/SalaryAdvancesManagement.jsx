@@ -7,15 +7,15 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { getEmployees } from '@/services/employees/employee.service';
+import { getEmployees } from '@modules/employees';
 import {
   getAdvances,
   getAdvanceStats,
   approveAdvance,
   rejectAdvance,
   createAdvanceByAdmin,
-} from '@/services/payroll/salaryAdvance.service';
-import Modal from '@/components/common/Modal';
+} from '../services/salaryAdvance.service';
+import Modal from '@core/ui/Modal';
 
 const STATUS_MAP = {
   APPROVED: { label: 'APROBADO', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },

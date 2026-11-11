@@ -8,8 +8,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPerformanceReport } from '@/services/analytics.service';
-import { getDepartments } from '@/services/employees/employee.service';
+import { getPerformanceReport, AnalyticsMethodologyModal } from '@modules/analytics';
+import { getDepartments } from '@modules/employees';
 import {
   BarChart,
   Bar,
@@ -21,7 +21,6 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { FiArrowLeft, FiBookOpen } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
 
 const PerformanceReport = () => {
   const [data, setData] = useState(null);

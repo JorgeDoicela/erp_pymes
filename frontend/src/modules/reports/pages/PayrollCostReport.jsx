@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPayrollCostReport } from '@/services/analytics.service';
+import { getPayrollCostReport, AnalyticsMethodologyModal } from '@modules/analytics';
 import {
   AreaChart,
   Area,
@@ -25,7 +25,6 @@ import {
   Bar,
 } from 'recharts';
 import { FiArrowLeft, FiBookOpen } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
 
 const PayrollCostReport = () => {
   const [data, setData] = useState(null);

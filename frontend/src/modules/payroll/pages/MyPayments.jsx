@@ -12,9 +12,9 @@ import {
   getMyPayrolls,
   signPayslipDetail,
   disputePayslipDetail,
-} from '@/services/payroll/payrollConfig.service';
-import { generatePayslipPDF } from '@/utils/generatePayslipPDF';
-import Modal from '@/components/common/Modal';
+} from '../services/payrollConfig.service';
+import { generatePayslipPDF } from '../utils/generatePayslipPDF';
+import Modal from '@core/ui/Modal';
 import {
   FiFileText,
   FiEye,

@@ -9,8 +9,8 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FiChevronRight, FiArrowRight } from 'react-icons/fi';
-import NormaLogo from '@/components/common/NormaLogo';
-import DeveloperCard from '@/components/common/DeveloperCard';
+import NormaLogo from '@core/ui/NormaLogo';
+import DeveloperCard from '@core/ui/DeveloperCard';
 
 function Home() {
   // Calculadora rápida de nómina en vivo para PyMEs (Ecuador)

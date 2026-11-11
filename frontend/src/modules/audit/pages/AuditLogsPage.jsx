@@ -7,9 +7,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { getAuditLogs, getAuditStats } from '@/services/audit.service';
-import useAutoSync from '@/hooks/useAutoSync';
-import Modal from '@/components/common/Modal';
+import { getAuditLogs, getAuditStats } from '../services/audit.service';
+import useAutoSync from '@core/hooks/useAutoSync';
+import Modal from '@core/ui/Modal';
 
 const translations = {
   actions: {

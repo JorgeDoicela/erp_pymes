@@ -13,8 +13,8 @@ import {
   getRecruitmentStats,
   updateVacancyStatus,
   deleteVacancy,
-} from '@/services/recruitment.service';
-import Modal from '@/components/common/Modal';
+} from '../services/recruitment.service';
+import Modal from '@core/ui/Modal';
 
 const RecruitmentDashboard = () => {
   const navigate = useNavigate();

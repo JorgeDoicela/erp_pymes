@@ -7,10 +7,12 @@
  */
 
 export { default as SuperAdminDashboard } from './pages/SuperAdminDashboard.jsx';
-export { default as AdminSettings } from './pages/AdminSettings.jsx';
 
-export { default as CompanyFormModal } from './components/CompanyFormModal.jsx';
-export { default as TenantAuditModal } from './components/TenantAuditModal.jsx';
-export { default as TenantCredentialsModal } from './components/TenantCredentialsModal.jsx';
+export { default as SuperAdminOverview } from './components/SuperAdminOverview.jsx';
+export { default as SuperAdminMetricsView } from './components/SuperAdminMetricsView.jsx';
+export { default as SuperAdminAuditView } from './components/SuperAdminAuditView.jsx';
+export { default as SuperAdminCreateTenantModal } from './components/SuperAdminCreateTenantModal.jsx';
+export { default as TenantDetailDrawer } from './components/TenantDetailDrawer.jsx';
 
 export { default as systemService } from './services/systemService.js';
+export * from './services/systemService.js';

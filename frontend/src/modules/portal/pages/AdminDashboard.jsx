@@ -8,10 +8,10 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { getSectionsByRole } from '@/constants/modules';
-import * as intelligenceService from '@/services/intelligenceService';
-import api from '@/api/axios';
-import SmartModuleHub from '@/components/dashboard/SmartModuleHub';
+import { getSectionsByRole } from '@core/constants/modules.jsx';
+import { intelligenceService } from '@modules/analytics';
+import api from '@core/api/httpClient';
+import SmartModuleHub from '../components/SmartModuleHub';
 
 function AdminDashboard({ user }) {
   const navigate = useNavigate();
@@ -80,7 +80,8 @@ function AdminDashboard({ user }) {
       try {
         let pendingCount = 0;
         try {
-          const { getMyPendingEvaluations } = await import('@/modules/performance/services/evaluation.service');
+          const { getMyPendingEvaluations } =
+            await import('@/modules/performance/services/evaluation.service');
           const evaluations = await getMyPendingEvaluations();
           pendingCount = evaluations.filter((e) => e.status !== 'COMPLETED').length;
         } catch (e) {

@@ -7,9 +7,9 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import notificationService from '@/services/notifications/notification.service';
+import notificationService from '../services/notification.service';
 import { useNavigate } from 'react-router-dom';
-import useNotificationSocket from '@/hooks/useNotificationSocket';
+import useNotificationSocket from '../hooks/useNotificationSocket';
 import { toast } from 'react-hot-toast';
 
 const NotificationBell = () => {

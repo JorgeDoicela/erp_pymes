@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import Modal from '../../../components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 export const ConfirmDeleteAnnouncementModal = ({
   announcement,
@@ -44,8 +44,8 @@ export const ConfirmDeleteAnnouncementModal = ({
     >
       {announcement && (
         <p className="text-xs text-gray-500">
-          Se retirará del tablón el comunicado "{announcement.title}" junto con todos sus
-          registros de acuse de recibo.
+          Se retirará del tablón el comunicado "{announcement.title}" junto con todos sus registros
+          de acuse de recibo.
         </p>
       )}
     </Modal>

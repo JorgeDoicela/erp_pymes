@@ -7,3 +7,4 @@
  */
 
 export * from './roles.js';
+export * from './modules.jsx';

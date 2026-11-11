@@ -8,3 +8,4 @@
 
 export { default as AuditLogsPage } from './pages/AuditLogsPage.jsx';
 export { default as auditService } from './services/audit.service.js';
+export * from './services/audit.service.js';

@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import api from '@/api/axios';
+import api from '@core/api/httpClient';
 
 export const getAttendanceReport = async (startDate, endDate, department, employeeId) => {
   try {

@@ -9,8 +9,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import api from '@/api/axios';
-import Modal from '@/components/common/Modal';
+import api from '@core/api/httpClient';
+import Modal from '@core/ui/Modal';
 
 const ExpiringContracts = () => {
   const navigate = useNavigate();

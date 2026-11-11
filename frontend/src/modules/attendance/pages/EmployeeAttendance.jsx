@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import DigitalMarker from '../../../components/attendance/DigitalMarker';
+import DigitalMarker from '../components/DigitalMarker';
 
 const EmployeeAttendance = ({ user }) => {
   return (

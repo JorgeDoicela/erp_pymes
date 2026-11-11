@@ -11,9 +11,9 @@ import { Link } from 'react-router-dom';
 import {
   getTemporalAttentionSummary,
   calibrateTemporalAttention,
-} from '@/services/intelligenceService';
+} from '../services/intelligenceService';
 import { FiRefreshCw, FiSliders, FiArrowLeft, FiBookOpen } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
+import AnalyticsMethodologyModal from '../components/AnalyticsMethodologyModal';
 import {
   XAxis,
   YAxis,

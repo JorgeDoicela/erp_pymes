@@ -8,8 +8,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { generateCustomReport } from '@/services/analytics.service';
-import { getDepartments } from '@/services/employees/employee.service';
+import { generateCustomReport } from '@modules/analytics';
+import { getDepartments } from '@modules/employees';
 import {
   FiDatabase,
   FiCheckSquare,

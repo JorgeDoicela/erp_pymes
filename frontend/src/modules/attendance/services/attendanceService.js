@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import api from '@/api/axios';
+import api from '@core/api/httpClient';
 
 const markAttendance = async (employeeId, type, location = null) => {
   try {

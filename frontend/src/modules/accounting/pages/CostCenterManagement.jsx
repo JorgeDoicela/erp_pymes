@@ -13,7 +13,7 @@ import {
   updateCostCenter,
   deleteCostCenter,
   getGeneralLedger,
-} from '@/services/accounting.service';
+} from '../services/accounting.service';
 import {
   FiBriefcase,
   FiPlus,

@@ -35,22 +35,22 @@ import {
   Cell,
 } from 'recharts';
 
-import * as intelligenceService from '@/services/intelligenceService.js';
-import useAutoSync from '@/hooks/useAutoSync.js';
-import IntelligentInsightCard from '@/components/IntelligentInsightCard.jsx';
-import RiskScoreIndicator from '@/components/RiskScoreIndicator.jsx';
-import DepartmentComparison from '@/components/DepartmentComparison.jsx';
-import HealthMeter from '@/components/HealthMeter.jsx';
-import EmployeeScoreCard from '@/components/EmployeeScoreCard.jsx';
-import PredictiveTrendChart from '@/components/PredictiveTrendChart.jsx';
-import Loading from '@/components/Loading.jsx';
-import ErrorState from '@/components/ErrorState.jsx';
-import ExecutiveKPIBanner from '@/components/ExecutiveKPIBanner.jsx';
-import WhatIfScenarioSimulator from '@/components/WhatIfScenarioSimulator.jsx';
+import * as intelligenceService from '../services/intelligenceService';
+import useAutoSync from '@core/hooks/useAutoSync';
+import IntelligentInsightCard from '../components/IntelligentInsightCard';
+import RiskScoreIndicator from '../components/RiskScoreIndicator';
+import DepartmentComparison from '../components/DepartmentComparison';
+import HealthMeter from '../components/HealthMeter';
+import EmployeeScoreCard from '../components/EmployeeScoreCard';
+import PredictiveTrendChart from '../components/PredictiveTrendChart';
+import Loading from '@core/feedback/Loading';
+import ErrorState from '@core/feedback/ErrorState';
+import ExecutiveKPIBanner from '../components/ExecutiveKPIBanner';
+import WhatIfScenarioSimulator from '../components/WhatIfScenarioSimulator';
 import DataQualityPanel from '../components/DataQualityPanel.jsx';
-import ExecutiveReportModal from '@/components/ExecutiveReportModal.jsx';
-import AdvancedBusinessAnalytics from '@/components/AdvancedBusinessAnalytics.jsx';
-import MethodologyModal from '@/components/MethodologyModal.jsx';
+import ExecutiveReportModal from '../components/ExecutiveReportModal';
+import AdvancedBusinessAnalytics from '../components/AdvancedBusinessAnalytics';
+import MethodologyModal from '../components/MethodologyModal';
 
 /**
  * Dashboard Inteligente de Gestión

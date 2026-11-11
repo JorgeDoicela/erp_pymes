@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { BlockMath } from 'react-katex';
-import Modal from './common/Modal';
+import Modal from '@core/ui/Modal';
 import 'katex/dist/katex.min.css';
 import {
   WeibullInteractive,
@@ -19,7 +19,7 @@ import {
   OhiInteractive,
   DataQualityInteractive,
   PayrollBurnoutInteractive,
-} from './methodology/IntelligenceVisualizers.jsx';
+} from './IntelligenceVisualizers.jsx';
 
 // Formulas LaTeX de los Motores Operativos del Centro de Inteligencia (/intelligence)
 const FORMULAS = {

@@ -167,5 +167,5 @@ class ComplianceService {
   }
 }
 
+export { ComplianceService };
 export default new ComplianceService();
-

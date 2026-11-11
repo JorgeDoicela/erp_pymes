@@ -12,7 +12,7 @@ import {
   runMorlOptimization,
   getMorlHistory,
   exportAcademicDataset,
-} from '@/services/intelligenceService';
+} from '../services/intelligenceService';
 import {
   FiTarget,
   FiPlay,
@@ -24,7 +24,7 @@ import {
   FiArrowLeft,
   FiBookOpen,
 } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
+import AnalyticsMethodologyModal from '../components/AnalyticsMethodologyModal';
 import {
   ScatterChart,
   Scatter,

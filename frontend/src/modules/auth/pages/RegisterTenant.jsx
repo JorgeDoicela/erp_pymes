@@ -20,8 +20,8 @@ import {
   FiCheck,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import NormaLogo from '../../../components/common/NormaLogo';
-import api from '../../../api/axios';
+import NormaLogo from '@core/ui/NormaLogo';
+import api from '@core/api/httpClient';
 
 export default function RegisterTenant() {
   const navigate = useNavigate();

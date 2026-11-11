@@ -216,5 +216,5 @@ class StatutoryBenefitsService {
   }
 }
 
+export { StatutoryBenefitsService };
 export default new StatutoryBenefitsService();
-

@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiLock, FiEye, FiEyeOff, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
-import NormaLogo from '../../../components/common/NormaLogo';
+import NormaLogo from '@core/ui/NormaLogo';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 

@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { FiInfo, FiLock } from 'react-icons/fi';
-import MaskedText from '../../../components/common/MaskedText';
+import MaskedText from '@core/ui/MaskedText';
 
 // Detecta si un valor parece ser texto cifrado (hex largo con ':') que nunca se desencriptó
 const looksEncrypted = (val) => {

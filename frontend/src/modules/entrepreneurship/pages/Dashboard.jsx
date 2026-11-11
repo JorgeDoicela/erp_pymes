@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FiCompass, FiPlus, FiBox, FiTrendingUp, FiCheckCircle, FiClock } from 'react-icons/fi';
-import entrepreneurshipService from '@/services/entrepreneurship.service';
+import entrepreneurshipService from '../services/entrepreneurship.service';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 

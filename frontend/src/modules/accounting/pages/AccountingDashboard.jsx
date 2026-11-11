@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPeriods, getJournalEntries, getTrialBalance } from '@/services/accounting.service';
+import { getPeriods, getJournalEntries, getTrialBalance } from '../services/accounting.service';
 import {
   FiTrendingUp,
   FiBookOpen,

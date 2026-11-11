@@ -27,9 +27,12 @@ export * from './components/expedient';
 export * from './components/assets';
 
 // Servicios
-export * as employeeService from './services/employee.service.js';
-export * as onboardingOffboardingService from './services/onboardingOffboarding.service.js';
+export { default as employeeService } from './services/employee.service.js';
+export * from './services/employee.service.js';
+export { default as onboardingOffboardingService } from './services/onboardingOffboarding.service.js';
+export * from './services/onboardingOffboarding.service.js';
 
-// Hooks & Utils
+// Hooks & Utils & Constants
+export * from './constants/employeeOptions.js';
 export * from './hooks/useEmployees.js';
 export * from './utils/generateCertificatePDF.js';

@@ -9,11 +9,11 @@
 import { useState, useEffect } from 'react';
 import { FiMenu, FiGlobe, FiBriefcase } from 'react-icons/fi';
 import { useNavigate, Link } from 'react-router-dom';
-import NotificationBell from '@/modules/notifications/components/NotificationBell';
-import api from '@/core/api/httpClient.js';
+import { NotificationBell } from '@modules/notifications';
+import api from '@core/api/httpClient';
 import toast from 'react-hot-toast';
 
-import { isSuperAdmin as checkIsSuperAdmin } from '@/core/constants/roles.js';
+import { isSuperAdmin as checkIsSuperAdmin } from '@core/constants/roles';
 
 const Header = ({ user, onMenuClick, isSidebarOpen = true, title = 'Panel de Control' }) => {
   const navigate = useNavigate();

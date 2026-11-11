@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getSatisfactionReport } from '@/services/analytics.service';
+import { getSatisfactionReport, AnalyticsMethodologyModal } from '@modules/analytics';
 import {
   Radar,
   RadarChart,
@@ -19,7 +19,6 @@ import {
   Tooltip,
 } from 'recharts';
 import { FiArrowLeft, FiBookOpen } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
 
 const SatisfactionReport = () => {
   const [data, setData] = useState(null);

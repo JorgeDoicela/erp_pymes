@@ -8,9 +8,9 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import systemService from '@/services/systemService';
-import api from '@/api/axios.js';
-import LocationPickerMap from '@/components/common/LocationPickerMap';
+import { systemService } from '@modules/superadmin';
+import api from '@core/api/httpClient';
+import LocationPickerMap from '@core/ui/LocationPickerMap';
 
 const SETTINGS_TABS = [
   { id: 'COMPANY', label: 'Identificación & Plan' },

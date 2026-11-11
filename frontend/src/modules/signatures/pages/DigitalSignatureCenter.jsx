@@ -8,14 +8,14 @@
 
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { getEmployees } from '@/services/employees/employee.service';
+import { getEmployees } from '@modules/employees';
 import {
   generateQrSignature,
   verifyQrSignature,
   inspectP12Certificate,
   signDocumentWithP12,
   verifyP12Signature,
-} from '@/services/signatures/signature.service';
+} from '../services/signature.service';
 import {
   FiCheck,
   FiCopy,

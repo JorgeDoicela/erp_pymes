@@ -9,7 +9,5 @@
 export { default as Home } from './pages/Home.jsx';
 export { default as AdminDashboard } from './pages/AdminDashboard.jsx';
 export { default as EmployeeDashboard } from './pages/EmployeeDashboard.jsx';
-export { default as MobileEmployeePortal } from './pages/MobileEmployeePortal.jsx';
-export { default as AdminSettings } from './pages/AdminSettings.jsx';
 
 export { default as SmartModuleHub } from './components/SmartModuleHub.jsx';

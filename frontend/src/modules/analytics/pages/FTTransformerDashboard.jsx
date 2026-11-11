@@ -8,9 +8,9 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getFTTransformerComparison, trainFTTransformer } from '@/services/intelligenceService';
+import { getFTTransformerComparison, trainFTTransformer } from '../services/intelligenceService';
 import { FiRefreshCw, FiSliders, FiArrowLeft, FiBookOpen } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
+import AnalyticsMethodologyModal from '../components/AnalyticsMethodologyModal';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const FTTransformerDashboard = () => {

@@ -8,8 +8,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import notificationService from '@/services/notifications/notification.service';
-import useNotificationSocket from '@/hooks/useNotificationSocket';
+import notificationService from '../services/notification.service';
+import useNotificationSocket from '../hooks/useNotificationSocket';
 
 const NotificationsPage = () => {
   const navigate = useNavigate();

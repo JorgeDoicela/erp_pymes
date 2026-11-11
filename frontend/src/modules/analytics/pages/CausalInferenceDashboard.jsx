@@ -12,7 +12,7 @@ import {
   runCausalSimulation,
   getCausalHistory,
   exportAcademicDataset,
-} from '@/services/intelligenceService';
+} from '../services/intelligenceService';
 import {
   FiGitPullRequest,
   FiPlay,
@@ -23,7 +23,7 @@ import {
   FiArrowLeft,
   FiBookOpen,
 } from 'react-icons/fi';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
+import AnalyticsMethodologyModal from '../components/AnalyticsMethodologyModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const CausalInferenceDashboard = () => {

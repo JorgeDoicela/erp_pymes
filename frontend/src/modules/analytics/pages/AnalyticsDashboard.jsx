@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getDashboardData } from '@/services/analytics.service';
+import { getDashboardData } from '../services/analytics.service';
 import {
   FiDollarSign,
   FiLayers,
@@ -35,7 +35,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
-import AnalyticsMethodologyModal from '@/components/analytics/AnalyticsMethodologyModal';
+import AnalyticsMethodologyModal from '../components/AnalyticsMethodologyModal';
 
 const OPERATIONAL_REPORTS = [
   {

@@ -6,13 +6,15 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiClock, FiCalendar, FiDollarSign, FiFolder, FiUser, FiCheckSquare } from 'react-icons/fi';
-import { getSectionsByRole } from '@/constants/modules';
-import api from '@/api/axios';
-import SmartModuleHub from '@/components/dashboard/SmartModuleHub';
-import MobileEmployeePortal from './MobileEmployeePortal';
+import { getSectionsByRole } from '@core/constants/modules.jsx';
+import api from '@core/api/httpClient';
+import { Loading } from '@core/feedback';
+import SmartModuleHub from '../components/SmartModuleHub';
+
+const MobileEmployeePortal = lazy(() => import('./MobileEmployeePortal'));
 
 function EmployeeDashboard({ user }) {
   const navigate = useNavigate();
@@ -50,7 +52,7 @@ function EmployeeDashboard({ user }) {
       setLoadingMetrics(true);
       try {
         const [evalsRes, absencesRes, profileRes] = await Promise.allSettled([
-          import('@/modules/performance/services/evaluation.service').then((m) => m.getMyPendingEvaluations()),
+          import('@modules/performance').then((m) => m.getMyPendingEvaluations()),
           api.get('/absences/my-requests'),
           api.get('/employees/profile').catch(() => null),
         ]);
@@ -97,7 +99,11 @@ function EmployeeDashboard({ user }) {
   }, [user]);
 
   if (isMobile) {
-    return <MobileEmployeePortal user={user} />;
+    return (
+      <Suspense fallback={<Loading />}>
+        <MobileEmployeePortal user={user} />
+      </Suspense>
+    );
   }
 
   return (

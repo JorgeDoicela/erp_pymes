@@ -8,9 +8,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import absenceService from '@/services/attendance/absenceService';
+import absenceService from '../services/absenceService';
 import TeamCalendar from './TeamCalendar';
-import Modal from '@/components/common/Modal';
+import Modal from '@core/ui/Modal';
 
 const STATUS_MAP = {
   PENDING: { label: 'Pendiente', cls: 'text-amber-800 bg-amber-50 border-amber-200' },

@@ -15,7 +15,7 @@ import {
   getAnnouncementStats,
   deleteAnnouncement,
   getBirthdays,
-} from '../../../services/communication/announcement.service';
+} from '../services/announcement.service';
 import {
   AnnouncementsFeed,
   AnnouncementsBirthdaysTab,

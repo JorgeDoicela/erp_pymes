@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CONTRACT_TYPES } from '../../../constants/employeeOptions';
+import { CONTRACT_TYPES } from '../constants/employeeOptions';
 
 export const EmployeeProfileHeader = ({
   employee,

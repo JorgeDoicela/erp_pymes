@@ -27,3 +27,12 @@ export const deleteGoal = async (id) => {
   const response = await api.delete(`/goals/${id}`);
   return response.data;
 };
+
+const goalsService = {
+  getMyGoals,
+  createGoal,
+  updateGoalProgress,
+  deleteGoal,
+};
+
+export default goalsService;

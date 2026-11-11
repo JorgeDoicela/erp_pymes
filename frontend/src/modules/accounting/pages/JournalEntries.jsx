@@ -16,7 +16,7 @@ import {
   getCostCenters,
   deleteJournalEntry,
   getPeriods,
-} from '@/services/accounting.service';
+} from '../services/accounting.service';
 import {
   FiBook,
   FiPlus,
@@ -29,7 +29,7 @@ import {
   FiRefreshCw,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import useAutoSync from '@/hooks/useAutoSync.js';
+import useAutoSync from '@core/hooks/useAutoSync';
 
 const JournalEntries = () => {
   const [entries, setEntries] = useState([]);

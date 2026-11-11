@@ -20,4 +20,6 @@ export { default as EvaluationDetailModal } from './components/EvaluationDetailM
 
 // Servicios
 export { default as evaluationService } from './services/evaluation.service.js';
+export * from './services/evaluation.service.js';
 export { default as goalsService } from './services/goals.service.js';
+export * from './services/goals.service.js';

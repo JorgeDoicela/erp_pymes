@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import api from '../../../api/axios.js';
+import api from '@core/api/httpClient';
 
 /**
  * Obtiene el panel consolidado de métricas del ODS 8

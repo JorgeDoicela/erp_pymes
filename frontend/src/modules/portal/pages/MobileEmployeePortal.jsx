@@ -9,12 +9,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { getMyPayrolls } from '@/services/payroll/payrollConfig.service';
-import { getMyAbsences, createAbsenceRequest } from '@/services/attendance/absenceService';
-import { clockIn, clockOut } from '@/services/attendance/attendanceService';
-import { generatePayslipPDF } from '@/utils/generatePayslipPDF';
-import { generateCertificatePDF } from '@/utils/generateCertificatePDF';
-import Modal from '@/components/common/Modal';
+import { getMyPayrolls, generatePayslipPDF } from '@modules/payroll';
+import { getMyAbsences, createAbsenceRequest, clockIn, clockOut } from '@modules/attendance';
+import { generateCertificatePDF } from '@modules/employees';
+import Modal from '@core/ui/Modal';
 import {
   HomeIcon,
   ClockIcon,
