@@ -72,27 +72,27 @@ const Header = ({
   };
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 md:px-8 sticky top-0 z-30 transition-all duration-300">
-      <div className="flex items-center gap-3 sm:gap-4">
+    <header className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-30 transition-all duration-300">
+      <div className="flex items-center gap-2.5 sm:gap-3.5">
         <button
           onClick={onMenuClick}
-          className="p-2 -ml-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer flex items-center justify-center"
+          className="p-1.5 -ml-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors cursor-pointer flex items-center justify-center"
           title={isSidebarOpen ? 'Ocultar menú lateral' : 'Mostrar menú lateral'}
           aria-label="Alternar menú lateral"
         >
-          <FiMenu size={20} />
+          <FiMenu size={18} />
         </button>
-        <h2 className="text-sm sm:text-base font-semibold text-gray-900 truncate">{title}</h2>
+        <h2 className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{title}</h2>
       </div>
 
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center gap-2.5 sm:gap-3.5">
         {isSuperAdmin && (
-          <div className="flex items-center gap-2 bg-gray-50 px-2.5 py-1 rounded border border-gray-200 text-xs text-gray-700 hover:border-gray-300 transition-colors">
+          <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200 text-xs text-gray-700 hover:border-gray-300 transition-colors">
             <FiBriefcase className="text-gray-400 shrink-0 text-xs" />
             <select
               value={selectedTenantId}
               onChange={handleTenantChange}
-              className="bg-transparent font-medium focus:outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate py-0.5 text-gray-800"
+              className="bg-transparent font-medium focus:outline-none cursor-pointer max-w-[150px] sm:max-w-[210px] truncate py-0.5 text-gray-800 text-xs"
               title="Selector de Empresa (SuperAdmin)"
             >
               <option value="">Modo Global (Todas las empresas)</option>
@@ -108,7 +108,7 @@ const Header = ({
         <NotificationBell />
 
         {/* Menú de Usuario y Cierre de Sesión */}
-        <div className="relative border-l border-gray-200 pl-3 sm:pl-4" ref={userMenuRef}>
+        <div className="relative border-l border-gray-200 pl-2.5 sm:pl-3.5" ref={userMenuRef}>
           <button
             type="button"
             onClick={() => setIsUserMenuOpen((prev) => !prev)}
@@ -120,15 +120,15 @@ const Header = ({
               <p className="text-xs font-semibold text-gray-900 leading-tight">
                 {user?.firstName || 'Admin'}
               </p>
-              <p className="text-[11px] font-medium text-gray-400 leading-tight">
+              <p className="text-[10px] font-medium text-gray-400 leading-tight">
                 {getRoleLabel(user)}
               </p>
             </div>
-            <div className="w-8 h-8 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center font-mono font-semibold text-xs shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-colors">
+            <div className="w-7 h-7 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center font-mono font-semibold text-xs shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-colors">
               {user?.firstName?.[0] || 'A'}
             </div>
             <FiChevronDown
-              size={12}
+              size={11}
               className={`text-gray-400 group-hover:text-gray-600 transition-transform duration-150 ${
                 isUserMenuOpen ? 'rotate-180' : ''
               }`}
@@ -137,7 +137,7 @@ const Header = ({
 
           {/* Menú Desplegable */}
           {isUserMenuOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded border border-gray-200 shadow-xl py-1 z-50">
+            <div className="absolute right-0 mt-1.5 w-56 bg-white rounded border border-gray-200 shadow-xl py-1 z-50">
               <div className="px-3.5 py-2.5 border-b border-gray-100">
                 <p className="text-xs font-semibold text-gray-900 truncate">
                   {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Usuario'}

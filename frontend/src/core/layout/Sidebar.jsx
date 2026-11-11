@@ -100,7 +100,7 @@ const Sidebar = ({ user, onClose }) => {
   return (
     <aside className="h-full w-full bg-white border-r border-gray-200 flex flex-col text-gray-600 transition-all duration-300">
       {/* Header del Logo */}
-      <div className="p-4 sm:p-5 flex items-center justify-between border-b border-gray-100">
+      <div className="h-12 px-4 sm:px-5 flex items-center justify-between border-b border-gray-100">
         <Link
           to={getHomePath()}
           onClick={() => {
@@ -108,7 +108,7 @@ const Sidebar = ({ user, onClose }) => {
           }}
           className="cursor-pointer block"
         >
-          <NormaLogo size="md" className="hover:opacity-85 transition-opacity" />
+          <NormaLogo size="sm" className="hover:opacity-85 transition-opacity" />
         </Link>
         {onClose && (
           <button
