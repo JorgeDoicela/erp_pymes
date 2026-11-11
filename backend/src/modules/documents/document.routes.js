@@ -12,7 +12,7 @@ import path from 'path';
 import fs from 'fs';
 import documentController from './document.controller.js';
 import { STORAGE_CONFIG } from '../../config/storage.config.js';
-import { authenticate, authorize } from '../../middleware/auth.middleware.js';
+import { authenticate, authorize } from '../auth/auth.middleware.js';
 
 const router = Router();
 

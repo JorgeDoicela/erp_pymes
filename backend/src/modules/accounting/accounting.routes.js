@@ -8,8 +8,8 @@
  */
 
 import express from 'express';
-import { authenticate, authorize } from '../../middleware/auth.middleware.js';
-import { validate } from '../../middleware/validate.middleware.js';
+import { authenticate, authorize } from '../auth/auth.middleware.js';
+import { validate } from '../../core/middleware/validate.middleware.js';
 import {
   createPeriodDto,
   createAccountDto,

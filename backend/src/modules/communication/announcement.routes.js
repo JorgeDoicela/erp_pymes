@@ -16,7 +16,7 @@ import {
   deleteAnnouncement,
   getBirthdays,
 } from './announcement.controller.js';
-import { authenticate, authorize } from '../../middleware/auth.middleware.js';
+import { authenticate, authorize } from '../auth/auth.middleware.js';
 
 const router = Router();
 
@@ -31,4 +31,3 @@ router.post('/:id/read', markAnnouncementReadOrAcknowledge);
 router.get('/:id/stats', authorize(['admin', 'hr']), getAnnouncementStats);
 
 export default router;
-

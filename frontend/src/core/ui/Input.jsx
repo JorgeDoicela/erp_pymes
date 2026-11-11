@@ -7,6 +7,7 @@
  */
 
 import React, { useId } from 'react';
+import { FiInfo } from 'react-icons/fi';
 
 export const Input = React.forwardRef(
   (
@@ -14,6 +15,7 @@ export const Input = React.forwardRef(
       label,
       error,
       helperText,
+      help,
       type = 'text',
       icon: Icon = null,
       className = '',
@@ -29,12 +31,25 @@ export const Input = React.forwardRef(
     return (
       <div className="w-full">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-xs font-medium text-gray-600 mb-1 select-none"
-          >
-            {label}
-          </label>
+          <div className="flex items-center gap-1.5 mb-1">
+            <label
+              htmlFor={inputId}
+              className="block text-xs font-medium text-gray-700 select-none"
+            >
+              {label}
+            </label>
+            {help && (
+              <div className="relative group/help">
+                <FiInfo
+                  size={12}
+                  className="text-gray-400 cursor-help hover:text-blue-600 transition-colors"
+                />
+                <div className="absolute bottom-full left-0 mb-1.5 w-52 p-2 bg-gray-900 border border-gray-800 rounded text-[11px] text-gray-200 opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible transition-all z-50 pointer-events-none shadow-lg">
+                  {help}
+                </div>
+              </div>
+            )}
+          </div>
         )}
         <div className="relative">
           {Icon && (
@@ -46,11 +61,11 @@ export const Input = React.forwardRef(
             ref={ref}
             id={inputId}
             type={type}
-            className={`w-full bg-white border text-xs text-gray-800 rounded px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed ${
+            className={`w-full bg-white border text-xs text-gray-900 rounded px-3 py-1.5 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed ${
               Icon ? 'pl-8' : ''
             } ${mono ? 'font-mono tabular-nums' : ''} ${
               error
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
                 : 'border-gray-200'
             } ${className}`}
             {...props}

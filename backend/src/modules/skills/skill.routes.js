@@ -8,7 +8,7 @@
 
 import { Router } from 'express';
 import skillController from './skill.controller.js';
-import { authenticate } from '../../middleware/auth.middleware.js';
+import { authenticate } from '../auth/auth.middleware.js';
 
 const router = Router();
 
@@ -16,4 +16,3 @@ router.post('/', authenticate, skillController.create);
 router.delete('/:id', authenticate, skillController.delete);
 
 export default router;
-

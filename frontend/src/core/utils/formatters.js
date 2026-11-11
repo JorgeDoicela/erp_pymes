@@ -6,12 +6,12 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-export const formatCurrency = (amount) => {
+export const formatCurrency = (amount, currency = 'USD', maximumFractionDigits = 2) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    currency,
+    minimumFractionDigits: maximumFractionDigits === 0 ? 0 : 2,
+    maximumFractionDigits,
   }).format(Number(amount) || 0);
 };
 

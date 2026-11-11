@@ -7,7 +7,7 @@
  */
 
 import announcementRepository from './announcement.repository.js';
-import auditRepository from '../audit/audit.repository.js';
+import { auditRepository } from '../audit/index.js';
 
 export class AnnouncementService {
   /**
@@ -302,4 +302,3 @@ export class AnnouncementService {
 }
 
 export default new AnnouncementService();
-

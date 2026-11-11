@@ -8,27 +8,30 @@
 
 import '../src/config/env.js';
 import { PrismaClient } from '@prisma/client';
-import { seedCleanup } from './seeds/cleanup.js';
-import { seedUsers } from './seeds/users.js';
-import { seedRecruitment } from './seeds/recruitment.js';
-import { seedPerformance } from './seeds/performance.js';
-import { seedPayroll } from './seeds/payroll.js';
-import { seedClimate } from './seeds/climate.js';
-import { seedCoreRecords } from './seeds/core_records.js';
-import { seedGoals } from './seeds/goals.js';
-import { seedBenefits } from './seeds/benefits.js';
-import { seedAttendance } from './seeds/attendance.js';
-import { seedAbsences } from './seeds/absences.js';
-import { seedDocuments } from './seeds/documents.js';
-import { seedAudit } from './seeds/audit.js';
-import { seedPayrollConfig } from './seeds/payroll_config.js';
-import { seedNotifications } from './seeds/notifications.js';
-import { seedAnnouncements } from './seeds/announcements.js';
-import { seedAccounting, seedJournalEntries } from './seeds/accounting.js';
-import { seedEntrepreneurship } from './seeds/entrepreneurship.js';
-import { seedResearchData } from './seeds/research_data.js';
-import { seedOffboarding } from './seeds/offboarding.js';
-import { seedSustainability } from './seeds/sustainability.js';
+import {
+  seedCleanup,
+  seedUsers,
+  seedRecruitment,
+  seedPerformance,
+  seedPayroll,
+  seedClimate,
+  seedCoreRecords,
+  seedGoals,
+  seedBenefits,
+  seedAttendance,
+  seedAbsences,
+  seedDocuments,
+  seedAudit,
+  seedPayrollConfig,
+  seedNotifications,
+  seedAnnouncements,
+  seedAccounting,
+  seedJournalEntries,
+  seedEntrepreneurship,
+  seedResearchData,
+  seedOffboarding,
+  seedSustainability,
+} from './seeds/index.js';
 
 function createPrisma() {
   return new PrismaClient({

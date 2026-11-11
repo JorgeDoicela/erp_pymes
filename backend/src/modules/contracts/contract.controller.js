@@ -7,7 +7,7 @@
  */
 
 import contractService from './contract.service.js';
-import auditRepository from '../audit/audit.repository.js';
+import { auditRepository } from '../audit/index.js';
 import path from 'path';
 
 export class ContractController {
@@ -82,7 +82,7 @@ export class ContractController {
 
       const filePath = path.resolve('uploads/contracts', filename);
       res.download(filePath);
-    } catch (error) {
+    } catch {
       res.status(404).json({ success: false, message: 'Archivo no encontrado' });
     }
   }

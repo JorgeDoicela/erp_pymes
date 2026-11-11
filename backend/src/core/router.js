@@ -40,9 +40,11 @@ import {
   intelligenceRoutes,
   analyticsRoutes,
   entrepreneurshipRoutes,
+  systemRoutes,
+  authenticate,
+  authorize,
+  requireTenant,
 } from '../modules/index.js';
-import { authenticate, authorize } from '../middleware/auth.middleware.js';
-import { requireTenant } from '../middleware/tenant.middleware.js';
 
 const router = Router();
 
@@ -108,6 +110,6 @@ router.use('/sustainability', protectedTenant, sustainabilityRoutes);
 router.use('/entrepreneurship', protectedTenant, entrepreneurshipRoutes);
 router.use('/compliance', protectedTenant, complianceRoutes);
 router.use('/announcements', protectedTenant, announcementRoutes);
+router.use('/system', systemRoutes);
 
 export default router;
-

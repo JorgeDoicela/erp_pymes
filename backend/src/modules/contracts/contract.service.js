@@ -7,11 +7,15 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import contractRepository from './contract.repository.js';
-import employeeRepository from '../employees/employee.repository.js';
-import prisma from '../../database/db.js';
+import defaultContractRepo from './contract.repository.js';
+import { employeeRepository } from '../employees/index.js';
 
 export class ContractService {
+  constructor({ repo = defaultContractRepo, empRepo = employeeRepository } = {}) {
+    this.contractRepository = repo;
+    this.employeeRepository = empRepo;
+  }
+
   async createContract(data) {
     // Validate end date > start date
     if (data.startDate && data.endDate) {
@@ -21,7 +25,7 @@ export class ContractService {
     }
 
     // Verify employee exists
-    const employee = await employeeRepository.findById(data.employeeId);
+    const employee = await this.employeeRepository.findById(data.employeeId);
     if (!employee) {
       throw new Error('Empleado no encontrado');
     }
@@ -30,28 +34,11 @@ export class ContractService {
     const newStart = new Date(data.startDate);
     const newEnd = data.endDate ? new Date(data.endDate) : null;
 
-    const overlapping = await prisma.contract.findFirst({
-      where: {
-        employeeId: data.employeeId,
-        status: 'Active',
-        OR: [
-          // Caso 1: Un contrato existente cubre la nueva fecha de inicio
-          {
-            startDate: { lte: newStart },
-            OR: [{ endDate: null }, { endDate: { gte: newStart } }],
-          },
-          // Caso 2: El nuevo contrato cubre el inicio de un contrato existente
-          newEnd
-            ? {
-                startDate: { lte: newEnd, gte: newStart },
-              }
-            : {
-                // Si el nuevo es indefinido (null), se solapa con cualquier contrato que empiece después
-                startDate: { gte: newStart },
-              },
-        ],
-      },
-    });
+    const overlapping = await this.contractRepository.findOverlapping(
+      data.employeeId,
+      newStart,
+      newEnd
+    );
 
     if (overlapping) {
       throw new Error(
@@ -59,11 +46,11 @@ export class ContractService {
       );
     }
 
-    return await contractRepository.create(data);
+    return await this.contractRepository.create(data);
   }
 
   async getContractsByEmployee(employeeId) {
-    return await contractRepository.findByEmployeeId(employeeId);
+    return await this.contractRepository.findByEmployeeId(employeeId);
   }
 
   async getExpiringContracts(days = 30, tenantId = null) {
@@ -71,70 +58,38 @@ export class ContractService {
     const futureDate = new Date();
     futureDate.setDate(today.getDate() + days);
 
-    // Find contracts expiring between now and futureDate
-    // Also ensure they are active
-    return await prisma.contract.findMany({
-      where: {
-        status: 'Active',
-        endDate: {
-          gte: today,
-          lte: futureDate,
-        },
-        ...(tenantId ? { employee: { tenantId } } : {}),
-      },
-      include: {
-        employee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            department: true,
-            position: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        endDate: 'asc',
-      },
-    });
+    return await this.contractRepository.findExpiring(today, futureDate, tenantId);
   }
 
   async renewContract(contractId, data, tenantId = null) {
-    const contract = await prisma.contract.findUnique({
-      where: { id: contractId },
-      include: { employee: true },
-    });
+    const contract = await this.contractRepository.findByIdWithEmployee(contractId);
     if (!contract) throw new Error('Contrato no encontrado');
-    if (tenantId && contract.employee.tenantId !== tenantId) {
+    if (tenantId && contract.employee?.tenantId !== tenantId) {
       throw new Error('No autorizado para modificar contratos de otra empresa');
     }
 
     const { newEndDate, newSalary, newType = 'Indefinido', notes } = data;
     const isIndefinite = newType === 'Indefinido' || !newEndDate;
 
-    const updatedContract = await prisma.contract.update({
-      where: { id: contractId },
-      data: {
-        endDate: isIndefinite ? null : new Date(newEndDate),
-        type: newType,
-        salary: newSalary ? parseFloat(newSalary) : contract.salary,
-        clauses: notes
-          ? `${contract.clauses || ''}\n[Renovado ${new Date().toISOString().split('T')[0]}]: ${notes}`
-          : contract.clauses,
-        status: 'Active',
-      },
+    const updatedContract = await this.contractRepository.update(contractId, {
+      endDate: isIndefinite ? null : new Date(newEndDate),
+      type: newType,
+      salary: newSalary ? parseFloat(newSalary) : contract.salary,
+      clauses: notes
+        ? `${contract.clauses || ''}\n[Renovado ${new Date().toISOString().split('T')[0]}]: ${notes}`
+        : contract.clauses,
+      status: 'Active',
     });
 
-    await prisma.employee.update({
-      where: { id: contract.employeeId },
-      data: {
+    if (typeof this.employeeRepository.update === 'function') {
+      await this.employeeRepository.update(contract.employeeId, {
         contractType: newType,
-      },
-    });
+      });
+    }
 
     return updatedContract;
   }
 }
 
-export default new ContractService();
+export const contractService = new ContractService();
+export default contractService;

@@ -22,7 +22,6 @@
   "private": true,
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "@simplewebauthn/browser": "^13.2.2",
     "@simplewebauthn/server": "^13.2.3",
     "axios": "^1.13.3",
     "bcryptjs": "^3.0.3",
@@ -42,7 +41,6 @@
     "nodemailer": "^9.0.5",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3",
     "uuid": "^11.1.1",
     "zod": "^3.24.2"
   },

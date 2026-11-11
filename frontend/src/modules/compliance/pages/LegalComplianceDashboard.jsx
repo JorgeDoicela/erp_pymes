@@ -13,16 +13,16 @@ import { getComplianceAlerts, getStatutoryProvisions } from '../services/complia
 import ExportButtons from '@core/ui/ExportButtons';
 import useAutoSync from '@core/hooks/useAutoSync';
 import {
-  ShieldExclamationIcon,
-  ExclamationTriangleIcon,
-  ClockIcon,
-  BanknotesIcon,
-  ArrowPathIcon,
-  BuildingOfficeIcon,
-  DocumentTextIcon,
-  CheckCircleIcon,
-  UserGroupIcon,
-} from '@heroicons/react/24/outline';
+  HiShieldExclamation as ShieldExclamationIcon,
+  HiExclamationTriangle as ExclamationTriangleIcon,
+  HiClock as ClockIcon,
+  HiBanknotes as BanknotesIcon,
+  HiArrowPath as ArrowPathIcon,
+  HiBuildingOffice as BuildingOfficeIcon,
+  HiDocumentText as DocumentTextIcon,
+  HiCheckCircle as CheckCircleIcon,
+  HiUserGroup as UserGroupIcon,
+} from 'react-icons/hi2';
 
 const LegalComplianceDashboard = () => {
   const navigate = useNavigate();

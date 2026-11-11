@@ -10,8 +10,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import authRepository from './auth.repository.js';
-import emailService from '../notifications/email.service.js';
-import auditRepository from '../audit/audit.repository.js';
+import { emailService } from '../notifications/index.js';
+import { auditRepository } from '../audit/index.js';
 import { isSuperAdminRole } from '../../config/roles.js';
 
 export class AuthHttpError extends Error {
@@ -224,4 +224,3 @@ export class AuthService {
 }
 
 export default new AuthService();
-

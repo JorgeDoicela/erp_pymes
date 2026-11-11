@@ -23,4 +23,6 @@ export {
   accountingDto,
 };
 
+export * from './accounting.dto.js';
+
 export default router;

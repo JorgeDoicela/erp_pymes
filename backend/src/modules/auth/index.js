@@ -10,6 +10,7 @@ import router from './auth.routes.js';
 import * as authController from './auth.controller.js';
 import authService, { AuthService } from './auth.service.js';
 import authRepository, { AuthRepository } from './auth.repository.js';
+import { authenticate, authorize, optionalAuth } from './auth.middleware.js';
 
 export {
   router as authRoutes,
@@ -18,7 +19,9 @@ export {
   AuthService,
   authRepository,
   AuthRepository,
+  authenticate,
+  authorize,
+  optionalAuth,
 };
 
 export default router;
-

@@ -8,7 +8,7 @@
 
 import { Router } from 'express';
 import { login, forgotPassword, resetPassword } from './auth.controller.js';
-import { rateLimit } from '../../middleware/rateLimit.middleware.js';
+import { rateLimit } from '../../core/middleware/rateLimit.middleware.js';
 
 const router = Router();
 
@@ -21,4 +21,3 @@ router.post(
 router.post('/reset-password', resetPassword);
 
 export default router;
-

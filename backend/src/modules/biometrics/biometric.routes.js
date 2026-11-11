@@ -8,7 +8,7 @@
 
 import { Router } from 'express';
 import * as biometricController from './biometric.controller.js';
-import { authenticate } from '../../middleware/auth.middleware.js';
+import { authenticate } from '../auth/auth.middleware.js';
 
 const router = Router();
 
@@ -22,4 +22,3 @@ router.post('/login/options', biometricController.getAuthenticationOptions);
 router.post('/login/verify', biometricController.verifyAuthentication);
 
 export default router;
-

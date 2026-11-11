@@ -8,7 +8,7 @@
 
 import cron from 'node-cron';
 import prisma from '../../database/db.js';
-import notificationService from '../notifications/notification.service.js';
+import { notificationService } from '../notifications/index.js';
 
 export const checkContractExpirations = async () => {
   console.log('--- Running Contract Expiration Check ---');

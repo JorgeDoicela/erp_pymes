@@ -10,9 +10,13 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import indexRoutes from './core/router.js';
-import { systemRoutes } from './modules/index.js';
-import { maintenanceMiddleware } from './middleware/maintenance.middleware.js';
-import { errorHandler, requestLogger, validateBodyNotEmpty } from './middleware/errorHandler.js';
+import { systemRoutes, maintenanceMiddleware } from './modules/index.js';
+import {
+  errorHandler,
+  requestLogger,
+  validateBodyNotEmpty,
+} from './core/middleware/errorHandler.js';
+import { performanceMiddleware } from './core/middleware/performance.middleware.js';
 
 const app = express();
 
@@ -100,7 +104,6 @@ if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 app.use(requestLogger);
 
 // RNF-13: Performance Logging
-import { performanceMiddleware } from './middleware/performance.middleware.js';
 app.use(performanceMiddleware);
 
 // Middleware de validación

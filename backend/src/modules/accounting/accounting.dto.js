@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { nonNegativeMoneySchema } from '../../dto/common/validators.js';
+import { nonNegativeMoneySchema } from '../../core/validators.js';
 
 export const ACCOUNT_TYPES = ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'];
 

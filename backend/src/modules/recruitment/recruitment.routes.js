@@ -25,9 +25,9 @@ import {
   evaluateCandidate,
   hireCandidate,
 } from './recruitment.controller.js';
-import { authenticate, authorize } from '../../middleware/auth.middleware.js';
-import { requireTenant } from '../../middleware/tenant.middleware.js';
-import { uploadResume } from '../../middleware/upload.middleware.js';
+import { authenticate, authorize } from '../auth/auth.middleware.js';
+import { requireTenant } from '../tenants/index.js';
+import { uploadResume } from '../../core/storage/upload.middleware.js';
 
 const router = Router();
 const protectedAdmin = [authenticate, requireTenant, authorize(['admin', 'hr'])];
@@ -55,4 +55,3 @@ router.post('/applications/:id/evaluations', protectedAdmin, evaluateCandidate);
 router.post('/applications/:id/hire', protectedAdmin, hireCandidate);
 
 export default router;
-

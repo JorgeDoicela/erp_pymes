@@ -10,7 +10,10 @@
 import router from './signature.routes.js';
 import signatureController, { SignatureController } from './signature.controller.js';
 import qrSignatureService, { QrSignatureService } from './qrSignature.service.js';
-import ecuadorianElectronicSignatureService, { EcuadorianElectronicSignatureService } from './ecuadorianElectronicSignature.service.js';
+import ecuadorianElectronicSignatureService, {
+  EcuadorianElectronicSignatureService,
+} from './ecuadorianElectronicSignature.service.js';
+import signatureRepository, { SignatureRepository } from './signature.repository.js';
 
 export {
   router as signatureRoutes,
@@ -20,6 +23,8 @@ export {
   QrSignatureService,
   ecuadorianElectronicSignatureService,
   EcuadorianElectronicSignatureService,
+  signatureRepository,
+  SignatureRepository,
 };
 
 export default router;

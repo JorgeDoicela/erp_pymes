@@ -8,7 +8,7 @@
  */
 
 import accountingService from './accounting.service.js';
-import { asyncHandler } from '../../utils/asyncHandler.js';
+import { asyncHandler } from '../../core/utils/asyncHandler.js';
 
 const getTenantId = (req) => req.tenantId || req.user?.tenantId || null;
 

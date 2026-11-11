@@ -253,8 +253,11 @@ export default function IntelligentDashboard({ user, onLogout }) {
 
               <div className="relative group">
                 <button
+                  type="button"
                   disabled={isExporting}
+                  onClick={() => handleExportDataset('csv')}
                   className="px-3 py-1.5 border border-gray-300 hover:border-gray-400 text-gray-700 rounded text-xs font-medium cursor-pointer transition-colors disabled:opacity-50"
+                  title="Descargar dataset en CSV (pase el cursor para más formatos)"
                 >
                   <span>Exportar Dataset</span>
                 </button>

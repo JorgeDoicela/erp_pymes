@@ -6,38 +6,32 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import prisma from '../../database/db.js';
-import { encryptCoordinate, decryptCoordinate } from '../../utils/encryption.js';
+import { systemRepository } from './system.repository.js';
+import { encryptCoordinate, decryptCoordinate } from '../../core/security/encryption.js';
 
 export class SystemService {
   async getSettings(tenantId = null) {
     try {
       let settings = null;
       if (tenantId) {
-        settings = await prisma.systemSetting.findFirst({
-          where: { tenantId },
-        });
+        settings = await systemRepository.findByTenantId(tenantId);
       }
 
       if (!settings) {
-        settings = await prisma.systemSetting.findFirst();
+        settings = await systemRepository.findFirst();
       }
 
       if (!settings) {
-        settings = await prisma.systemSetting.upsert({
-          where: { id: 'default' },
-          update: {},
-          create: {
-            id: 'default',
-            tenantId: tenantId || null,
-            maintenanceMode: false,
-            biometricEnabled: false,
-            allowedIPs: null,
-            globalLatitude: null,
-            globalLongitude: null,
-            globalRadius: 200,
-            maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
-          },
+        settings = await systemRepository.upsertDefault({
+          id: 'default',
+          tenantId: tenantId || null,
+          maintenanceMode: false,
+          biometricEnabled: false,
+          allowedIPs: null,
+          globalLatitude: null,
+          globalLongitude: null,
+          globalRadius: 200,
+          maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
         });
       }
 
@@ -73,33 +67,12 @@ export class SystemService {
 
     let settings;
     if (tenantId) {
-      const existing = await prisma.systemSetting.findFirst({ where: { tenantId } });
+      const existing = await systemRepository.findByTenantId(tenantId);
       if (existing) {
-        settings = await prisma.systemSetting.update({
-          where: { id: existing.id },
-          data: updateData,
-        });
+        settings = await systemRepository.updateById(existing.id, updateData);
       } else {
-        settings = await prisma.systemSetting.create({
-          data: {
-            tenantId,
-            maintenanceMode: false,
-            biometricEnabled: false,
-            allowedIPs: null,
-            globalLatitude: null,
-            globalLongitude: null,
-            globalRadius: 200,
-            maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
-            ...updateData,
-          },
-        });
-      }
-    } else {
-      settings = await prisma.systemSetting.upsert({
-        where: { id: 'default' },
-        update: updateData,
-        create: {
-          id: 'default',
+        settings = await systemRepository.create({
+          tenantId,
           maintenanceMode: false,
           biometricEnabled: false,
           allowedIPs: null,
@@ -108,7 +81,19 @@ export class SystemService {
           globalRadius: 200,
           maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
           ...updateData,
-        },
+        });
+      }
+    } else {
+      settings = await systemRepository.upsertById('default', updateData, {
+        id: 'default',
+        maintenanceMode: false,
+        biometricEnabled: false,
+        allowedIPs: null,
+        globalLatitude: null,
+        globalLongitude: null,
+        globalRadius: 200,
+        maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
+        ...updateData,
       });
     }
 
@@ -121,7 +106,7 @@ export class SystemService {
 
   async checkHealth() {
     try {
-      await prisma.$queryRaw`SELECT 1`;
+      await systemRepository.checkDatabaseConnection();
       return {
         status: 'UP',
         database: 'CONNECTED',
@@ -143,24 +128,44 @@ export class SystemService {
       if (!lat || !lng) throw new Error('Coordinates missing');
 
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
-
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'RecursosHumanos-App/1.0 (internal-tool)',
+          'User-Agent': 'NormaERP-HR/1.0',
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Nominatim API Error: ${response.statusText}`);
+        throw new Error(`Nominatim responded with status ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      let placeName = 'Ubicación Desconocida';
+      if (data && data.address) {
+        const addr = data.address;
+        const main = addr.road || addr.pedestrian || addr.suburb || addr.neighbourhood;
+        const city = addr.city || addr.town || addr.village || addr.county;
+        if (main && city) placeName = `${main}, ${city}`;
+        else if (main) placeName = main;
+        else if (city) placeName = city;
+        else placeName = data.display_name.split(',')[0];
+      } else if (data && data.display_name) {
+        placeName = data.display_name.split(',')[0];
+      }
+
+      return {
+        placeName,
+        details: data?.address || null,
+      };
     } catch (error) {
-      console.error('Geocoding Error:', error.message);
-      return null;
+      console.warn('[System Service] Reverse geocoding failed:', error.message);
+      return {
+        placeName: `${lat}, ${lng}`,
+        details: null,
+      };
     }
   }
 }
 
-export default new SystemService();
-
+export const systemService = new SystemService();
+export default systemService;

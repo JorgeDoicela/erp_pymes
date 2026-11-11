@@ -7,8 +7,11 @@
  */
 
 import React from 'react';
-import { FiInfo, FiLock } from 'react-icons/fi';
+import { FiLock } from 'react-icons/fi';
 import MaskedText from '@core/ui/MaskedText';
+export { EmptyState } from '@core/ui/EmptyState';
+export { InputField } from '@core/ui/InputField';
+export { SelectField } from '@core/ui/SelectField';
 
 // Detecta si un valor parece ser texto cifrado (hex largo con ':') que nunca se desencriptó
 const looksEncrypted = (val) => {
@@ -63,12 +66,6 @@ export const InfoItem = ({ label, value, isPrivate, isMasked }) => {
   );
 };
 
-export const EmptyState = ({ message }) => (
-  <div className="col-span-full py-8 text-center text-gray-400 text-xs bg-gray-50/50 rounded border border-gray-200">
-    {message}
-  </div>
-);
-
 export const getLevelColor = (level) => {
   switch (level?.toLowerCase()) {
     case 'expert':
@@ -81,63 +78,3 @@ export const getLevelColor = (level) => {
       return 'bg-gray-100 text-gray-700 border border-gray-200';
   }
 };
-
-export const InputField = ({ label, name, type = 'text', value, onChange, error, help }) => (
-  <div className="flex flex-col group relative">
-    <div className="flex items-center gap-1.5 mb-1">
-      <label className="text-xs font-medium text-gray-700">{label}</label>
-      {help && (
-        <div className="relative group/help">
-          <FiInfo
-            size={12}
-            className="text-gray-400 cursor-help hover:text-blue-600 transition-colors"
-          />
-          <div className="absolute bottom-full left-0 mb-1.5 w-52 p-2 bg-gray-900 border border-gray-800 rounded text-[11px] text-gray-200 opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible transition-all z-50 pointer-events-none shadow-lg">
-            {help}
-          </div>
-        </div>
-      )}
-    </div>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      className={`bg-white border ${error ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'} rounded px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition-colors`}
-    />
-    {error && <span className="text-[11px] font-medium text-red-600 mt-1">{error}</span>}
-  </div>
-);
-
-export const SelectField = ({ label, name, value, onChange, options, error, help }) => (
-  <div className="flex flex-col group relative">
-    <div className="flex items-center gap-1.5 mb-1">
-      <label className="text-xs font-medium text-gray-700">{label}</label>
-      {help && (
-        <div className="relative group/help">
-          <FiInfo
-            size={12}
-            className="text-gray-400 cursor-help hover:text-blue-600 transition-colors"
-          />
-          <div className="absolute bottom-full left-0 mb-1.5 w-52 p-2 bg-gray-900 border border-gray-800 rounded text-[11px] text-gray-200 opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible transition-all z-50 pointer-events-none shadow-lg">
-            {help}
-          </div>
-        </div>
-      )}
-    </div>
-    <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      className={`w-full bg-white border ${error ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'} rounded px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition-colors`}
-    >
-      <option value="">Seleccione</option>
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
-    {error && <span className="text-[11px] font-medium text-red-600 mt-1">{error}</span>}
-  </div>
-);

@@ -8,13 +8,9 @@
  */
 
 import defaultAccountingRepo from './accounting.repository.js';
-import defaultAuditRepo from '../audit/audit.repository.js';
-import { financial } from '../../utils/financialUtils.js';
-import {
-  NotFoundError,
-  ValidationError,
-  ConflictError,
-} from '../../core/errors/appError.js';
+import { auditRepository as defaultAuditRepo } from '../audit/index.js';
+import { financial } from '../../core/utils/financialUtils.js';
+import { NotFoundError, ValidationError, ConflictError } from '../../core/errors/appError.js';
 
 export class AccountingService {
   /**
@@ -124,7 +120,17 @@ export class AccountingService {
     return await this.accountingRepo.getAccounts(tenantId);
   }
 
-  async createAccount({ tenantId, code, name, description, type, level, isTransactional, parentId, user }) {
+  async createAccount({
+    tenantId,
+    code,
+    name,
+    description,
+    type,
+    level,
+    isTransactional,
+    parentId,
+    user,
+  }) {
     const existing = await this.accountingRepo.findAccountByCode(code, tenantId);
     if (existing) {
       throw new ConflictError('El código contable ya está registrado.');
@@ -183,7 +189,9 @@ export class AccountingService {
 
     const hasMovements = await this.accountingRepo.countAccountMovements(id);
     if (hasMovements > 0) {
-      throw new ConflictError('No se puede eliminar una cuenta que posee asientos contables registrados.');
+      throw new ConflictError(
+        'No se puede eliminar una cuenta que posee asientos contables registrados.'
+      );
     }
 
     await this.accountingRepo.deleteAccount(id);
@@ -296,7 +304,16 @@ export class AccountingService {
     return await this.accountingRepo.getJournalEntries(where, take);
   }
 
-  async createJournalEntry({ tenantId, date, description, type, lines, referenceModule, referenceId, user }) {
+  async createJournalEntry({
+    tenantId,
+    date,
+    description,
+    type,
+    lines,
+    referenceModule,
+    referenceId,
+    user,
+  }) {
     // 1. Validar cuadratura del asiento (Partida Doble)
     const sumDebits = lines.reduce(
       (acc, l) => acc.plus(financial.from(l.debit || 0)),
@@ -392,7 +409,9 @@ export class AccountingService {
     }
 
     if (entry.status === 'POSTED') {
-      throw new ConflictError('No se puede eliminar un comprobante contable que ya ha sido mayorizado.');
+      throw new ConflictError(
+        'No se puede eliminar un comprobante contable que ya ha sido mayorizado.'
+      );
     }
 
     await this.accountingRepo.deleteJournalEntry(id);
@@ -529,13 +548,12 @@ export class AccountingService {
     accounts.forEach((a) => (accMap[a.code] = a.id));
 
     if (!accMap['5.1.1'] || !accMap['2.1.1']) {
-      throw new ValidationError('Faltan cuentas críticas en el catálogo (Sueldos o Pasivos por pagar)');
+      throw new ValidationError(
+        'Faltan cuentas críticas en el catálogo (Sueldos o Pasivos por pagar)'
+      );
     }
 
     const lines = [];
-    let totalSueldos = 0;
-    let totalHorasExtras = 0;
-    let totalBonos = 0;
     let totalDeducciones = 0;
     let totalNeto = 0;
 
@@ -561,9 +579,6 @@ export class AccountingService {
       expensesByCC[ccId || 'DEFAULT'].extras += det.overtimeAmount || 0;
       expensesByCC[ccId || 'DEFAULT'].bonos += detBonuses;
 
-      totalSueldos += det.baseSalary || 0;
-      totalHorasExtras += det.overtimeAmount || 0;
-      totalBonos += detBonuses;
       totalNeto += det.netSalary || 0;
 
       const deductions =

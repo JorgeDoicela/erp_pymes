@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { requestAdvance, getMyAdvances, cancelAdvance } from '../services/salaryAdvance.service';
-import { PlusIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { HiPlus as PlusIcon, HiInformationCircle as InformationCircleIcon } from 'react-icons/hi2';
 import Modal from '@core/ui/Modal';
 
 const MySalaryAdvances = () => {

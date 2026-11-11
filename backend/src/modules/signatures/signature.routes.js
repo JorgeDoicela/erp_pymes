@@ -8,12 +8,12 @@
 import { Router } from 'express';
 import multer from 'multer';
 import signatureController from './signature.controller.js';
-import { authenticate } from '../../middleware/auth.middleware.js';
+import { authenticate } from '../auth/auth.middleware.js';
 
 const router = Router();
 const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // Máximo 10MB para certificados .p12
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // Máximo 10MB para certificados .p12
 });
 
 // Rutas Públicas (para escaneo desde teléfono o validación externa de autenticidad)
@@ -23,8 +23,17 @@ router.post('/electronic/verify', signatureController.verifyP12Signature);
 
 // Rutas Protegidas (Generación y firmado dentro del ERP)
 router.post('/qr/generate', authenticate, signatureController.generateQr);
-router.post('/electronic/inspect', authenticate, upload.single('p12File'), signatureController.inspectP12);
-router.post('/electronic/sign', authenticate, upload.single('p12File'), signatureController.signWithP12);
+router.post(
+  '/electronic/inspect',
+  authenticate,
+  upload.single('p12File'),
+  signatureController.inspectP12
+);
+router.post(
+  '/electronic/sign',
+  authenticate,
+  upload.single('p12File'),
+  signatureController.signWithP12
+);
 
 export default router;
-

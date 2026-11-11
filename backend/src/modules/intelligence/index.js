@@ -1,32 +1,32 @@
 /**
  * @file index.js
- * @description Módulo de Inteligencia Artificial, People Analytics y Emprendimiento (Vertical Slice Bounded Context).
+ * @description Módulo de Inteligencia Artificial, People Analytics y Emprendimiento (Pure Nested Vertical Slices).
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import intelligenceRouter from './intelligence.routes.js';
-import analyticsRouter from './analytics.routes.js';
-import entrepreneurshipRouter from './entrepreneurship.routes.js';
-import * as intelligenceController from './intelligence.controller.js';
-import * as analyticsController from './analytics.controller.js';
-import * as entrepreneurshipController from './entrepreneurship.controller.js';
-import * as capTableController from './capTable.controller.js';
-import * as validationController from './validation.controller.js';
-import * as entrepreneurshipIntelligenceController from './entrepreneurshipIntelligence.controller.js';
-import * as intelligenceService from './intelligence.service.js';
-import * as entrepreneurshipIntelligenceService from './entrepreneurshipIntelligence.service.js';
-import analyticsService, { AnalyticsService } from './analytics.service.js';
+import intelligenceRouter from './predictive/intelligence.routes.js';
+import analyticsRouter from './analytics/analytics.routes.js';
+import entrepreneurshipRouter from './entrepreneurship/entrepreneurship.routes.js';
+import * as intelligenceController from './predictive/intelligence.controller.js';
+import * as analyticsController from './analytics/analytics.controller.js';
+import * as entrepreneurshipController from './entrepreneurship/entrepreneurship.controller.js';
+import * as capTableController from './entrepreneurship/capTable.controller.js';
+import * as validationController from './entrepreneurship/validation.controller.js';
+import * as entrepreneurshipIntelligenceController from './entrepreneurship/entrepreneurshipIntelligence.controller.js';
+import * as intelligenceService from './predictive/intelligence.service.js';
+import * as entrepreneurshipIntelligenceService from './entrepreneurship/entrepreneurshipIntelligence.service.js';
+import analyticsService, { AnalyticsService } from './analytics/analytics.service.js';
 import entrepreneurshipRepository, {
   EntrepreneurshipRepository,
-} from './entrepreneurship.repository.js';
-import causalInferenceService from './causalInference.service.js';
-import federatedLearningService from './federatedLearning.service.js';
-import ftTransformerService from './ftTransformer.service.js';
-import morlOptimizationService from './morlOptimization.service.js';
-import rsiService from './rsi.service.js';
-import temporalAttentionService from './temporalAttention.service.js';
+} from './entrepreneurship/entrepreneurship.repository.js';
+import causalInferenceService from './predictive/causalInference.service.js';
+import federatedLearningService from './predictive/federatedLearning.service.js';
+import ftTransformerService from './predictive/ftTransformer.service.js';
+import morlOptimizationService from './predictive/morlOptimization.service.js';
+import rsiService from './predictive/rsi.service.js';
+import temporalAttentionService from './predictive/temporalAttention.service.js';
 
 export {
   intelligenceRouter as intelligenceRoutes,
@@ -52,5 +52,7 @@ export {
   temporalAttentionService,
 };
 
-export default intelligenceRouter;
+export * from './predictive/rdpAccountant.js';
+export * from './predictive/intelligence.service.js';
 
+export default intelligenceRouter;

@@ -18,14 +18,14 @@ import { getEmployees } from '../services/employee.service';
 import { generateSettlementPDF } from '@modules/payroll';
 import useAutoSync from '@core/hooks/useAutoSync';
 import {
-  UserMinusIcon,
-  CalculatorIcon,
-  CheckCircleIcon,
-  DocumentTextIcon,
-  ArrowPathIcon,
-  ExclamationCircleIcon,
-  ClipboardDocumentCheckIcon,
-} from '@heroicons/react/24/outline';
+  HiUserMinus as UserMinusIcon,
+  HiCalculator as CalculatorIcon,
+  HiCheckCircle as CheckCircleIcon,
+  HiDocumentText as DocumentTextIcon,
+  HiArrowPath as ArrowPathIcon,
+  HiExclamationCircle as ExclamationCircleIcon,
+  HiClipboardDocumentCheck as ClipboardDocumentCheckIcon,
+} from 'react-icons/hi2';
 
 const OffboardingManagement = () => {
   const [offboardings, setOffboardings] = useState([]);

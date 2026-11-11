@@ -14,16 +14,16 @@ import { getMyAbsences, createAbsenceRequest, clockIn, clockOut } from '@modules
 import { generateCertificatePDF } from '@modules/employees';
 import Modal from '@core/ui/Modal';
 import {
-  HomeIcon,
-  ClockIcon,
-  DocumentArrowDownIcon,
-  PaperAirplaneIcon,
-  MapPinIcon,
-  DocumentTextIcon,
-  CalendarIcon,
-  ArrowRightOnRectangleIcon,
-  UserCircleIcon,
-} from '@heroicons/react/24/outline';
+  HiHome as HomeIcon,
+  HiClock as ClockIcon,
+  HiDocumentArrowDown as DocumentArrowDownIcon,
+  HiPaperAirplane as PaperAirplaneIcon,
+  HiMapPin as MapPinIcon,
+  HiDocumentText as DocumentTextIcon,
+  HiCalendar as CalendarIcon,
+  HiArrowRightOnRectangle as ArrowRightOnRectangleIcon,
+  HiUserCircle as UserCircleIcon,
+} from 'react-icons/hi2';
 
 const MobileEmployeePortal = ({ user }) => {
   const navigate = useNavigate();

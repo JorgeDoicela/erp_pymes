@@ -9,6 +9,36 @@
 import prisma from '../../database/db.js';
 
 export const recruitmentRepository = {
+  // Stats
+  async getStats(whereVacancy = {}, whereApp = {}) {
+    const [
+      totalVacancies,
+      openVacancies,
+      closedVacancies,
+      totalApplications,
+      hiredCount,
+      inReviewCount,
+    ] = await Promise.all([
+      prisma.jobVacancy.count({ where: whereVacancy }),
+      prisma.jobVacancy.count({ where: { ...whereVacancy, status: 'OPEN' } }),
+      prisma.jobVacancy.count({ where: { ...whereVacancy, status: 'CLOSED' } }),
+      prisma.jobApplication.count({ where: whereApp }),
+      prisma.jobApplication.count({ where: { ...whereApp, status: 'HIRED' } }),
+      prisma.jobApplication.count({
+        where: { ...whereApp, status: { in: ['REVIEWING', 'INTERVIEW'] } },
+      }),
+    ]);
+
+    return {
+      totalVacancies,
+      openVacancies,
+      closedVacancies,
+      totalApplications,
+      hiredCount,
+      inReviewCount,
+    };
+  },
+
   // Vacancies
   async createVacancy(data) {
     return prisma.jobVacancy.create({ data });
@@ -97,4 +127,3 @@ export const recruitmentRepository = {
 };
 
 export default recruitmentRepository;
-

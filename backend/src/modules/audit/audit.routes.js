@@ -8,7 +8,7 @@
 
 import { Router } from 'express';
 import { getAuditLogs, getAuditStats, getEntityLogs } from './audit.controller.js';
-import { authenticate, authorize } from '../../middleware/auth.middleware.js';
+import { authenticate, authorize } from '../auth/auth.middleware.js';
 
 const router = Router();
 
@@ -21,4 +21,3 @@ router.get('/', getAuditLogs);
 router.get('/:entityId', getEntityLogs);
 
 export default router;
-

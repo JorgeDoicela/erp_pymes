@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion';
 import { FiDollarSign, FiShield, FiClock, FiTrendingUp } from 'react-icons/fi';
+import { formatCurrency } from '@core/utils';
 
 /**
  * Banner Ejecutivo de Impacto Financiero y ROI de RRHH
@@ -24,13 +25,7 @@ export default function ExecutiveKPIBanner({ financialImpact }) {
     paybackPeriodMonths: 0,
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: data.currency || 'USD',
-      maximumFractionDigits: 0,
-    }).format(amount || 0);
-  };
+  const formatAmount = (amount) => formatCurrency(amount, data.currency || 'USD', 0);
 
   return (
     <div className="bg-white rounded p-4 sm:p-5 border border-gray-200 space-y-4">
@@ -54,7 +49,7 @@ export default function ExecutiveKPIBanner({ financialImpact }) {
               className="text-sm font-semibold text-gray-900 font-mono block truncate"
               style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
             >
-              {formatCurrency(data.totalFinancialOpportunity)}
+              {formatAmount(data.totalFinancialOpportunity)}
             </span>
           </div>
         </div>
@@ -74,7 +69,7 @@ export default function ExecutiveKPIBanner({ financialImpact }) {
             className="text-lg font-semibold text-gray-900 font-mono"
             style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
           >
-            {formatCurrency(data.estimatedTurnoverCostRisk)}
+            {formatAmount(data.estimatedTurnoverCostRisk)}
           </p>
           <p className="text-[11px] text-gray-400 mt-0.5">Fuga estimada de talento activo</p>
         </div>
@@ -91,7 +86,7 @@ export default function ExecutiveKPIBanner({ financialImpact }) {
             className="text-lg font-semibold text-green-800 font-mono"
             style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
           >
-            {formatCurrency(data.potentialRetentionSavings)}
+            {formatAmount(data.potentialRetentionSavings)}
           </p>
           <p className="text-[11px] text-gray-400 mt-0.5">Evitado con intervención (75%)</p>
         </div>
@@ -108,7 +103,7 @@ export default function ExecutiveKPIBanner({ financialImpact }) {
             className="text-lg font-semibold text-gray-900 font-mono"
             style={{ fontVariantNumeric: 'tabular-nums lining-nums' }}
           >
-            {formatCurrency(data.estimatedAbsenteeismCost)}
+            {formatAmount(data.estimatedAbsenteeismCost)}
           </p>
           <p className="text-[11px] text-gray-400 mt-0.5">Horas no trabajadas acumuladas</p>
         </div>

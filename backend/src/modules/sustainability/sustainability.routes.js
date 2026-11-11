@@ -7,7 +7,7 @@
  */
 
 import { Router } from 'express';
-import { authenticate, authorize } from '../../middleware/auth.middleware.js';
+import { authenticate, authorize } from '../auth/auth.middleware.js';
 import * as sustainabilityController from './sustainability.controller.js';
 
 const router = Router();

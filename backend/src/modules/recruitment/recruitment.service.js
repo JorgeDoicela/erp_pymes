@@ -7,10 +7,10 @@
  */
 
 import recruitmentRepository from './recruitment.repository.js';
-import prisma from '../../database/db.js';
+import { tenantRepository } from '../tenants/index.js';
 import bcrypt from 'bcryptjs';
-import emailService from '../notifications/email.service.js';
-import auditRepository from '../audit/audit.repository.js';
+import { emailService } from '../notifications/index.js';
+import { auditRepository } from '../audit/index.js';
 import { deleteFileFromStorage } from '../../core/storage/blob.service.js';
 
 export const recruitmentService = {
@@ -52,32 +52,7 @@ export const recruitmentService = {
     const whereVacancy = tenantId ? { tenantId } : {};
     const whereApp = tenantId ? { vacancy: { tenantId } } : {};
 
-    const [
-      totalVacancies,
-      openVacancies,
-      closedVacancies,
-      totalApplications,
-      hiredCount,
-      inReviewCount,
-    ] = await Promise.all([
-      prisma.jobVacancy.count({ where: whereVacancy }),
-      prisma.jobVacancy.count({ where: { ...whereVacancy, status: 'OPEN' } }),
-      prisma.jobVacancy.count({ where: { ...whereVacancy, status: 'CLOSED' } }),
-      prisma.jobApplication.count({ where: whereApp }),
-      prisma.jobApplication.count({ where: { ...whereApp, status: 'HIRED' } }),
-      prisma.jobApplication.count({
-        where: { ...whereApp, status: { in: ['REVIEWING', 'INTERVIEW'] } },
-      }),
-    ]);
-
-    return {
-      totalVacancies,
-      openVacancies,
-      closedVacancies,
-      totalApplications,
-      hiredCount,
-      inReviewCount,
-    };
+    return await recruitmentRepository.getStats(whereVacancy, whereApp);
   },
 
   async getVacancies(tenantId = null, filters = {}) {
@@ -120,10 +95,7 @@ export const recruitmentService = {
     let targetTenantId = tenantId || null;
 
     if (!targetTenantId && companySlug) {
-      const tenant = await prisma.tenant.findUnique({
-        where: { slug: companySlug },
-        select: { id: true },
-      });
+      const tenant = await tenantRepository.findTenantBySlug(companySlug, { id: true });
       if (tenant) {
         targetTenantId = tenant.id;
       }
@@ -577,4 +549,3 @@ export const recruitmentService = {
 };
 
 export default recruitmentService;
-
