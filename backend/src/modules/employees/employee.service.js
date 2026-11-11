@@ -8,7 +8,7 @@
  */
 
 import defaultEmployeeRepo from './employee.repository.js';
-import auditRepository from '../../repositories/audit/auditRepository.js';
+import auditRepository from '../audit/audit.repository.js';
 import prisma from '../../database/db.js';
 import { NotFoundError, ValidationError, ConflictError } from '../../core/errors/appError.js';
 

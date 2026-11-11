@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import statutoryBenefitsService from '../src/services/compliance/statutoryBenefitsService.js';
-import complianceService from '../src/services/compliance/complianceService.js';
+import statutoryBenefitsService from '../src/modules/compliance/statutoryBenefits.service.js';
+import complianceService from '../src/modules/compliance/compliance.service.js';
 import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({

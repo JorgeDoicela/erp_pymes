@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import rsiService from '../src/services/ai/rsiService.js';
+import rsiService from '../src/modules/intelligence/rsi.service.js';
 import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({

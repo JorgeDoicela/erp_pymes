@@ -8,7 +8,7 @@
 
 import cron from 'node-cron';
 import prisma from '../../database/db.js';
-import notificationService from '../../services/notifications/notificationService.js';
+import notificationService from '../notifications/notification.service.js';
 
 export const checkPerformanceReminders = async () => {
   console.log('--- Running Performance Review Reminder Check ---');

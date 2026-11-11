@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import causalInferenceService from '../src/services/ai/causalInferenceService.js';
+import causalInferenceService from '../src/modules/intelligence/causalInference.service.js';
 import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({

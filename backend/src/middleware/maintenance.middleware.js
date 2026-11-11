@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import systemService from '../services/system/systemService.js';
+import systemService from '../modules/system/system.service.js';
 import jwt from 'jsonwebtoken';
 
 /**

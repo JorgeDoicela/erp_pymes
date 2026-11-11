@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import forge from 'node-forge';
-import ecuadorianElectronicSignatureService from '../src/services/signatures/ecuadorianElectronicSignatureService.js';
+import ecuadorianElectronicSignatureService from '../src/modules/signatures/ecuadorianElectronicSignature.service.js';
 
 describe('Servicio Desacoplado de Firma Electrónica Oficial del Ecuador (ecuadorianElectronicSignatureService)', () => {
     let testP12Buffer;

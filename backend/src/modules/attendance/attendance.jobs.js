@@ -8,7 +8,7 @@
 
 import cron from 'node-cron';
 import prisma from '../../database/db.js';
-import notificationService from '../../services/notifications/notificationService.js';
+import notificationService from '../notifications/notification.service.js';
 
 export const checkRequestReminders = async () => {
   console.log('[CRON] Checking for Pending Requests (Reminders & Escalations)...');

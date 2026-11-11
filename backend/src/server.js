@@ -9,12 +9,14 @@
 import './config/env.js';
 import http from 'http';
 import app from './app.js';
-import socketService from './services/notifications/socketService.js';
-import { initContractCronJob } from './jobs/contractCronJob.js';
-import { initPerformanceCronJob } from './jobs/performanceCronJob.js';
-import { initRequestMonitorCronJob } from './jobs/requestMonitorCronJob.js';
-import { initDocumentCronJob } from './jobs/documentCronJob.js';
-import { initPayrollCronJob } from './jobs/payrollCronJob.js';
+import {
+  socketService,
+  initContractCronJob,
+  initPerformanceCronJob,
+  initRequestMonitorCronJob,
+  initDocumentCronJob,
+  initPayrollCronJob,
+} from './modules/index.js';
 
 // Init background jobs
 initContractCronJob();

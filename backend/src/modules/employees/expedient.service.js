@@ -8,7 +8,7 @@
  */
 
 import prisma from '../../database/db.js';
-import auditRepository from '../../repositories/audit/auditRepository.js';
+import auditRepository from '../audit/audit.repository.js';
 
 export class ExpedientService {
   // Categorías del expediente digital de un colaborador

@@ -7,7 +7,7 @@
  */
 
 import { absenceService } from './absence.service.js';
-import notificationService from '../../services/notifications/notificationService.js';
+import notificationService from '../notifications/notification.service.js';
 import prisma from '../../database/db.js';
 import multer from 'multer';
 import path from 'path';

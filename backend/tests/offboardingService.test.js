@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import offboardingService from '../src/services/employees/offboardingService.js';
+import offboardingService from '../src/modules/employees/offboarding.service.js';
 import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({

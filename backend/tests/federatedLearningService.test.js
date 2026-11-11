@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import federatedLearningService from '../src/services/ai/federatedLearningService.js';
+import federatedLearningService from '../src/modules/intelligence/federatedLearning.service.js';
 import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({

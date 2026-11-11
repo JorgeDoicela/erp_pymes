@@ -7,7 +7,7 @@
  */
 
 import contractService from './contract.service.js';
-import auditRepository from '../../repositories/audit/auditRepository.js';
+import auditRepository from '../audit/audit.repository.js';
 import path from 'path';
 
 export class ContractController {

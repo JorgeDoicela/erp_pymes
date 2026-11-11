@@ -13,11 +13,11 @@
  * 7. Modelo de Supervivencia Weibull y Simulación Monte Carlo
  */
 
-import temporalAttentionService from '../../src/services/ai/temporalAttentionService.js';
-import ftTransformerService from '../../src/services/ai/ftTransformerService.js';
-import causalInferenceService from '../../src/services/ai/causalInferenceService.js';
-import federatedLearningService from '../../src/services/ai/federatedLearningService.js';
-import morlOptimizationService from '../../src/services/ai/morlOptimizationService.js';
+import temporalAttentionService from '../../src/modules/intelligence/temporalAttention.service.js';
+import ftTransformerService from '../../src/modules/intelligence/ftTransformer.service.js';
+import causalInferenceService from '../../src/modules/intelligence/causalInference.service.js';
+import federatedLearningService from '../../src/modules/intelligence/federatedLearning.service.js';
+import morlOptimizationService from '../../src/modules/intelligence/morlOptimization.service.js';
 import prisma from '../../src/database/db.js';
 
 let passedTests = 0;

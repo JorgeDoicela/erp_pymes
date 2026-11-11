@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import employeeService from '../src/services/employees/employeeService.js';
-import employeeRepository from '../src/repositories/employees/employeeRepository.js';
+import employeeService from '../src/modules/employees/employee.service.js';
+import employeeRepository from '../src/modules/employees/employee.repository.js';
 import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({
@@ -29,7 +29,7 @@ const { mockEmployeeRepo } = vi.hoisted(() => {
     return { mockEmployeeRepo: repo };
 });
 
-vi.mock('../src/repositories/employees/employeeRepository.js', () => ({
+vi.mock('../src/modules/employees/employee.repository.js', () => ({
     default: mockEmployeeRepo
 }));
 
@@ -38,7 +38,7 @@ vi.mock('../src/modules/employees/employee.repository.js', () => ({
     EmployeeRepository: vi.fn().mockImplementation(() => mockEmployeeRepo)
 }));
 
-vi.mock('../src/repositories/audit/auditRepository.js', () => ({
+vi.mock('../src/modules/audit/audit.repository.js', () => ({
     default: {
         createLog: vi.fn().mockResolvedValue({}),
         log: vi.fn().mockResolvedValue({})

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import payrollCalculationService from '../src/services/payroll/payrollCalculationService.js';
-import payrollConfigService from '../src/services/payroll/payrollConfigService.js';
+import payrollCalculationService from '../src/modules/payroll/payrollCalculation.service.js';
+import payrollConfigService from '../src/modules/payroll/payrollConfig.service.js';
 import { financial } from '../src/utils/financialUtils.js';
 import prisma from '../src/database/db.js';
 

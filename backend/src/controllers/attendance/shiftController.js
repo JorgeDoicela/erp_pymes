@@ -1,9 +1,0 @@
-/**
- * @file shiftController.js
- * @deprecated Este archivo ha sido consolidado en src/modules/attendance/shift.controller.js.
- * Se mantiene este re-export para compatibilidad retroactiva.
- */
-
-export * from '../../modules/attendance/shift.controller.js';
-import shiftController from '../../modules/attendance/shift.controller.js';
-export default shiftController;

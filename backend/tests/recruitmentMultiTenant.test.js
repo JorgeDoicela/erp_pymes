@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { recruitmentService } from '../src/services/recruitment/recruitmentService.js';
-import recruitmentRepository from '../src/repositories/recruitment/recruitmentRepository.js';
+import { recruitmentService } from '../src/modules/recruitment/recruitment.service.js';
+import recruitmentRepository from '../src/modules/recruitment/recruitment.repository.js';
 
 const { mockRecruitmentRepo } = vi.hoisted(() => ({
     mockRecruitmentRepo: {
@@ -21,7 +21,7 @@ const { mockRecruitmentRepo } = vi.hoisted(() => ({
     }
 }));
 
-vi.mock('../src/repositories/recruitment/recruitmentRepository.js', () => ({
+vi.mock('../src/modules/recruitment/recruitment.repository.js', () => ({
     recruitmentRepository: mockRecruitmentRepo,
     default: mockRecruitmentRepo
 }));
@@ -30,7 +30,7 @@ vi.mock('../src/modules/recruitment/recruitment.repository.js', () => ({
     recruitmentRepository: mockRecruitmentRepo,
     default: mockRecruitmentRepo
 }));
-vi.mock('../src/repositories/audit/auditRepository.js', () => ({
+vi.mock('../src/modules/audit/audit.repository.js', () => ({
     default: {
         createLog: vi.fn().mockResolvedValue({}),
         log: vi.fn().mockResolvedValue({})

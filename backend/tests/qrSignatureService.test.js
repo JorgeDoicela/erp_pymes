@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import qrSignatureService from '../src/services/signatures/qrSignatureService.js';
+import qrSignatureService from '../src/modules/signatures/qrSignature.service.js';
 
 describe('Servicio Desacoplado de Firmas Digitales QR (qrSignatureService)', () => {
     it('debe generar una firma digital QR válida con token criptográfico y código de verificación', async () => {

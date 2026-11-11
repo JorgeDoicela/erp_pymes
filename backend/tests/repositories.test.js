@@ -6,10 +6,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import accountingRepository, {
   AccountingRepository,
-} from '../src/repositories/accounting/accountingRepository.js';
+} from '../src/modules/accounting/accounting.repository.js';
 import payrollRepository, {
   PayrollRepository,
-} from '../src/repositories/payroll/payrollRepository.js';
+} from '../src/modules/payroll/payroll.repository.js';
 
 describe('Fase 2: Homogeneización de la Capa de Repositorios', () => {
   describe('AccountingRepository', () => {

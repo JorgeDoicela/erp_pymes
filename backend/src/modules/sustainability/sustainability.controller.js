@@ -6,11 +6,11 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import sustainabilityService from './services/sustainability.service.js';
-import sustainabilityRagService from './services/sustainabilityRag.service.js';
-import sustainabilityFineTuningService from './services/sustainabilityFineTuning.service.js';
-import sustainabilityRepository from './repositories/sustainability.repository.js';
-import { AdvisorQuerySchema, DocumentIngestSchema, FineTuningExportSchema } from './dto/sustainability.dto.js';
+import sustainabilityService from './sustainability.service.js';
+import sustainabilityRagService from './sustainabilityRag.service.js';
+import sustainabilityFineTuningService from './sustainabilityFineTuning.service.js';
+import sustainabilityRepository from './sustainability.repository.js';
+import { AdvisorQuerySchema, DocumentIngestSchema, FineTuningExportSchema } from './sustainability.dto.js';
 
 /**
  * GET /api/sustainability/ods8

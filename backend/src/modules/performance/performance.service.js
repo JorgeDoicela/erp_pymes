@@ -7,8 +7,8 @@
  */
 
 import prisma from '../../database/db.js';
-import auditRepository from '../../repositories/audit/auditRepository.js';
-import notificationService from '../../services/notifications/notificationService.js';
+import auditRepository from '../audit/audit.repository.js';
+import notificationService from '../notifications/notification.service.js';
 
 class PerformanceService {
   /**

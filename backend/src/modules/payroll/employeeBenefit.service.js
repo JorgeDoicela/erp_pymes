@@ -7,7 +7,7 @@
  */
 
 import prisma from '../../database/db.js';
-import auditRepository from '../../repositories/audit/auditRepository.js';
+import auditRepository from '../audit/audit.repository.js';
 import { financial } from '../../utils/financialUtils.js';
 
 class EmployeeBenefitService {

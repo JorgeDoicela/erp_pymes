@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { financial } from '../src/utils/financialUtils.js';
-import { calculateKolmogorovSmirnovTest } from '../src/services/intelligenceService.js';
+import { calculateKolmogorovSmirnovTest } from '../src/modules/intelligence/intelligence.service.js';
 
 describe('System-wide Calculations and Data Audit Test Suite (Código del Trabajo Ecuador & Enterprise Standard)', () => {
 

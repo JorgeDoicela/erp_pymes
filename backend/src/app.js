@@ -9,8 +9,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import indexRoutes from './routes/index.routes.js';
-import systemRoutes from './routes/system/system.routes.js';
+import indexRoutes from './core/router.js';
+import { systemRoutes } from './modules/index.js';
 import { maintenanceMiddleware } from './middleware/maintenance.middleware.js';
 import { errorHandler, requestLogger, validateBodyNotEmpty } from './middleware/errorHandler.js';
 

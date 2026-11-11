@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { runWhatIfMonteCarlo, getDepartmentComparison } from '../src/services/intelligenceService.js';
+import { runWhatIfMonteCarlo, getDepartmentComparison } from '../src/modules/intelligence/intelligence.service.js';
 
 describe('Intelligence Analytics & Stochastic Monte Carlo Tests', () => {
     it('Should execute Monte Carlo simulation with stochastic iterations and valid 95% confidence intervals', async () => {

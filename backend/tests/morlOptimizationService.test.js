@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import morlOptimizationService from '../src/services/ai/morlOptimizationService.js';
+import morlOptimizationService from '../src/modules/intelligence/morlOptimization.service.js';
 import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({

@@ -8,7 +8,7 @@
  */
 
 import defaultAccountingRepo from './accounting.repository.js';
-import defaultAuditRepo from '../../repositories/audit/auditRepository.js';
+import defaultAuditRepo from '../audit/audit.repository.js';
 import { financial } from '../../utils/financialUtils.js';
 import {
   NotFoundError,

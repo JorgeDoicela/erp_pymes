@@ -7,9 +7,9 @@
  */
 
 export { default as sustainabilityRoutes } from './sustainability.routes.js';
-export { default as sustainabilityService } from './services/sustainability.service.js';
-export { default as sustainabilityRagService } from './services/sustainabilityRag.service.js';
-export { default as sustainabilityFineTuningService } from './services/sustainabilityFineTuning.service.js';
-export { default as sustainabilityRepository } from './repositories/sustainability.repository.js';
+export { default as sustainabilityService } from './sustainability.service.js';
+export { default as sustainabilityRagService } from './sustainabilityRag.service.js';
+export { default as sustainabilityFineTuningService } from './sustainabilityFineTuning.service.js';
+export { default as sustainabilityRepository } from './sustainability.repository.js';
 export * from './sustainability.controller.js';
-export * from './dto/sustainability.dto.js';
+export * from './sustainability.dto.js';

@@ -7,7 +7,7 @@
  */
 
 import { recruitmentService } from './recruitment.service.js';
-import { uploadFileToStorage } from '../../services/storage/blobService.js';
+import { uploadFileToStorage } from '../../core/storage/blob.service.js';
 
 // Helper for tenant extraction
 const getTenantId = (req) => req.tenantId || req.user?.tenantId || null;

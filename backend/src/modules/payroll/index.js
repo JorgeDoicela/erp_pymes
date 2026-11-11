@@ -21,6 +21,7 @@ import payrollCalculationService from './payrollCalculation.service.js';
 import payrollConfigService from './payrollConfig.service.js';
 import employeeBenefitService from './employeeBenefit.service.js';
 import salaryAdvanceService from './salaryAdvance.service.js';
+import { checkPayrollReminders, initPayrollCronJob } from './payroll.jobs.js';
 
 import * as payrollDto from './payroll.dto.js';
 
@@ -41,6 +42,8 @@ export {
   employeeBenefitService,
   salaryAdvanceService,
   payrollDto,
+  checkPayrollReminders,
+  initPayrollCronJob,
 };
 
 export default router;

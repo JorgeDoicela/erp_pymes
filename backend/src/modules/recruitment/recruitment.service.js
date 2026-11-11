@@ -9,9 +9,9 @@
 import recruitmentRepository from './recruitment.repository.js';
 import prisma from '../../database/db.js';
 import bcrypt from 'bcryptjs';
-import emailService from '../../services/notifications/emailService.js';
-import auditRepository from '../../repositories/audit/auditRepository.js';
-import { deleteFileFromStorage } from '../../services/storage/blobService.js';
+import emailService from '../notifications/email.service.js';
+import auditRepository from '../audit/audit.repository.js';
+import { deleteFileFromStorage } from '../../core/storage/blob.service.js';
 
 export const recruitmentService = {
   async createVacancy(data, userId, tenantId = null) {

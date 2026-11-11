@@ -98,6 +98,93 @@ describe('Fase 3: Arquitectura de Monolito Modular y Core de Errores', () => {
       expect(modules.recruitmentService).toBeDefined();
       expect(modules.recruitmentRepository).toBeDefined();
     });
+
+    it('debe exportar los componentes del módulo Audit', () => {
+      expect(modules.auditRoutes).toBeDefined();
+      expect(modules.auditController).toBeDefined();
+      expect(modules.auditService).toBeDefined();
+      expect(modules.auditRepository).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Biometrics', () => {
+      expect(modules.biometricRoutes).toBeDefined();
+      expect(modules.biometricController).toBeDefined();
+      expect(modules.biometricService).toBeDefined();
+      expect(modules.biometricRepository).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Skills', () => {
+      expect(modules.skillRoutes).toBeDefined();
+      expect(modules.skillController).toBeDefined();
+      expect(modules.skillService).toBeDefined();
+      expect(modules.skillRepository).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Communication', () => {
+      expect(modules.announcementRoutes).toBeDefined();
+      expect(modules.announcementController).toBeDefined();
+      expect(modules.announcementService).toBeDefined();
+      expect(modules.announcementRepository).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Tenants', () => {
+      expect(modules.tenantRoutes).toBeDefined();
+      expect(modules.superAdminRoutes).toBeDefined();
+      expect(modules.tenantController).toBeDefined();
+      expect(modules.superAdminController).toBeDefined();
+      expect(modules.seedController).toBeDefined();
+      expect(modules.tenantService).toBeDefined();
+      expect(modules.superAdminService).toBeDefined();
+      expect(modules.tenantRepository).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Notifications', () => {
+      expect(modules.notificationRoutes).toBeDefined();
+      expect(modules.notificationController).toBeDefined();
+      expect(modules.notificationPreferencesController).toBeDefined();
+      expect(modules.notificationService).toBeDefined();
+      expect(modules.notificationRepository).toBeDefined();
+      expect(modules.emailService).toBeDefined();
+      expect(modules.socketService).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Reports', () => {
+      expect(modules.reportRoutes).toBeDefined();
+      expect(modules.exportRoutes).toBeDefined();
+      expect(modules.reportController).toBeDefined();
+      expect(modules.exportController).toBeDefined();
+      expect(modules.reportService).toBeDefined();
+      expect(modules.exportService).toBeDefined();
+      expect(modules.reportRepository).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Intelligence', () => {
+      expect(modules.intelligenceRoutes).toBeDefined();
+      expect(modules.analyticsRoutes).toBeDefined();
+      expect(modules.entrepreneurshipRoutes).toBeDefined();
+      expect(modules.intelligenceController).toBeDefined();
+      expect(modules.analyticsController).toBeDefined();
+      expect(modules.intelligenceService).toBeDefined();
+      expect(modules.analyticsService).toBeDefined();
+      expect(modules.rsiService).toBeDefined();
+      expect(modules.causalInferenceService).toBeDefined();
+      expect(modules.federatedLearningService).toBeDefined();
+      expect(modules.ftTransformerService).toBeDefined();
+      expect(modules.morlOptimizationService).toBeDefined();
+      expect(modules.temporalAttentionService).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo Auth', () => {
+      expect(modules.authRoutes).toBeDefined();
+      expect(modules.authController).toBeDefined();
+      expect(modules.authService).toBeDefined();
+      expect(modules.authRepository).toBeDefined();
+    });
+
+    it('debe exportar los componentes del módulo System', () => {
+      expect(modules.systemRoutes).toBeDefined();
+      expect(modules.systemService).toBeDefined();
+    });
   });
 
   describe('Jerarquía de Errores de Dominio (src/core/errors/appError.js)', () => {

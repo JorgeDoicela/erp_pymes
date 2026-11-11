@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { attendanceService } from '../src/services/attendance/attendanceService.js';
-import { attendanceRepository } from '../src/repositories/attendance/attendanceRepository.js';
-import employeeRepository from '../src/repositories/employees/employeeRepository.js';
+import { attendanceService } from '../src/modules/attendance/attendance.service.js';
+import { attendanceRepository } from '../src/modules/attendance/attendance.repository.js';
+import employeeRepository from '../src/modules/employees/employee.repository.js';
 import prisma from '../src/database/db.js';
 import { encryptCoordinate } from '../src/utils/encryption.js';
 
@@ -38,7 +38,7 @@ const { mockAttendanceRepo, mockEmpRepo } = vi.hoisted(() => ({
     }
 }));
 
-vi.mock('../src/repositories/attendance/attendanceRepository.js', () => ({
+vi.mock('../src/modules/attendance/attendance.repository.js', () => ({
     attendanceRepository: mockAttendanceRepo,
     default: mockAttendanceRepo
 }));
@@ -48,7 +48,7 @@ vi.mock('../src/modules/attendance/attendance.repository.js', () => ({
     default: mockAttendanceRepo
 }));
 
-vi.mock('../src/repositories/employees/employeeRepository.js', () => ({
+vi.mock('../src/modules/employees/employee.repository.js', () => ({
     default: mockEmpRepo
 }));
 

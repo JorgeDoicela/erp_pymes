@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import salaryAdvanceService from '../src/services/payroll/salaryAdvanceService.js';
+import salaryAdvanceService from '../src/modules/payroll/salaryAdvance.service.js';
 import prisma from '../src/database/db.js';
 
 vi.mock('../src/database/db.js', () => ({
@@ -22,7 +22,7 @@ vi.mock('../src/database/db.js', () => ({
     }
 }));
 
-vi.mock('../src/repositories/audit/auditRepository.js', () => ({
+vi.mock('../src/modules/audit/audit.repository.js', () => ({
     default: {
         createLog: vi.fn().mockResolvedValue({}),
         log: vi.fn().mockResolvedValue({})
