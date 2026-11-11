@@ -11,21 +11,16 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { FiX, FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import { getSectionsByRole, getModulesByRole } from '@core/constants/modules.jsx';
 import { NormaLogo } from '@core/ui';
-import {
-  isSuperAdmin as checkIsSuperAdmin,
-  getRoleLabel as getRoleTitle,
-  ROLES,
-} from '@core/constants/roles';
+import { isSuperAdmin as checkIsSuperAdmin, ROLES } from '@core/constants/roles';
 
 const STORAGE_KEY = 'erp_sidebar_collapsed_sections';
 
-const Sidebar = ({ user, onLogout, onClose }) => {
+const Sidebar = ({ user, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const activeItemRef = useRef(null);
 
   const isSuperAdminUser = checkIsSuperAdmin(user);
-  const getRoleLabel = () => getRoleTitle(user);
 
   const sections = getSectionsByRole(user);
   const allModules = getModulesByRole(user);
@@ -187,34 +182,6 @@ const Sidebar = ({ user, onLogout, onClose }) => {
           );
         })}
       </nav>
-
-      {/* Footer de Perfil y Cierre de Sesión */}
-      <div className="p-3.5 border-t border-gray-200 bg-white">
-        <Link
-          to="/profile"
-          onClick={() => {
-            if (onClose) onClose();
-          }}
-          className="flex items-center gap-2.5 mb-3 w-full text-left p-1.5 rounded border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all group cursor-pointer no-underline"
-          title="Ver mi perfil"
-        >
-          <div className="w-8 h-8 rounded bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center font-mono font-semibold text-xs shrink-0 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-colors">
-            {user?.firstName?.[0] || 'A'}
-          </div>
-          <div className="overflow-hidden flex-1">
-            <p className="text-xs font-semibold text-gray-900 truncate leading-tight">
-              {user?.firstName || 'Admin'}
-            </p>
-            <p className="text-[11px] text-gray-400 truncate leading-tight">{getRoleLabel()}</p>
-          </div>
-        </Link>
-        <button
-          onClick={onLogout}
-          className="w-full py-1.5 px-3 rounded border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors text-xs font-medium bg-white cursor-pointer"
-        >
-          Cerrar Sesión
-        </button>
-      </div>
     </aside>
   );
 };
