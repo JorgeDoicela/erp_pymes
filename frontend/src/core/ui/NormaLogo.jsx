@@ -56,15 +56,8 @@ export const NormaLogo = ({
     lg: 'text-lg',
   };
 
-  const erpSizes = {
-    sm: 'text-[10px]',
-    md: 'text-[11px]',
-    lg: 'text-xs',
-  };
-
   const iconSize = iconSizes[size] || iconSizes.md;
   const textSize = textSizes[size] || textSizes.md;
-  const erpSize = erpSizes[size] || erpSizes.md;
 
   if (variant === 'icon') {
     return <NormaIcon size={iconSize} className={className} />;
@@ -75,23 +68,13 @@ export const NormaLogo = ({
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
       <NormaIcon size={iconSize} />
-      <div className="flex items-center gap-1.5 leading-none">
+      <div className="flex items-center leading-none">
         <span
           className={`font-bold tracking-tight ${textSize} ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}
         >
           NORMA
-        </span>
-        <span className={`${isDark ? 'text-gray-600' : 'text-gray-300'} font-normal text-xs`}>
-          ·
-        </span>
-        <span
-          className={`font-mono font-medium tracking-wider uppercase ${erpSize} ${
-            isDark ? 'text-gray-400' : 'text-gray-500'
-          }`}
-        >
-          ERP
         </span>
       </div>
     </div>

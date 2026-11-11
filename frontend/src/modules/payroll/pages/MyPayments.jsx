@@ -412,7 +412,7 @@ const MyPayments = ({ user }) => {
                 {/* Sello Empleador */}
                 <div className="p-3 border border-gray-200 rounded">
                   <p className="font-semibold text-gray-900">
-                    {selectedPayroll.employee?.tenant?.name || 'NORMA ERP S.A.'}
+                    {selectedPayroll.employee?.tenant?.name || 'NORMA S.A.'}
                   </p>
                   <p className="text-[11px] text-gray-500">Dpto. Talento Humano y Nómina</p>
                   <p className="text-[11px] text-gray-600 mt-1">Autorización y Emisión Conforme</p>

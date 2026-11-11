@@ -16,7 +16,8 @@ const EmployeeAbsences = () => {
   const isSuperAdmin =
     currentUser?.role === 'superadmin' ||
     currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com';
+    currentUser?.email === 'admin@emplifi.com' ||
+    currentUser?.email === 'jorge.doicela.m@gmail.com';
 
   const [requests, setRequests] = useState([]);
   const [isCreating, setIsCreating] = useState(false);

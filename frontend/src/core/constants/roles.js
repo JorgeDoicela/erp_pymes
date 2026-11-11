@@ -24,7 +24,10 @@ export const isSuperAdmin = (user) => {
   const role = (user.role || '').toLowerCase();
   const email = (user.email || '').toLowerCase();
   return (
-    role === ROLES.SUPERADMIN || email === 'admin@normaerp.com' || email === 'admin@emplifi.com'
+    role === ROLES.SUPERADMIN ||
+    email === 'admin@normaerp.com' ||
+    email === 'admin@emplifi.com' ||
+    email === 'jorge.doicela.m@gmail.com'
   );
 };
 

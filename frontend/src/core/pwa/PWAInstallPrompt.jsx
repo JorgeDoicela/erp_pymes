@@ -97,7 +97,7 @@ export default function PWAInstallPrompt() {
   if (isInstalled) return null;
 
   return (
-    <div className="fixed bottom-20 right-5 md:right-6 z-50 flex flex-col items-end gap-3 pointer-events-auto">
+    <div className="fixed bottom-4 right-4 md:right-5 z-50 flex flex-col items-end gap-3 pointer-events-auto">
       <AnimatePresence>
         {showPrompt && (
           <motion.div
@@ -119,7 +119,7 @@ export default function PWAInstallPrompt() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm text-gray-900 flex items-center gap-1.5">
-                      Instalar Aplicación Norma ERP
+                      Instalar Aplicación Norma
                       <span className="text-[10px] bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.2 rounded font-mono">
                         PWA
                       </span>
@@ -167,7 +167,7 @@ export default function PWAInstallPrompt() {
                     </li>
                     <li>
                       O abre el menú del navegador y selecciona{' '}
-                      <span className="font-bold text-blue-600">"Instalar Norma ERP"</span>.
+                      <span className="font-bold text-blue-600">"Instalar Norma"</span>.
                     </li>
                   </ol>
                 </div>
@@ -196,7 +196,7 @@ export default function PWAInstallPrompt() {
       <button
         onClick={() => setShowPrompt((prev) => !prev)}
         className="border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-        title="Instalar Norma ERP PWA"
+        title="Instalar Norma PWA"
       >
         <FiDownload size={13} className="text-blue-600" />
         <span>Instalar App</span>

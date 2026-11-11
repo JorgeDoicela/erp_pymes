@@ -231,3 +231,13 @@ export const formatRelativeTime = (timestamp) => {
   if (diffDays < 7) return `Hace ${diffDays} días`;
   return new Date(timestamp).toLocaleDateString('es-EC', { day: 'numeric', month: 'short' });
 };
+
+const moduleTracker = {
+  getRawModuleHistory,
+  recordModuleVisit,
+  getFrequentModules,
+  getRecentModules,
+  formatRelativeTime,
+};
+
+export default moduleTracker;

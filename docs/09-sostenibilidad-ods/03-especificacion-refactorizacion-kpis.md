@@ -99,16 +99,26 @@ graph TD
           "status": "COMPLIANT",
           "summary": "El 100% de las desvinculaciones cuenta con acta de finiquito y verificación criptográfica QR."
         },
-        "salaryEquitablityIndex": {
+        "salaryEquitabilityIndex": {
           "code": "8.5.2",
           "label": "Cumplimiento de Salario Básico y Dignidad",
           "value": 100.0,
           "target": 100.0,
           "unit": "%",
           "status": "COMPLIANT",
-          "summary": "0 contratos por debajo del Salario Básico Unificado vigente."
+          "summary": "52 de 52 colaboradores activos perciben al menos el SBU vigente ($460.00 USD)."
         }
       }
+    },
+    "erpContext": {
+      "totalActiveEmployees": 52,
+      "subSbuEmployeesCount": 0,
+      "averageSalaryUsd": 785.4,
+      "openAccountingPeriods": 1,
+      "totalJournalEntries": 148,
+      "openJobVacancies": 3,
+      "totalPerformanceEvaluations": 45,
+      "activeEntrepreneurships": 2
     }
   }
 }
@@ -145,7 +155,10 @@ El servicio agrega información a partir de las entidades del esquema relacional
    Suma las horas en `Attendance.overtimeHours` del mes y las contrasta con las horas liquidadas en los conceptos de sobretiempo en `PayrollDetail`.
 
 4. **Transparencia en Desvinculaciones (`verifiedLegalSettlements`):**
-   Verifica que los procesos de `OffboardingProcess` cuenten con liquidación calculada y documento firmado digitalmente.
+   Verifica que los procesos de `OffboardingProcess` cuenten con liquidación calculada (`severanceAmount`, `desahucioAmount`, `totalSettlement`) y estado completado.
+
+5. **Dignidad Salarial y Desencriptación en Memoria (`salaryEquitabilityIndex`):**
+   Desencripta en memoria el campo `Employee.salary` cifrado con `AES-256-GCM` (`decryptSalary`) y verifica con `Decimal.js` que cada colaborador activo perciba al menos el Salario Básico Unificado vigente (`$460.00 USD`).
 
 ---
 

@@ -1023,7 +1023,7 @@ const EMPLOYEES_EMPRESA_2 = [
 
 export async function seedUsers(prisma) {
   console.log('[USERS] Configurando exactamente 2 Empresas SaaS con sus equipos completos...');
-  const password = await bcrypt.hash('Emplifi2025!', 10);
+  const password = await bcrypt.hash('Norma2026!', 10);
 
   // ── 1. EXACTAMENTE 7 TENANTS / EMPRESAS MULTI-SECTOR ─────────────────────
   const TENANTS_TO_SEED = [
@@ -1172,7 +1172,38 @@ export async function seedUsers(prisma) {
         vacationDays: 0,
       },
     });
-    console.log('SuperAdmin Global: admin@normaerp.com y admin@emplifi.com / Emplifi2025!');
+    // Crear alias personal/oficial jorge.doicela.m@gmail.com
+    await prisma.employee.upsert({
+      where: { email: 'jorge.doicela.m@gmail.com' },
+      update: { password, tenantId: null, role: 'superadmin', isActive: true },
+      create: {
+        tenantId: null,
+        firstName: 'Jorge',
+        lastName: 'Doicela',
+        email: 'jorge.doicela.m@gmail.com',
+        role: 'superadmin',
+        department: 'Administración Global',
+        position: 'SuperAdmin SaaS',
+        salary: encryptSalary(0),
+        password,
+        identityCard: '0101010103',
+        birthDate: new Date('1990-01-01'),
+        hireDate: new Date('2020-01-01'),
+        isActive: true,
+        address: 'Plataforma Norma ERP',
+        phone: '0999999999',
+        civilStatus: 'Soltero',
+        contractType: 'SaaS Owner',
+        bankName: encrypt('N/A'),
+        accountNumber: encrypt('N/A'),
+        accountType: 'N/A',
+        vacationDays: 0,
+      },
+    });
+
+    console.log(
+      'SuperAdmin Global: jorge.doicela.m@gmail.com, admin@normaerp.com y admin@emplifi.com / Norma2026!'
+    );
   } catch (e) {
     superAdmin = await prisma.employee.findFirst({ where: { role: 'superadmin' } });
   }

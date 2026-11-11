@@ -8,6 +8,7 @@
 
 import { Outlet, useLocation } from 'react-router-dom';
 import DashboardLayout from './DashboardLayout';
+import GlobalLegalAssistantWidget from '../../modules/sustainability/components/GlobalLegalAssistantWidget.jsx';
 
 const MainLayout = ({ user, onLogout }) => {
   const location = useLocation();
@@ -43,6 +44,7 @@ const MainLayout = ({ user, onLogout }) => {
   return (
     <DashboardLayout user={user} onLogout={onLogout} title={title}>
       <Outlet />
+      <GlobalLegalAssistantWidget />
     </DashboardLayout>
   );
 };

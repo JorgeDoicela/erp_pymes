@@ -80,10 +80,32 @@ export const getBiometricSetting = async (req, res) => {
   }
 };
 
+export const getSmtpStatus = async (req, res, next) => {
+  try {
+    const status = await systemService.getSmtpStatus();
+    res.json({ success: true, data: status });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const sendTestEmail = async (req, res, next) => {
+  try {
+    const { to } = req.body || {};
+    const recipient = to || req.user?.email;
+    const result = await systemService.sendTestEmail(recipient);
+    res.json({ success: true, message: `Correo de prueba emitido a ${recipient}`, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getHealth,
   getSettings,
   updateSettings,
   reverseGeocode,
   getBiometricSetting,
+  getSmtpStatus,
+  sendTestEmail,
 };

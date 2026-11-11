@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import NormaLogo from '@core/ui/NormaLogo';
 import DeveloperCard from '@core/ui/DeveloperCard';
+import { detectDeviceBiometrics } from '@core/utils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -36,6 +37,51 @@ const IconFingerprint = ({ className = 'w-4 h-4' }) => (
   </svg>
 );
 
+const IconFaceId = ({ className = 'w-4 h-4' }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M4 7V5a1 1 0 0 1 1-1h2" />
+    <path d="M20 7V5a1 1 0 0 0-1-1h-2" />
+    <path d="M4 17v2a1 1 0 0 0 1 1h2" />
+    <path d="M20 17v2a1 1 0 0 1-1 1h-2" />
+    <circle cx="9" cy="9.5" r="1" fill="currentColor" />
+    <circle cx="15" cy="9.5" r="1" fill="currentColor" />
+    <path d="M12 11.5v2.5" />
+    <path d="M9 16.5c1 1 5 1 6 0" />
+  </svg>
+);
+
+const IconWindowsHello = ({ className = 'w-4 h-4' }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.75"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M4 8V5a1 1 0 0 1 1-1h3" />
+    <path d="M20 8V5a1 1 0 0 0-1-1h-3" />
+    <path d="M4 16v3a1 1 0 0 0 1 1h3" />
+    <path d="M20 16v3a1 1 0 0 1-1 1h-3" />
+    <circle cx="9" cy="10" r="1" fill="currentColor" />
+    <circle cx="15" cy="10" r="1" fill="currentColor" />
+    <path d="M9.5 14.5a3.5 3.5 0 0 0 5 0" />
+  </svg>
+);
+
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,8 +90,27 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState('login'); // 'login' or 'forgotPassword'
   const [successMsg, setSuccessMsg] = useState('');
+  const [biometricInfo, setBiometricInfo] = useState({
+    checking: true,
+    available: false,
+    type: 'none',
+    label: '',
+    subtitle: '',
+  });
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+    detectDeviceBiometrics().then((info) => {
+      if (isMounted) {
+        setBiometricInfo({ ...info, checking: false });
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const authErr = sessionStorage.getItem('auth_error_toast');
@@ -227,7 +292,7 @@ function Login({ onLogin }) {
             <NormaLogo size="lg" />
           </div>
           <h1 className="text-xl font-semibold text-gray-900 mb-1 tracking-tight">
-            Acceso al Sistema ERP
+            Acceso al Sistema
           </h1>
           <p className="text-xs text-gray-500">
             Ingrese sus credenciales de usuario para continuar
@@ -326,27 +391,41 @@ function Login({ onLogin }) {
                 </button>
               </div>
 
-              {/* Separador de acceso alternativo */}
-              <div className="relative py-1 text-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-white px-2.5 text-gray-400">o</span>
-                </div>
-              </div>
+              {/* Acceso biométrico condicional inteligente según capacidades reales del dispositivo */}
+              {biometricInfo.available && (
+                <>
+                  {/* Separador de acceso alternativo */}
+                  <div className="relative py-1 text-center">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200" />
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="bg-white px-2.5 text-gray-400">o</span>
+                    </div>
+                  </div>
 
-              {/* Botón de acceso con huella o rostro */}
-              <button
-                type="button"
-                onClick={handleBiometricLogin}
-                disabled={loading}
-                aria-label="Ingresar con huella digital o rostro"
-                className="w-full py-2.5 px-4 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 text-xs font-medium rounded transition-colors flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <IconFingerprint className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                <span>Ingresar con huella digital o reconocimiento facial</span>
-              </button>
+                  {/* Botón de acceso biométrico adaptado al hardware del dispositivo */}
+                  <button
+                    type="button"
+                    onClick={handleBiometricLogin}
+                    disabled={loading}
+                    aria-label={biometricInfo.label}
+                    title={biometricInfo.subtitle || biometricInfo.label}
+                    className="w-full py-2.5 px-4 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 text-xs font-medium rounded transition-colors flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {biometricInfo.type === 'faceId' && (
+                      <IconFaceId className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                    )}
+                    {biometricInfo.type === 'windowsHello' && (
+                      <IconWindowsHello className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                    )}
+                    {['touchId', 'fingerprint', 'generic'].includes(biometricInfo.type) && (
+                      <IconFingerprint className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                    )}
+                    <span>{biometricInfo.label}</span>
+                  </button>
+                </>
+              )}
 
               {/* Links */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">

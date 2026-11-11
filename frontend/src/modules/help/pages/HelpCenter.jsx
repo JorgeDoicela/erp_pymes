@@ -75,13 +75,13 @@ const HelpCenter = () => {
     general: [
       {
         id: 'g1',
-        title: 'Introducción a la Plataforma ERP',
+        title: 'Introducción a la Plataforma',
         icon: FiBriefcase,
         content: (
           <>
             <p>
-              <strong>NORMA ERP</strong> es un ecosistema integral de gestión del talento humano,
-              nómina legal y contabilidad operativa para PyMEs.
+              <strong>NORMA</strong> es un ecosistema integral de gestión del talento humano, nómina
+              legal y contabilidad operativa para PyMEs.
             </p>
             <ul className="list-disc pl-4 space-y-1 mt-1.5 text-gray-600">
               <li>

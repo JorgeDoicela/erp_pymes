@@ -11,6 +11,7 @@ import http from 'http';
 import app from './app.js';
 import {
   socketService,
+  emailService,
   initContractCronJob,
   initPerformanceCronJob,
   initRequestMonitorCronJob,
@@ -35,6 +36,22 @@ socketService.init(server);
 server.listen(PORT, () => {
   console.log(`Backend NORMA ERP corriendo en http://localhost:${PORT}`);
   console.log('Server updated at ' + new Date().toISOString());
+
+  // Diagnóstico no bloqueante de conectividad de correo SMTP
+  emailService
+    .verifyConnection()
+    .then((status) => {
+      if (status.verified && status.configured) {
+        console.log(`[SMTP] Servidor de correo activo: ${status.message}`);
+      } else if (!status.configured) {
+        console.log(`[SMTP] ${status.message}`);
+      } else {
+        console.warn(`[SMTP Warning] Verificación de correo fallida: ${status.message}`);
+      }
+    })
+    .catch((err) => {
+      console.warn(`[SMTP Warning] Error al verificar correo: ${err.message}`);
+    });
 });
 
 const gracefulShutdown = async (signal) => {

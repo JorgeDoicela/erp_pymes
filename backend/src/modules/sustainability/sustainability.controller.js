@@ -1,6 +1,7 @@
 /**
  * @file sustainability.controller.js
- * @description Controlador HTTP para el dominio de Sostenibilidad ODS 8, Asistente RAG y Exportador de Fine-Tuning
+ * @description Controlador HTTP para el dominio de Sostenibilidad ODS 8, Asistente RAG Multi-Lugar,
+ * Evaluador Jurídico y Exportador de Datasets de Fine-Tuning.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -10,7 +11,11 @@ import sustainabilityService from './sustainability.service.js';
 import sustainabilityRagService from './sustainabilityRag.service.js';
 import sustainabilityFineTuningService from './sustainabilityFineTuning.service.js';
 import sustainabilityRepository from './sustainability.repository.js';
-import { AdvisorQuerySchema, DocumentIngestSchema, FineTuningExportSchema } from './sustainability.dto.js';
+import {
+  AdvisorQuerySchema,
+  DocumentIngestSchema,
+  FineTuningExportSchema,
+} from './sustainability.dto.js';
 
 /**
  * GET /api/sustainability/ods8
@@ -35,7 +40,8 @@ export async function getOds8Metrics(req, res) {
 
 /**
  * POST /api/sustainability/advisor/query
- * Realiza una consulta al Asistente RAG con citación legal de Ecuador y ODS 8
+ * Realiza una consulta al Asistente RAG con Modelo Buscador (1,910+ fragmentos de los 4 PDFs),
+ * Modelo Evaluador y Adaptador Universal LLM (DeepSeek / OpenAI / Gemini / Local Fine-Tuned).
  */
 export async function queryAdvisor(req, res) {
   try {
@@ -50,12 +56,23 @@ export async function queryAdvisor(req, res) {
       });
     }
 
-    const { query, conversationHistory, odsTargetFilter } = validation.data;
+    const {
+      query,
+      conversationHistory,
+      odsTargetFilter,
+      categoryFilter,
+      moduleContext,
+      providerOverrides,
+    } = validation.data;
+
     const result = await sustainabilityRagService.processQuery({
       query,
       conversationHistory,
       tenantId,
       odsTargetFilter,
+      categoryFilter,
+      moduleContext,
+      providerOverrides,
     });
 
     return res.json({
@@ -65,7 +82,7 @@ export async function queryAdvisor(req, res) {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Error al procesar consulta en el asistente de sostenibilidad',
+      message: 'Error al procesar consulta en el asistente jurídico y contable',
       error: error.message,
     });
   }
@@ -105,7 +122,7 @@ export async function ingestDocument(req, res) {
 
 /**
  * POST /api/sustainability/fine-tuning/export
- * Genera el dataset JSONL para entrenamiento / fine-tuning de un modelo LLM grande
+ * Genera el dataset JSONL para entrenamiento / fine-tuning de un modelo LLM grande o buscador
  */
 export async function exportFineTuningDataset(req, res) {
   try {
@@ -120,16 +137,20 @@ export async function exportFineTuningDataset(req, res) {
       });
     }
 
-    const { targetModel, includeTenantData, categories } = validation.data;
+    const { targetModel, includeTenantData, includeFullPdfCorpus, categories } = validation.data;
     const dataset = await sustainabilityFineTuningService.generateDataset({
       targetModel,
       includeTenantData,
+      includeFullPdfCorpus,
       tenantId,
       categories,
     });
 
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="fine_tuning_ecuador_ods8_${targetModel}.jsonl"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="fine_tuning_ecuador_ods8_${targetModel}.jsonl"`
+    );
 
     return res.json({
       success: true,

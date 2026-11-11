@@ -20,7 +20,7 @@ export const generatePayslipPDF = async (detail, employee, periodDate, options =
   const doc = new jsPDF();
 
   // Nombre de la Empresa
-  const companyName = employee?.tenant?.name || employee?.companyName || 'NORMA ERP S.A.';
+  const companyName = employee?.tenant?.name || employee?.companyName || 'NORMA S.A.';
   const companyRuc = employee?.tenant?.ruc || '1792345678001';
 
   // Header Principal

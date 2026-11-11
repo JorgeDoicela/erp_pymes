@@ -1,102 +1,173 @@
 /**
  * @file SustainabilityDashboard.jsx
- * @description Tablero de Sostenibilidad ODS 8, Métricas de Trabajo Decente y Asistente RAG Ecuatoriano
+ * @description Consola Operativa de Gobernanza ODS 8, Auditoría Multi-Módulo y Asistente RAG (Estándar Holded/Linear)
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import React from 'react';
-import { FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
+import React, { useState } from 'react';
+import { FiRefreshCw } from 'react-icons/fi';
 import { useSustainabilityMetrics } from '../hooks/useSustainabilityMetrics.js';
 import SustainabilityKPIGrid from '../components/SustainabilityKPIGrid.jsx';
 import SustainabilityAIAdvisor from '../components/SustainabilityAIAdvisor.jsx';
 
 export default function SustainabilityDashboard() {
   const { metrics, loading, error, refetch } = useSustainabilityMetrics();
+  const [activeTab, setActiveTab] = useState('advisor');
 
   const ods = metrics?.ods || {};
+  const erpContext = metrics?.erpContext || {};
   const overallScore = ods.overallScore ?? 100;
   const complianceLevel = ods.complianceLevel || 'ALTO';
+  const indicatorsCount = Object.keys(ods.indicators || {}).length || 5;
 
   return (
-    <div className="space-y-5">
-      {/* Page Header */}
+    <div className="space-y-4">
+      {/* Encabezado limpio estilo Holded / Linear */}
       <div className="bg-white border border-gray-200 rounded-[4px] p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-[3px]">
-              Agenda ONU 2030
-            </span>
-            <span className="text-xs text-gray-400 font-mono">ODS 8</span>
-          </div>
-          <h1 className="text-lg font-bold text-gray-950 mt-1">
-            Gobernanza de Sostenibilidad y Trabajo Decente (ODS 8)
+          <span className="text-[11px] font-mono font-medium text-gray-500 uppercase tracking-wider">
+            Gobernanza Legal, Contable y Sostenibilidad · Agenda 2030 (ODS 8)
+          </span>
+          <h1 className="text-lg font-semibold text-gray-900 mt-0.5">
+            Centro de Inteligencia Normativa y Auditoría ODS 8
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            Monitoreo programático de formalidad contractual, seguridad social (IESS) y derechos laborales en Ecuador.
+            Asistente RAG sobre Código del Trabajo, IESS, Tributación SRI, Contabilidad NIIF y
+            monitoreo en vivo de indicadores.
           </p>
         </div>
 
-        {/* Global Compliance Badge & Action */}
         <div className="flex items-center gap-4">
-          <div className="bg-gray-50 border border-gray-200 rounded-[4px] px-3.5 py-2 text-right">
-            <div className="text-[10px] font-mono text-gray-500 uppercase tracking-wide">
-              Cumplimiento Global
+          <div className="text-right font-mono">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider">
+              Índice Global ODS 8 · {complianceLevel}
             </div>
-            <div className="flex items-baseline justify-end gap-1.5 mt-0.5">
-              <span className="text-xl font-bold font-mono text-gray-950 tabular-nums">
-                {overallScore.toFixed(1)}%
-              </span>
-              <span
-                className={`text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-[2px] border ${
-                  complianceLevel === 'ALTO'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-amber-50 text-amber-700 border-amber-200'
-                }`}
-              >
-                {complianceLevel}
-              </span>
+            <div className="text-xl font-semibold text-gray-900 tabular-nums mt-0.5">
+              {overallScore.toFixed(2)}%
             </div>
           </div>
 
           <button
+            type="button"
             onClick={refetch}
             disabled={loading}
-            className="p-2.5 text-gray-600 bg-white hover:bg-gray-50 border border-gray-200 rounded-[4px] transition-colors shadow-xs"
-            title="Recalcular métricas ODS 8"
+            aria-label="Recalcular métricas"
+            className="px-3 py-2 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-[4px] flex items-center gap-1.5 transition-colors"
           >
-            <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
+            <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Actualizar</span>
           </button>
         </div>
       </div>
 
-      {/* Error state */}
+      {/* Navegación por Pestañas con contadores tabulares */}
+      <div className="border-b border-gray-200 flex items-center gap-6 px-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('advisor')}
+          className={`pb-2.5 text-xs font-medium transition-colors border-b-2 ${
+            activeTab === 'advisor'
+              ? 'border-[#111827] text-gray-900 font-semibold'
+              : 'border-transparent text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          Asistente Jurídico y Contable RAG
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('matrix')}
+          className={`pb-2.5 text-xs font-medium transition-colors border-b-2 font-mono tabular-nums ${
+            activeTab === 'matrix'
+              ? 'border-[#111827] text-gray-900 font-semibold'
+              : 'border-transparent text-gray-500 hover:text-gray-800'
+          }`}
+        >
+          Matriz de Indicadores ODS 8 ({indicatorsCount})
+        </button>
+      </div>
+
+      {/* Estado de Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-[4px] text-xs flex items-center gap-2">
-          <FiAlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
+        <div className="bg-white border border-gray-300 text-[#991b1b] px-4 py-3 rounded-[4px] text-xs font-mono">
+          Error de diagnóstico: {error}
         </div>
       )}
 
-      {/* Indicadores Clave del ODS 8 */}
-      <div>
-        <div className="flex items-center justify-between mb-2.5">
-          <h2 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-            Indicadores Troncales de Sostenibilidad Laboral
-          </h2>
-          <span className="text-[11px] font-mono text-gray-400">
-            Base: Legislación Vigente Ecuador 2026
-          </span>
-        </div>
-        <SustainabilityKPIGrid indicators={ods.indicators} />
-      </div>
+      {/* Contenido Principal con Panel Lateral Compacto */}
+      {activeTab === 'advisor' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
+          <div className="lg:col-span-3">
+            <SustainabilityAIAdvisor />
+          </div>
 
-      {/* Asistente RAG y Asesor Jurídico Ecuatoriano */}
-      <SustainabilityAIAdvisor
-        overallScore={overallScore}
-        complianceLevel={complianceLevel}
-      />
+          {/* Columna lateral derecha compacta de 1 columna (Regla 5 estilos-erp-pymes) */}
+          <aside className="bg-white border border-gray-200 rounded-[4px] p-4 space-y-4">
+            <div className="border-b border-gray-100 pb-2.5">
+              <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
+                Telemetría en Vivo
+              </span>
+              <h2 className="text-xs font-semibold text-gray-900 mt-0.5">
+                Contexto Transaccional del Tenant
+              </h2>
+            </div>
+
+            <dl className="space-y-2.5 text-xs">
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <dt className="text-gray-500">Colaboradores Activos</dt>
+                <dd className="font-mono font-semibold text-gray-900 tabular-nums">
+                  {erpContext.totalActiveEmployees ?? 0}
+                </dd>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <dt className="text-gray-500">Contratos Vigentes</dt>
+                <dd className="font-mono font-semibold text-gray-900 tabular-nums">
+                  {erpContext.employeesWithActiveContract ?? 0}
+                </dd>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <dt className="text-gray-500">Sueldo Promedio</dt>
+                <dd className="font-mono font-semibold text-gray-900 tabular-nums">
+                  ${(erpContext.averageSalaryUsd ?? 0).toFixed(2)}
+                </dd>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <dt className="text-gray-500">SBU Referencia 2026</dt>
+                <dd className="font-mono text-gray-700 tabular-nums">
+                  ${(ods.sbuReferenceUsd ?? 460).toFixed(2)}
+                </dd>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <dt className="text-gray-500">Asientos Contables NIIF</dt>
+                <dd className="font-mono font-semibold text-gray-900 tabular-nums">
+                  {erpContext.totalJournalEntries ?? 0}
+                </dd>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <dt className="text-gray-500">Períodos Contables Abiertos</dt>
+                <dd className="font-mono font-semibold text-gray-900 tabular-nums">
+                  {erpContext.openAccountingPeriods ?? 0}
+                </dd>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <dt className="text-gray-500">Horas Extras (30d)</dt>
+                <dd className="font-mono font-semibold text-gray-900 tabular-nums">
+                  {(erpContext.overtimeHoursTracked30d ?? 0).toFixed(1)}h
+                </dd>
+              </div>
+              <div className="flex justify-between py-1">
+                <dt className="text-gray-500">Consentimiento LOPDP</dt>
+                <dd className="font-mono font-semibold text-gray-900 tabular-nums">
+                  {(erpContext.trackingConsentRate ?? 100).toFixed(1)}%
+                </dd>
+              </div>
+            </dl>
+          </aside>
+        </div>
+      ) : (
+        <SustainabilityKPIGrid indicators={ods.indicators} />
+      )}
     </div>
   );
 }

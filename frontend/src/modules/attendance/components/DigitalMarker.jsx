@@ -61,6 +61,8 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
   // Hook desacoplado de biometría WebAuthn
   const {
     biometricEnabled,
+    biometricSupported,
+    deviceBiometrics,
     hasBiometricRegistered,
     setHasBiometricRegistered,
     registeringBiometric,
@@ -187,11 +189,13 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     currentUser?.role === 'admin' ||
     currentUser?.role === 'superadmin' ||
     currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com';
+    currentUser?.email === 'admin@emplifi.com' ||
+    currentUser?.email === 'jorge.doicela.m@gmail.com';
   const isSuperAdmin =
     currentUser?.role === 'superadmin' ||
     currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com';
+    currentUser?.email === 'admin@emplifi.com' ||
+    currentUser?.email === 'jorge.doicela.m@gmail.com';
 
   const initiateMark = (type) => {
     if (isSuperAdmin && !foundEmployee) {
@@ -357,11 +361,12 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
         />
       )}
 
-      {/* Banner de Registro Biométrico In-Situ */}
-      {biometricEnabled && hasBiometricRegistered === false && (
+      {/* Banner de Registro Biométrico In-Situ (Solo si el dispositivo cuenta con hardware compatible) */}
+      {biometricEnabled && biometricSupported && hasBiometricRegistered === false && (
         <BiometricRegistrationBanner
           registering={registeringBiometric}
           onRegister={handleQuickRegisterBiometric}
+          deviceBiometrics={deviceBiometrics}
         />
       )}
 

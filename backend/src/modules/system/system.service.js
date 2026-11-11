@@ -165,6 +165,34 @@ export class SystemService {
       };
     }
   }
+
+  async getSmtpStatus() {
+    const { emailService } = await import('../notifications/index.js');
+    return emailService.verifyConnection();
+  }
+
+  async sendTestEmail(recipientEmail) {
+    const { emailService } = await import('../notifications/index.js');
+    const targetEmail = recipientEmail || process.env.EMAIL_USER || 'admin@normaerp.com';
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 6px; background-color: #ffffff;">
+        <h2 style="color: #111827; font-size: 18px; margin-top: 0; margin-bottom: 12px;">Comprobación de Servidor SMTP · Norma ERP</h2>
+        <p style="color: #374151; font-size: 14px; line-height: 1.5;">Este es un correo de prueba emitido automáticamente para validar la conectividad del servidor SMTP, el pool de conexiones y la entregabilidad del sistema.</p>
+        <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 12px; margin: 16px 0; font-size: 12px; color: #4b5563; font-family: monospace;">
+          <div><strong>Estado:</strong> Conexión Verificada</div>
+          <div><strong>Fecha y Hora:</strong> ${new Date().toISOString()}</div>
+          <div><strong>Destinatario:</strong> ${targetEmail}</div>
+        </div>
+        <p style="color: #6b7280; font-size: 12px; margin-bottom: 0;">Si has recibido este mensaje, el servicio de correo transaccional de Norma ERP se encuentra operando correctamente.</p>
+      </div>
+    `;
+
+    return emailService.sendEmail({
+      to: targetEmail,
+      subject: 'Prueba de Conectividad SMTP · Norma ERP',
+      html,
+    });
+  }
 }
 
 export const systemService = new SystemService();

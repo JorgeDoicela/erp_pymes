@@ -9,10 +9,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { systemService } from '@modules/superadmin';
+import { detectDeviceBiometrics } from '@core/utils';
 
 export function useBiometricAuth() {
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [biometricSupported, setBiometricSupported] = useState(false);
+  const [deviceBiometrics, setDeviceBiometrics] = useState({
+    available: false,
+    type: 'none',
+    label: '',
+    platformName: 'Desconocido',
+  });
   const [hasBiometricRegistered, setHasBiometricRegistered] = useState(null);
   const [registeringBiometric, setRegisteringBiometric] = useState(false);
 
@@ -45,19 +52,21 @@ export function useBiometricAuth() {
 
     const checkSupport = async () => {
       try {
-        if (
-          typeof window !== 'undefined' &&
-          window.PublicKeyCredential &&
-          typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
-        ) {
-          const available =
-            await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-          if (isMounted) setBiometricSupported(available);
-        } else {
-          if (isMounted) setBiometricSupported(false);
+        const bioInfo = await detectDeviceBiometrics();
+        if (isMounted) {
+          setDeviceBiometrics(bioInfo);
+          setBiometricSupported(bioInfo.available);
         }
       } catch {
-        if (isMounted) setBiometricSupported(false);
+        if (isMounted) {
+          setBiometricSupported(false);
+          setDeviceBiometrics({
+            available: false,
+            type: 'none',
+            label: '',
+            platformName: 'No soportado',
+          });
+        }
       }
     };
 
@@ -170,6 +179,7 @@ export function useBiometricAuth() {
     biometricEnabled,
     setBiometricEnabled,
     biometricSupported,
+    deviceBiometrics,
     hasBiometricRegistered,
     setHasBiometricRegistered,
     registeringBiometric,

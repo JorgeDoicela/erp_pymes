@@ -39,7 +39,7 @@ export const generateCertificatePDF = (employeeData) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(20);
   doc.setTextColor(30, 41, 59);
-  doc.text('NORMA ERP', 105, 25, null, null, 'center');
+  doc.text('NORMA', 105, 25, null, null, 'center');
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
@@ -97,7 +97,7 @@ export const generateCertificatePDF = (employeeData) => {
   doc.text('GERENCIA DE TALENTO HUMANO', 105, currentY + 6, null, null, 'center');
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text('NORMA ERP', 105, currentY + 11, null, null, 'center');
+  doc.text('NORMA', 105, currentY + 11, null, null, 'center');
 
   // QR & Institutional Validation Box (Bottom Left/Right)
   const qrY = currentY + 22;

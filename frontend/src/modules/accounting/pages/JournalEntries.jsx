@@ -147,7 +147,8 @@ const JournalEntries = () => {
   const isSuperAdmin =
     currentUser?.role === 'superadmin' ||
     currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com';
+    currentUser?.email === 'admin@emplifi.com' ||
+    currentUser?.email === 'jorge.doicela.m@gmail.com';
 
   const handleSubmit = async (e) => {
     e.preventDefault();

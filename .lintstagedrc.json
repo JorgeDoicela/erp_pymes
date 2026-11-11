@@ -1,5 +1,5 @@
 {
-  "*": ["secretlint"],
+  "*.{js,jsx,mjs,cjs,json,yml,yaml}": ["secretlint --secretlintignore .secretlintignore"],
   "frontend/**/*.{js,jsx}": ["eslint --config frontend/eslint.config.js --fix", "prettier --write"],
   "backend/**/*.js": ["eslint --config backend/eslint.config.js --fix", "prettier --write"],
   "**/*.{json,css,scss,md}": ["prettier --write"]

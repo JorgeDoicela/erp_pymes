@@ -61,6 +61,12 @@ services:
       RUN_SEED: ${RUN_SEED:-true}
       EMAIL_USER: ${EMAIL_USER:-your-email@example.com}
       EMAIL_PASS: ${EMAIL_PASS:-your-app-password}
+      AI_PROVIDER: ${AI_PROVIDER:-deepseek}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-deepseek-chat}
+      AI_LLM_URL: ${AI_LLM_URL:-}
+      AI_LLM_MODEL: ${AI_LLM_MODEL:-ecuador-erp-ai}
+      AI_LLM_TIMEOUT_MS: ${AI_LLM_TIMEOUT_MS:-25000}
     healthcheck:
       # Docker verifica que el proceso Node responde activamente, no solo que está corriendo
       # Si el proceso se cuelga o crashea silenciosamente, restart:always lo reinicia sólo

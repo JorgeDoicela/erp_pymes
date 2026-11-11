@@ -27,5 +27,17 @@ router.put(
 );
 router.get('/geocode', systemController.reverseGeocode);
 router.get('/biometric-setting', optionalAuth, systemController.getBiometricSetting);
+router.get(
+  '/smtp-status',
+  authenticate,
+  authorize(['admin', 'superadmin']),
+  systemController.getSmtpStatus
+);
+router.post(
+  '/test-email',
+  authenticate,
+  authorize(['admin', 'superadmin']),
+  systemController.sendTestEmail
+);
 
 export default router;

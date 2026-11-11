@@ -161,7 +161,7 @@ const PublicSignatureVerification = () => {
 
       <div className="mt-4 text-center">
         <Link to="/login" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-          Acceso a la Plataforma Institucional NORMA ERP
+          Acceso a la Plataforma Institucional NORMA
         </Link>
       </div>
     </div>

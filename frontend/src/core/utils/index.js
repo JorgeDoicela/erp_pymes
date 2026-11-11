@@ -8,4 +8,5 @@
 
 export * from './formatters.js';
 export * from './validationUtils.js';
+export * from './biometricDetector.js';
 export { default as moduleTracker } from './moduleTracker.js';

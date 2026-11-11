@@ -100,7 +100,7 @@ export default function RegisterTenant() {
             <NormaLogo size="lg" />
           </Link>
           <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
-            Registro de Empresa ERP
+            Registro de Empresa
           </h1>
           <p className="text-xs text-gray-500 mt-1">
             Active su prueba gratuita de 45 días sin necesidad de tarjeta de crédito
@@ -199,7 +199,7 @@ export default function RegisterTenant() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Plan Inicial ERP
+                      Plan Inicial
                     </label>
                     <select
                       name="plan"

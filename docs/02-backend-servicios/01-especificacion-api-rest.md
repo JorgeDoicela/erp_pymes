@@ -500,3 +500,23 @@ Estado del checklist de cumplimiento normativo del tenant.
 ### GET `/health`
 
 Responde `{ "status": "UP", "timestamp": "ISO8601" }` sin consultar la base de datos. Usado por Docker y balanceadores de carga para verificar disponibilidad del proceso.
+
+---
+
+## 24. Sostenibilidad ODS 8 y Asistente Legal IA
+
+### GET `/api/sustainability/ods8`
+
+Calcula en tiempo real los 5 indicadores troncales del ODS 8 (`8.3.1`, `8.5.1`, `8.5.2`, `8.8.1`, `8.8.2`) desencriptando en memoria las remuneraciones cifradas con `AES-256-GCM` y aplicando aritmética `Decimal.js` (20 dígitos, `ROUND_HALF_UP`).
+
+### POST `/api/sustainability/advisor/query`
+
+Consulta al Asistente Legal y Contable IA. Ejecuta el Modelo Buscador BM25 sobre los 1,880 artículos extraídos de los 4 PDFs oficiales, el Modelo Evaluador (Cross-Encoder Reranker + Juez Anti-Alucinación), la calculadora determinista `Decimal.js` y el Adaptador Universal de Inferencia (`deepseek`, `local_ollama`, `local_openai`, `openai`, `gemini`, `groq`, `anthropic`). Soporta filtro contextual por módulo del ERP (`moduleContext`).
+
+### POST `/api/sustainability/knowledge/ingest`
+
+Permite a los administradores del tenant indexar reglamentos internos o políticas corporativas adicionales en las tablas `knowledge_documents` y `knowledge_chunks`.
+
+### POST `/api/sustainability/fine-tuning/export`
+
+Genera y exporta el dataset de entrenamiento supervisado en formato `.jsonl` (`qwen2.5`, `llama3` u `openai`).

@@ -70,7 +70,7 @@ export const AssetActaModal = ({ isOpen, onClose, selectedAsset }) => {
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block font-mono">
                 Empresa / Empleador
               </span>
-              <p className="font-semibold text-gray-900">NORMA ERP S.A.</p>
+              <p className="font-semibold text-gray-900">NORMA S.A.</p>
               <p className="text-gray-500 text-[11px] font-mono tabular-nums">RUC: 1792345678001</p>
             </div>
 

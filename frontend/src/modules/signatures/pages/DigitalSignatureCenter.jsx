@@ -52,7 +52,7 @@ const DigitalSignatureCenter = () => {
     docId: '',
     signerName: '',
     signerId: '',
-    issuer: 'NORMA ERP S.A.',
+    issuer: 'NORMA S.A.',
     content: '',
     notes: 'Firma digital de conformidad',
     expiresInDays: 365,

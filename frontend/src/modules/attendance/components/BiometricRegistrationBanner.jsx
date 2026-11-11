@@ -9,7 +9,15 @@
 import React from 'react';
 import { MdFingerprint } from 'react-icons/md';
 
-export const BiometricRegistrationBanner = ({ registering, onRegister }) => {
+export const BiometricRegistrationBanner = ({ registering, onRegister, deviceBiometrics }) => {
+  const buttonLabel = deviceBiometrics?.platformName
+    ? `Vincular con ${deviceBiometrics.platformName}`
+    : 'Vincular Mi Huella / Passkey';
+
+  const subtitle = deviceBiometrics?.subtitle
+    ? `Agiliza el registro de tu jornada mediante ${deviceBiometrics.subtitle.toLowerCase()}. Vincula tu credencial en un solo paso.`
+    : 'Agiliza el registro de tu jornada utilizando la huella dactilar, FaceID o PIN seguro de tu dispositivo. Vincula tu credencial en un solo paso.';
+
   return (
     <div className="w-full max-w-md mb-5 p-4 bg-gray-50 border border-gray-200 rounded-[4px] text-xs space-y-2.5 text-gray-800">
       <div className="flex items-start gap-2.5">
@@ -18,10 +26,7 @@ export const BiometricRegistrationBanner = ({ registering, onRegister }) => {
         </div>
         <div>
           <p className="font-semibold text-gray-900 text-xs">Acceso Biométrico Rápido y Seguro</p>
-          <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed">
-            Agiliza el registro de tu jornada utilizando la huella dactilar, FaceID o PIN seguro
-            de tu dispositivo. Vincula tu credencial en un solo paso.
-          </p>
+          <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed">{subtitle}</p>
         </div>
       </div>
       <button
@@ -38,7 +43,7 @@ export const BiometricRegistrationBanner = ({ registering, onRegister }) => {
         ) : (
           <>
             <MdFingerprint className="w-4 h-4" />
-            <span>Vincular Mi Huella / Passkey</span>
+            <span>{buttonLabel}</span>
           </>
         )}
       </button>

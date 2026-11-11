@@ -97,3 +97,11 @@ El sistema visual sigue estrictamente el estándar de diseño empresarial de ref
 - **`IntelligentDashboard.jsx`:** Tablero analítico con motor Weibull de riesgo de rotación, scoring multidimensional y ROI proyectado.
 - **`ExecutiveKPIBanner.jsx`:** Banner ejecutivo de oportunidad de ahorro financiero formateado con precisión de moneda centralizada.
 - **`MonteCarloSimulator.jsx`:** Simulación estocástica de escenarios financieros y sensibilidad de retención.
+
+### 3.6. Sostenibilidad ODS 8 y Asistente Legal Contextual Multi-Módulo (`modules/sustainability/`)
+
+- **`SustainabilityDashboard.jsx` (`modules/sustainability/pages/`):** Panel de gobernanza laboral que consolida el índice ponderado de cumplimiento ODS 8, la matriz tabular de los 5 KPIs oficiales y la consola central del asistente jurídico.
+- **`GlobalLegalAssistantWidget.jsx` (`modules/sustainability/components/`):** Asistente flotante contextual montado transversalmente en `MainLayout.jsx`. Detecta la ruta activa del usuario (`/payroll`, `/contracts`, `/offboarding`, `/attendance`, `/accounting`, `/employees`, `/performance`, `/admin/sustainability`), adapta las sugerencias al módulo en pantalla, permite configurar en caliente el proveedor de inferencia (DeepSeek API o Modelo Local `.gguf`) y muestra el puntaje de fidelidad del Modelo Evaluador (`evaluationAudit.groundednessScore`).
+- **`SustainabilityAIAdvisor.jsx` (`modules/sustainability/components/`):** Consola interactiva principal del asistente RAG con escenarios preconfigurados, auditoría anti-alucinación y acceso a exportación de datasets `.jsonl`.
+- **`LegalCitationDrawer.jsx` (`modules/sustainability/components/`):** Panel lateral de lectura íntegra para inspeccionar el texto oficial de cualquiera de los 1,880 artículos recuperados de los 4 PDFs normativos.
+- **`FineTuningExportModal.jsx` (`modules/sustainability/components/`):** Diálogo modal para configurar y descargar el dataset de Fine-Tuning en formato `.jsonl`.

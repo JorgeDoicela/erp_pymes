@@ -31,7 +31,7 @@ export const generateSettlementPDF = (settlementData) => {
   // Header
   doc.setFontSize(18);
   doc.setTextColor(30);
-  doc.text('NORMA ERP S.A. - DEPARTAMENTO DE RRHH', 105, 20, null, null, 'center');
+  doc.text('NORMA S.A. - DEPARTAMENTO DE RRHH', 105, 20, null, null, 'center');
 
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
@@ -130,7 +130,7 @@ export const generateSettlementPDF = (settlementData) => {
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text('NORMA ERP S.A. / EMPLEADOR', 55, signY + 5, null, null, 'center');
+  doc.text('NORMA S.A. / EMPLEADOR', 55, signY + 5, null, null, 'center');
   doc.text(`${employee.firstName} ${employee.lastName}`, 155, signY + 5, null, null, 'center');
 
   doc.setFont('helvetica', 'normal');

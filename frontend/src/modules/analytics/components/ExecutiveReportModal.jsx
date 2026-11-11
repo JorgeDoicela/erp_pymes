@@ -188,7 +188,7 @@ export default function ExecutiveReportModal({ isOpen, onClose, data }) {
         <div className="pt-6 border-t border-slate-200 flex justify-between items-end text-xs text-slate-500">
           <div>
             <p className="font-bold text-slate-800">
-              Generado por Norma ERP · Sistema de Gestión y Cumplimiento Laboral para PyMEs
+              Generado por Norma · Sistema de Gestión y Cumplimiento Laboral para PyMEs
             </p>
             <p>Plataforma de Analítica Predictiva & Gestión de Talento</p>
           </div>

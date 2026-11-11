@@ -123,3 +123,27 @@ export const getGeneralLedger = async (accountId, periodId, costCenterId) => {
   });
   return response.data;
 };
+
+const accountingService = {
+  getPeriods,
+  createPeriod,
+  togglePeriod,
+  deletePeriod,
+  getAccounts,
+  createAccount,
+  updateAccount,
+  deleteAccount,
+  getCostCenters,
+  createCostCenter,
+  updateCostCenter,
+  deleteCostCenter,
+  getJournalEntries,
+  createJournalEntry,
+  postJournalEntry,
+  deleteJournalEntry,
+  integratePayroll,
+  getTrialBalance,
+  getGeneralLedger,
+};
+
+export default accountingService;

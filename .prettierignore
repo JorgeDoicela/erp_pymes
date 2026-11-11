@@ -9,3 +9,6 @@ package-lock.json
 *.min.js
 *.min.css
 backend/prisma/migrations
+*.jsonl
+*.ipynb
+backend/src/modules/sustainability/data/extractedFullLegalCorpus.json

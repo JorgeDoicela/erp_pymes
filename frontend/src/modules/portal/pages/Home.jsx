@@ -110,8 +110,8 @@ function Home() {
 
   const faqs = [
     {
-      q: '¿Cómo garantiza Norma ERP el cumplimiento legal en Ecuador?',
-      a: 'Norma ERP incorpora directamente la normativa laboral ecuatoriana: cálculo automático de aportes al IESS (9.45% personal y 11.15% patronal), horas suplementarias (50%), extraordinarias (100%), decimotercero, decimocuarto, fondos de reserva y actas de finiquito (Arts. 185 y 188).',
+      q: '¿Cómo garantiza Norma el cumplimiento legal en Ecuador?',
+      a: 'Norma incorpora directamente la normativa laboral ecuatoriana: cálculo automático de aportes al IESS (9.45% personal y 11.15% patronal), horas suplementarias (50%), extraordinarias (100%), decimotercero, decimocuarto, fondos de reserva y actas de finiquito (Arts. 185 y 188).',
     },
     {
       q: '¿Cómo funciona la prueba gratuita de 45 días?',
@@ -726,7 +726,7 @@ function Home() {
                 <NormaLogo size="sm" />
               </div>
               <p className="text-xs text-gray-500 leading-relaxed">
-                Software ERP de Gestión del Talento Humano y Nómina Legal para pequeñas y medianas
+                Software de Gestión del Talento Humano y Nómina Legal para pequeñas y medianas
                 empresas en Ecuador.
               </p>
             </div>
@@ -809,7 +809,7 @@ function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-gray-500">
             <div>© 2026 Jorge Doicela. Todos los derechos reservados.</div>
             <div className="flex items-center gap-4">
-              <span>SaaS ERP Ecuador</span>
+              <span>SaaS Ecuador</span>
               <span className="text-gray-300">|</span>
               <span>Cifrado AES-256</span>
             </div>

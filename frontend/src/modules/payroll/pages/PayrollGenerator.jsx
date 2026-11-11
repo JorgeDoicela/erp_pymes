@@ -340,7 +340,7 @@ const PayrollGenerator = () => {
                 { header: 'Total Nómina ($)', key: 'totalNet' },
                 { header: 'Fecha Generación', key: 'createdAt' },
               ]}
-              fileName="historial-nominas-norma-erp"
+              fileName="historial-nominas-norma"
               title="HISTORIAL GENERAL DE NÓMINAS"
             />
           </div>

@@ -367,7 +367,7 @@ const EvaluationResults = () => {
           </div>
 
           <div className="mt-8 text-center text-gray-400 text-[11px] border-t border-gray-100 pt-3 font-mono">
-            Generado por Norma ERP · Sistema de Gestión y Cumplimiento Laboral
+            Generado por Norma · Sistema de Gestión y Cumplimiento Laboral
           </div>
         </div>
       </div>

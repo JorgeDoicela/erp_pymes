@@ -192,6 +192,14 @@ describe('Fase 3: Arquitectura de Monolito Modular y Core de Errores', () => {
       expect(modules.systemService).toBeDefined();
       expect(modules.systemRepository).toBeDefined();
     });
+
+    it('debe exportar los componentes del módulo Sustainability (ODS 8, RAG y Fine-Tuning)', () => {
+      expect(modules.sustainabilityRoutes).toBeDefined();
+      expect(modules.sustainabilityService).toBeDefined();
+      expect(modules.sustainabilityRagService).toBeDefined();
+      expect(modules.sustainabilityFineTuningService).toBeDefined();
+      expect(modules.sustainabilityRepository).toBeDefined();
+    });
   });
 
   describe('Jerarquía de Errores de Dominio (src/core/errors/appError.js)', () => {

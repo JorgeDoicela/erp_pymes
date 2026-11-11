@@ -1,253 +1,336 @@
-# Arquitectura del Asistente de IA: RAG con Legislación Ecuatoriana y Fine-Tuning para ODS 8
+# Arquitectura del Asistente de IA Multi-Módulo: Buscador Semántico (1,880 Artículos), Evaluador Anti-Alucinación, Adaptador DeepSeek / Multi-LLM y Fine-Tuning en Google Colab
 
-Este documento técnico consolida la arquitectura, el estado de implementación, el corpus normativo y la guía de continuidad operativa para el **Asistente de Inteligencia Artificial y Gobernanza del ODS 8 (Trabajo Decente y Crecimiento Económico)** en la plataforma **Norma ERP**.
+Este documento especifica la arquitectura de software, los algoritmos de recuperación y verificación normativa, los contratos de API REST, los componentes de interfaz transversal y el pipeline de entrenamiento en Google Colab del **Asistente Jurídico, Laboral, Contable y de Sostenibilidad ODS 8** integrado en **Norma ERP**.
 
 ---
 
-## 1. Visión General y Bounded Context
+## 1. Extracción Íntegra (100%) de los 4 Cuerpos Normativos Oficiales
 
-El módulo está estructurado bajo la **Arquitectura Modular por Dominio (Bounded Context / Monolito Modular)** en backend y frontend. Resuelve dos desafíos esenciales en software empresarial:
+> [!IMPORTANT]
+> El sistema opera exclusivamente sobre el texto oficial extraído de las 540 páginas de los 4 documentos normativos almacenados en `docs/09-sostenibilidad-ods/corpus-legal/`. No se utilizan resúmenes manuales que sustituyan o recorten el articulado original.
 
-1. **Cero Alucinaciones Legales:** Empleo de RAG (Retrieval-Augmented Generation) sobre la base vectorial en PostgreSQL (`pgvector`), extrayendo artículos textuales del Código del Trabajo de Ecuador antes de responder.
-2. **Especialización y Razonamiento Jurídico-Laboral:** Fine-Tuning de un modelo abierto grande (**Qwen 2.5 14B Instruct**) entrenado en Google Colab (GPU NVIDIA A100) y desplegado en Amazon Web Services (AWS) optimizando costos para operar durante 1 semana continua con un presupuesto de $100 USD.
+El script [`extractAllFourPdfs.js`](../../backend/src/modules/sustainability/data/extractAllFourPdfs.js) procesa los 4 archivos PDF mediante `pdfjs-dist`, reconstruye los saltos de línea respetando la estructura tipográfica de cada cuerpo legal y segmenta la totalidad del texto en artículos individuales, disposiciones generales, disposiciones transitorias y secciones metodológicas dentro de [`extractedFullLegalCorpus.json`](../../backend/src/modules/sustainability/data/extractedFullLegalCorpus.json).
+
+### 1.1. Inventario Exacto del Corpus Extraído e Indexado
+
+| ID Documento           | Archivo Fuente (`corpus-legal/`)              | Categoría en Sistema        | Páginas Procesadas | Artículos / Secciones Extraídas |   Caracteres Extraídos   |  Meta ODS Principal   |
+| :--------------------- | :-------------------------------------------- | :-------------------------- | :----------------: | :-----------------------------: | :----------------------: | :-------------------: |
+| `constitucion_2008`    | `01-constitucion-republica-ecuador-2008.pdf`  | `CONSTITUTION`              |        136         |          481 artículos          |         400,261          |     `8.5` / `8.8`     |
+| `codigo_trabajo`       | `02-codigo-del-trabajo-ecuador.pdf`           | `LABOR_CODE`                |        157         |          714 artículos          |         587,255          | `8.3` / `8.5` / `8.8` |
+| `ley_seguridad_social` | `03-ley-de-seguridad-social-iess.pdf`         | `IESS_REGULATION`           |        104         |          383 artículos          |         357,385          |         `8.5`         |
+| `oit_metodologia_ods8` | `04-oit-metodologia-ods8-trabajo-decente.pdf` | `ODS_8_FRAMEWORK`           |        143         |          302 secciones          |         398,353          | `8.3` / `8.5` / `8.8` |
+| **TOTAL OFICIAL**      | **4 Documentos Oficiales**                    | **4 Categorías Normativas** |  **540 páginas**   | **1,880 artículos y secciones** | **1,743,254 caracteres** |  **ODS 8 Completo**   |
+
+### 1.2. Reglas de Segmentación en `extractAllFourPdfs.js`
+
+1. **Documentos Legislativos (`Constitución`, `Código del Trabajo`, `Ley de Seguridad Social`):**
+   - Detección por expresión regular de cabeceras de artículo (`Art. N.-`, `Artículo N.-`, `Art. Innumerado`) y disposiciones (`DISPOSICIÓN TRANSITORIA`, `DISPOSICIÓN GENERAL`, `DISPOSICIÓN REFORMATORIA`).
+   - Cuando un artículo extenso supera los `2,200` caracteres, el segmentador lo divide en sub-bloques lógicos (`Parte 1`, `Parte 2`, etc.) conservando el código del artículo original (`articleCode`) para evitar truncamiento en la ventana de contexto y mantener alta precisión en el cálculo de relevancia BM25.
+2. **Documento Metodológico (`OIT Indicadores de Trabajo Decente ODS 8`):**
+   - Agrupación semántica por indicadores estadísticos de la OIT y bloques de hasta `1,400` caracteres con preservación de títulos de sección y fórmulas de cálculo.
+
+---
+
+## 2. Arquitectura de 3 Capas: Buscador + Evaluador + Modelo Grande / Local
+
+El motor de inteligencia artificial separa estrictamente las responsabilidades de **búsqueda documental**, **evaluación de fidelidad normativa** y **síntesis generativa**, impidiendo que el modelo de lenguaje invente artículos o altere cálculos financieros.
 
 ```mermaid
 flowchart TD
-    subgraph FrontendModule["Frontend: src/modules/sustainability"]
-        UI_Dash["SustainabilityDashboard.jsx (/admin/sustainability)"]
-        UI_KPIGrid["SustainabilityKPIGrid.jsx (Métricas 8.3, 8.5, 8.8)"]
-        UI_Advisor["SustainabilityAIAdvisor.jsx (Consola RAG + Citas)"]
-        UI_Drawer["LegalCitationDrawer.jsx (Inspector de Código del Trabajo)"]
-        UI_Export["FineTuningExportModal.jsx (Generador .jsonl)"]
-        Hook_Metrics["useSustainabilityMetrics.js"]
-        Hook_Advisor["useSustainabilityAdvisor.js"]
+    subgraph Cliente["Capa de Presentación (React 19 — Todas las Vistas del ERP)"]
+        GlobalWidget["GlobalLegalAssistantWidget.jsx (Asistente Contextual en MainLayout)"]
+        MainConsole["SustainabilityAIAdvisor.jsx (Consola en /admin/sustainability)"]
+        Drawer["LegalCitationDrawer.jsx (Visor de Artículos Oficiales)"]
     end
 
-    subgraph BackendModule["Backend: src/modules/sustainability"]
-        Routes["sustainability.routes.js (/api/sustainability/*)"]
-        Ctrl["sustainability.controller.js"]
-        Srv_ODS["sustainability.service.js (Cálculo con Decimal.js)"]
-        Srv_RAG["sustainabilityRag.service.js (Inyección Híbrida)"]
-        Srv_FT["sustainabilityFineTuning.service.js (Pipeline Dataset)"]
-        Repo["sustainability.repository.js (Consultas Relacionales + Vectoriales)"]
-        DTO["sustainability.dto.js (Validaciones Zod)"]
+    subgraph Orquestacion["Capa de Aplicación y Dominio (backend/src/modules/sustainability)"]
+        Controller["sustainability.controller.js"]
+        RagOrchestrator["sustainabilityRag.service.js (Orquestador + Calculadora Decimal.js)"]
+        Retriever["CAPA 1 — Modelo Buscador: sustainability.repository.js"]
+        Evaluator["CAPA 2 — Modelo Evaluador: legalEvaluator.service.js"]
+        LlmAdapter["CAPA 3 — Adaptador Universal: llmProvider.service.js"]
     end
 
-    subgraph Persistencia["Base de Datos PostgreSQL"]
-        T_Doc[("knowledge_documents")]
-        T_Chunk[("knowledge_chunks (Metadata + Vector)")]
-        T_Rel[("employees, contracts, payroll, attendance, offboarding")]
+    subgraph Datos["Corpus e Índices en Memoria / Disco"]
+        PdfJson[("extractedFullLegalCorpus.json (1,880 Artículos de los 4 PDFs)")]
+        ColabVectors[("trained_retriever_index.json (Embeddings Entrenados en Colab)")]
+        PrismaDB[("PostgreSQL ( Estado Real del Tenant + Sueldos AES-256-GCM )")]
     end
 
-    subgraph InferenciaExterna["Entorno de Inferencia (AWS EC2 / Ollama)"]
-        LLM_Model["Qwen 2.5 14B Instruct (Afinado con Leyes de Ecuador)"]
-        Embedder_Model["nomic-embed-text / bge-m3 (Embeddings Vectoriales)"]
+    subgraph MotoresInferencia["Proveedores de Inferencia Soportados"]
+        DeepSeek["DeepSeek API (deepseek-chat / deepseek-reasoner)"]
+        CloudProviders["OpenAI / Google Gemini / Groq / Anthropic"]
+        LocalFineTuned["Modelo Local Fine-Tuneado (Ollama GGUF / vLLM / LM Studio)"]
     end
 
-    UI_Dash --> UI_KPIGrid & UI_Advisor
-    UI_Advisor --> UI_Drawer & UI_Export
-    UI_Dash --> Hook_Metrics & Hook_Advisor
-    Hook_Advisor --> Routes
-    Routes --> Ctrl --> DTO
-    Ctrl --> Srv_ODS & Srv_RAG & Srv_FT
-    Srv_ODS --> Repo --> T_Rel
-    Srv_RAG --> Repo --> T_Doc & T_Chunk
-    Srv_RAG --> InferenciaExterna
+    GlobalWidget & MainConsole -->|"POST /api/sustainability/advisor/query"| Controller
+    Controller --> RagOrchestrator
+    RagOrchestrator --> Retriever
+    PdfJson & ColabVectors --> Retriever
+    PrismaDB --> RagOrchestrator
+    Retriever -->|"Top 18 Candidatos (BM25 + Vectores)"| Evaluator
+    Evaluator -->|"Fase 1: Re-Ranking Contextual (Top 8)"| RagOrchestrator
+    RagOrchestrator -->|"Prompt Anclado + Tabla Decimal.js"| LlmAdapter
+    LlmAdapter --> DeepSeek & CloudProviders & LocalFineTuned
+    LlmAdapter -->|"Respuesta Generada"| Evaluator
+    Evaluator -->|"Fase 2: Auditoría Anti-Alucinación"| RagOrchestrator
+    RagOrchestrator -->|"Respuesta + Citas + evaluationAudit"| GlobalWidget & MainConsole
+    GlobalWidget & MainConsole --> Drawer
 ```
 
 ---
 
-## 2. Componentes Implementados en el Repositorio
+### 2.1. Capa 1 — Modelo Buscador (`sustainability.repository.js`)
 
-### 2.1 Backend (`backend/src/modules/sustainability/`)
+El repositorio [`sustainability.repository.js`](../../backend/src/modules/sustainability/sustainability.repository.js) implementa un motor de búsqueda híbrido en memoria que indexa los 1,880 artículos al iniciar el proceso:
 
-| Archivo                               | Responsabilidad Técnica                                                                                            |
-| :------------------------------------ | :----------------------------------------------------------------------------------------------------------------- |
-| `sustainability.dto.js`               | Validación Zod para consultas RAG, ingestión de documentos y opciones de exportación JSONL.                        |
-| `sustainability.repository.js`        | Consultas agregadas multi-tabla en PostgreSQL y matching semántico de artículos normativos.                        |
-| `sustainability.service.js`           | Cálculo con `Decimal.js` (20 dígitos `ROUND_HALF_UP`) de los 5 KPIs del ODS 8 (8.3.1, 8.5.1, 8.5.2, 8.8.1, 8.8.2). |
-| `sustainabilityRag.service.js`        | Orquestador RAG que vincula fragmentos normativos ecuatorianos con las métricas en tiempo real de la empresa.      |
-| `sustainabilityFineTuning.service.js` | Ensamblador de pares de instrucción y respuesta en formato Alpaca/Unsloth (Llama/Qwen) y OpenAI JSONL.             |
-| `sustainability.controller.js`        | Controladores HTTP para `/ods8`, `/advisor/query`, `/knowledge/ingest` y `/fine-tuning/export`.                    |
-| `sustainability.routes.js`            | Enrutador protegido por autenticación (`authenticate`) y aislamiento de tenant (`requireTenant`).                  |
-| `index.js`                            | Barrel export público del módulo.                                                                                  |
-
-### 2.2 Base de Datos (`backend/prisma/`)
-
-- **Esquema (`schema.prisma`):** Modelos `KnowledgeDocument` y `KnowledgeChunk` asociados a `Tenant` con índices para `category` y `odsTarget`.
-- **Migración SQL:** `prisma/migrations/20261110162000_add_sustainability_rag_knowledge/migration.sql`.
-- **Seed Automatizado:** `prisma/seeds/sustainability.js` integrado en `prisma/seed.js`.
-
-### 2.3 Frontend (`frontend/src/modules/sustainability/`)
-
-| Archivo                       | Responsabilidad en la UI (Estándar Holded/Linear)                                             |
-| :---------------------------- | :-------------------------------------------------------------------------------------------- |
-| `SustainabilityDashboard.jsx` | Tablero ejecutivo en `/admin/sustainability` con porcentaje de cumplimiento global.           |
-| `SustainabilityKPIGrid.jsx`   | Grilla de tarjetas de indicadores con estados `CONFORME` y `ATENCIÓN`.                        |
-| `SustainabilityKPICard.jsx`   | Tarjeta individual con valores monoespaciados (`font-mono`, `tabular-nums`) y meta.           |
-| `SustainabilityAIAdvisor.jsx` | Consola conversacional con presets legales, historial de diálogo y badges de citación.        |
-| `LegalCitationDrawer.jsx`     | Panel lateral para lectura del artículo oficial del Código del Trabajo o resolución del IESS. |
-| `FineTuningExportModal.jsx`   | Modal interactivo para seleccionar la arquitectura LLM y descargar el `.jsonl`.               |
-| `sustainability.service.js`   | Cliente HTTP que consume los endpoints `/api/sustainability/*`.                               |
-| `useSustainabilityMetrics.js` | Hook para ciclo de vida y recálculo de métricas ODS 8.                                        |
-| `useSustainabilityAdvisor.js` | Hook de interacción conversacional del asistente.                                             |
+1. **Índice Invertido BM25 Pre-Tokenizado:**
+   - Normaliza acentos y signos de puntuación, calcula la frecuencia de término $f(t, D)$ por artículo y el factor de frecuencia inversa de documento $\text{IDF}(t)$ sobre los $N = 1,880$ fragmentos:
+     $$\text{IDF}(t) = \ln\left(1 + \frac{N - \text{df}(t) + 0.5}{\text{df}(t) + 0.5}\right)$$
+   - Evalúa cada artículo respecto a la consulta expandida $Q$ mediante la ecuación Okapi BM25 ($k_1 = 1.5, b = 0.75$):
+     $$\text{Score}_{\text{BM25}}(D, Q) = \sum_{t \in Q} \text{IDF}(t) \cdot \frac{f(t, D) \cdot (k_1 + 1)}{f(t, D) + k_1 \cdot \left(1 - b + b \cdot \frac{|D|}{\text{avgdl}}\right)}$$
+2. **Detección Exacta de Artículos y Expansión Jurídica:**
+   - Si el usuario menciona explícitamente un número de artículo (ej. `Art. 188`, `artículo 55`, `Art. 326`), el buscador aplica un impulso determinista de `+45.0` puntos sobre los fragmentos cuyo `articleCode` contenga dicho numeral.
+   - Expande los términos de búsqueda mediante el diccionario `ECUADOR_LEGAL_SYNONYMS` (vinculando términos coloquiales como _finiquito_, _despido_, _renuncia_, _décimo_, _utilidades_ o _horas extras_ con sus números de artículo correspondientes).
+3. **Fusión con Embeddings Entrenados en Google Colab (`trained_retriever_index.json`):**
+   - Si existe el archivo `backend/src/modules/sustainability/data/trained_retriever_index.json` exportado desde el cuaderno de Google Colab, el repositorio carga el mapa de vectores densos normalizados y refuerza los artículos indexados.
 
 ---
 
-## 3. Corpus Normativo Oficial en el Repositorio
+### 2.2. Capa 2 — Modelo Evaluador (`legalEvaluator.service.js`)
 
-Los documentos fuente están alojados en `docs/09-sostenibilidad-ods/corpus-legal/` y versionados con Git:
+El servicio [`legalEvaluator.service.js`](../../backend/src/modules/sustainability/legalEvaluator.service.js) actúa como filtro de precisión antes de llamar al LLM y como juez auditor después de que el LLM genera la respuesta:
 
-| Documento                    | Archivo en Repositorio                        | Tamaño  | Aspectos Normativos Extraídos                                                                                                                                                                        |
-| :--------------------------- | :-------------------------------------------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Constitución del Ecuador** | `01-constitucion-republica-ecuador-2008.pdf`  | 370 KB  | Arts. 33, 325-329: Principio de no precarización, afiliación obligatoria a seguridad social, igualdad remunerativa.                                                                                  |
-| **Código del Trabajo**       | `02-codigo-del-trabajo-ecuador.pdf`           | 419 KB  | Arts. 11-19 (Contratos y prueba de 90 días), Art. 47 (Jornada 40h), Art. 55 (Horas suplementarias 50% y extraordinarias 100%), Art. 185 (Desahucio 25%), Art. 188 (Despido intempestivo escalonado). |
-| **Ley de Seguridad Social**  | `03-ley-de-seguridad-social-iess.pdf`         | 618 KB  | Ley 2001-55: Seguro General Obligatorio, aportaciones (9.45% personal / 11.15% patronal), fondos de reserva (8.33% mes 13).                                                                          |
-| **Metodología ODS 8 (OIT)**  | `04-oit-metodologia-ods8-trabajo-decente.pdf` | 2.17 MB | Informe técnico de las metas 8.3, 8.5 y 8.8 de la Agenda 2030 para trabajo decente y erradicación de informalidad.                                                                                   |
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User as Usuario (Cualquier Módulo ERP)
+    participant RAG as sustainabilityRag.service.js
+    participant Ret as Buscador (BM25 + Vectores)
+    participant Eval as Evaluador (legalEvaluator.service.js)
+    participant LLM as Adaptador LLM (DeepSeek / Local GGUF)
+
+    User->>RAG: Consulta + moduleContext (ej. "offboarding")
+    RAG->>Ret: searchKnowledgeChunks(query, limit=18)
+    Ret-->>RAG: 18 fragmentos candidatos de los 4 PDFs
+    RAG->>Eval: Fase 1: evaluateAndRerankChunks(query, candidates, moduleContext, topK=8)
+    Eval-->>RAG: Top 8 fragmentos verificados con evaluatorConfidence [0.15 - 0.99]
+    RAG->>RAG: computeLiveLegalCalculation(query) con Decimal.js
+    RAG->>LLM: generateChatCompletion(systemPrompt + Top 8 Artículos + Cálculo Decimal.js)
+    LLM-->>RAG: Respuesta redactada por DeepSeek o LLM Local
+    RAG->>Eval: Fase 2: verifyAnswerFidelity(answerText, Top 8, liveCalculation, allKnownArticles)
+    Eval-->>RAG: Respuesta validada + evaluationAudit (groundednessScore, verifiedArticles)
+    RAG-->>User: Dictamen jurídico + Citas clicables + Sello de Fidelidad
+```
+
+#### Fase 1: Re-Ranking Cross-Encoder (`evaluateAndRerankChunks`)
+
+Califica cada fragmento candidato en el rango $[0.15, 0.99]$ sumando cinco componentes:
+
+- **Componente Retriever ($0.00$ a $0.45$):** Puntaje BM25 relativo al máximo candidato de la consulta.
+- **Cobertura Léxica Exacta ($0.00$ a $0.25$):** Proporción de tokens de la pregunta presentes en el artículo.
+- **Coincidencia de Bigramas Jurídicos ($0.00$ a $0.15$):** Pares de palabras consecutivas exactas (ej. `despido intempestivo`, `período prueba`, `aporte patronal`).
+- **Bono de Artículo Exacto ($+0.25$):** Coincidencia exacta con el número de artículo solicitado.
+- **Afinidad Contextual con el Módulo del ERP ($+0.10$):** Prioriza las categorías normativas asociadas a la pantalla actual del usuario (`MODULE_DOMAIN_AFFINITY`).
+
+#### Fase 2: Juez Anti-Alucinación (`verifyAnswerFidelity`)
+
+Una vez generada la respuesta del modelo grande, el evaluador:
+
+1. Extrae mediante expresión regular todas las menciones a artículos (`Art. X`) en el texto generado.
+2. Verifica cada artículo contra los fragmentos recuperados y contra el conjunto global `_knownArticleNumbers` extraído de los 1,880 artículos de los 4 PDFs.
+3. Si hubo un cálculo matemático en vivo con `Decimal.js`, verifica que el monto total (`totalSettlement`, `totalOvertimePay` o `netSalary`) figure exactamente en la respuesta.
+4. Si detecta cualquier artículo no respaldado por los 4 documentos oficiales, anexa automáticamente una **Nota de Auditoría del Evaluador Legal** advirtiendo qué artículos están verificados en el corpus oficial.
 
 ---
 
-## 4. Estrategia de Entrenamiento (Google Colab con GPU A100)
+### 2.3. Capa 3 — Adaptador Universal de Inferencia (`llmProvider.service.js`)
 
-### 4.1 Selección del Modelo: Qwen 2.5 14B Instruct
+El servicio [`llmProvider.service.js`](../../backend/src/modules/sustainability/llmProvider.service.js) desacopla la lógica RAG del proveedor de inteligencia artificial, soportando tanto APIs cloud como modelos locales entrenados mediante Fine-Tuning:
 
-- **Justificación:** Capacidades superiores en razonamiento contable/laboral en español, formato de salida JSON y ventana de contexto de hasta 128k tokens.
-- **Rendimiento en A100:** Tiempo estimado de entrenamiento con LoRA / QLoRA mediante **Unsloth**: 45 a 70 minutos.
+| Proveedor (`AI_PROVIDER`)     |     Protocolo      | URL Base por Defecto                                      | Modelo por Defecto         | Variable de Credencial   |
+| :---------------------------- | :----------------: | :-------------------------------------------------------- | :------------------------- | :----------------------- |
+| `deepseek` _(Predeterminado)_ |    OpenAI REST     | `https://api.deepseek.com`                                | `deepseek-chat`            | `DEEPSEEK_API_KEY`       |
+| `local_ollama`                |     Ollama API     | `http://127.0.0.1:11434`                                  | `ecuador-erp-ai`           | Sin API Key (Local GGUF) |
+| `local_openai`                |    OpenAI REST     | `http://127.0.0.1:8000/v1`                                | `ecuador-erp-ai`           | Opcional (`AI_API_KEY`)  |
+| `openai`                      |    OpenAI REST     | `https://api.openai.com/v1`                               | `gpt-4o-mini`              | `OPENAI_API_KEY`         |
+| `gemini`                      |   OpenAI Compat    | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-2.5-flash`         | `GEMINI_API_KEY`         |
+| `groq`                        |    OpenAI REST     | `https://api.groq.com/openai/v1`                          | `llama-3.3-70b-versatile`  | `GROQ_API_KEY`           |
+| `anthropic`                   | Anthropic Messages | `https://api.anthropic.com/v1`                            | `claude-3-5-sonnet-latest` | `ANTHROPIC_API_KEY`      |
 
-### 4.2 Script de Entrenamiento para Colab (`train_qwen_unsloth.py`)
+#### Cadena de Resiliencia y Fallback Automático:
 
-```python
-# Script base para ejecutar en Google Colab con entorno GPU A100
-from unsloth import FastLanguageModel
-import torch
+1. Intenta generar la respuesta con el proveedor configurado en `.env` o enviado en `providerOverrides` (ej. `DeepSeek API`).
+2. Si el proveedor cloud no tiene API Key configurada o sufre una caída de red y existe un servidor local definido en `AI_LLM_URL`, conmuta automáticamente al modelo local fine-tuneado (`FALLBACK_LOCAL_FINE_TUNED`).
+3. Si ningún servidor LLM externo está activo, ejecuta el sintetizador determinista (`RAG_DETERMINISTIC_SYNTHESIS`), que construye la respuesta citando literalmente los artículos verificados por el Evaluador y las tablas aritméticas de `Decimal.js`.
 
-max_seq_length = 4096
-dtype = None # Auto detección
-load_in_4bit = True # QLoRA de alta eficiencia
+---
 
-# 1. Cargar modelo base
-model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="Qwen/Qwen2.5-14B-Instruct",
-    max_seq_length=max_seq_length,
-    dtype=dtype,
-    load_in_4bit=load_in_4bit,
-)
+## 3. Calculadora Jurídico-Contable en Vivo (`Decimal.js`)
 
-# 2. Configurar adaptadores LoRA
-model = FastLanguageModel.get_peft_model(
-    model,
-    r=16,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-    lora_alpha=16,
-    lora_dropout=0,
-    bias="none",
-    use_gradient_checkpointing="unsloth",
-    random_state=3407,
-)
+En [`sustainabilityRag.service.js`](../../backend/src/modules/sustainability/sustainabilityRag.service.js), el método `computeLiveLegalCalculation(query)` detecta consultas numéricas y ejecuta cálculos exactos con `Decimal.js` (`precision: 20`, `ROUND_HALF_UP`) antes de invocar al LLM:
 
-# 3. Cargar dataset generado por Norma ERP
-from datasets import load_dataset
-dataset = load_dataset("json", data_files="fine_tuning_ecuador_ods8_llama3.jsonl")
+1. **Liquidación de Haberes y Finiquitos (`SETTLEMENT_CALCULATION`):**
+   - **Bonificación por Desahucio (Art. 185 CT):** $0.25 \times \text{Sueldo} \times \lfloor \text{Años Completos} \rfloor$.
+   - **Indemnización por Despido Intempestivo (Art. 188 CT):** Si el tiempo de servicio es $\le 3$ años, equivale a $3 \times \text{Sueldo}$; si es $> 3$ años, toda fracción de año se computa como año completo ($\text{Años} + 1$ si $\text{Meses} > 0$), con tope legal de $25$ remuneraciones mensuales.
+   - **Proporcionales:** Décimo Tercer Sueldo ($\text{Sueldo}/12 \times \text{Meses}$), Décimo Cuarto Sueldo ($\text{SBU}/12 \times \text{Meses}$) y Vacaciones no gozadas ($\text{Sueldo}/24 \times \text{Meses}$, Art. 69 CT).
+2. **Horas Suplementarias, Extraordinarias y Jornada Nocturna (`OVERTIME_CALCULATION`):**
+   - Divisor legal de jornada mensual: $240\text{ horas}$ ($\text{Valor Hora} = \text{Sueldo} / 240$).
+   - Hora suplementaria diurna (Art. 55.1 CT): $\text{Valor Hora} \times 1.50$.
+   - Hora extraordinaria en fin de semana o feriado (Art. 55.2 CT): $\text{Valor Hora} \times 2.00$.
+   - Jornada nocturna (Art. 49 CT): $\text{Valor Hora} \times 1.25$.
+3. **Rol de Pagos y Asiento Contable por Partida Doble (`PAYROLL_ACCOUNTING_CALCULATION`):**
+   - Aporte Personal IESS ($9.45\%$), Aporte Patronal IESS ($11.15\%$), Fondos de Reserva ($8.33\%$ mensual desde el segundo año, Art. 196 CT) y cuadre contable donde $\sum \text{Débitos} = \sum \text{Créditos}$.
 
-# 4. Entrenar y exportar a formato GGUF / Ollama
-from trl import SFTTrainer
-from transformers import TrainingArguments
+---
 
-trainer = SFTTrainer(
-    model=model,
-    tokenizer=tokenizer,
-    train_dataset=dataset["train"],
-    dataset_text_field="output",
-    max_seq_length=max_seq_length,
-    args=TrainingArguments(
-        per_device_train_batch_size=4,
-        gradient_accumulation_steps=4,
-        warmup_steps=10,
-        max_steps=120,
-        learning_rate=2e-4,
-        fp16=not torch.cuda.is_bf16_supported(),
-        bf16=torch.cuda.is_bf16_supported(),
-        logging_steps=5,
-        output_dir="outputs",
-    ),
-)
-trainer.train()
+## 4. Asistente Contextual en Diferentes Lugares del ERP (Frontend)
 
-# Guardar en GGUF para Ollama/vLLM
-model.save_pretrained_gguf("qwen2.5-14b-ecuador-ods8", tokenizer, quantization_method="q4_k_m")
+El asistente no está confinado a una sola vista; acompaña al usuario en todas las pantallas del sistema a través de [`GlobalLegalAssistantWidget.jsx`](../../frontend/src/modules/sustainability/components/GlobalLegalAssistantWidget.jsx), inyectado globalmente en [`MainLayout.jsx`](../../frontend/src/core/layout/MainLayout.jsx).
+
+### 4.1. Mapeo Automático de Rutas a Contextos Normativos
+
+| Ruta Activa en el Navegador (`useLocation`)    | Código `moduleContext` | Artículos Priorizados por el Evaluador                                                      | Consultas Rápidas Contextuales Ofrecidas                                                                        |
+| :--------------------------------------------- | :--------------------: | :------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------- |
+| `/payroll`, `/my-payments`                     |       `payroll`        | Código del Trabajo (Remuneraciones, Décimos, Sobretiempos) y Ley de Seguridad Social (IESS) | Cálculo de rol de pagos, aportes 9.45% / 11.15%, horas extras y materia gravada IESS.                           |
+| `/contracts`                                   |      `contracts`       | Código del Trabajo (Arts. 8 al 41) y Constitución (Art. 327)                                | Período de prueba de 90 días (Art. 15), recargo del 35% en eventuales (Art. 17) y registro SUT.                 |
+| `/offboarding`, `/finiquitos`                  |     `offboarding`      | Código del Trabajo (Arts. 169 al 195.3 y Art. 595)                                          | Simulación de despido intempestivo (Art. 188), desahucio (Art. 185), Visto Bueno (Art. 172) y despido ineficaz. |
+| `/attendance`, `/shifts`, `/absences`          |      `attendance`      | Código del Trabajo (Jornadas Arts. 47-68, Vacaciones Arts. 69-78, Licencias Art. 152)       | Cálculo de vacaciones por antigüedad, límites de horas suplementarias y licencias de maternidad/paternidad.     |
+| `/accounting`                                  |      `accounting`      | Código del Trabajo (Utilidades Art. 97, Provisiones) y Ley de Seguridad Social              | Asientos contables de nómina por partida doble, provisiones mensuales y reparto del 15% de utilidades.          |
+| `/employees`, `/register-employee`, `/profile` |      `employees`       | Constitución (Arts. 33, 34, 326) y Ley de Seguridad Social (Afiliación Art. 73)             | Obligatoriedad de afiliación desde el primer día, fondos de reserva e irrenunciabilidad de derechos.            |
+| `/performance`, `/evaluations`, `/recruitment` |     `performance`      | Constitución (Art. 326.4 Igualdad Salarial) y OIT Metodología ODS 8                         | Igual remuneración por trabajo de igual valor y métricas de empleo pleno (Meta 8.5).                            |
+| `/admin/sustainability`                        |    `sustainability`    | Los 4 documentos oficiales completos + Telemetría en vivo de los 5 KPIs ODS 8               | Estado de cumplimiento del tenant en metas 8.3, 8.5 y 8.8 e indicadores de Trabajo Decente OIT.                 |
+
+---
+
+## 5. Especificación de Endpoints REST del Módulo
+
+Todas las rutas están registradas bajo `/api/sustainability` en [`sustainability.routes.js`](../../backend/src/modules/sustainability/sustainability.routes.js) y validadas mediante esquemas Zod en [`sustainability.dto.js`](../../backend/src/modules/sustainability/sustainability.dto.js).
+
+| Método | Ruta Completa                            | Roles Autorizados             | Descripción Técnica                                                                                                                                                                           |
+| :----: | :--------------------------------------- | :---------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/api/sustainability/ods8`               | `admin`, `hr`, `superadmin`   | Desencripta salarios (`AES-256-GCM`) en memoria y calcula con `Decimal.js` los 5 KPIs del ODS 8 (`8.3.1`, `8.5.1`, `8.5.2`, `8.8.1`, `8.8.2`).                                                |
+| `POST` | `/api/sustainability/advisor/query`      | Cualquier usuario autenticado | Ejecuta el pipeline completo: Buscador (1,880 arts.) $\rightarrow$ Evaluador Fase 1 $\rightarrow$ Calculadora `Decimal.js` $\rightarrow$ DeepSeek / LLM Local $\rightarrow$ Evaluador Fase 2. |
+| `POST` | `/api/sustainability/knowledge/ingest`   | `admin`, `superadmin`         | Permite a una empresa (tenant) indexar reglamentos internos adicionales en PostgreSQL (`knowledge_documents` y `knowledge_chunks`).                                                           |
+| `POST` | `/api/sustainability/fine-tuning/export` | `admin`, `superadmin`         | Compila y descarga en tiempo real el dataset `.jsonl` (`qwen2.5`, `llama3` u `openai`) para entrenamiento supervisado.                                                                        |
+
+### Ejemplo de Petición a `POST /api/sustainability/advisor/query`:
+
+```json
+{
+  "query": "Calcula la liquidación por despido intempestivo y desahucio para un sueldo de $850 USD con 4 años y 2 meses de servicio.",
+  "moduleContext": "offboarding",
+  "odsTargetFilter": "8.8",
+  "conversationHistory": [],
+  "providerOverrides": {
+    "provider": "deepseek",
+    "model": "deepseek-chat"
+  }
+}
+```
+
+### Ejemplo de Respuesta (`200 OK`):
+
+```json
+{
+  "success": true,
+  "data": {
+    "answer": "### Dictamen Jurídico, Laboral y Contable — Norma ERP\n...",
+    "legalCitations": [
+      {
+        "documentTitle": "Código del Trabajo de la República del Ecuador",
+        "category": "LABOR_CODE",
+        "articleCode": "Código del Trabajo Art. 188",
+        "odsTarget": "8.8",
+        "relevanceScore": 74.21,
+        "evaluatorConfidence": 0.965,
+        "excerpt": "Art. 188.- Indemnización por despido intempestivo.- El empleador que despidiere intempestivamente al trabajador, será condenado a indemnizarlo, de conformidad con el tiempo de servicio y según la siguiente escala..."
+      }
+    ],
+    "liveCalculation": {
+      "type": "SETTLEMENT_CALCULATION",
+      "baseSalary": 850,
+      "years": 4,
+      "months": 2,
+      "desahucioAmount": 850,
+      "severanceAmount": 4250,
+      "totalSettlement": 5387.22
+    },
+    "evaluationAudit": {
+      "status": "VERIFIED_BY_EVALUATOR",
+      "groundednessScore": 1,
+      "verifiedArticles": ["Art. 188", "Art. 185", "Art. 111", "Art. 113", "Art. 69"],
+      "unverifiedArticles": [],
+      "mathVerified": true
+    },
+    "moduleContext": "offboarding",
+    "totalIndexedArticles": 1880,
+    "inferenceMode": "DEEPSEEK",
+    "providerInfo": {
+      "provider": "DeepSeek API",
+      "model": "deepseek-chat"
+    },
+    "complianceLevel": "ALTO",
+    "tenantScore": 95.5,
+    "generatedAt": "2026-11-11T20:24:00.000Z"
+  }
+}
 ```
 
 ---
 
-## 5. Estrategia de Despliegue en AWS (1 Semana / Presupuesto de $100 USD)
+## 6. Guía Completa de Entrenamiento en Google Colab y Configuración
 
-Para mantener el sistema operativo durante 7 días (168 horas continuas) sin exceder los $100 USD de crédito:
+Todos los artefactos para entrenar tanto el **Modelo Buscador / Evaluador** como el **Modelo Generativo Local** se encuentran generados en `docs/09-sostenibilidad-ods/`:
 
-### Opción Recomendada: Instancia Spot con GPU (`g5.xlarge`)
+| Archivo Generado                                                                         | Ubicación Relativa            |        Registros        | Propósito en Google Colab                                                                                      |
+| :--------------------------------------------------------------------------------------- | :---------------------------- | :---------------------: | :------------------------------------------------------------------------------------------------------------- |
+| [`Entrenamiento_IA_Norma_ERP_Colab.ipynb`](./Entrenamiento_IA_Norma_ERP_Colab.ipynb)     | `docs/09-sostenibilidad-ods/` |  7 celdas ejecutables   | Cuaderno Jupyter completo dividido en Fase 1 (Buscador + Evaluador) y Fase 2 (Fine-Tuning QLoRA `.gguf`).      |
+| [`retriever_evaluator_training_colab.jsonl`](./retriever_evaluator_training_colab.jsonl) | `docs/09-sostenibilidad-ods/` |   **1,880 tripletas**   | Contiene el 100% de los artículos de los 4 PDFs en formato contrastivo (`query`, `positive`, `hard_negative`). |
+| [`fine_tuning_ecuador_ods8_qwen.jsonl`](./fine_tuning_ecuador_ods8_qwen.jsonl)           | `docs/09-sostenibilidad-ods/` | **195 muestras ChatML** | Escenarios de razonamiento jurídico y matemático paso a paso (`Decimal.js`) más artículos de los 4 PDFs.       |
 
-- **Tipo de Instancia:** `g5.xlarge` (NVIDIA A10G 24GB VRAM, 4 vCPUs, 16GB RAM).
-- **Modalidad:** EC2 Spot Instance en región `us-east-1` o `us-west-2`.
-- **Costo por Hora:** ~$0.35 - $0.40 USD.
-- **Costo Total (168 horas):** ~$59 a $67 USD (quedan ~$33 USD de margen).
-- **Rendimiento:** Inferencia en streaming con GPU a ~60 tokens/segundo.
+### 6.1. Pasos para Ejecutar el Cuaderno en Google Colab
 
-### Despliegue en el Servidor AWS:
+1. Ingresar a Google Colab y seleccionar **Archivo $\rightarrow$ Subir cuaderno**, cargando [`Entrenamiento_IA_Norma_ERP_Colab.ipynb`](./Entrenamiento_IA_Norma_ERP_Colab.ipynb).
+2. Configurar el acelerador de hardware en **Entorno de ejecución $\rightarrow$ Cambiar tipo de entorno de ejecución $\rightarrow$ GPU T4** (o **GPU A100**).
+3. En el panel lateral izquierdo de Google Colab (**Archivos**), subir los dos datasets:
+   - `retriever_evaluator_training_colab.jsonl`
+   - `fine_tuning_ecuador_ods8_qwen.jsonl`
+4. **Ejecutar la Fase 1 (Celdas 1 a 5 — Buscador y Evaluador):**
+   - Entrena el Bi-Encoder (`intfloat/multilingual-e5-base`) con `MultipleNegativesRankingLoss` sobre los 1,880 artículos.
+   - Entrena el Cross-Encoder Evaluador (`unicamp-dl/mMiniLM-L6-v2-mmarco-v2`) diferenciando artículos positivos de negativos difíciles.
+   - Exporta y descarga automáticamente el archivo `trained_retriever_index.json`. Colocar este archivo en `backend/src/modules/sustainability/data/trained_retriever_index.json`.
+5. **Ejecutar la Fase 2 (Celdas 6 y 7 — Fine-Tuning de Modelo Local GGUF, Opcional):**
+   - Si además de usar la API de DeepSeek se desea ejecutar un modelo grande entrenado localmente, ejecuta las celdas 6 y 7 con Unsloth QLoRA (4-bit) y descarga el archivo `.gguf` (`q4_k_m`) resultante.
 
-```bash
-# 1. Instalar Ollama en la instancia EC2
-curl -fsSL https://ollama.com/install.sh | sh
-
-# 2. Descargar modelo de embeddings para la base vectorial
-ollama pull nomic-embed-text
-
-# 3. Crear el modelo especializado a partir del archivo GGUF entrenado en Colab
-cat <<EOF > Modelfile
-FROM ./qwen2.5-14b-ecuador-ods8-q4_k_m.gguf
-PARAMETER temperature 0.2
-PARAMETER stop "<|im_end|>"
-SYSTEM "Eres el Asistente Experto en Cumplimiento Laboral de Ecuador y Gobernanza ODS 8 en Norma ERP."
-EOF
-
-ollama create ecuador-erp-ai -f Modelfile
-
-# 4. Iniciar servicio en puerto público/privado
-OLLAMA_HOST=0.0.0.0:11434 ollama serve
-```
-
-### Configuración en Norma ERP (`backend/.env`):
+### 6.2. Configuración de Variables de Entorno (`backend/.env`)
 
 ```env
-AI_LLM_URL=http://<IP_PUBLICA_O_DNS_AWS>:11434
-AI_LLM_MODEL=ecuador-erp-ai
-AI_EMBEDDING_MODEL=nomic-embed-text
+# ==============================================================================
+# MODO 1: DEEPSEEK API (O CUALQUIER PROVEEDOR CLOUD: openai, gemini, groq, anthropic)
+# ==============================================================================
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-tu_clave_de_deepseek
+AI_MODEL=deepseek-chat
+AI_LLM_TIMEOUT_MS=25000
+
+# ==============================================================================
+# MODO 2: IA LOCAL ENTRENADA CON FINE-TUNING EN COLAB (OLLAMA GGUF O VLLM)
+# ==============================================================================
+# AI_PROVIDER=local_ollama
+# AI_LLM_URL=http://127.0.0.1:11434
+# AI_LLM_MODEL=ecuador-erp-ai
 ```
 
----
+### 6.3. Comandos de Mantenimiento y Verificación en Local
 
-## 6. Guía de Continuidad en Otra Máquina
+```bash
+# 1. Re-extraer el 100% de las 540 páginas de los 4 PDFs oficiales (1,880 artículos)
+node backend/src/modules/sustainability/data/extractAllFourPdfs.js
 
-Al clonar o mover este repositorio a otro entorno de desarrollo:
+# 2. Regenerar los dos archivos .jsonl para Google Colab
+node backend/src/modules/sustainability/data/extractCorpusToDataset.js
 
-1. **Clonar e instalar dependencias:**
-   ```bash
-   git clone <url-repositorio>
-   cd erp_pymes
-   cd backend && npm install
-   cd ../frontend && npm install
-   ```
-2. **Generar cliente de base de datos:**
-   ```bash
-   cd backend
-   npx prisma generate
-   ```
-3. **Verificar corpus legal:**
-   Los archivos PDF ya se encuentran disponibles en:
-   `docs/09-sostenibilidad-ods/corpus-legal/`
-4. **Ejecutar seed normativo:**
-   ```bash
-   node src/modules/sustainability/data/seedSustainability.js
-   ```
-5. **Iniciar desarrollo:**
-   - Backend: `npm run dev` en `backend/`
-   - Frontend: `npm run dev` en `frontend/`
-   - Acceso: `http://localhost:5173/admin/sustainability`
+# 3. Ejecutar pruebas unitarias y de arquitectura del módulo
+npx --prefix backend vitest run tests/modules/sustainability/sustainabilityModule.test.js tests/architecture/modularMonolith.test.js
+```
