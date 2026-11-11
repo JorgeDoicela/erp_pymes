@@ -33,6 +33,8 @@ const DIRECT_TENANT_MODELS = new Set([
   'CausalIntervention',
   'TenantPrivacyBudget',
   'MorlPolicyRun',
+  'AttentionCalibration',
+  'FTTransformerWeights',
 ]);
 
 // 2. Modelos relacionales vinculados directamente al Empleado (Employee)
@@ -78,6 +80,7 @@ const INDIRECT_RELATION_MAP = {
   EntrepreneurshipInterview: { project: { owner: { tenantId: true } } },
   EntrepreneurshipTargetMarket: { project: { owner: { tenantId: true } } },
   ParetoFrontierPoint: { policyRun: { tenantId: true } },
+  KnowledgeChunk: { document: { tenantId: true } },
 };
 
 /**

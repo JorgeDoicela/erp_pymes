@@ -9,7 +9,7 @@
 
 import employeeService from './employee.service.js';
 import bcrypt from 'bcryptjs';
-import { isSuperAdminRole } from '../../../config/roles.js';
+import { isSuperAdminRole, isTenantRole, TENANT_ROLES } from '../../../config/roles.js';
 import { asyncHandler } from '../../../core/utils/asyncHandler.js';
 import { ValidationError, ForbiddenError } from '../../../core/errors/appError.js';
 
@@ -65,6 +65,13 @@ export class EmployeeController {
     const hashedPassword = await bcrypt.hash(password, 10);
     const tenantId = req.tenantId || req.user?.tenantId;
 
+    const assignedRole = (role || 'employee').toLowerCase();
+    if (!isTenantRole(assignedRole)) {
+      throw new ValidationError(
+        `Rol inválido para empleado de empresa. Roles permitidos: ${TENANT_ROLES.join(', ')}`
+      );
+    }
+
     const employee = await employeeService.createEmployee({
       tenantId,
       firstName,
@@ -74,7 +81,7 @@ export class EmployeeController {
       position,
       salary,
       password: hashedPassword,
-      role: role || 'employee',
+      role: assignedRole,
       identityCard,
       birthDate: new Date(birthDate),
       address,
@@ -198,6 +205,14 @@ export class EmployeeController {
       delete updateData.isActive;
       delete updateData.exitDate;
       delete updateData.exitReason;
+    } else if (updateData.role) {
+      const assignedRole = updateData.role.toLowerCase();
+      if (!isTenantRole(assignedRole)) {
+        throw new ValidationError(
+          `Rol inválido para empleado de empresa. Roles permitidos: ${TENANT_ROLES.join(', ')}`
+        );
+      }
+      updateData.role = assignedRole;
     }
 
     const userId = req.user?.id;
