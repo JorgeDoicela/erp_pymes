@@ -15,7 +15,7 @@ const SIG_STATUS_MAP = {
   DISPUTED: { label: 'Observado', cls: 'text-red-800 bg-transparent border-red-300' },
 };
 
-export const PayrollDetailsTable = ({ payroll, details = [], onEditDetail }) => {
+export const PayrollDetailsTable = ({ payroll, details = [], readOnly = false, onEditDetail }) => {
   return (
     <>
       {/* Vista Móvil: Tarjetas compactas */}
@@ -71,7 +71,7 @@ export const PayrollDetailsTable = ({ payroll, details = [], onEditDetail }) => 
                     );
                   })()}
                   <div className="flex gap-2">
-                    {payroll.status === 'DRAFT' && (
+                    {payroll.status === 'DRAFT' && !readOnly && (
                       <button
                         type="button"
                         onClick={() => onEditDetail(det)}
@@ -213,7 +213,7 @@ export const PayrollDetailsTable = ({ payroll, details = [], onEditDetail }) => 
                     </td>
                     <td className="py-2.5 px-4 text-center">
                       <div className="flex justify-center gap-1.5">
-                        {payroll.status === 'DRAFT' && (
+                        {payroll.status === 'DRAFT' && !readOnly && (
                           <button
                             type="button"
                             onClick={() => onEditDetail(det)}

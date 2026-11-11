@@ -23,7 +23,12 @@ router.post(
   employeeController.create
 );
 
-router.get('/', authenticate, authorize(['admin', 'hr', 'accounting']), employeeController.getAll);
+router.get(
+  '/',
+  authenticate,
+  authorize(['admin', 'hr', 'accounting', 'manager']),
+  employeeController.getAll
+);
 router.get('/profile', authenticate, employeeController.getProfile);
 router.get('/profile/me', authenticate, employeeController.getProfile);
 router.post('/consent', authenticate, employeeController.updateConsent);
@@ -31,7 +36,7 @@ router.post('/consent', authenticate, employeeController.updateConsent);
 router.get(
   '/departments',
   authenticate,
-  authorize(['admin', 'hr', 'accounting', 'employee']),
+  authorize(['admin', 'hr', 'accounting', 'manager', 'employee']),
   employeeController.getDepartments
 );
 
@@ -45,14 +50,14 @@ router.get(
 router.get(
   '/department/:department',
   authenticate,
-  authorize(['admin', 'hr']),
+  authorize(['admin', 'hr', 'manager']),
   employeeController.getByDepartment
 );
 
 router.get(
   '/:id',
   authenticate,
-  authorize(['admin', 'hr', 'employee']),
+  authorize(['admin', 'hr', 'manager', 'employee']),
   employeeController.getById
 );
 

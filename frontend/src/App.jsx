@@ -183,6 +183,7 @@ const RequireAuth = ({ children, role, user }) => {
       if (userRole === ROLES.ADMIN || userRole === ROLES.HR)
         return <Navigate to="/admin" replace />;
       if (userRole === ROLES.ACCOUNTING) return <Navigate to="/admin/accounting" replace />;
+      if (userRole === ROLES.MANAGER) return <Navigate to="/admin/absences" replace />;
       if (userRole === ROLES.EMPLOYEE) return <Navigate to="/empleado" replace />;
       return <Navigate to="/login" replace />;
     }
@@ -285,6 +286,20 @@ function App() {
           <Route path="/superadmin/audit" element={<SuperAdminDashboard />} />
         </Route>
 
+        {/* Tiempo y Asistencia Departamental / Equipo (Admin, HR y Manager) */}
+        <Route
+          element={
+            <RequireAuth user={auth.user} role={['admin', 'hr', 'manager']}>
+              <MainLayout user={auth.user} onLogout={handleLogout} />
+            </RequireAuth>
+          }
+        >
+          <Route path="/admin/shifts" element={<ShiftManagement user={auth.user} />} />
+          <Route path="/admin/reports" element={<AttendanceReports />} />
+          <Route path="/admin/absences" element={<AdminAbsences user={auth.user} />} />
+          <Route path="/attendance" element={<AttendancePage user={auth.user} />} />
+        </Route>
+
         {/* Administrador y Recursos Humanos (RRHH) */}
         <Route
           element={
@@ -293,14 +308,14 @@ function App() {
             </RequireAuth>
           }
         >
-          <Route path="/admin/shifts" element={<ShiftManagement />} />
-          <Route path="/admin/reports" element={<AttendanceReports />} />
-          <Route path="/admin/absences" element={<AdminAbsences />} />
           <Route
             path="/admin/register-employee"
             element={<RegisterEmployee token={auth.token} />}
           />
-          <Route path="/admin/employees" element={<EmployeeList token={auth.token} />} />
+          <Route
+            path="/admin/employees"
+            element={<EmployeeList token={auth.token} user={auth.user} />}
+          />
           <Route
             path="/admin/employees/ficha"
             element={<EmployeeProfile token={auth.token} user={auth.user} />}
@@ -309,12 +324,11 @@ function App() {
             path="/admin/employees/:id"
             element={<EmployeeProfile token={auth.token} user={auth.user} />}
           />
-          <Route path="/attendance" element={<AttendancePage user={auth.user} />} />
           <Route path="/admin/notifications" element={<NotificationsPage />} />
           <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
           <Route path="/admin/audit" element={<AuditLogsPage />} />
           <Route path="/admin/contracts/expiring" element={<ExpiringContracts />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/settings" element={<AdminSettings user={auth.user} />} />
           <Route path="/admin/expedientes" element={<EmployeeExpedient />} />
           <Route path="/admin/expedientes/:employeeId" element={<EmployeeExpedient />} />
           <Route path="/admin/assets" element={<EmployeeAssetsManagement />} />
@@ -353,8 +367,11 @@ function App() {
         >
           <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
           <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
-          <Route path="/admin/payroll/advances" element={<SalaryAdvancesManagement />} />
-          <Route path="/admin/payroll/generator" element={<PayrollGenerator />} />
+          <Route
+            path="/admin/payroll/advances"
+            element={<SalaryAdvancesManagement user={auth.user} />}
+          />
+          <Route path="/admin/payroll/generator" element={<PayrollGenerator user={auth.user} />} />
         </Route>
 
         {/* Contabilidad (Compartido para Contabilidad y Admin) */}
@@ -367,7 +384,7 @@ function App() {
         >
           <Route path="/admin/accounting" element={<AccountingDashboard />} />
           <Route path="/admin/accounting/chart" element={<ChartOfAccounts />} />
-          <Route path="/admin/accounting/journals" element={<JournalEntries />} />
+          <Route path="/admin/accounting/journals" element={<JournalEntries user={auth.user} />} />
           <Route path="/admin/accounting/reports/trial-balance" element={<TrialBalance />} />
           <Route path="/admin/accounting/periods" element={<PeriodsManagement />} />
           <Route path="/admin/accounting/cost-centers" element={<CostCenterManagement />} />
@@ -386,10 +403,10 @@ function App() {
           <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
         </Route>
 
-        {/* Employee Self-Service Routes - Solo para rol employee */}
+        {/* Employee Self-Service Routes - Portal y Autogestión (Employee y Manager) */}
         <Route
           element={
-            <RequireAuth user={auth.user} role="employee">
+            <RequireAuth user={auth.user} role={['employee', 'manager']}>
               <MainLayout user={auth.user} onLogout={handleLogout} />
             </RequireAuth>
           }

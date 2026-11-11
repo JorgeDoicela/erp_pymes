@@ -20,16 +20,21 @@ export const requireSuperAdmin = async (req, res, next) => {
       return next();
     }
 
-    // Validación de respaldo en BD por si el token no se ha renovado
-    if (req.user?.id) {
-      const user = await prisma.employee.findUnique({
-        where: { id: req.user.id },
-        select: { role: true },
-      });
+    // Validación de respaldo en BD únicamente si el rol no venía definido en el token
+    if (!userRole && req.user?.id) {
+      try {
+        const user = await prisma.employee.findUnique({
+          where: { id: req.user.id },
+          select: { role: true },
+        });
 
-      if (user && isSuperAdminRole(user.role)) {
-        req.user.role = 'superadmin';
-        return next();
+        if (user && isSuperAdminRole(user.role)) {
+          req.user.role = 'superadmin';
+          return next();
+        }
+      } catch (dbErr) {
+        // Si la base de datos no está disponible o falla, prevalece la decisión del token
+        console.warn('[SUPERADMIN MIDDLEWARE] Fallback DB role lookup skipped:', dbErr.message);
       }
     }
 

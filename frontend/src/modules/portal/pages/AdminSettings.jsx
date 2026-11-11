@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { systemService } from '@modules/superadmin';
 import api from '@core/api/httpClient';
 import LocationPickerMap from '@core/ui/LocationPickerMap';
+import { canMutateCompanySettings, getCurrentUser } from '@core/constants/roles';
 
 const SETTINGS_TABS = [
   { id: 'COMPANY', label: 'Identificación & Plan' },
@@ -19,8 +20,11 @@ const SETTINGS_TABS = [
   { id: 'MAINTENANCE', label: 'Mantenimiento & Sistema' },
 ];
 
-const AdminSettings = () => {
+const AdminSettings = ({ user }) => {
   const navigate = useNavigate();
+  const currentUser = user || getCurrentUser();
+  const canMutate = canMutateCompanySettings(currentUser);
+
   const [activeTab, setActiveTab] = useState('COMPANY');
   const [settings, setSettings] = useState(null);
   const [tenant, setTenant] = useState(null);
@@ -224,6 +228,11 @@ const AdminSettings = () => {
             </div>
           </div>
 
+          {!canMutate && (
+            <span className="text-xs text-gray-500 font-mono border border-gray-200 px-3 py-1.5 rounded bg-gray-50">
+              Solo Lectura / Supervisión
+            </span>
+          )}
           <button
             onClick={() => navigate('/admin')}
             className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
@@ -320,15 +329,17 @@ const AdminSettings = () => {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={handleSaveTenant}
-                disabled={savingTenant}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors cursor-pointer"
-              >
-                {savingTenant ? 'Guardando...' : 'Guardar Datos Fiscales'}
-              </button>
-            </div>
+            {canMutate && (
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleSaveTenant}
+                  disabled={savingTenant}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors cursor-pointer"
+                >
+                  {savingTenant ? 'Guardando...' : 'Guardar Datos Fiscales'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -422,14 +433,16 @@ const AdminSettings = () => {
                       })
                     }
                   />
-                  <button
-                    onClick={useMyLocation}
-                    type="button"
-                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded border border-gray-200 transition-colors shrink-0 cursor-pointer"
-                    title="Capturar GPS del dispositivo actual"
-                  >
-                    GPS Actual
-                  </button>
+                  {canMutate && (
+                    <button
+                      onClick={useMyLocation}
+                      type="button"
+                      className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded border border-gray-200 transition-colors shrink-0 cursor-pointer"
+                      title="Capturar GPS del dispositivo actual"
+                    >
+                      GPS Actual
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -440,7 +453,7 @@ const AdminSettings = () => {
                 <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider">
                   Direcciones IP de Red Permitidas
                 </label>
-                {settings.yourIp && (
+                {settings.yourIp && canMutate && (
                   <button
                     type="button"
                     onClick={addCurrentIp}
@@ -452,8 +465,9 @@ const AdminSettings = () => {
               </div>
               <input
                 type="text"
+                disabled={!canMutate}
                 placeholder="Ej: 192.168.1.1, 201.12.3.4 (Dejar vacío para permitir cualquier IP)"
-                className={`${inputClass} font-mono`}
+                className={`${inputClass} font-mono disabled:bg-gray-50 disabled:text-gray-500`}
                 value={settings.allowedIPs || ''}
                 onChange={(e) => setSettings({ ...settings, allowedIPs: e.target.value })}
               />
@@ -463,15 +477,17 @@ const AdminSettings = () => {
               </p>
             </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={handleSaveSettings}
-                disabled={saving}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors cursor-pointer"
-              >
-                {saving ? 'Guardando...' : 'Guardar Parámetros de Geocerca'}
-              </button>
-            </div>
+            {canMutate && (
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={saving}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors cursor-pointer"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Parámetros de Geocerca'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -503,8 +519,11 @@ const AdminSettings = () => {
 
               <button
                 type="button"
+                disabled={!canMutate}
                 onClick={() => handleToggle('biometricEnabled')}
-                className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
+                  !canMutate ? 'opacity-60 cursor-not-allowed ' : 'cursor-pointer '
+                }${
                   settings.biometricEnabled
                     ? 'bg-blue-50 text-blue-800 border-blue-200'
                     : 'bg-gray-100 text-gray-600 border-gray-200'
@@ -514,15 +533,17 @@ const AdminSettings = () => {
               </button>
             </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={handleSaveSettings}
-                disabled={saving}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors cursor-pointer"
-              >
-                {saving ? 'Guardando...' : 'Guardar Parámetros de Seguridad'}
-              </button>
-            </div>
+            {canMutate && (
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={saving}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors cursor-pointer"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Parámetros de Seguridad'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -551,8 +572,11 @@ const AdminSettings = () => {
 
               <button
                 type="button"
+                disabled={!canMutate}
                 onClick={() => handleToggle('maintenanceMode')}
-                className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
+                  !canMutate ? 'opacity-60 cursor-not-allowed ' : 'cursor-pointer '
+                }${
                   settings.maintenanceMode
                     ? 'bg-amber-50 text-amber-800 border-amber-200'
                     : 'bg-gray-100 text-gray-600 border-gray-200'
@@ -568,22 +592,25 @@ const AdminSettings = () => {
               </label>
               <input
                 type="text"
-                className={inputClass}
+                disabled={!canMutate}
+                className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500`}
                 value={settings.maintenanceMessage || ''}
                 onChange={(e) => setSettings({ ...settings, maintenanceMessage: e.target.value })}
                 placeholder="El sistema estará en mantenimiento brevemente."
               />
             </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={handleSaveSettings}
-                disabled={saving}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors cursor-pointer"
-              >
-                {saving ? 'Guardando...' : 'Guardar Configuración de Mantenimiento'}
-              </button>
-            </div>
+            {canMutate && (
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={saving}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors cursor-pointer"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Configuración de Mantenimiento'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

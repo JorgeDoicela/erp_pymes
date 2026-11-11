@@ -94,6 +94,7 @@ const Sidebar = ({ user, onClose }) => {
     const role = (user?.role || '').toLowerCase();
     if (role === ROLES.EMPLOYEE) return '/empleado';
     if (role === ROLES.ACCOUNTING) return '/admin/accounting';
+    if (role === ROLES.MANAGER) return '/admin/absences';
     return '/admin';
   };
 

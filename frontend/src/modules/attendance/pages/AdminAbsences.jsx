@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import absenceService from '../services/absenceService';
 import TeamCalendar from './TeamCalendar';
 import Modal from '@core/ui/Modal';
+import { canMutateTeam, getCurrentUser } from '@core/constants/roles';
 
 const STATUS_MAP = {
   PENDING: { label: 'Pendiente', cls: 'text-amber-800 bg-amber-50 border-amber-200' },
@@ -19,7 +20,9 @@ const STATUS_MAP = {
   CANCELLED: { label: 'Cancelado', cls: 'text-gray-800 bg-gray-50 border-gray-200' },
 };
 
-const AdminAbsences = () => {
+const AdminAbsences = ({ user }) => {
+  const currentUser = user || getCurrentUser();
+  const canResolve = canMutateTeam(currentUser);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('PENDING'); // 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'
@@ -376,22 +379,28 @@ const AdminAbsences = () => {
                           </p>
                         </div>
 
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openResolutionModal(req, 'APPROVED')}
-                            className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
-                          >
-                            Aprobar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openResolutionModal(req, 'REJECTED')}
-                            className="flex-1 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors cursor-pointer"
-                          >
-                            Rechazar
-                          </button>
-                        </div>
+                        {canResolve ? (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openResolutionModal(req, 'APPROVED')}
+                              className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
+                            >
+                              Aprobar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openResolutionModal(req, 'REJECTED')}
+                              className="flex-1 py-1.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded transition-colors cursor-pointer"
+                            >
+                              Rechazar
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] font-mono text-gray-500 bg-gray-100 py-1.5 px-2 rounded text-center block border border-gray-200">
+                            Solo Lectura / Auditoría
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -30,8 +30,12 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import useAutoSync from '@core/hooks/useAutoSync';
+import { canMutateAccounting, getCurrentUser, isReadOnlySupervision } from '@core/constants/roles';
 
-const JournalEntries = () => {
+const JournalEntries = ({ user }) => {
+  const currentUser = user || getCurrentUser();
+  const canMutate = canMutateAccounting(currentUser);
+
   const [entries, setEntries] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
@@ -143,12 +147,7 @@ const JournalEntries = () => {
   const totalCredit = formData.lines.reduce((acc, l) => acc + (parseFloat(l.credit) || 0), 0);
   const difference = Math.abs(totalDebit - totalCredit);
 
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const isSuperAdmin =
-    currentUser?.role === 'superadmin' ||
-    currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com' ||
-    currentUser?.email === 'jorge.doicela.m@gmail.com';
+  const isSuperAdmin = isReadOnlySupervision(currentUser);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -249,12 +248,18 @@ const JournalEntries = () => {
                 </option>
               ))}
             </select>
-            <button
-              onClick={() => setShowForm(true)}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              <FiPlus size={14} /> Registrar Asiento
-            </button>
+            {canMutate ? (
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <FiPlus size={14} /> Registrar Asiento
+              </button>
+            ) : (
+              <span className="text-xs text-gray-500 font-mono border border-gray-200 px-3 py-1.5 rounded bg-gray-50">
+                Solo Lectura / Auditoría
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -485,7 +490,7 @@ const JournalEntries = () => {
                     >
                       <FiEye size={12} /> Detalle
                     </button>
-                    {entry.status === 'DRAFT' && (
+                    {entry.status === 'DRAFT' && canMutate && (
                       <>
                         <button
                           onClick={() => handlePost(entry.id)}
@@ -559,7 +564,7 @@ const JournalEntries = () => {
                             >
                               <FiEye size={16} />
                             </button>
-                            {entry.status === 'DRAFT' && (
+                            {entry.status === 'DRAFT' && canMutate && (
                               <>
                                 <button
                                   onClick={() => handlePost(entry.id)}

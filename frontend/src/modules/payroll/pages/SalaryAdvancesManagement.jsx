@@ -16,6 +16,7 @@ import {
   createAdvanceByAdmin,
 } from '../services/salaryAdvance.service';
 import Modal from '@core/ui/Modal';
+import { canMutatePayroll, getCurrentUser } from '@core/constants/roles';
 
 const STATUS_MAP = {
   APPROVED: { label: 'APROBADO', cls: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
@@ -25,7 +26,10 @@ const STATUS_MAP = {
   CANCELLED: { label: 'CANCELADO', cls: 'bg-gray-50 text-gray-700 border-gray-200' },
 };
 
-const SalaryAdvancesManagement = () => {
+const SalaryAdvancesManagement = ({ user }) => {
+  const currentUser = user || getCurrentUser();
+  const canMutate = canMutatePayroll(currentUser);
+
   // Listas y estados
   const [advances, setAdvances] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -323,12 +327,18 @@ const SalaryAdvancesManagement = () => {
             </div>
           </div>
 
-          <button
-            onClick={handleOpenCreateModal}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
-          >
-            + Conceder Anticipo
-          </button>
+          {canMutate ? (
+            <button
+              onClick={handleOpenCreateModal}
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
+            >
+              + Conceder Anticipo
+            </button>
+          ) : (
+            <span className="text-xs text-gray-500 font-mono border border-gray-200 px-3 py-1.5 rounded bg-gray-50">
+              Solo Lectura / Auditoría
+            </span>
+          )}
         </div>
       </div>
 
@@ -509,7 +519,7 @@ const SalaryAdvancesManagement = () => {
                         </span>
                       </td>
                       <td className="py-2.5 px-4 text-right">
-                        {adv.status === 'PENDING' ? (
+                        {adv.status === 'PENDING' && canMutate ? (
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => handleOpenApproveModal(adv)}

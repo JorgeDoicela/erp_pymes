@@ -8,8 +8,9 @@
 
 import { z } from 'zod';
 import { cedulaSchema, phoneEcuadorSchema, positiveMoneySchema } from '../../../core/validators.js';
+import { TENANT_ROLES } from '../../../config/roles.js';
 
-const VALID_ROLES = ['admin', 'hr', 'accounting', 'employee', 'supervisor', 'security', 'support'];
+const VALID_ROLES = [...TENANT_ROLES, 'entrepreneur', 'supervisor'];
 
 /**
  * Esquema para Creación de Empleado (POST /api/employees)

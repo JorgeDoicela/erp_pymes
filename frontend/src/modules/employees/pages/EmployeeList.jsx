@@ -11,10 +11,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useEmployees } from '../hooks/useEmployees';
 import { FiDownload } from 'react-icons/fi';
 import MaskedText from '@core/ui/MaskedText';
+import { canMutateEmployees, getCurrentUser } from '@core/constants/roles';
 
-const EmployeeList = ({ token }) => {
+const EmployeeList = ({ token, user }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUser = user || getCurrentUser();
+  const canCreateEmployee = canMutateEmployees(currentUser);
 
   // Use the hook for data fetching
   const { employees, loading, error, fetchEmployees } = useEmployees(token);
@@ -108,12 +111,14 @@ const EmployeeList = ({ token }) => {
             <FiDownload size={14} />
             <span>Exportar CSV</span>
           </button>
-          <button
-            onClick={() => navigate('/admin/register-employee')}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer inline-flex items-center gap-1.5"
-          >
-            <span>+ Registrar Colaborador</span>
-          </button>
+          {canCreateEmployee && (
+            <button
+              onClick={() => navigate('/admin/register-employee')}
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span>+ Registrar Colaborador</span>
+            </button>
+          )}
           <button
             onClick={() => navigate('/admin')}
             className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"

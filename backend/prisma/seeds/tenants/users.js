@@ -15,9 +15,10 @@ const EMPLOYEES_EMPRESA_1 = [
     firstName: 'Andrés',
     lastName: 'Morales',
     email: 'andres.morales@emplifi.com',
+    role: 'manager',
     identityCard: '1712345678',
     department: 'Tecnología',
-    position: 'Desarrollador Senior',
+    position: 'Desarrollador Senior / Líder de Equipo',
     salary: 2200,
     phone: '0991234567',
     address: 'Av. República del Salvador N36-84, Quito',
@@ -34,6 +35,7 @@ const EMPLOYEES_EMPRESA_1 = [
     firstName: 'Valeria',
     lastName: 'Espinoza',
     email: 'valeria.espinoza@emplifi.com',
+    role: 'hr',
     identityCard: '1723456789',
     department: 'Recursos Humanos',
     position: 'Coordinadora de RRHH',
@@ -788,9 +790,10 @@ const EMPLOYEES_EMPRESA_2 = [
     firstName: 'Francisco',
     lastName: 'Jaramillo',
     email: 'francisco.jaramillo@techsolutions.ec',
+    role: 'manager',
     identityCard: '1791112233',
     department: 'Desarrollo',
-    position: 'Tech Lead Backend',
+    position: 'Tech Lead Backend / Supervisor de Equipo',
     salary: 2800,
     phone: '0995551122',
     address: 'Calle La Niña y Eloy Alfaro, Quito',
@@ -864,9 +867,10 @@ const EMPLOYEES_EMPRESA_2 = [
     firstName: 'Isabel',
     lastName: 'Fuentes',
     email: 'isabel.fuentes@techsolutions.ec',
+    role: 'hr',
     identityCard: '1766655544',
     department: 'Recursos Humanos',
-    position: 'Talent Acquisition Specialist',
+    position: 'Coordinadora de Talento Humano',
     salary: 1850,
     phone: '0966655544',
     address: 'Av. Eloy Alfaro, Quito',
@@ -1299,16 +1303,17 @@ export async function seedUsers(prisma) {
   tenant1Employees.push(entrepreneur1);
 
   for (const emp of EMPLOYEES_EMPRESA_1) {
+    const role = emp.role || 'employee';
     const created = await prisma.employee.upsert({
       where: { email: emp.email },
-      update: { password, tenantId: tenant1.id },
+      update: { password, tenantId: tenant1.id, role },
       create: {
         tenantId: tenant1.id,
         firstName: emp.firstName,
         lastName: emp.lastName,
         email: emp.email,
         password,
-        role: 'employee',
+        role,
         department: emp.department,
         position: emp.position,
         salary: encryptSalary(emp.salary),
@@ -1422,16 +1427,17 @@ export async function seedUsers(prisma) {
   tenant2Employees.push(entrepreneur2);
 
   for (const emp of EMPLOYEES_EMPRESA_2) {
+    const role = emp.role || 'employee';
     const created = await prisma.employee.upsert({
       where: { email: emp.email },
-      update: { password, tenantId: tenant2.id },
+      update: { password, tenantId: tenant2.id, role },
       create: {
         tenantId: tenant2.id,
         firstName: emp.firstName,
         lastName: emp.lastName,
         email: emp.email,
         password,
-        role: 'employee',
+        role,
         department: emp.department,
         position: emp.position,
         salary: encryptSalary(emp.salary),
@@ -1798,16 +1804,17 @@ export async function seedUsers(prisma) {
 
     // Empleados
     for (const emp of tData.employees) {
+      const role = emp.role || 'employee';
       await prisma.employee.upsert({
         where: { email: emp.email },
-        update: { password, tenantId: tenant.id },
+        update: { password, tenantId: tenant.id, role },
         create: {
           tenantId: tenant.id,
           firstName: emp.firstName,
           lastName: emp.lastName,
           email: emp.email,
           password,
-          role: 'employee',
+          role,
           department: emp.department,
           position: emp.position,
           salary: encryptSalary(emp.salary),

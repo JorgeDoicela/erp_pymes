@@ -42,7 +42,7 @@ import { isSuperAdmin as checkIsSuperAdmin, ROLES } from './roles.js';
 
 export const superAdminSections = [
   {
-    title: 'Administración Global Plataforma',
+    title: 'Plataforma Global SaaS',
     modules: [
       {
         title: 'Panel Principal SuperAdmin',
@@ -430,6 +430,188 @@ export const accountingSections = [
   },
 ];
 
+export const hrSections = [
+  {
+    title: 'Gestión de Talento y Expedientes',
+    modules: [
+      {
+        title: 'Empleados y Fichas',
+        icon: <FiUsers />,
+        color: 'bg-blue-500',
+        path: '/admin/employees',
+      },
+      {
+        title: 'Expedientes Digitales',
+        icon: <FiFolder />,
+        color: 'bg-blue-600',
+        path: '/admin/expedientes',
+      },
+      {
+        title: 'Vencimiento de Contratos',
+        icon: <FiFileText />,
+        color: 'bg-amber-600',
+        path: '/admin/contracts/expiring',
+      },
+      {
+        title: 'Reclutamiento y Vacantes',
+        icon: <FiBriefcase />,
+        color: 'bg-pink-500',
+        path: '/recruitment',
+      },
+      {
+        title: 'Evaluaciones de Desempeño',
+        icon: <FiTrendingUp />,
+        color: 'bg-orange-500',
+        path: '/performance',
+      },
+    ],
+  },
+  {
+    title: 'Tiempo, Asistencia y Turnos',
+    modules: [
+      {
+        title: 'Control de Asistencia',
+        icon: <FiClock />,
+        color: 'bg-indigo-500',
+        path: '/attendance',
+      },
+      {
+        title: 'Ausencias y Vacaciones',
+        icon: <FiUserX />,
+        color: 'bg-rose-500',
+        path: '/admin/absences',
+      },
+      {
+        title: 'Gestión de Turnos',
+        icon: <FiCalendar />,
+        color: 'bg-purple-500',
+        path: '/admin/shifts',
+      },
+    ],
+  },
+  {
+    title: 'Operativa Laboral y Legal',
+    modules: [
+      {
+        title: 'Equipos y EPPs',
+        icon: <FiPackage />,
+        color: 'bg-purple-600',
+        path: '/admin/assets',
+      },
+      {
+        title: 'Salida de Personal',
+        icon: <FiUserMinus />,
+        color: 'bg-rose-600',
+        path: '/admin/offboarding',
+      },
+      {
+        title: 'Firmas Digitales QR & .p12',
+        icon: <FiFileText />,
+        color: 'bg-indigo-600',
+        path: '/admin/signatures',
+      },
+      {
+        title: 'Cumplimiento Legal',
+        icon: <FiShield />,
+        color: 'bg-emerald-700',
+        path: '/admin/compliance',
+      },
+      {
+        title: 'Sostenibilidad ODS 8',
+        icon: <FiBookOpen />,
+        color: 'bg-emerald-600',
+        path: '/admin/sustainability',
+      },
+    ],
+  },
+  {
+    title: 'Comunicación y Perfil',
+    modules: [
+      {
+        title: 'Comunicados y Anuncios',
+        icon: <FiVolume2 />,
+        color: 'bg-blue-600',
+        path: '/announcements',
+      },
+      {
+        title: 'Notificaciones y Alertas',
+        icon: <FiVolume2 />,
+        color: 'bg-blue-600',
+        path: '/admin/notifications',
+      },
+      { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
+    ],
+  },
+];
+
+export const managerSections = [
+  {
+    title: 'Gestión de Equipo Directo',
+    modules: [
+      {
+        title: 'Aprobación de Ausencias',
+        icon: <FiUserX />,
+        color: 'bg-rose-500',
+        path: '/admin/absences',
+      },
+      {
+        title: 'Asistencia de Equipo',
+        icon: <FiClock />,
+        color: 'bg-indigo-500',
+        path: '/attendance',
+      },
+      {
+        title: 'Turnos y Horarios',
+        icon: <FiCalendar />,
+        color: 'bg-purple-500',
+        path: '/admin/shifts',
+      },
+      {
+        title: 'Metas y Objetivos',
+        icon: <FiTarget />,
+        color: 'bg-cyan-500',
+        path: '/performance/goals',
+      },
+    ],
+  },
+  {
+    title: 'Mi Portal de Autogestión',
+    modules: [
+      {
+        title: 'Mi Asistencia',
+        icon: <FiClock />,
+        color: 'bg-indigo-500',
+        path: '/empleado/asistencia',
+      },
+      {
+        title: 'Mis Permisos',
+        icon: <FiCalendar />,
+        color: 'bg-rose-500',
+        path: '/empleado/ausencias',
+      },
+      {
+        title: 'Mis Recibos de Pago',
+        icon: <FiDollarSign />,
+        color: 'bg-green-500',
+        path: '/my-payments',
+      },
+      {
+        title: 'Mis Anticipos',
+        icon: <FiCreditCard />,
+        color: 'bg-emerald-600',
+        path: '/my-advances',
+      },
+      {
+        title: 'Comunicados y Anuncios',
+        icon: <FiVolume2 />,
+        color: 'bg-blue-600',
+        path: '/announcements',
+      },
+      { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
+    ],
+  },
+];
+
 export const entrepreneurSections = [
   {
     title: 'Proyectos e Innovación',
@@ -461,12 +643,16 @@ export const getSectionsByRole = (user) => {
   const role = (user?.role || '').toLowerCase();
   switch (role) {
     case ROLES.ADMIN:
-    case ROLES.HR:
       return adminSections;
+    case ROLES.HR:
+      return hrSections;
     case ROLES.ACCOUNTING:
       return accountingSections;
+    case ROLES.MANAGER:
+      return managerSections;
     case 'entrepreneur':
       return entrepreneurSections;
+    case ROLES.EMPLOYEE:
     default:
       return employeeSections;
   }
@@ -481,6 +667,8 @@ export const getModulesByRole = (user) => {
 // Arrays planos exportados por compatibilidad con imports anteriores
 export const superAdminModules = superAdminSections.flatMap((s) => s.modules);
 export const adminModules = adminSections.flatMap((s) => s.modules);
+export const hrModules = hrSections.flatMap((s) => s.modules);
+export const managerModules = managerSections.flatMap((s) => s.modules);
 export const employeeModules = employeeSections.flatMap((s) => s.modules);
 export const accountingModules = accountingSections.flatMap((s) => s.modules);
 export const entrepreneurModules = entrepreneurSections.flatMap((s) => s.modules);

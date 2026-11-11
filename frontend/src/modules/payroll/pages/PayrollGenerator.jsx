@@ -23,6 +23,7 @@ import {
 import { integratePayroll } from '@modules/accounting';
 import ExportButtons from '@core/ui/ExportButtons';
 import { FiBell } from 'react-icons/fi';
+import { canMutatePayroll, getCurrentUser } from '@core/constants/roles';
 
 // Subcomponentes Modulares Extraídos (core/ui y modules/payroll)
 import { Button } from '@core/ui';
@@ -37,8 +38,10 @@ const STATUS_MAP = {
   DRAFT: { label: 'Borrador', cls: 'text-amber-800 bg-transparent border-amber-300' },
 };
 
-const PayrollGenerator = () => {
+const PayrollGenerator = ({ user }) => {
   const navigate = useNavigate();
+  const currentUser = user || getCurrentUser();
+  const canMutate = canMutatePayroll(currentUser);
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -315,9 +318,15 @@ const PayrollGenerator = () => {
               ← Historial de Nóminas
             </Button>
           )}
-          <Button variant="primary" onClick={() => setModalOpen(true)}>
-            + Nueva Nómina
-          </Button>
+          {canMutate ? (
+            <Button variant="primary" onClick={() => setModalOpen(true)}>
+              + Nueva Nómina
+            </Button>
+          ) : (
+            <span className="text-xs text-gray-500 font-mono border border-gray-200 px-3 py-1.5 rounded-[4px] bg-gray-50">
+              Solo Lectura / Auditoría
+            </span>
+          )}
         </div>
       </div>
 
@@ -441,7 +450,7 @@ const PayrollGenerator = () => {
 
             {/* Acciones de Flujo de Nómina */}
             <div className="flex flex-wrap items-center gap-2">
-              {selectedPayroll.status === 'DRAFT' && (
+              {selectedPayroll.status === 'DRAFT' && canMutate && (
                 <>
                   <Button variant="destructive" onClick={handleDeletePayroll}>
                     Eliminar
@@ -457,14 +466,16 @@ const PayrollGenerator = () => {
                   <Button variant="secondary" onClick={handleDownloadBankFile}>
                     Descargar Archivo Banco
                   </Button>
-                  {!selectedPayroll.journalEntryId && (
+                  {canMutate && !selectedPayroll.journalEntryId && (
                     <Button variant="secondary" onClick={handleIntegrateAccounting}>
                       Integrar Contabilidad
                     </Button>
                   )}
-                  <Button variant="primary" onClick={handleMarkAsPaid}>
-                    Registrar Pago
-                  </Button>
+                  {canMutate && (
+                    <Button variant="primary" onClick={handleMarkAsPaid}>
+                      Registrar Pago
+                    </Button>
+                  )}
                 </>
               )}
 
@@ -473,12 +484,12 @@ const PayrollGenerator = () => {
                   <Button variant="secondary" onClick={handleDownloadBankFile}>
                     Descargar Archivo Banco
                   </Button>
-                  {!selectedPayroll.journalEntryId && (
+                  {canMutate && !selectedPayroll.journalEntryId && (
                     <Button variant="secondary" onClick={handleIntegrateAccounting}>
                       Integrar Contabilidad
                     </Button>
                   )}
-                  {signatureStats.pending > 0 && (
+                  {canMutate && signatureStats.pending > 0 && (
                     <Button variant="secondary" icon={FiBell} onClick={handleNotifySignatures}>
                       Notificar Firmas ({signatureStats.pending})
                     </Button>
@@ -507,6 +518,7 @@ const PayrollGenerator = () => {
             <PayrollDetailsTable
               payroll={selectedPayroll}
               details={filteredDetails}
+              readOnly={!canMutate}
               onEditDetail={(det) => {
                 setEditingDetail({ ...det });
                 setEditModalOpen(true);

@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import shiftService from '../services/shiftService';
 import { employeeService } from '@modules/employees';
 import Modal from '@core/ui/Modal';
+import { canMutateTeam, getCurrentUser } from '@core/constants/roles';
 
 const ALL_DAYS = [
   { key: 'Lunes', short: 'Lun' },
@@ -22,7 +23,9 @@ const ALL_DAYS = [
   { key: 'Domingo', short: 'Dom' },
 ];
 
-const ShiftManagement = () => {
+const ShiftManagement = ({ user }) => {
+  const currentUser = user || getCurrentUser();
+  const canManage = canMutateTeam(currentUser);
   const [activeTab, setActiveTab] = useState('shifts'); // 'shifts' | 'assignments' | 'bulk_assign'
   const [shifts, setShifts] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -387,15 +390,23 @@ const ShiftManagement = () => {
             Configure los horarios laborales del personal y asigne turnos masiva o individualmente.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
-          >
-            + Nuevo Turno
-          </button>
-        </div>
+        {canManage ? (
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
+            >
+              + Nuevo Turno
+            </button>
+          </div>
+        ) : (
+          <div className="shrink-0">
+            <span className="text-[11px] font-mono text-gray-500 bg-gray-100 py-1.5 px-2.5 rounded border border-gray-200">
+              Modo Supervisión (Lectura)
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Pestañas con Contadores Tabulares */}
@@ -505,20 +516,26 @@ const ShiftManagement = () => {
                         {shift.toleranceMinutes ?? 15} min
                       </td>
                       <td className="py-3 px-4 text-right space-x-1.5">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(shift)}
-                          className="border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteShift(shift)}
-                          className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded transition-colors cursor-pointer"
-                        >
-                          Eliminar
-                        </button>
+                        {canManage ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(shift)}
+                              className="border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 text-xs px-2.5 py-1 rounded transition-colors cursor-pointer"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteShift(shift)}
+                              className="border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium px-2.5 py-1 rounded transition-colors cursor-pointer"
+                            >
+                              Eliminar
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-gray-400 font-mono text-[11px]">—</span>
+                        )}
                       </td>
                     </tr>
                   ))

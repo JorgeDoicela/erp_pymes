@@ -87,7 +87,17 @@ export const ROLE_PERMISSIONS = Object.freeze({
     'benefits:read',
     'benefits:write',
   ],
-  [ROLES.MANAGER]: ['team:read', 'team:attendance', 'team:absences:approve', 'team:goals:manage'],
+  [ROLES.MANAGER]: [
+    'team:read',
+    'team:attendance',
+    'team:absences:approve',
+    'team:goals:manage',
+    'self:read',
+    'self:attendance',
+    'self:absences:request',
+    'self:payroll:read',
+    'self:goals:read',
+  ],
   [ROLES.EMPLOYEE]: [
     'self:read',
     'self:attendance',

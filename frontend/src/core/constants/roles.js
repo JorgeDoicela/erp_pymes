@@ -49,10 +49,22 @@ export const isAccounting = (user) => {
   return role === ROLES.ACCOUNTING;
 };
 
+export const isManager = (user) => {
+  if (!user) return false;
+  const role = (user.role || '').toLowerCase();
+  return role === ROLES.MANAGER;
+};
+
 export const isEmployee = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
   return role === ROLES.EMPLOYEE;
+};
+
+export const canManageTeam = (user) => {
+  if (!user) return false;
+  const role = (user.role || '').toLowerCase();
+  return [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.HR, ROLES.MANAGER].includes(role);
 };
 
 export const canManageEmployees = (user) => {
@@ -83,6 +95,48 @@ export const canManageRecruitment = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
   return [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.HR].includes(role);
+};
+
+export const getCurrentUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+};
+
+export const isReadOnlySupervision = (user) => {
+  return isSuperAdmin(user);
+};
+
+export const canMutateEmployees = (user) => {
+  if (!user || isReadOnlySupervision(user)) return false;
+  const role = (user.role || '').toLowerCase();
+  return [ROLES.ADMIN, ROLES.HR].includes(role);
+};
+
+export const canMutatePayroll = (user) => {
+  if (!user || isReadOnlySupervision(user)) return false;
+  const role = (user.role || '').toLowerCase();
+  return [ROLES.ADMIN, ROLES.ACCOUNTING, ROLES.HR].includes(role);
+};
+
+export const canMutateAccounting = (user) => {
+  if (!user || isReadOnlySupervision(user)) return false;
+  const role = (user.role || '').toLowerCase();
+  return [ROLES.ADMIN, ROLES.ACCOUNTING].includes(role);
+};
+
+export const canMutateTeam = (user) => {
+  if (!user || isReadOnlySupervision(user)) return false;
+  const role = (user.role || '').toLowerCase();
+  return [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER].includes(role);
+};
+
+export const canMutateCompanySettings = (user) => {
+  if (!user || isReadOnlySupervision(user)) return false;
+  const role = (user.role || '').toLowerCase();
+  return role === ROLES.ADMIN;
 };
 
 export const getRoleLabel = (user) => {
