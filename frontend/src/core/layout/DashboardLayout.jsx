@@ -103,6 +103,7 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
         <Header
           user={user}
           onMenuClick={handleToggleMenu}
+          onLogout={onLogout}
           isSidebarOpen={isDesktopOpen}
           title={title}
         />
