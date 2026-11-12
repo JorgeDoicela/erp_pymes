@@ -43,7 +43,7 @@ export class SustainabilityRagService {
     });
 
     // 2. MODELO EVALUADOR (FASE 1 — RERANKER): Evaluar relevancia, diversidad normativa y afinidad con el módulo
-    const evaluatedChunks = legalEvaluatorService.evaluateAndRerankChunks({
+    const evaluatedChunks = await legalEvaluatorService.evaluateAndRerankChunks({
       query,
       candidateChunks: rawCandidateChunks,
       moduleContext,

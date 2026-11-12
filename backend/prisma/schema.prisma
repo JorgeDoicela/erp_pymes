@@ -7,7 +7,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -51,6 +51,8 @@ model Tenant {
   attentionCalibrations AttentionCalibration[]
   ftTransformerWeights FTTransformerWeights[]
   knowledgeDocuments   KnowledgeDocument[]
+  whatsappContexts     WhatsappConversationContext[]
+  whatsappActionSessions WhatsappActionSession[]
 
   @@map("tenants")
 }
@@ -119,6 +121,7 @@ model Employee {
   entrepreneurships    Entrepreneurship[]       @relation("ProjectOwner")
   projectMemberships   EntrepreneurshipMember[]
   projectMentorships   EntrepreneurshipMentor[]
+  whatsappActionSessions WhatsappActionSession[]
 
   @@index([email])
   @@index([department])
@@ -1277,20 +1280,66 @@ model KnowledgeDocument {
 }
 
 model KnowledgeChunk {
-  id          String            @id @default(cuid())
+  id          String                      @id @default(cuid())
   documentId  String
-  content     String            @db.Text
-  articleCode String?           // Ej: "Art. 185", "Art. 188", "Meta 8.3"
-  odsTarget   String?           // "8.3", "8.5", "8.8"
-  metadata    Json?             // Palabras clave, régimen territorial (Sierra/Costa), jurisprudencia
-  createdAt   DateTime          @default(now())
+  content     String                      @db.Text
+  contentHash String?
+  articleCode String?                     // Ej: "Art. 185", "Art. 188", "Meta 8.3"
+  odsTarget   String?                     // "8.3", "8.5", "8.8"
+  metadata    Json?                       // Palabras clave, régimen territorial (Sierra/Costa), jurisprudencia
+  embedding   Unsupported("vector(768)")?
+  createdAt   DateTime                    @default(now())
 
   document    KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@index([odsTarget])
+  @@index([contentHash])
   @@map("knowledge_chunks")
 }
+
+model WhatsappConversationContext {
+  id                         String   @id @default(cuid())
+  phoneKey                   String   @unique
+  activeTenantId             String?
+  pendingTenantSelectionJson Json?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  activeTenant               Tenant?  @relation(fields: [activeTenantId], references: [id], onDelete: SetNull)
+
+  @@index([activeTenantId])
+  @@map("whatsapp_conversation_contexts")
+}
+
+model WhatsappActionSession {
+  id                String   @id @default(cuid())
+  tenantId          String
+  employeeId        String
+  phoneKey          String
+  skillName         String
+  status            String   @default("PENDING_CONFIRMATION") // COLLECTING_PARAMS, PENDING_CONFIRMATION, EXECUTING, COMPLETED, CANCELLED, EXPIRED, LOCKED
+  payloadJson       Json
+  otpHash           String?
+  otpSentToEmail    String?
+  attempts          Int      @default(0)
+  maxAttempts       Int      @default(3)
+  expiresAt         DateTime
+  sourceMessageId   String?
+  confirmMessageId  String?
+  resultingEntityId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee          Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId, status])
+  @@index([phoneKey, status])
+  @@index([expiresAt])
+  @@map("whatsapp_action_sessions")
+}
+
 
 
 

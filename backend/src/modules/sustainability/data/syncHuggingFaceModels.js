@@ -20,6 +20,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '../../../../..');
 const DATA_DIR = __dirname;
+const BI_ENCODER_DIR = path.join(DATA_DIR, 'models', 'bi-encoder');
+const CROSS_ENCODER_DIR = path.join(DATA_DIR, 'models', 'cross-encoder');
 const LORA_MODEL_DIR = path.join(DATA_DIR, 'models', 'qwen25-ecuador-ods8-lora');
 
 function loadEnvFromRoot() {
@@ -55,6 +57,31 @@ const HF_RETRIEVER_REPO_ID =
   process.env.HF_RETRIEVER_REPO_ID || `${HF_NAMESPACE}/norma-erp-ecuador-retriever-e5`;
 const HF_LORA_REPO_ID =
   process.env.HF_LORA_REPO_ID || `${HF_NAMESPACE}/norma-erp-ecuador-qwen2.5-7b-lora`;
+
+const ONNX_FOLDER_SPECS = [
+  {
+    repoId: HF_RETRIEVER_REPO_ID,
+    subdir: 'bi-encoder',
+    localDir: BI_ENCODER_DIR,
+    description: 'Bi-Encoder ONNX Cuantizado INT8 (768-dim)',
+  },
+  {
+    repoId: HF_RETRIEVER_REPO_ID,
+    subdir: 'cross-encoder',
+    localDir: CROSS_ENCODER_DIR,
+    description: 'Cross-Encoder Evaluador ONNX Cuantizado INT8',
+  },
+];
+
+async function listRepoFolderFiles(repoId, subdir) {
+  const url = `https://huggingface.co/api/models/${repoId}/tree/main/${subdir}?recursive=true`;
+  const headers = HF_TOKEN ? { Authorization: `Bearer ${HF_TOKEN}` } : {};
+  const res = await fetch(url, { headers });
+  if (!res.ok) return [];
+  const items = await res.json();
+  if (!Array.isArray(items)) return [];
+  return items.filter((item) => item.type === 'file').map((item) => item.path);
+}
 
 const ESSENTIAL_ARTIFACTS = [
   {
@@ -165,6 +192,34 @@ async function runStatus() {
     const relPath = path.relative(ROOT_DIR, item.local).replace(/\\/g, '/');
     console.log(` [${exists ? 'OK' : '--'}] ${relPath} (${sizeStr}) — ${item.description}`);
   }
+  for (const folder of ONNX_FOLDER_SPECS) {
+    const onnxPath = path.join(folder.localDir, 'onnx', 'model_quantized.onnx');
+    const tokPath = path.join(folder.localDir, 'tokenizer.json');
+    const exists = fs.existsSync(onnxPath) && fs.existsSync(tokPath);
+    const sizeStr = fs.existsSync(onnxPath) ? formatSize(fs.statSync(onnxPath).size) : 'FALTANTE';
+    const relPath = path.relative(ROOT_DIR, onnxPath).replace(/\\/g, '/');
+    console.log(` [${exists ? 'OK' : '--'}] ${relPath} (${sizeStr}) — ${folder.description}`);
+  }
+}
+
+async function syncOnnxFolder(folder, onlyIfMissing = false) {
+  const remoteFiles = await listRepoFolderFiles(folder.repoId, folder.subdir);
+  if (remoteFiles.length === 0) {
+    console.warn(` [WARN] Carpeta remota ${folder.subdir}/ aún no disponible en ${folder.repoId}`);
+    return 0;
+  }
+  let downloadedCount = 0;
+  for (const remotePath of remoteFiles) {
+    const relInsideFolder = remotePath.slice(folder.subdir.length + 1);
+    const localPath = path.join(folder.localDir, relInsideFolder);
+    if (onlyIfMissing && fs.existsSync(localPath) && fs.statSync(localPath).size > 20) {
+      continue;
+    }
+    const bytes = await downloadFileFromRepo(folder.repoId, remotePath, localPath);
+    downloadedCount++;
+    console.log(` [OK] ${remotePath} (${formatSize(bytes)})`);
+  }
+  return downloadedCount;
 }
 
 async function runPull(includeFullLora = false) {
@@ -180,6 +235,10 @@ async function runPull(includeFullLora = false) {
     const relPath = path.relative(ROOT_DIR, item.local).replace(/\\/g, '/');
     console.log(` [OK] ${item.remote} (${formatSize(bytes)}) -> ${relPath}`);
   }
+
+  for (const folder of ONNX_FOLDER_SPECS) {
+    await syncOnnxFolder(folder, false);
+  }
 }
 
 async function runEnsure() {
@@ -191,21 +250,31 @@ async function runEnsure() {
   const missing = list.filter(
     (item) => !fs.existsSync(item.local) || fs.statSync(item.local).size < 20
   );
-  if (missing.length === 0) {
-    console.log('[HF Sync] Todos los artefactos de IA están presentes localmente.');
-    return;
+  if (missing.length > 0) {
+    console.log(
+      `[HF Sync] Descargando ${missing.length} artefacto(s) faltante(s) desde Hugging Face Hub...`
+    );
+    for (const item of missing) {
+      try {
+        const bytes = await downloadFileFromRepo(item.repoId, item.remote, item.local);
+        console.log(` [OK] Descargado ${item.remote} (${formatSize(bytes)})`);
+      } catch (err) {
+        console.warn(` [WARN] No se pudo sincronizar ${item.remote}: ${err.message}`);
+      }
+    }
   }
 
-  console.log(
-    `[HF Sync] Descargando ${missing.length} artefacto(s) faltante(s) desde Hugging Face Hub...`
-  );
-  for (const item of missing) {
+  let onnxSynced = 0;
+  for (const folder of ONNX_FOLDER_SPECS) {
     try {
-      const bytes = await downloadFileFromRepo(item.repoId, item.remote, item.local);
-      console.log(` [OK] Descargado ${item.remote} (${formatSize(bytes)})`);
+      onnxSynced += await syncOnnxFolder(folder, true);
     } catch (err) {
-      console.warn(` [WARN] No se pudo sincronizar ${item.remote}: ${err.message}`);
+      console.warn(` [WARN] No se pudo sincronizar modelo ONNX ${folder.subdir}: ${err.message}`);
     }
+  }
+
+  if (missing.length === 0 && onnxSynced === 0) {
+    console.log('[HF Sync] Todos los artefactos ONNX e índices están presentes localmente.');
   }
 }
 

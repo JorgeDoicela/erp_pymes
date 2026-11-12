@@ -14,31 +14,50 @@ export class WhatsappRepository {
   }
 
   /**
-   * Busca un colaborador en la base de datos coincidiendo con cualquiera de las variantes telefónicas normalizadas.
+   * Construye lista de candidatos telefónicos en BD eliminando falsos positivos mediante coincidencia canónica exacta.
+   * Filtra únicamente colaboradores activos pertenecientes a empresas (tenants) activas.
    * @param {string[]} phoneVariants
-   * @returns {Promise<Object|null>} Colaborador con tenant asociado o null si no existe.
+   * @returns {Promise<Array<Object>>}
    */
-  async findEmployeeByPhoneVariants(phoneVariants) {
+  async findEmployeesByPhoneVariants(phoneVariants) {
     if (!phoneVariants || !phoneVariants.length) {
-      return null;
+      return [];
     }
 
     try {
-      const orConditions = phoneVariants.flatMap((variant) => [
-        { phone: variant },
-        { phone: { contains: variant } },
-      ]);
+      const cleanVariants = Array.from(
+        new Set(phoneVariants.map((v) => String(v || '').trim()).filter(Boolean))
+      );
 
-      const employee = await this.prisma.employee.findFirst({
+      // Extraer sufijo mínimo de 9 dígitos para capturar teléfonos almacenados con guiones/espacios
+      const suffixTailSet = new Set(
+        cleanVariants
+          .map((v) => v.replace(/[^\d]/g, ''))
+          .filter((d) => d.length >= 9)
+          .map((d) => d.slice(-9))
+      );
+
+      const orConditions = [
+        { phone: { in: cleanVariants } },
+        ...Array.from(suffixTailSet).map((tail) => ({ phone: { endsWith: tail } })),
+      ];
+
+      const employees = await this.prisma.employee.findMany({
         where: {
           OR: orConditions,
           isActive: true,
+          tenantId: { not: null },
+          tenant: {
+            isActive: true,
+            subscriptionStatus: { notIn: ['SUSPENDED', 'CANCELLED'] },
+          },
         },
         select: {
           id: true,
           firstName: true,
           lastName: true,
           email: true,
+          identityCard: true,
           department: true,
           position: true,
           role: true,
@@ -55,16 +74,159 @@ export class WhatsappRepository {
             },
           },
         },
+        orderBy: [{ tenantId: 'asc' }, { createdAt: 'asc' }],
       });
 
-      return employee;
+      // Verificación canónica exacta sobre dígitos normalizados para evitar colisiones parciales
+      const canonicalTargets = new Set(cleanVariants.map((v) => this.normalizeDigitsForMatch(v)));
+      return employees.filter((emp) => {
+        const storedDigits = this.normalizeDigitsForMatch(emp.phone);
+        return Boolean(storedDigits && canonicalTargets.has(storedDigits));
+      });
     } catch (err) {
       console.error(
-        '[WhatsApp Repository Error] Error al buscar colaborador por teléfono:',
+        '[WhatsApp Repository Error] Error al buscar colaboradores por teléfono:',
         err.message
       );
-      return null;
+      return [];
     }
+  }
+
+  /**
+   * Normaliza dígitos telefónicos para comparación canónica multi-formato (Ecuador E.164 / local).
+   * @private
+   */
+  normalizeDigitsForMatch(rawPhone) {
+    const digits = String(rawPhone || '').replace(/[^\d]/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('0') && digits.length === 10) {
+      return `593${digits.substring(1)}`;
+    }
+    if (digits.length === 9 && digits.startsWith('9')) {
+      return `593${digits}`;
+    }
+    return digits;
+  }
+
+  /**
+   * Busca un colaborador único (compatibilidad con flujos de lectura simples).
+   * @param {string[]} phoneVariants
+   * @returns {Promise<Object|null>}
+   */
+  async findEmployeeByPhoneVariants(phoneVariants) {
+    const matches = await this.findEmployeesByPhoneVariants(phoneVariants);
+    return matches[0] || null;
+  }
+
+  /**
+   * Resuelve el colaborador y su contexto multi-tenant activo para el teléfono remitente.
+   * Si un mismo teléfono pertenece a varias empresas activas, requiere selección explícita si aún no tiene contexto activo.
+   * @param {{ phoneKey: string, phoneVariants: string[] }} params
+   */
+  async resolveEmployeeContext({ phoneKey, phoneVariants }) {
+    const matches = await this.findEmployeesByPhoneVariants(phoneVariants);
+
+    if (!matches.length) {
+      return {
+        status: 'UNREGISTERED',
+        employee: null,
+        candidates: [],
+      };
+    }
+
+    if (matches.length === 1) {
+      return {
+        status: 'RESOLVED',
+        employee: matches[0],
+        candidates: matches,
+      };
+    }
+
+    const context = phoneKey
+      ? await this.prisma.whatsappConversationContext.findUnique({
+          where: { phoneKey },
+        })
+      : null;
+
+    if (context?.activeTenantId) {
+      const selected = matches.find((emp) => emp.tenantId === context.activeTenantId);
+      if (selected) {
+        return {
+          status: 'RESOLVED',
+          employee: selected,
+          candidates: matches,
+        };
+      }
+    }
+
+    const pendingList = matches.map((emp, idx) => ({
+      index: idx + 1,
+      tenantId: emp.tenantId,
+      tenantName: emp.tenant?.name || `Empresa ${idx + 1}`,
+      ruc: emp.tenant?.ruc || null,
+      employeeId: emp.id,
+    }));
+
+    if (phoneKey) {
+      await this.prisma.whatsappConversationContext.upsert({
+        where: { phoneKey },
+        create: {
+          phoneKey,
+          activeTenantId: null,
+          pendingTenantSelectionJson: pendingList,
+        },
+        update: {
+          activeTenantId: null,
+          pendingTenantSelectionJson: pendingList,
+        },
+      });
+    }
+
+    return {
+      status: 'MULTI_TENANT_SELECTION_REQUIRED',
+      employee: null,
+      candidates: matches,
+      pendingSelection: pendingList,
+    };
+  }
+
+  async getConversationContext(phoneKey) {
+    if (!phoneKey) return null;
+    return this.prisma.whatsappConversationContext.findUnique({
+      where: { phoneKey },
+    });
+  }
+
+  async setActiveTenantContext({ phoneKey, tenantId }) {
+    if (!phoneKey || !tenantId) return null;
+    return this.prisma.whatsappConversationContext.upsert({
+      where: { phoneKey },
+      create: {
+        phoneKey,
+        activeTenantId: tenantId,
+        pendingTenantSelectionJson: null,
+      },
+      update: {
+        activeTenantId: tenantId,
+        pendingTenantSelectionJson: null,
+      },
+    });
+  }
+
+  async clearActiveTenantSelection({ phoneKey, pendingSelection = null }) {
+    if (!phoneKey) return null;
+    return this.prisma.whatsappConversationContext.upsert({
+      where: { phoneKey },
+      create: {
+        phoneKey,
+        activeTenantId: null,
+        pendingTenantSelectionJson: pendingSelection,
+      },
+      update: {
+        activeTenantId: null,
+        pendingTenantSelectionJson: pendingSelection,
+      },
+    });
   }
 
   /**

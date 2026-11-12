@@ -125,14 +125,80 @@ export class WhatsappService {
     const userQuery = text.body.trim();
 
     try {
-      // Normalizar número telefónico y buscar al colaborador en la base de datos
       const phoneVariants = this.security.normalizePhoneNumberVariants(from);
-      const employee = await this.repo.findEmployeeByPhoneVariants(phoneVariants);
+      const phoneKey =
+        typeof this.security.getCanonicalPhoneKey === 'function'
+          ? this.security.getCanonicalPhoneKey(from)
+          : String(from || '').replace(/[^\d]/g, '');
 
-      // Generar respuesta con el orquestador de IA (DeepSeek / Gemini + RAG Legal)
+      let employee = null;
+
+      if (typeof this.repo.resolveEmployeeContext === 'function') {
+        const contextResult = await this.repo.resolveEmployeeContext({
+          phoneKey,
+          phoneVariants,
+        });
+
+        // Permitir cambio explícito de empresa cuando el teléfono está vinculado a múltiples tenants
+        if (
+          contextResult.candidates?.length > 1 &&
+          /^(cambiar\s+(?:de\s+)?empresa|mis\s+empresas|empresas)$/i.test(userQuery)
+        ) {
+          const pendingList = contextResult.candidates.map((emp, idx) => ({
+            index: idx + 1,
+            tenantId: emp.tenantId,
+            tenantName: emp.tenant?.name || `Empresa ${idx + 1}`,
+            ruc: emp.tenant?.ruc || null,
+            employeeId: emp.id,
+          }));
+          if (typeof this.repo.clearActiveTenantSelection === 'function') {
+            await this.repo.clearActiveTenantSelection({
+              phoneKey,
+              pendingSelection: pendingList,
+            });
+          }
+          await this.client.sendTextMessage({
+            to: from,
+            text: this.formatTenantSelectionPrompt(contextResult.candidates),
+          });
+          return;
+        }
+
+        if (contextResult.status === 'MULTI_TENANT_SELECTION_REQUIRED') {
+          const chosen = this.matchTenantSelectionReply(userQuery, contextResult.candidates);
+          if (chosen && typeof this.repo.setActiveTenantContext === 'function') {
+            await this.repo.setActiveTenantContext({
+              phoneKey,
+              tenantId: chosen.tenantId,
+            });
+            await this.client.sendTextMessage({
+              to: from,
+              text:
+                `Empresa activa configurada en *${chosen.tenant?.name || 'Norma ERP'}*.\n\n` +
+                `Ahora puede consultar sus datos, hacer preguntas legales o solicitar vacaciones en esta empresa. ` +
+                `Si necesita cambiar mas adelante, escriba *CAMBIAR EMPRESA*.`,
+            });
+            return;
+          }
+
+          await this.client.sendTextMessage({
+            to: from,
+            text: this.formatTenantSelectionPrompt(contextResult.candidates),
+          });
+          return;
+        }
+
+        employee = contextResult.employee;
+      } else {
+        employee = await this.repo.findEmployeeByPhoneVariants(phoneVariants);
+      }
+
+      // Generar respuesta con el orquestador de IA (DeepSeek / Gemini + RAG Legal + Skills Agénticas)
       const replyText = await this.ai.generateResponse({
         text: userQuery,
         employee,
+        phoneKey,
+        messageId,
       });
 
       // Enviar respuesta al usuario por WhatsApp
@@ -147,6 +213,47 @@ export class WhatsappService {
         text: GENERAL_ERROR_MESSAGE,
       });
     }
+  }
+
+  /**
+   * Formatea el menú numerado cuando un teléfono pertenece a múltiples empresas (multi-tenant).
+   * @private
+   */
+  formatTenantSelectionPrompt(candidates = []) {
+    const lines = candidates.map((emp, idx) => {
+      const rucNote = emp.tenant?.ruc ? ` (RUC: ${emp.tenant.ruc})` : '';
+      return `${idx + 1}. *${emp.tenant?.name || 'Empresa'}*${rucNote}`;
+    });
+
+    return (
+      `Su numero esta vinculado a *${candidates.length} empresas* en Norma ERP:\n\n` +
+      `${lines.join('\n')}\n\n` +
+      `Responda con el *numero de la empresa* (ej: *1* o *EMPRESA 1*) con la que desea operar.`
+    );
+  }
+
+  /**
+   * Resuelve la empresa seleccionada por el usuario ante un prompt multi-tenant.
+   * @private
+   */
+  matchTenantSelectionReply(replyText, candidates = []) {
+    const clean = String(replyText || '').trim();
+    const numericMatch = clean.match(/^(?:empresa\s*)?(\d{1,2})$/i);
+    if (numericMatch) {
+      const index = Number(numericMatch[1]) - 1;
+      if (index >= 0 && index < candidates.length) {
+        return candidates[index];
+      }
+    }
+
+    const lower = clean.toLowerCase();
+    if (lower.length >= 3) {
+      return (
+        candidates.find((emp) => (emp.tenant?.name || '').toLowerCase().includes(lower)) || null
+      );
+    }
+
+    return null;
   }
 
   /**

@@ -17,7 +17,12 @@ import absenceController from './absences/absence.controller.js';
 
 import { attendanceService } from './tracking/attendance.service.js';
 import { shiftService } from './shifts/shift.service.js';
-import { absenceService } from './absences/absence.service.js';
+import {
+  absenceService,
+  getEcuadorTodayIso,
+  calculateCalendarDays,
+  isVacationType,
+} from './absences/absence.service.js';
 
 import { attendanceRepository } from './tracking/attendance.repository.js';
 import { shiftRepository } from './shifts/shift.repository.js';
@@ -35,6 +40,9 @@ export {
   attendanceService,
   shiftService,
   absenceService,
+  getEcuadorTodayIso,
+  calculateCalendarDays,
+  isVacationType,
   attendanceRepository,
   shiftRepository,
   absenceRepository,

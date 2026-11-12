@@ -37,6 +37,9 @@ uploads/
 *.safetensors
 *.gguf
 *.bin
+*.onnx
+backend/src/modules/sustainability/data/models/bi-encoder/
+backend/src/modules/sustainability/data/models/cross-encoder/
 backend/src/modules/sustainability/data/qwen25_ecuador_ods8_lora.zip
 backend/src/modules/sustainability/data/models/qwen25-ecuador-ods8-lora/adapter_model.safetensors
 backend/src/modules/sustainability/data/models/qwen25-ecuador-ods8-lora/tokenizer.json

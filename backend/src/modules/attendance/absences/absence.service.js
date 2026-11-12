@@ -10,24 +10,226 @@ import { absenceRepository } from './absence.repository.js';
 import { employeeRepository } from '../../employees/index.js';
 import { notificationService } from '../../notifications/index.js';
 
-export const absenceService = {
-  async createRequest({ employeeId, type, startDate, endDate, reason, file }) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+const VACATION_TYPE_KEYS = new Set(['vacaciones', 'vacation']);
+const MAX_SINGLE_VACATION_REQUEST_DAYS = 30;
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-    const cleanStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const cleanEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-    const daysRequested = Math.max(
-      1,
-      Math.round((cleanEnd - cleanStart) / (1000 * 60 * 60 * 24)) + 1
+export function isVacationType(type) {
+  return VACATION_TYPE_KEYS.has(
+    String(type || '')
+      .trim()
+      .toLowerCase()
+  );
+}
+
+/**
+ * Convierte una entrada de fecha (YYYY-MM-DD o Date) en fecha canónica sin corrimiento por zona horaria.
+ * @param {string|Date} input
+ * @returns {{ iso: string, utcNoon: Date, utcMidnightMs: number } | null}
+ */
+export function parseCanonicalCalendarDate(input) {
+  if (!input) return null;
+
+  if (typeof input === 'string') {
+    const isoMatch = input.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) {
+      const year = Number(isoMatch[1]);
+      const month = Number(isoMatch[2]);
+      const day = Number(isoMatch[3]);
+      const probe = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      if (
+        Number.isNaN(probe.getTime()) ||
+        probe.getUTCFullYear() !== year ||
+        probe.getUTCMonth() !== month - 1 ||
+        probe.getUTCDate() !== day
+      ) {
+        return null;
+      }
+      return {
+        iso: `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`,
+        utcNoon: probe,
+        utcMidnightMs: Date.UTC(year, month - 1, day),
+      };
+    }
+  }
+
+  const parsed = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  const year = parsed.getUTCFullYear();
+  const month = parsed.getUTCMonth();
+  const day = parsed.getUTCDate();
+  const pad = (n) => String(n).padStart(2, '0');
+
+  return {
+    iso: `${year}-${pad(month + 1)}-${pad(day)}`,
+    utcNoon: new Date(Date.UTC(year, month, day, 12, 0, 0)),
+    utcMidnightMs: Date.UTC(year, month, day),
+  };
+}
+
+export function calculateCalendarDays(startInput, endInput) {
+  const start = parseCanonicalCalendarDate(startInput);
+  const end = parseCanonicalCalendarDate(endInput);
+  if (!start || !end) return 0;
+
+  return Math.max(1, Math.round((end.utcMidnightMs - start.utcMidnightMs) / MS_PER_DAY) + 1);
+}
+
+export function getEcuadorTodayIso() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Guayaquil',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+export const absenceService = {
+  async getPendingVacationDays(employeeId, tenantId = null) {
+    const pendingRequests = await absenceRepository.getPendingRequestsByEmployee(
+      employeeId,
+      tenantId
+    );
+    return (pendingRequests || [])
+      .filter((req) => isVacationType(req.type))
+      .reduce((acc, req) => acc + calculateCalendarDays(req.startDate, req.endDate), 0);
+  },
+
+  async previewVacationRequest({
+    employeeId,
+    tenantId,
+    startDate,
+    endDate,
+    reason,
+    allowPastDates = false,
+  }) {
+    if (!tenantId) {
+      throw new Error('Contexto de empresa (tenantId) requerido para validar vacaciones.');
+    }
+
+    const employee = await employeeRepository.findById(employeeId);
+    if (!employee || !employee.isActive) {
+      throw new Error('Colaborador no encontrado o inactivo en el sistema.');
+    }
+
+    if (employee.tenantId !== tenantId) {
+      throw new Error('Acceso denegado: el colaborador no pertenece a la empresa activa.');
+    }
+
+    const start = parseCanonicalCalendarDate(startDate);
+    const end = parseCanonicalCalendarDate(endDate);
+    if (!start || !end) {
+      throw new Error('Las fechas de inicio y fin deben tener formato válido YYYY-MM-DD.');
+    }
+
+    if (end.utcMidnightMs < start.utcMidnightMs) {
+      throw new Error('La fecha de fin de la ausencia no puede ser anterior a la fecha de inicio.');
+    }
+
+    if (!allowPastDates) {
+      const todayIso = getEcuadorTodayIso();
+      if (start.iso < todayIso) {
+        throw new Error(
+          `La fecha de inicio (${start.iso}) no puede ser anterior a la fecha actual (${todayIso}).`
+        );
+      }
+    }
+
+    const daysRequested = calculateCalendarDays(start.iso, end.iso);
+    if (daysRequested > MAX_SINGLE_VACATION_REQUEST_DAYS) {
+      throw new Error(
+        `Una solicitud individual no puede superar ${MAX_SINGLE_VACATION_REQUEST_DAYS} días calendario.`
+      );
+    }
+
+    const cleanReason = String(reason || '').trim();
+    if (cleanReason.length < 3) {
+      throw new Error('Debe indicar un motivo válido de al menos 3 caracteres.');
+    }
+
+    const existingOverlap = await absenceRepository.findOverlapping(
+      employeeId,
+      start.utcNoon,
+      end.utcNoon,
+      tenantId
     );
 
-    if (end < start) {
+    if (existingOverlap) {
+      throw new Error(
+        'El colaborador ya cuenta con una solicitud de ausencia pendiente o aprobada en ese rango de fechas.'
+      );
+    }
+
+    const pendingVacationDays = await this.getPendingVacationDays(employeeId, tenantId);
+    const vacationDaysTotal = Number(employee.vacationDays || 0);
+    const netAvailableBefore = Math.max(0, vacationDaysTotal - pendingVacationDays);
+
+    if (netAvailableBefore < daysRequested) {
+      throw new Error(
+        `Saldo neto insuficiente. Tienes ${vacationDaysTotal} días disponibles (${pendingVacationDays} días en solicitudes pendientes; saldo neto: ${netAvailableBefore} días) y solicitaste ${daysRequested}.`
+      );
+    }
+
+    return {
+      employeeId,
+      tenantId,
+      startDate: start.iso,
+      endDate: end.iso,
+      startUtc: start.utcNoon,
+      endUtc: end.utcNoon,
+      daysRequested,
+      reason: cleanReason,
+      vacationDaysTotal,
+      pendingVacationDays,
+      netAvailableBefore,
+      projectedAvailableAfter: netAvailableBefore - daysRequested,
+    };
+  },
+
+  async createRequest({
+    employeeId,
+    tenantId = null,
+    type,
+    startDate,
+    endDate,
+    reason,
+    file,
+    allowPastDates = true,
+  }) {
+    const start = parseCanonicalCalendarDate(startDate);
+    const end = parseCanonicalCalendarDate(endDate);
+
+    if (!start || !end) {
+      throw new Error('Las fechas de inicio y fin no son válidas.');
+    }
+
+    if (end.utcMidnightMs < start.utcMidnightMs) {
       throw new Error('La fecha de fin de la ausencia no puede ser anterior a la fecha de inicio');
     }
 
-    // Detección de solapamiento de ausencias vía Repository
-    const existingOverlap = await absenceRepository.findOverlapping(employeeId, start, end);
+    const employee = await employeeRepository.findById(employeeId);
+    if (!employee) throw new Error('Empleado no encontrado');
+
+    if (tenantId && employee.tenantId !== tenantId) {
+      throw new Error('Acceso denegado: el colaborador no pertenece a la empresa activa.');
+    }
+
+    const effectiveTenantId = tenantId || employee.tenantId || null;
+
+    if (!allowPastDates && start.iso < getEcuadorTodayIso()) {
+      throw new Error('La fecha de inicio de la solicitud no puede estar en el pasado.');
+    }
+
+    const daysRequested = calculateCalendarDays(start.iso, end.iso);
+
+    // Detección de solapamiento de ausencias vía Repository (aislada por tenant si aplica)
+    const existingOverlap = await absenceRepository.findOverlapping(
+      employeeId,
+      start.utcNoon,
+      end.utcNoon,
+      effectiveTenantId
+    );
 
     if (existingOverlap) {
       throw new Error(
@@ -35,30 +237,24 @@ export const absenceService = {
       );
     }
 
-    // Validación de Vacaciones
-    const cleanType = type.trim();
-
-    if (
-      ['Vacaciones', 'VACATION', 'vacaciones'].some(
-        (t) => t.toLowerCase() === cleanType.toLowerCase()
-      )
-    ) {
-      const employee = await employeeRepository.findById(employeeId);
-      if (!employee) throw new Error('Empleado no encontrado');
-
-      if (employee.vacationDays < daysRequested) {
+    // Validación de Vacaciones (descontando solicitudes PENDING previas para evitar sobrecompromiso)
+    const cleanType = String(type || '').trim();
+    if (isVacationType(cleanType)) {
+      const pendingVacationDays = await this.getPendingVacationDays(employeeId, effectiveTenantId);
+      const netAvailable = Math.max(0, Number(employee.vacationDays || 0) - pendingVacationDays);
+      if (netAvailable < daysRequested) {
         throw new Error(
-          `Saldo insuficiente. Tienes ${employee.vacationDays} días, solicitaste ${daysRequested}.`
+          `Saldo insuficiente. Tienes ${employee.vacationDays} días (${pendingVacationDays} comprometidos en solicitudes pendientes), solicitaste ${daysRequested}.`
         );
       }
     }
 
     const data = {
       employeeId,
-      type,
-      startDate: start,
-      endDate: end,
-      reason,
+      type: cleanType || type,
+      startDate: start.utcNoon,
+      endDate: end.utcNoon,
+      reason: String(reason || '').trim(),
       status: 'PENDING',
       evidenceUrl: file ? file.filename : null,
     };
@@ -68,10 +264,10 @@ export const absenceService = {
     this.notifyAdminsOnAbsenceRequest({
       employeeId,
       request,
-      type,
-      startDate,
-      endDate,
-      tenantId: data.tenantId,
+      type: data.type,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      tenantId: effectiveTenantId,
     }).catch((err) => console.error('[AbsenceNotification] Error dispatching alerts:', err));
 
     return request;
@@ -118,14 +314,8 @@ export const absenceService = {
       return request;
     }
 
-    const requestType = request.type.trim();
-    const isVacation = ['Vacaciones', 'VACATION', 'vacaciones'].includes(requestType);
-
-    const start = new Date(request.startDate);
-    const end = new Date(request.endDate);
-    const cleanStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const cleanEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-    const days = Math.max(1, Math.round((cleanEnd - cleanStart) / (1000 * 60 * 60 * 24)) + 1);
+    const isVacation = isVacationType(request.type);
+    const days = calculateCalendarDays(request.startDate, request.endDate);
 
     let updated;
 

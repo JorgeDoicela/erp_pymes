@@ -7,6 +7,8 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
+import neuralRetrieverService from './neuralRetriever.service.js';
+
 const NORMATIVE_SOURCE_PATTERNS = [
   { category: 'CONSTITUTION', pattern: /\b(constitucion|constitucional|carta magna)\b/ },
   { category: 'LABOR_CODE', pattern: /\b(codigo del? trabajo|codigo laboral)\b/ },
@@ -70,11 +72,11 @@ const MODULE_DOMAIN_AFFINITY = {
 export class LegalEvaluatorService {
   /**
    * 1. EVALUADOR DE RELEVANCIA (Cross-Encoder Reranker):
-   * Evalúa los fragmentos recuperados por el Modelo Buscador, califica su pertinencia en [0, 1]
-   * considerando bigramas exactos, citación de artículos y el lugar del ERP donde está el usuario.
+   * Evalúa en vivo los fragmentos recuperados usando el modelo neuronal Cross-Encoder ONNX (cuando está presente)
+   * combinado con señales deterministas de bigramas, citación exacta y afinidad contextual del ERP.
    * @param {Object} params
    */
-  evaluateAndRerankChunks({
+  async evaluateAndRerankChunks({
     query,
     candidateChunks = [],
     moduleContext = 'sustainability',
@@ -96,55 +98,75 @@ export class LegalEvaluatorService {
 
     const maxInitialScore = Math.max(...candidateChunks.map((c) => c.relevanceScore || 1), 1);
 
-    const evaluated = candidateChunks.map((chunk) => {
+    // Inferencia par-a-par en vivo con Cross-Encoder ONNX cuantizado (si los pesos están sincronizados)
+    let liveCrossEncoderScores = null;
+    try {
+      if (neuralRetrieverService.hasCrossEncoderFiles()) {
+        const candidatePassages = candidateChunks.map(
+          (c) => `${c.articleCode || ''} (${c.document?.title || ''}): ${c.content}`
+        );
+        liveCrossEncoderScores = await neuralRetrieverService.rerankPairs(query, candidatePassages);
+      }
+    } catch {
+      liveCrossEncoderScores = null;
+    }
+
+    const evaluated = candidateChunks.map((chunk, idx) => {
       const normContent = this.normalize(`${chunk.articleCode || ''} ${chunk.content}`);
       const contentTokens = normContent.split(/\s+/).filter((t) => t.length >= 3);
       const contentBigrams = new Set(this.buildBigrams(contentTokens));
 
-      // A. Puntaje base normalizado del Modelo Buscador (0.0 a 0.45)
+      const liveCeScore =
+        Array.isArray(liveCrossEncoderScores) && typeof liveCrossEncoderScores[idx] === 'number'
+          ? liveCrossEncoderScores[idx]
+          : null;
+
+      // A. Puntaje base normalizado del Modelo Buscador (0.0 a 0.38)
       const retrieverComponent = Math.min(
-        0.45,
-        ((chunk.relevanceScore || 0) / maxInitialScore) * 0.45
+        0.38,
+        ((chunk.relevanceScore || 0) / maxInitialScore) * 0.38
       );
 
-      // B. Cobertura de términos clave de la consulta (0.0 a 0.25)
+      // B. Cobertura de términos clave de la consulta (0.0 a 0.18)
       let matchedTokens = 0;
       for (const qt of queryTokens) {
         if (normContent.includes(qt)) matchedTokens++;
       }
       const tokenCoverage =
-        queryTokens.length > 0 ? Math.min(0.25, (matchedTokens / queryTokens.length) * 0.25) : 0.15;
+        queryTokens.length > 0 ? Math.min(0.18, (matchedTokens / queryTokens.length) * 0.18) : 0.1;
 
-      // C. Coincidencia de bigramas / frases jurídicas exactas (0.0 a 0.15)
+      // C. Coincidencia de bigramas / frases jurídicas exactas (0.0 a 0.12)
       let matchedBigrams = 0;
       for (const bg of queryBigrams) {
         if (contentBigrams.has(bg)) matchedBigrams++;
       }
       const bigramBonus =
-        queryBigrams.length > 0 ? Math.min(0.15, (matchedBigrams / queryBigrams.length) * 0.15) : 0;
+        queryBigrams.length > 0 ? Math.min(0.12, (matchedBigrams / queryBigrams.length) * 0.12) : 0;
 
-      // D. Coincidencia exacta de número de artículo (Boost directo +0.25)
+      // D. Coincidencia exacta de número de artículo (Boost directo +0.22)
       let articleExactBonus = 0;
       if (mentionedArticles.length > 0 && chunk.articleCode) {
         const hasExactArt = mentionedArticles.some((num) =>
           new RegExp(`\\b${num.replace('.', '\\.')}\\b`).test(chunk.articleCode)
         );
-        if (hasExactArt) articleExactBonus = 0.25;
+        if (hasExactArt) articleExactBonus = 0.22;
       }
 
-      // E. Afinidad con el lugar/módulo del ERP desde donde consulta el usuario (+0.10)
+      // E. Afinidad con el lugar/módulo del ERP desde donde consulta el usuario (+0.08)
       const chunkDomain = chunk.metadata?.domain || chunk.document?.category || '';
-      const contextBonus = preferredDomains.includes(chunkDomain) ? 0.1 : 0.02;
+      const contextBonus = preferredDomains.includes(chunkDomain) ? 0.08 : 0.02;
 
-      // F. Puntaje neuronal del Bi-Encoder y Cross-Encoder entrenados en Colab (si están presentes en el chunk)
+      // F. Puntaje neuronal en vivo: Bi-Encoder coseno + Cross-Encoder ONNX par-a-par
       const denseBonus =
         typeof chunk.denseSimilarity === 'number' && chunk.denseSimilarity > 0
-          ? Math.min(0.12, chunk.denseSimilarity * 0.15)
+          ? Math.min(0.14, chunk.denseSimilarity * 0.16)
           : 0;
       const crossEncoderBonus =
-        typeof chunk.trainedCrossEncoderPrior === 'number' && chunk.trainedCrossEncoderPrior > 0
-          ? Math.min(0.08, chunk.trainedCrossEncoderPrior * 0.08)
-          : 0;
+        liveCeScore !== null
+          ? liveCeScore * 0.32
+          : typeof chunk.trainedCrossEncoderPrior === 'number' && chunk.trainedCrossEncoderPrior > 0
+            ? Math.min(0.08, chunk.trainedCrossEncoderPrior * 0.08)
+            : 0;
 
       const rawConfidence =
         retrieverComponent +
@@ -158,6 +180,7 @@ export class LegalEvaluatorService {
 
       return {
         ...chunk,
+        liveCrossEncoderScore: liveCeScore,
         evaluatorConfidence,
       };
     });

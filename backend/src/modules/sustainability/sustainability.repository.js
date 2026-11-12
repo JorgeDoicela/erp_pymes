@@ -9,6 +9,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import prisma from '../../database/db.js';
 import { ECUADOR_LABOR_CORPUS } from './data/ecuadorLaborKnowledge.js';
@@ -16,6 +17,7 @@ import {
   detectRequestedNormativeCategories,
   selectBalancedByCategory,
 } from './legalEvaluator.service.js';
+import neuralRetrieverService from './neuralRetriever.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -140,10 +142,34 @@ export class SustainabilityRepository {
     this._memoryIndex = null;
     this._knownArticleNumbers = new Set();
     this._trainedEmbeddingsMap = null;
+    this._trainedEmbeddingsByKey = null;
+    this._trainedEmbeddingsByComposite = null;
+    this._trainedCrossEncoderMap = null;
+    this._trainedQueryVocabMap = null;
+    this._trainedEmbeddingDim = 0;
+    this._pgVectorSeeded = false;
+    this._pgVectorAvailable = null;
+    this._pgSeedPromise = null;
+  }
+
+  computeContentHash(content) {
+    return crypto
+      .createHash('sha256')
+      .update(String(content || '').trim())
+      .digest('hex')
+      .slice(0, 16);
+  }
+
+  buildChunkKey(category, articleCode, contentHash) {
+    return `${category || 'LABOR_CODE'}::${articleCode || ''}::${contentHash || ''}`;
+  }
+
+  formatVectorLiteral(vec) {
+    return `[${vec.map((v) => Number(v).toFixed(6)).join(',')}]`;
   }
 
   /**
-   * Construye y cachea en memoria el índice invertido BM25 exclusivamente con los 1,880
+   * Construye y cachea en memoria el índice invertido BM25 exclusivamente con los 1,880+
    * artículos y secciones extraídos al 100% de los 4 PDFs oficiales.
    */
   ensureMemoryIndexLoaded() {
@@ -151,14 +177,16 @@ export class SustainabilityRepository {
 
     const allChunks = [];
 
-    // 1. Cargar exclusivamente los 1,880 artículos y secciones íntegras de los 4 PDFs oficiales
+    // 1. Cargar exclusivamente los 1,880+ artículos y secciones íntegras de los 4 PDFs oficiales
     for (const doc of ECUADOR_LABOR_CORPUS) {
       const normalizedCategory = doc.docId === 'constitucion_2008' ? 'CONSTITUTION' : doc.category;
       for (const chunk of doc.chunks || []) {
         this.registerArticleNumbers(chunk.articleCode);
+        const contentHash = this.computeContentHash(chunk.content);
         allChunks.push({
           id: `pdf_${doc.docId || normalizedCategory}_${allChunks.length}`,
           content: chunk.content,
+          contentHash,
           articleCode: chunk.articleCode,
           odsTarget: chunk.odsTarget || '8.8',
           metadata: {
@@ -176,25 +204,44 @@ export class SustainabilityRepository {
       }
     }
 
-    // 3. Cargar vectores densos y priors del Evaluador pre-entrenados desde Colab en trained_retriever_index.json
+    // 2. Cargar vectores densos y priors del Evaluador pre-entrenados desde Colab en trained_retriever_index.json
     this._trainedEmbeddingsMap = null;
+    this._trainedEmbeddingsByKey = null;
+    this._trainedEmbeddingsByComposite = null;
     this._trainedCrossEncoderMap = null;
     this._trainedQueryVocabMap = null;
+    this._trainedEmbeddingDim = 0;
 
     if (fs.existsSync(TRAINED_EMBEDDINGS_INDEX_PATH)) {
       try {
         const rawVectors = JSON.parse(fs.readFileSync(TRAINED_EMBEDDINGS_INDEX_PATH, 'utf-8'));
+        this._trainedEmbeddingDim = Number(rawVectors.embeddingDim) || 0;
+
         if (rawVectors.embeddingsByArticle) {
           this._trainedEmbeddingsMap = rawVectors.embeddingsByArticle;
         } else if (Array.isArray(rawVectors.articles)) {
           this._trainedEmbeddingsMap = {};
+          this._trainedEmbeddingsByKey = {};
+          this._trainedEmbeddingsByComposite = {};
           this._trainedCrossEncoderMap = {};
+
           for (const item of rawVectors.articles) {
-            if (item.articleCode && Array.isArray(item.embedding)) {
-              this._trainedEmbeddingsMap[item.articleCode] = item.embedding;
+            if (!Array.isArray(item.embedding)) continue;
+            if (!this._trainedEmbeddingDim) {
+              this._trainedEmbeddingDim = item.embedding.length;
             }
-            if (item.articleCode && typeof item.crossEncoderScore === 'number') {
-              this._trainedCrossEncoderMap[item.articleCode] = item.crossEncoderScore;
+            if (item.chunkKey) {
+              this._trainedEmbeddingsByKey[item.chunkKey] = item.embedding;
+            }
+            if (item.category && item.articleCode) {
+              this._trainedEmbeddingsByComposite[`${item.category}::${item.articleCode}`] =
+                item.embedding;
+            }
+            if (item.articleCode) {
+              this._trainedEmbeddingsMap[item.articleCode] = item.embedding;
+              if (typeof item.crossEncoderScore === 'number') {
+                this._trainedCrossEncoderMap[item.articleCode] = item.crossEncoderScore;
+              }
             }
           }
         }
@@ -206,12 +253,15 @@ export class SustainabilityRepository {
         }
       } catch {
         this._trainedEmbeddingsMap = null;
+        this._trainedEmbeddingsByKey = null;
+        this._trainedEmbeddingsByComposite = null;
         this._trainedCrossEncoderMap = null;
         this._trainedQueryVocabMap = null;
+        this._trainedEmbeddingDim = 0;
       }
     }
 
-    // 4. Pre-tokenizar todos los fragmentos y construir tabla de frecuencias e IDF para búsqueda en <5ms
+    // 3. Pre-tokenizar todos los fragmentos y asociar cada chunk con su vector exacto sin colisiones
     const totalDocs = allChunks.length || 1;
     const docFreq = {};
     let totalLengthSum = 0;
@@ -233,8 +283,22 @@ export class SustainabilityRepository {
 
       totalLengthSum += tokens.length;
 
+      const chunkKey = this.buildChunkKey(
+        chunk.document?.category,
+        chunk.articleCode,
+        chunk.contentHash
+      );
+      const compositeKey = `${chunk.document?.category || ''}::${chunk.articleCode || ''}`;
+      const denseVector =
+        this._trainedEmbeddingsByKey?.[chunkKey] ||
+        this._trainedEmbeddingsByComposite?.[compositeKey] ||
+        this._trainedEmbeddingsMap?.[chunk.articleCode] ||
+        null;
+
       return {
         chunk,
+        chunkKey,
+        denseVector,
         termFreq,
         docLen: tokens.length,
         normArticleCode: this.normalizeText(chunk.articleCode || ''),
@@ -444,12 +508,326 @@ export class SustainabilityRepository {
   }
 
   /**
-   * Modelo Buscador Híbrido (BM25 Pre-Indexado + Lookup Exacto de Artículo + Expansión Semántica)
-   * Busca sobre los 1,910+ fragmentos de los 4 PDFs oficiales y los reglamentos privados del tenant.
+   * Sincroniza de forma idempotente los 1,880+ fragmentos legales y sus vectores 768-dim
+   * hacia PostgreSQL + pgvector (HNSW). Falla de forma segura si BD no está disponible (ej. tests CI).
+   */
+  async ensurePgVectorCorpusSeeded() {
+    if (process.env.NODE_ENV === 'test' && process.env.ENABLE_PGVECTOR_TEST !== 'true') {
+      return false;
+    }
+    if (this._pgVectorSeeded) return this._pgVectorAvailable === true;
+    if (this._pgSeedPromise) return this._pgSeedPromise;
+
+    this._pgSeedPromise = (async () => {
+      try {
+        const index = this.ensureMemoryIndexLoaded();
+        const availExt = await prisma.$queryRawUnsafe(
+          `SELECT EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'vector') AS avail`
+        );
+        if (!availExt?.[0]?.avail) {
+          this._pgVectorAvailable = false;
+          return false;
+        }
+
+        // Auto-sanación idempotente de extensión pgvector, columnas e índices en entornos existentes
+        await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector`);
+        await prisma.$executeRawUnsafe(
+          `ALTER TABLE "knowledge_chunks" ADD COLUMN IF NOT EXISTS "contentHash" TEXT, ADD COLUMN IF NOT EXISTS "embedding" vector(768)`
+        );
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "knowledge_chunks_contentHash_idx" ON "knowledge_chunks"("contentHash")`
+        );
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "knowledge_chunks_embedding_hnsw_idx" ON "knowledge_chunks" USING hnsw ("embedding" vector_cosine_ops) WITH (m = 16, ef_construction = 64)`
+        );
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS "knowledge_chunks_fts_es_gin_idx" ON "knowledge_chunks" USING gin (to_tsvector('spanish', coalesce("articleCode", '') || ' ' || "content"))`
+        );
+
+        const expectedVectorDim = this._trainedEmbeddingDim || 768;
+        this._pgVectorAvailable = true;
+
+        // Corregir categoría heredada de Constitución si ya existía en BD
+        await prisma.$executeRawUnsafe(
+          `UPDATE "knowledge_documents" SET category = 'CONSTITUTION' WHERE "tenantId" IS NULL AND title LIKE '%Constituci%' AND category = 'LABOR_CODE'`
+        );
+
+        const statsRows = await prisma.$queryRawUnsafe(
+          `SELECT COUNT(*)::int AS total, COUNT(kc."embedding")::int AS embedded
+           FROM "knowledge_chunks" kc
+           INNER JOIN "knowledge_documents" kd ON kd.id = kc."documentId"
+           WHERE kd."tenantId" IS NULL`
+        );
+        const totalInDb = statsRows?.[0]?.total || 0;
+        const embeddedInDb = statsRows?.[0]?.embedded || 0;
+
+        if (
+          totalInDb >= index.totalDocs &&
+          (expectedVectorDim !== 768 || embeddedInDb >= Math.floor(index.totalDocs * 0.95))
+        ) {
+          this._pgVectorSeeded = true;
+          return true;
+        }
+
+        // Agrupar fragmentos por documento oficial
+        const byDoc = new Map();
+        for (const entry of index.indexedDocs) {
+          const { chunk, denseVector } = entry;
+          const key = `${chunk.document.category}::${chunk.document.title}`;
+          if (!byDoc.has(key)) {
+            byDoc.set(key, {
+              meta: chunk.document,
+              items: [],
+            });
+          }
+          byDoc.get(key).items.push({ chunk, denseVector });
+        }
+
+        const canLiveEncode = neuralRetrieverService.hasBiEncoderFiles();
+
+        for (const { meta, items } of byDoc.values()) {
+          let doc = await prisma.knowledgeDocument.findFirst({
+            where: { title: meta.title, tenantId: null },
+          });
+          if (!doc) {
+            doc = await prisma.knowledgeDocument.create({
+              data: {
+                tenantId: null,
+                title: meta.title,
+                category: meta.category,
+                sourceUrl: meta.sourceUrl || null,
+                version: meta.version || '2026',
+              },
+            });
+          } else if (doc.category !== meta.category) {
+            doc = await prisma.knowledgeDocument.update({
+              where: { id: doc.id },
+              data: { category: meta.category },
+            });
+          }
+
+          const existingRows = await prisma.$queryRawUnsafe(
+            `SELECT id, "articleCode", content, "contentHash", ("embedding" IS NOT NULL) AS has_vec FROM "knowledge_chunks" WHERE "documentId" = $1`,
+            doc.id
+          );
+          const existingByHash = new Map();
+          const legacyByArticleQueue = new Map();
+          const consumedRowIds = new Set();
+
+          for (const row of existingRows) {
+            const rowHash = row.contentHash || this.computeContentHash(row.content);
+            if (!existingByHash.has(rowHash)) {
+              existingByHash.set(rowHash, row);
+            }
+            if (!row.contentHash && row.articleCode) {
+              if (!legacyByArticleQueue.has(row.articleCode)) {
+                legacyByArticleQueue.set(row.articleCode, []);
+              }
+              legacyByArticleQueue.get(row.articleCode).push(row);
+            }
+          }
+
+          for (const { chunk, denseVector } of items) {
+            let vec768 =
+              Array.isArray(denseVector) && denseVector.length === 768 ? denseVector : null;
+            if (!vec768 && canLiveEncode) {
+              vec768 = await neuralRetrieverService.embedPassage(
+                `${chunk.articleCode || ''} - ${chunk.content}`
+              );
+            }
+
+            let existing = existingByHash.get(chunk.contentHash) || null;
+            if (!existing && chunk.articleCode) {
+              const queue = legacyByArticleQueue.get(chunk.articleCode) || [];
+              existing = queue.find((r) => !consumedRowIds.has(r.id)) || null;
+            }
+            if (existing) {
+              consumedRowIds.add(existing.id);
+            }
+
+            if (!existing) {
+              const created = await prisma.knowledgeChunk.create({
+                data: {
+                  documentId: doc.id,
+                  content: chunk.content,
+                  contentHash: chunk.contentHash,
+                  articleCode: chunk.articleCode || null,
+                  odsTarget: chunk.odsTarget || null,
+                  metadata: chunk.metadata || {},
+                },
+              });
+              existingByHash.set(chunk.contentHash, {
+                id: created.id,
+                contentHash: chunk.contentHash,
+                has_vec: Boolean(vec768),
+              });
+              if (vec768) {
+                await prisma.$executeRawUnsafe(
+                  `UPDATE "knowledge_chunks" SET "embedding" = $1::vector WHERE id = $2`,
+                  this.formatVectorLiteral(vec768),
+                  created.id
+                );
+              }
+            } else {
+              if (!existing.contentHash) {
+                await prisma.$executeRawUnsafe(
+                  `UPDATE "knowledge_chunks" SET "contentHash" = $1 WHERE id = $2`,
+                  chunk.contentHash,
+                  existing.id
+                );
+                existing.contentHash = chunk.contentHash;
+              }
+              if (!existing.has_vec && vec768) {
+                await prisma.$executeRawUnsafe(
+                  `UPDATE "knowledge_chunks" SET "embedding" = $1::vector WHERE id = $2`,
+                  this.formatVectorLiteral(vec768),
+                  existing.id
+                );
+                existing.has_vec = true;
+              }
+            }
+          }
+        }
+
+        this._pgVectorSeeded = true;
+        return true;
+      } catch {
+        this._pgVectorAvailable = false;
+        return false;
+      } finally {
+        this._pgSeedPromise = null;
+      }
+    })();
+
+    return this._pgSeedPromise;
+  }
+
+  /**
+   * Búsqueda vectorial HNSW + Full-Text Search en PostgreSQL (`pgvector`).
+   * Cubre tanto el corpus público oficial como las políticas privadas del tenant con embeddings reales.
+   * @private
+   */
+  async searchPgVectorHybrid({
+    query,
+    queryDenseVector,
+    odsTarget,
+    category,
+    tenantId,
+    limit = 24,
+  }) {
+    if (!this._pgVectorAvailable) return [];
+
+    const vectorRows = [];
+    const ftsRows = [];
+
+    try {
+      if (Array.isArray(queryDenseVector) && queryDenseVector.length === 768) {
+        const vecLiteral = this.formatVectorLiteral(queryDenseVector);
+        const rawVec = await prisma.$queryRawUnsafe(
+          `SELECT kc.id, kc.content, kc."contentHash", kc."articleCode", kc."odsTarget", kc.metadata,
+                  kd.title AS "docTitle", kd.category AS "docCategory", kd.version AS "docVersion", kd."sourceUrl" AS "docSourceUrl",
+                  (1 - (kc."embedding" <=> $1::vector))::float AS cosine_sim
+           FROM "knowledge_chunks" kc
+           INNER JOIN "knowledge_documents" kd ON kd.id = kc."documentId"
+           WHERE kc."embedding" IS NOT NULL
+             AND (kd."tenantId" IS NULL OR kd."tenantId" = $2)
+             AND ($3::text IS NULL OR kc."odsTarget" = $3)
+             AND ($4::text IS NULL OR kd.category = $4)
+           ORDER BY kc."embedding" <=> $1::vector
+           LIMIT $5`,
+          vecLiteral,
+          tenantId || '__NO_TENANT__',
+          odsTarget || null,
+          category || null,
+          Math.max(limit * 2, 24)
+        );
+        vectorRows.push(...rawVec);
+      }
+
+      if (query && query.trim()) {
+        const rawFts = await prisma.$queryRawUnsafe(
+          `SELECT kc.id, kc.content, kc."contentHash", kc."articleCode", kc."odsTarget", kc.metadata,
+                  kd.title AS "docTitle", kd.category AS "docCategory", kd.version AS "docVersion", kd."sourceUrl" AS "docSourceUrl",
+                  ts_rank_cd(to_tsvector('spanish', coalesce(kc."articleCode", '') || ' ' || kc."content"), plainto_tsquery('spanish', $1))::float AS fts_rank
+           FROM "knowledge_chunks" kc
+           INNER JOIN "knowledge_documents" kd ON kd.id = kc."documentId"
+           WHERE to_tsvector('spanish', coalesce(kc."articleCode", '') || ' ' || kc."content") @@ plainto_tsquery('spanish', $1)
+             AND (kd."tenantId" IS NULL OR kd."tenantId" = $2)
+             AND ($3::text IS NULL OR kc."odsTarget" = $3)
+             AND ($4::text IS NULL OR kd.category = $4)
+           ORDER BY fts_rank DESC
+           LIMIT $5`,
+          query.trim(),
+          tenantId || '__NO_TENANT__',
+          odsTarget || null,
+          category || null,
+          Math.max(limit, 16)
+        );
+        ftsRows.push(...rawFts);
+      }
+    } catch {
+      return [];
+    }
+
+    const byKey = new Map();
+    const mapRow = (row) => ({
+      id: row.id,
+      content: row.content,
+      contentHash: row.contentHash || this.computeContentHash(row.content),
+      articleCode: row.articleCode,
+      odsTarget: row.odsTarget || '8.8',
+      metadata: row.metadata || {},
+      document: {
+        title: row.docTitle,
+        category: row.docCategory,
+        version: row.docVersion || '2026',
+        sourceUrl: row.docSourceUrl || null,
+      },
+    });
+
+    vectorRows.forEach((row, rankIdx) => {
+      const chunk = mapRow(row);
+      const key = this.buildChunkKey(chunk.document.category, chunk.articleCode, chunk.contentHash);
+      const rrf = 1 / (60 + rankIdx + 1);
+      byKey.set(key, {
+        chunk,
+        chunkKey: key,
+        pgVectorScore: Math.max(0, Number(row.cosine_sim) || 0),
+        pgFtsScore: 0,
+        pgRrfScore: rrf * 100,
+      });
+    });
+
+    ftsRows.forEach((row, rankIdx) => {
+      const chunk = mapRow(row);
+      const key = this.buildChunkKey(chunk.document.category, chunk.articleCode, chunk.contentHash);
+      const rrf = 1 / (60 + rankIdx + 1);
+      const existing = byKey.get(key);
+      if (existing) {
+        existing.pgFtsScore = Number(row.fts_rank) || 0;
+        existing.pgRrfScore += rrf * 100;
+      } else {
+        byKey.set(key, {
+          chunk,
+          chunkKey: key,
+          pgVectorScore: 0,
+          pgFtsScore: Number(row.fts_rank) || 0,
+          pgRrfScore: rrf * 100,
+        });
+      }
+    });
+
+    return [...byKey.values()];
+  }
+
+  /**
+   * Modelo Buscador Híbrido (PostgreSQL pgvector HNSW + FTS Español + Bi-Encoder ONNX en vivo + BM25).
+   * Busca sobre los 1,880+ fragmentos de los 4 PDFs oficiales y los reglamentos privados del tenant.
    * @param {Object} params
    */
   async searchKnowledgeChunks({ query, odsTarget, category, tenantId, limit = 12 }) {
     const index = this.ensureMemoryIndexLoaded();
+    await this.ensurePgVectorCorpusSeeded();
 
     // Si hay un tenantId específico, consultar también si ese tenant subió políticas internas privadas en BD
     let tenantPrivateDocs = [];
@@ -471,8 +849,11 @@ export class SustainabilityRepository {
           );
           const termFreq = {};
           for (const t of tokens) termFreq[t] = (termFreq[t] || 0) + 1;
+          const contentHash = chunk.contentHash || this.computeContentHash(chunk.content);
           return {
-            chunk,
+            chunk: { ...chunk, contentHash },
+            chunkKey: this.buildChunkKey(chunk.document?.category, chunk.articleCode, contentHash),
+            denseVector: null,
             termFreq,
             docLen: tokens.length,
             normArticleCode: this.normalizeText(chunk.articleCode || ''),
@@ -525,13 +906,34 @@ export class SustainabilityRepository {
     const avgDocLength = index.avgDocLength;
     const idfMap = index.idfMap;
 
-    // Si existen embeddings entrenados en Colab, proyectar la consulta al espacio vectorial denso (128-dim)
-    const queryDenseVector = this.computeQueryDenseEmbedding(rawTokens, expandedTokens, idfMap);
+    // 1. Vectorizar consulta completa en tiempo real con Bi-Encoder ONNX (o vocabulario legado si no existe ONNX)
+    let queryDenseVector = null;
+    if (neuralRetrieverService.hasBiEncoderFiles()) {
+      try {
+        queryDenseVector = await neuralRetrieverService.embedQuery(query);
+      } catch {
+        queryDenseVector = null;
+      }
+    }
+    if (!queryDenseVector) {
+      queryDenseVector = this.computeQueryDenseEmbedding(rawTokens, expandedTokens, idfMap);
+    }
 
-    const scored = [];
+    // 2. Consultar en paralelo PostgreSQL pgvector HNSW + FTS español (si PostgreSQL pgvector está activo)
+    const pgHits = await this.searchPgVectorHybrid({
+      query,
+      queryDenseVector,
+      odsTarget,
+      category,
+      tenantId,
+      limit: Math.max(limit * 2, 24),
+    });
+    const pgHitByKey = new Map(pgHits.map((hit) => [hit.chunkKey, hit]));
+
+    const scoredByKey = new Map();
 
     for (const entry of candidates) {
-      const { chunk, termFreq, docLen, normArticleCode } = entry;
+      const { chunk, chunkKey, denseVector, termFreq, docLen, normArticleCode } = entry;
       let score = 0;
 
       for (const qToken of expandedTokens) {
@@ -556,18 +958,20 @@ export class SustainabilityRepository {
         }
       }
 
-      // Fusión Híbrida Densa + Cross-Encoder cuando trained_retriever_index.json está cargado
-      let denseSimilarity = 0;
-      let trainedCrossEncoderPrior = 0;
-      if (this._trainedEmbeddingsMap && chunk.articleCode) {
-        const docVector = this._trainedEmbeddingsMap[chunk.articleCode];
-        if (queryDenseVector && Array.isArray(docVector)) {
-          denseSimilarity = Math.max(0, this.cosineSimilarity(queryDenseVector, docVector));
-          if (denseSimilarity > 0.15) {
-            score += denseSimilarity * 18.0;
-          }
-        }
+      // Fusión Híbrida Vectorial: preferir similitud exacta pgvector HNSW y luego coseno en memoria
+      const pgHit = pgHitByKey.get(chunkKey);
+      let denseSimilarity = pgHit?.pgVectorScore || 0;
+      if (denseSimilarity === 0 && queryDenseVector && Array.isArray(denseVector)) {
+        denseSimilarity = Math.max(0, this.cosineSimilarity(queryDenseVector, denseVector));
       }
+      if (denseSimilarity > 0.25) {
+        score += denseSimilarity * 24.0;
+      }
+      if (pgHit) {
+        score += pgHit.pgRrfScore * 1.5 + Math.min(8.0, (pgHit.pgFtsScore || 0) * 6.0);
+      }
+
+      let trainedCrossEncoderPrior = 0;
       if (this._trainedCrossEncoderMap && chunk.articleCode) {
         trainedCrossEncoderPrior = this._trainedCrossEncoderMap[chunk.articleCode] || 0;
         if (score > 0 && trainedCrossEncoderPrior > 0) {
@@ -600,7 +1004,7 @@ export class SustainabilityRepository {
       }
 
       if (score > 0) {
-        scored.push({
+        scoredByKey.set(chunkKey, {
           ...chunk,
           relevanceScore: Number(score.toFixed(4)),
           denseSimilarity: Number(denseSimilarity.toFixed(4)),
@@ -609,6 +1013,22 @@ export class SustainabilityRepository {
       }
     }
 
+    // Incorporar hits puros de pgvector que hayan venido de políticas privadas del tenant
+    for (const pgHit of pgHits) {
+      if (scoredByKey.has(pgHit.chunkKey)) continue;
+      let extraScore = pgHit.pgVectorScore * 24.0 + pgHit.pgRrfScore * 1.5;
+      if (requestedCategorySet.has(pgHit.chunk.document?.category)) {
+        extraScore += 18.0;
+      }
+      scoredByKey.set(pgHit.chunkKey, {
+        ...pgHit.chunk,
+        relevanceScore: Number(extraScore.toFixed(4)),
+        denseSimilarity: Number(pgHit.pgVectorScore.toFixed(4)),
+        trainedCrossEncoderPrior: 0,
+      });
+    }
+
+    const scored = [...scoredByKey.values()];
     scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
 
     if (scored.length > 0) {
@@ -633,11 +1053,11 @@ export class SustainabilityRepository {
   }
 
   /**
-   * Ingesta un documento con sus fragmentos en una transacción ACID
+   * Ingesta un documento con sus fragmentos en una transacción ACID y genera sus vectores pgvector
    * @param {Object} docData
    */
   async ingestDocument(docData, tenantId = null) {
-    return prisma.$transaction(async (tx) => {
+    const createdDoc = await prisma.$transaction(async (tx) => {
       const document = await tx.knowledgeDocument.create({
         data: {
           tenantId,
@@ -648,20 +1068,46 @@ export class SustainabilityRepository {
         },
       });
 
+      const createdChunks = [];
       if (docData.chunks && docData.chunks.length > 0) {
-        await tx.knowledgeChunk.createMany({
-          data: docData.chunks.map((chunk) => ({
-            documentId: document.id,
-            content: chunk.content,
-            articleCode: chunk.articleCode || null,
-            odsTarget: chunk.odsTarget || null,
-            metadata: chunk.metadata || {},
-          })),
-        });
+        for (const chunk of docData.chunks) {
+          const created = await tx.knowledgeChunk.create({
+            data: {
+              documentId: document.id,
+              content: chunk.content,
+              contentHash: this.computeContentHash(chunk.content),
+              articleCode: chunk.articleCode || null,
+              odsTarget: chunk.odsTarget || null,
+              metadata: chunk.metadata || {},
+            },
+          });
+          createdChunks.push(created);
+        }
       }
 
-      return document;
+      return { document, createdChunks };
     });
+
+    if (neuralRetrieverService.hasBiEncoderFiles() && createdDoc.createdChunks.length > 0) {
+      try {
+        for (const chunk of createdDoc.createdChunks) {
+          const vec = await neuralRetrieverService.embedPassage(
+            `${chunk.articleCode || ''} - ${chunk.content}`
+          );
+          if (Array.isArray(vec) && vec.length === 768) {
+            await prisma.$executeRawUnsafe(
+              `UPDATE "knowledge_chunks" SET "embedding" = $1::vector WHERE id = $2`,
+              this.formatVectorLiteral(vec),
+              chunk.id
+            );
+          }
+        }
+      } catch {
+        // Si pgvector aún no está habilitado en test DB, el documento ya quedó persistido
+      }
+    }
+
+    return createdDoc.document;
   }
 
   /**
@@ -760,20 +1206,27 @@ export class SustainabilityRepository {
   }
 
   /**
-   * Devuelve estadísticas del corpus indexado de los 4 PDFs oficiales
+   * Devuelve estadísticas del corpus indexado, vectores pgvector y estado ONNX
    */
   getCorpusStatistics() {
     const index = this.ensureMemoryIndexLoaded();
+    const onnxStatus = neuralRetrieverService.getStatus();
+    const embeddedChunksCount = index.indexedDocs.filter((d) =>
+      Array.isArray(d.denseVector)
+    ).length;
     return {
       totalIndexedChunks: index.totalDocs,
       totalKnownArticles: this._knownArticleNumbers.size,
-      hasTrainedEmbeddings: Boolean(this._trainedEmbeddingsMap),
-      trainedArticlesCount: this._trainedEmbeddingsMap
-        ? Object.keys(this._trainedEmbeddingsMap).length
-        : 0,
+      hasTrainedEmbeddings: Boolean(this._trainedEmbeddingsByKey || this._trainedEmbeddingsMap),
+      embeddingDim: this._trainedEmbeddingDim || 0,
+      trainedArticlesCount: embeddedChunksCount,
       trainedQueryVocabSize: this._trainedQueryVocabMap
         ? Object.keys(this._trainedQueryVocabMap).length
         : 0,
+      pgVectorAvailable: Boolean(this._pgVectorAvailable),
+      pgVectorSeeded: Boolean(this._pgVectorSeeded),
+      neuralBiEncoderReady: onnxStatus.biEncoderReady,
+      neuralCrossEncoderReady: onnxStatus.crossEncoderReady,
     };
   }
 }

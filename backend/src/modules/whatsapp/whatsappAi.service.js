@@ -14,16 +14,30 @@ import {
 import llmProviderService from '../sustainability/llmProvider.service.js';
 import sustainabilityRagService from '../sustainability/sustainabilityRag.service.js';
 import whatsappRepository from './whatsapp.repository.js';
+import whatsappConfirmationService from './whatsappConfirmation.service.js';
+import whatsappActionSessionRepository, {
+  WHATSAPP_SESSION_STATUS,
+} from './whatsappActionSession.repository.js';
+import { WhatsappSkillRegistry } from './skills/whatsappSkill.registry.js';
+import requestVacationSkill from './skills/requestVacation.skill.js';
+
+const defaultSkillRegistry = new WhatsappSkillRegistry([requestVacationSkill]);
 
 export class WhatsappAiService {
   constructor(
     llmProvider = llmProviderService,
     ragService = sustainabilityRagService,
-    repo = whatsappRepository
+    repo = whatsappRepository,
+    confirmationService = whatsappConfirmationService,
+    skillRegistry = defaultSkillRegistry,
+    sessionRepo = whatsappActionSessionRepository
   ) {
     this.llmProvider = llmProvider;
     this.ragService = ragService;
     this.repo = repo;
+    this.confirmationService = confirmationService;
+    this.skillRegistry = skillRegistry;
+    this.sessionRepo = sessionRepo;
   }
 
   /**
@@ -92,7 +106,30 @@ export class WhatsappAiService {
       return WHATSAPP_INTENTS.TENANT_METRICS_QUERY;
     }
 
-    // 3. Consultas personales del colaborador (vacaciones, marcación, etc.)
+    // 3. Habilidad agéntica: solicitud transaccional de vacaciones (diferenciada de consultas de saldo o ley)
+    const isLegalTopic =
+      /(codigo\s+del\s+trabajo|ley\s+organica|constitucion|articulo|art\.|iess|sri|lopdp|segun\s+la\s+ley|que\s+dice\s+(?:el\s+codigo|la\s+ley))/i.test(
+        lower
+      );
+    const isPersonalBalanceQuestion = /^(cuant[oa]s?|cual\s+es\s+mi|tengo)\b/i.test(lower);
+
+    if (
+      !isLegalTopic &&
+      !isPersonalBalanceQuestion &&
+      (/(?:solicitar|pedir|agendar|registrar|tomar|necesito|quiero|deseo|tramitar|solicitud\s+de)\b[^.\n]{0,45}\bvacacion(?:es)?\b/i.test(
+        lower
+      ) ||
+        /\bvacacion(?:es)?\s+(?:del|desde|para\s+el|entre)\b/i.test(lower))
+    ) {
+      return WHATSAPP_INTENTS.VACATION_REQUEST_ACTION;
+    }
+
+    // 4. Consultas legales explícitas (prioridad sobre palabra clave 'vacaciones' cuando invoca norma/ley)
+    if (isLegalTopic) {
+      return WHATSAPP_INTENTS.LEGAL_QUERY;
+    }
+
+    // 5. Consultas personales del colaborador (vacaciones, marcación, etc.)
     if (
       /(vacacion|saldo|mis?\s+dias|asistencia|marque|marcar|entrada|salida|mi\s+perfil|mi\s+cargo|mi\s+departamento)/i.test(
         lower
@@ -101,9 +138,9 @@ export class WhatsappAiService {
       return WHATSAPP_INTENTS.EMPLOYEE_QUERY;
     }
 
-    // 4. Consultas legales y normativas
+    // 6. Consultas legales y normativas generales
     if (
-      /(codigo\s+del\s+trabajo|ley|iess|sri|lopdp|despido|renuncia|liquidacion|desahucio|horas?\s+extra|decimo|utilidades|jubilacion|maternidad|paternidad|finiquito|articulo|art\.)/i.test(
+      /(despido|renuncia|liquidacion|desahucio|horas?\s+extra|decimo|utilidades|jubilacion|maternidad|paternidad|finiquito)/i.test(
         lower
       )
     ) {
@@ -115,39 +152,185 @@ export class WhatsappAiService {
   }
 
   /**
-   * Genera la respuesta apropiada para WhatsApp orquestando RAG, datos del ERP y el LLM seleccionado.
+   * Genera la respuesta apropiada para WhatsApp orquestando RAG, habilidades agénticas, datos del ERP y el LLM.
    * @param {Object} params
    * @param {string} params.text Mensaje recibido.
    * @param {Object|null} params.employee Registro del colaborador en base de datos.
+   * @param {string|null} [params.phoneKey] Clave telefónica canónica para sesiones multi-turno y 2FA.
+   * @param {string|null} [params.messageId] Identificador wamid del mensaje entrante.
    * @param {Object} [params.aiOverrides] Opciones opcionales para forzar proveedor (ej. { provider: 'gemini' }).
    * @returns {Promise<string>} Texto listo para ser enviado por WhatsApp.
    */
-  async generateResponse({ text, employee, aiOverrides = {} }) {
-    const intent = this.classifyIntent(text, employee);
+  async generateResponse({ text, employee, phoneKey = null, messageId = null, aiOverrides = {} }) {
     const aiConfig = this.resolveAiProviderConfig(aiOverrides);
 
     // Caso A: Remitente no registrado en la empresa
-    if (intent === WHATSAPP_INTENTS.UNKNOWN_SENDER) {
+    if (!employee) {
       return UNREGISTERED_PHONE_MESSAGE;
     }
 
-    // Caso B: Saludo general o menú de opciones
+    // Caso B: Sesión agéntica activa (recolección de parámetros o doble factor pendiente)
+    if (
+      phoneKey &&
+      employee.tenantId &&
+      employee.id &&
+      this.sessionRepo &&
+      this.confirmationService
+    ) {
+      const activeSession = await this.sessionRepo.findOpenSession({
+        phoneKey,
+        tenantId: employee.tenantId,
+        employeeId: employee.id,
+      });
+
+      if (activeSession) {
+        if (activeSession.status === WHATSAPP_SESSION_STATUS.PENDING_CONFIRMATION) {
+          const confirmationReply = await this.confirmationService.handlePendingConfirmation({
+            text,
+            employee,
+            phoneKey,
+            messageId,
+            activeSession,
+            skillRegistry: this.skillRegistry,
+          });
+          if (confirmationReply) {
+            return confirmationReply;
+          }
+        }
+
+        if (activeSession.status === WHATSAPP_SESSION_STATUS.COLLECTING_PARAMS) {
+          if (/^(cancelar|anular|salir|abortar)$/i.test(String(text || '').trim())) {
+            await this.sessionRepo.markStatus({
+              id: activeSession.id,
+              tenantId: employee.tenantId,
+              employeeId: employee.id,
+              status: WHATSAPP_SESSION_STATUS.CANCELLED,
+            });
+            return `Borrador de solicitud cancelado correctamente.`;
+          }
+
+          if (new Date(activeSession.expiresAt).getTime() <= Date.now()) {
+            await this.sessionRepo.markStatus({
+              id: activeSession.id,
+              tenantId: employee.tenantId,
+              employeeId: employee.id,
+              status: WHATSAPP_SESSION_STATUS.EXPIRED,
+            });
+          } else {
+            return this.handleAgenticSkill({
+              skillId: activeSession.skillName,
+              text,
+              employee,
+              phoneKey,
+              messageId,
+              activeSession,
+              aiConfig,
+            });
+          }
+        }
+      }
+    }
+
+    const intent = this.classifyIntent(text, employee);
+
+    // Caso C: Saludo general o menú de opciones
     if (intent === WHATSAPP_INTENTS.GENERAL_GREETING) {
       return this.formatGreetingMessage(employee);
     }
 
-    // Caso C: Métricas globales de empresa
+    // Caso D: Habilidad agéntica para solicitar vacaciones con validación dual (Cédula + OTP correo)
+    if (intent === WHATSAPP_INTENTS.VACATION_REQUEST_ACTION) {
+      return this.handleAgenticSkill({
+        skillId: 'REQUEST_VACATION',
+        text,
+        employee,
+        phoneKey: phoneKey || employee.phone || employee.id,
+        messageId,
+        activeSession: null,
+        aiConfig,
+      });
+    }
+
+    // Caso E: Métricas globales de empresa
     if (intent === WHATSAPP_INTENTS.TENANT_METRICS_QUERY) {
       return this.handleTenantMetricsQuery({ employee });
     }
 
-    // Caso D: Consulta personal del colaborador (Vacaciones, Marcación de hoy)
+    // Caso F: Consulta personal del colaborador (Vacaciones, Marcación de hoy)
     if (intent === WHATSAPP_INTENTS.EMPLOYEE_QUERY) {
       return this.handleEmployeePersonalQuery({ text, employee, aiConfig });
     }
 
-    // Caso E: Consulta Jurídica / Normativa con RAG Legal Ecuatoriano
+    // Caso G: Consulta Jurídica / Normativa con RAG Legal Ecuatoriano
     return this.handleLegalQuery({ text, employee, aiConfig });
+  }
+
+  /**
+   * Orquesta la preparación de una habilidad agéntica y su paso a doble confirmación.
+   * @private
+   */
+  async handleAgenticSkill({
+    skillId,
+    text,
+    employee,
+    phoneKey,
+    messageId,
+    activeSession,
+    aiConfig,
+  }) {
+    if (!employee.tenantId) {
+      return `Su perfil no tiene una empresa activa asignada para ejecutar solicitudes operativas.`;
+    }
+
+    const skill = this.skillRegistry?.getSkill(skillId);
+    if (!skill) {
+      return `La accion solicitada no se encuentra habilitada en este momento.`;
+    }
+
+    const prep = await skill.prepareDraft({
+      text,
+      employee,
+      activeSession,
+      aiConfig,
+    });
+
+    if (prep.status === 'NEED_MORE_INFO') {
+      if (this.confirmationService) {
+        await this.confirmationService.saveCollectingDraft({
+          employee,
+          phoneKey,
+          skillName: skill.id,
+          partialPayload: prep.partialPayload,
+          activeSession,
+          sourceMessageId: messageId,
+        });
+      }
+      return prep.promptMessage;
+    }
+
+    if (prep.status === 'DOMAIN_REJECTED') {
+      if (activeSession && this.sessionRepo) {
+        await this.sessionRepo.markStatus({
+          id: activeSession.id,
+          tenantId: employee.tenantId,
+          employeeId: employee.id,
+          status: WHATSAPP_SESSION_STATUS.CANCELLED,
+        });
+      }
+      return prep.errorMessage;
+    }
+
+    if (prep.status === 'READY_FOR_CONFIRMATION' && this.confirmationService) {
+      return this.confirmationService.initiateDualConfirmation({
+        employee,
+        phoneKey,
+        skill,
+        draftSummary: prep.draftSummary,
+        sourceMessageId: messageId,
+      });
+    }
+
+    return `No fue posible preparar la solicitud en este momento.`;
   }
 
   /**
@@ -292,8 +475,9 @@ Instrucciones: Responde a la pregunta del colaborador de manera amable, ejecutiv
     const companyName = employee.tenant?.name ? ` de *${employee.tenant.name}*` : '';
     return (
       `Hola ${employee.firstName}, bienvenido(a) al Asistente Corporativo de Norma ERP${companyName}.\n\n` +
-      `Puede consultarme directamente por este chat:\n` +
+      `Puede consultarme o gestionar directamente por este chat:\n` +
       `- *Mis vacaciones:* "¿Cuantos dias de vacaciones tengo disponibles?"\n` +
+      `- *Pedir vacaciones:* "Quiero pedir vacaciones del 2026-11-20 al 2026-11-24 por viaje familiar"\n` +
       `- *Mi marcacion:* "¿A que hora marque hoy?"\n` +
       `- *Consultas legales:* "Como se calculan las horas extraordinarias segun el Art. 55?" o "¿Cual es la liquidacion por despido intempestivo?"\n` +
       `- *Seguridad Social:* "Requisitos para jubilacion ordinaria IESS."\n\n` +

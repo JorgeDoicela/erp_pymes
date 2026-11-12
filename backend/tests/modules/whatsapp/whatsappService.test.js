@@ -156,6 +156,8 @@ describe('WhatsApp Service & Webhook Orchestrator Suite', () => {
       expect(mockAi.generateResponse).toHaveBeenCalledWith({
         text: 'Hola, cuantos dias de vacaciones tengo?',
         employee: mockEmployee,
+        phoneKey: '593987654321',
+        messageId: 'wamid.MSG_100',
       });
       expect(mockClient.sendTextMessage).toHaveBeenCalledWith({
         to: '593987654321',
@@ -185,6 +187,122 @@ describe('WhatsApp Service & Webhook Orchestrator Suite', () => {
       expect(status).toHaveProperty('ai');
       expect(status.whatsapp.isConfigured).toBe(true);
       expect(status.ai.activeProvider).toBe('deepseek');
+    });
+  });
+
+  describe('4. Resolución Multi-Tenant cuando un teléfono pertenece a múltiples empresas', () => {
+    it('debe solicitar selección de empresa si el teléfono pertenece a más de un tenant activo', async () => {
+      mockRepo.resolveEmployeeContext = vi.fn().mockResolvedValueOnce({
+        status: 'MULTI_TENANT_SELECTION_REQUIRED',
+        employee: null,
+        candidates: [
+          {
+            id: 'emp-a',
+            tenantId: 'tenant-a',
+            tenant: { id: 'tenant-a', name: 'Empresa Alfa S.A.', ruc: '1790001112001' },
+          },
+          {
+            id: 'emp-b',
+            tenantId: 'tenant-b',
+            tenant: { id: 'tenant-b', name: 'Empresa Beta Cia. Ltda.', ruc: '0990003334001' },
+          },
+        ],
+      });
+
+      const payload = {
+        object: 'whatsapp_business_account',
+        entry: [
+          {
+            changes: [
+              {
+                field: 'messages',
+                value: {
+                  messages: [
+                    {
+                      from: '593969677280',
+                      id: 'wamid.MULTI_1',
+                      type: 'text',
+                      text: { body: 'Quiero pedir vacaciones' },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      await service.processWebhookEvent({ body: payload });
+      await new Promise((r) => setTimeout(r, 30));
+
+      expect(mockAi.generateResponse).not.toHaveBeenCalled();
+      expect(mockClient.sendTextMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: '593969677280',
+          text: expect.stringContaining('1. *Empresa Alfa S.A.*'),
+        })
+      );
+      expect(mockClient.sendTextMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: expect.stringContaining('2. *Empresa Beta Cia. Ltda.*'),
+        })
+      );
+    });
+
+    it('debe fijar activeTenantId cuando el usuario responde seleccionando su empresa', async () => {
+      mockRepo.resolveEmployeeContext = vi.fn().mockResolvedValueOnce({
+        status: 'MULTI_TENANT_SELECTION_REQUIRED',
+        employee: null,
+        candidates: [
+          {
+            id: 'emp-a',
+            tenantId: 'tenant-a',
+            tenant: { id: 'tenant-a', name: 'Empresa Alfa S.A.' },
+          },
+          {
+            id: 'emp-b',
+            tenantId: 'tenant-b',
+            tenant: { id: 'tenant-b', name: 'Empresa Beta Cia. Ltda.' },
+          },
+        ],
+      });
+      mockRepo.setActiveTenantContext = vi.fn().mockResolvedValueOnce(true);
+
+      const payload = {
+        object: 'whatsapp_business_account',
+        entry: [
+          {
+            changes: [
+              {
+                field: 'messages',
+                value: {
+                  messages: [
+                    {
+                      from: '593969677280',
+                      id: 'wamid.MULTI_2',
+                      type: 'text',
+                      text: { body: '2' },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      await service.processWebhookEvent({ body: payload });
+      await new Promise((r) => setTimeout(r, 30));
+
+      expect(mockRepo.setActiveTenantContext).toHaveBeenCalledWith({
+        phoneKey: '593969677280',
+        tenantId: 'tenant-b',
+      });
+      expect(mockClient.sendTextMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: expect.stringContaining('Empresa Beta Cia. Ltda.'),
+        })
+      );
     });
   });
 });

@@ -51,10 +51,10 @@ flowchart TD
         LlmAdapter["CAPA 3 — Adaptador Universal: llmProvider.service.js"]
     end
 
-    subgraph Datos["Corpus e Índices en Memoria / Disco"]
+    subgraph Datos["Corpus e Índices (PostgreSQL pgvector + ONNX CPU)"]
         PdfJson[("extractedFullLegalCorpus.json (1,880 Artículos de los 4 PDFs)")]
-        ColabVectors[("trained_retriever_index.json (Embeddings Entrenados en Colab)")]
-        PrismaDB[("PostgreSQL ( Estado Real del Tenant + Sueldos AES-256-GCM )")]
+        ColabVectors[("trained_retriever_index.json (Vectores 768d + Modelos ONNX INT8)")]
+        PrismaDB[("PostgreSQL pgvector:pg15 (HNSW 768d + FTS Español + Datos Tenant)")]
     end
 
     subgraph MotoresInferencia["Proveedores de Inferencia Soportados"]
@@ -67,9 +67,10 @@ flowchart TD
     Controller --> RagOrchestrator
     RagOrchestrator --> Retriever
     PdfJson & ColabVectors --> Retriever
+    PrismaDB <-->|"HNSW Cosine <=> + GIN FTS"| Retriever
     PrismaDB --> RagOrchestrator
-    Retriever -->|"Top 18 Candidatos (BM25 + Vectores)"| Evaluator
-    Evaluator -->|"Fase 1: Re-Ranking Contextual (Top 8)"| RagOrchestrator
+    Retriever -->|"Top Candidatos (pgvector HNSW + FTS + BM25)"| Evaluator
+    Evaluator -->|"Fase 1: Cross-Encoder ONNX Reranking (Top 6-8)"| RagOrchestrator
     RagOrchestrator -->|"Prompt Anclado + Tabla Decimal.js"| LlmAdapter
     LlmAdapter --> DeepSeek & CloudProviders & LocalFineTuned
     LlmAdapter -->|"Respuesta Generada"| Evaluator
@@ -80,20 +81,19 @@ flowchart TD
 
 ---
 
-### 2.1. Capa 1 — Modelo Buscador (`sustainability.repository.js`)
+### 2.1. Capa 1 — Modelo Buscador (`sustainability.repository.js` + `neuralRetriever.service.js`)
 
-El repositorio [`sustainability.repository.js`](../../backend/src/modules/sustainability/sustainability.repository.js) implementa un motor de búsqueda híbrido en memoria que indexa los 1,880 artículos al iniciar el proceso:
+El repositorio [`sustainability.repository.js`](../../backend/src/modules/sustainability/sustainability.repository.js) y [`neuralRetriever.service.js`](../../backend/src/modules/sustainability/neuralRetriever.service.js) implementan un motor híbrido que combina recuperación vectorial en PostgreSQL `pgvector` (`HNSW` coseno de `768` dimensiones), búsqueda textual completa en español (`GIN tsvector`) e índice invertido BM25 en memoria:
 
-1. **Índice Invertido BM25 Pre-Tokenizado:**
-   - Normaliza acentos y signos de puntuación, calcula la frecuencia de término $f(t, D)$ por artículo y el factor de frecuencia inversa de documento $\text{IDF}(t)$ sobre los $N = 1,880$ fragmentos:
-     $$\text{IDF}(t) = \ln\left(1 + \frac{N - \text{df}(t) + 0.5}{\text{df}(t) + 0.5}\right)$$
-   - Evalúa cada artículo respecto a la consulta expandida $Q$ mediante la ecuación Okapi BM25 ($k_1 = 1.5, b = 0.75$):
-     $$\text{Score}_{\text{BM25}}(D, Q) = \sum_{t \in Q} \text{IDF}(t) \cdot \frac{f(t, D) \cdot (k_1 + 1)}{f(t, D) + k_1 \cdot \left(1 - b + b \cdot \frac{|D|}{\text{avgdl}}\right)}$$
-2. **Detección Exacta de Artículos y Expansión Jurídica:**
-   - Si el usuario menciona explícitamente un número de artículo (ej. `Art. 188`, `artículo 55`, `Art. 326`), el buscador aplica un impulso determinista de `+45.0` puntos sobre los fragmentos cuyo `articleCode` contenga dicho numeral.
-   - Expande los términos de búsqueda mediante el diccionario `ECUADOR_LEGAL_SYNONYMS` (vinculando términos coloquiales como _finiquito_, _despido_, _renuncia_, _décimo_, _utilidades_ o _horas extras_ con sus números de artículo correspondientes).
-3. **Fusión con Embeddings Entrenados en Google Colab (`trained_retriever_index.json`):**
-   - Si existe el archivo `backend/src/modules/sustainability/data/trained_retriever_index.json` exportado desde el cuaderno de Google Colab, el repositorio carga el mapa de vectores densos normalizados y refuerza los artículos indexados.
+1. **Inferencia ONNX en Vivo (`@huggingface/transformers`):**
+   - Vectoriza la consulta del usuario en tiempo real en CPU mediante `bi-encoder/onnx/model_quantized.onnx` (`intfloat/multilingual-e5-base`, `QUInt8`, `265.45 MB`, `768` dimensiones).
+   - Al ingestar documentos internos por tenant (`ingestDocument()`), calcula e indexa automáticamente sus vectores de pasaje en `knowledge_chunks.embedding`.
+2. **Búsqueda Híbrida en PostgreSQL `pgvector` (`HNSW` + `FTS` + `RRF`):**
+   - Consulta `knowledge_chunks` usando distancia coseno (`embedding <=> queryVec`) respaldada por el índice `knowledge_chunks_embedding_hnsw_idx` (`m = 16, ef_construction = 64`) y el índice funcional `knowledge_chunks_fts_es_gin_idx` (`to_tsvector('spanish', ...)`), fusionando ambos rankings mediante Reciprocal Rank Fusion (RRF).
+   - El servicio `ensurePgVectorCorpusSeeded()` hidrata idempotente y sin duplicados los vectores de `768` dimensiones usando huella SHA-256 (`contentHash`) y respaldo por `articleCode`.
+3. **Respaldo BM25, Detección de Artículos y Balanceo Multi-Cuerpo:**
+   - Calcula $\text{Score}_{\text{BM25}}(D, Q)$ ($k_1 = 1.5, b = 0.75$) con expansión de `ECUADOR_LEGAL_SYNONYMS` y boost determinista (`+45.0`) cuando se solicita un numeral específico (`Art. N`).
+   - Cuando la consulta invoca múltiples cuerpos normativos (ej. Constitución + OIT ODS 8), `selectBalancedByCategory()` reserva cuotas equitativas por categoría solicitada.
 
 ---
 
@@ -123,15 +123,15 @@ sequenceDiagram
     RAG-->>User: Dictamen jurídico + Citas clicables + Sello de Fidelidad
 ```
 
-#### Fase 1: Re-Ranking Cross-Encoder (`evaluateAndRerankChunks`)
+#### Fase 1: Re-Ranking Neural Cross-Encoder ONNX (`evaluateAndRerankChunks`)
 
-Califica cada fragmento candidato en el rango $[0.15, 0.99]$ sumando cinco componentes:
+Califica cada fragmento candidato en el rango $[0.15, 0.99]$ combinando inferencia neural en vivo y señales normativas deterministas:
 
-- **Componente Retriever ($0.00$ a $0.45$):** Puntaje BM25 relativo al máximo candidato de la consulta.
-- **Cobertura Léxica Exacta ($0.00$ a $0.25$):** Proporción de tokens de la pregunta presentes en el artículo.
-- **Coincidencia de Bigramas Jurídicos ($0.00$ a $0.15$):** Pares de palabras consecutivas exactas (ej. `despido intempestivo`, `período prueba`, `aporte patronal`).
-- **Bono de Artículo Exacto ($+0.25$):** Coincidencia exacta con el número de artículo solicitado.
-- **Afinidad Contextual con el Módulo del ERP ($+0.10$):** Prioriza las categorías normativas asociadas a la pantalla actual del usuario (`MODULE_DOMAIN_AFFINITY`).
+- **Inferencia Cross-Encoder ONNX en Vivo (`crossEncoderBonus`, hasta $+0.32$):** Evalúa en CPU mediante `cross-encoder/onnx/model_quantized.onnx` (`unicamp-dl/mMiniLM-L6-v2-mmarco-v2` cuantizado `QUInt8`) el par completo `(consulta, fragmento)` en lote con calibración sigmoidea relativa.
+- **Similitud Densa Bi-Encoder / `pgvector` HNSW (`denseBonus`, hasta $+0.14$):** Similitud coseno en `768` dimensiones calculada en vivo por `bi-encoder/onnx/model_quantized.onnx`.
+- **Componente Retriever Híbrido ($0.00$ a $0.38$):** Puntaje combinado de `pgvector` HNSW + FTS español RRF + Okapi BM25 relativo al máximo candidato.
+- **Cobertura Léxica Exacta ($0.00$ a $0.18$) y Bigramas Jurídicos ($0.00$ a $0.12$):** Coincidencia literal de tokens y pares consecutivos (ej. `despido intempestivo`, `periodo prueba`).
+- **Bono de Artículo Exacto ($+0.22$) y Afinidad con el Módulo ERP ($+0.08$):** Prioriza citaciones numéricas explícitas (`Art. N`) y dominios afines a la vista consultante (`MODULE_DOMAIN_AFFINITY`), equilibrando categorías vía `selectBalancedByCategory()`.
 
 #### Fase 2: Juez Anti-Alucinación (`verifyAnswerFidelity`)
 
@@ -342,59 +342,40 @@ npx --prefix backend vitest run tests/modules/sustainability/sustainabilityModul
 
 ---
 
-## 7. Bitácora de Entrenamiento en Google Colab, Publicación en Hugging Face Hub y Guía de Producción AWS EC2
+## 7. Bitácora de Entrenamiento en Google Colab, Exportación ONNX y Producción AWS
 
-### 7.1. Resultados Reales del Entrenamiento Ejecutado en Google Colab GPU
+### 7.1. Resultados del Entrenamiento y Cuantización en Google Colab GPU
 
-El entrenamiento del ecosistema de IA se ejecutó en dos fases independientes utilizando GPUs de centro de datos en Google Colab mediante `colab.exe`:
+El entrenamiento y exportación del ecosistema de IA se ejecutó en Google Colab (`colab.exe`):
 
-| Fase                                         | Modelo Base y Técnica                                                                                                            | Hardware Asignado                                   | Métricas de Convergencia                                                                                                                | Repositorio Público en Hugging Face (`doiceladev`)                                                                    |
-| :------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- |
-| **Fase 1: Buscador Denso + Evaluador Legal** | Bi-Encoder `intfloat/multilingual-e5-base` (`MultipleNegativesRankingLoss`) + Cross-Encoder `unicamp-dl/mMiniLM-L6-v2-mmarco-v2` | **NVIDIA A100-SXM4-40GB** (`52.6s`)                 | `1,880` artículos + `800` términos de consulta codificados; Separación Cross-Encoder: Positivos `1.0000` vs. Negativos `0.0000`         | [`doiceladev/norma-erp-ecuador-retriever-e5`](https://huggingface.co/doiceladev/norma-erp-ecuador-retriever-e5)       |
-| **Fase 2: Generador Jurídico y ODS 8**       | `Qwen/Qwen2.5-7B-Instruct` + PEFT LoRA (`r=16`, `lora_alpha=32`, `40,370,176` parámetros entrenables en `bfloat16`)              | **NVIDIA L4 (22.03 GB VRAM)** (`808.17s`, 3 épocas) | `Train Loss: 0.7676` \| `Eval Loss: 0.5329` (descenso continuo en las 3 épocas: `0.6909` $\rightarrow$ `0.5564` $\rightarrow$ `0.5329`) | [`doiceladev/norma-erp-ecuador-qwen2.5-7b-lora`](https://huggingface.co/doiceladev/norma-erp-ecuador-qwen2.5-7b-lora) |
+| Fase                                                    | Modelo Base y Técnica                                                                                                                                                                    | Hardware Asignado                                    | Métricas de Convergencia y Selección                                                                                                                                                                                    | Repositorio en Hugging Face (`doiceladev`)                                                                            |
+| :------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| **Fase 1: Bi-Encoder + Cross-Encoder ONNX (`QUInt8`)**  | Bi-Encoder `intfloat/multilingual-e5-base` (`768d`) + Cross-Encoder `unicamp-dl/mMiniLM-L6-v2-mmarco-v2` (2 épocas), cuantizados con `op_types_to_quantize=["MatMul", "Gemm", "Gather"]` | **NVIDIA T4 / A100** (`train_export_neural_onnx.py`) | Selección empírica automática: Bi-Encoder Base (`Recall@5=0.500`, `MRR@10=0.375`) + Cross-Encoder Fine-Tuned (`265.45 MB` + `102.42 MB` ONNX `QUInt8`, compresión `3.99x`); índice `1,880` chunks × `768d` (`13.57 MB`) | [`doiceladev/norma-erp-ecuador-retriever-e5`](https://huggingface.co/doiceladev/norma-erp-ecuador-retriever-e5)       |
+| **Fase 2: Generador Jurídico y ODS 8 (Opcional Local)** | `Qwen/Qwen2.5-7B-Instruct` + PEFT LoRA (`r=16`, `lora_alpha=32`, `40,370,176` parámetros en `bfloat16`)                                                                                  | **NVIDIA L4 (22.03 GB VRAM)** (`808.17s`, 3 épocas)  | `Train Loss: 0.7676` \| `Eval Loss: 0.5329` (`0.6909` $\rightarrow$ `0.5564` $\rightarrow$ `0.5329`)                                                                                                                    | [`doiceladev/norma-erp-ecuador-qwen2.5-7b-lora`](https://huggingface.co/doiceladev/norma-erp-ecuador-qwen2.5-7b-lora) |
 
-### 7.2. Estructura de Artefactos Descargados en el Proyecto
-
-Todos los artefactos entrenados y descargados desde Hugging Face Hub residen en `backend/src/modules/sustainability/data/`:
+### 7.2. Estructura de Artefactos en el Proyecto
 
 ```text
 backend/src/modules/sustainability/data/
 ├── extractedFullLegalCorpus.json                  # 1,880 artículos íntegros extraídos de los 4 PDFs oficiales
-├── trained_retriever_index.json                   # Índice neuronal denso + scores Cross-Encoder (3.20 MB, versionado en Git)
-├── training_report_a100.json                      # Telemetría oficial de entrenamiento GPU (versionado en Git)
+├── trained_retriever_index.json                   # Índice vectorial 768d + scores Cross-Encoder (13.57 MB, versionado en Git)
+├── train_export_neural_onnx.py                    # Script reproducible Colab: entrena, evalúa, cuantiza QUInt8 y publica en HF
 ├── syncHuggingFaceModels.js                       # Sincronizador automático con Hugging Face Hub (status | pull | ensure)
-└── models/
-    └── qwen25-ecuador-ods8-lora/
-        ├── adapter_config.json                    # Configuración PEFT LoRA (r=16, alpha=32, target_modules q..down_proj)
-        ├── adapter_model.safetensors              # Pesos tensoriales LoRA en bfloat16 (154.05 MB, descargado bajo demanda)
-        ├── Modelfile                              # Manifiesto de despliegue directo para Ollama
-        ├── README.md                              # Ficha técnica (Model Card) del modelo
-        ├── tokenizer.json                         # Tokenizador Qwen2.5 (10.89 MB)
-        ├── tokenizer_config.json                  # Configuración de tokens especiales ChatML
-        └── chat_template.jinja                    # Plantilla Jinja de conversación
+└── models/                                        # Volumen Docker persistente ai_models_data en producción (ignorado en Git)
+    ├── bi-encoder/onnx/model_quantized.onnx       # Bi-Encoder ONNX INT8 (265.45 MB)
+    ├── cross-encoder/onnx/model_quantized.onnx    # Cross-Encoder ONNX INT8 (102.42 MB)
+    └── qwen25-ecuador-ods8-lora/                  # Adaptador LoRA PEFT opcional para Ollama (--full-lora)
 ```
 
 > [!NOTE]
-> Para mantener el repositorio Git ágil y evitar el límite de 100 MB por archivo de GitHub, los archivos ligeros esenciales (`trained_retriever_index.json`, `training_report_a100.json`, `adapter_config.json`, `Modelfile`, `README.md`) están incluidos directamente en el árbol del proyecto, mientras que el binario pesado `adapter_model.safetensors` (`154.05 MB`) está ignorado en `.gitignore` y se descarga en cualquier servidor mediante `syncHuggingFaceModels.js pull --full-lora`.
+> Los binarios pesados `.onnx` y `adapter_model.safetensors` están excluidos en `.gitignore`. En producción, el contenedor `rh_backend` descarga automáticamente `bi-encoder/` (`265.45 MB`) y `cross-encoder/` (`102.42 MB`) al volumen `ai_models_data` mediante `syncHuggingFaceModels.js ensure` durante el arranque.
 
-### 7.3. Qué Toca Hacer al Crear la Instancia en AWS EC2 (Checklist de Producción)
+### 7.3. Automatización en Producción (AWS Lightsail / EC2 + Docker)
 
-Cuando crees tu instancia Debian en **AWS EC2**, el despliegue de los modelos está automatizado en [`backend/entrypoint.sh`](../../backend/entrypoint.sh):
+El despliegue en producción es automático al hacer `push` a `main`:
 
-1. **En el archivo `/var/www/recursos_humanos/.env` de tu servidor AWS EC2**, asegúrate de incluir las variables de IA y Hugging Face:
-   ```env
-   AI_PROVIDER="deepseek"
-   DEEPSEEK_API_KEY="sk-tu-api-key-de-deepseek"
-   AI_MODEL="deepseek-chat"
-   HF_TOKEN="hf_tu-token-de-huggingface"
-   HUGGINGFACE_HUB_TOKEN="hf_tu-token-de-huggingface"
-   HF_NAMESPACE="doiceladev"
-   HF_RETRIEVER_REPO_ID="doiceladev/norma-erp-ecuador-retriever-e5"
-   HF_LORA_REPO_ID="doiceladev/norma-erp-ecuador-qwen2.5-7b-lora"
-   ```
-2. **Arranque Automático del Buscador Neuronal y Evaluador (Cero GPU requerida en EC2):**
-   - Al ejecutar `docker compose up -d`, el `entrypoint.sh` del contenedor `rh_backend` invoca automáticamente `node src/modules/sustainability/data/syncHuggingFaceModels.js ensure`.
-   - `rh_backend` carga en RAM `trained_retriever_index.json` (`3.20 MB`), activando el **Buscador Híbrido (BM25 + Similitud Coseno Densa)** y el **Evaluador Cross-Encoder** en cualquier instancia EC2 económica (`t3.small` o `t3.medium`) sin necesidad de tarjeta gráfica.
-3. **(Opcional) Si en el futuro aprovisionas una instancia EC2 con GPU (`g5.xlarge` / `g6.xlarge`) para correr el LLM LoRA localmente con Ollama:**
-   - Ejecuta `docker exec rh_backend node src/modules/sustainability/data/syncHuggingFaceModels.js pull --full-lora` para descargar `adapter_model.safetensors` (`154.05 MB`).
-   - Registra el modelo en Ollama con `ollama create ecuador-erp-ai -f backend/src/modules/sustainability/data/models/qwen25-ecuador-ods8-lora/Modelfile` y cambia `AI_PROVIDER="local_ollama"` en el `.env`.
+1. **`rh_postgres` (`pgvector/pgvector:pg15`):** Mantiene compatibilidad binaria con el volumen `postgres_data` y habilita búsqueda vectorial `HNSW` + FTS en español.
+2. **`backend/entrypoint.sh` y `server.js`:**
+   - Ejecuta `syncHuggingFaceModels.js ensure` para hidratar `bi-encoder/` y `cross-encoder/` ONNX `QUInt8` en el volumen persistente `ai_models_data`.
+   - `server.js` invoca de forma no bloqueante `sustainabilityRepository.ensurePgVectorCorpusSeeded()`, asegurando extensión `vector`, índices HNSW/GIN e hidratación de los `1,880` vectores `768d` sin duplicar filas existentes.
+3. **Generación LLM (`DeepSeek API`):** Recomendado `AI_PROVIDER="deepseek"` en instancias **AWS Lightsail 4 GB RAM (2 vCPU)** para ejecutar recuperación neural local ONNX + `pgvector` y delegar únicamente la redacción final al modelo grande por API.

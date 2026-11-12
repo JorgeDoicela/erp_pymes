@@ -12,6 +12,7 @@ import app from './app.js';
 import {
   socketService,
   emailService,
+  sustainabilityRepository,
   initContractCronJob,
   initPerformanceCronJob,
   initRequestMonitorCronJob,
@@ -52,6 +53,20 @@ server.listen(PORT, () => {
     .catch((err) => {
       console.warn(`[SMTP Warning] Error al verificar correo: ${err.message}`);
     });
+
+  // Sincronización no bloqueante del corpus vectorial pgvector (HNSW 768d) al arrancar el servidor
+  if (process.env.NODE_ENV !== 'test') {
+    sustainabilityRepository
+      .ensurePgVectorCorpusSeeded()
+      .then((ok) => {
+        if (ok) {
+          console.log('[RAG pgvector] Índice vectorial HNSW (768d) sincronizado y activo.');
+        }
+      })
+      .catch((err) => {
+        console.warn(`[RAG pgvector Warning] Sincronización diferida: ${err.message}`);
+      });
+  }
 });
 
 const gracefulShutdown = async (signal) => {

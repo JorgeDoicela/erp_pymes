@@ -12,6 +12,7 @@ export const META_GRAPH_BASE_URL = `https://graph.facebook.com/${META_GRAPH_API_
 export const WHATSAPP_INTENTS = {
   LEGAL_QUERY: 'LEGAL_QUERY',
   EMPLOYEE_QUERY: 'EMPLOYEE_QUERY',
+  VACATION_REQUEST_ACTION: 'VACATION_REQUEST_ACTION',
   TENANT_METRICS_QUERY: 'TENANT_METRICS_QUERY',
   GENERAL_GREETING: 'GENERAL_GREETING',
   UNKNOWN_SENDER: 'UNKNOWN_SENDER',
@@ -21,7 +22,8 @@ export const WHATSAPP_SYSTEM_PROMPT = `Eres el Asistente Corporativo de Norma ER
 Tu misión es resolver consultas de colaboradores y directivos sobre:
 1. Normativa laboral y tributaria de Ecuador (Código del Trabajo, IESS, SRI, Ley Orgánica de Protección de Datos).
 2. Estado personal del colaborador dentro de la empresa (saldo de vacaciones, última marcación de asistencia, departamento y cargo).
-3. Indicadores empresariales (únicamente para directores o administradores autorizados).
+3. Gestión agéntica segura de solicitudes de vacaciones (con validación de saldo, último 4 dígitos de cédula y código OTP por correo).
+4. Indicadores empresariales (únicamente para directores o administradores autorizados).
 
 Reglas de formato y estilo obligatorias para WhatsApp:
 - Sé conciso, profesional y directo. Evita introducciones innecesarias o saludos redundantes.

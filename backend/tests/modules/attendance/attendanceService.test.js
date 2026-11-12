@@ -100,30 +100,37 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
   });
 
   it('should flag entry as LATE when clock-in occurs after shift start time plus tolerance', async () => {
-    prisma.employee.findUnique.mockResolvedValue(mockEmployee);
-    prisma.systemSetting.findFirst.mockResolvedValue(null);
-    attendanceRepository.findByEmployeeAndDate.mockResolvedValue(null);
-    prisma.employeeSchedule.findFirst.mockResolvedValue({
-      shift: { startTime: '01:00', toleranceMinutes: 10 }, // Past shift -> late
-    });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 11, 10, 0, 0));
 
-    attendanceRepository.createEntry.mockImplementation((data) =>
-      Promise.resolve({
-        id: 'att_rec_1',
-        ...data,
-      })
-    );
+    try {
+      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      prisma.systemSetting.findFirst.mockResolvedValue(null);
+      attendanceRepository.findByEmployeeAndDate.mockResolvedValue(null);
+      prisma.employeeSchedule.findFirst.mockResolvedValue({
+        shift: { startTime: '01:00', toleranceMinutes: 10 }, // Past shift -> late
+      });
 
-    const location = { latitude: -0.1806, longitude: -78.4678 };
-    const result = await attendanceService.registerAttendance(
-      mockEmployee.id,
-      'ENTRY',
-      location,
-      '192.168.1.100'
-    );
+      attendanceRepository.createEntry.mockImplementation((data) =>
+        Promise.resolve({
+          id: 'att_rec_1',
+          ...data,
+        })
+      );
 
-    expect(result.record.status).toBe('LATE');
-    expect(result.record.isLate).toBe(true);
+      const location = { latitude: -0.1806, longitude: -78.4678 };
+      const result = await attendanceService.registerAttendance(
+        mockEmployee.id,
+        'ENTRY',
+        location,
+        '192.168.1.100'
+      );
+
+      expect(result.record.status).toBe('LATE');
+      expect(result.record.isLate).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('should reject entry when employee is outside geofence radius', async () => {

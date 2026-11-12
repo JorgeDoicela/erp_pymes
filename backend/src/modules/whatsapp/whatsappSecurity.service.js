@@ -67,6 +67,114 @@ export class WhatsappSecurityService {
   }
 
   /**
+   * Retorna la clave telefónica canónica (solo dígitos internacionales) para indexación multi-tenant en BD.
+   * @param {string} rawPhone
+   * @returns {string}
+   */
+  getCanonicalPhoneKey(rawPhone) {
+    if (!rawPhone || typeof rawPhone !== 'string') return '';
+    const digitsOnly = rawPhone.replace(/[^\d]/g, '');
+    if (!digitsOnly) return '';
+
+    if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
+      return `593${digitsOnly.substring(1)}`;
+    }
+    if (digitsOnly.length === 9 && digitsOnly.startsWith('9')) {
+      return `593${digitsOnly}`;
+    }
+    return digitsOnly;
+  }
+
+  /**
+   * Verifica en tiempo constante los últimos 4 dígitos del documento de identidad del colaborador.
+   * @param {string} identityCard
+   * @param {string} providedLast4
+   * @returns {boolean}
+   */
+  verifyIdentityLast4(identityCard, providedLast4) {
+    const docDigits = String(identityCard || '').replace(/[^\d]/g, '');
+    const candidate = String(providedLast4 || '').trim();
+
+    if (docDigits.length < 4 || !/^\d{4}$/.test(candidate)) {
+      return false;
+    }
+
+    const expectedLast4 = docDigits.slice(-4);
+    const expectedBuffer = Buffer.from(expectedLast4, 'utf8');
+    const providedBuffer = Buffer.from(candidate, 'utf8');
+
+    if (expectedBuffer.length !== providedBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, providedBuffer);
+  }
+
+  /**
+   * Genera un código OTP numérico criptográficamente seguro.
+   * @param {number} [length=6]
+   * @returns {string}
+   */
+  generateNumericOtp(length = 6) {
+    const min = 10 ** (length - 1);
+    const max = 10 ** length;
+    return crypto.randomInt(min, max).toString();
+  }
+
+  /**
+   * Calcula el hash SHA-256 con salt único de sesión para almacenamiento seguro del OTP.
+   * @param {string} sessionId
+   * @param {string} otpCode
+   * @returns {string}
+   */
+  hashOtp(sessionId, otpCode) {
+    return crypto
+      .createHash('sha256')
+      .update(`whatsapp-otp:${String(sessionId)}:${String(otpCode).trim()}`)
+      .digest('hex');
+  }
+
+  /**
+   * Valida en tiempo constante un código OTP contra su hash almacenado en BD.
+   * @param {string} sessionId
+   * @param {string} providedOtp
+   * @param {string} storedHash
+   * @returns {boolean}
+   */
+  verifyOtpHash(sessionId, providedOtp, storedHash) {
+    const candidate = String(providedOtp || '').trim();
+    if (!sessionId || !storedHash || !/^\d{6}$/.test(candidate)) {
+      return false;
+    }
+
+    const expectedHash = this.hashOtp(sessionId, candidate);
+    const expectedBuffer = Buffer.from(expectedHash, 'utf8');
+    const storedBuffer = Buffer.from(String(storedHash), 'utf8');
+
+    if (expectedBuffer.length !== storedBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, storedBuffer);
+  }
+
+  /**
+   * Enmascara una dirección de correo electrónico para visualización segura (LOPDP).
+   * @param {string} email
+   * @returns {string}
+   */
+  maskEmail(email) {
+    const value = String(email || '').trim();
+    const parts = value.split('@');
+    if (parts.length !== 2 || !parts[0]) return '***';
+
+    const local = parts[0];
+    const domain = parts[1];
+    const visiblePrefix = local.slice(0, Math.min(2, local.length));
+    return `${visiblePrefix}***@${domain}`;
+  }
+
+  /**
    * Valida la firma criptográfica HMAC-SHA256 del webhook entrante de Meta.
    * @param {Object} params
    * @param {Buffer|string} params.rawBody Buffer o cadena cruda del cuerpo HTTP.

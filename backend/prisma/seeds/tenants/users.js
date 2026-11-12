@@ -1309,6 +1309,54 @@ export async function seedUsers(prisma) {
   });
   tenant1Employees.push(entrepreneur1);
 
+  // Colaborador demo operativo en Empresa 1 para pruebas de WhatsApp + OTP 2FA (sin contaminar SuperAdmin)
+  const demoPhone = process.env.DEMO_EMPLOYEE_PHONE || process.env.SUPERADMIN_PHONE;
+  if (demoPhone && demoPhone !== '0999999999') {
+    const rawEmailUser = String(process.env.EMAIL_USER || '').trim();
+    const derivedDemoEmail =
+      rawEmailUser.includes('@') && !rawEmailUser.includes('example.com')
+        ? `${rawEmailUser.split('@')[0]}+demo@${rawEmailUser.split('@')[1]}`
+        : 'colaborador.demo@emplifi.com';
+    const demoEmail = process.env.DEMO_EMPLOYEE_EMAIL || derivedDemoEmail;
+    const demoIdentity = process.env.DEMO_EMPLOYEE_IDENTITY || '1750007280';
+
+    const demoWhatsappEmployee = await prisma.employee.upsert({
+      where: { email: demoEmail },
+      update: {
+        password,
+        tenantId: tenant1.id,
+        role: 'employee',
+        phone: demoPhone,
+        identityCard: demoIdentity,
+        isActive: true,
+      },
+      create: {
+        tenantId: tenant1.id,
+        firstName: 'Jorge',
+        lastName: 'Doicela (Demo)',
+        email: demoEmail,
+        role: 'employee',
+        department: 'Tecnología',
+        position: 'Especialista Operativo',
+        salary: encryptSalary(1800),
+        password,
+        identityCard: demoIdentity,
+        birthDate: new Date('1990-01-01'),
+        hireDate: new Date('2022-01-01'),
+        isActive: true,
+        address: 'Quito, Ecuador',
+        phone: demoPhone,
+        civilStatus: 'Soltero',
+        contractType: 'Indefinido',
+        bankName: encrypt('Banco Pichincha'),
+        accountNumber: encrypt('2200998877'),
+        accountType: 'Ahorros',
+        vacationDays: 15,
+      },
+    });
+    tenant1Employees.push(demoWhatsappEmployee);
+  }
+
   for (const emp of EMPLOYEES_EMPRESA_1) {
     const role = emp.role || 'employee';
     const created = await prisma.employee.upsert({

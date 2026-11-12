@@ -13,6 +13,15 @@ import whatsappClientService, { WhatsappClientService } from './whatsappClient.s
 import whatsappSecurityService, { WhatsappSecurityService } from './whatsappSecurity.service.js';
 import whatsappRepository, { WhatsappRepository } from './whatsapp.repository.js';
 import whatsappAiService, { WhatsappAiService } from './whatsappAi.service.js';
+import whatsappActionSessionRepository, {
+  WhatsappActionSessionRepository,
+  WHATSAPP_SESSION_STATUS,
+} from './whatsappActionSession.repository.js';
+import whatsappConfirmationService, {
+  WhatsappConfirmationService,
+} from './whatsappConfirmation.service.js';
+import { WhatsappSkillRegistry } from './skills/whatsappSkill.registry.js';
+import requestVacationSkill, { RequestVacationSkill } from './skills/requestVacation.skill.js';
 import * as whatsappConstants from './whatsapp.constants.js';
 
 export {
@@ -29,6 +38,14 @@ export {
   WhatsappRepository,
   whatsappAiService,
   WhatsappAiService,
+  whatsappActionSessionRepository,
+  WhatsappActionSessionRepository,
+  WHATSAPP_SESSION_STATUS,
+  whatsappConfirmationService,
+  WhatsappConfirmationService,
+  WhatsappSkillRegistry,
+  requestVacationSkill,
+  RequestVacationSkill,
   whatsappConstants,
 };
 

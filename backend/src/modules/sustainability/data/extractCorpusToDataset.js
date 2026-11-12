@@ -10,6 +10,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import sustainabilityFineTuningService from '../sustainabilityFineTuning.service.js';
 import sustainabilityRepository from '../sustainability.repository.js';
@@ -17,7 +18,72 @@ import sustainabilityRepository from '../sustainability.repository.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function computeChunkHash(content) {
+  return crypto
+    .createHash('sha256')
+    .update(String(content || '').trim())
+    .digest('hex')
+    .slice(0, 16);
+}
+
+function buildNaturalLegalQuery(chunk, docTitle, keywords) {
+  const cleanedBody = String(chunk.content || '')
+    .replace(/^\[[^\]]+\]\s*/i, '')
+    .replace(/^Art(?:\.|[ií]culo)?\s*\d+(?:\.\d+)?[.\-\s:]*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const excerpt = cleanedBody.split(/(?<=[.;])\s+/)[0]?.slice(0, 180) || cleanedBody.slice(0, 180);
+  const topic = keywords ? `(${keywords})` : '';
+  return `${docTitle} ${topic}: ${excerpt}`.replace(/\s+/g, ' ').trim();
+}
+
+const NATURAL_DOMAIN_ANCHORS = [
+  {
+    query: 'me despidieron sin causa justa y tengo años trabajando cuanto me toca de liquidacion',
+    matchCode: /Art\.\s*188\b/i,
+    matchCategory: 'LABOR_CODE',
+  },
+  {
+    query:
+      'proteccion por embarazo maternidad lactancia y prohibicion de despido a mujer embarazada',
+    matchCode: /Art\.\s*153\b|Art\.\s*152\b/i,
+    matchCategory: 'LABOR_CODE',
+  },
+  {
+    query: 'cuando se pagan los fondos de reserva iess y porcentaje 8.33',
+    matchCode: /Art\.\s*196\b|Art\.\s*279\b|Art\.\s*73\b/i,
+    matchCategory: null,
+  },
+  {
+    query: 'prohibicion del trabajo forzoso esclavitud trata laboral constitucion y oit ods 8',
+    matchCode: /Art\.\s*66\b|Meta\s*8\.7\b/i,
+    matchCategory: null,
+  },
+  {
+    query:
+      'jornada maxima semanal 40 horas descanso obligatorio horas suplementarias 50% y extraordinarias 100%',
+    matchCode: /Art\.\s*47\b|Art\.\s*55\b/i,
+    matchCategory: 'LABOR_CODE',
+  },
+  {
+    query: 'calculo de jubilacion patronal e iess vejez pension mensual',
+    matchCode: /Art\.\s*216\b|Art\.\s*185\b/i,
+    matchCategory: null,
+  },
+  {
+    query: 'derecho constitucional al trabajo digno remuneracion justa seguridad social',
+    matchCode: /Art\.\s*33\b|Art\.\s*34\b|Art\.\s*325\b/i,
+    matchCategory: 'CONSTITUTION',
+  },
+  {
+    query: 'obligaciones del empleador afiliacion al iess aportes patronales y mora',
+    matchCode: /Art\.\s*73\b|Art\.\s*11\b|Art\.\s*42\b/i,
+    matchCategory: null,
+  },
+];
+
 async function exportAllColabDatasets() {
+  const generateFallback = process.argv.includes('--generate-fallback');
   console.log('===================================================================');
   console.log('[COLAB EXPORTER] Generando datasets para Buscador, Evaluador y LLM Local...');
   console.log('===================================================================');
@@ -36,7 +102,7 @@ async function exportAllColabDatasets() {
   const sftLines = sftResult.samples.map((s) => JSON.stringify(s)).join('\n') + '\n';
   fs.writeFileSync(sftOutputPath, sftLines, 'utf-8');
 
-  // 2. Generar Dataset Contrastivo con el 100% de los 4 PDFs (1,910+ fragmentos) para el Modelo Buscador y Evaluador
+  // 2. Generar Dataset Contrastivo con el 100% de los 4 PDFs (1,895+ fragmentos) para el Modelo Buscador y Evaluador
   const allPdfChunks = await sustainabilityRepository.getAllChunksForDataset({
     includeFullPdfCorpus: true,
   });
@@ -49,25 +115,69 @@ async function exportAllColabDatasets() {
     // Seleccionar un fragmento negativo de otro documento/artículo distante para Contrastive Learning
     const negIndex = (i + Math.floor(totalChunks / 3) + 17) % totalChunks;
     const negativeChunk = allPdfChunks[negIndex];
+    // Negativo cercano dentro del mismo documento para mayor discriminación intra-corpus
+    const sameCorpusNegIndex = (i + 7) % totalChunks;
+    const hardNegativeChunk = allPdfChunks[sameCorpusNegIndex];
 
     const code = chunk.articleCode || `Fragmento ${i + 1}`;
     const docTitle = chunk.document?.title || 'Legislación del Ecuador';
+    const category = chunk.document?.category || 'LABOR_CODE';
+    const contentHash = computeChunkHash(chunk.content);
+    const chunkKey = `${category}::${code}::${contentHash}`;
     const keywords = (chunk.metadata?.keywords || []).slice(0, 5).join(', ');
 
     const negText = `${negativeChunk.articleCode} (${negativeChunk.document?.title}): ${negativeChunk.content}`;
+    const hardNegText = `${hardNegativeChunk.articleCode} (${hardNegativeChunk.document?.title}): ${hardNegativeChunk.content}`;
+    const positiveText = `${code} (${docTitle}): ${chunk.content}`;
 
-    // Consulta 1: Búsqueda por código/artículo y temática
+    // Consulta natural semántica sin depender únicamente del número de artículo
     retrieverSamples.push({
-      query: `¿Qué establece ${code} de ${docTitle} sobre ${keywords || 'la normativa ecuatoriana'}?`,
-      positive: `${code} (${docTitle}): ${chunk.content}`,
+      chunk_key: chunkKey,
+      content_hash: contentHash,
+      query: buildNaturalLegalQuery(chunk, docTitle, keywords),
+      positive: positiveText,
       negative: negText,
-      hard_negative: negText,
+      hard_negative: hardNegText,
       article_code: code,
       title: docTitle,
       document_title: docTitle,
-      category: chunk.document?.category || 'LABOR_CODE',
-      domain: chunk.metadata?.domain || chunk.document?.category || 'LABOR_CODE',
+      category,
+      domain: chunk.metadata?.domain || category,
       ods_target: chunk.odsTarget || '8.8',
+      label: 1.0,
+    });
+  }
+
+  // Agregar anclas conversacionales reales (como preguntan RRHH y trabajadores sin citar artículo)
+  for (const anchor of NATURAL_DOMAIN_ANCHORS) {
+    const matched = allPdfChunks.find(
+      (c) =>
+        anchor.matchCode.test(c.articleCode || '') &&
+        (!anchor.matchCategory || c.document?.category === anchor.matchCategory)
+    );
+    if (!matched) continue;
+    const neg =
+      allPdfChunks.find(
+        (c) =>
+          c.articleCode !== matched.articleCode &&
+          c.document?.category !== matched.document?.category
+      ) || allPdfChunks[0];
+    const category = matched.document?.category || 'LABOR_CODE';
+    const code = matched.articleCode || 'Disposición';
+    const contentHash = computeChunkHash(matched.content);
+    retrieverSamples.push({
+      chunk_key: `${category}::${code}::${contentHash}`,
+      content_hash: contentHash,
+      query: anchor.query,
+      positive: `${code} (${matched.document?.title}): ${matched.content}`,
+      negative: `${neg.articleCode} (${neg.document?.title}): ${neg.content}`,
+      hard_negative: `${neg.articleCode} (${neg.document?.title}): ${neg.content}`,
+      article_code: code,
+      title: matched.document?.title || 'Legislación del Ecuador',
+      document_title: matched.document?.title || 'Legislación del Ecuador',
+      category,
+      domain: matched.metadata?.domain || category,
+      ods_target: matched.odsTarget || '8.8',
       label: 1.0,
     });
   }
@@ -79,8 +189,18 @@ async function exportAllColabDatasets() {
   const retrieverLines = retrieverSamples.map((r) => JSON.stringify(r)).join('\n') + '\n';
   fs.writeFileSync(retrieverOutputPath, retrieverLines, 'utf-8');
 
-  // 3. Generar índice vectorial denso base (trained_retriever_index.json) con 128 dimensiones
-  // para activar la fusión híbrida inmediata (reemplazable por el export GPU de Google Colab)
+  if (!generateFallback) {
+    console.log(
+      `[OK] Dataset LLM SFT/QLoRA guardado: ${sftOutputPath} (${sftResult.totalSamples} muestras ChatML)`
+    );
+    console.log(
+      `[OK] Dataset Buscador + Evaluador guardado: ${retrieverOutputPath} (${retrieverSamples.length} tripletes contrastivos)`
+    );
+    console.log(
+      '[INFO] trained_retriever_index.json existente preservado (usa --generate-fallback solo si deseas regenerar un índice base sin GPU).'
+    );
+    return;
+  }
   const EMBED_DIM = 128;
   const computeDeterministicNormalizedVector = (tokens) => {
     const vec = new Array(EMBED_DIM).fill(0);

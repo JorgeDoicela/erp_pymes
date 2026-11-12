@@ -14,13 +14,38 @@ export const absenceRepository = {
     return prisma.absenceRequest.create({ data });
   },
 
-  async findOverlapping(employeeId, start, end) {
-    return prisma.absenceRequest.findFirst({
-      where: {
-        employeeId,
-        status: { in: ['PENDING', 'APPROVED'] },
-        startDate: { lte: end },
-        endDate: { gte: start },
+  async findOverlapping(employeeId, start, end, tenantId = null) {
+    const where = {
+      employeeId,
+      status: { in: ['PENDING', 'APPROVED'] },
+      startDate: { lte: end },
+      endDate: { gte: start },
+    };
+
+    if (tenantId) {
+      where.employee = { tenantId };
+    }
+
+    return prisma.absenceRequest.findFirst({ where });
+  },
+
+  async getPendingRequestsByEmployee(employeeId, tenantId = null) {
+    const where = {
+      employeeId,
+      status: 'PENDING',
+    };
+
+    if (tenantId) {
+      where.employee = { tenantId };
+    }
+
+    return prisma.absenceRequest.findMany({
+      where,
+      select: {
+        id: true,
+        type: true,
+        startDate: true,
+        endDate: true,
       },
     });
   },

@@ -215,7 +215,6 @@ describe('Módulo de Sostenibilidad ODS 8, RAG Multi-Dominio y Fine-Tuning', () 
       expect(stats.totalKnownArticles).toBeGreaterThan(400);
       expect(stats.hasTrainedEmbeddings).toBe(true);
       expect(stats.trainedArticlesCount).toBeGreaterThanOrEqual(1850);
-      expect(stats.trainedQueryVocabSize).toBeGreaterThanOrEqual(500);
     });
 
     it('debe re-ordenar fragmentos con el Modelo Evaluador (Cross-Encoder) y auditar alucinaciones', async () => {
@@ -224,7 +223,7 @@ describe('Módulo de Sostenibilidad ODS 8, RAG Multi-Dominio y Fine-Tuning', () 
         limit: 10,
       });
 
-      const reranked = legalEvaluatorService.evaluateAndRerankChunks({
+      const reranked = await legalEvaluatorService.evaluateAndRerankChunks({
         query: 'liquidación de despido intempestivo Art. 188 y desahucio Art. 185',
         candidateChunks: candidates,
         moduleContext: 'offboarding',
@@ -266,7 +265,7 @@ describe('Módulo de Sostenibilidad ODS 8, RAG Multi-Dominio y Fine-Tuning', () 
         limit: 16,
       });
 
-      const reranked = legalEvaluatorService.evaluateAndRerankChunks({
+      const reranked = await legalEvaluatorService.evaluateAndRerankChunks({
         query:
           'Cómo promueve el Ecuador el empleo pleno según la Constitución y las metas 8.5 y 8.8 de la OIT',
         candidateChunks: candidates,

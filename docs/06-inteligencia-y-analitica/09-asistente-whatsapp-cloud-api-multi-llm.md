@@ -57,16 +57,20 @@ sequenceDiagram
 
 ## 2. Inventario de Componentes del Bounded Context
 
-| Componente                        | Archivo Fuente                                                                                  | Responsabilidad                                                                                                        |
-| :-------------------------------- | :---------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------- |
-| **Constantes y Prompts**          | [`whatsapp.constants.js`](../../backend/src/modules/whatsapp/whatsapp.constants.js)             | Textos predeterminados, intenciones soportadas y restricciones visuales para WhatsApp.                                 |
-| **Seguridad y Criptografía**      | [`whatsappSecurity.service.js`](../../backend/src/modules/whatsapp/whatsappSecurity.service.js) | Validación HMAC-SHA256 de webhooks, normalización de prefijos E.164, prevención de duplicados con TTL y rate limiting. |
-| **Cliente Meta Graph API**        | [`whatsappClient.service.js`](../../backend/src/modules/whatsapp/whatsappClient.service.js)     | Cliente HTTP con fragmentación automática de mensajes mayores a 4,000 caracteres y confirmación de lectura.            |
-| **Persistencia y Acceso a Datos** | [`whatsapp.repository.js`](../../backend/src/modules/whatsapp/whatsapp.repository.js)           | Búsqueda multi-variante de colaboradores, marcaciones del día y agregaciones de tenant.                                |
-| **Orquestador de IA**             | [`whatsappAi.service.js`](../../backend/src/modules/whatsapp/whatsappAi.service.js)             | Enrutamiento de intención, inyección de contexto verificado, conexión con DeepSeek/Gemini y limpieza de formato.       |
-| **Coordinador del Webhook**       | [`whatsapp.service.js`](../../backend/src/modules/whatsapp/whatsapp.service.js)                 | Handshake de suscripción, procesamiento desacoplado en segundo plano y diagnóstico del canal.                          |
-| **Controlador HTTP**              | [`whatsapp.controller.js`](../../backend/src/modules/whatsapp/whatsapp.controller.js)           | Endpoints de webhook público y utilidades administrativas de diagnóstico y prueba.                                     |
-| **Enrutador**                     | [`whatsapp.routes.js`](../../backend/src/modules/whatsapp/whatsapp.routes.js)                   | Exposición canónica en `/api/whatsapp`.                                                                                |
+| Componente                        | Archivo Fuente                                                                                                  | Responsabilidad                                                                                                            |
+| :-------------------------------- | :-------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| **Constantes y Prompts**          | [`whatsapp.constants.js`](../../backend/src/modules/whatsapp/whatsapp.constants.js)                             | Textos predeterminados, intenciones soportadas y restricciones visuales para WhatsApp.                                     |
+| **Seguridad y Criptografía**      | [`whatsappSecurity.service.js`](../../backend/src/modules/whatsapp/whatsappSecurity.service.js)                 | Validación HMAC-SHA256 de webhooks, normalización de prefijos E.164, prevención de duplicados con TTL y rate limiting.     |
+| **Cliente Meta Graph API**        | [`whatsappClient.service.js`](../../backend/src/modules/whatsapp/whatsappClient.service.js)                     | Cliente HTTP con fragmentación automática de mensajes mayores a 4,000 caracteres y confirmación de lectura.                |
+| **Persistencia y Acceso a Datos** | [`whatsapp.repository.js`](../../backend/src/modules/whatsapp/whatsapp.repository.js)                           | Resolución multi-tenant canónica de colaboradores, conmutación de empresa, marcaciones del día y métricas.                 |
+| **Sesiones Agénticas (Prisma)**   | [`whatsappActionSession.repository.js`](../../backend/src/modules/whatsapp/whatsappActionSession.repository.js) | Persistencia multi-tenant de borradores multi-turno, intentos 2FA y reclamo atómico idempotente (`WhatsappActionSession`). |
+| **Confirmación Dual 2FA**         | [`whatsappConfirmation.service.js`](../../backend/src/modules/whatsapp/whatsappConfirmation.service.js)         | Generación de OTP SHA-256 enviado por correo SMTP, validación con últimos 4 dígitos de cédula y registro en `AuditLog`.    |
+| **Registro de Habilidades**       | [`skills/whatsappSkill.registry.js`](../../backend/src/modules/whatsapp/skills/whatsappSkill.registry.js)       | Registro desacoplado de capacidades transaccionales (Agent Skills) ejecutables desde WhatsApp.                             |
+| **Habilidad: Vacaciones**         | [`skills/requestVacation.skill.js`](../../backend/src/modules/whatsapp/skills/requestVacation.skill.js)         | Extracción estructurada de fechas/motivo, pre-validación en `absenceService.previewVacationRequest` y creación `PENDING`.  |
+| **Orquestador de IA**             | [`whatsappAi.service.js`](../../backend/src/modules/whatsapp/whatsappAi.service.js)                             | Enrutamiento de intención, gestión de sesiones agénticas activas, conexión con DeepSeek/Gemini y limpieza de formato.      |
+| **Coordinador del Webhook**       | [`whatsapp.service.js`](../../backend/src/modules/whatsapp/whatsapp.service.js)                                 | Handshake de suscripción, procesamiento desacoplado en segundo plano y diagnóstico del canal.                              |
+| **Controlador HTTP**              | [`whatsapp.controller.js`](../../backend/src/modules/whatsapp/whatsapp.controller.js)                           | Endpoints de webhook público y utilidades administrativas de diagnóstico y prueba.                                         |
+| **Enrutador**                     | [`whatsapp.routes.js`](../../backend/src/modules/whatsapp/whatsapp.routes.js)                                   | Exposición canónica en `/api/whatsapp`.                                                                                    |
 
 ---
 
@@ -152,3 +156,14 @@ sequenceDiagram
    DEEPSEEK_API_KEY="sk-..."
    GEMINI_API_KEY="AIza..."
    ```
+
+---
+
+## 5. Habilidades Agénticas Transaccionales y Seguridad Multi-Tenant (2FA)
+
+Las acciones de escritura desde WhatsApp (como solicitar vacaciones vía `REQUEST_VACATION`) operan bajo un flujo **Human-in-the-Loop** con aislamiento estricto por `tenantId`:
+
+1. **Resolución Multi-Tenant del Remitente:** Si un número telefónico pertenece a colaboradores activos en múltiples empresas, `WhatsappRepository.resolveEmployeeContext` requiere selección explícita (`WhatsappConversationContext`) antes de consultar o mutar información operativa. El usuario puede alternar empresa con `CAMBIAR EMPRESA`.
+2. **Pre-validación de Dominio:** `RequestVacationSkill` extrae `startDate`, `endDate` y `reason` (multi-turno si falta información) y ejecuta `absenceService.previewVacationRequest`, validando fechas futuras en `America/Guayaquil`, ausencia de solapamientos y saldo neto (`vacationDays` descontando solicitudes `PENDING`).
+3. **Doble Factor (Últimos 4 Dígitos de Cédula + OTP SMTP):** `WhatsappConfirmationService` almacena un borrador en `whatsapp_action_sessions` con vigencia de 10 minutos, máximo 3 intentos y código OTP de 6 dígitos enviado vía `EmailService` (almacenado únicamente como hash SHA-256 con salt de sesión).
+4. **Ejecución Idempotente y Auditoría:** Al recibir `CONFIRMAR <4_digitos_cedula> <OTP_6_digitos>`, se valida en tiempo constante (`crypto.timingSafeEqual`), se reclama la sesión atómicamente (`PENDING_CONFIRMATION -> EXECUTING`), se registra la solicitud en `AbsenceRequest` (`status: PENDING`), se notifica a administradores del tenant y se escribe trazabilidad en `audit_logs`.

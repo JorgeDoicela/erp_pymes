@@ -31,11 +31,11 @@ El sistema opera con 5 contenedores orquestados mediante Docker Compose bajo un 
 
 ## 2. Servicios Docker Compose
 
-### 2.1 Base de Datos PostgreSQL
+### 2.1 Base de Datos PostgreSQL (`pgvector`)
 
 ```yaml
 db:
-  image: postgres:15-alpine
+  image: pgvector/pgvector:pg15
   container_name: rh_postgres
   restart: always
   healthcheck:
@@ -47,7 +47,7 @@ db:
     - postgres_data:/var/lib/postgresql/data
 ```
 
-El volumen `postgres_data` persiste los datos de PostgreSQL fuera del ciclo de vida del contenedor.
+El volumen `postgres_data` persiste las tablas relacionales y la extensión vectorial `pgvector` (`vector(768)` + índice `HNSW`) fuera del ciclo de vida del contenedor.
 
 ### 2.2 Caché Redis
 
@@ -81,9 +81,10 @@ backend:
     interval: 30s
     timeout: 10s
     retries: 3
-    start_period: 90s
+    start_period: 120s
   volumes:
     - uploads_data:/app/uploads
+    - ai_models_data:/app/src/modules/sustainability/data/models
   depends_on:
     db:
       condition: service_healthy
@@ -91,7 +92,7 @@ backend:
       condition: service_healthy
 ```
 
-El `start_period: 90s` concede tiempo suficiente para que Prisma ejecute migraciones pendientes al iniciar. El healthcheck usa el endpoint `/health` del backend. El volumen `uploads_data` persiste los archivos subidos.
+El `start_period: 120s` concede tiempo suficiente para que Prisma ejecute migraciones pendientes y `syncHuggingFaceModels.js ensure` descargue los modelos ONNX `QUInt8` en el primer arranque. El volumen `uploads_data` persiste los archivos subidos y `ai_models_data` persiste `bi-encoder/` y `cross-encoder/`.
 
 ### 2.4 Frontend Web SPA
 
@@ -141,13 +142,10 @@ El Gateway perimetral centraliza la entrada externa:
 
 El proceso de build del backend:
 
-1. `node:20-alpine` como imagen base (ligera).
-2. `COPY package*.json ./` + `npm ci --only=production` para instalar dependencias de producción.
-3. `npx prisma generate` en el postinstall para generar el cliente Prisma.
-4. `COPY . .` para copiar el código fuente.
-5. `CMD ["node", "src/server.js"]` como comando de inicio.
-
-Al arrancar, el servidor ejecuta `npx prisma migrate deploy` antes de iniciar Express para aplicar migraciones pendientes de forma automática en el entorno productivo.
+1. `node:20-slim` (Debian Bookworm glibc) como imagen base, con `openssl`, `curl` y `ca-certificates` para compatibilidad nativa con `onnxruntime-node` y Prisma (`debian-openssl-3.0.x`).
+2. `COPY package*.json ./` + `COPY prisma ./prisma/` + `RUN npm install` para instalar dependencias de producción y generar el cliente Prisma.
+3. `COPY . .` + `RUN npx prisma generate` para empaquetar el código fuente.
+4. `ENTRYPOINT ["./entrypoint.sh"]`, ejecutando migraciones (`migrate deploy` / `db push`), `ensure` de modelos ONNX desde Hugging Face y arranque de `src/server.js` (que además auto-hidrata `pgvector` HNSW de forma no bloqueante).
 
 ## 4. Dockerfile del Frontend
 
@@ -380,7 +378,7 @@ curl -I https://norma.doicela.dev/health
 
 ## 14. Optimización de Carga, Resiliencia y Protección de Recursos
 
-La plataforma está diseñada bajo una arquitectura modular y de baja huella de cómputo, optimizada para operar de forma estable en instancias virtuales de recursos moderados (1 vCPU, 2 GB RAM con 2 GB Swap).
+La plataforma está diseñada bajo una arquitectura modular optimizada para operar en instancias **AWS Lightsail / EC2 de 2 vCPU y 4 GB RAM** (mínimo funcional 2 GB RAM con 2 GB Swap cuando ejecuta inferencia local ONNX `QUInt8` junto a `pgvector`).
 
 Esta infraestructura garantiza la estabilidad operativa mediante los siguientes mecanismos:
 
@@ -437,43 +435,44 @@ cat backup_migracion.sql | docker exec -i rh_postgres psql -U admin_rh db_recurs
 
 El módulo de Sostenibilidad (ODS 8) y el Asistente Jurídico-Laboral operan con dos repositorios publicados en **Hugging Face Hub (`doiceladev`)**:
 
-1. [`doiceladev/norma-erp-ecuador-retriever-e5`](https://huggingface.co/doiceladev/norma-erp-ecuador-retriever-e5): Contiene el índice neuronal denso y los puntajes del Cross-Encoder entrenados en GPU **NVIDIA A100-SXM4-40GB** (`trained_retriever_index.json`, `3.27 MB`, `1,880` artículos legales + `800` vectores de vocabulario).
-2. [`doiceladev/norma-erp-ecuador-qwen2.5-7b-lora`](https://huggingface.co/doiceladev/norma-erp-ecuador-qwen2.5-7b-lora): Contiene el adaptador PEFT LoRA (`r=16, alpha=32`) entrenado en `bfloat16` sobre `Qwen/Qwen2.5-7B-Instruct` (`adapter_model.safetensors`, `154 MB`, `adapter_config.json` y `Modelfile` para Ollama).
+1. [`doiceladev/norma-erp-ecuador-retriever-e5`](https://huggingface.co/doiceladev/norma-erp-ecuador-retriever-e5): Contiene los modelos ONNX cuantizados (`bi-encoder/onnx/model_quantized.onnx` de `265.45 MB` base `intfloat/multilingual-e5-base` y `cross-encoder/onnx/model_quantized.onnx` de `102.42 MB` fine-tuned `mMiniLM-L6-v2`) más el índice completo de `768` dimensiones (`trained_retriever_index.json`, `13.57 MB`, `1,880` fragmentos) para `pgvector` HNSW.
+2. [`doiceladev/norma-erp-ecuador-qwen2.5-7b-lora`](https://huggingface.co/doiceladev/norma-erp-ecuador-qwen2.5-7b-lora): Contiene el adaptador PEFT LoRA (`r=16, alpha=32`) entrenado en `bfloat16` sobre `Qwen/Qwen2.5-7B-Instruct` (`adapter_model.safetensors`, `154.05 MB`, `adapter_config.json` y `Modelfile` para Ollama).
 
-### 16.1. Arquitectura de Despliegue según el Tipo de Instancia AWS EC2
+### 16.1. Arquitectura de Despliegue según el Tipo de Instancia AWS
 
 ```mermaid
 flowchart TD
     HF["Hugging Face Hub (doiceladev)"]
     Entrypoint["backend/entrypoint.sh -> syncHuggingFaceModels.js ensure"]
-    Backend["Contenedor rh_backend (Node.js 20)"]
-    RetrieverRAM["En Memoria de rh_backend: trained_retriever_index.json (3.27 MB, Cero GPU requerida)"]
+    Backend["Contenedor rh_backend (node:20-slim + @huggingface/transformers ONNX)"]
+    PgVector["rh_postgres (pgvector/pgvector:pg15 — HNSW 768d + GIN FTS)"]
 
-    subgraph TopologiaA["Topología A (Recomendada para EC2 Estándar: t3.small / t3.medium sin GPU)"]
-        CloudLLM["API Externa o Router HF (DeepSeek / Gemini / Hugging Face Inference)"]
+    subgraph TopologiaA["Topología A (Recomendada en AWS Lightsail / EC2 4 GB RAM sin GPU)"]
+        CloudLLM["API Externa (DeepSeek API / Gemini / Groq / OpenAI)"]
     end
 
     subgraph TopologiaB["Topología B (Inferencia 100% Soberana en EC2 con GPU g5.xlarge / g6.xlarge)"]
         OllamaHost["Servicio Ollama / vLLM con Qwen2.5-7B + adapter_model.safetensors"]
     end
 
-    HF -->|"Auto-hidratación en el arranque"| Entrypoint
+    HF -->|"Auto-hidratación en volumen ai_models_data"| Entrypoint
     Entrypoint --> Backend
-    Backend --> RetrieverRAM
-    RetrieverRAM -->|"Top-8 Artículos Verificados + Tabla Decimal.js"| CloudLLM
-    RetrieverRAM -->|"Top-8 Artículos Verificados + Tabla Decimal.js"| OllamaHost
+    Backend <-->|"Consulta HNSW <=> y FTS"| PgVector
+    Backend -->|"Top-6/8 Artículos + Cross-Encoder ONNX + Decimal.js"| CloudLLM
+    Backend -->|"Top-6/8 Artículos + Cross-Encoder ONNX + Decimal.js"| OllamaHost
 ```
 
 ### 16.2. Hidratación Automática en el Arranque del Contenedor (`entrypoint.sh`)
 
-Cuando despliegues la instancia AWS EC2, **no necesitas subir archivos manualmente por FTP o SCP**. Al iniciar `rh_backend`, el script [`backend/entrypoint.sh`](../../backend/entrypoint.sh) ejecuta automáticamente:
+Cuando despliegues la instancia AWS Lightsail / EC2, **no necesitas subir modelos manualmente**. Al iniciar `rh_backend`, el script [`backend/entrypoint.sh`](../../backend/entrypoint.sh) ejecuta automáticamente:
 
 ```bash
 node src/modules/sustainability/data/syncHuggingFaceModels.js ensure
 ```
 
-- Este comando verifica que `trained_retriever_index.json`, `training_report_a100.json`, `adapter_config.json` y `Modelfile` estén presentes en el contenedor; si falta alguno, lo descarga directamente desde `https://huggingface.co/doiceladev/...` utilizando el `HF_TOKEN` definido en `/var/www/recursos_humanos/.env`.
-- Si deseas que la instancia descargue también los pesos completos `adapter_model.safetensors` (`154 MB`) y el tokenizador completo al iniciar o manualmente:
+- Este comando verifica que `trained_retriever_index.json`, `bi-encoder/onnx/model_quantized.onnx`, `cross-encoder/onnx/model_quantized.onnx` y los metadatos esenciales estén presentes en `/app/src/modules/sustainability/data/models` (volumen `ai_models_data`); si falta alguno, lo descarga directamente desde `https://huggingface.co/doiceladev/norma-erp-ecuador-retriever-e5`.
+- Posteriormente, [`server.js`](../../backend/src/server.js) invoca de forma no bloqueante `sustainabilityRepository.ensurePgVectorCorpusSeeded()`, habilitando la extensión `vector` y sincronizando los `1,880` embeddings de `768` dimensiones en `pgvector` HNSW sin duplicar registros existentes.
+- Si deseas que la instancia descargue también los pesos pesados de generación local (`adapter_model.safetensors`, `154.05 MB`):
 
 ```bash
 # Descargar absolutamente todos los artefactos (incluyendo adapter_model.safetensors de 154 MB)
@@ -483,12 +482,12 @@ docker exec rh_backend node src/modules/sustainability/data/syncHuggingFaceModel
 docker exec rh_backend node src/modules/sustainability/data/syncHuggingFaceModels.js status
 ```
 
-### 16.3. Opción A: Producción en Instancia EC2 Estándar (CPU: `t3.small` o `t3.medium`)
+### 16.3. Opción A: Producción en AWS Lightsail / EC2 CPU (`4 GB RAM`, `2 vCPU`)
 
-Esta es la configuración más eficiente en costos para AWS EC2:
+Esta es la configuración recomendada para producción con RAG neuronal ONNX en vivo y `pgvector`:
 
-1. **Buscador Denso + Evaluador Cross-Encoder (`trained_retriever_index.json`):** Corre al **100% en la memoria RAM del contenedor `rh_backend`** en menos de `5 ms` por consulta sin requerir GPU en producción, ya que las proyecciones neuronales de los 1,880 artículos y del vocabulario jurídico fueron pre-calculadas en la NVIDIA A100 durante el entrenamiento.
-2. **Generación LLM:** Se delega mediante `llmProvider.service.js` a `AI_PROVIDER=deepseek` (o `huggingface` / `gemini`), enviando únicamente el contexto normativo pre-filtrado por el Evaluador y los cálculos exactos de `Decimal.js`.
+1. **Buscador Híbrido y Evaluador Neural (`@huggingface/transformers` + `pgvector`):** `rh_backend` ejecuta en CPU los modelos cuantizados `QUInt8` (`265.45 MB` Bi-Encoder + `102.42 MB` Cross-Encoder) y consulta `pgvector/pgvector:pg15` por distancia coseno `HNSW` + FTS en español.
+2. **Generación LLM:** Se delega mediante `llmProvider.service.js` a `AI_PROVIDER=deepseek` (`deepseek-chat`), enviando únicamente los artículos verificados por el Cross-Encoder y los cálculos exactos de `Decimal.js`.
 
 Variables en `/var/www/recursos_humanos/.env` para la Opción A:
 
