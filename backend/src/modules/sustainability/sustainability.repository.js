@@ -137,6 +137,96 @@ const ECUADOR_LEGAL_SYNONYMS = {
   firma: ['electronica', 'p12', 'pkcs12', 'qr', 'sha-256', 'comercio'],
 };
 
+const SPANISH_STOPWORDS = new Set([
+  'el',
+  'la',
+  'los',
+  'las',
+  'un',
+  'una',
+  'unos',
+  'unas',
+  'de',
+  'del',
+  'al',
+  'a',
+  'en',
+  'para',
+  'por',
+  'con',
+  'sin',
+  'sobre',
+  'que',
+  'me',
+  'mi',
+  'mis',
+  'te',
+  'ti',
+  'tu',
+  'tus',
+  'se',
+  'su',
+  'sus',
+  'le',
+  'les',
+  'nos',
+  'como',
+  'cual',
+  'cuales',
+  'cuando',
+  'donde',
+  'quien',
+  'quienes',
+  'si',
+  'y',
+  'o',
+  'pero',
+  'mas',
+  'muy',
+  'es',
+  'son',
+  'fue',
+  'era',
+  'ser',
+  'estar',
+  'ha',
+  'han',
+  'hay',
+  'lo',
+  'toca',
+  'debo',
+  'deben',
+  'puedo',
+  'pueden',
+  'dice',
+  'dicen',
+  'este',
+  'esta',
+]);
+
+function resolveLegalRoot(token) {
+  if (!token || typeof token !== 'string') return null;
+  const t = token.toLowerCase();
+  if (t.startsWith('despid') || t.startsWith('desped')) return 'despido';
+  if (t.startsWith('renunc')) return 'renuncia';
+  if (t.startsWith('liquid')) return 'finiquito';
+  if (t.startsWith('desahu')) return 'desahucio';
+  if (t.startsWith('jubil')) return 'jubilacion';
+  if (t.startsWith('vacaci')) return 'vacaciones';
+  if (t.startsWith('embaraz') || t.startsWith('matern')) return 'maternidad';
+  if (t.startsWith('patern')) return 'paternidad';
+  if (t.startsWith('lactan')) return 'lactancia';
+  if (t.startsWith('utilida')) return 'utilidades';
+  if (t.startsWith('decim')) return 'decimo';
+  if (t.startsWith('hor')) return 'horas';
+  if (t.startsWith('sobretiemp')) return 'horas';
+  if (t.startsWith('suplementar')) return 'horas';
+  if (t.startsWith('extraordinar')) return 'extra';
+  if (t.startsWith('afili') || t.startsWith('aport') || t.startsWith('cesant')) return 'iess';
+  if (t.startsWith('finiquit')) return 'finiquito';
+  return null;
+}
+
 export class SustainabilityRepository {
   constructor() {
     this._memoryIndex = null;
@@ -875,17 +965,30 @@ export class SustainabilityRepository {
     }
 
     const normalizedQuery = this.normalizeText(query);
-    const rawTokens = normalizedQuery.split(/\s+/).filter((t) => t.length >= 2);
+    const allTokens = normalizedQuery.split(/\s+/).filter((t) => t.length >= 2);
+    const rawTokens = allTokens.filter((t) => !SPANISH_STOPWORDS.has(t));
+    const queryTokensToUse = rawTokens.length > 0 ? rawTokens : allTokens;
 
-    // Expandir tokens con sinónimos jurídicos y contables del Ecuador
-    const expandedTokens = new Set(rawTokens);
-    for (const token of rawTokens) {
+    // Expandir tokens con sinónimos jurídicos y contables del Ecuador y raíces lematizadas
+    const expandedTokens = new Set(queryTokensToUse);
+    for (const token of queryTokensToUse) {
+      const rootKey = resolveLegalRoot(token);
+      if (rootKey && ECUADOR_LEGAL_SYNONYMS[rootKey]) {
+        expandedTokens.add(rootKey);
+        for (const syn of ECUADOR_LEGAL_SYNONYMS[rootKey]) {
+          this.normalizeText(syn)
+            .split(/\s+/)
+            .filter((s) => s.length >= 2 && !SPANISH_STOPWORDS.has(s))
+            .forEach((s) => expandedTokens.add(s));
+        }
+      }
+
       for (const [key, synonyms] of Object.entries(ECUADOR_LEGAL_SYNONYMS)) {
         if (token === key || (token.length >= 4 && (token.includes(key) || key.includes(token)))) {
           for (const syn of synonyms) {
             this.normalizeText(syn)
               .split(/\s+/)
-              .filter((s) => s.length >= 2)
+              .filter((s) => s.length >= 2 && !SPANISH_STOPWORDS.has(s))
               .forEach((s) => expandedTokens.add(s));
           }
         }
@@ -979,6 +1082,8 @@ export class SustainabilityRepository {
         }
       }
 
+      const chunkCategory = chunk.document?.category;
+
       // Boost de exactitud si el usuario pidió un número de artículo específico (ej. Art. 216 de los PDFs)
       if (articleMatches.length > 0 && normArticleCode) {
         for (const artNum of articleMatches) {
@@ -988,14 +1093,26 @@ export class SustainabilityRepository {
             new RegExp(`\\b${artNum.replace('.', '\\.')}\\b`).test(normArticleCode)
           ) {
             score += 40.0;
+            // Preferencia por el Código del Trabajo cuando hay colisión con Constitución y no se pidió Constitución
+            if (chunkCategory === 'LABOR_CODE' && !requestedCategorySet.has('CONSTITUTION')) {
+              score += 25.0;
+            }
           }
         }
       }
 
       // Boost si el usuario mencionó explícitamente este cuerpo normativo (ej. Constitución, IESS, OIT)
-      const chunkCategory = chunk.document?.category;
       if (score > 0 && chunkCategory && requestedCategorySet.has(chunkCategory)) {
         score += 18.0;
+      }
+
+      // Si es consulta laboral y el documento es Código del Trabajo sin petición explícita de Constitución
+      if (
+        score > 0 &&
+        chunkCategory === 'LABOR_CODE' &&
+        !requestedCategorySet.has('CONSTITUTION')
+      ) {
+        score += 8.0;
       }
 
       // Boost si es parte del catálogo curado con fórmulas verificadas del ERP

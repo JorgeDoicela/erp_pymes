@@ -42,3 +42,27 @@ export const NON_TEXT_MEDIA_FALLBACK = `Por el momento, el Asistente Norma ERP p
 export const RATE_LIMIT_EXCEEDED_MESSAGE = `Ha superado el limite de consultas por minuto. Por favor espere unos instantes antes de enviar un nuevo mensaje.`;
 
 export const GENERAL_ERROR_MESSAGE = `En este momento el servicio de consultas de Norma ERP experimento una interrupcion temporal. Por favor intente nuevamente en unos minutos.`;
+
+/**
+ * Limpia y adapta Markdown a los estándares visuales de WhatsApp (*negrita*, _cursiva_, sin tablas ni ###).
+ * @param {string} rawText
+ * @returns {string}
+ */
+export function cleanTextForWhatsapp(rawText) {
+  if (!rawText) return '';
+
+  return rawText
+    .replace(/^#{1,6}\s*(.+)$/gm, '*$1*')
+    .replace(/\*\*(.+?)\*\*/g, '*$1*')
+    .replace(/\|(.+)\|/g, (match) => {
+      const parts = match
+        .split('|')
+        .map((p) => p.trim())
+        .filter(Boolean);
+      if (parts.length === 0 || parts.every((p) => /^[-:]+$/.test(p))) return '';
+      return `- ${parts.join(' : ')}`;
+    })
+    .replace(/```[a-z]*\n([\s\S]*?)```/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}

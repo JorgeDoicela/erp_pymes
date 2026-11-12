@@ -67,6 +67,7 @@ const MODULE_DOMAIN_AFFINITY = {
   recruitment: ['PERFORMANCE', 'CONSTITUTION', 'LABOR_CODE'],
   signatures: ['SIGNATURES', 'GOVERNANCE'],
   sustainability: ['ODS_8', 'ODS_8_FRAMEWORK', 'LABOR_CODE', 'IESS_REGULATION', 'CONSTITUTION'],
+  whatsapp: ['LABOR_CODE', 'IESS_REGULATION', 'OFFBOARDING', 'ATTENDANCE', 'PAYROLL', 'CONTRACTS'],
 };
 
 export class LegalEvaluatorService {
@@ -200,7 +201,7 @@ export class LegalEvaluatorService {
     answerText,
     retrievedChunks = [],
     liveCalculation = null,
-    allKnownArticleCodes = new Set(),
+    _allKnownArticleCodes = new Set(),
   }) {
     if (!answerText) {
       return {
@@ -226,9 +227,8 @@ export class LegalEvaluatorService {
     for (const num of citedNumbers) {
       const regex = new RegExp(`\\b${num.replace('.', '\\.')}\\b`);
       const inRetrieved = regex.test(retrievedArticleText);
-      const inGlobalCorpus = allKnownArticleCodes.has(num);
 
-      if (inRetrieved || inGlobalCorpus) {
+      if (inRetrieved) {
         verifiedArticles.push(`Art. ${num}`);
       } else {
         unverifiedArticles.push(`Art. ${num}`);
@@ -279,10 +279,10 @@ export class LegalEvaluatorService {
     if (unverifiedArticles.length > 0) {
       const verifiedList =
         verifiedArticles.length > 0 ? verifiedArticles.join(', ') : 'ninguno directo';
-      auditedAnswer += `\n\n---\n#### Nota de Auditoría del Evaluador Legal (Anti-Alucinación)\n- **Artículos verificados en el corpus oficial:** ${verifiedList}\n- **Referencias no halladas en el corpus recuperado:** ${unverifiedArticles.join(', ')}`;
+      auditedAnswer += `\n\n---\n*Nota de Auditoría del Evaluador Legal (Anti-Alucinación):*\n- *Artículos verificados en el corpus oficial:* ${verifiedList}\n- *Referencias no halladas en el corpus recuperado:* ${unverifiedArticles.join(', ')}`;
     }
     if (liveCalculation && !mathVerified) {
-      auditedAnswer += `\n\n---\n#### Verificación Matemática Oficial del Evaluador (Decimal.js)\n${liveCalculation.formattedSummary}`;
+      auditedAnswer += `\n\n---\n*Verificación Matemática Oficial del Evaluador (Decimal.js):*\n${liveCalculation.formattedSummary}`;
     }
 
     return {

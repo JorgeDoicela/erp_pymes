@@ -8,7 +8,7 @@
  */
 
 import { absenceService, getEcuadorTodayIso } from '../../attendance/index.js';
-import llmProviderService from '../../sustainability/llmProvider.service.js';
+import { llmProviderService } from '../../sustainability/index.js';
 
 export const REQUEST_VACATION_SKILL_ID = 'REQUEST_VACATION';
 

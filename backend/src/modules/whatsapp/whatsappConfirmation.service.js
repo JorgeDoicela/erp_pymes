@@ -382,12 +382,9 @@ export class WhatsappConfirmationService {
             <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #4b5563;">Codigo OTP de verificacion</div>
             <div style="font-size: 28px; font-weight: 700; letter-spacing: 0.25em; color: #111827; margin-top: 6px;">${otpCode}</div>
           </div>
-          <p style="font-size: 13px; color: #4b5563; margin-bottom: 0;">
-            Este codigo expira en <strong>${ttlMinutes} minutos</strong> y permite un maximo de 3 intentos. Si no reconoces esta solicitud, responde <strong>CANCELAR</strong> en el chat y notifica a Talento Humano.
-          </p>
+          <p style="font-size: 13px; color: #4b5563; margin-bottom: 0;">Este codigo expira en <strong>${ttlMinutes} minutos</strong> y permite un maximo de 3 intentos. Si no reconoces esta solicitud, responde <strong>CANCELAR</strong> en el chat y notifica a Talento Humano.</p>
         </div>
-      </div>
-    `;
+      </div>`;
 
     return this.emailSender.sendEmail({
       to: employee.email,

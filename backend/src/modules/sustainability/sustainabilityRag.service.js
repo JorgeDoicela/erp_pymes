@@ -154,6 +154,7 @@ export class SustainabilityRagService {
   }) {
     const erpCtx = tenantMetrics?.erpContext || {};
     const ods = tenantMetrics?.ods || {};
+    const isWhatsapp = String(moduleContext || '').toLowerCase() === 'whatsapp';
 
     const contextBlocks = evaluatedChunks
       .map(
@@ -162,28 +163,46 @@ export class SustainabilityRagService {
       )
       .join('\n\n');
 
-    return [
+    const promptLines = [
       'Eres el Asistente Jurídico, Contable y Laboral Oficial de Norma ERP para la República del Ecuador.',
-      `El usuario está consultando desde el módulo: [${String(moduleContext || 'general').toUpperCase()}].`,
+      isWhatsapp
+        ? 'Canal de atención: WhatsApp Corporativo. Responde de forma ejecutiva, breve y directa en formato WhatsApp (*negrita* para artículos y leyes, guiones para viñetas, sin tablas ni numerales ###).'
+        : `El usuario está consultando desde el módulo: [${String(moduleContext || 'general').toUpperCase()}].`,
       '',
       'REGLAS INVIOLABLES DEL MODELO EVALUADOR (CERO ALUCINACIONES):',
       '1. Responde ÚNICAMENTE con base en las Fuentes Verificadas extraídas de los 4 documentos oficiales (Constitución del Ecuador 2008, Código del Trabajo, Ley de Seguridad Social IESS y Metodología OIT ODS 8) incluidas abajo.',
       '2. Cita siempre el número exacto del artículo (ej. Art. 188 del Código del Trabajo, Art. 11 de la Ley de Seguridad Social) tal como aparece en las fuentes recuperadas.',
-      '3. Cuando existan cálculos monetarios, utiliza OBLIGATORIAMENTE las cifras exactas pre-calculadas con Decimal.js en la sección de Verificación Matemática.',
-      '4. Emplea un tono profesional, directo, estructurado en Markdown y sin emojis.',
-      '',
-      '=== TELEMETRÍA EN VIVO DE LA EMPRESA (TENANT) ===',
-      `- Índice Global ODS 8: ${ods.overallScore ?? 100}% (Nivel: ${ods.complianceLevel || 'ALTO'})`,
-      `- Colaboradores Activos: ${erpCtx.totalActiveEmployees ?? 0} | Con Contrato Vigente: ${erpCtx.employeesWithActiveContract ?? 0}`,
-      `- Sueldo Promedio: $${(erpCtx.averageSalaryUsd ?? 0).toFixed(2)} USD | SBU Vigente: $${SBU_ECUADOR_2026.toFixed(2)} USD`,
-      `- Períodos Contables Abiertos: ${erpCtx.openAccountingPeriods ?? 0} | Asientos Contables NIIF: ${erpCtx.totalJournalEntries ?? 0}`,
+      '3. Si la información consultada NO consta en las Fuentes Verificadas abajo, indica con claridad: "No se encuentra el fundamento oficial para esta consulta en el corpus normativo cargado", y NUNCA inventes artículos de memoria.',
+      '4. Cuando existan cálculos monetarios, utiliza OBLIGATORIAMENTE las cifras exactas pre-calculadas con Decimal.js en la sección de Verificación Matemática.',
+      '5. Emplea un tono profesional, directo, estructurado y sin emojis.',
+    ];
+
+    if (!isWhatsapp) {
+      promptLines.push(
+        '',
+        '=== TELEMETRÍA EN VIVO DE LA EMPRESA (TENANT) ===',
+        `- Índice Global ODS 8: ${ods.overallScore ?? 100}% (Nivel: ${ods.complianceLevel || 'ALTO'})`,
+        `- Colaboradores Activos: ${erpCtx.totalActiveEmployees ?? 0} | Con Contrato Vigente: ${erpCtx.employeesWithActiveContract ?? 0}`,
+        `- Sueldo Promedio: $${(erpCtx.averageSalaryUsd ?? 0).toFixed(2)} USD | SBU Vigente: $${SBU_ECUADOR_2026.toFixed(2)} USD`,
+        `- Períodos Contables Abiertos: ${erpCtx.openAccountingPeriods ?? 0} | Asientos Contables NIIF: ${erpCtx.totalJournalEntries ?? 0}`
+      );
+    }
+
+    promptLines.push(
       '',
       '=== ARTÍCULOS Y SECCIONES EXTRAÍDAS DE LOS 4 PDFs OFICIALES ===',
-      contextBlocks,
-      liveCalculation
-        ? `\n=== VERIFICACIÓN MATEMÁTICA OFICIAL (DECIMAL.JS — 20 DÍGITOS ROUND_HALF_UP) ===\n${liveCalculation.formattedSummary}`
-        : '',
-    ].join('\n');
+      contextBlocks
+    );
+
+    if (liveCalculation) {
+      promptLines.push(
+        '',
+        '=== VERIFICACIÓN MATEMÁTICA OFICIAL (DECIMAL.JS — 20 DÍGITOS ROUND_HALF_UP) ===',
+        liveCalculation.formattedSummary
+      );
+    }
+
+    return promptLines.join('\n');
   }
 
   /**

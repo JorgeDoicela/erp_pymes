@@ -10,9 +10,10 @@ import {
   WHATSAPP_INTENTS,
   WHATSAPP_SYSTEM_PROMPT,
   UNREGISTERED_PHONE_MESSAGE,
+  cleanTextForWhatsapp,
 } from './whatsapp.constants.js';
-import llmProviderService from '../sustainability/llmProvider.service.js';
-import sustainabilityRagService from '../sustainability/sustainabilityRag.service.js';
+import { classifyIntent, formatGreetingMessage } from './whatsappAi.utils.js';
+import { llmProviderService, sustainabilityRagService } from '../sustainability/index.js';
 import whatsappRepository from './whatsapp.repository.js';
 import whatsappConfirmationService from './whatsappConfirmation.service.js';
 import whatsappActionSessionRepository, {
@@ -62,16 +63,15 @@ export class WhatsappAiService {
         provider: 'gemini',
         apiKey: overrides.apiKey || process.env.GEMINI_API_KEY,
         model: overrides.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-        temperature: 0.1,
+        temperature: 0.0,
       };
     }
 
-    // Por defecto o si se especificó deepseek
     return {
       provider: 'deepseek',
       apiKey: overrides.apiKey || process.env.DEEPSEEK_API_KEY,
       model: overrides.model || process.env.DEEPSEEK_MODEL || 'deepseek-chat',
-      temperature: 0.1,
+      temperature: 0.0,
     };
   }
 
@@ -82,73 +82,7 @@ export class WhatsappAiService {
    * @returns {string} Código de intención (WHATSAPP_INTENTS)
    */
   classifyIntent(text, employee) {
-    if (!employee) {
-      return WHATSAPP_INTENTS.UNKNOWN_SENDER;
-    }
-
-    const lower = text.toLowerCase().trim();
-
-    // 1. Saludos y solicitudes de ayuda
-    if (
-      /^(hola|buen(os)?\s*(dias|tardes|noches)|saludos|menu|ayuda|opciones|que\s*puedes\s*hacer)\b/i.test(
-        lower
-      )
-    ) {
-      return WHATSAPP_INTENTS.GENERAL_GREETING;
-    }
-
-    // 2. Consultas sobre métricas empresariales (KPIs)
-    if (
-      /(metricas|kpis?|resumen\s+empresa|cuantos\s+empleados|asistencias\s+hoy|total\s+personal)/i.test(
-        lower
-      )
-    ) {
-      return WHATSAPP_INTENTS.TENANT_METRICS_QUERY;
-    }
-
-    // 3. Habilidad agéntica: solicitud transaccional de vacaciones (diferenciada de consultas de saldo o ley)
-    const isLegalTopic =
-      /(codigo\s+del\s+trabajo|ley\s+organica|constitucion|articulo|art\.|iess|sri|lopdp|segun\s+la\s+ley|que\s+dice\s+(?:el\s+codigo|la\s+ley))/i.test(
-        lower
-      );
-    const isPersonalBalanceQuestion = /^(cuant[oa]s?|cual\s+es\s+mi|tengo)\b/i.test(lower);
-
-    if (
-      !isLegalTopic &&
-      !isPersonalBalanceQuestion &&
-      (/(?:solicitar|pedir|agendar|registrar|tomar|necesito|quiero|deseo|tramitar|solicitud\s+de)\b[^.\n]{0,45}\bvacacion(?:es)?\b/i.test(
-        lower
-      ) ||
-        /\bvacacion(?:es)?\s+(?:del|desde|para\s+el|entre)\b/i.test(lower))
-    ) {
-      return WHATSAPP_INTENTS.VACATION_REQUEST_ACTION;
-    }
-
-    // 4. Consultas legales explícitas (prioridad sobre palabra clave 'vacaciones' cuando invoca norma/ley)
-    if (isLegalTopic) {
-      return WHATSAPP_INTENTS.LEGAL_QUERY;
-    }
-
-    // 5. Consultas personales del colaborador (vacaciones, marcación, etc.)
-    if (
-      /(vacacion|saldo|mis?\s+dias|asistencia|marque|marcar|entrada|salida|mi\s+perfil|mi\s+cargo|mi\s+departamento)/i.test(
-        lower
-      )
-    ) {
-      return WHATSAPP_INTENTS.EMPLOYEE_QUERY;
-    }
-
-    // 6. Consultas legales y normativas generales
-    if (
-      /(despido|renuncia|liquidacion|desahucio|horas?\s+extra|decimo|utilidades|jubilacion|maternidad|paternidad|finiquito)/i.test(
-        lower
-      )
-    ) {
-      return WHATSAPP_INTENTS.LEGAL_QUERY;
-    }
-
-    // Por defecto, evaluar como consulta de conocimiento general / legal
-    return WHATSAPP_INTENTS.LEGAL_QUERY;
+    return classifyIntent(text, employee);
   }
 
   /**
@@ -339,60 +273,36 @@ export class WhatsappAiService {
    */
   async handleEmployeePersonalQuery({ text, employee, aiConfig }) {
     const todayAttendance = await this.repo.getEmployeeAttendanceToday(employee.id);
-
-    const checkInTime = todayAttendance?.checkIn
-      ? new Date(todayAttendance.checkIn).toLocaleTimeString('es-EC', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'America/Guayaquil',
-        })
-      : 'Sin registro de entrada hoy';
-
-    const checkOutTime = todayAttendance?.checkOut
-      ? new Date(todayAttendance.checkOut).toLocaleTimeString('es-EC', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'America/Guayaquil',
-        })
+    const tzOpt = { hour: '2-digit', minute: '2-digit', timeZone: 'America/Guayaquil' };
+    const checkIn = todayAttendance?.checkIn
+      ? new Date(todayAttendance.checkIn).toLocaleTimeString('es-EC', tzOpt)
+      : 'Sin entrada';
+    const checkOut = todayAttendance?.checkOut
+      ? new Date(todayAttendance.checkOut).toLocaleTimeString('es-EC', tzOpt)
       : 'Pendiente';
 
-    const factsPrompt = `Datos verificados del colaborador en Norma ERP:
-- Colaborador: ${employee.firstName} ${employee.lastName}
-- Empresa: ${employee.tenant?.name || 'N/A'}
-- Cargo: ${employee.position || 'N/A'}
-- Departamento: ${employee.department || 'N/A'}
-- Saldo de Vacaciones Disponibles: ${employee.vacationDays} dias laborales
-- Marcacion de hoy: Entrada (${checkInTime}), Salida (${checkOutTime})
-- Estado de marcacion: ${todayAttendance?.status || 'SIN_MARCACION'}
-
-Pregunta del colaborador: "${text}"
-
-Instrucciones: Responde a la pregunta del colaborador de manera amable, ejecutiva y breve, utilizando UNICAMENTE los datos verificados arriba. Aplica formato WhatsApp (*negrita* y viñetas con guion). No inventes ningun dato.`;
+    const factsPrompt = `Datos del colaborador: ${employee.firstName} ${employee.lastName} (${employee.tenant?.name || 'N/A'}), Cargo: ${employee.position}, Dpto: ${employee.department}, Vacaciones: ${employee.vacationDays} días, Marcación hoy: Entrada ${checkIn}, Salida ${checkOut}.\nPregunta: "${text}"\nInstrucciones: Responde conciso en formato WhatsApp (*negrita*, guiones). No inventes datos.`;
 
     try {
       const llmResult = await this.llmProvider.generateChatCompletion({
         systemPrompt: WHATSAPP_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: factsPrompt }],
-        temperature: 0.1,
+        temperature: 0.0,
         providerOverrides: aiConfig,
       });
-
-      if (llmResult?.content) {
-        return this.cleanTextForWhatsapp(llmResult.content);
-      }
+      if (llmResult?.content) return cleanTextForWhatsapp(llmResult.content);
     } catch (err) {
       console.error('[WhatsApp AI Error] Fallo al generar respuesta personal:', err.message);
     }
 
-    // Fallback determinista seguro sin depender del LLM
     return (
-      `*Informacion de su perfil en Norma ERP:*\n\n` +
+      `*Información de su perfil en Norma ERP:*\n\n` +
       `- *Colaborador:* ${employee.firstName} ${employee.lastName}\n` +
       `- *Empresa:* ${employee.tenant?.name || 'N/A'}\n` +
       `- *Departamento:* ${employee.department}\n` +
       `- *Cargo:* ${employee.position}\n` +
-      `- *Saldo de Vacaciones:* ${employee.vacationDays} dias disponibles\n` +
-      `- *Marcacion de hoy:* Entrada: ${checkInTime} | Salida: ${checkOutTime}`
+      `- *Saldo de Vacaciones:* ${employee.vacationDays} días disponibles\n` +
+      `- *Marcación de hoy:* Entrada: ${checkIn} | Salida: ${checkOut}`
     );
   }
 
@@ -410,7 +320,7 @@ Instrucciones: Responde a la pregunta del colaborador de manera amable, ejecutiv
       });
 
       if (ragResponse?.answer) {
-        let formatted = this.cleanTextForWhatsapp(ragResponse.answer);
+        let formatted = cleanTextForWhatsapp(ragResponse.answer);
 
         // Añadir citas legales relevantes al final en formato WhatsApp si existen
         if (ragResponse.legalCitations?.length) {
@@ -427,23 +337,10 @@ Instrucciones: Responde a la pregunta del colaborador de manera amable, ejecutiv
       console.error('[WhatsApp AI Error] Fallo al procesar consulta RAG:', err.message);
     }
 
-    // Fallback con el LLM directo si el RAG tuviera alguna eventualidad
-    try {
-      const fallbackResult = await this.llmProvider.generateChatCompletion({
-        systemPrompt: WHATSAPP_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: text }],
-        temperature: 0.1,
-        providerOverrides: aiConfig,
-      });
-
-      if (fallbackResult?.content) {
-        return this.cleanTextForWhatsapp(fallbackResult.content);
-      }
-    } catch (fallbackErr) {
-      console.error('[WhatsApp AI Error] Fallo en fallback de LLM:', fallbackErr.message);
-    }
-
-    return `No fue posible procesar la consulta normativa en este momento. Por favor formule su pregunta especificando el tema laboral o articulo de interes.`;
+    return (
+      `No fue posible verificar con precisión la normativa para su consulta en este momento.\n\n` +
+      `Por favor formule su pregunta especificando el tema laboral o artículo de interés (ej. *Art. 188 Código del Trabajo* o *horas extraordinarias*).`
+    );
   }
 
   /**
@@ -469,50 +366,20 @@ Instrucciones: Responde a la pregunta del colaborador de manera amable, ejecutiv
 
   /**
    * Formatea el mensaje de bienvenida y menú de opciones para WhatsApp.
-   * @private
+   * @param {Object} employee
+   * @returns {string}
    */
   formatGreetingMessage(employee) {
-    const companyName = employee.tenant?.name ? ` de *${employee.tenant.name}*` : '';
-    return (
-      `Hola ${employee.firstName}, bienvenido(a) al Asistente Corporativo de Norma ERP${companyName}.\n\n` +
-      `Puede consultarme o gestionar directamente por este chat:\n` +
-      `- *Mis vacaciones:* "¿Cuantos dias de vacaciones tengo disponibles?"\n` +
-      `- *Pedir vacaciones:* "Quiero pedir vacaciones del 2026-11-20 al 2026-11-24 por viaje familiar"\n` +
-      `- *Mi marcacion:* "¿A que hora marque hoy?"\n` +
-      `- *Consultas legales:* "Como se calculan las horas extraordinarias segun el Art. 55?" o "¿Cual es la liquidacion por despido intempestivo?"\n` +
-      `- *Seguridad Social:* "Requisitos para jubilacion ordinaria IESS."\n\n` +
-      `Escriba su consulta en cualquier momento para responderle.`
-    );
+    return formatGreetingMessage(employee);
   }
 
   /**
    * Limpia y adapta Markdown a los estándares visuales de WhatsApp.
-   * @private
+   * @param {string} rawText
+   * @returns {string}
    */
   cleanTextForWhatsapp(rawText) {
-    if (!rawText) return '';
-
-    return (
-      rawText
-        // Reemplazar encabezados markdown (### Título) por *Título*
-        .replace(/^#{1,6}\s*(.+)$/gm, '*$1*')
-        // Reemplazar negritas dobles markdown (**texto**) por formato WhatsApp (*texto*)
-        .replace(/\*\*(.+?)\*\*/g, '*$1*')
-        // Remover bloques de tablas markdown con pipes (| col | col |)
-        .replace(/\|(.+)\|/g, (match) => {
-          const parts = match
-            .split('|')
-            .map((p) => p.trim())
-            .filter(Boolean);
-          if (parts.length === 0 || parts.every((p) => /^[-:]+$/.test(p))) return '';
-          return `- ${parts.join(' : ')}`;
-        })
-        // Remover triples backticks redundantes en texto conversacional
-        .replace(/```[a-z]*\n([\s\S]*?)```/g, '$1')
-        // Normalizar saltos de línea excesivos
-        .replace(/\n{3,}/g, '\n\n')
-        .trim()
-    );
+    return cleanTextForWhatsapp(rawText);
   }
 }
 
