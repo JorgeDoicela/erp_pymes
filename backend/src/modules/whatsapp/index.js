@@ -22,6 +22,15 @@ import whatsappConfirmationService, {
 } from './whatsappConfirmation.service.js';
 import { WhatsappSkillRegistry } from './skills/whatsappSkill.registry.js';
 import requestVacationSkill, { RequestVacationSkill } from './skills/requestVacation.skill.js';
+import requestSalaryAdvanceSkill, {
+  RequestSalaryAdvanceSkill,
+} from './skills/requestSalaryAdvance.skill.js';
+import requestPermissionSkill, {
+  RequestPermissionSkill,
+} from './skills/requestPermission.skill.js';
+import reviewPendingRequestsSkill, {
+  ReviewPendingRequestsSkill,
+} from './skills/reviewPendingRequests.skill.js';
 import * as whatsappConstants from './whatsapp.constants.js';
 
 export {
@@ -46,6 +55,12 @@ export {
   WhatsappSkillRegistry,
   requestVacationSkill,
   RequestVacationSkill,
+  requestSalaryAdvanceSkill,
+  RequestSalaryAdvanceSkill,
+  requestPermissionSkill,
+  RequestPermissionSkill,
+  reviewPendingRequestsSkill,
+  ReviewPendingRequestsSkill,
   whatsappConstants,
 };
 

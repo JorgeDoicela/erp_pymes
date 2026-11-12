@@ -1,6 +1,7 @@
 /**
  * @file whatsappAi.service.js
- * @description Orquestador de Inteligencia Artificial para WhatsApp con soporte para DeepSeek, Gemini y RAG Legal Ecuatoriano.
+ * @description Orquestador de Inteligencia Artificial para WhatsApp con soporte para DeepSeek, Gemini,
+ * RAG Legal Ecuatoriano y Habilidades Agénticas Multi-Tenant con confirmación 2FA.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -12,7 +13,12 @@ import {
   UNREGISTERED_PHONE_MESSAGE,
   cleanTextForWhatsapp,
 } from './whatsapp.constants.js';
-import { classifyIntent, formatGreetingMessage } from './whatsappAi.utils.js';
+import {
+  classifyIntent,
+  formatGreetingMessage,
+  formatPayrollAndRequestsMessage,
+  formatTenantMetricsMessage,
+} from './whatsappAi.utils.js';
 import { llmProviderService, sustainabilityRagService } from '../sustainability/index.js';
 import whatsappRepository from './whatsapp.repository.js';
 import whatsappConfirmationService from './whatsappConfirmation.service.js';
@@ -21,8 +27,23 @@ import whatsappActionSessionRepository, {
 } from './whatsappActionSession.repository.js';
 import { WhatsappSkillRegistry } from './skills/whatsappSkill.registry.js';
 import requestVacationSkill from './skills/requestVacation.skill.js';
+import requestSalaryAdvanceSkill from './skills/requestSalaryAdvance.skill.js';
+import requestPermissionSkill from './skills/requestPermission.skill.js';
+import reviewPendingRequestsSkill from './skills/reviewPendingRequests.skill.js';
 
-const defaultSkillRegistry = new WhatsappSkillRegistry([requestVacationSkill]);
+const defaultSkillRegistry = new WhatsappSkillRegistry([
+  requestVacationSkill,
+  requestSalaryAdvanceSkill,
+  requestPermissionSkill,
+  reviewPendingRequestsSkill,
+]);
+
+const INTENT_TO_SKILL_ID = {
+  [WHATSAPP_INTENTS.VACATION_REQUEST_ACTION]: 'REQUEST_VACATION',
+  [WHATSAPP_INTENTS.SALARY_ADVANCE_ACTION]: 'REQUEST_SALARY_ADVANCE',
+  [WHATSAPP_INTENTS.PERMISSION_REQUEST_ACTION]: 'REQUEST_PERMISSION',
+  [WHATSAPP_INTENTS.REVIEW_REQUESTS_ACTION]: 'REVIEW_PENDING_REQUESTS',
+};
 
 export class WhatsappAiService {
   constructor(
@@ -43,8 +64,6 @@ export class WhatsappAiService {
 
   /**
    * Resuelve el proveedor de IA activo para WhatsApp (DeepSeek o Gemini con fallbacks seguros).
-   * @param {Object} [overrides]
-   * @returns {Object} Configuración del proveedor
    */
   resolveAiProviderConfig(overrides = {}) {
     const requestedProvider = (
@@ -75,35 +94,21 @@ export class WhatsappAiService {
     };
   }
 
-  /**
-   * Clasifica la intención del mensaje del usuario a partir del texto y palabras clave.
-   * @param {string} text
-   * @param {Object|null} employee
-   * @returns {string} Código de intención (WHATSAPP_INTENTS)
-   */
   classifyIntent(text, employee) {
     return classifyIntent(text, employee);
   }
 
   /**
    * Genera la respuesta apropiada para WhatsApp orquestando RAG, habilidades agénticas, datos del ERP y el LLM.
-   * @param {Object} params
-   * @param {string} params.text Mensaje recibido.
-   * @param {Object|null} params.employee Registro del colaborador en base de datos.
-   * @param {string|null} [params.phoneKey] Clave telefónica canónica para sesiones multi-turno y 2FA.
-   * @param {string|null} [params.messageId] Identificador wamid del mensaje entrante.
-   * @param {Object} [params.aiOverrides] Opciones opcionales para forzar proveedor (ej. { provider: 'gemini' }).
-   * @returns {Promise<string>} Texto listo para ser enviado por WhatsApp.
    */
   async generateResponse({ text, employee, phoneKey = null, messageId = null, aiOverrides = {} }) {
     const aiConfig = this.resolveAiProviderConfig(aiOverrides);
 
-    // Caso A: Remitente no registrado en la empresa
     if (!employee) {
       return UNREGISTERED_PHONE_MESSAGE;
     }
 
-    // Caso B: Sesión agéntica activa (recolección de parámetros o doble factor pendiente)
+    // Sesión agéntica activa (recolección de parámetros o doble factor pendiente)
     if (
       phoneKey &&
       employee.tenantId &&
@@ -127,9 +132,7 @@ export class WhatsappAiService {
             activeSession,
             skillRegistry: this.skillRegistry,
           });
-          if (confirmationReply) {
-            return confirmationReply;
-          }
+          if (confirmationReply) return confirmationReply;
         }
 
         if (activeSession.status === WHATSAPP_SESSION_STATUS.COLLECTING_PARAMS) {
@@ -167,15 +170,23 @@ export class WhatsappAiService {
 
     const intent = this.classifyIntent(text, employee);
 
-    // Caso C: Saludo general o menú de opciones
     if (intent === WHATSAPP_INTENTS.GENERAL_GREETING) {
       return this.formatGreetingMessage(employee);
     }
 
-    // Caso D: Habilidad agéntica para solicitar vacaciones con validación dual (Cédula + OTP correo)
-    if (intent === WHATSAPP_INTENTS.VACATION_REQUEST_ACTION) {
+    if (intent === WHATSAPP_INTENTS.SWITCH_TENANT_COMMAND) {
+      return (
+        `*Empresa Activa Actual:* ${employee.tenant?.name || 'Norma ERP'}${employee.tenant?.ruc ? ` (RUC: ${employee.tenant.ruc})` : ''}\n` +
+        `- *Rol en esta empresa:* ${employee.role || 'employee'}\n` +
+        `- *Departamento:* ${employee.department || 'General'}\n\n` +
+        `Su numero telefonico opera actualmente sobre esta empresa. Si su telefono esta vinculado a mas de un RUC activo, el selector multi-empresa le mostrara la lista numerada automaticamente.`
+      );
+    }
+
+    const targetSkillId = INTENT_TO_SKILL_ID[intent];
+    if (targetSkillId) {
       return this.handleAgenticSkill({
-        skillId: 'REQUEST_VACATION',
+        skillId: targetSkillId,
         text,
         employee,
         phoneKey: phoneKey || employee.phone || employee.id,
@@ -185,23 +196,23 @@ export class WhatsappAiService {
       });
     }
 
-    // Caso E: Métricas globales de empresa
+    if (intent === WHATSAPP_INTENTS.PAYROLL_SLIP_QUERY) {
+      return this.handlePayrollAndRequestsQuery({ employee });
+    }
+
     if (intent === WHATSAPP_INTENTS.TENANT_METRICS_QUERY) {
       return this.handleTenantMetricsQuery({ employee });
     }
 
-    // Caso F: Consulta personal del colaborador (Vacaciones, Marcación de hoy)
     if (intent === WHATSAPP_INTENTS.EMPLOYEE_QUERY) {
       return this.handleEmployeePersonalQuery({ text, employee, aiConfig });
     }
 
-    // Caso G: Consulta Jurídica / Normativa con RAG Legal Ecuatoriano
     return this.handleLegalQuery({ text, employee, aiConfig });
   }
 
   /**
    * Orquesta la preparación de una habilidad agéntica y su paso a doble confirmación.
-   * @private
    */
   async handleAgenticSkill({
     skillId,
@@ -267,10 +278,15 @@ export class WhatsappAiService {
     return `No fue posible preparar la solicitud en este momento.`;
   }
 
-  /**
-   * Maneja consultas personales del colaborador con datos deterministas de la base de datos.
-   * @private
-   */
+  async handlePayrollAndRequestsQuery({ employee }) {
+    const data =
+      typeof this.repo.getEmployeeLatestPayrollAndRequests === 'function'
+        ? await this.repo.getEmployeeLatestPayrollAndRequests(employee.id, employee.tenantId)
+        : { latestPayrollDetail: null, recentAbsences: [], recentAdvances: [] };
+
+    return formatPayrollAndRequestsMessage(employee, data);
+  }
+
   async handleEmployeePersonalQuery({ text, employee, aiConfig }) {
     const todayAttendance = await this.repo.getEmployeeAttendanceToday(employee.id);
     const tzOpt = { hour: '2-digit', minute: '2-digit', timeZone: 'America/Guayaquil' };
@@ -306,10 +322,6 @@ export class WhatsappAiService {
     );
   }
 
-  /**
-   * Maneja consultas legales y de normativa utilizando el motor RAG integral existente.
-   * @private
-   */
   async handleLegalQuery({ text, employee, aiConfig }) {
     try {
       const ragResponse = await this.ragService.processQuery({
@@ -321,8 +333,6 @@ export class WhatsappAiService {
 
       if (ragResponse?.answer) {
         let formatted = cleanTextForWhatsapp(ragResponse.answer);
-
-        // Añadir citas legales relevantes al final en formato WhatsApp si existen
         if (ragResponse.legalCitations?.length) {
           const topCitations = ragResponse.legalCitations.slice(0, 3);
           formatted += `\n\n*Fundamento Normativo Oficial:*`;
@@ -330,7 +340,6 @@ export class WhatsappAiService {
             formatted += `\n- *${c.articleCode}* (${c.documentTitle})`;
           });
         }
-
         return formatted;
       }
     } catch (err) {
@@ -343,41 +352,20 @@ export class WhatsappAiService {
     );
   }
 
-  /**
-   * Maneja consultas de indicadores de empresa restringidas por RBAC.
-   * @private
-   */
   async handleTenantMetricsQuery({ employee }) {
-    const allowedRoles = ['admin', 'manager', 'hr', 'entrepreneur', 'superadmin'];
+    const allowedRoles = ['admin', 'manager', 'hr', 'accounting', 'entrepreneur', 'superadmin'];
     if (!allowedRoles.includes(employee.role?.toLowerCase())) {
-      return `Estimado(a) ${employee.firstName}, su rol actual (${employee.role}) no dispone de autorizacion para consultar metricas generales de la empresa.\n\nPuede consultar su saldo de vacaciones, registro de marcaciones y legislacion laboral.`;
+      return `Estimado(a) ${employee.firstName}, su rol actual (${employee.role}) no dispone de autorizacion para consultar metricas generales de la empresa.\n\nPuede consultar su saldo de vacaciones, rol de pagos, registro de marcaciones y legislacion laboral.`;
     }
 
     const metrics = await this.repo.getTenantSummaryMetrics(employee.tenantId);
-
-    return (
-      `*Resumen Operativo de la Empresa (${employee.tenant?.name || 'Norma ERP'}):*\n\n` +
-      `- *Colaboradores Activos:* ${metrics.totalActiveEmployees || 0}\n` +
-      `- *Marcaciones Registradas Hoy:* ${metrics.totalAttendancesToday || 0}\n` +
-      `- *Solicitudes de Permiso Pendientes:* ${metrics.pendingAbsenceRequests || 0}\n\n` +
-      `_Datos sincronizados en tiempo real con la base de datos empresarial._`
-    );
+    return formatTenantMetricsMessage(employee, metrics);
   }
 
-  /**
-   * Formatea el mensaje de bienvenida y menú de opciones para WhatsApp.
-   * @param {Object} employee
-   * @returns {string}
-   */
   formatGreetingMessage(employee) {
     return formatGreetingMessage(employee);
   }
 
-  /**
-   * Limpia y adapta Markdown a los estándares visuales de WhatsApp.
-   * @param {string} rawText
-   * @returns {string}
-   */
   cleanTextForWhatsapp(rawText) {
     return cleanTextForWhatsapp(rawText);
   }

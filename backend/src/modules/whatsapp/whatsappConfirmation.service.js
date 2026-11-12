@@ -144,6 +144,7 @@ export class WhatsappConfirmationService {
         employee,
         otpCode,
         draftSummary,
+        skillName: skill.name || skill.id,
         ttlMinutes: Math.round(ACTION_SESSION_TTL_MS / 60000),
       });
     } catch (emailErr) {
@@ -171,16 +172,15 @@ export class WhatsappConfirmationService {
       `${summaryText}\n\n` +
       `*Validacion de Seguridad Requerida (vigencia 10 minutos):*\n` +
       `Se envio un codigo OTP de 6 digitos a su correo *${maskedEmail}*.\n\n` +
-      `Para registrar la solicitud definitivamente, responda con:\n` +
+      `Para registrar la operacion definitivamente, responda con:\n` +
       `- *CONFIRMAR <4 ultimos digitos de su cedula> <codigo OTP>*\n` +
       `Ejemplo: _CONFIRMAR 1234 849201_\n\n` +
-      `Si desea anular esta solicitud, responda *CANCELAR*.`
+      `Si desea anular esta operacion, responda *CANCELAR*.`
     );
   }
 
   /**
    * Procesa mensajes entrantes cuando existe una sesión agéntica activa para este usuario y tenant.
-   * Retorna null si la sesión corresponde a COLLECTING_PARAMS y debe reevaluarse en la skill.
    */
   async handlePendingConfirmation({
     text,
@@ -191,7 +191,6 @@ export class WhatsappConfirmationService {
     skillRegistry,
   }) {
     if (!activeSession) return null;
-
     const clean = String(text || '').trim();
 
     if (/^(cancelar|anular|salir|abortar)$/i.test(clean)) {
@@ -211,7 +210,7 @@ export class WhatsappConfirmationService {
         employeeId: employee.id,
         status: WHATSAPP_SESSION_STATUS.EXPIRED,
       });
-      return `La sesion de solicitud expiro por seguridad (limite de 10 minutos). Escriba nuevamente su solicitud de vacaciones si desea iniciar un nuevo proceso.`;
+      return `La sesion de solicitud expiro por seguridad (limite de 10 minutos). Escriba nuevamente su solicitud si desea iniciar un nuevo proceso.`;
     }
 
     if (activeSession.status !== WHATSAPP_SESSION_STATUS.PENDING_CONFIRMATION) {
@@ -219,7 +218,6 @@ export class WhatsappConfirmationService {
     }
 
     const confirmMatch = clean.match(/^(?:confirmar|confirmo)[\s:,-]+(\d{4})[\s:,-]+(\d{6})$/i);
-
     if (!confirmMatch) {
       if (/^(?:confirmar|confirmo)\b/i.test(clean)) {
         return (
@@ -231,7 +229,7 @@ export class WhatsappConfirmationService {
       }
 
       return (
-        `Tiene una confirmacion de vacaciones pendiente en *${employee.tenant?.name || 'Norma ERP'}*.\n\n` +
+        `Tiene una confirmacion pendiente en *${employee.tenant?.name || 'Norma ERP'}*.\n\n` +
         `Para completarla responda:\n` +
         `*CONFIRMAR <4 ultimos digitos cedula> <OTP 6 digitos>*\n\n` +
         `O responda *CANCELAR* para descartar la solicitud y realizar otra consulta.`
@@ -268,11 +266,7 @@ export class WhatsappConfirmationService {
             attempts: attemptState.attempts,
           },
         });
-
-        return (
-          `Solicitud bloqueada por seguridad tras ${attemptState.maxAttempts} intentos fallidos de verificacion.\n\n` +
-          `Debera iniciar una nueva solicitud de vacaciones.`
-        );
+        return `Solicitud bloqueada por seguridad tras ${attemptState.maxAttempts} intentos fallidos de verificacion.\n\nDebera iniciar una nueva solicitud.`;
       }
 
       const remaining = Math.max(1, attemptState.maxAttempts - attemptState.attempts);
@@ -289,7 +283,6 @@ export class WhatsappConfirmationService {
       employeeId: employee.id,
       confirmMessageId: messageId || null,
     });
-
     if (!claimed) {
       return `Esta confirmacion ya fue procesada o ya no se encuentra vigente.`;
     }
@@ -342,19 +335,13 @@ export class WhatsappConfirmationService {
         '[WhatsApp Confirmation Error] Fallo al ejecutar accion confirmada:',
         execErr.message
       );
-
       await this.sessionRepo.markStatus({
         id: activeSession.id,
         tenantId: employee.tenantId,
         employeeId: employee.id,
         status: WHATSAPP_SESSION_STATUS.CANCELLED,
       });
-
-      return (
-        `No se pudo completar el registro de su solicitud:\n` +
-        `${execErr.message}\n\n` +
-        `La sesion fue cerrada; si desea ajustar las fechas puede enviar una nueva solicitud.`
-      );
+      return `No se pudo completar el registro de su solicitud:\n${execErr.message}\n\nLa sesion fue cerrada; si desea ajustar los datos puede enviar una nueva solicitud.`;
     }
   }
 
@@ -362,35 +349,53 @@ export class WhatsappConfirmationService {
    * Envía el código OTP de 6 dígitos al correo registrado del colaborador reutilizando EmailService.
    * @private
    */
-  async sendOtpEmail({ employee, otpCode, draftSummary, ttlMinutes }) {
+  async sendOtpEmail({
+    employee,
+    otpCode,
+    draftSummary = {},
+    skillName = 'Operacion',
+    ttlMinutes,
+  }) {
     const companyName = employee.tenant?.name || 'Norma ERP';
-    const subject = `[Norma ERP] Codigo OTP para solicitud de vacaciones - ${companyName}`;
+    const subject = `[Norma ERP] Codigo OTP para ${skillName} - ${companyName}`;
+    const detailRows = [];
+    if (draftSummary.permissionType) detailRows.push(['Tipo', draftSummary.permissionType]);
+    if (draftSummary.startDate) detailRows.push(['Desde', draftSummary.startDate]);
+    if (draftSummary.endDate) detailRows.push(['Hasta', draftSummary.endDate]);
+    if (draftSummary.daysRequested)
+      detailRows.push(['Dias solicitados', `${draftSummary.daysRequested} dias`]);
+    if (draftSummary.amount)
+      detailRows.push(['Monto solicitado', `$${Number(draftSummary.amount).toFixed(2)}`]);
+    if (draftSummary.installments)
+      detailRows.push(['Cuotas', `${draftSummary.installments} mes(es)`]);
+    if (draftSummary.targetLabel) detailRows.push(['Solicitud objetivo', draftSummary.targetLabel]);
+    if (draftSummary.actionLabel) detailRows.push(['Resolucion', draftSummary.actionLabel]);
+    if (draftSummary.reason) detailRows.push(['Motivo / Comentario', draftSummary.reason]);
+
+    const rowsHtml = detailRows
+      .map(
+        ([label, val]) =>
+          `<tr><td style="padding: 6px 0; color: #6b7280;">${label}:</td><td style="padding: 6px 0; font-weight: 600;">${val}</td></tr>`
+      )
+      .join('');
+
     const html = `
       <div style="font-family: Inter, system-ui, -apple-system, sans-serif; background: #f9fafb; padding: 24px; color: #111827;">
         <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 28px;">
-          <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #111827;">Confirmacion de Solicitud via WhatsApp</h2>
+          <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #111827;">Confirmacion de ${skillName} via WhatsApp</h2>
           <p style="margin: 0 0 18px 0; font-size: 13px; color: #4b5563;">Empresa: <strong>${companyName}</strong></p>
           <p style="font-size: 14px; color: #374151;">Hola <strong>${employee.firstName} ${employee.lastName}</strong>,</p>
-          <p style="font-size: 14px; color: #374151;">Se inicio una solicitud de vacaciones desde tu WhatsApp corporativo con el siguiente detalle:</p>
-          <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;">
-            <tr><td style="padding: 6px 0; color: #6b7280;">Desde:</td><td style="padding: 6px 0; font-weight: 600;">${draftSummary.startDate}</td></tr>
-            <tr><td style="padding: 6px 0; color: #6b7280;">Hasta:</td><td style="padding: 6px 0; font-weight: 600;">${draftSummary.endDate}</td></tr>
-            <tr><td style="padding: 6px 0; color: #6b7280;">Dias solicitados:</td><td style="padding: 6px 0; font-weight: 600;">${draftSummary.daysRequested} dias</td></tr>
-            <tr><td style="padding: 6px 0; color: #6b7280;">Motivo:</td><td style="padding: 6px 0;">${draftSummary.reason}</td></tr>
-          </table>
+          <p style="font-size: 14px; color: #374151;">Se inicio una operacion (<strong>${skillName}</strong>) desde tu WhatsApp corporativo:</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;">${rowsHtml}</table>
           <div style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 16px; text-align: center; margin: 20px 0;">
             <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #4b5563;">Codigo OTP de verificacion</div>
             <div style="font-size: 28px; font-weight: 700; letter-spacing: 0.25em; color: #111827; margin-top: 6px;">${otpCode}</div>
           </div>
-          <p style="font-size: 13px; color: #4b5563; margin-bottom: 0;">Este codigo expira en <strong>${ttlMinutes} minutos</strong> y permite un maximo de 3 intentos. Si no reconoces esta solicitud, responde <strong>CANCELAR</strong> en el chat y notifica a Talento Humano.</p>
+          <p style="font-size: 13px; color: #4b5563; margin-bottom: 0;">Este codigo expira en <strong>${ttlMinutes} minutos</strong> y permite un maximo de 3 intentos. Si no reconoces esta operacion, responde <strong>CANCELAR</strong> en el chat y notifica a Talento Humano.</p>
         </div>
       </div>`;
 
-    return this.emailSender.sendEmail({
-      to: employee.email,
-      subject,
-      html,
-    });
+    return this.emailSender.sendEmail({ to: employee.email, subject, html });
   }
 }
 
