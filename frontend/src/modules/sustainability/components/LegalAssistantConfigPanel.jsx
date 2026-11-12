@@ -1,6 +1,6 @@
 /**
  * @file LegalAssistantConfigPanel.jsx
- * @description Panel de configuración de proveedores LLM, formateador seguro de Markdown legal y burbuja de mensajes.
+ * @description Panel de configuración de proveedores LLM y burbuja de mensajes auditados.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -8,93 +8,13 @@
 
 import React from 'react';
 import { FiBookOpen } from 'react-icons/fi';
+import { renderFormattedLegalText } from './legalAssistantMarkdown.jsx';
 
 export {
   MODULE_CONTEXT_MAP,
   ADVISOR_PRESETS,
   resolveActiveModuleContext,
 } from '../constants/legalAssistantContexts.js';
-
-function renderCodeSegments(text) {
-  const segments = String(text).split(/(`[^`]+`)/g);
-  return segments.map((seg, i) => {
-    if (seg.startsWith('`') && seg.endsWith('`') && seg.length > 2) {
-      return (
-        <code
-          key={i}
-          className="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded-[3px] font-mono text-[11px] text-gray-900 tabular-nums"
-        >
-          {seg.slice(1, -1)}
-        </code>
-      );
-    }
-    return seg;
-  });
-}
-
-function renderInlineFormatting(text) {
-  if (!text) return null;
-  const parts = String(text).split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*\n]+\*)/g);
-  return parts.map((part, idx) => {
-    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
-      return (
-        <strong key={idx} className="font-semibold text-gray-900">
-          {renderCodeSegments(part.slice(2, -2))}
-        </strong>
-      );
-    }
-    if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
-      return (
-        <code
-          key={idx}
-          className="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded-[3px] font-mono text-[11px] text-gray-900 tabular-nums"
-        >
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
-      return (
-        <em key={idx} className="italic text-gray-700">
-          {renderCodeSegments(part.slice(1, -1))}
-        </em>
-      );
-    }
-    return part;
-  });
-}
-
-export function renderFormattedLegalText(content) {
-  if (!content) return null;
-  const lines = String(content).split('\n');
-  return (
-    <div className="space-y-1 font-sans">
-      {lines.map((rawLine, idx) => {
-        const line = rawLine.trim();
-        if (!line) return <div key={idx} className="h-1" />;
-        if (/^-{3,}$/.test(line)) {
-          return <hr key={idx} className="my-2 border-gray-200" />;
-        }
-        if (/^#{1,4}\s+/.test(line)) {
-          return (
-            <h4 key={idx} className="font-semibold text-gray-900 text-xs pt-1">
-              {renderInlineFormatting(line.replace(/^#{1,4}\s+/, ''))}
-            </h4>
-          );
-        }
-        if (/^[-*]\s+/.test(line)) {
-          return (
-            <div key={idx} className="flex items-start gap-1.5 pl-1">
-              <span className="text-gray-400 select-none">•</span>
-              <span className="flex-1">{renderInlineFormatting(line.replace(/^[-*]\s+/, ''))}</span>
-            </div>
-          );
-        }
-        return <div key={idx}>{renderInlineFormatting(rawLine)}</div>;
-      })}
-    </div>
-  );
-}
 
 export function LegalAssistantMessageBubble({ msg, onSelectCitation }) {
   const isUser = msg.role === 'user';
