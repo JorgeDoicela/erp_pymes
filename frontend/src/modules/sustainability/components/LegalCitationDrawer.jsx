@@ -56,9 +56,17 @@ export default function LegalCitationDrawer({ citation, isOpen, onClose }) {
               <span className="text-gray-400">Vigencia:</span>
               <span className="font-mono text-gray-800">2026 · Concordada en Norma</span>
             </div>
+            {typeof citation.evaluatorConfidence === 'number' && (
+              <div className="flex justify-between">
+                <span className="text-gray-400">Confianza del Evaluador:</span>
+                <span className="font-mono font-semibold text-gray-900 tabular-nums">
+                  {Math.round(citation.evaluatorConfidence * 100)}%
+                </span>
+              </div>
+            )}
             {typeof citation.relevanceScore === 'number' && (
               <div className="flex justify-between">
-                <span className="text-gray-400">Score de Relevancia RAG:</span>
+                <span className="text-gray-400">Score BM25 + Vectorial:</span>
                 <span className="font-mono text-gray-800 tabular-nums">
                   {citation.relevanceScore.toFixed(2)}
                 </span>

@@ -15,6 +15,23 @@ export {
   resolveActiveModuleContext,
 } from '../constants/legalAssistantContexts.js';
 
+function renderCodeSegments(text) {
+  const segments = String(text).split(/(`[^`]+`)/g);
+  return segments.map((seg, i) => {
+    if (seg.startsWith('`') && seg.endsWith('`') && seg.length > 2) {
+      return (
+        <code
+          key={i}
+          className="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded-[3px] font-mono text-[11px] text-gray-900 tabular-nums"
+        >
+          {seg.slice(1, -1)}
+        </code>
+      );
+    }
+    return seg;
+  });
+}
+
 function renderInlineFormatting(text) {
   if (!text) return null;
   const parts = String(text).split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*\n]+\*)/g);
@@ -22,7 +39,7 @@ function renderInlineFormatting(text) {
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
       return (
         <strong key={idx} className="font-semibold text-gray-900">
-          {part.slice(2, -2)}
+          {renderCodeSegments(part.slice(2, -2))}
         </strong>
       );
     }
@@ -39,7 +56,7 @@ function renderInlineFormatting(text) {
     if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
       return (
         <em key={idx} className="italic text-gray-700">
-          {part.slice(1, -1)}
+          {renderCodeSegments(part.slice(1, -1))}
         </em>
       );
     }
