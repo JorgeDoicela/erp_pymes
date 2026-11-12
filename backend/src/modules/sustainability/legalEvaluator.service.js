@@ -90,8 +90,24 @@ export class LegalEvaluatorService {
       const chunkDomain = chunk.metadata?.domain || chunk.document?.category || '';
       const contextBonus = preferredDomains.includes(chunkDomain) ? 0.1 : 0.02;
 
+      // F. Puntaje neuronal del Bi-Encoder y Cross-Encoder entrenados en Colab (si están presentes en el chunk)
+      const denseBonus =
+        typeof chunk.denseSimilarity === 'number' && chunk.denseSimilarity > 0
+          ? Math.min(0.12, chunk.denseSimilarity * 0.15)
+          : 0;
+      const crossEncoderBonus =
+        typeof chunk.trainedCrossEncoderPrior === 'number' && chunk.trainedCrossEncoderPrior > 0
+          ? Math.min(0.08, chunk.trainedCrossEncoderPrior * 0.08)
+          : 0;
+
       const rawConfidence =
-        retrieverComponent + tokenCoverage + bigramBonus + articleExactBonus + contextBonus;
+        retrieverComponent +
+        tokenCoverage +
+        bigramBonus +
+        articleExactBonus +
+        contextBonus +
+        denseBonus +
+        crossEncoderBonus;
       const evaluatorConfidence = Number(Math.min(0.99, Math.max(0.15, rawConfidence)).toFixed(4));
 
       return {
@@ -152,15 +168,27 @@ export class LegalEvaluatorService {
     // 2. Verificar consistencia matemática si hubo cálculo con Decimal.js
     let mathVerified = true;
     if (liveCalculation) {
-      const expectedTotal =
-        liveCalculation.totalSettlement ??
-        liveCalculation.totalDebit ??
-        liveCalculation.totalSupp50 ??
-        null;
+      const candidateTotals = [
+        liveCalculation.totalSettlement,
+        liveCalculation.totalDebit,
+        liveCalculation.netSalary,
+        liveCalculation.totalOvertimePay,
+        liveCalculation.totalSupp50,
+      ].filter((val) => typeof val === 'number');
 
-      if (typeof expectedTotal === 'number') {
-        const formattedExpected = expectedTotal.toFixed(2);
-        mathVerified = answerText.includes(formattedExpected);
+      if (candidateTotals.length > 0) {
+        mathVerified = candidateTotals.some((expectedTotal) => {
+          const formattedExpected = expectedTotal.toFixed(2);
+          const formattedComma = expectedTotal.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+          return (
+            answerText.includes(formattedExpected) ||
+            answerText.includes(formattedComma) ||
+            answerText.includes(String(expectedTotal))
+          );
+        });
       }
     }
 
@@ -178,6 +206,11 @@ export class LegalEvaluatorService {
 
     // Si el LLM externo omitió el desglose exacto de Decimal.js o citó algo no verificado, anexar nota de auditoría
     let auditedAnswer = answerText;
+    if (unverifiedArticles.length > 0) {
+      const verifiedList =
+        verifiedArticles.length > 0 ? verifiedArticles.join(', ') : 'ninguno directo';
+      auditedAnswer += `\n\n---\n#### Nota de Auditoría del Evaluador Legal (Anti-Alucinación)\n- **Artículos verificados en el corpus oficial:** ${verifiedList}\n- **Referencias no halladas en el corpus recuperado:** ${unverifiedArticles.join(', ')}`;
+    }
     if (liveCalculation && !mathVerified) {
       auditedAnswer += `\n\n---\n#### Verificación Matemática Oficial del Evaluador (Decimal.js)\n${liveCalculation.formattedSummary}`;
     }

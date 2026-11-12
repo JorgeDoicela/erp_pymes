@@ -83,7 +83,14 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Middlewares de parseo
-app.use(express.json({ limit: '20mb' }));
+app.use(
+  express.json({
+    limit: '20mb',
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Servir archivos estáticos (uploads)

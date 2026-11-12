@@ -6,7 +6,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import offboardingService from '../../../src/modules/employees/index.js';
+import { offboardingService } from '../../../src/modules/employees/index.js';
 
 export async function seedOffboarding(prisma, allEmployees) {
   console.log(

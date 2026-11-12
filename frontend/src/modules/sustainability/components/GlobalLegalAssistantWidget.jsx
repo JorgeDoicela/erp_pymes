@@ -255,6 +255,7 @@ export default function GlobalLegalAssistantWidget() {
                     className="w-full bg-white border border-gray-300 rounded-[4px] px-2 py-1 text-[11px] text-gray-900"
                   >
                     <option value="">Servidor por defecto (.env)</option>
+                    <option value="huggingface">Hugging Face Hub (doiceladev / Qwen 2.5)</option>
                     <option value="deepseek">DeepSeek API (deepseek-chat)</option>
                     <option value="local_ollama">IA Local Fine-Tuned (Ollama GGUF)</option>
                     <option value="local_openai">IA Local (vLLM / LM Studio)</option>

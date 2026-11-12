@@ -43,6 +43,13 @@ const PROVIDER_CONFIGS = {
     defaultModel: 'claude-3-5-sonnet-latest',
     protocol: 'anthropic',
   },
+  huggingface: {
+    name: 'Hugging Face Hub Inference API',
+    baseUrl: 'https://router.huggingface.co/v1',
+    chatPath: '/chat/completions',
+    defaultModel: 'Qwen/Qwen2.5-72B-Instruct',
+    protocol: 'openai',
+  },
   local_ollama: {
     name: 'Local Fine-Tuned LLM (Ollama GGUF)',
     baseUrl: 'http://127.0.0.1:11434',
@@ -85,18 +92,40 @@ export class LlmProviderService {
       providerKey = 'local_ollama';
     } else if (rawProvider === 'vllm' || rawProvider === 'lmstudio' || rawProvider === 'llamacpp') {
       providerKey = 'local_openai';
+    } else if (rawProvider === 'hf' || rawProvider === 'huggingface_hub') {
+      providerKey = 'huggingface';
+    } else if (
+      rawProvider === 'deepseek' &&
+      !overrides.apiKey &&
+      !process.env.DEEPSEEK_API_KEY &&
+      (process.env.HF_TOKEN || process.env.HUGGINGFACE_HUB_TOKEN)
+    ) {
+      // Si DeepSeek no tiene API Key pero existe HF_TOKEN configurado, usar Hugging Face Router automáticamente
+      providerKey = 'huggingface';
     }
 
     const preset = PROVIDER_CONFIGS[providerKey] || PROVIDER_CONFIGS.deepseek;
 
+    const providerSpecificEnvKey = {
+      deepseek: process.env.DEEPSEEK_API_KEY,
+      openai: process.env.OPENAI_API_KEY,
+      gemini: process.env.GEMINI_API_KEY,
+      groq: process.env.GROQ_API_KEY,
+      anthropic: process.env.ANTHROPIC_API_KEY,
+      huggingface: process.env.HF_TOKEN || process.env.HUGGINGFACE_HUB_TOKEN,
+    }[providerKey];
+
     const apiKey =
       overrides.apiKey ||
+      providerSpecificEnvKey ||
       process.env.AI_API_KEY ||
       process.env.DEEPSEEK_API_KEY ||
       process.env.OPENAI_API_KEY ||
       process.env.GEMINI_API_KEY ||
       process.env.GROQ_API_KEY ||
       process.env.ANTHROPIC_API_KEY ||
+      process.env.HF_TOKEN ||
+      process.env.HUGGINGFACE_HUB_TOKEN ||
       '';
 
     const baseUrl = (

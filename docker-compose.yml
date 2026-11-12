@@ -49,8 +49,8 @@ services:
       - .env
     environment:
       PORT: 5000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://admin_rh:your_postgres_password_here@db:5432/db_recursos_humanos?schema=public}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin_rh}:${POSTGRES_PASSWORD:-your_postgres_password_here}@db:5432/${POSTGRES_DB:-db_recursos_humanos}?schema=public
+      REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key_here}
       CLIENT_URL: ${CLIENT_URL:-https://norma.doicela.dev}
       FRONTEND_URL: ${FRONTEND_URL:-https://norma.doicela.dev}
@@ -67,6 +67,16 @@ services:
       AI_LLM_URL: ${AI_LLM_URL:-}
       AI_LLM_MODEL: ${AI_LLM_MODEL:-ecuador-erp-ai}
       AI_LLM_TIMEOUT_MS: ${AI_LLM_TIMEOUT_MS:-25000}
+      HF_TOKEN: ${HF_TOKEN:-}
+      HUGGINGFACE_HUB_TOKEN: ${HUGGINGFACE_HUB_TOKEN:-}
+      HF_NAMESPACE: ${HF_NAMESPACE:-doiceladev}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      SUPERADMIN_PHONE: ${SUPERADMIN_PHONE:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN:-}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-}
+      WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
+      WHATSAPP_AI_PROVIDER: ${WHATSAPP_AI_PROVIDER:-deepseek}
     healthcheck:
       # Docker verifica que el proceso Node responde activamente, no solo que está corriendo
       # Si el proceso se cuelga o crashea silenciosamente, restart:always lo reinicia sólo

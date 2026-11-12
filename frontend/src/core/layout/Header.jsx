@@ -7,13 +7,11 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { FiMenu, FiBriefcase, FiChevronDown, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiMenu, FiChevronDown, FiUser, FiLogOut } from 'react-icons/fi';
 import { useNavigate, Link } from 'react-router-dom';
 import { NotificationBell } from '@modules/notifications';
-import api from '@core/api/httpClient';
-import toast from 'react-hot-toast';
 
-import { isSuperAdmin as checkIsSuperAdmin, getRoleLabel } from '@core/constants/roles';
+import { getRoleLabel } from '@core/constants/roles';
 
 const Header = ({
   user,
@@ -23,12 +21,7 @@ const Header = ({
   title = 'Panel de Control',
 }) => {
   const navigate = useNavigate();
-  const isSuperAdmin = checkIsSuperAdmin(user);
 
-  const [tenants, setTenants] = useState([]);
-  const [selectedTenantId, setSelectedTenantId] = useState(
-    () => localStorage.getItem('superadmin_selected_tenant_id') || ''
-  );
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
 
@@ -41,35 +34,6 @@ const Header = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (isSuperAdmin) {
-      api
-        .get('/superadmin/tenants-list')
-        .then((res) => {
-          if (res.data.success) {
-            setTenants(res.data.data);
-          }
-        })
-        .catch((err) => console.error('Error fetching tenants list for header:', err));
-    }
-  }, [isSuperAdmin]);
-
-  const handleTenantChange = (e) => {
-    const value = e.target.value;
-    setSelectedTenantId(value);
-    if (value) {
-      localStorage.setItem('superadmin_selected_tenant_id', value);
-      const found = tenants.find((t) => t.id === value);
-      toast.success(`Modo Supervisión: Empresa ${found?.name || ''}`);
-    } else {
-      localStorage.removeItem('superadmin_selected_tenant_id');
-      toast.success('Modo Global SaaS Activado (Todas las empresas)');
-    }
-    // Disparar evento personalizado para actualizar datos si es necesario
-    window.dispatchEvent(new Event('superadmin_tenant_change'));
-    window.location.reload();
-  };
 
   return (
     <header className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-30 transition-all duration-300">
@@ -86,25 +50,6 @@ const Header = ({
       </div>
 
       <div className="flex items-center gap-2.5 sm:gap-3.5">
-        {isSuperAdmin && (
-          <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200 text-xs text-gray-700 hover:border-gray-300 transition-colors">
-            <FiBriefcase className="text-gray-400 shrink-0 text-xs" />
-            <select
-              value={selectedTenantId}
-              onChange={handleTenantChange}
-              className="bg-transparent font-medium focus:outline-none cursor-pointer max-w-[150px] sm:max-w-[210px] truncate py-0.5 text-gray-800 text-xs"
-              title="Selector de Empresa (SuperAdmin)"
-            >
-              <option value="">Modo Global (Todas las empresas)</option>
-              {tenants.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         <NotificationBell />
 
         {/* Menú de Usuario y Cierre de Sesión */}

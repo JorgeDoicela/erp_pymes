@@ -12,7 +12,6 @@ import Header from './Header';
 import { DeveloperCard } from '@core/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { isSuperAdmin as checkIsSuperAdmin } from '@core/constants/roles';
 
 const DashboardLayout = ({ children, user, onLogout, title }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,26 +25,6 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
-
-  const isSuperAdmin = checkIsSuperAdmin(user);
-  const isOperationalOrTenantModule =
-    (location.pathname.startsWith('/admin/') &&
-      !location.pathname.startsWith('/admin/audit') &&
-      !location.pathname.startsWith('/admin/settings')) ||
-    location.pathname.startsWith('/attendance') ||
-    location.pathname.startsWith('/performance') ||
-    location.pathname.startsWith('/recruitment') ||
-    location.pathname.startsWith('/analytics');
-
-  const isSuperAdminSupervising = isSuperAdmin && isOperationalOrTenantModule;
-  const selectedTenantId = isSuperAdmin
-    ? localStorage.getItem('superadmin_selected_tenant_id')
-    : null;
-
-  const handleClearTenantInspection = () => {
-    localStorage.removeItem('superadmin_selected_tenant_id');
-    window.location.reload();
-  };
 
   const handleToggleMenu = () => {
     if (window.innerWidth < 768) {
@@ -108,42 +87,7 @@ const DashboardLayout = ({ children, user, onLogout, title }) => {
           title={title}
         />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0 w-full">
-          <div className="max-w-7xl mx-auto w-full min-w-0">
-            {isSuperAdmin && selectedTenantId && (
-              <div className="mb-5 bg-gray-900 text-white px-4 py-3 rounded border border-gray-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                <div>
-                  <p className="font-semibold text-sm">Modo Inspección de Empresa Activo</p>
-                  <p className="text-gray-400 text-[11px] mt-0.5">
-                    Estás auditando los datos aislados de una empresa específica.
-                  </p>
-                </div>
-                <button
-                  onClick={handleClearTenantInspection}
-                  className="px-3 py-1.5 bg-white text-gray-900 hover:bg-gray-100 font-medium rounded text-xs transition-colors shrink-0 cursor-pointer"
-                >
-                  Volver a Modo Global
-                </button>
-              </div>
-            )}
-            {isSuperAdminSupervising && !selectedTenantId && (
-              <div className="mb-5 bg-white border border-gray-200 px-4 py-3 rounded flex items-start gap-3 text-gray-700">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-semibold text-xs text-gray-900">
-                      Modo Supervisión SuperAdmin
-                    </h4>
-                    <span className="px-2 py-0.5 text-[10px] font-mono font-medium bg-gray-100 text-gray-500 rounded border border-gray-200">
-                      Solo Lectura
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Estás navegando este módulo en modo supervisión global.
-                  </p>
-                </div>
-              </div>
-            )}
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto w-full min-w-0">{children}</div>
         </main>
       </div>
       <DeveloperCard />

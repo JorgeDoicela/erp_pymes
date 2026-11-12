@@ -24,11 +24,6 @@ import { toast } from 'react-hot-toast';
 const ProjectForm = () => {
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const isSuperAdmin =
-    currentUser?.role === 'superadmin' ||
-    currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com' ||
-    currentUser?.email === 'jorge.doicela.m@gmail.com';
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -50,10 +45,6 @@ const ProjectForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSuperAdmin) {
-      toast.error('Modo Supervisión: El SuperAdministrador no puede crear o modificar proyectos.');
-      return;
-    }
     setLoading(true);
     try {
       await entrepreneurshipService.createProject(formData);

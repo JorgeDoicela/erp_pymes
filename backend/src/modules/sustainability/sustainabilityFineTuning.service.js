@@ -23,11 +23,13 @@ export class SustainabilityFineTuningService {
   async generateDataset({
     targetModel = 'qwen2.5',
     includeTenantData = false,
+    includeFullPdfCorpus = false,
     tenantId = null,
     categories = [],
   } = {}) {
     const rawChunks = await sustainabilityRepository.getAllChunksForDataset({
       categories,
+      includeFullPdfCorpus,
       includeTenantData,
       tenantId,
     });

@@ -185,26 +185,9 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     });
   };
 
-  const isAdminOrSuperAdmin =
-    currentUser?.role === 'admin' ||
-    currentUser?.role === 'superadmin' ||
-    currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com' ||
-    currentUser?.email === 'jorge.doicela.m@gmail.com';
-  const isSuperAdmin =
-    currentUser?.role === 'superadmin' ||
-    currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com' ||
-    currentUser?.email === 'jorge.doicela.m@gmail.com';
+  const isAdminOrSuperAdmin = currentUser?.role === 'admin';
 
   const initiateMark = (type) => {
-    if (isSuperAdmin && !foundEmployee) {
-      setMessage({
-        type: 'error',
-        text: 'Modo Supervisión: El SuperAdministrador debe buscar la cédula del empleado para registrar su asistencia.',
-      });
-      return;
-    }
     if (biometricEnabled && hasBiometricRegistered === false) {
       setMessage({
         type: 'error',

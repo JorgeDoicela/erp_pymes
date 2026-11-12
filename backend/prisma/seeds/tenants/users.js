@@ -1177,9 +1177,16 @@ export async function seedUsers(prisma) {
       },
     });
     // Crear alias personal/oficial jorge.doicela.m@gmail.com
+    const superAdminPhone = process.env.SUPERADMIN_PHONE || '0999999999';
     await prisma.employee.upsert({
       where: { email: 'jorge.doicela.m@gmail.com' },
-      update: { password, tenantId: null, role: 'superadmin', isActive: true },
+      update: {
+        password,
+        tenantId: null,
+        role: 'superadmin',
+        isActive: true,
+        phone: superAdminPhone,
+      },
       create: {
         tenantId: null,
         firstName: 'Jorge',
@@ -1195,7 +1202,7 @@ export async function seedUsers(prisma) {
         hireDate: new Date('2020-01-01'),
         isActive: true,
         address: 'Plataforma Norma ERP',
-        phone: '0999999999',
+        phone: superAdminPhone,
         civilStatus: 'Soltero',
         contractType: 'SaaS Owner',
         bankName: encrypt('N/A'),

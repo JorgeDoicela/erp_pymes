@@ -30,7 +30,7 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import useAutoSync from '@core/hooks/useAutoSync';
-import { canMutateAccounting, getCurrentUser, isReadOnlySupervision } from '@core/constants/roles';
+import { canMutateAccounting, getCurrentUser } from '@core/constants/roles';
 
 const JournalEntries = ({ user }) => {
   const currentUser = user || getCurrentUser();
@@ -147,16 +147,8 @@ const JournalEntries = ({ user }) => {
   const totalCredit = formData.lines.reduce((acc, l) => acc + (parseFloat(l.credit) || 0), 0);
   const difference = Math.abs(totalDebit - totalCredit);
 
-  const isSuperAdmin = isReadOnlySupervision(currentUser);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSuperAdmin) {
-      toast.error(
-        'Modo Supervisión: El SuperAdministrador no puede crear ni modificar asientos contables.'
-      );
-      return;
-    }
     if (difference > 0.01) {
       toast.error('El asiento debe estar cuadrado (Debe = Haber)');
       return;
@@ -183,10 +175,6 @@ const JournalEntries = ({ user }) => {
   };
 
   const handlePost = async (id) => {
-    if (isSuperAdmin) {
-      toast.error('Modo Supervisión: El SuperAdministrador no puede mayorizar asientos.');
-      return;
-    }
     if (
       !window.confirm(
         '¿Mayorizar este asiento? Una vez contabilizado no podrá ser editado ni eliminado.'
@@ -204,10 +192,6 @@ const JournalEntries = ({ user }) => {
   };
 
   const handleDelete = async (id) => {
-    if (isSuperAdmin) {
-      toast.error('Modo Supervisión: El SuperAdministrador no puede eliminar asientos.');
-      return;
-    }
     if (!window.confirm('¿Eliminar este borrador de asiento?')) return;
     try {
       await deleteJournalEntry(id);

@@ -73,12 +73,6 @@ export const superAdminSections = [
         color: 'bg-slate-500',
         path: '/superadmin/audit',
       },
-      {
-        title: 'Indicadores Globales (BI)',
-        icon: <FiBarChart2 />,
-        color: 'bg-cyan-600',
-        path: '/analytics',
-      },
     ],
   },
   {

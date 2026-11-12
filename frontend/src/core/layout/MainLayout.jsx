@@ -37,6 +37,7 @@ const MainLayout = ({ user, onLogout }) => {
   else if (path.includes('/notifications')) title = 'Notificaciones';
   else if (path.includes('/audit')) title = 'Auditoría del Sistema';
   else if (path.includes('/accounting')) title = 'Gestión Contable';
+  else if (path.includes('/sustainability')) title = 'Sostenibilidad ODS 8 y Asistente Legal';
   else if (path.includes('/entrepreneurship')) title = 'Incubadora de Negocios';
   else if (path.includes('/help')) title = 'Centro de Ayuda';
   else if (path.includes('/profile')) title = 'Mi Perfil';

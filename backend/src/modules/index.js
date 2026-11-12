@@ -25,3 +25,4 @@ export * from './reports/index.js';
 export * from './intelligence/index.js';
 export * from './auth/index.js';
 export * from './system/index.js';
+export * from './whatsapp/index.js';

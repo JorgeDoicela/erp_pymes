@@ -12,13 +12,6 @@ import { employeeService } from '@modules/employees';
 import { FiCalendar, FiPlus, FiX } from 'react-icons/fi';
 
 const EmployeeAbsences = () => {
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const isSuperAdmin =
-    currentUser?.role === 'superadmin' ||
-    currentUser?.email === 'admin@normaerp.com' ||
-    currentUser?.email === 'admin@emplifi.com' ||
-    currentUser?.email === 'jorge.doicela.m@gmail.com';
-
   const [requests, setRequests] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [balance, setBalance] = useState(0);
@@ -52,12 +45,6 @@ const EmployeeAbsences = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSuperAdmin) {
-      setMessage(
-        'Modo Supervisión: El SuperAdministrador no puede solicitar permisos ni alterar registros.'
-      );
-      return;
-    }
     setLoading(true);
     setMessage('');
 

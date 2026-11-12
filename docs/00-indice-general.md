@@ -50,6 +50,7 @@ Documentación técnica del sistema de gestión de talento humano, nómina legal
 - [06 — Aprendizaje Federado Multi-Tenant (DP-SGD)](./06-inteligencia-y-analitica/06-aprendizaje-federado-privacidad-diferencial.md)
 - [07 — Motor de Aprendizaje por Refuerzo Multiobjetivo (MORL & Frontera de Pareto)](./06-inteligencia-y-analitica/07-optimizacion-multiobjetivo-frontera-pareto-morl.md)
 - [08 — Arquitectura Neural y Atencional (Temporal Self-Attention & FT-Transformer)](./06-inteligencia-y-analitica/08-arquitectura-neural-atencional.md)
+- [09 — Asistente Corporativo WhatsApp Cloud API + Multi-LLM y RAG Legal](./06-inteligencia-y-analitica/09-asistente-whatsapp-cloud-api-multi-llm.md)
 
 ### 07 — Despliegue y Operaciones
 
@@ -77,7 +78,7 @@ Documentación técnica del sistema de gestión de talento humano, nómina legal
 
 - Todas las rutas de API tienen el prefijo `/api/`
 - La autenticación se realiza mediante `Authorization: Bearer <JWT>`
-- El contexto de empresa se transmite en `req.user.tenantId` (automático desde el JWT) o mediante la cabecera `x-tenant-id` (solo SuperAdmin)
+- El contexto de empresa se transmite exclusivamente en `req.user.tenantId` (extraído del JWT firmado); por cumplimiento LOPDP, el rol `superadmin` opera aislado de los datos privados de los tenants
 - Los identificadores de entidades utilizan CUID (Prisma) o UUID v4 según el modelo
 - Los campos monetarios y los salarios se almacenan encriptados con AES-256-GCM
 - Las coordenadas GPS se truncan a 4 decimales (~11m de precisión) antes de encriptarse

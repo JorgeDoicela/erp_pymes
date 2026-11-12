@@ -13,6 +13,7 @@ import * as sustainabilityService from '../services/sustainability.service.js';
 export default function FineTuningExportModal({ isOpen, onClose }) {
   const [targetModel, setTargetModel] = useState('qwen2.5');
   const [includeTenantData, setIncludeTenantData] = useState(false);
+  const [includeFullPdfCorpus, setIncludeFullPdfCorpus] = useState(false);
   const [loading, setLoading] = useState(false);
   const [downloadReady, setDownloadReady] = useState(null);
 
@@ -25,6 +26,7 @@ export default function FineTuningExportModal({ isOpen, onClose }) {
       const res = await sustainabilityService.exportFineTuningDataset({
         targetModel,
         includeTenantData,
+        includeFullPdfCorpus,
       });
 
       if (res?.success && res?.data) {
@@ -104,8 +106,22 @@ export default function FineTuningExportModal({ isOpen, onClose }) {
             </select>
           </div>
 
-          <div className="p-3 bg-[#f9fafb] border border-gray-200 rounded-[4px]">
+          <div className="p-3 bg-[#f9fafb] border border-gray-200 rounded-[4px] space-y-2.5">
             <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeFullPdfCorpus}
+                onChange={(e) => setIncludeFullPdfCorpus(e.target.checked)}
+                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-0"
+              />
+              <span className="text-[11px] text-gray-700 leading-relaxed">
+                <strong>Incluir los 1,880 artículos íntegros de los 4 PDFs oficiales</strong>{' '}
+                (genera ~3,835 pares de entrenamiento exhaustivos; desactivado genera ~275 pares
+                doctrinales, aritméticos y estratificados de alta densidad).
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2.5 cursor-pointer border-t border-gray-200 pt-2.5">
               <input
                 type="checkbox"
                 checked={includeTenantData}

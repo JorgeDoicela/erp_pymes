@@ -64,37 +64,37 @@ export const isEmployee = (user) => {
 export const canManageTeam = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
-  return [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.HR, ROLES.MANAGER].includes(role);
+  return [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER].includes(role);
 };
 
 export const canManageEmployees = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
-  return [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.HR].includes(role);
+  return [ROLES.ADMIN, ROLES.HR].includes(role);
 };
 
 export const canManagePayroll = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
-  return [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.ACCOUNTING, ROLES.HR].includes(role);
+  return [ROLES.ADMIN, ROLES.ACCOUNTING, ROLES.HR].includes(role);
 };
 
 export const canManageAccounting = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
-  return [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.ACCOUNTING].includes(role);
+  return [ROLES.ADMIN, ROLES.ACCOUNTING].includes(role);
 };
 
 export const canAccessIntelligence = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
-  return [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.HR, ROLES.ACCOUNTING].includes(role);
+  return [ROLES.ADMIN, ROLES.HR, ROLES.ACCOUNTING].includes(role);
 };
 
 export const canManageRecruitment = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
-  return [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.HR].includes(role);
+  return [ROLES.ADMIN, ROLES.HR].includes(role);
 };
 
 export const getCurrentUser = () => {
@@ -105,36 +105,37 @@ export const getCurrentUser = () => {
   }
 };
 
-export const isReadOnlySupervision = (user) => {
-  return isSuperAdmin(user);
+export const isReadOnlySupervision = (_user) => {
+  // SuperAdmin no tiene acceso de lectura ni supervisión a datos confidenciales de tenants
+  return false;
 };
 
 export const canMutateEmployees = (user) => {
-  if (!user || isReadOnlySupervision(user)) return false;
+  if (!user) return false;
   const role = (user.role || '').toLowerCase();
   return [ROLES.ADMIN, ROLES.HR].includes(role);
 };
 
 export const canMutatePayroll = (user) => {
-  if (!user || isReadOnlySupervision(user)) return false;
+  if (!user) return false;
   const role = (user.role || '').toLowerCase();
   return [ROLES.ADMIN, ROLES.ACCOUNTING, ROLES.HR].includes(role);
 };
 
 export const canMutateAccounting = (user) => {
-  if (!user || isReadOnlySupervision(user)) return false;
+  if (!user) return false;
   const role = (user.role || '').toLowerCase();
   return [ROLES.ADMIN, ROLES.ACCOUNTING].includes(role);
 };
 
 export const canMutateTeam = (user) => {
-  if (!user || isReadOnlySupervision(user)) return false;
+  if (!user) return false;
   const role = (user.role || '').toLowerCase();
   return [ROLES.ADMIN, ROLES.HR, ROLES.MANAGER].includes(role);
 };
 
 export const canMutateCompanySettings = (user) => {
-  if (!user || isReadOnlySupervision(user)) return false;
+  if (!user) return false;
   const role = (user.role || '').toLowerCase();
   return role === ROLES.ADMIN;
 };

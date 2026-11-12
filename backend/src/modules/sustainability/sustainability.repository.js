@@ -143,7 +143,11 @@ export class SustainabilityRepository {
       }
     }
 
-    // 3. Cargar vectores pre-entrenados desde Colab si existen en trained_retriever_index.json
+    // 3. Cargar vectores densos y priors del Evaluador pre-entrenados desde Colab en trained_retriever_index.json
+    this._trainedEmbeddingsMap = null;
+    this._trainedCrossEncoderMap = null;
+    this._trainedQueryVocabMap = null;
+
     if (fs.existsSync(TRAINED_EMBEDDINGS_INDEX_PATH)) {
       try {
         const rawVectors = JSON.parse(fs.readFileSync(TRAINED_EMBEDDINGS_INDEX_PATH, 'utf-8'));
@@ -151,14 +155,26 @@ export class SustainabilityRepository {
           this._trainedEmbeddingsMap = rawVectors.embeddingsByArticle;
         } else if (Array.isArray(rawVectors.articles)) {
           this._trainedEmbeddingsMap = {};
+          this._trainedCrossEncoderMap = {};
           for (const item of rawVectors.articles) {
             if (item.articleCode && Array.isArray(item.embedding)) {
               this._trainedEmbeddingsMap[item.articleCode] = item.embedding;
             }
+            if (item.articleCode && typeof item.crossEncoderScore === 'number') {
+              this._trainedCrossEncoderMap[item.articleCode] = item.crossEncoderScore;
+            }
           }
+        }
+        if (
+          rawVectors.queryVocabularyEmbeddings &&
+          typeof rawVectors.queryVocabularyEmbeddings === 'object'
+        ) {
+          this._trainedQueryVocabMap = rawVectors.queryVocabularyEmbeddings;
         }
       } catch {
         this._trainedEmbeddingsMap = null;
+        this._trainedCrossEncoderMap = null;
+        this._trainedQueryVocabMap = null;
       }
     }
 
@@ -227,8 +243,27 @@ export class SustainabilityRepository {
    * @param {string} tenantId
    */
   async getOds8AggregatedData(tenantId) {
-    const whereTenant = tenantId ? { tenantId } : {};
-    const whereEmployeeTenant = tenantId ? { employee: { tenantId } } : {};
+    // Aislamiento estricto multi-tenant (LOPDP): nunca agregar ni desencriptar salarios si no hay tenantId activo
+    if (!tenantId) {
+      return {
+        totalEmployees: 0,
+        employeesWithActiveContract: 0,
+        allActiveEmployees: [],
+        recentPayrolls: [],
+        recentAttendances: [],
+        recentOffboardings: [],
+        erpSummary: {
+          openAccountingPeriods: 0,
+          totalJournalEntries: 0,
+          openJobVacancies: 0,
+          totalPerformanceEvaluations: 0,
+          activeEntrepreneurships: 0,
+        },
+      };
+    }
+
+    const whereTenant = { tenantId };
+    const whereEmployeeTenant = { employee: { tenantId } };
 
     const [
       totalEmployees,
@@ -453,6 +488,9 @@ export class SustainabilityRepository {
     const avgDocLength = index.avgDocLength;
     const idfMap = index.idfMap;
 
+    // Si existen embeddings entrenados en Colab, proyectar la consulta al espacio vectorial denso (128-dim)
+    const queryDenseVector = this.computeQueryDenseEmbedding(rawTokens, expandedTokens, idfMap);
+
     const scored = [];
 
     for (const entry of candidates) {
@@ -481,6 +519,25 @@ export class SustainabilityRepository {
         }
       }
 
+      // Fusión Híbrida Densa + Cross-Encoder cuando trained_retriever_index.json está cargado
+      let denseSimilarity = 0;
+      let trainedCrossEncoderPrior = 0;
+      if (this._trainedEmbeddingsMap && chunk.articleCode) {
+        const docVector = this._trainedEmbeddingsMap[chunk.articleCode];
+        if (queryDenseVector && Array.isArray(docVector)) {
+          denseSimilarity = Math.max(0, this.cosineSimilarity(queryDenseVector, docVector));
+          if (denseSimilarity > 0.15) {
+            score += denseSimilarity * 18.0;
+          }
+        }
+      }
+      if (this._trainedCrossEncoderMap && chunk.articleCode) {
+        trainedCrossEncoderPrior = this._trainedCrossEncoderMap[chunk.articleCode] || 0;
+        if (score > 0 && trainedCrossEncoderPrior > 0) {
+          score += trainedCrossEncoderPrior * 3.0;
+        }
+      }
+
       // Boost de exactitud si el usuario pidió un número de artículo específico (ej. Art. 216 de los PDFs)
       if (articleMatches.length > 0 && normArticleCode) {
         for (const artNum of articleMatches) {
@@ -503,6 +560,8 @@ export class SustainabilityRepository {
         scored.push({
           ...chunk,
           relevanceScore: Number(score.toFixed(4)),
+          denseSimilarity: Number(denseSimilarity.toFixed(4)),
+          trainedCrossEncoderPrior: Number(trainedCrossEncoderPrior.toFixed(4)),
         });
       }
     }
@@ -576,19 +635,85 @@ export class SustainabilityRepository {
     }
 
     if (!includeFullPdfCorpus) {
-      // Muestra estratificada de los 4 documentos oficiales (15 artículos por documento = 60 artículos reales)
+      // 1. Conservar siempre el 100% de las síntesis doctrinales curadas
+      const curated = docs.filter((c) => c.metadata?.isCurated);
+      const pdfDocs = docs.filter((c) => !c.metadata?.isCurated);
+
+      // 2. Muestreo estratificado uniforme a lo largo de todo el documento (inicio, medio y fin)
+      // para cubrir los 4 PDFs completos (ej. Art. 325-333 de la Constitución, todo el Código del Trabajo, IESS y OIT)
       const byDoc = {};
-      for (const chunk of docs) {
+      for (const chunk of pdfDocs) {
         const title = chunk.document?.title || 'default';
         if (!byDoc[title]) byDoc[title] = [];
-        if (byDoc[title].length < 15) {
-          byDoc[title].push(chunk);
+        byDoc[title].push(chunk);
+      }
+
+      const sampledPdfChunks = [];
+      const targetPerDoc = 25;
+      for (const docChunks of Object.values(byDoc)) {
+        if (docChunks.length <= targetPerDoc) {
+          sampledPdfChunks.push(...docChunks);
+        } else {
+          const step = docChunks.length / targetPerDoc;
+          for (let i = 0; i < targetPerDoc; i++) {
+            sampledPdfChunks.push(docChunks[Math.floor(i * step)]);
+          }
         }
       }
-      docs = Object.values(byDoc).flat();
+
+      docs = [...curated, ...sampledPdfChunks];
     }
 
     return docs;
+  }
+
+  /**
+   * Proyecta los tokens de la consulta al espacio vectorial denso (128-dim) del Bi-Encoder entrenado en Colab
+   * @private
+   */
+  computeQueryDenseEmbedding(rawTokens, expandedTokens, idfMap) {
+    if (!this._trainedQueryVocabMap) return null;
+
+    let pooled = null;
+    let totalWeight = 0;
+
+    for (const token of expandedTokens) {
+      const vec = this._trainedQueryVocabMap[token];
+      if (!Array.isArray(vec) || vec.length === 0) continue;
+
+      if (!pooled) pooled = new Array(vec.length).fill(0);
+      const isPrimary = rawTokens.includes(token);
+      const idf = idfMap[token] ?? 2.0;
+      const weight = (isPrimary ? 2.0 : 0.75) * idf;
+
+      for (let i = 0; i < vec.length; i++) {
+        pooled[i] += vec[i] * weight;
+      }
+      totalWeight += weight;
+    }
+
+    if (!pooled || totalWeight === 0) return null;
+
+    let normSq = 0;
+    for (let i = 0; i < pooled.length; i++) {
+      normSq += pooled[i] * pooled[i];
+    }
+    const norm = Math.sqrt(normSq) || 1;
+    return pooled.map((v) => v / norm);
+  }
+
+  /**
+   * Calcula similitud coseno entre dos vectores normalizados
+   * @private
+   */
+  cosineSimilarity(vecA, vecB) {
+    const len = Math.min(vecA.length, vecB.length);
+    if (len === 0) return 0;
+    let dot = 0;
+    for (let i = 0; i < len; i++) {
+      dot += vecA[i] * vecB[i];
+    }
+    return dot;
   }
 
   /**
@@ -600,6 +725,12 @@ export class SustainabilityRepository {
       totalIndexedChunks: index.totalDocs,
       totalKnownArticles: this._knownArticleNumbers.size,
       hasTrainedEmbeddings: Boolean(this._trainedEmbeddingsMap),
+      trainedArticlesCount: this._trainedEmbeddingsMap
+        ? Object.keys(this._trainedEmbeddingsMap).length
+        : 0,
+      trainedQueryVocabSize: this._trainedQueryVocabMap
+        ? Object.keys(this._trainedQueryVocabMap).length
+        : 0,
     };
   }
 }

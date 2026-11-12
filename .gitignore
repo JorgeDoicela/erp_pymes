@@ -33,6 +33,14 @@ coverage
 backend/uploads/
 uploads/
 
+# Large AI Model Weights (fetched on-demand from Hugging Face Hub via syncHuggingFaceModels.js)
+*.safetensors
+*.gguf
+*.bin
+backend/src/modules/sustainability/data/qwen25_ecuador_ods8_lora.zip
+backend/src/modules/sustainability/data/models/qwen25-ecuador-ods8-lora/adapter_model.safetensors
+backend/src/modules/sustainability/data/models/qwen25-ecuador-ods8-lora/tokenizer.json
+
 # OS
 .DS_Store
 Thumbs.db

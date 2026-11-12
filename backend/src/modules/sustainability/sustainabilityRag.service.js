@@ -131,6 +131,7 @@ export class SustainabilityRagService {
         status: evaluationAudit.status,
         groundednessScore: evaluationAudit.groundednessScore,
         verifiedArticles: evaluationAudit.verifiedArticles,
+        unverifiedArticles: evaluationAudit.unverifiedArticles,
         mathVerified: evaluationAudit.mathVerified,
         totalCorpusIndexedChunks: corpusStats.totalIndexedChunks,
       },

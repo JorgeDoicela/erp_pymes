@@ -324,6 +324,16 @@ BIOMETRIC_MAX_AGE_DAYS=90
 # Notificaciones por Correo SMTP
 EMAIL_USER="contacto@doicela.dev"
 EMAIL_PASS="tu-app-password-smtp"
+
+# Inteligencia Artificial, RAG Legal y Hugging Face Hub (doiceladev)
+AI_PROVIDER="deepseek"
+DEEPSEEK_API_KEY="sk-tu-api-key-de-deepseek"
+AI_MODEL="deepseek-chat"
+HF_TOKEN="hf_tu-token-de-huggingface"
+HUGGINGFACE_HUB_TOKEN="hf_tu-token-de-huggingface"
+HF_NAMESPACE="doiceladev"
+HF_RETRIEVER_REPO_ID="doiceladev/norma-erp-ecuador-retriever-e5"
+HF_LORA_REPO_ID="doiceladev/norma-erp-ecuador-qwen2.5-7b-lora"
 EOF
 ```
 
@@ -420,3 +430,96 @@ cat backup_migracion.sql | docker exec -i rh_postgres psql -U admin_rh db_recurs
 
 1. **Cloudflare DNS:** Actualizar el registro `A` de `norma.doicela.dev` con la nueva IP pública del servidor.
 2. **GitHub Secrets:** En el repositorio de GitHub, actualizar `EC2_HOST` (y `EC2_SSH_KEY` si cambia la llave de acceso) para que los futuros despliegues automáticos apunten al nuevo servidor.
+
+---
+
+## 16. Despliegue en Producción de los Modelos de IA y RAG Legal en AWS EC2
+
+El módulo de Sostenibilidad (ODS 8) y el Asistente Jurídico-Laboral operan con dos repositorios publicados en **Hugging Face Hub (`doiceladev`)**:
+
+1. [`doiceladev/norma-erp-ecuador-retriever-e5`](https://huggingface.co/doiceladev/norma-erp-ecuador-retriever-e5): Contiene el índice neuronal denso y los puntajes del Cross-Encoder entrenados en GPU **NVIDIA A100-SXM4-40GB** (`trained_retriever_index.json`, `3.27 MB`, `1,880` artículos legales + `800` vectores de vocabulario).
+2. [`doiceladev/norma-erp-ecuador-qwen2.5-7b-lora`](https://huggingface.co/doiceladev/norma-erp-ecuador-qwen2.5-7b-lora): Contiene el adaptador PEFT LoRA (`r=16, alpha=32`) entrenado en `bfloat16` sobre `Qwen/Qwen2.5-7B-Instruct` (`adapter_model.safetensors`, `154 MB`, `adapter_config.json` y `Modelfile` para Ollama).
+
+### 16.1. Arquitectura de Despliegue según el Tipo de Instancia AWS EC2
+
+```mermaid
+flowchart TD
+    HF["Hugging Face Hub (doiceladev)"]
+    Entrypoint["backend/entrypoint.sh -> syncHuggingFaceModels.js ensure"]
+    Backend["Contenedor rh_backend (Node.js 20)"]
+    RetrieverRAM["En Memoria de rh_backend: trained_retriever_index.json (3.27 MB, Cero GPU requerida)"]
+
+    subgraph TopologiaA["Topología A (Recomendada para EC2 Estándar: t3.small / t3.medium sin GPU)"]
+        CloudLLM["API Externa o Router HF (DeepSeek / Gemini / Hugging Face Inference)"]
+    end
+
+    subgraph TopologiaB["Topología B (Inferencia 100% Soberana en EC2 con GPU g5.xlarge / g6.xlarge)"]
+        OllamaHost["Servicio Ollama / vLLM con Qwen2.5-7B + adapter_model.safetensors"]
+    end
+
+    HF -->|"Auto-hidratación en el arranque"| Entrypoint
+    Entrypoint --> Backend
+    Backend --> RetrieverRAM
+    RetrieverRAM -->|"Top-8 Artículos Verificados + Tabla Decimal.js"| CloudLLM
+    RetrieverRAM -->|"Top-8 Artículos Verificados + Tabla Decimal.js"| OllamaHost
+```
+
+### 16.2. Hidratación Automática en el Arranque del Contenedor (`entrypoint.sh`)
+
+Cuando despliegues la instancia AWS EC2, **no necesitas subir archivos manualmente por FTP o SCP**. Al iniciar `rh_backend`, el script [`backend/entrypoint.sh`](../../backend/entrypoint.sh) ejecuta automáticamente:
+
+```bash
+node src/modules/sustainability/data/syncHuggingFaceModels.js ensure
+```
+
+- Este comando verifica que `trained_retriever_index.json`, `training_report_a100.json`, `adapter_config.json` y `Modelfile` estén presentes en el contenedor; si falta alguno, lo descarga directamente desde `https://huggingface.co/doiceladev/...` utilizando el `HF_TOKEN` definido en `/var/www/recursos_humanos/.env`.
+- Si deseas que la instancia descargue también los pesos completos `adapter_model.safetensors` (`154 MB`) y el tokenizador completo al iniciar o manualmente:
+
+```bash
+# Descargar absolutamente todos los artefactos (incluyendo adapter_model.safetensors de 154 MB)
+docker exec rh_backend node src/modules/sustainability/data/syncHuggingFaceModels.js pull --full-lora
+
+# Verificar el estado e integridad de todos los archivos descargados
+docker exec rh_backend node src/modules/sustainability/data/syncHuggingFaceModels.js status
+```
+
+### 16.3. Opción A: Producción en Instancia EC2 Estándar (CPU: `t3.small` o `t3.medium`)
+
+Esta es la configuración más eficiente en costos para AWS EC2:
+
+1. **Buscador Denso + Evaluador Cross-Encoder (`trained_retriever_index.json`):** Corre al **100% en la memoria RAM del contenedor `rh_backend`** en menos de `5 ms` por consulta sin requerir GPU en producción, ya que las proyecciones neuronales de los 1,880 artículos y del vocabulario jurídico fueron pre-calculadas en la NVIDIA A100 durante el entrenamiento.
+2. **Generación LLM:** Se delega mediante `llmProvider.service.js` a `AI_PROVIDER=deepseek` (o `huggingface` / `gemini`), enviando únicamente el contexto normativo pre-filtrado por el Evaluador y los cálculos exactos de `Decimal.js`.
+
+Variables en `/var/www/recursos_humanos/.env` para la Opción A:
+
+```env
+AI_PROVIDER="deepseek"
+DEEPSEEK_API_KEY="sk-tu-api-key-de-deepseek"
+AI_MODEL="deepseek-chat"
+HF_TOKEN="hf_tu-token-de-huggingface"
+HF_NAMESPACE="doiceladev"
+HF_RETRIEVER_REPO_ID="doiceladev/norma-erp-ecuador-retriever-e5"
+HF_LORA_REPO_ID="doiceladev/norma-erp-ecuador-qwen2.5-7b-lora"
+```
+
+### 16.4. Opción B: Producción con Inferencia Local del Modelo Fine-Tuneado (`Qwen2.5-7B LoRA`) en EC2 GPU (`g5.xlarge` / `g6.xlarge`)
+
+Si deseas ejecutar tu propio modelo fine-tuneado `doiceladev/norma-erp-ecuador-qwen2.5-7b-lora` directamente dentro de la instancia AWS EC2 usando **Ollama**:
+
+```bash
+# 1. Descargar los pesos LoRA completos desde tu cuenta de Hugging Face
+docker exec rh_backend node src/modules/sustainability/data/syncHuggingFaceModels.js pull --full-lora
+
+# 2. Copiar la carpeta del modelo extraído al host EC2
+docker cp rh_backend:/app/src/modules/sustainability/data/models/qwen25-ecuador-ods8-lora /var/www/recursos_humanos/qwen25-ecuador-ods8-lora
+
+# 3. Instalar Ollama en la instancia Debian EC2 y registrar el modelo con su Modelfile
+curl -fsSL https://ollama.com/install.sh | sh
+cd /var/www/recursos_humanos/qwen25-ecuador-ods8-lora
+ollama create ecuador-erp-ai -f Modelfile
+
+# 4. Configurar el .env para que rh_backend consuma el modelo local
+# AI_PROVIDER="local_ollama"
+# AI_LLM_URL="http://host.docker.internal:11434"
+# AI_LLM_MODEL="ecuador-erp-ai"
+```

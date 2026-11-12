@@ -172,10 +172,11 @@ const RequireAuth = ({ children, role, user }) => {
       ? role.map((r) => r.toLowerCase())
       : [role.toLowerCase()];
 
-    // SuperAdmin supervisa funciones administrativas, pero no portales de autogestión personal de empleados
-    const isEmployeeOnlyRoute = allowedRoles.length === 1 && allowedRoles[0] === ROLES.EMPLOYEE;
-    const hasPermission =
-      (superAdminUser && !isEmployeeOnlyRoute) || allowedRoles.includes(userRole);
+    // Por ley de protección de datos (LOPDP / GDPR) y principio de menor privilegio:
+    // El rol SuperAdmin administra la plataforma SaaS, pero NO tiene acceso a datos privados u operativos de tenants.
+    // Solo puede acceder a rutas que explícitamente incluyan 'superadmin'.
+    const isSuperAdminAllowed = allowedRoles.includes(ROLES.SUPERADMIN);
+    const hasPermission = superAdminUser ? isSuperAdminAllowed : allowedRoles.includes(userRole);
 
     if (!hasPermission) {
       // Redirigir según el rol real del usuario a su "home"

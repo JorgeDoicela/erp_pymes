@@ -154,7 +154,10 @@ function Login({ onLogin }) {
       localStorage.setItem('token', data.token);
 
       // Redirección automática basada en el rol
-      if (['admin', 'accounting', 'entrepreneur'].includes(data.data.role)) {
+      const userRole = (data.data.role || '').toLowerCase();
+      if (userRole === 'superadmin') {
+        navigate('/superadmin/dashboard');
+      } else if (['admin', 'accounting', 'entrepreneur'].includes(userRole)) {
         navigate('/admin');
       } else {
         navigate('/empleado');
@@ -226,7 +229,10 @@ function Login({ onLogin }) {
       });
       localStorage.setItem('token', verifyData.token);
 
-      if (['admin', 'accounting', 'entrepreneur'].includes(verifyData.data.role)) {
+      const bioRole = (verifyData.data.role || '').toLowerCase();
+      if (bioRole === 'superadmin') {
+        navigate('/superadmin/dashboard');
+      } else if (['admin', 'accounting', 'entrepreneur'].includes(bioRole)) {
         navigate('/admin');
       } else {
         navigate('/empleado');

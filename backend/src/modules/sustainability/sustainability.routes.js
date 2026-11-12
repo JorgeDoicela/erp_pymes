@@ -15,17 +15,17 @@ const router = Router();
 // Todas las rutas requieren usuario autenticado
 router.use(authenticate);
 
-// 1. Métricas e Indicadores de Cumplimiento ODS 8
+// 1. Métricas e Indicadores de Cumplimiento ODS 8 (Exclusivo para roles del tenant, aislamiento LOPDP)
 router.get(
   '/ods8',
-  authorize(['admin', 'hr', 'accounting', 'superadmin']),
+  authorize(['admin', 'hr', 'accounting', 'manager']),
   sustainabilityController.getOds8Metrics
 );
 
-// 2. Consulta al Asistente RAG con Citas de Legislación de Ecuador
+// 2. Consulta al Asistente RAG con Citas de Legislación de Ecuador (Disponible para todos los roles autenticados)
 router.post(
   '/advisor/query',
-  authorize(['admin', 'hr', 'accounting', 'employee', 'superadmin']),
+  authorize(['admin', 'hr', 'accounting', 'manager', 'employee', 'entrepreneur', 'superadmin']),
   sustainabilityController.queryAdvisor
 );
 

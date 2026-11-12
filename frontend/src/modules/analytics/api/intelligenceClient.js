@@ -33,11 +33,6 @@ intelligenceClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    const selectedTenantId = localStorage.getItem('superadmin_selected_tenant_id');
-    if (selectedTenantId) {
-      config.headers['x-tenant-id'] = selectedTenantId;
-    }
-
     return config;
   },
   (error) => Promise.reject(error)

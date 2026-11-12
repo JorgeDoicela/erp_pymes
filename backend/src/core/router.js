@@ -41,6 +41,7 @@ import {
   analyticsRoutes,
   entrepreneurshipRoutes,
   systemRoutes,
+  whatsappRoutes,
   authenticate,
   authorize,
   requireTenant,
@@ -111,5 +112,6 @@ router.use('/entrepreneurship', protectedTenant, entrepreneurshipRoutes);
 router.use('/compliance', protectedTenant, complianceRoutes);
 router.use('/announcements', protectedTenant, announcementRoutes);
 router.use('/system', systemRoutes);
+router.use('/whatsapp', whatsappRoutes);
 
 export default router;

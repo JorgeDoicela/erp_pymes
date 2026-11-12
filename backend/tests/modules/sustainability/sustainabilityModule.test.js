@@ -209,10 +209,13 @@ describe('Módulo de Sostenibilidad ODS 8, RAG Multi-Dominio y Fine-Tuning', () 
   });
 
   describe('5. Corpus Completo de los 4 PDFs (1,895 Artículos), Modelo Evaluador y Adaptador DeepSeek/Local', () => {
-    it('debe tener indexados los 1,880+ artículos extraídos de los 4 PDFs oficiales sin omitir ninguno', () => {
+    it('debe tener indexados los 1,880+ artículos extraídos de los 4 PDFs oficiales sin omitir ninguno y activo el índice híbrido denso', () => {
       const stats = sustainabilityRepository.getCorpusStatistics();
       expect(stats.totalIndexedChunks).toBeGreaterThanOrEqual(1880);
       expect(stats.totalKnownArticles).toBeGreaterThan(400);
+      expect(stats.hasTrainedEmbeddings).toBe(true);
+      expect(stats.trainedArticlesCount).toBeGreaterThanOrEqual(1850);
+      expect(stats.trainedQueryVocabSize).toBeGreaterThanOrEqual(500);
     });
 
     it('debe re-ordenar fragmentos con el Modelo Evaluador (Cross-Encoder) y auditar alucinaciones', async () => {
@@ -242,6 +245,30 @@ describe('Módulo de Sostenibilidad ODS 8, RAG Multi-Dominio y Fine-Tuning', () 
 
       expect(groundedAudit.status).toBe('VERIFIED_BY_EVALUATOR');
       expect(groundedAudit.groundednessScore).toBeGreaterThanOrEqual(0.8);
+
+      const hallucinatedAudit = legalEvaluatorService.verifyAnswerFidelity({
+        answerText:
+          'Según el Art. 188 y el inexistente Art. 9999 del Código, se aplica la indemnización.',
+        retrievedChunks: reranked,
+        liveCalculation: null,
+        allKnownArticleCodes: knownSet,
+      });
+      expect(hallucinatedAudit.unverifiedArticles).toContain('Art. 9999');
+      expect(hallucinatedAudit.auditedAnswer).toContain(
+        'Nota de Auditoría del Evaluador Legal (Anti-Alucinación)'
+      );
+    });
+
+    it('debe garantizar aislamiento multi-tenant LOPDP cuando no se proporciona tenantId y soportar exportación del corpus PDF completo', async () => {
+      const emptyTenantData = await sustainabilityRepository.getOds8AggregatedData(null);
+      expect(emptyTenantData.totalEmployees).toBe(0);
+      expect(emptyTenantData.allActiveEmployees).toEqual([]);
+
+      const fullCorpusDataset = await sustainabilityFineTuningService.generateDataset({
+        targetModel: 'qwen2.5',
+        includeFullPdfCorpus: true,
+      });
+      expect(fullCorpusDataset.totalSamples).toBeGreaterThanOrEqual(3800);
     });
 
     it('debe soportar configuración para DeepSeek API, OpenAI, Gemini y Modelos Locales Fine-Tuneados (Ollama / vLLM)', () => {

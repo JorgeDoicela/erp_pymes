@@ -148,15 +148,16 @@ Una vez generada la respuesta del modelo grande, el evaluador:
 
 El servicio [`llmProvider.service.js`](../../backend/src/modules/sustainability/llmProvider.service.js) desacopla la lógica RAG del proveedor de inteligencia artificial, soportando tanto APIs cloud como modelos locales entrenados mediante Fine-Tuning:
 
-| Proveedor (`AI_PROVIDER`)     |     Protocolo      | URL Base por Defecto                                      | Modelo por Defecto         | Variable de Credencial   |
-| :---------------------------- | :----------------: | :-------------------------------------------------------- | :------------------------- | :----------------------- |
-| `deepseek` _(Predeterminado)_ |    OpenAI REST     | `https://api.deepseek.com`                                | `deepseek-chat`            | `DEEPSEEK_API_KEY`       |
-| `local_ollama`                |     Ollama API     | `http://127.0.0.1:11434`                                  | `ecuador-erp-ai`           | Sin API Key (Local GGUF) |
-| `local_openai`                |    OpenAI REST     | `http://127.0.0.1:8000/v1`                                | `ecuador-erp-ai`           | Opcional (`AI_API_KEY`)  |
-| `openai`                      |    OpenAI REST     | `https://api.openai.com/v1`                               | `gpt-4o-mini`              | `OPENAI_API_KEY`         |
-| `gemini`                      |   OpenAI Compat    | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-2.5-flash`         | `GEMINI_API_KEY`         |
-| `groq`                        |    OpenAI REST     | `https://api.groq.com/openai/v1`                          | `llama-3.3-70b-versatile`  | `GROQ_API_KEY`           |
-| `anthropic`                   | Anthropic Messages | `https://api.anthropic.com/v1`                            | `claude-3-5-sonnet-latest` | `ANTHROPIC_API_KEY`      |
+| Proveedor (`AI_PROVIDER`)     |     Protocolo      | URL Base por Defecto                                      | Modelo por Defecto                             | Variable de Credencial   |
+| :---------------------------- | :----------------: | :-------------------------------------------------------- | :--------------------------------------------- | :----------------------- |
+| `deepseek` _(Predeterminado)_ |    OpenAI REST     | `https://api.deepseek.com`                                | `deepseek-chat`                                | `DEEPSEEK_API_KEY`       |
+| `huggingface`                 |    OpenAI REST     | `https://router.huggingface.co/v1`                        | `Qwen/Qwen2.5-7B-Instruct`                     | `HF_TOKEN`               |
+| `local_ollama`                |     Ollama API     | `http://127.0.0.1:11434`                                  | `ecuador-erp-ai`                               | Sin API Key (Local GGUF) |
+| `local_openai`                |    OpenAI REST     | `http://127.0.0.1:8000/v1`                                | `doiceladev/norma-erp-ecuador-qwen2.5-7b-lora` | Opcional (`AI_API_KEY`)  |
+| `openai`                      |    OpenAI REST     | `https://api.openai.com/v1`                               | `gpt-4o-mini`                                  | `OPENAI_API_KEY`         |
+| `gemini`                      |   OpenAI Compat    | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-2.5-flash`                             | `GEMINI_API_KEY`         |
+| `groq`                        |    OpenAI REST     | `https://api.groq.com/openai/v1`                          | `llama-3.3-70b-versatile`                      | `GROQ_API_KEY`           |
+| `anthropic`                   | Anthropic Messages | `https://api.anthropic.com/v1`                            | `claude-3-5-sonnet-latest`                     | `ANTHROPIC_API_KEY`      |
 
 #### Cadena de Resiliencia y Fallback Automático:
 
@@ -283,11 +284,11 @@ Todas las rutas están registradas bajo `/api/sustainability` en [`sustainabilit
 
 Todos los artefactos para entrenar tanto el **Modelo Buscador / Evaluador** como el **Modelo Generativo Local** se encuentran generados en `docs/09-sostenibilidad-ods/`:
 
-| Archivo Generado                                                                         | Ubicación Relativa            |        Registros        | Propósito en Google Colab                                                                                      |
-| :--------------------------------------------------------------------------------------- | :---------------------------- | :---------------------: | :------------------------------------------------------------------------------------------------------------- |
-| [`Entrenamiento_IA_Norma_ERP_Colab.ipynb`](./Entrenamiento_IA_Norma_ERP_Colab.ipynb)     | `docs/09-sostenibilidad-ods/` |  7 celdas ejecutables   | Cuaderno Jupyter completo dividido en Fase 1 (Buscador + Evaluador) y Fase 2 (Fine-Tuning QLoRA `.gguf`).      |
-| [`retriever_evaluator_training_colab.jsonl`](./retriever_evaluator_training_colab.jsonl) | `docs/09-sostenibilidad-ods/` |   **1,880 tripletas**   | Contiene el 100% de los artículos de los 4 PDFs en formato contrastivo (`query`, `positive`, `hard_negative`). |
-| [`fine_tuning_ecuador_ods8_qwen.jsonl`](./fine_tuning_ecuador_ods8_qwen.jsonl)           | `docs/09-sostenibilidad-ods/` | **195 muestras ChatML** | Escenarios de razonamiento jurídico y matemático paso a paso (`Decimal.js`) más artículos de los 4 PDFs.       |
+| Archivo Generado                                                                         | Ubicación Relativa            |        Registros        | Propósito en Google Colab                                                                                             |
+| :--------------------------------------------------------------------------------------- | :---------------------------- | :---------------------: | :-------------------------------------------------------------------------------------------------------------------- |
+| [`Entrenamiento_IA_Norma_ERP_Colab.ipynb`](./Entrenamiento_IA_Norma_ERP_Colab.ipynb)     | `docs/09-sostenibilidad-ods/` |  8 celdas ejecutables   | Cuaderno Jupyter completo dividido en Fase 1 (Buscador + Evaluador) y Fase 2 (Fine-Tuning QLoRA `.gguf`).             |
+| [`retriever_evaluator_training_colab.jsonl`](./retriever_evaluator_training_colab.jsonl) | `docs/09-sostenibilidad-ods/` |   **1,880 tripletas**   | Contiene el 100% de los artículos de los 4 PDFs en formato contrastivo (`query`, `positive`, `hard_negative`).        |
+| [`fine_tuning_ecuador_ods8_qwen.jsonl`](./fine_tuning_ecuador_ods8_qwen.jsonl)           | `docs/09-sostenibilidad-ods/` | **275 muestras ChatML** | Escenarios de razonamiento jurídico y matemático paso a paso (`Decimal.js`) más muestreo estratificado de los 4 PDFs. |
 
 ### 6.1. Pasos para Ejecutar el Cuaderno en Google Colab
 
@@ -331,6 +332,69 @@ node backend/src/modules/sustainability/data/extractAllFourPdfs.js
 # 2. Regenerar los dos archivos .jsonl para Google Colab
 node backend/src/modules/sustainability/data/extractCorpusToDataset.js
 
-# 3. Ejecutar pruebas unitarias y de arquitectura del módulo
+# 3. Verificar o descargar los modelos entrenados desde Hugging Face Hub (doiceladev)
+node backend/src/modules/sustainability/data/syncHuggingFaceModels.js status
+node backend/src/modules/sustainability/data/syncHuggingFaceModels.js pull --full-lora
+
+# 4. Ejecutar pruebas unitarias y de arquitectura del módulo
 npx --prefix backend vitest run tests/modules/sustainability/sustainabilityModule.test.js tests/architecture/modularMonolith.test.js
 ```
+
+---
+
+## 7. Bitácora de Entrenamiento en Google Colab, Publicación en Hugging Face Hub y Guía de Producción AWS EC2
+
+### 7.1. Resultados Reales del Entrenamiento Ejecutado en Google Colab GPU
+
+El entrenamiento del ecosistema de IA se ejecutó en dos fases independientes utilizando GPUs de centro de datos en Google Colab mediante `colab.exe`:
+
+| Fase                                         | Modelo Base y Técnica                                                                                                            | Hardware Asignado                                   | Métricas de Convergencia                                                                                                                | Repositorio Público en Hugging Face (`doiceladev`)                                                                    |
+| :------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| **Fase 1: Buscador Denso + Evaluador Legal** | Bi-Encoder `intfloat/multilingual-e5-base` (`MultipleNegativesRankingLoss`) + Cross-Encoder `unicamp-dl/mMiniLM-L6-v2-mmarco-v2` | **NVIDIA A100-SXM4-40GB** (`52.6s`)                 | `1,880` artículos + `800` términos de consulta codificados; Separación Cross-Encoder: Positivos `1.0000` vs. Negativos `0.0000`         | [`doiceladev/norma-erp-ecuador-retriever-e5`](https://huggingface.co/doiceladev/norma-erp-ecuador-retriever-e5)       |
+| **Fase 2: Generador Jurídico y ODS 8**       | `Qwen/Qwen2.5-7B-Instruct` + PEFT LoRA (`r=16`, `lora_alpha=32`, `40,370,176` parámetros entrenables en `bfloat16`)              | **NVIDIA L4 (22.03 GB VRAM)** (`808.17s`, 3 épocas) | `Train Loss: 0.7676` \| `Eval Loss: 0.5329` (descenso continuo en las 3 épocas: `0.6909` $\rightarrow$ `0.5564` $\rightarrow$ `0.5329`) | [`doiceladev/norma-erp-ecuador-qwen2.5-7b-lora`](https://huggingface.co/doiceladev/norma-erp-ecuador-qwen2.5-7b-lora) |
+
+### 7.2. Estructura de Artefactos Descargados en el Proyecto
+
+Todos los artefactos entrenados y descargados desde Hugging Face Hub residen en `backend/src/modules/sustainability/data/`:
+
+```text
+backend/src/modules/sustainability/data/
+├── extractedFullLegalCorpus.json                  # 1,880 artículos íntegros extraídos de los 4 PDFs oficiales
+├── trained_retriever_index.json                   # Índice neuronal denso + scores Cross-Encoder (3.20 MB, versionado en Git)
+├── training_report_a100.json                      # Telemetría oficial de entrenamiento GPU (versionado en Git)
+├── syncHuggingFaceModels.js                       # Sincronizador automático con Hugging Face Hub (status | pull | ensure)
+└── models/
+    └── qwen25-ecuador-ods8-lora/
+        ├── adapter_config.json                    # Configuración PEFT LoRA (r=16, alpha=32, target_modules q..down_proj)
+        ├── adapter_model.safetensors              # Pesos tensoriales LoRA en bfloat16 (154.05 MB, descargado bajo demanda)
+        ├── Modelfile                              # Manifiesto de despliegue directo para Ollama
+        ├── README.md                              # Ficha técnica (Model Card) del modelo
+        ├── tokenizer.json                         # Tokenizador Qwen2.5 (10.89 MB)
+        ├── tokenizer_config.json                  # Configuración de tokens especiales ChatML
+        └── chat_template.jinja                    # Plantilla Jinja de conversación
+```
+
+> [!NOTE]
+> Para mantener el repositorio Git ágil y evitar el límite de 100 MB por archivo de GitHub, los archivos ligeros esenciales (`trained_retriever_index.json`, `training_report_a100.json`, `adapter_config.json`, `Modelfile`, `README.md`) están incluidos directamente en el árbol del proyecto, mientras que el binario pesado `adapter_model.safetensors` (`154.05 MB`) está ignorado en `.gitignore` y se descarga en cualquier servidor mediante `syncHuggingFaceModels.js pull --full-lora`.
+
+### 7.3. Qué Toca Hacer al Crear la Instancia en AWS EC2 (Checklist de Producción)
+
+Cuando crees tu instancia Debian en **AWS EC2**, el despliegue de los modelos está automatizado en [`backend/entrypoint.sh`](../../backend/entrypoint.sh):
+
+1. **En el archivo `/var/www/recursos_humanos/.env` de tu servidor AWS EC2**, asegúrate de incluir las variables de IA y Hugging Face:
+   ```env
+   AI_PROVIDER="deepseek"
+   DEEPSEEK_API_KEY="sk-tu-api-key-de-deepseek"
+   AI_MODEL="deepseek-chat"
+   HF_TOKEN="hf_tu-token-de-huggingface"
+   HUGGINGFACE_HUB_TOKEN="hf_tu-token-de-huggingface"
+   HF_NAMESPACE="doiceladev"
+   HF_RETRIEVER_REPO_ID="doiceladev/norma-erp-ecuador-retriever-e5"
+   HF_LORA_REPO_ID="doiceladev/norma-erp-ecuador-qwen2.5-7b-lora"
+   ```
+2. **Arranque Automático del Buscador Neuronal y Evaluador (Cero GPU requerida en EC2):**
+   - Al ejecutar `docker compose up -d`, el `entrypoint.sh` del contenedor `rh_backend` invoca automáticamente `node src/modules/sustainability/data/syncHuggingFaceModels.js ensure`.
+   - `rh_backend` carga en RAM `trained_retriever_index.json` (`3.20 MB`), activando el **Buscador Híbrido (BM25 + Similitud Coseno Densa)** y el **Evaluador Cross-Encoder** en cualquier instancia EC2 económica (`t3.small` o `t3.medium`) sin necesidad de tarjeta gráfica.
+3. **(Opcional) Si en el futuro aprovisionas una instancia EC2 con GPU (`g5.xlarge` / `g6.xlarge`) para correr el LLM LoRA localmente con Ollama:**
+   - Ejecuta `docker exec rh_backend node src/modules/sustainability/data/syncHuggingFaceModels.js pull --full-lora` para descargar `adapter_model.safetensors` (`154.05 MB`).
+   - Registra el modelo en Ollama con `ollama create ecuador-erp-ai -f backend/src/modules/sustainability/data/models/qwen25-ecuador-ods8-lora/Modelfile` y cambia `AI_PROVIDER="local_ollama"` en el `.env`.

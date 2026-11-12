@@ -11,6 +11,9 @@ else
     echo "=== RUN_SEED=$RUN_SEED. Omitiendo seed ==="
 fi
 
+echo "=== Entrypoint: Verificando artefactos de IA y RAG Legal (Hugging Face Hub) ==="
+node src/modules/sustainability/data/syncHuggingFaceModels.js ensure || echo "WARNING: No se pudo verificar Hugging Face Hub. Usando índice embebido..."
+
 echo "=== Sincronización completada. Iniciando servidor Node.js ==="
 exec node src/server.js
 

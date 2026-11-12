@@ -1,0 +1,18 @@
+{
+  "baseModel": "Qwen/Qwen2.5-7B-Instruct",
+  "precision": "bfloat16 + LoRA (r=16, alpha=32)",
+  "gpu": "NVIDIA L4",
+  "vramGb": 22.03,
+  "datasetSamples": 275,
+  "trainSamples": 247,
+  "evalSamples": 28,
+  "epochs": 3,
+  "loraRank": 16,
+  "loraAlpha": 32,
+  "trainLoss": 0.7676,
+  "evalLoss": 0.5329,
+  "trainingTimeSeconds": 808.17,
+  "sampleInferencePrompt": "Calcula paso a paso la indemnización por despido intempestivo (Art. 188) y bonificación por desahucio (Art. 185) en Ecuador para un trabajador con sueldo mensual de $850.00 USD y 4 años y 2 meses de servicio.",
+  "sampleInferenceOutput": "### Liquidación Jurídica y Aritmética de la Indemnización (Art. 188) y Bonificación (Art. 185)\n#### 1. Parámetro Legal: Indemnización por Despido Intempestivo (Art. 188 del Código del Trabajo)\n[OIT Convenio 81 | Pág. 16] Art. 188.- - Si el despido fuera intempestivo, además de las indemnizaciones previstas en los artículos anteriores, se le deberá pagar al trabajador una indemnización adicional equivalente a la remuneración que hubiere percibido por el período de seis meses, computándose el año completo de servicio como seis meses. Nota: Artículo reformado por Ley No. 0, publicada en Registro Oficial Suplemento 379 de 15 de Abril del 2005 . Nota: Artículo reformado por Ley No. 0, publicada en Registro Oficial Suplemento 409 de 15 de Abril del 2006 .\n#### 2. Parámetro Legal: Bonificación por Desahucio (Art. 185 del Código del Trabajo)\n[OIT Convenio 81 | Pág. 16] Art. 185.- - En caso de desahucio, además de lo que establece el artículo anterior, se le pagará al trabajador una bonificación equivalente a la remuneración que hubiere percibido por el período de seis meses, computándose el año completo de servicio como seis meses. Nota: Artículo reformado por Ley No. 0, publicada en Registro Oficial Suplemento 379 de 15 de Abril del 2005 . Nota: Artículo reformado por Ley No. 0, publicada en Registro Oficial Suplemento 409 de 15 de Abril del 2006 .\n#### 3. Cálculo de Indemnización y",
+  "completedAt": "2026-11-12T03:18:30Z"
+}
