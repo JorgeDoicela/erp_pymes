@@ -12,7 +12,7 @@ import { FiSend, FiTrash2, FiDownload } from 'react-icons/fi';
 import { useSustainabilityAdvisor } from '../hooks/useSustainabilityAdvisor.js';
 import LegalCitationDrawer from './LegalCitationDrawer.jsx';
 import FineTuningExportModal from './FineTuningExportModal.jsx';
-import { ADVISOR_PRESETS } from './LegalAssistantConfigPanel.jsx';
+import { ADVISOR_PRESETS, LegalAssistantMessageBubble } from './LegalAssistantConfigPanel.jsx';
 
 export default function SustainabilityAIAdvisor() {
   const [inputText, setInputText] = useState('');
@@ -103,56 +103,11 @@ export default function SustainabilityAIAdvisor() {
           </div>
         ) : (
           messages.map((msg) => (
-            <div
+            <LegalAssistantMessageBubble
               key={msg.id}
-              className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-            >
-              <div
-                className={`max-w-[90%] rounded-[4px] p-3.5 text-xs leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-[#2563eb] text-white font-medium'
-                    : 'bg-white border border-gray-200 text-gray-800'
-                }`}
-              >
-                <div className="whitespace-pre-wrap font-sans">{msg.content}</div>
-
-                {/* Auditoría del Modelo Evaluador Anti-Alucinación */}
-                {msg.role === 'assistant' && msg.evaluationAudit && (
-                  <div className="mt-2.5 pt-2 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-gray-500">
-                    <span>
-                      Evaluador Anti-Alucinación: Fidelidad{' '}
-                      <strong className="text-gray-900 tabular-nums">
-                        {Math.round((msg.evaluationAudit.groundednessScore || 1) * 100)}%
-                      </strong>
-                    </span>
-                    <span>
-                      Motor: <strong className="text-gray-800">{msg.inferenceMode || 'RAG'}</strong>
-                    </span>
-                  </div>
-                )}
-
-                {/* Citas Legales Asociadas */}
-                {msg.legalCitations && msg.legalCitations.length > 0 && (
-                  <div className="mt-3 pt-2.5 border-t border-gray-200 space-y-1.5">
-                    <p className="text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-wider">
-                      Fuentes Normativas Recuperadas (Inspeccionar):
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {msg.legalCitations.map((citation, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setSelectedCitation(citation)}
-                          className="px-2 py-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-800 font-mono text-[10px] rounded-[4px] transition-colors"
-                        >
-                          {citation.articleCode}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+              msg={msg}
+              onSelectCitation={setSelectedCitation}
+            />
           ))
         )}
 

@@ -28,6 +28,13 @@ export const performanceMiddleware = (req, res, next) => {
     if (url.includes('/attendance')) {
       threshold = 1000;
       type = 'Asistencia';
+    } else if (
+      url.includes('/advisor') ||
+      url.includes('/intelligence') ||
+      url.includes('/fine-tuning')
+    ) {
+      threshold = 15000;
+      type = 'Inferencia IA / RAG';
     } else if (url.includes('/reports') || url.includes('/analytics')) {
       threshold = 5000;
       type = 'Reportes';

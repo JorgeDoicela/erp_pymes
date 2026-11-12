@@ -11,8 +11,12 @@ import neuralRetrieverService from './neuralRetriever.service.js';
 
 const NORMATIVE_SOURCE_PATTERNS = [
   { category: 'CONSTITUTION', pattern: /\b(constitucion|constitucional|carta magna)\b/ },
-  { category: 'LABOR_CODE', pattern: /\b(codigo del? trabajo|codigo laboral)\b/ },
-  { category: 'IESS_REGULATION', pattern: /\b(iess|seguridad social)\b/ },
+  {
+    category: 'LABOR_CODE',
+    pattern:
+      /\b(codigo del? trabajo|codigo laboral|fondos? de reserva|desahucio|despido|vacaciones|utilidades|decimo)\b/,
+  },
+  { category: 'IESS_REGULATION', pattern: /\b(iess|seguridad social|afiliacion)\b/ },
   { category: 'ODS_8_FRAMEWORK', pattern: /\b(oit|ods\s*8|trabajo decente|8\.[1-9])\b/ },
 ];
 
@@ -55,14 +59,13 @@ export function selectBalancedByCategory(items, limit, requestedCategories, scor
   return selected.sort((a, b) => (b[scoreField] || 0) - (a[scoreField] || 0)).slice(0, limit);
 }
 
-// Mapa de afinidad entre los módulos/vistas del ERP y las categorías normativas
 const MODULE_DOMAIN_AFFINITY = {
   payroll: ['PAYROLL', 'IESS', 'TAX_SRI', 'LABOR_CODE', 'IESS_REGULATION'],
   contracts: ['CONTRACTS', 'CONSTITUTION', 'LABOR_CODE'],
   offboarding: ['OFFBOARDING', 'LABOR_CODE', 'SIGNATURES'],
   attendance: ['ATTENDANCE', 'BIOMETRICS', 'GOVERNANCE', 'LABOR_CODE'],
   accounting: ['ACCOUNTING', 'TAX_SRI', 'IESS', 'INTERNAL_POLICY'],
-  employees: ['CONTRACTS', 'GOVERNANCE', 'CONSTITUTION', 'LABOR_CODE'],
+  employees: ['CONTRACTS', 'GOVERNANCE', 'CONSTITUTION', 'LABOR_CODE', 'IESS_REGULATION'],
   performance: ['PERFORMANCE', 'ODS_8', 'ODS_8_FRAMEWORK'],
   recruitment: ['PERFORMANCE', 'CONSTITUTION', 'LABOR_CODE'],
   signatures: ['SIGNATURES', 'GOVERNANCE'],
@@ -71,12 +74,6 @@ const MODULE_DOMAIN_AFFINITY = {
 };
 
 export class LegalEvaluatorService {
-  /**
-   * 1. EVALUADOR DE RELEVANCIA (Cross-Encoder Reranker):
-   * Evalúa en vivo los fragmentos recuperados usando el modelo neuronal Cross-Encoder ONNX (cuando está presente)
-   * combinado con señales deterministas de bigramas, citación exacta y afinidad contextual del ERP.
-   * @param {Object} params
-   */
   async evaluateAndRerankChunks({
     query,
     candidateChunks = [],
@@ -88,18 +85,13 @@ export class LegalEvaluatorService {
     const normQuery = this.normalize(query);
     const queryTokens = normQuery.split(/\s+/).filter((t) => t.length >= 3);
     const queryBigrams = this.buildBigrams(queryTokens);
-
-    // Extraer números de artículos mencionados en la pregunta
     const mentionedArticles = [...query.matchAll(/art(?:[ií]culo|\.)?\s*(\d+(?:\.\d+)?)/gi)].map(
       (m) => m[1]
     );
-
     const preferredDomains =
       MODULE_DOMAIN_AFFINITY[String(moduleContext || 'sustainability').toLowerCase()] || [];
-
     const maxInitialScore = Math.max(...candidateChunks.map((c) => c.relevanceScore || 1), 1);
 
-    // Inferencia par-a-par en vivo con Cross-Encoder ONNX cuantizado (si los pesos están sincronizados)
     let liveCrossEncoderScores = null;
     try {
       if (neuralRetrieverService.hasCrossEncoderFiles()) {
@@ -116,19 +108,16 @@ export class LegalEvaluatorService {
       const normContent = this.normalize(`${chunk.articleCode || ''} ${chunk.content}`);
       const contentTokens = normContent.split(/\s+/).filter((t) => t.length >= 3);
       const contentBigrams = new Set(this.buildBigrams(contentTokens));
-
       const liveCeScore =
         Array.isArray(liveCrossEncoderScores) && typeof liveCrossEncoderScores[idx] === 'number'
           ? liveCrossEncoderScores[idx]
           : null;
 
-      // A. Puntaje base normalizado del Modelo Buscador (0.0 a 0.38)
       const retrieverComponent = Math.min(
         0.38,
         ((chunk.relevanceScore || 0) / maxInitialScore) * 0.38
       );
 
-      // B. Cobertura de términos clave de la consulta (0.0 a 0.18)
       let matchedTokens = 0;
       for (const qt of queryTokens) {
         if (normContent.includes(qt)) matchedTokens++;
@@ -136,7 +125,6 @@ export class LegalEvaluatorService {
       const tokenCoverage =
         queryTokens.length > 0 ? Math.min(0.18, (matchedTokens / queryTokens.length) * 0.18) : 0.1;
 
-      // C. Coincidencia de bigramas / frases jurídicas exactas (0.0 a 0.12)
       let matchedBigrams = 0;
       for (const bg of queryBigrams) {
         if (contentBigrams.has(bg)) matchedBigrams++;
@@ -144,7 +132,6 @@ export class LegalEvaluatorService {
       const bigramBonus =
         queryBigrams.length > 0 ? Math.min(0.12, (matchedBigrams / queryBigrams.length) * 0.12) : 0;
 
-      // D. Coincidencia exacta de número de artículo (Boost directo +0.22)
       let articleExactBonus = 0;
       if (mentionedArticles.length > 0 && chunk.articleCode) {
         const hasExactArt = mentionedArticles.some((num) =>
@@ -153,11 +140,8 @@ export class LegalEvaluatorService {
         if (hasExactArt) articleExactBonus = 0.22;
       }
 
-      // E. Afinidad con el lugar/módulo del ERP desde donde consulta el usuario (+0.08)
       const chunkDomain = chunk.metadata?.domain || chunk.document?.category || '';
       const contextBonus = preferredDomains.includes(chunkDomain) ? 0.08 : 0.02;
-
-      // F. Puntaje neuronal en vivo: Bi-Encoder coseno + Cross-Encoder ONNX par-a-par
       const denseBonus =
         typeof chunk.denseSimilarity === 'number' && chunk.denseSimilarity > 0
           ? Math.min(0.14, chunk.denseSimilarity * 0.16)
@@ -177,12 +161,11 @@ export class LegalEvaluatorService {
         contextBonus +
         denseBonus +
         crossEncoderBonus;
-      const evaluatorConfidence = Number(Math.min(0.99, Math.max(0.15, rawConfidence)).toFixed(4));
 
       return {
         ...chunk,
         liveCrossEncoderScore: liveCeScore,
-        evaluatorConfidence,
+        evaluatorConfidence: Number(Math.min(0.99, Math.max(0.15, rawConfidence)).toFixed(4)),
       };
     });
 
@@ -191,12 +174,6 @@ export class LegalEvaluatorService {
     return selectBalancedByCategory(evaluated, topK, requestedCategories, 'evaluatorConfidence');
   }
 
-  /**
-   * 2. EVALUADOR DE FIDELIDAD Y CERO ALUCINACIONES (Groundedness Judge):
-   * Audita la respuesta final antes de entregarla al usuario, verificando que los artículos citados
-   * pertenezcan al corpus legal y que los valores numéricos coincidan con Decimal.js.
-   * @param {Object} params
-   */
   verifyAnswerFidelity({
     answerText,
     retrievedChunks = [],
@@ -213,10 +190,8 @@ export class LegalEvaluatorService {
       };
     }
 
-    // 1. Extraer todos los artículos citados en la respuesta generada
     const citedMatches = [...answerText.matchAll(/Art(?:[ií]culo|\.)?\s*(\d+(?:\.\d+)?)/gi)];
     const citedNumbers = [...new Set(citedMatches.map((m) => m[1]))];
-
     const retrievedArticleText = retrievedChunks
       .map((c) => `${c.articleCode || ''} ${c.content}`)
       .join(' ');
@@ -226,25 +201,28 @@ export class LegalEvaluatorService {
 
     for (const num of citedNumbers) {
       const regex = new RegExp(`\\b${num.replace('.', '\\.')}\\b`);
-      const inRetrieved = regex.test(retrievedArticleText);
-
-      if (inRetrieved) {
+      if (regex.test(retrievedArticleText)) {
         verifiedArticles.push(`Art. ${num}`);
       } else {
         unverifiedArticles.push(`Art. ${num}`);
       }
     }
 
-    // 2. Verificar consistencia matemática si hubo cálculo con Decimal.js
     let mathVerified = true;
     if (liveCalculation) {
       const candidateTotals = [
         liveCalculation.totalSettlement,
+        liveCalculation.desahucioAmount,
+        liveCalculation.severanceAmount,
         liveCalculation.totalDebit,
         liveCalculation.netSalary,
+        liveCalculation.reserveFund,
+        liveCalculation.iessPersonal,
+        liveCalculation.iessPatronal,
         liveCalculation.totalOvertimePay,
         liveCalculation.totalSupp50,
-      ].filter((val) => typeof val === 'number');
+        liveCalculation.totalExtra100,
+      ].filter((val) => typeof val === 'number' && val > 0);
 
       if (candidateTotals.length > 0) {
         mathVerified = candidateTotals.some((expectedTotal) => {
@@ -274,7 +252,6 @@ export class LegalEvaluatorService {
       (citationRatio * 0.75 + (mathVerified ? 0.25 : 0.1)).toFixed(4)
     );
 
-    // Si el LLM externo omitió el desglose exacto de Decimal.js o citó algo no verificado, anexar nota de auditoría
     let auditedAnswer = answerText;
     if (unverifiedArticles.length > 0) {
       const verifiedList =
