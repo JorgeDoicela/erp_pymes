@@ -32,7 +32,7 @@ const PDF_SOURCES = [
     docId: 'constitucion_2008',
     title: 'Constitución de la República del Ecuador (2008)',
     shortTitle: 'Constitución del Ecuador',
-    category: 'LABOR_CODE',
+    category: 'CONSTITUTION',
     defaultOds: '8.5',
     mode: 'ARTICLES',
   },

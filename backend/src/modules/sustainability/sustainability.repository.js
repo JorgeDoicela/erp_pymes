@@ -12,6 +12,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import prisma from '../../database/db.js';
 import { ECUADOR_LABOR_CORPUS } from './data/ecuadorLaborKnowledge.js';
+import {
+  detectRequestedNormativeCategories,
+  selectBalancedByCategory,
+} from './legalEvaluator.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,7 +54,13 @@ const ECUADOR_LEGAL_SYNONYMS = {
     'reserva',
     'mora',
     'afiliacion',
+    '73',
+    '11',
+    'primer',
+    'dia',
   ],
+  fondos: ['reserva', '8.33%', '196', '200', '202', 'iess', 'mensualizado', 'ano'],
+  reserva: ['fondos', '8.33%', '196', '200', '202', 'iess', 'mensualizado'],
   decimo: ['decimotercer', 'decimocuarto', '13er', '14to', 'navideno', 'escolar', '111', '113'],
   utilidades: ['15%', '10%', '5%', 'cargas', 'familiares', 'abril', '97', 'reparto'],
   impuesto: ['renta', 'sri', 'lorti', 'gastos', 'personales', 'retencion', 'rdep', '107'],
@@ -79,6 +89,24 @@ const ECUADOR_LEGAL_SYNONYMS = {
     '152',
     '155',
   ],
+  discapacidad: ['4%', 'inclusion', 'sustituto', '42', '47', '330', 'persona'],
+  discapacidades: ['4%', 'discapacidad', 'inclusion', 'sustituto', '42', '47', '330'],
+  constitucion: [
+    'constitucional',
+    'republica',
+    'derecho',
+    'trabajo',
+    '33',
+    '34',
+    '66',
+    '325',
+    '326',
+    '327',
+    '328',
+  ],
+  constitucional: ['constitucion', 'derechos', '33', '66', '325', '326', 'trabajo'],
+  forzoso: ['esclavitud', 'servidumbre', 'trabajo', 'obligatorio', '66', '8.7', '8.8', '325'],
+  pleno: ['empleo', 'productivo', 'trabajo', 'decente', '8.5', '325', '326'],
   contrato: [
     'indefinido',
     'prueba',
@@ -125,17 +153,22 @@ export class SustainabilityRepository {
 
     // 1. Cargar exclusivamente los 1,880 artículos y secciones íntegras de los 4 PDFs oficiales
     for (const doc of ECUADOR_LABOR_CORPUS) {
+      const normalizedCategory = doc.docId === 'constitucion_2008' ? 'CONSTITUTION' : doc.category;
       for (const chunk of doc.chunks || []) {
         this.registerArticleNumbers(chunk.articleCode);
         allChunks.push({
-          id: `pdf_${doc.docId || doc.category}_${allChunks.length}`,
+          id: `pdf_${doc.docId || normalizedCategory}_${allChunks.length}`,
           content: chunk.content,
           articleCode: chunk.articleCode,
           odsTarget: chunk.odsTarget || '8.8',
-          metadata: { ...(chunk.metadata || {}), isFullPdfExtract: true },
+          metadata: {
+            ...(chunk.metadata || {}),
+            docId: doc.docId,
+            isFullPdfExtract: true,
+          },
           document: {
             title: doc.title,
-            category: doc.category,
+            category: normalizedCategory,
             version: doc.version || '2026',
             sourceUrl: doc.sourceUrl || null,
           },
@@ -478,6 +511,10 @@ export class SustainabilityRepository {
       }
     }
 
+    // Detectar cuerpos normativos explícitamente solicitados en la consulta
+    const requestedCategories = detectRequestedNormativeCategories(normalizedQuery);
+    const requestedCategorySet = new Set(requestedCategories);
+
     // Detectar mención explícita de número de artículo (ej. "Art. 188", "artículo 216", "Art 55")
     const articleMatches = [...query.matchAll(/art(?:[ií]culo|\.)?\s*(\d+(?:\.\d+)?)/gi)].map(
       (m) => m[1]
@@ -551,6 +588,12 @@ export class SustainabilityRepository {
         }
       }
 
+      // Boost si el usuario mencionó explícitamente este cuerpo normativo (ej. Constitución, IESS, OIT)
+      const chunkCategory = chunk.document?.category;
+      if (score > 0 && chunkCategory && requestedCategorySet.has(chunkCategory)) {
+        score += 18.0;
+      }
+
       // Boost si es parte del catálogo curado con fórmulas verificadas del ERP
       if (chunk.metadata?.isCurated && score > 3.0) {
         score *= 1.25;
@@ -569,7 +612,7 @@ export class SustainabilityRepository {
     scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
 
     if (scored.length > 0) {
-      return scored.slice(0, limit);
+      return selectBalancedByCategory(scored, limit, requestedCategories, 'relevanceScore');
     }
 
     return candidates.slice(0, limit).map((c) => ({ ...c.chunk, relevanceScore: 0.5 }));

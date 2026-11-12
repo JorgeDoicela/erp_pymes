@@ -7,6 +7,52 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
+const NORMATIVE_SOURCE_PATTERNS = [
+  { category: 'CONSTITUTION', pattern: /\b(constitucion|constitucional|carta magna)\b/ },
+  { category: 'LABOR_CODE', pattern: /\b(codigo del? trabajo|codigo laboral)\b/ },
+  { category: 'IESS_REGULATION', pattern: /\b(iess|seguridad social)\b/ },
+  { category: 'ODS_8_FRAMEWORK', pattern: /\b(oit|ods\s*8|trabajo decente|8\.[1-9])\b/ },
+];
+
+export function detectRequestedNormativeCategories(normQuery) {
+  const query = String(normQuery || '');
+  return NORMATIVE_SOURCE_PATTERNS.filter(({ pattern }) => pattern.test(query)).map(
+    ({ category }) => category
+  );
+}
+
+export function selectBalancedByCategory(items, limit, requestedCategories, scoreField) {
+  if (!Array.isArray(requestedCategories) || requestedCategories.length <= 1) {
+    return items.slice(0, limit);
+  }
+
+  const selected = [];
+  const seenIds = new Set();
+  const minPerCategory = Math.max(2, Math.floor(limit / requestedCategories.length));
+
+  for (const category of requestedCategories) {
+    let taken = 0;
+    for (const item of items) {
+      if (item.document?.category === category && !seenIds.has(item.id)) {
+        selected.push(item);
+        seenIds.add(item.id);
+        taken++;
+        if (taken >= minPerCategory) break;
+      }
+    }
+  }
+
+  for (const item of items) {
+    if (selected.length >= limit) break;
+    if (!seenIds.has(item.id)) {
+      selected.push(item);
+      seenIds.add(item.id);
+    }
+  }
+
+  return selected.sort((a, b) => (b[scoreField] || 0) - (a[scoreField] || 0)).slice(0, limit);
+}
+
 // Mapa de afinidad entre los módulos/vistas del ERP y las categorías normativas
 const MODULE_DOMAIN_AFFINITY = {
   payroll: ['PAYROLL', 'IESS', 'TAX_SRI', 'LABOR_CODE', 'IESS_REGULATION'],
@@ -117,7 +163,8 @@ export class LegalEvaluatorService {
     });
 
     evaluated.sort((a, b) => b.evaluatorConfidence - a.evaluatorConfidence);
-    return evaluated.slice(0, topK);
+    const requestedCategories = detectRequestedNormativeCategories(normQuery);
+    return selectBalancedByCategory(evaluated, topK, requestedCategories, 'evaluatorConfidence');
   }
 
   /**

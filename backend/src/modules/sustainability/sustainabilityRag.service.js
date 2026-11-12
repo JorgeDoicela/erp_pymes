@@ -33,21 +33,21 @@ export class SustainabilityRagService {
     moduleContext = 'sustainability',
     providerOverrides = {},
   }) {
-    // 1. MODELO BUSCADOR: Recuperar los 14 mejores candidatos entre los 1,910+ artículos de los 4 PDFs
+    // 1. MODELO BUSCADOR: Recuperar los 16 mejores candidatos entre los 1,880+ artículos de los 4 PDFs
     const rawCandidateChunks = await sustainabilityRepository.searchKnowledgeChunks({
       query,
       odsTarget: odsTargetFilter,
       category: categoryFilter,
       tenantId,
-      limit: 14,
+      limit: 16,
     });
 
-    // 2. MODELO EVALUADOR (FASE 1 — RERANKER): Evaluar relevancia y afinidad con el lugar del ERP
+    // 2. MODELO EVALUADOR (FASE 1 — RERANKER): Evaluar relevancia, diversidad normativa y afinidad con el módulo
     const evaluatedChunks = legalEvaluatorService.evaluateAndRerankChunks({
       query,
       candidateChunks: rawCandidateChunks,
       moduleContext,
-      topK: 5,
+      topK: 6,
     });
 
     // 3. TELEMETRÍA EN VIVO DEL ERP: Obtener estado real del tenant

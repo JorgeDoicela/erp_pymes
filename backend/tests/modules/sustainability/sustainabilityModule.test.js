@@ -259,6 +259,26 @@ describe('Módulo de Sostenibilidad ODS 8, RAG Multi-Dominio y Fine-Tuning', () 
       );
     });
 
+    it('debe preservar diversidad normativa (Constitución + OIT ODS 8) en consultas multi-cuerpo', async () => {
+      const candidates = await sustainabilityRepository.searchKnowledgeChunks({
+        query:
+          'Cómo promueve el Ecuador el empleo pleno según la Constitución y las metas 8.5 y 8.8 de la OIT',
+        limit: 16,
+      });
+
+      const reranked = legalEvaluatorService.evaluateAndRerankChunks({
+        query:
+          'Cómo promueve el Ecuador el empleo pleno según la Constitución y las metas 8.5 y 8.8 de la OIT',
+        candidateChunks: candidates,
+        moduleContext: 'sustainability',
+        topK: 6,
+      });
+
+      const categories = new Set(reranked.map((c) => c.document?.category));
+      expect(categories.has('CONSTITUTION')).toBe(true);
+      expect(categories.has('ODS_8_FRAMEWORK')).toBe(true);
+    });
+
     it('debe garantizar aislamiento multi-tenant LOPDP cuando no se proporciona tenantId y soportar exportación del corpus PDF completo', async () => {
       const emptyTenantData = await sustainabilityRepository.getOds8AggregatedData(null);
       expect(emptyTenantData.totalEmployees).toBe(0);
