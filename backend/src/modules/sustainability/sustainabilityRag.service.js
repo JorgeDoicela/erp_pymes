@@ -245,17 +245,10 @@ export class SustainabilityRagService {
 
     // 1. Caso Finiquito / Despido Intempestivo / Desahucio / Renuncia
     if (
-      qLower.includes('liquidaci') ||
-      qLower.includes('finiquito') ||
-      qLower.includes('despido') ||
-      qLower.includes('desahucio') ||
-      qLower.includes('renuncia') ||
-      qLower.includes('188') ||
-      qLower.includes('185')
+      /liquidaci|finiquito|despid|desped|intempestiv|desahuci|renuncia|\b188\b|\b185\b/i.test(query)
     ) {
       const effectiveYears = years !== null ? years : 3;
-      const isUnfairDismissal =
-        qLower.includes('despido') || qLower.includes('intempestivo') || qLower.includes('188');
+      const isUnfairDismissal = /despid|desped|intempestiv|\b188\b/i.test(query);
 
       const desahucioAmount = baseSalary
         .times(0.25)
