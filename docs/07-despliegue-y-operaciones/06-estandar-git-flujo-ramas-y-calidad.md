@@ -16,32 +16,35 @@ gitGraph
    commit id: "Dev-Base"
    branch jorge_doicela
    checkout jorge_doicela
-   commit id: "feat: work-1"
+   commit id: "feat: jorge"
    checkout develop
-   branch feature-colaborador
-   checkout feature-colaborador
-   commit id: "feat: colaborador"
+   branch derek_murillo
+   checkout derek_murillo
+   commit id: "feat: derek"
    checkout develop
-   merge feature-colaborador id: "PR: CI Aprobado"
+   merge derek_murillo id: "PR: CI Aprobado (0 aprobaciones)"
+   merge jorge_doicela id: "PR: Integracion"
    checkout main
-   merge develop id: "Release a Producción"
+   merge develop id: "Release a Produccion (Solo Admin)"
 ```
 
 ### Matriz de Acceso y Reglas por Rama
 
-| Rama            | Propósito                                | Push Directo                                                                           | Política de Pull Request                                               | Ruleset ID |
-| :-------------- | :--------------------------------------- | :------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- | :--------- |
-| `main`          | Producción estable. Despliega a AWS EC2. | **Restringido:** Exclusivo para `JorgeDoicela` (emergencias/hotfix).                   | Requerido para cualquier otro colaborador. Status checks obligatorios. | `26961019` |
-| `develop`       | Rama de integración continua y staging.  | **Bloqueado:** Nadie puede enviar commits directos (bypass de admin solo emergencias). | **Obligatorio:** Todo cambio debe ingresar vía PR aprobado por CI.     | `26961066` |
-| `jorge_doicela` | Rama activa de trabajo del titular.      | Permitido para su autor.                                                               | Base para enviar PR hacia `develop`.                                   | No aplica  |
-| `feature/*`     | Nuevas funcionalidades o módulos.        | Permitido para su autor.                                                               | Se integra exclusivamente hacia `develop` vía PR.                      | No aplica  |
-| `fix/*`         | Corrección de defectos reportados.       | Permitido para su autor.                                                               | Se integra hacia `develop` vía PR.                                     | No aplica  |
+| Rama            | Propósito                                | Push Directo / Escritura                                                                                            | Política de Pull Request                                                                                 | Ruleset ID |
+| :-------------- | :--------------------------------------- | :------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------- | :--------- |
+| `main`          | Producción estable. Despliega a AWS EC2. | **Bloqueado (`creation`, `update`, `deletion`, `non_fast_forward`):** Exclusivo para `JorgeDoicela` (bypass Admin). | Ningún colaborador sin bypass puede fusionar a `main`. Exige `1` aprobación y los 3 status checks de CI. | `26961019` |
+| `develop`       | Rama de integración continua y staging.  | **Bloqueado (`pull_request`, `deletion`, `non_fast_forward`):** Bypass exclusivo para rol Admin (`JorgeDoicela`).   | **Obligatorio:** `0` aprobaciones requeridas; el merge se habilita al pasar los 3 status checks de CI.   | `26961066` |
+| `jorge_doicela` | Rama activa de trabajo del titular.      | Permitido para su autor.                                                                                            | Base para enviar PR hacia `develop`.                                                                     | No aplica  |
+| `derek_murillo` | Rama de trabajo de Derek Murillo.        | Permitido para su autor.                                                                                            | Base para enviar PR hacia `develop` (sin acceso de escritura ni merge sobre `main`).                     | No aplica  |
+| `feature/*`     | Nuevas funcionalidades o módulos.        | Permitido para su autor.                                                                                            | Se integra exclusivamente hacia `develop` vía PR.                                                        | No aplica  |
+| `fix/*`         | Corrección de defectos reportados.       | Permitido para su autor.                                                                                            | Se integra hacia `develop` vía PR.                                                                       | No aplica  |
 
 ### Restricciones Globales en Ramas Protegidas (`main` y `develop`)
 
 1. **Prohibido el Force Push (`non_fast_forward`):** Ningún desarrollador puede sobrescribir el historial con `git push --force`.
 2. **Prohibido el Borrado de Rama (`deletion`):** Las ramas `main` y `develop` están protegidas contra eliminación accidental o deliberada.
 3. **Requisito de Sincronización Estricta (`strict`):** Antes de fusionar un Pull Request, la rama de origen debe estar actualizada con el último commit de la rama destino.
+4. **Segregación de Roles y Bypass Exclusivo (`actor_id: 5`):** Únicamente el rol **Admin** (`JorgeDoicela`) cuenta con `bypass_mode: always`. Todo colaborador debe incorporarse con rol **Write** (nunca **Admin**) para garantizar que no pueda eludir los Pull Requests en `develop` ni actualizar `main`.
 
 ---
 

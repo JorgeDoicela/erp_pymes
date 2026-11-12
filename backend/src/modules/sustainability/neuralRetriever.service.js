@@ -11,12 +11,6 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import {
-  AutoModel,
-  AutoModelForSequenceClassification,
-  AutoTokenizer,
-  env,
-} from '@huggingface/transformers';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +19,22 @@ const MODELS_BASE_DIR = path.resolve(__dirname, './data/models');
 const BI_ENCODER_ID = 'bi-encoder';
 const CROSS_ENCODER_ID = 'cross-encoder';
 
+let transformersModulePromise = null;
+
+async function loadTransformers() {
+  if (!transformersModulePromise) {
+    transformersModulePromise = import('@huggingface/transformers').then((mod) => {
+      mod.env.allowRemoteModels = false;
+      mod.env.allowLocalModels = true;
+      mod.env.localModelPath = MODELS_BASE_DIR.endsWith(path.sep)
+        ? MODELS_BASE_DIR
+        : `${MODELS_BASE_DIR}${path.sep}`;
+      return mod;
+    });
+  }
+  return transformersModulePromise;
+}
+
 function hasQuantizedModel(modelSubdir) {
   const dir = path.join(MODELS_BASE_DIR, modelSubdir);
   return (
@@ -32,14 +42,6 @@ function hasQuantizedModel(modelSubdir) {
     fs.existsSync(path.join(dir, 'tokenizer.json')) &&
     fs.existsSync(path.join(dir, 'config.json'))
   );
-}
-
-function configureTransformersEnv() {
-  env.allowRemoteModels = false;
-  env.allowLocalModels = true;
-  env.localModelPath = MODELS_BASE_DIR.endsWith(path.sep)
-    ? MODELS_BASE_DIR
-    : `${MODELS_BASE_DIR}${path.sep}`;
 }
 
 class NeuralRetrieverService {
@@ -71,7 +73,7 @@ class NeuralRetrieverService {
     if (this._biBundle) return this._biBundle;
     if (!this._biPromise) {
       this._biPromise = (async () => {
-        configureTransformersEnv();
+        const { AutoTokenizer, AutoModel } = await loadTransformers();
         const [tokenizer, model] = await Promise.all([
           AutoTokenizer.from_pretrained(BI_ENCODER_ID, { local_files_only: true }),
           AutoModel.from_pretrained(BI_ENCODER_ID, {
@@ -94,7 +96,7 @@ class NeuralRetrieverService {
     if (this._ceBundle) return this._ceBundle;
     if (!this._cePromise) {
       this._cePromise = (async () => {
-        configureTransformersEnv();
+        const { AutoTokenizer, AutoModelForSequenceClassification } = await loadTransformers();
         const [tokenizer, model] = await Promise.all([
           AutoTokenizer.from_pretrained(CROSS_ENCODER_ID, { local_files_only: true }),
           AutoModelForSequenceClassification.from_pretrained(CROSS_ENCODER_ID, {
