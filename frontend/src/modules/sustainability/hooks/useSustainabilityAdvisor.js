@@ -16,16 +16,16 @@ export function useSustainabilityAdvisor(defaultModuleContext = 'general') {
   const [activeCitations, setActiveCitations] = useState([]);
   const [lastMetadata, setLastMetadata] = useState({
     inferenceMode: null,
-    totalIndexedArticles: 1880,
+    totalIndexedArticles: 1899,
     evaluationAudit: null,
     providerInfo: null,
   });
 
   const askAdvisor = async (queryText, options = {}) => {
-    if (!queryText.trim()) return;
+    if (!queryText || !queryText.trim()) return;
 
     const odsTargetFilter =
-      typeof options === 'string' ? options : options?.odsTargetFilter || null;
+      typeof options === 'string' ? options : options?.odsTargetFilter || undefined;
     const moduleContext =
       typeof options === 'object' && options?.moduleContext
         ? options.moduleContext
@@ -48,20 +48,19 @@ export function useSustainabilityAdvisor(defaultModuleContext = 'general') {
     setError(null);
 
     try {
-      const history = messages.slice(-8).map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
+      const history = messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));
+      const payload = { query: queryText, conversationHistory: history, moduleContext };
+      if (odsTargetFilter) payload.odsTargetFilter = odsTargetFilter;
+      if (providerOverrides) payload.providerOverrides = providerOverrides;
 
-      const res = await sustainabilityService.queryAdvisor({
-        query: queryText,
-        conversationHistory: history,
-        odsTargetFilter,
-        moduleContext,
-        providerOverrides,
-      });
+      const res = await sustainabilityService.queryAdvisor(payload);
 
       if (res?.success && res?.data) {
+        const indexedTotal =
+          res.data.totalIndexedArticles ||
+          res.data.evaluationAudit?.totalCorpusIndexedChunks ||
+          1899;
+
         const assistantMsg = {
           id: Date.now() + 1,
           role: 'assistant',
@@ -71,16 +70,16 @@ export function useSustainabilityAdvisor(defaultModuleContext = 'general') {
           tenantScore: res.data.tenantScore,
           moduleContext: res.data.moduleContext || moduleContext,
           inferenceMode: res.data.inferenceMode,
-          providerInfo: res.data.providerInfo,
+          providerInfo: res.data.providerInfo || null,
           evaluationAudit: res.data.evaluationAudit || null,
-          totalIndexedArticles: res.data.totalIndexedArticles || 1880,
+          totalIndexedArticles: indexedTotal,
           timestamp: res.data.generatedAt || new Date().toISOString(),
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
         setLastMetadata({
           inferenceMode: res.data.inferenceMode,
-          totalIndexedArticles: res.data.totalIndexedArticles || 1880,
+          totalIndexedArticles: indexedTotal,
           evaluationAudit: res.data.evaluationAudit || null,
           providerInfo: res.data.providerInfo || null,
         });
@@ -93,15 +92,17 @@ export function useSustainabilityAdvisor(defaultModuleContext = 'general') {
       }
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Error de comunicación');
-      const errorMsg = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content:
-          'No se pudo obtener el dictamen legal en este momento. Verifique la conexión o intente nuevamente.',
-        isError: true,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content:
+            'No se pudo obtener el dictamen legal en este momento. Verifique la conexión o intente nuevamente.',
+          isError: true,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -113,13 +114,5 @@ export function useSustainabilityAdvisor(defaultModuleContext = 'general') {
     setError(null);
   };
 
-  return {
-    messages,
-    loading,
-    error,
-    activeCitations,
-    lastMetadata,
-    askAdvisor,
-    clearChat,
-  };
+  return { messages, loading, error, activeCitations, lastMetadata, askAdvisor, clearChat };
 }

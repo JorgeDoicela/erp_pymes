@@ -308,6 +308,47 @@ describe('Suite Integral E2E: WhatsApp API, Motor RAG y Modelos ONNX Entrenados'
       expect(citationsText).toMatch(/Art\.\s*69/i);
     }, 25000);
 
+    it('POST /api/sustainability/advisor/query debe procesar la consulta sugerida de EMPLOYEES con odsTargetFilter null/omitido y retornar totalIndexedArticles y providerInfo', async () => {
+      const res = await request(app)
+        .post('/api/sustainability/advisor/query')
+        .set('Authorization', `Bearer ${employeeToken}`)
+        .send({
+          query:
+            '¿Desde qué día es obligatoria la afiliación al IESS y cuándo se genera derecho a Fondos de Reserva (8.33%)?',
+          conversationHistory: [],
+          odsTargetFilter: null,
+          moduleContext: 'employees',
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.totalIndexedArticles).toBeGreaterThan(1800);
+      expect(res.body.data).toHaveProperty('providerInfo');
+      expect(res.body.data.evaluationAudit.groundednessScore).toBeGreaterThanOrEqual(0.8);
+      expect(res.body.data.legalCitations.length).toBeGreaterThan(0);
+    }, 25000);
+
+    it('POST /api/sustainability/advisor/query debe ejecutar cálculo exacto Decimal.js para liquidación en módulo offboarding', async () => {
+      const res = await request(app)
+        .post('/api/sustainability/advisor/query')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          query:
+            'Calcula paso a paso la liquidación por despido intempestivo (Art. 188) y desahucio (Art. 185) para $850 USD y 4 años y 2 meses.',
+          conversationHistory: [],
+          moduleContext: 'offboarding',
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.liveCalculation).toBeDefined();
+      expect(res.body.data.liveCalculation.type).toBe('SETTLEMENT_CALCULATION');
+      expect(res.body.data.liveCalculation.baseSalary).toBe(850);
+      expect(res.body.data.liveCalculation.desahucioAmount).toBe(850);
+      expect(res.body.data.liveCalculation.severanceAmount).toBe(4250);
+      expect(res.body.data.evaluationAudit.mathVerified).toBe(true);
+    }, 25000);
+
     it('POST /api/sustainability/fine-tuning/export debe exportar dataset JSONL para admin', async () => {
       const res = await request(app)
         .post('/api/sustainability/fine-tuning/export')

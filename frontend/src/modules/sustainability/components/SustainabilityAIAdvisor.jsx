@@ -12,6 +12,7 @@ import { FiSend, FiTrash2, FiDownload } from 'react-icons/fi';
 import { useSustainabilityAdvisor } from '../hooks/useSustainabilityAdvisor.js';
 import LegalCitationDrawer from './LegalCitationDrawer.jsx';
 import FineTuningExportModal from './FineTuningExportModal.jsx';
+import { ADVISOR_PRESETS } from './LegalAssistantConfigPanel.jsx';
 
 export default function SustainabilityAIAdvisor() {
   const [inputText, setInputText] = useState('');
@@ -20,56 +21,7 @@ export default function SustainabilityAIAdvisor() {
   const { messages, loading, lastMetadata, askAdvisor, clearChat } =
     useSustainabilityAdvisor('sustainability');
 
-  const presets = [
-    {
-      id: 'finiquito-art188',
-      domain: 'FINIQUITOS · ART. 185 / 188',
-      label: 'Liquidación por Despido Intempestivo y Desahucio',
-      prompt:
-        'Calcula paso a paso la liquidación por despido intempestivo y desahucio en Ecuador para un colaborador con sueldo de $850 USD y 4 años y 2 meses de servicio.',
-      ods: '8.8',
-    },
-    {
-      id: 'contabilidad-niif',
-      domain: 'CONTABILIDAD · NIIF PYMES',
-      label: 'Rol de Pagos, IESS y Asiento de Partida Doble',
-      prompt:
-        'Calcula el rol de pagos, aportes al IESS (9.45% y 11.15%) y genera el asiento contable NIIF por partida doble para un sueldo de $1200 USD.',
-      ods: '8.5',
-    },
-    {
-      id: 'horas-extras-vacaciones',
-      domain: 'JORNADA · ART. 49 / 55 / 69',
-      label: 'Horas Suplementarias (50%), Extraordinarias (100%) y Vacaciones',
-      prompt:
-        '¿Cómo se calculan 10 horas suplementarias, 6 extraordinarias y los días adicionales de vacaciones por antigüedad para un sueldo de $750 USD?',
-      ods: '8.8',
-    },
-    {
-      id: 'utilidades-sri',
-      domain: 'TRIBUTACIÓN SRI · ART. 97',
-      label: 'Reparto del 15% de Utilidades e Impuesto a la Renta',
-      prompt:
-        '¿Cómo se distribuye legalmente el 15% de utilidades (10% general y 5% cargas familiares) y cómo aplica la rebaja del 18% por gastos personales ante el SRI?',
-      ods: '8.5',
-    },
-    {
-      id: 'contratos-prueba',
-      domain: 'CONTRATOS · ART. 14 / 15 / 17',
-      label: 'Período de Prueba (90 días), Eventuales y Teletrabajo',
-      prompt:
-        '¿Cuáles son las reglas legales del período de prueba de 90 días, el recargo del 35% en contratos eventuales y la desconexión digital en teletrabajo?',
-      ods: '8.3',
-    },
-    {
-      id: 'lopdp-firmas',
-      domain: 'GOBERNANZA · LOPDP / FIRMAS',
-      label: 'Cifrado AES-256-GCM, Biometría FIDO2 y Firma .p12',
-      prompt:
-        '¿Cómo cumple el sistema con la LOPDP del Ecuador en el cifrado de salarios, geolocalización, biometría WebAuthn y validez de firmas electrónicas?',
-      ods: '8.8',
-    },
-  ];
+  const presets = ADVISOR_PRESETS;
 
   const handleSubmit = (e) => {
     e.preventDefault();

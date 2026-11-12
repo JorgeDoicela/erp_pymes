@@ -24,8 +24,8 @@ export const AdvisorQuerySchema = z.object({
     .optional()
     .default([]),
   stream: z.boolean().optional().default(false),
-  odsTargetFilter: z.enum(['8.3', '8.5', '8.8']).optional(),
-  categoryFilter: z.string().optional(),
+  odsTargetFilter: z.enum(['8.3', '8.5', '8.8']).nullable().optional(),
+  categoryFilter: z.string().nullable().optional(),
   moduleContext: z
     .enum([
       'payroll',
@@ -38,17 +38,20 @@ export const AdvisorQuerySchema = z.object({
       'recruitment',
       'signatures',
       'sustainability',
+      'whatsapp',
       'general',
     ])
+    .nullable()
     .optional()
-    .default('sustainability'),
+    .transform((val) => val || 'sustainability'),
   providerOverrides: z
     .object({
-      provider: z.string().optional(),
-      model: z.string().optional(),
-      baseUrl: z.string().optional(),
-      apiKey: z.string().optional(),
+      provider: z.string().nullable().optional(),
+      model: z.string().nullable().optional(),
+      baseUrl: z.string().nullable().optional(),
+      apiKey: z.string().nullable().optional(),
     })
+    .nullable()
     .optional(),
 });
 
