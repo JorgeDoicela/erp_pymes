@@ -115,28 +115,35 @@ export class LlmProviderService {
       huggingface: process.env.HF_TOKEN || process.env.HUGGINGFACE_HUB_TOKEN,
     }[providerKey];
 
+    const envProviderRaw = (process.env.AI_PROVIDER || '').toLowerCase().trim();
+    const isExplicitDifferentProvider =
+      Boolean(overrides.provider) && Boolean(envProviderRaw) && providerKey !== envProviderRaw;
+
     const apiKey =
       overrides.apiKey ||
       providerSpecificEnvKey ||
-      process.env.AI_API_KEY ||
-      process.env.DEEPSEEK_API_KEY ||
-      process.env.OPENAI_API_KEY ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GROQ_API_KEY ||
-      process.env.ANTHROPIC_API_KEY ||
-      process.env.HF_TOKEN ||
-      process.env.HUGGINGFACE_HUB_TOKEN ||
+      (!isExplicitDifferentProvider ? process.env.AI_API_KEY : '') ||
+      (!overrides.provider
+        ? process.env.DEEPSEEK_API_KEY ||
+          process.env.OPENAI_API_KEY ||
+          process.env.GEMINI_API_KEY ||
+          process.env.GROQ_API_KEY ||
+          process.env.ANTHROPIC_API_KEY ||
+          process.env.HF_TOKEN ||
+          process.env.HUGGINGFACE_HUB_TOKEN
+        : '') ||
       '';
 
     const baseUrl = (
       overrides.baseUrl ||
-      process.env.AI_BASE_URL ||
-      process.env.AI_LLM_URL ||
+      (!isExplicitDifferentProvider ? process.env.AI_BASE_URL || process.env.AI_LLM_URL : '') ||
       preset.baseUrl
     ).replace(/\/+$/, '');
 
     const model =
-      overrides.model || process.env.AI_MODEL || process.env.AI_LLM_MODEL || preset.defaultModel;
+      overrides.model ||
+      (!isExplicitDifferentProvider ? process.env.AI_MODEL || process.env.AI_LLM_MODEL : '') ||
+      preset.defaultModel;
 
     const timeoutMs = Number(overrides.timeoutMs || process.env.AI_LLM_TIMEOUT_MS || 20000);
 

@@ -288,6 +288,23 @@ describe('Módulo de Sostenibilidad ODS 8, RAG Multi-Dominio y Fine-Tuning', () 
       expect(localOllamaCfg.providerKey).toBe('local_ollama');
       expect(localOllamaCfg.model).toBe('ecuador-erp-ai');
       expect(localOllamaCfg.isConfigured).toBe(true);
+
+      const prevProvider = process.env.AI_PROVIDER;
+      const prevModel = process.env.AI_MODEL;
+      process.env.AI_PROVIDER = 'deepseek';
+      process.env.AI_MODEL = 'deepseek-chat';
+      try {
+        const hfCfg = llmProviderService.resolveActiveConfig({
+          provider: 'huggingface',
+          apiKey: 'hf_test_token',
+        });
+        expect(hfCfg.providerKey).toBe('huggingface');
+        expect(hfCfg.model).toBe('Qwen/Qwen2.5-72B-Instruct');
+        expect(hfCfg.baseUrl).toBe('https://router.huggingface.co/v1');
+      } finally {
+        process.env.AI_PROVIDER = prevProvider;
+        process.env.AI_MODEL = prevModel;
+      }
     });
   });
 });

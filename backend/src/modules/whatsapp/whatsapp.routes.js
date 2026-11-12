@@ -12,9 +12,11 @@ import { authenticate, authorize } from '../auth/auth.middleware.js';
 
 const router = Router();
 
-// Endpoints públicos del Webhook de Meta
+// Endpoints públicos del Webhook de Meta y documentación legal
 router.get('/webhook', whatsappController.verifyWebhook);
 router.post('/webhook', whatsappController.handleWebhook);
+router.get('/privacy', whatsappController.getPrivacyPolicy);
+router.get('/terms', whatsappController.getTermsOfService);
 
 // Endpoints protegidos para administración y pruebas
 router.get(

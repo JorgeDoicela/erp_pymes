@@ -131,6 +131,7 @@ const AnnouncementsBoard = lazy(
 const LegalComplianceDashboard = lazy(
   () => import('@modules/compliance/pages/LegalComplianceDashboard.jsx')
 );
+const PrivacyPolicy = lazy(() => import('@modules/compliance/pages/PrivacyPolicy.jsx'));
 const ExpiringContracts = lazy(() => import('@modules/contracts/pages/ExpiringContracts.jsx'));
 
 // Notifications, Audit & Help
@@ -253,6 +254,8 @@ function App() {
       <PWAReloadPrompt />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/privacy" element={<PrivacyPolicy mode="privacy" />} />
+        <Route path="/terms" element={<PrivacyPolicy mode="terms" />} />
         <Route path="/register-company" element={<RegisterTenant />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/careers/:id" element={<JobApplication />} />
