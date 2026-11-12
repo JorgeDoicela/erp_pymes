@@ -98,21 +98,24 @@ router.post(
   authorize(['admin', 'hr', 'superadmin']),
   simulateSettlement
 );
-
 router.post(
   '/offboarding/start',
   authenticate,
   authorize(['admin', 'hr', 'superadmin']),
   startOffboarding
 );
-
+router.put(
+  '/offboarding/:id/checklist',
+  authenticate,
+  authorize(['admin', 'hr', 'superadmin']),
+  updateChecklistStep
+);
 router.patch(
   '/offboarding/:id/step',
   authenticate,
   authorize(['admin', 'hr', 'superadmin']),
   updateChecklistStep
 );
-
 router.get('/offboarding', authenticate, authorize(['admin', 'hr', 'superadmin']), getOffboardings);
 
 export default router;

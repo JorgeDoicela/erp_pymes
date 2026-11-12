@@ -46,12 +46,36 @@ const OffboardingManagement = () => {
   const [selectedOffboarding, setSelectedOffboarding] = useState(null);
   const [checklistModalOpen, setChecklistModalOpen] = useState(false);
 
+  const parseChecklist = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  };
+
   const loadData = async (isSilent = false) => {
     if (!isSilent && !offboardings.length) setLoading(true);
     try {
       const [resOff, resEmp] = await Promise.all([getOffboardings(), getEmployees()]);
-      if (resOff.success) setOffboardings(resOff.data);
-      if (resEmp.success) setEmployees(resEmp.data);
+      if (resOff?.success) {
+        const offList = Array.isArray(resOff.data)
+          ? resOff.data
+          : Array.isArray(resOff.data?.data)
+            ? resOff.data.data
+            : [];
+        setOffboardings(offList);
+      }
+      if (resEmp) {
+        const empList = Array.isArray(resEmp.data)
+          ? resEmp.data
+          : Array.isArray(resEmp)
+            ? resEmp
+            : [];
+        setEmployees(empList);
+      }
     } catch (error) {
       console.error('Error al cargar datos:', error);
     } finally {
@@ -194,13 +218,13 @@ const OffboardingManagement = () => {
               <div className="p-8 text-center text-gray-400 text-xs font-mono">
                 Cargando procesos de salida...
               </div>
-            ) : offboardings.length === 0 ? (
+            ) : !Array.isArray(offboardings) || offboardings.length === 0 ? (
               <div className="p-8 text-center text-gray-400 text-xs italic">
                 No hay procesos de salida registrados.
               </div>
             ) : (
               offboardings.map((off) => {
-                const checklist = JSON.parse(off.checklist || '[]');
+                const checklist = parseChecklist(off.checklist);
                 const completedTasks = checklist.filter((t) => t.completed).length;
                 const totalTasks = checklist.length;
                 const isComplete = totalTasks > 0 && completedTasks === totalTasks;
@@ -252,7 +276,7 @@ const OffboardingManagement = () => {
                           Total Liquidación
                         </span>
                         <span className="font-mono font-semibold text-gray-900 tabular-nums">
-                          ${off.totalSettlement.toFixed(2)}
+                          ${Number(off.totalSettlement || 0).toFixed(2)}
                         </span>
                       </div>
                       <div>
@@ -320,7 +344,7 @@ const OffboardingManagement = () => {
                       Cargando procesos de salida...
                     </td>
                   </tr>
-                ) : offboardings.length === 0 ? (
+                ) : !Array.isArray(offboardings) || offboardings.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="p-8 text-center text-gray-400 text-xs italic">
                       No hay procesos de salida registrados.
@@ -328,7 +352,7 @@ const OffboardingManagement = () => {
                   </tr>
                 ) : (
                   offboardings.map((off) => {
-                    const checklist = JSON.parse(off.checklist || '[]');
+                    const checklist = parseChecklist(off.checklist);
                     const completedTasks = checklist.filter((t) => t.completed).length;
                     const totalTasks = checklist.length;
                     const isComplete = totalTasks > 0 && completedTasks === totalTasks;
@@ -346,7 +370,7 @@ const OffboardingManagement = () => {
                           {new Date(off.exitDate).toLocaleDateString('es-EC')}
                         </td>
                         <td className="py-2.5 px-4 text-right font-mono font-semibold text-gray-900 tabular-nums">
-                          ${off.totalSettlement.toFixed(2)}
+                          ${Number(off.totalSettlement || 0).toFixed(2)}
                         </td>
                         <td className="py-2.5 px-4 text-center">
                           <span
@@ -609,7 +633,7 @@ const OffboardingManagement = () => {
               </div>
 
               <div className="p-5 space-y-2.5 max-h-[400px] overflow-y-auto text-xs">
-                {JSON.parse(selectedOffboarding.checklist || '[]').map((task) => (
+                {parseChecklist(selectedOffboarding.checklist).map((task) => (
                   <div
                     key={task.id}
                     onClick={() => handleToggleTask(task.id, task.completed)}

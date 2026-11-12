@@ -201,17 +201,18 @@ export const startOffboarding = async (req, res) => {
 export const updateChecklistStep = async (req, res) => {
   try {
     const { id } = req.params;
-    const { stepKey, status, notes } = req.body;
+    const { stepKey, status, notes, taskId, completed } = req.body;
     const adminId = req.user?.id || req.user?.employeeId;
 
-    const updated = await offboardingService.updateChecklistStep({
-      processId: id,
-      stepKey,
-      status,
-      notes,
-      adminId,
-      user: req.user,
-    });
+    const targetTaskId = taskId || stepKey;
+    const isCompleted = completed !== undefined ? completed : status === 'COMPLETED';
+
+    const updated = await offboardingService.updateChecklistStep(
+      id,
+      targetTaskId,
+      isCompleted,
+      adminId
+    );
     return res.json({ success: true, data: updated });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -220,8 +221,17 @@ export const updateChecklistStep = async (req, res) => {
 
 export const getOffboardings = async (req, res) => {
   try {
-    const result = await offboardingService.getOffboardings(req.user);
-    return res.json({ success: true, data: result });
+    const { status, search, page, limit } = req.query;
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const result = await offboardingService.getOffboardings({
+      status,
+      search,
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      tenantId,
+      user: req.user,
+    });
+    return res.json({ success: true, ...result });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
