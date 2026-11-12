@@ -40,7 +40,7 @@ export class WhatsappService {
   verifyWebhookChallenge({ mode, token, challenge }) {
     const configuredToken = process.env.WHATSAPP_VERIFY_TOKEN;
 
-    if (mode === 'subscribe' && token && (token === configuredToken || !configuredToken)) {
+    if (mode === 'subscribe' && token && configuredToken && token === configuredToken) {
       return { success: true, challenge };
     }
 
