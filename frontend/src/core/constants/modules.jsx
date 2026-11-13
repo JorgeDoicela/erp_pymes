@@ -35,6 +35,7 @@ import {
   FiGitPullRequest,
   FiShare2,
   FiDatabase,
+  FiHome,
 } from 'react-icons/fi';
 import { isSuperAdmin as checkIsSuperAdmin, ROLES } from './roles.js';
 
@@ -90,6 +91,17 @@ export const superAdminSections = [
 ];
 
 export const adminSections = [
+  {
+    title: 'Panel Ejecutivo',
+    modules: [
+      {
+        title: 'Panel de Control',
+        icon: <FiHome />,
+        color: 'bg-blue-600',
+        path: '/admin',
+      },
+    ],
+  },
   {
     title: 'Gestión de Capital Humano',
     modules: [
@@ -167,8 +179,14 @@ export const adminSections = [
     ],
   },
   {
-    title: 'Nómina y Compensaciones',
+    title: 'Finanzas y Nómina',
     modules: [
+      {
+        title: 'Contabilidad General',
+        icon: <FiDatabase />,
+        color: 'bg-indigo-600',
+        path: '/admin/accounting',
+      },
       {
         title: 'Gestión de Nómina',
         icon: <FiDollarSign />,
@@ -213,7 +231,7 @@ export const adminSections = [
     ],
   },
   {
-    title: 'Inteligencia y Analíticas',
+    title: 'Inteligencia y Negocio',
     modules: [
       {
         title: 'Centro de Inteligencia de Negocio',
@@ -226,6 +244,12 @@ export const adminSections = [
         icon: <FiBarChart2 />,
         color: 'bg-blue-600',
         path: '/analytics',
+      },
+      {
+        title: 'Proyectos de Innovación',
+        icon: <FiCompass />,
+        color: 'bg-amber-600',
+        path: '/admin/entrepreneurship',
       },
     ],
   },
@@ -243,12 +267,6 @@ export const adminSections = [
         icon: <FiVolume2 />,
         color: 'bg-blue-600',
         path: '/admin/notifications',
-      },
-      {
-        title: 'Configuración Notificaciones',
-        icon: <FiSettings />,
-        color: 'bg-slate-600',
-        path: '/admin/notifications/settings',
       },
       {
         title: 'Auditoría de Sistema',
@@ -419,12 +437,35 @@ export const accountingSections = [
         color: 'bg-indigo-600',
         path: '/analytics',
       },
+      {
+        title: 'Comunicados y Anuncios',
+        icon: <FiVolume2 />,
+        color: 'bg-blue-600',
+        path: '/announcements',
+      },
+      {
+        title: 'Notificaciones y Alertas',
+        icon: <FiVolume2 />,
+        color: 'bg-blue-600',
+        path: '/notifications',
+      },
       { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
     ],
   },
 ];
 
 export const hrSections = [
+  {
+    title: 'Panel Ejecutivo',
+    modules: [
+      {
+        title: 'Panel de Control',
+        icon: <FiHome />,
+        color: 'bg-blue-600',
+        path: '/admin',
+      },
+    ],
+  },
   {
     title: 'Gestión de Talento y Expedientes',
     modules: [
@@ -484,6 +525,29 @@ export const hrSections = [
     ],
   },
   {
+    title: 'Nómina y Beneficios Sociales',
+    modules: [
+      {
+        title: 'Gestión de Nómina',
+        icon: <FiDollarSign />,
+        color: 'bg-green-500',
+        path: '/admin/payroll/generator',
+      },
+      {
+        title: 'Beneficios Social/IESS',
+        icon: <FiGift />,
+        color: 'bg-yellow-500',
+        path: '/admin/payroll/benefits',
+      },
+      {
+        title: 'Anticipos y Préstamos',
+        icon: <FiCreditCard />,
+        color: 'bg-emerald-600',
+        path: '/admin/payroll/advances',
+      },
+    ],
+  },
+  {
     title: 'Operativa Laboral y Legal',
     modules: [
       {
@@ -519,8 +583,14 @@ export const hrSections = [
     ],
   },
   {
-    title: 'Comunicación y Perfil',
+    title: 'Analíticas y Comunicación',
     modules: [
+      {
+        title: 'Analíticas de Personal',
+        icon: <FiBarChart2 />,
+        color: 'bg-blue-600',
+        path: '/analytics',
+      },
       {
         title: 'Comunicados y Anuncios',
         icon: <FiVolume2 />,
@@ -560,17 +630,17 @@ export const managerSections = [
         color: 'bg-purple-500',
         path: '/admin/shifts',
       },
-      {
-        title: 'Metas y Objetivos',
-        icon: <FiTarget />,
-        color: 'bg-cyan-500',
-        path: '/performance/goals',
-      },
     ],
   },
   {
     title: 'Mi Portal de Autogestión',
     modules: [
+      {
+        title: 'Portal de Autogestión',
+        icon: <FiBarChart2 />,
+        color: 'bg-blue-500',
+        path: '/empleado',
+      },
       {
         title: 'Mi Asistencia',
         icon: <FiClock />,
@@ -596,10 +666,34 @@ export const managerSections = [
         path: '/my-advances',
       },
       {
+        title: 'Mis Evaluaciones',
+        icon: <FiClipboard />,
+        color: 'bg-orange-500',
+        path: '/performance/my-evaluations',
+      },
+      {
+        title: 'Mis Objetivos',
+        icon: <FiTarget />,
+        color: 'bg-cyan-500',
+        path: '/performance/goals',
+      },
+      {
+        title: 'Firmas Digitales',
+        icon: <FiFileText />,
+        color: 'bg-emerald-600',
+        path: '/signatures',
+      },
+      {
         title: 'Comunicados y Anuncios',
         icon: <FiVolume2 />,
         color: 'bg-blue-600',
         path: '/announcements',
+      },
+      {
+        title: 'Notificaciones y Alertas',
+        icon: <FiVolume2 />,
+        color: 'bg-blue-600',
+        path: '/notifications',
       },
       { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
     ],
@@ -616,18 +710,26 @@ export const entrepreneurSections = [
         color: 'bg-amber-600',
         path: '/admin/entrepreneurship',
       },
-      {
-        title: 'Nuevo Proyecto',
-        icon: <FiPlus />,
-        color: 'bg-green-500',
-        path: '/admin/entrepreneurship/create',
-      },
       { title: 'Analíticas', icon: <FiActivity />, color: 'bg-indigo-600', path: '/analytics' },
     ],
   },
   {
     title: 'Personal y Soporte',
-    modules: [{ title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' }],
+    modules: [
+      {
+        title: 'Comunicados y Anuncios',
+        icon: <FiVolume2 />,
+        color: 'bg-blue-600',
+        path: '/announcements',
+      },
+      {
+        title: 'Notificaciones y Alertas',
+        icon: <FiVolume2 />,
+        color: 'bg-blue-600',
+        path: '/notifications',
+      },
+      { title: 'Mi Perfil', icon: <FiUsers />, color: 'bg-blue-500', path: '/profile' },
+    ],
   },
 ];
 
