@@ -8,7 +8,7 @@
 
 export const MODULE_CONTEXT_MAP = [
   {
-    match: ['/payroll', '/my-payments'],
+    match: ['/payroll', '/my-payments', '/my-advances'],
     code: 'payroll',
     label: 'Nómina, IESS y Beneficios Sociales',
     prompts: [
@@ -58,22 +58,57 @@ export const MODULE_CONTEXT_MAP = [
     ],
   },
   {
-    match: ['/employees', '/register-employee', '/profile'],
-    code: 'employees',
-    label: 'Talento Humano, LOPDP y Seguridad Social',
+    match: ['/signatures'],
+    code: 'signatures',
+    label: 'Firmas Electrónicas (.p12) y Validez Jurídica',
     prompts: [
-      '¿Desde qué día es obligatoria la afiliación al IESS y cuándo se genera derecho a Fondos de Reserva (8.33%)?',
-      '¿Cómo protege el sistema los datos salariales y biométricos bajo la LOPDP del Ecuador?',
-      '¿Qué garantías establece el Art. 326 de la Constitución sobre irrenunciabilidad e igualdad salarial?',
+      '¿Qué validez jurídica tienen los roles de pago y actas firmadas electrónicamente bajo la Ley de Comercio Electrónico?',
+      '¿Cómo se garantiza la integridad y no repudio de documentos laborales firmados en Norma ERP?',
     ],
   },
   {
-    match: ['/performance', '/evaluations', '/recruitment'],
+    match: ['/compliance', '/audit'],
+    code: 'compliance',
+    label: 'Cumplimiento Legal, LOPDP y Auditoría',
+    prompts: [
+      '¿Qué obligaciones exige la LOPDP del Ecuador para el tratamiento de datos salariales y biométricos?',
+      '¿Qué registros laborales y de seguridad social audita el Ministerio del Trabajo e IESS?',
+    ],
+  },
+  {
+    match: ['/recruitment'],
+    code: 'recruitment',
+    label: 'Reclutamiento y Selección sin Sesgos',
+    prompts: [
+      '¿Qué prohíbe la Constitución y el Código del Trabajo en procesos de selección y contratación de personal?',
+      '¿Cómo aplica la LOPDP sobre los datos personales y hojas de vida de postulantes?',
+    ],
+  },
+  {
+    match: ['/performance', '/evaluations'],
     code: 'performance',
-    label: 'Desempeño 360° y Reclutamiento sin Sesgos',
+    label: 'Desempeño 360° y Productividad ODS 8',
     prompts: [
       '¿Qué disposiciones del Código del Trabajo y Constitución garantizan igual remuneración por trabajo de igual valor?',
       '¿Cómo se vinculan las evaluaciones 360° con las metas del ODS 8.5 de empleo pleno y productivo?',
+    ],
+  },
+  {
+    match: ['/analytics', '/reports', '/intelligence'],
+    code: 'analytics',
+    label: 'Analítica de Talento, Costos e IA Predictiva',
+    prompts: [
+      '¿Cómo se evalúa la equidad salarial respecto al SBU ($460 USD) y las metas del ODS 8.5?',
+      '¿Qué indicadores de rotación, horas extra y cumplimiento IESS deben monitorearse mensualmente?',
+    ],
+  },
+  {
+    match: ['/entrepreneurship'],
+    code: 'entrepreneurship',
+    label: 'Incubadora de Negocios y Formalización ODS 8.3',
+    prompts: [
+      '¿Cómo promueve el ODS 8.3 la formalización y crecimiento de microempresas y PYMES en Ecuador?',
+      '¿Cuáles son las obligaciones laborales iniciales al contratar al primer colaborador en el IESS y SUT?',
     ],
   },
   {
@@ -83,6 +118,26 @@ export const MODULE_CONTEXT_MAP = [
     prompts: [
       '¿Cuál es el estado actual de cumplimiento ODS 8 (metas 8.3, 8.5 y 8.8) en la empresa y qué artículos aplican?',
       'Explícame los indicadores de Trabajo Decente de la OIT implementados en el sistema.',
+    ],
+  },
+  {
+    match: [
+      '/employees',
+      '/register-employee',
+      '/profile',
+      '/expedientes',
+      '/my-expedient',
+      '/assets',
+      '/my-assets',
+      '/admin/settings',
+      '/empleado',
+    ],
+    code: 'employees',
+    label: 'Talento Humano, LOPDP y Seguridad Social',
+    prompts: [
+      '¿Desde qué día es obligatoria la afiliación al IESS y cuándo se genera derecho a Fondos de Reserva (8.33%)?',
+      '¿Cómo protege el sistema los datos salariales y biométricos bajo la LOPDP del Ecuador?',
+      '¿Qué garantías establece el Art. 326 de la Constitución sobre irrenunciabilidad e igualdad salarial?',
     ],
   },
 ];

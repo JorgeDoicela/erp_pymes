@@ -48,7 +48,10 @@ export function useSustainabilityAdvisor(defaultModuleContext = 'general') {
     setError(null);
 
     try {
-      const history = messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));
+      const history = messages
+        .filter((m) => !m.isError)
+        .slice(-8)
+        .map((m) => ({ role: m.role, content: m.content }));
       const payload = { query: queryText, conversationHistory: history, moduleContext };
       if (odsTargetFilter) payload.odsTargetFilter = odsTargetFilter;
       if (providerOverrides) payload.providerOverrides = providerOverrides;

@@ -16,12 +16,14 @@ export default function FineTuningExportModal({ isOpen, onClose }) {
   const [includeFullPdfCorpus, setIncludeFullPdfCorpus] = useState(false);
   const [loading, setLoading] = useState(false);
   const [downloadReady, setDownloadReady] = useState(null);
+  const [exportError, setExportError] = useState(null);
 
   if (!isOpen) return null;
 
   const handleExport = async () => {
     setLoading(true);
     setDownloadReady(null);
+    setExportError(null);
     try {
       const res = await sustainabilityService.exportFineTuningDataset({
         targetModel,
@@ -48,9 +50,13 @@ export default function FineTuningExportModal({ isOpen, onClose }) {
           model: targetModel,
           domainsCount: res.data.domainsCovered?.length || 9,
         });
+      } else {
+        setExportError(res?.message || 'No se pudo generar el dataset de entrenamiento.');
       }
     } catch (err) {
-      console.error('Error al exportar dataset de fine-tuning:', err);
+      setExportError(
+        err?.response?.data?.message || err.message || 'Error al exportar dataset de fine-tuning.'
+      );
     } finally {
       setLoading(false);
     }
@@ -134,6 +140,15 @@ export default function FineTuningExportModal({ isOpen, onClose }) {
               </span>
             </label>
           </div>
+
+          {exportError && (
+            <div
+              role="alert"
+              className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-[4px] text-[11px]"
+            >
+              {exportError}
+            </div>
+          )}
 
           {downloadReady && (
             <div className="p-3 bg-[#f9fafb] border border-gray-200 text-gray-900 rounded-[4px] text-[11px] font-mono tabular-nums">

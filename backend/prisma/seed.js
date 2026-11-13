@@ -31,6 +31,7 @@ import {
   seedResearchData,
   seedOffboarding,
   seedSustainability,
+  seedWhatsapp,
 } from './seeds/index.js';
 
 function createPrisma() {
@@ -156,6 +157,8 @@ async function main() {
   await withRetry('ANNOUNCEMENTS', (prisma) => seedAnnouncements(prisma, allEmployees));
   await sleep(800);
   await withRetry('NOTIFICATIONS', (prisma) => seedNotifications(prisma, admin1, allEmployees));
+  await sleep(800);
+  await withRetry('WHATSAPP', (prisma) => seedWhatsapp(prisma, allEmployees));
   await sleep(800);
 
   // 10. Contabilidad PUG

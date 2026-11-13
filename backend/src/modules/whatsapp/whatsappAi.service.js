@@ -22,6 +22,8 @@ import {
 import { llmProviderService, sustainabilityRagService } from '../sustainability/index.js';
 import whatsappRepository from './whatsapp.repository.js';
 import whatsappConfirmationService from './whatsappConfirmation.service.js';
+import whatsappConsentService from './whatsappConsent.service.js';
+import { auditService } from '../audit/index.js';
 import whatsappActionSessionRepository, {
   WHATSAPP_SESSION_STATUS,
 } from './whatsappActionSession.repository.js';
@@ -52,7 +54,9 @@ export class WhatsappAiService {
     repo = whatsappRepository,
     confirmationService = whatsappConfirmationService,
     skillRegistry = defaultSkillRegistry,
-    sessionRepo = whatsappActionSessionRepository
+    sessionRepo = whatsappActionSessionRepository,
+    consentService = whatsappConsentService,
+    auditor = auditService
   ) {
     this.llmProvider = llmProvider;
     this.ragService = ragService;
@@ -60,6 +64,8 @@ export class WhatsappAiService {
     this.confirmationService = confirmationService;
     this.skillRegistry = skillRegistry;
     this.sessionRepo = sessionRepo;
+    this.consentService = consentService;
+    this.auditor = auditor;
   }
 
   /**
@@ -106,6 +112,17 @@ export class WhatsappAiService {
 
     if (!employee) {
       return UNREGISTERED_PHONE_MESSAGE;
+    }
+
+    if (this.consentService && typeof this.consentService.handleConsentFlow === 'function') {
+      const consentReply = await this.consentService.handleConsentFlow({
+        text,
+        employee,
+        phoneKey,
+        sessionRepo: this.sessionRepo,
+        auditor: this.auditor,
+      });
+      if (consentReply) return consentReply;
     }
 
     // Sesión agéntica activa (recolección de parámetros o doble factor pendiente)
@@ -327,6 +344,7 @@ export class WhatsappAiService {
       const ragResponse = await this.ragService.processQuery({
         query: text,
         tenantId: employee.tenantId,
+        userRole: employee.role,
         moduleContext: 'whatsapp',
         providerOverrides: aiConfig,
       });

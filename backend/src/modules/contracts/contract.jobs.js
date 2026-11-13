@@ -33,7 +33,14 @@ export const checkContractExpirations = async () => {
         },
         include: {
           employee: {
-            select: { id: true, firstName: true, lastName: true, email: true, department: true },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              department: true,
+              tenantId: true,
+            },
           },
         },
       });

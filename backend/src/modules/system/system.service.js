@@ -8,6 +8,20 @@
 
 import { systemRepository } from './system.repository.js';
 import { encryptCoordinate, decryptCoordinate } from '../../core/security/encryption.js';
+import { validateAllowedIps } from '../../core/utils/ipUtils.js';
+import { ValidationError } from '../../core/errors/appError.js';
+
+const buildDefaultSettings = (tenantId = null) => ({
+  ...(tenantId ? { tenantId } : { id: 'default', tenantId: null }),
+  maintenanceMode: false,
+  biometricEnabled: false,
+  ipRestrictionEnabled: false,
+  allowedIPs: null,
+  globalLatitude: null,
+  globalLongitude: null,
+  globalRadius: 200,
+  maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
+});
 
 export class SystemService {
   async getSettings(tenantId = null) {
@@ -15,24 +29,14 @@ export class SystemService {
       let settings = null;
       if (tenantId) {
         settings = await systemRepository.findByTenantId(tenantId);
-      }
-
-      if (!settings) {
-        settings = await systemRepository.findFirst();
-      }
-
-      if (!settings) {
-        settings = await systemRepository.upsertDefault({
-          id: 'default',
-          tenantId: tenantId || null,
-          maintenanceMode: false,
-          biometricEnabled: false,
-          allowedIPs: null,
-          globalLatitude: null,
-          globalLongitude: null,
-          globalRadius: 200,
-          maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
-        });
+        if (!settings) {
+          settings = await systemRepository.create(buildDefaultSettings(tenantId));
+        }
+      } else {
+        settings = await systemRepository.findGlobalDefault();
+        if (!settings) {
+          settings = await systemRepository.upsertDefault(buildDefaultSettings(null));
+        }
       }
 
       return {
@@ -42,17 +46,7 @@ export class SystemService {
       };
     } catch (error) {
       console.error('Error fetching settings:', error);
-      return {
-        id: 'default',
-        tenantId: tenantId || null,
-        maintenanceMode: false,
-        biometricEnabled: false,
-        allowedIPs: null,
-        globalLatitude: null,
-        globalLongitude: null,
-        globalRadius: 200,
-        maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
-      };
+      return buildDefaultSettings(tenantId);
     }
   }
 
@@ -64,35 +58,41 @@ export class SystemService {
     if (data.globalLongitude !== undefined) {
       updateData.globalLongitude = encryptCoordinate(data.globalLongitude);
     }
+    if (data.allowedIPs !== undefined) {
+      try {
+        updateData.allowedIPs = validateAllowedIps(data.allowedIPs);
+      } catch (err) {
+        throw new ValidationError(err.message);
+      }
+    }
 
     let settings;
     if (tenantId) {
       const existing = await systemRepository.findByTenantId(tenantId);
+      const effectiveAllowedIPs =
+        updateData.allowedIPs !== undefined ? updateData.allowedIPs : existing?.allowedIPs;
+      const effectiveIpEnabled =
+        updateData.ipRestrictionEnabled !== undefined
+          ? Boolean(updateData.ipRestrictionEnabled)
+          : Boolean(existing?.ipRestrictionEnabled);
+
+      if (effectiveIpEnabled && !effectiveAllowedIPs) {
+        throw new ValidationError(
+          'Debe registrar al menos una dirección IP o rango CIDR válido antes de activar la restricción por IP.'
+        );
+      }
+
       if (existing) {
         settings = await systemRepository.updateById(existing.id, updateData);
       } else {
         settings = await systemRepository.create({
-          tenantId,
-          maintenanceMode: false,
-          biometricEnabled: false,
-          allowedIPs: null,
-          globalLatitude: null,
-          globalLongitude: null,
-          globalRadius: 200,
-          maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
+          ...buildDefaultSettings(tenantId),
           ...updateData,
         });
       }
     } else {
       settings = await systemRepository.upsertById('default', updateData, {
-        id: 'default',
-        maintenanceMode: false,
-        biometricEnabled: false,
-        allowedIPs: null,
-        globalLatitude: null,
-        globalLongitude: null,
-        globalRadius: 200,
-        maintenanceMessage: 'El sistema estará en mantenimiento brevemente.',
+        ...buildDefaultSettings(null),
         ...updateData,
       });
     }

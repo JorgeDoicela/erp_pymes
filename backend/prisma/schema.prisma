@@ -113,6 +113,8 @@ model Employee {
   resetPasswordExpires DateTime?
   trackingConsent      Boolean                 @default(false)
   trackingConsentDate  DateTime?
+  whatsappConsent      Boolean                 @default(false)
+  whatsappConsentDate  DateTime?
   salaryAdvances       SalaryAdvance[]
   assets               EmployeeAsset[]
   offboardings         OffboardingProcess[]
@@ -128,6 +130,7 @@ model Employee {
   @@index([tenantId])
   @@index([tenantId, isActive])
   @@index([tenantId, role])
+  @@index([tenantId, whatsappConsent])
   @@index([hireDate])
   @@index([exitDate])
   @@index([isActive])
@@ -663,6 +666,7 @@ model SystemSetting {
   maintenanceScheduled DateTime?
   maintenanceMessage   String?
   biometricEnabled     Boolean   @default(false)
+  ipRestrictionEnabled Boolean   @default(false)
   allowedIPs           String?   // Permitted IP ranges (comma separated)
   globalLatitude       String?    // Global workplace coordinates
   globalLongitude      String?

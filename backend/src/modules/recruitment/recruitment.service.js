@@ -9,9 +9,10 @@
 import recruitmentRepository from './recruitment.repository.js';
 import { tenantRepository } from '../tenants/index.js';
 import bcrypt from 'bcryptjs';
-import { emailService } from '../notifications/index.js';
 import { auditRepository } from '../audit/index.js';
 import { deleteFileFromStorage } from '../../core/storage/blob.service.js';
+import { encryptSalary } from '../../core/security/encryption.js';
+import recruitmentEmailService from './recruitmentEmail.service.js';
 
 export const recruitmentService = {
   async createVacancy(data, userId, tenantId = null) {
@@ -90,15 +91,28 @@ export const recruitmentService = {
     }));
   },
 
+  async getPublicCompanies() {
+    const tenants = await tenantRepository.findPublicActiveTenants();
+    return tenants
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        openVacanciesCount: t._count?.jobVacancies ?? 0,
+      }))
+      .sort((a, b) => b.openVacanciesCount - a.openVacanciesCount || a.name.localeCompare(b.name));
+  },
+
   async getPublicVacancies(filters = {}) {
     const { tenantId, companySlug } = filters;
     let targetTenantId = tenantId || null;
 
     if (!targetTenantId && companySlug) {
       const tenant = await tenantRepository.findTenantBySlug(companySlug, { id: true });
-      if (tenant) {
-        targetTenantId = tenant.id;
+      if (!tenant) {
+        return [];
       }
+      targetTenantId = tenant.id;
     }
 
     const where = {
@@ -118,6 +132,16 @@ export const recruitmentService = {
     if (!vacancy) throw new Error('Vacante no encontrada');
     if (tenantId && vacancy.tenantId && vacancy.tenantId !== tenantId) {
       throw new Error('Acceso denegado: La vacante no pertenece a la empresa activa.');
+    }
+    return vacancy;
+  },
+
+  async getPublicVacancyById(id) {
+    const vacancy = await recruitmentRepository.getVacancyById(id, {
+      tenant: { select: { id: true, name: true, slug: true } },
+    });
+    if (!vacancy || vacancy.status !== 'OPEN') {
+      throw new Error('La vacante no existe o ya no se encuentra disponible.');
     }
     return vacancy;
   },
@@ -176,7 +200,9 @@ export const recruitmentService = {
       throw new Error('El CV es obligatorio (PDF)');
     }
 
-    const vacancy = await recruitmentRepository.getVacancyById(id);
+    const vacancy = await recruitmentRepository.getVacancyById(id, {
+      tenant: { select: { id: true, name: true, slug: true } },
+    });
     if (!vacancy || vacancy.status !== 'OPEN') {
       throw new Error('La vacante no existe o ya no se encuentra abierta para postulaciones.');
     }
@@ -191,12 +217,18 @@ export const recruitmentService = {
       throw new Error('Ya te has postulado a esta vacante con este correo electrónico.');
     }
 
-    return recruitmentRepository.createApplication({
+    const created = await recruitmentRepository.createApplication({
       ...applicantData,
       vacancyId: id,
       resumeUrl,
       status: 'PENDING',
     });
+
+    recruitmentEmailService
+      .sendApplicationReceivedEmail({ ...created, vacancy })
+      .catch((err) => console.error('Error sending application confirmation email:', err));
+
+    return created;
   },
 
   async getApplicationsByVacancy(vacancyId, tenantId = null) {
@@ -212,7 +244,12 @@ export const recruitmentService = {
         },
       },
       notes: { orderBy: { createdAt: 'desc' } },
-      interviews: { orderBy: { date: 'asc' } },
+      interviews: {
+        orderBy: { date: 'asc' },
+        include: {
+          interviewer: { select: { id: true, firstName: true, lastName: true } },
+        },
+      },
       evaluations: { include: { evaluator: { select: { firstName: true, lastName: true } } } },
     });
 
@@ -247,11 +284,15 @@ export const recruitmentService = {
     // Enviar email si es rechazado y la opción está habilitada
     if (status === 'REJECTED' && sendEmail) {
       try {
-        const fullApp = await recruitmentRepository.getApplicationById(id, { vacancy: true });
+        const fullApp = await recruitmentRepository.getApplicationById(id, {
+          vacancy: {
+            include: { tenant: { select: { id: true, name: true, slug: true } } },
+          },
+        });
         if (fullApp) {
-          this._sendRejectionEmail(fullApp).catch((err) =>
-            console.error('Error sending rejection email:', err)
-          );
+          recruitmentEmailService
+            .sendRejectionEmail(fullApp)
+            .catch((err) => console.error('Error sending rejection email:', err));
         }
       } catch (error) {
         console.error('Error fetching application for rejection email:', error);
@@ -299,29 +340,136 @@ export const recruitmentService = {
     });
   },
 
-  async scheduleInterview(applicationId, interviewData, interviewerId, tenantId = null) {
-    await this.getApplicationDetails(applicationId, tenantId);
-    const { date, type, location, notes } = interviewData;
+  async scheduleInterview(applicationId, interviewData, defaultInterviewerId, tenantId = null) {
+    const application = await this.getApplicationDetails(applicationId, tenantId);
+    const {
+      date,
+      type = 'VIRTUAL',
+      location,
+      notes,
+      interviewerId: requestedInterviewerId,
+      sendEmail = true,
+    } = interviewData;
 
-    return recruitmentRepository.executeTransaction(async (tx) => {
-      const interview = await tx.interview.create({
+    if (!date || isNaN(new Date(date).getTime())) {
+      throw new Error('La fecha y hora de la entrevista son obligatorias.');
+    }
+
+    const allowedTypes = ['VIRTUAL', 'PRESENTIAL', 'PHONE'];
+    if (!allowedTypes.includes(type)) {
+      throw new Error('Modalidad de entrevista inválida.');
+    }
+
+    if ((type === 'VIRTUAL' || type === 'PRESENTIAL') && !location?.trim()) {
+      throw new Error(
+        type === 'VIRTUAL'
+          ? 'El enlace de la videollamada es obligatorio.'
+          : 'La dirección o sala de reunión es obligatoria para entrevistas presenciales.'
+      );
+    }
+
+    let finalInterviewerId = defaultInterviewerId;
+    let interviewerName = null;
+    if (requestedInterviewerId) {
+      const interviewers = await recruitmentRepository.findTenantInterviewers(
+        application.vacancy?.tenantId || tenantId
+      );
+      const found = interviewers.find((emp) => emp.id === requestedInterviewerId);
+      if (!found) {
+        throw new Error('El entrevistador seleccionado no pertenece a la empresa activa.');
+      }
+      finalInterviewerId = found.id;
+      interviewerName = `${found.firstName} ${found.lastName}`;
+    }
+
+    const interview = await recruitmentRepository.executeTransaction(async (tx) => {
+      const created = await tx.interview.create({
         data: {
           applicationId,
           date: new Date(date),
           type,
-          location,
-          notes,
-          interviewerId,
+          location: location?.trim() || null,
+          notes: notes?.trim() || null,
+          interviewerId: finalInterviewerId,
+          status: 'SCHEDULED',
+        },
+        include: {
+          interviewer: { select: { id: true, firstName: true, lastName: true } },
         },
       });
 
-      await tx.jobApplication.update({
-        where: { id: applicationId },
-        data: { status: 'INTERVIEW' },
-      });
+      if (application.status === 'PENDING' || application.status === 'REVIEWING') {
+        await tx.jobApplication.update({
+          where: { id: applicationId },
+          data: { status: 'INTERVIEW' },
+        });
+      }
 
-      return interview;
+      return created;
     });
+
+    if (sendEmail) {
+      const resolvedName =
+        interviewerName ||
+        (interview.interviewer
+          ? `${interview.interviewer.firstName} ${interview.interviewer.lastName}`
+          : null);
+      recruitmentEmailService
+        .sendInterviewScheduledEmail({
+          application,
+          interview,
+          interviewerName: resolvedName,
+        })
+        .catch((err) => console.error('Error sending interview email:', err));
+    }
+
+    return interview;
+  },
+
+  async updateInterviewStatus(interviewId, status, tenantId = null, sendEmail = true) {
+    const allowedStatuses = ['SCHEDULED', 'COMPLETED', 'CANCELLED'];
+    if (!allowedStatuses.includes(status)) {
+      throw new Error('Estado de entrevista inválido.');
+    }
+
+    const existing = await recruitmentRepository.getInterviewById(interviewId, {
+      application: {
+        include: {
+          vacancy: {
+            include: { tenant: { select: { id: true, name: true, slug: true } } },
+          },
+        },
+      },
+    });
+
+    if (!existing) {
+      throw new Error('Entrevista no encontrada.');
+    }
+
+    if (
+      tenantId &&
+      existing.application?.vacancy?.tenantId &&
+      existing.application.vacancy.tenantId !== tenantId
+    ) {
+      throw new Error('Acceso denegado: La entrevista no pertenece a la empresa activa.');
+    }
+
+    const updated = await recruitmentRepository.updateInterview(interviewId, { status });
+
+    if (status === 'CANCELLED' && sendEmail) {
+      recruitmentEmailService
+        .sendInterviewCancelledEmail({
+          application: existing.application,
+          interview: existing,
+        })
+        .catch((err) => console.error('Error sending interview cancellation email:', err));
+    }
+
+    return updated;
+  },
+
+  async getTenantInterviewers(tenantId) {
+    return recruitmentRepository.findTenantInterviewers(tenantId);
   },
 
   async evaluateCandidate(applicationId, evaluationData, evaluatorId, tenantId = null) {
@@ -381,6 +529,16 @@ export const recruitmentService = {
       throw new Error('El candidato debe ser mayor de 18 años para ser contratado.');
     }
 
+    const existingEmployee = await recruitmentRepository.findEmployeeByEmailOrIdentity(
+      application.email,
+      identityCard
+    );
+    if (existingEmployee) {
+      throw new Error(
+        'Ya existe un colaborador registrado con ese correo electrónico o número de cédula.'
+      );
+    }
+
     return recruitmentRepository
       .executeTransaction(async (tx) => {
         // 1. Update Application Status
@@ -394,6 +552,11 @@ export const recruitmentService = {
           throw new Error('La contraseña es obligatoria y debe tener al menos 8 caracteres.');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
+        const numericSalary = Number(salary);
+        if (isNaN(numericSalary) || numericSalary <= 0) {
+          throw new Error('El salario debe ser un número válido mayor a cero.');
+        }
+        const encryptedSalary = encryptSalary(numericSalary);
         const newEmployee = await tx.employee.create({
           data: {
             tenantId: candidateTenantId,
@@ -409,7 +572,7 @@ export const recruitmentService = {
             civilStatus,
             contractType,
             hireDate: new Date(startDate),
-            salary: `ENC:${salary}`,
+            salary: encryptedSalary,
             password: hashedPassword,
             role: 'employee',
           },
@@ -456,95 +619,15 @@ export const recruitmentService = {
         const shouldSendEmail = hireData.sendEmail !== undefined ? hireData.sendEmail : true;
         if (shouldSendEmail) {
           try {
-            this._sendHiringEmail(application, hireData.startDate).catch((err) =>
-              console.error('Error sending hiring email:', err)
-            );
+            recruitmentEmailService
+              .sendHiringEmail(application, hireData.startDate)
+              .catch((err) => console.error('Error sending hiring email:', err));
           } catch (error) {
             console.error('Error triggering hiring email:', error);
           }
         }
         return newEmployee;
       });
-  },
-
-  // Email Helpers
-  async _sendHiringEmail(application, startDate) {
-    const { firstName, lastName, email, vacancy } = application;
-    const name = `${firstName} ${lastName}`;
-    const position = vacancy ? vacancy.title : 'nuestro equipo';
-    const formattedDate = new Date(startDate).toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-    const loginUrl = process.env.FRONTEND_URL || process.env.ORIGIN || 'http://localhost:5173';
-
-    const html = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; overflow: hidden; shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            <div style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); padding: 40px 20px; text-align: center; color: #ffffff;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.025em;">¡Bienvenido a nuestro equipo!</h1>
-                <p style="margin-top: 10px; opacity: 0.9; font-size: 16px;">Estamos emocionados de tenerte con nosotros</p>
-            </div>
-            <div style="padding: 40px; color: #1e293b; line-height: 1.8;">
-                <p style="font-size: 18px;">Hola <strong>${name}</strong>,</p>
-                <p>¡Muchas felicidades! Nos complace informarte que has sido seleccionado(a) para el puesto de <strong>${position}</strong> en <strong>Norma ERP</strong>.</p>
-                <p>Tu talento y experiencia destacaron entre los candidatos, y estamos convencidos de que harás una contribución valiosa a nuestra organización.</p>
-                
-                <div style="background-color: #f8fafc; padding: 25px; border-radius: 6px; margin: 30px 0; border: 1px solid #e2e8f0;">
-                    <h3 style="margin-top: 0; color: #2563eb; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Detalles de Inicio</h3>
-                    <p style="margin-bottom: 5px;"><strong>Fecha de ingreso:</strong> ${formattedDate}</p>
-                    <p style="margin-top: 0;"><strong>Acceso:</strong> Utiliza el correo electrónico registrado y la contraseña asignada por el administrador.</p>
-                </div>
-
-                <p>Ya puedes acceder al portal de empleados para completar tu perfil y revisar la documentación inicial.</p>
-                
-                <div style="margin-top: 40px; text-align: center;">
-                    <a href="${loginUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 15px; display: inline-block;">Acceder al Portal</a>
-                </div>
-            </div>
-            <div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px; border-top: 1px solid #f1f5f9; background-color: #f8fafc;">
-                © ${new Date().getFullYear()} Norma ERP · Plataforma ERP para PYMEs. Todos los derechos reservados.<br>
-                Este es un mensaje automático, por favor no respondas a este correo.
-            </div>
-        </div>
-        `;
-
-    return emailService.sendEmail({
-      to: email,
-      subject: `¡Bienvenido(a) a bordo! - ${position}`,
-      html,
-    });
-  },
-
-  async _sendRejectionEmail(application) {
-    const { firstName, lastName, email, vacancy } = application;
-    const name = `${firstName} ${lastName}`;
-    const position = vacancy ? vacancy.title : 'la vacante';
-
-    const html = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 6px; background-color: #ffffff; overflow: hidden;">
-            <div style="background-color: #f8fafc; padding: 40px 20px; text-align: center; color: #1e293b; border-bottom: 2px solid #f1f5f9;">
-                <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #334155;">Actualización de tu postulación</h1>
-            </div>
-            <div style="padding: 40px; color: #475569; line-height: 1.8;">
-                <p style="font-size: 16px;">Hola <strong>${name}</strong>,</p>
-                <p>Agradecemos sinceramente el tiempo y el interés que demostraste al postularte para la vacante de <strong>${position}</strong> en <strong>Norma ERP</strong>.</p>
-                <p>Tras una cuidadosa revisión de todas las candidaturas, queremos informarte que en esta ocasión hemos decidido avanzar con otros perfiles que se alinean más estrechamente con los requerimientos específicos del puesto en este momento.</p>
-                <p>Tu perfil es muy valioso y mantendremos tu información en nuestra base de datos para futuras oportunidades que se ajusten a tu experiencia profesional.</p>
-                <p style="margin-top: 20px;">Te deseamos mucho éxito en tu búsqueda laboral y en tus futuros proyectos profesionales.</p>
-                <p style="margin-top: 30px; font-weight: 600; color: #1e293b;">Atentamente,<br><span style="color: #2563eb;">Equipo de Selección</span><br>Norma ERP</p>
-            </div>
-            <div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px; border-top: 1px solid #f1f5f9; background-color: #f8fafc;">
-                © ${new Date().getFullYear()} Norma ERP · Plataforma ERP para PYMEs. Todos los derechos reservados.
-            </div>
-        </div>
-        `;
-
-    return emailService.sendEmail({
-      to: email,
-      subject: `Actualización sobre tu postulación - ${position}`,
-      html,
-    });
   },
 };
 

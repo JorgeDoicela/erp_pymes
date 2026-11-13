@@ -65,8 +65,9 @@ export class ReportRepository {
     });
   }
 
-  async findEmployeesForExport() {
+  async findEmployeesForExport(tenantId = null) {
     return prisma.employee.findMany({
+      where: tenantId ? { tenantId } : {},
       include: {
         contracts: {
           where: { status: 'Active' },
@@ -77,9 +78,12 @@ export class ReportRepository {
     });
   }
 
-  async findPayrollDetailsForExport(payrollId) {
+  async findPayrollDetailsForExport(payrollId, tenantId = null) {
     return prisma.payrollDetail.findMany({
-      where: { payrollId },
+      where: {
+        payrollId,
+        ...(tenantId ? { payroll: { tenantId } } : {}),
+      },
       include: { employee: true, payroll: true },
     });
   }

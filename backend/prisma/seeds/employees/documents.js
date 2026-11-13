@@ -12,23 +12,33 @@ export async function seedDocuments(prisma, employees) {
   );
 
   const docsBatch = [];
+  const tenantEmpIndex = {};
+
   for (const emp of employees) {
     if (!emp.isActive) continue;
 
-    const isFullyVerified = true;
+    const tId = emp.tenantId || 'global';
+    tenantEmpIndex[tId] = (tenantEmpIndex[tId] || 0) + 1;
+    const relIdx = tenantEmpIndex[tId];
 
-    docsBatch.push(
-      {
-        employeeId: emp.id,
-        type: 'IDENTIFICATION',
-        documentCategory: 'IDENTIFICATION',
-        documentUrl: `https://storage.emplifi.ec/expedientes/${emp.id}/cedula_identidad.pdf`,
-        originalName: `Cedula_${emp.firstName}_${emp.lastName}.pdf`,
-        mimeType: 'application/pdf',
-        status: 'VERIFIED',
-        expiryDate: new Date('2029-12-31'),
-      },
-      {
+    // Colaborador 2 de cada tenant tiene documento en revisión para la pestaña 'Por Validar'
+    const isSafetyPending = relIdx === 2;
+    // Colaborador 5 de cada tenant no tiene certificado bancario para la pestaña 'Incompletos'
+    const skipBankCert = relIdx === 5;
+
+    docsBatch.push({
+      employeeId: emp.id,
+      type: 'IDENTIFICATION',
+      documentCategory: 'IDENTIFICATION',
+      documentUrl: `https://storage.emplifi.ec/expedientes/${emp.id}/cedula_identidad.pdf`,
+      originalName: `Cedula_${emp.firstName}_${emp.lastName}.pdf`,
+      mimeType: 'application/pdf',
+      status: 'VERIFIED',
+      expiryDate: new Date('2029-12-31'),
+    });
+
+    if (!skipBankCert) {
+      docsBatch.push({
         employeeId: emp.id,
         type: 'BANK_CERTIFICATE',
         documentCategory: 'BANK_CERTIFICATE',
@@ -37,7 +47,10 @@ export async function seedDocuments(prisma, employees) {
         mimeType: 'application/pdf',
         status: 'VERIFIED',
         expiryDate: null,
-      },
+      });
+    }
+
+    docsBatch.push(
       {
         employeeId: emp.id,
         type: 'TITLE_DIPLOMA',
@@ -75,7 +88,7 @@ export async function seedDocuments(prisma, employees) {
         documentUrl: `https://storage.emplifi.ec/expedientes/${emp.id}/salud_ocupacional.pdf`,
         originalName: 'Aptitud_Medica_Ocupacional.pdf',
         mimeType: 'application/pdf',
-        status: isFullyVerified ? 'VERIFIED' : 'PENDING',
+        status: isSafetyPending ? 'PENDING' : 'VERIFIED',
         expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       }
     );

@@ -7,7 +7,7 @@
 import {
   calculateKolmogorovSmirnovTest,
   runMultiSeedMonteCarloSensitivity,
-} from '../../src/modules/intelligence/intelligence.service.js';
+} from '../../src/modules/intelligence/predictive/intelligence.service.js';
 
 console.log('================================================================');
 console.log('🧪 INICIANDO BATERÍA DE PRUEBAS DE ESTRÉS Y VERIFICACIÓN MATEMÁTICA');

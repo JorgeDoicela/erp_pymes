@@ -66,6 +66,9 @@ export const updateProject = async (req, res) => {
 export const addMilestone = async (req, res) => {
   try {
     const { projectId, title, description, dueDate } = req.body;
+    const project = await entrepreneurshipRepository.findProjectDetails(projectId);
+    if (!project) return res.status(404).json({ error: 'Proyecto no encontrado' });
+
     const milestone = await entrepreneurshipRepository.createMilestone({
       projectId,
       title,
@@ -107,6 +110,9 @@ export const deleteMilestone = async (req, res) => {
 export const addUpdate = async (req, res) => {
   try {
     const { projectId, title, content, type } = req.body;
+    const project = await entrepreneurshipRepository.findProjectDetails(projectId);
+    if (!project) return res.status(404).json({ error: 'Proyecto no encontrado' });
+
     const update = await entrepreneurshipRepository.createUpdate({
       projectId,
       title,

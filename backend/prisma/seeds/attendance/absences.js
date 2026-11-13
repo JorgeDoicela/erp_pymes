@@ -152,44 +152,126 @@ export async function seedAbsences(prisma, employees) {
   ];
 
   const absencesBatch = [];
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
 
+  // 1. Agrupar colaboradores por Tenant para garantizar cobertura completa en todas las empresas
+  const tenantEmployeesMap = {};
   for (const emp of employees) {
     if (!emp.isActive) continue;
+    const tId = emp.tenantId || 'global';
+    if (!tenantEmployeesMap[tId]) tenantEmployeesMap[tId] = [];
+    tenantEmployeesMap[tId].push(emp);
+  }
 
-    const profile = ABSENCE_PROFILES.find((p) => p.email === emp.email);
+  for (const tId of Object.keys(tenantEmployeesMap)) {
+    const tEmps = tenantEmployeesMap[tId];
+    const nonAdminEmps = tEmps.filter((e) => e.role !== 'admin' && e.role !== 'superadmin');
+    const pool = nonAdminEmps.length >= 4 ? nonAdminEmps : tEmps;
 
-    if (profile) {
-      for (const req of profile.requests) {
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - req.daysAgo);
-        const endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + req.duration - 1);
+    // Empleado 0: Vacaciones en el mes corriente (para visibilidad inmediata en TeamCalendar)
+    if (pool[0]) {
+      const vStart = new Date(currentYear, currentMonth, 3);
+      const vEnd = new Date(currentYear, currentMonth, 6);
+      absencesBatch.push({
+        employeeId: pool[0].id,
+        type: 'Vacaciones',
+        startDate: vStart,
+        endDate: vEnd,
+        reason: 'Periodo de vacaciones reglamentarias del mes corriente.',
+        status: 'APPROVED',
+        adminComment: 'Aprobado según cronograma anual del departamento.',
+      });
+    }
 
-        absencesBatch.push({
-          employeeId: emp.id,
-          type: req.type,
-          startDate: startDate,
-          endDate: endDate,
-          reason: req.reason,
-          status: req.status,
-          adminComment: req.comment,
-        });
-      }
-    } else {
-      const startDate = new Date();
-      const offset = String(emp.id).charCodeAt(0) % 30;
-      startDate.setDate(startDate.getDate() - (40 + offset));
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 3);
+    // Empleado 1: Permiso Médico en el mes corriente (para TeamCalendar)
+    if (pool[1]) {
+      const mStart = new Date(currentYear, currentMonth, 9);
+      const mEnd = new Date(currentYear, currentMonth, 10);
+      absencesBatch.push({
+        employeeId: pool[1].id,
+        type: 'Permiso Médico',
+        startDate: mStart,
+        endDate: mEnd,
+        reason: 'Reposo ambulatorio prescrito por facultativo médico.',
+        status: 'APPROVED',
+        adminComment: 'Certificado médico validado por Bienestar y Salud Ocupacional.',
+      });
+    }
+
+    // Empleado 2: Solicitud Pendiente (para que AdminAbsences tenga registros interactivos por aprobar)
+    if (pool[2]) {
+      const pStart = new Date(currentYear, currentMonth, Math.max(1, now.getDate() - 1));
+      const pEnd = new Date(currentYear, currentMonth, Math.max(1, now.getDate() + 1));
+      absencesBatch.push({
+        employeeId: pool[2].id,
+        type: 'Enfermedad',
+        startDate: pStart,
+        endDate: pEnd,
+        reason: 'Cita con médico especialista y reposo recomendado de 48 horas.',
+        status: 'PENDING',
+        adminComment: null,
+      });
+    }
+
+    // Empleado 3: Solicitud Rechazada (para poblar la pestaña 'Rechazados')
+    if (pool[3]) {
+      const rStart = new Date(currentYear, currentMonth, Math.max(1, now.getDate() - 7));
+      const rEnd = new Date(currentYear, currentMonth, Math.max(1, now.getDate() - 5));
+      absencesBatch.push({
+        employeeId: pool[3].id,
+        type: 'Personal',
+        startDate: rStart,
+        endDate: rEnd,
+        reason: 'Permiso particular para viaje imprevisto fuera de la ciudad.',
+        status: 'REJECTED',
+        adminComment:
+          'Superposición de fechas con cierre contable y entrega crítica del área. No cumple antelación mínima.',
+      });
+    }
+
+    // Resto de colaboradores: Vacaciones históricas de meses anteriores
+    for (let rIdx = 4; rIdx < pool.length; rIdx++) {
+      const emp = pool[rIdx];
+      const offset = (emp.id.charCodeAt(0) * 3) % 25;
+      const hStart = new Date();
+      hStart.setDate(hStart.getDate() - (45 + offset));
+      const hEnd = new Date(hStart);
+      hEnd.setDate(hStart.getDate() + 4);
 
       absencesBatch.push({
         employeeId: emp.id,
         type: 'Vacaciones',
+        startDate: hStart,
+        endDate: hEnd,
+        reason: 'Descanso anual de vacaciones reglamentarias.',
+        status: 'APPROVED',
+        adminComment: 'Disfrute reglamentario completado sin novedades.',
+      });
+    }
+  }
+
+  // 2. Incorporar perfiles narrativos específicos adicionales
+  for (const emp of employees) {
+    if (!emp.isActive) continue;
+    const profile = ABSENCE_PROFILES.find((p) => p.email === emp.email);
+    if (!profile) continue;
+
+    for (const req of profile.requests) {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - req.daysAgo);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + req.duration - 1);
+
+      absencesBatch.push({
+        employeeId: emp.id,
+        type: req.type,
         startDate: startDate,
         endDate: endDate,
-        reason: 'Vacaciones reglamentarias de descanso',
-        status: 'APPROVED',
-        adminComment: 'Disfruta tus vacaciones',
+        reason: req.reason,
+        status: req.status,
+        adminComment: req.comment,
       });
     }
   }

@@ -10,6 +10,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import GlobalLegalAssistantWidget from '../components/GlobalLegalAssistantWidget.jsx';
+import { resolveActiveModuleContext } from '../constants/legalAssistantContexts.js';
 import * as sustainabilityService from '../services/sustainability.service.js';
 
 vi.mock('../services/sustainability.service.js', () => ({
@@ -151,5 +152,20 @@ describe('GlobalLegalAssistantWidget — Asistente Jurídico y Contable Multi-M�
     });
 
     expect(await screen.findByText(/Liquidación calculada con Decimal\.js/i)).toBeInTheDocument();
+  });
+
+  it('resuelve correctamente el contexto de módulo en todas las pestañas del ERP', () => {
+    expect(resolveActiveModuleContext('/my-advances').code).toBe('payroll');
+    expect(resolveActiveModuleContext('/empleado/asistencia').code).toBe('attendance');
+    expect(resolveActiveModuleContext('/empleado/ausencias').code).toBe('attendance');
+    expect(resolveActiveModuleContext('/empleado').code).toBe('employees');
+    expect(resolveActiveModuleContext('/admin/expedientes').code).toBe('employees');
+    expect(resolveActiveModuleContext('/my-assets').code).toBe('employees');
+    expect(resolveActiveModuleContext('/admin/signatures').code).toBe('signatures');
+    expect(resolveActiveModuleContext('/admin/compliance').code).toBe('compliance');
+    expect(resolveActiveModuleContext('/recruitment').code).toBe('recruitment');
+    expect(resolveActiveModuleContext('/analytics').code).toBe('analytics');
+    expect(resolveActiveModuleContext('/intelligence').code).toBe('analytics');
+    expect(resolveActiveModuleContext('/admin/entrepreneurship').code).toBe('entrepreneurship');
   });
 });

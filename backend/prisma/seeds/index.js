@@ -22,6 +22,7 @@ export * from './attendance/absences.js';
 export * from './communication/audit.js';
 export * from './communication/announcements.js';
 export * from './communication/notifications.js';
+export * from './communication/whatsapp.js';
 export * from './accounting/accounting.js';
 export * from './entrepreneurship/entrepreneurship.js';
 export * from './intelligence/research_data.js';

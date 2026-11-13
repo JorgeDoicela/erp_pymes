@@ -26,18 +26,18 @@ export const checkRequestReminders = async () => {
 
     const adminCache = new Map();
     const getAdmins = async (tenantId) => {
-      const cacheKey = tenantId || 'default';
-      if (adminCache.has(cacheKey)) return adminCache.get(cacheKey);
+      if (!tenantId) return [];
+      if (adminCache.has(tenantId)) return adminCache.get(tenantId);
 
       const admins = await prisma.employee.findMany({
         where: {
           role: 'admin',
           isActive: true,
-          ...(tenantId ? { tenantId } : {}),
+          tenantId,
         },
         select: { id: true },
       });
-      adminCache.set(cacheKey, admins);
+      adminCache.set(tenantId, admins);
       return admins;
     };
 

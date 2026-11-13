@@ -10,8 +10,14 @@ export async function seedBenefits(prisma, employees) {
   console.log('[BENEFITS] Generando Beneficios Legales y Corporativos Ecuatorianos...');
 
   const benefitsBatch = [];
+  const tenantEmpCounts = {};
+
   for (const emp of employees) {
     if (!emp.isActive) continue;
+    const tId = emp.tenantId || 'global';
+    tenantEmpCounts[tId] = (tenantEmpCounts[tId] || 0) + 1;
+    const relIdx = tenantEmpCounts[tId];
+
     benefitsBatch.push(
       {
         employeeId: emp.id,
@@ -43,7 +49,7 @@ export async function seedBenefits(prisma, employees) {
         amount: 100.0,
         type: 'BONUS',
         frequency: 'ONE_TIME',
-        status: 'ACTIVE',
+        status: relIdx % 2 === 0 ? 'PROCESSED' : 'ACTIVE',
       }
     );
   }

@@ -21,13 +21,19 @@ export const WHATSAPP_INTENTS = {
   TENANT_METRICS_QUERY: 'TENANT_METRICS_QUERY',
   GENERAL_GREETING: 'GENERAL_GREETING',
   UNKNOWN_SENDER: 'UNKNOWN_SENDER',
+  LOPDP_CONSENT_ACCEPT: 'LOPDP_CONSENT_ACCEPT',
+  LOPDP_CONSENT_REVOKE: 'LOPDP_CONSENT_REVOKE',
 };
+
+export const WHATSAPP_PRIVACY_POLICY_URL =
+  process.env.WHATSAPP_PRIVACY_URL ||
+  `${process.env.FRONTEND_URL || 'https://norma.doicela.dev'}/privacy`;
 
 export const WHATSAPP_SYSTEM_PROMPT = `Eres el Asistente Corporativo de Norma ERP para WhatsApp.
 Tu misión es resolver consultas de colaboradores y directivos sobre:
 1. Normativa laboral y tributaria de Ecuador (Código del Trabajo, IESS, SRI, Ley Orgánica de Protección de Datos).
 2. Estado personal del colaborador dentro de la empresa (saldo de vacaciones, última marcación de asistencia, departamento y cargo).
-3. Gestión agéntica segura de solicitudes de vacaciones (con validación de saldo, último 4 dígitos de cédula y código OTP por correo).
+3. Gestión agéntica segura de solicitudes de vacaciones (con validación de saldo, cédula de identidad completa y código OTP por correo).
 4. Indicadores empresariales (únicamente para directores o administradores autorizados).
 
 Reglas de formato y estilo obligatorias para WhatsApp:

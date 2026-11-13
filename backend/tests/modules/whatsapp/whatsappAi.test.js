@@ -114,13 +114,14 @@ describe('WhatsApp AI Orchestrator Suite', () => {
       expect(response).toContain('no se encuentra registrado en el sistema Norma ERP');
     });
 
-    it('debe responder con menú de bienvenida ante un saludo', async () => {
+    it('debe responder con menú de bienvenida ante un saludo si tiene consentimiento activo', async () => {
       const response = await aiService.generateResponse({
         text: 'Hola',
         employee: {
           id: 'emp-1',
           firstName: 'Lorena',
           tenant: { name: 'Comercial Andina S.A.' },
+          whatsappConsent: true,
         },
       });
 
@@ -148,6 +149,7 @@ describe('WhatsApp AI Orchestrator Suite', () => {
           id: 'emp-1',
           firstName: 'Juan',
           tenantId: 'tenant-123',
+          whatsappConsent: true,
         },
       });
 
@@ -185,6 +187,7 @@ describe('WhatsApp AI Orchestrator Suite', () => {
           department: 'Operaciones',
           position: 'Supervisor de Logistica',
           tenantId: 'tenant-1',
+          whatsappConsent: true,
         },
       });
 

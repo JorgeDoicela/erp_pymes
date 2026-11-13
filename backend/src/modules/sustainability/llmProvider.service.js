@@ -181,6 +181,13 @@ export class LlmProviderService {
     maxTokens = 2048,
     providerOverrides = {},
   }) {
+    const hasUserMessage = (messages || []).some(
+      (m) => m && m.content != null && String(m.content).trim().length > 0
+    );
+    if (!hasUserMessage) {
+      return null;
+    }
+
     const primaryConfig = this.resolveActiveConfig(providerOverrides);
 
     // 1. Intentar proveedor primario si está configurado
@@ -237,6 +244,13 @@ export class LlmProviderService {
     const timer = setTimeout(() => controller.abort(), config.timeoutMs);
 
     try {
+      const sanitizedMessages = (messages || [])
+        .filter((m) => m && m.content != null && String(m.content).trim().length > 0)
+        .map((m) => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: String(m.content),
+        }));
+
       if (config.protocol === 'anthropic') {
         const res = await fetch(`${config.baseUrl}${config.chatPath}`, {
           method: 'POST',
@@ -249,22 +263,23 @@ export class LlmProviderService {
             model: config.model,
             max_tokens: maxTokens,
             temperature,
-            system: systemPrompt,
-            messages: messages.map((m) => ({
-              role: m.role === 'assistant' ? 'assistant' : 'user',
-              content: m.content,
-            })),
+            system: String(systemPrompt || ''),
+            messages: sanitizedMessages,
           }),
           signal: controller.signal,
         });
 
         if (!res.ok) return null;
         const data = await res.json();
-        return data?.content?.[0]?.text || null;
+        const text = data?.content?.[0]?.text;
+        return typeof text === 'string' && text.trim() ? text.trim() : null;
       }
 
       if (config.protocol === 'ollama') {
-        const fullMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+        const fullMessages = [
+          { role: 'system', content: String(systemPrompt || '') },
+          ...sanitizedMessages,
+        ];
         const res = await fetch(`${config.baseUrl}${config.chatPath}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -283,11 +298,15 @@ export class LlmProviderService {
 
         if (!res.ok) return null;
         const data = await res.json();
-        return data?.message?.content || null;
+        const text = data?.message?.content;
+        return typeof text === 'string' && text.trim() ? text.trim() : null;
       }
 
       // Protocolo estándar OpenAI-Compatible (DeepSeek, OpenAI, Gemini OpenAI endpoint, Groq, vLLM, LM Studio)
-      const fullMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+      const fullMessages = [
+        { role: 'system', content: String(systemPrompt || '') },
+        ...sanitizedMessages,
+      ];
       const headers = { 'Content-Type': 'application/json' };
       if (config.apiKey) {
         headers.Authorization = `Bearer ${config.apiKey}`;
@@ -310,7 +329,8 @@ export class LlmProviderService {
 
       if (!res.ok) return null;
       const data = await res.json();
-      return data?.choices?.[0]?.message?.content || null;
+      const text = data?.choices?.[0]?.message?.content;
+      return typeof text === 'string' && text.trim() ? text.trim() : null;
     } catch {
       return null;
     } finally {

@@ -7,6 +7,7 @@
  */
 
 import { attendanceService } from './attendance.service.js';
+import { extractClientIp } from '../../../core/utils/ipUtils.js';
 
 const markAttendance = async (req, res, next) => {
   try {
@@ -19,7 +20,7 @@ const markAttendance = async (req, res, next) => {
       });
     }
 
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const ip = extractClientIp(req);
     const start = Date.now();
 
     const userRole = (req.user?.role || '').toLowerCase();

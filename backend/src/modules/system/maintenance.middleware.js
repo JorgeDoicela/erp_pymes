@@ -33,28 +33,30 @@ export const maintenanceMiddleware = async (req, res, next) => {
   }
 
   try {
-    const settings = await systemService.getSettings();
+    let decoded = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const secret = process.env.JWT_SECRET || 'secret_key_change_me';
+        decoded = jwt.verify(token, secret);
+      } catch (error) {
+        console.log('Maintenance token check failed:', error.message);
+      }
+    }
+
+    // Aislar la lectura de mantenimiento al tenant del usuario autenticado (o global si no pertenece a un tenant)
+    const tenantId = decoded?.tenantId || null;
+    const settings = await systemService.getSettings(tenantId);
 
     // Si settings no carga o no está en mantenimiento, proceder
     if (!settings?.maintenanceMode) {
       return next();
     }
 
-    // Verificar si el usuario está autenticado y tiene rol de admin/superadmin
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const token = authHeader.split(' ')[1];
-        const secret = process.env.JWT_SECRET || 'secret_key_change_me';
-        const decoded = jwt.verify(token, secret);
-
-        const role = decoded.role ? decoded.role.toLowerCase() : '';
-        if (role === 'admin' || role === 'superadmin') {
-          return next();
-        }
-      } catch (error) {
-        console.log('Maintenance bypass failed:', error.message);
-      }
+    const role = decoded?.role ? decoded.role.toLowerCase() : '';
+    if (role === 'admin' || role === 'superadmin') {
+      return next();
     }
 
     return res.status(503).json({

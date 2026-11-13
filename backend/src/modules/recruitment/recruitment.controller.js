@@ -30,12 +30,10 @@ export const getRecruitmentStats = async (req, res) => {
     res.json({ success: true, data: stats });
   } catch (error) {
     console.error('Error getting recruitment stats:', error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || 'Error al obtener estadísticas de reclutamiento',
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error al obtener estadísticas de reclutamiento',
+    });
   }
 };
 
@@ -52,6 +50,16 @@ export const getVacancies = async (req, res) => {
   } catch (error) {
     console.error('Error getting vacancies:', error);
     res.status(500).json({ message: error.message || 'Error al obtener vacantes' });
+  }
+};
+
+export const getPublicCompanies = async (req, res) => {
+  try {
+    const companies = await recruitmentService.getPublicCompanies();
+    res.json(companies);
+  } catch (error) {
+    console.error('Error getting public companies:', error);
+    res.status(500).json({ message: error.message || 'Error al obtener empresas' });
   }
 };
 
@@ -241,15 +249,12 @@ export const hireCandidate = async (req, res) => {
     const tenantId = getTenantId(req);
     const userId = req.user?.id;
     const result = await recruitmentService.hireCandidate(id, req.body, tenantId, userId);
-    res
-      .status(201)
-      .json({
-        message: 'Candidato contratado y colaborador creado exitosamente',
-        employee: result,
-      });
+    res.status(201).json({
+      message: 'Candidato contratado y colaborador creado exitosamente',
+      employee: result,
+    });
   } catch (error) {
     console.error('Error hiring candidate:', error);
     res.status(400).json({ message: error.message || 'Error en el proceso de contratación' });
   }
 };
-

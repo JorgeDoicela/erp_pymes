@@ -15,8 +15,15 @@ export class SystemRepository {
     });
   }
 
+  async findGlobalDefault() {
+    return prisma.systemSetting.findFirst({
+      where: { tenantId: null },
+    });
+  }
+
+  // Alias legado mantenido por compatibilidad, siempre restringido a tenantId: null
   async findFirst() {
-    return prisma.systemSetting.findFirst();
+    return this.findGlobalDefault();
   }
 
   async upsertDefault(createData) {

@@ -19,21 +19,43 @@ export function classifyIntent(text, employee) {
     return WHATSAPP_INTENTS.UNKNOWN_SENDER;
   }
 
-  const lower = String(text || '')
-    .toLowerCase()
+  const raw = String(text || '').trim();
+  const lower = raw.toLowerCase();
+  const unaccented = lower
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[¿?¡!]/g, '')
     .trim();
+
+  // 0. Comandos de consentimiento y revocatoria LOPDP (Ecuador Arts. 8 y 15)
+  if (
+    /^(?:revocar(?:\s+(?:consentimiento|lopdp|autorizacion|datos))?|revoco|no\s+acepto|cancelar\s+consentimiento)$/i.test(
+      unaccented
+    )
+  ) {
+    return WHATSAPP_INTENTS.LOPDP_CONSENT_REVOKE;
+  }
+  if (
+    /^(?:acepto|si\s+acepto|acepto\s+(?:terminos|politicas|lopdp|tratamiento)|autorizo(?:\s+el\s+tratamiento)?|de\s+acuerdo)$/i.test(
+      unaccented
+    )
+  ) {
+    return WHATSAPP_INTENTS.LOPDP_CONSENT_ACCEPT;
+  }
 
   // 1. Comando explícito de cambio/consulta de empresa activa (Multi-Tenant)
   if (
-    /^(cambiar\s+(?:de\s+)?empresa|mis\s+empresas|empresas|mi\s+empresa\s+activa)$/i.test(lower)
+    /^(cambiar\s+(?:de\s+)?empresa|mis\s+empresas|empresas|mi\s+empresa\s+activa)$/i.test(
+      unaccented
+    )
   ) {
     return WHATSAPP_INTENTS.SWITCH_TENANT_COMMAND;
   }
 
   // 2. Saludos y solicitudes de ayuda
   if (
-    /^(hola|buen(os)?\s*(dias|tardes|noches)|saludos|menu|ayuda|opciones|que\s*puedes\s*hacer)\b/i.test(
-      lower
+    /^(hola|buen(?:os?|as?)\s*(?:dias?|tardes?|noches?)|buenas\b|saludos|menu|ayuda|opciones|que\s*puedes\s*hacer)\b/i.test(
+      unaccented
     )
   ) {
     return WHATSAPP_INTENTS.GENERAL_GREETING;
@@ -42,9 +64,11 @@ export function classifyIntent(text, employee) {
   // 3. Habilidad agéntica gerencial: aprobar/rechazar/revisar solicitudes pendientes del tenant
   if (
     /(?:aprobar|rechazar|revisar|gestionar)\s+(?:solicitud(?:es)?|pendientes|permisos?|vacaciones|anticipos?)/i.test(
-      lower
+      unaccented
     ) ||
-    /\b(?:solicitudes\s+pendientes\s+por\s+aprobar|pendientes\s+de\s+aprobacion)\b/i.test(lower)
+    /\b(?:solicitudes\s+pendientes\s+por\s+aprobar|pendientes\s+de\s+aprobacion)\b/i.test(
+      unaccented
+    )
   ) {
     return WHATSAPP_INTENTS.REVIEW_REQUESTS_ACTION;
   }
@@ -52,26 +76,33 @@ export function classifyIntent(text, employee) {
   // 4. Consultas sobre métricas empresariales (KPIs)
   if (
     /(metricas|kpis?|resumen\s+empresa|cuantos\s+empleados|asistencias\s+hoy|total\s+personal)/i.test(
-      lower
+      unaccented
     )
   ) {
     return WHATSAPP_INTENTS.TENANT_METRICS_QUERY;
   }
 
   const isLegalTopic =
-    /(codigo\s+del\s+trabajo|ley\s+organica|constitucion|articulo|art\.|sri|lopdp|segun\s+la\s+ley|que\s+dice\s+(?:el\s+codigo|la\s+ley))/i.test(
-      lower
+    /(codigo\s+del\s+trabajo|ley\s+organica|constitucion|articulo|art\.|sri|lopdp|segun\s+la\s+ley|por\s+ley|que\s+dice\s+(?:el\s+codigo|la\s+ley))/i.test(
+      unaccented
     );
-  const isPersonalBalanceQuestion = /^(cuant[oa]s?|cual\s+es\s+mi|tengo|como\s+va)\b/i.test(lower);
+
+  const isInformationalInquiry =
+    /\b(cuant[oa]s?|cual(es)?|como|que|cuando|donde|saber|consultar|conocer|averiguar|revisar|ver|saldo|disponible(s)?|tengo|me queda(n)?|me corresponde(n)?)\b/i.test(
+      unaccented
+    ) ||
+    /\b(como\s+(?:puedo\s+|se\s+)?(?:pedir|solicitar|tramitar)|requisitos|puedo\s+(?:pedir|solicitar))\b/i.test(
+      unaccented
+    );
 
   // 5. Habilidad agéntica: solicitud transaccional de anticipo de sueldo
   if (
     !isLegalTopic &&
-    !isPersonalBalanceQuestion &&
-    (/(?:solicitar|pedir|necesito|quiero|deseo|tramitar|registrar|solicitud\s+de)\b[^.\n]{0,45}\b(?:anticipo|adelanto)\b/i.test(
-      lower
+    !isInformationalInquiry &&
+    (/(?:solicitar|solicito|pedir|pido|necesito|quiero|deseo|tramitar|tramito|registrar|registro|solicitud\s+de)\b[^.\n]{0,45}\b(?:anticipo|adelanto)\b/i.test(
+      unaccented
     ) ||
-      /\b(?:anticipo|adelanto)\s+(?:de\s+sueldo\s+)?(?:de|por)\s*\$?\s*\d+/i.test(lower))
+      /\b(?:anticipo|adelanto)\s+(?:de\s+sueldo\s+)?(?:de|por)\s*\$?\s*\d+/i.test(unaccented))
   ) {
     return WHATSAPP_INTENTS.SALARY_ADVANCE_ACTION;
   }
@@ -79,12 +110,12 @@ export function classifyIntent(text, employee) {
   // 6. Habilidad agéntica: solicitud de permiso médico, calamidad doméstica o licencia
   if (
     !isLegalTopic &&
-    !isPersonalBalanceQuestion &&
-    (/(?:solicitar|pedir|reportar|registrar|necesito|quiero|justificar)\b[^.\n]{0,45}\b(?:permiso|calamidad|cita\s+medica|licencia)\b/i.test(
-      lower
+    !isInformationalInquiry &&
+    (/(?:solicitar|solicito|pedir|pido|reportar|reporto|registrar|registro|necesito|quiero|justificar|justifico)\b[^.\n]{0,45}\b(?:permiso|calamidad|cita\s+medica|licencia)\b/i.test(
+      unaccented
     ) ||
       /\b(?:permiso\s+medico|calamidad\s+domestica|permiso\s+personal)\s+(?:para|del|el|por)\b/i.test(
-        lower
+        unaccented
       ))
   ) {
     return WHATSAPP_INTENTS.PERMISSION_REQUEST_ACTION;
@@ -93,11 +124,11 @@ export function classifyIntent(text, employee) {
   // 7. Habilidad agéntica: solicitud transaccional de vacaciones
   if (
     !isLegalTopic &&
-    !isPersonalBalanceQuestion &&
-    (/(?:solicitar|pedir|agendar|registrar|tomar|necesito|quiero|deseo|tramitar|solicitud\s+de)\b[^.\n]{0,45}\bvacacion(?:es)?\b/i.test(
-      lower
+    !isInformationalInquiry &&
+    (/(?:solicitar|solicito|solicitare|pedir|pido|agendar|agendo|registrar|registro|tomar|tomo|necesito|quiero|deseo|tramitar|tramito|solicitud\s+de)\b[^.\n]{0,45}\bvacacion(?:es)?\b/i.test(
+      unaccented
     ) ||
-      /\bvacacion(?:es)?\s+(?:del|desde|para\s+el|entre)\b/i.test(lower))
+      /\bvacacion(?:es)?\s+(?:del|desde|para(?:\s+el|\s+la)?|entre)\b/i.test(unaccented))
   ) {
     return WHATSAPP_INTENTS.VACATION_REQUEST_ACTION;
   }
@@ -106,7 +137,7 @@ export function classifyIntent(text, employee) {
   if (
     !isLegalTopic &&
     /(mi\s+rol|rol\s+de\s+pagos|ultimo\s+rol|cuanto\s+cobre|neto\s+a\s+recibir|estado\s+de\s+mis?\s+solicitud|mis\s+solicitudes|mis\s+anticipos)/i.test(
-      lower
+      unaccented
     )
   ) {
     return WHATSAPP_INTENTS.PAYROLL_SLIP_QUERY;
@@ -120,7 +151,7 @@ export function classifyIntent(text, employee) {
   // 10. Consultas personales del colaborador
   if (
     /(vacacion|saldo|mis?\s+dias|asistencia|marque|marcar|entrada|salida|mi\s+perfil|mi\s+cargo|mi\s+departamento)/i.test(
-      lower
+      unaccented
     )
   ) {
     return WHATSAPP_INTENTS.EMPLOYEE_QUERY;

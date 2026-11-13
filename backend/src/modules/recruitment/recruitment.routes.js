@@ -11,6 +11,7 @@ import {
   createVacancy,
   getRecruitmentStats,
   getVacancies,
+  getPublicCompanies,
   getPublicVacancies,
   getVacancyById,
   updateVacancyStatus,
@@ -25,6 +26,11 @@ import {
   evaluateCandidate,
   hireCandidate,
 } from './recruitment.controller.js';
+import {
+  getPublicVacancyById,
+  updateInterviewStatus,
+  getTenantInterviewers,
+} from './recruitmentInterview.controller.js';
 import { authenticate, authorize } from '../auth/auth.middleware.js';
 import { requireTenant } from '../tenants/index.js';
 import { uploadResume } from '../../core/storage/upload.middleware.js';
@@ -33,14 +39,17 @@ const router = Router();
 const protectedAdmin = [authenticate, requireTenant, authorize(['admin', 'hr'])];
 
 // Public Routes (for candidates)
+router.get('/public/companies', getPublicCompanies);
 router.get('/public', getPublicVacancies);
-router.get('/public/:id', getVacancyById);
+router.get('/public/:id', getPublicVacancyById);
 router.post('/public/:id/apply', uploadResume.single('resume'), applyToVacancy);
 
 // Admin Routes
 router.get('/stats', protectedAdmin, getRecruitmentStats);
+router.get('/interviewers', protectedAdmin, getTenantInterviewers);
 router.post('/', protectedAdmin, createVacancy);
 router.get('/', protectedAdmin, getVacancies);
+router.get('/:id', protectedAdmin, getVacancyById);
 router.put('/:id/status', protectedAdmin, updateVacancyStatus);
 router.delete('/:id', protectedAdmin, deleteVacancy);
 
@@ -51,6 +60,7 @@ router.put('/applications/:id/status', protectedAdmin, updateApplicationStatus);
 router.delete('/applications/:id', protectedAdmin, deleteApplication);
 router.post('/applications/:id/notes', protectedAdmin, addApplicationNote);
 router.post('/applications/:id/interviews', protectedAdmin, scheduleInterview);
+router.patch('/interviews/:interviewId/status', protectedAdmin, updateInterviewStatus);
 router.post('/applications/:id/evaluations', protectedAdmin, evaluateCandidate);
 router.post('/applications/:id/hire', protectedAdmin, hireCandidate);
 

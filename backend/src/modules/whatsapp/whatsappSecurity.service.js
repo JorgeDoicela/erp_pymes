@@ -86,6 +86,33 @@ export class WhatsappSecurityService {
   }
 
   /**
+   * Verifica en tiempo constante el documento de identidad completo (cédula) del colaborador.
+   * @param {string} identityCard
+   * @param {string} providedCedula
+   * @returns {boolean}
+   */
+  verifyIdentityCard(identityCard, providedCedula) {
+    const docDigits = String(identityCard || '').replace(/[^\d]/g, '');
+    const candidate = String(providedCedula || '')
+      .replace(/[^\d]/g, '')
+      .trim();
+
+    if (docDigits.length < 10 || candidate.length < 10) {
+      return false;
+    }
+
+    const expectedBuffer = Buffer.from(docDigits, 'utf8');
+    const providedBuffer = Buffer.from(candidate, 'utf8');
+
+    if (expectedBuffer.length !== providedBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, providedBuffer);
+  }
+
+  /**
+   * @deprecated Usar verifyIdentityCard. Mantenido por compatibilidad regresiva.
    * Verifica en tiempo constante los últimos 4 dígitos del documento de identidad del colaborador.
    * @param {string} identityCard
    * @param {string} providedLast4
@@ -175,17 +202,59 @@ export class WhatsappSecurityService {
   }
 
   /**
-   * Valida la firma criptográfica HMAC-SHA256 del webhook entrante de Meta.
-   * @param {Object} params
-   * @param {Buffer|string} params.rawBody Buffer o cadena cruda del cuerpo HTTP.
-   * @param {string} params.signatureHeader Cabecera 'x-hub-signature-256' provista por Meta.
-   * @param {string} [params.appSecret] Secreto de la aplicación Meta. Si no se provee, lee process.env.WHATSAPP_APP_SECRET.
-   * @returns {boolean} True si la firma es válida o si no se requiere verificación estricta.
+   * Calcula la firma HMAC-SHA256 con formato 'sha256=<hash>' para pruebas o verificación.
+   * @param {Buffer|string} rawBody
+   * @param {string} [appSecret]
+   * @returns {string}
    */
-  verifyWebhookSignature({ rawBody, signatureHeader, appSecret }) {
+  calculateSignature(rawBody, appSecret) {
+    const secret = appSecret || process.env.WHATSAPP_APP_SECRET || '';
+    const hash = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+    return `sha256=${hash}`;
+  }
+
+  /**
+   * Alias de verificación directa de firma HMAC.
+   * @param {Buffer|string} rawBody
+   * @param {string} signatureHeader
+   * @param {string} [appSecret]
+   * @returns {boolean}
+   */
+  validateSignature(rawBody, signatureHeader, appSecret) {
+    return this.verifyWebhookSignature({ rawBody, signatureHeader, appSecret });
+  }
+
+  /**
+   * Valida la firma criptográfica HMAC-SHA256 del webhook entrante de Meta.
+   * Soporta tanto paso de objeto ({ rawBody, signatureHeader, appSecret }) como parámetros posicionales (rawBody, signatureHeader, appSecret).
+   * @param {Object|Buffer|string} rawBodyOrParams Buffer/cadena cruda o destructured object.
+   * @param {string} [signatureHeaderArg] Cabecera 'x-hub-signature-256' provista por Meta.
+   * @param {string} [appSecretArg] Secreto de la aplicación Meta. Si no se provee, lee process.env.WHATSAPP_APP_SECRET.
+   * @returns {boolean} True si la firma es válida.
+   */
+  verifyWebhookSignature(rawBodyOrParams, signatureHeaderArg, appSecretArg) {
+    let rawBody;
+    let signatureHeader;
+    let appSecret;
+
+    if (
+      rawBodyOrParams &&
+      typeof rawBodyOrParams === 'object' &&
+      !Buffer.isBuffer(rawBodyOrParams) &&
+      'rawBody' in rawBodyOrParams
+    ) {
+      rawBody = rawBodyOrParams.rawBody;
+      signatureHeader = rawBodyOrParams.signatureHeader;
+      appSecret = rawBodyOrParams.appSecret;
+    } else {
+      rawBody = rawBodyOrParams;
+      signatureHeader = signatureHeaderArg;
+      appSecret = appSecretArg;
+    }
+
     const secret = appSecret || process.env.WHATSAPP_APP_SECRET;
 
-    // Si no hay appSecret configurado en el entorno, omitir validación estricta permitiendo desarrollo flexible
+    // Si no hay appSecret configurado en el entorno ni en argumentos, omitir validación estricta en dev
     if (!secret) {
       return true;
     }

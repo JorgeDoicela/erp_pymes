@@ -11,7 +11,8 @@ import exportService from './export.service.js';
 export class ExportController {
   async exportEmployees(req, res) {
     try {
-      const csv = await exportService.buildEmployeesCsv();
+      const tenantId = req.tenantId || req.user?.tenantId || null;
+      const csv = await exportService.buildEmployeesCsv(tenantId);
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', 'attachment; filename=lista_empleados.csv');
       res.send(csv);
@@ -26,7 +27,8 @@ export class ExportController {
   async exportPayrollCSV(req, res) {
     try {
       const { id } = req.params;
-      const csv = await exportService.buildPayrollCsv(id);
+      const tenantId = req.tenantId || req.user?.tenantId || null;
+      const csv = await exportService.buildPayrollCsv(id, tenantId);
 
       if (!csv) {
         return res.status(404).json({ message: 'No hay datos para esta nomina' });

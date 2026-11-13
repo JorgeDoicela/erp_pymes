@@ -64,13 +64,18 @@ export default function PrivacyPolicy({ mode = 'privacy' }) {
             </section>
             <section>
               <h2 className="text-sm font-semibold text-[#111827] mb-1">
-                2. Datos Tratados en el Canal WhatsApp
+                2. Datos Tratados en el Canal WhatsApp y Consentimiento Previo
               </h2>
               <p>
                 Al comunicarse con nuestro asistente empresarial por WhatsApp, el sistema utiliza el
                 número telefónico remitente y el texto de la consulta exclusivamente para verificar
-                su identidad como colaborador activo, consultar su estado de asistencias o
-                vacaciones y generar respuestas normativas.
+                su identidad como colaborador activo en su empresa empleadora, consultar su estado
+                de asistencias o vacaciones y generar respuestas normativas oficiales.
+              </p>
+              <p className="mt-2 text-xs text-[#4b5563]">
+                Conforme a los Arts. 8 y 12 de la LOPDP, el uso del canal WhatsApp requiere el
+                consentimiento previo, libre, específico e informado del titular mediante la
+                instrucción <strong className="font-mono text-[#111827]">ACEPTO</strong>.
               </p>
             </section>
             <section>
@@ -85,12 +90,21 @@ export default function PrivacyPolicy({ mode = 'privacy' }) {
             </section>
             <section>
               <h2 className="text-sm font-semibold text-[#111827] mb-1">
-                4. Derechos de Eliminación y Rectificación
+                4. Derechos LOPDP: Revocatoria, Rectificación y Eliminación
               </h2>
               <p>
-                El titular de los datos puede solicitar la actualización o desvinculación de su
-                número telefónico en cualquier momento a través del departamento de Talento Humano
-                de su empresa o mediante solicitud directa al correo{' '}
+                En estricto cumplimiento del Art. 15 de la LOPDP, el colaborador puede{' '}
+                <strong className="font-semibold text-[#111827]">
+                  revocar su consentimiento en cualquier momento
+                </strong>{' '}
+                respondiendo con la palabra{' '}
+                <strong className="font-mono text-[#111827]">REVOCAR</strong> en el chat de
+                WhatsApp. Al revocar, cesará de inmediato el procesamiento de sus datos por dicho
+                canal.
+              </p>
+              <p className="mt-2 text-xs text-[#4b5563]">
+                Asimismo, el titular puede solicitar la actualización o desvinculación definitiva a
+                través del departamento de Talento Humano de su empresa o escribiendo a{' '}
                 <span className="font-mono text-[#111827]">jorge.doicela.m@gmail.com</span>.
               </p>
             </section>

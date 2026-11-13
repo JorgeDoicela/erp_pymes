@@ -115,6 +115,46 @@ export const recruitmentRepository = {
     return prisma.interview.create({ data });
   },
 
+  async getInterviewById(id, include = {}) {
+    return prisma.interview.findUnique({
+      where: { id },
+      include,
+    });
+  },
+
+  async updateInterview(id, data) {
+    return prisma.interview.update({
+      where: { id },
+      data,
+    });
+  },
+
+  async findTenantInterviewers(tenantId) {
+    return prisma.employee.findMany({
+      where: {
+        ...(tenantId ? { tenantId } : {}),
+        isActive: true,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        position: true,
+        department: true,
+      },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+  },
+
+  async findEmployeeByEmailOrIdentity(email, identityCard) {
+    return prisma.employee.findFirst({
+      where: {
+        OR: [{ email }, { identityCard }],
+      },
+      select: { id: true, email: true, identityCard: true },
+    });
+  },
+
   // Evaluations
   async createEvaluation(data) {
     return prisma.candidateEvaluation.create({ data });

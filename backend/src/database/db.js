@@ -35,6 +35,7 @@ const DIRECT_TENANT_MODELS = new Set([
   'MorlPolicyRun',
   'AttentionCalibration',
   'FTTransformerWeights',
+  'WhatsappActionSession',
 ]);
 
 // 2. Modelos relacionales vinculados directamente al Empleado (Employee)

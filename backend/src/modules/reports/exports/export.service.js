@@ -22,8 +22,8 @@ const buildCsvWithBom = (headers, rows) => {
 };
 
 export class ExportService {
-  async buildEmployeesCsv() {
-    const employees = await reportRepository.findEmployeesForExport();
+  async buildEmployeesCsv(tenantId = null) {
+    const employees = await reportRepository.findEmployeesForExport(tenantId);
     const headers = [
       'Cedula',
       'Nombre',
@@ -55,8 +55,8 @@ export class ExportService {
     return buildCsvWithBom(headers, rows);
   }
 
-  async buildPayrollCsv(payrollId) {
-    const payroll = await reportRepository.findPayrollDetailsForExport(payrollId);
+  async buildPayrollCsv(payrollId, tenantId = null) {
+    const payroll = await reportRepository.findPayrollDetailsForExport(payrollId, tenantId);
     if (!payroll.length) return null;
 
     const headers = ['Cedula', 'Nombre', 'Cuenta', 'Banco', 'Monto', 'Concepto'];

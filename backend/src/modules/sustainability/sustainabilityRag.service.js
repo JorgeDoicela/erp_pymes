@@ -18,6 +18,8 @@ import {
   buildContextualActionPlan,
 } from './legalCalculation.helper.js';
 
+const TENANT_TELEMETRY_ROLES = new Set(['admin', 'hr', 'accounting', 'manager', 'entrepreneur']);
+
 export class SustainabilityRagService {
   /**
    * Procesa una consulta desde cualquier lugar del ERP mediante el pipeline:
@@ -32,6 +34,7 @@ export class SustainabilityRagService {
     query,
     conversationHistory = [],
     tenantId,
+    userRole,
     odsTargetFilter,
     categoryFilter,
     moduleContext = 'sustainability',
@@ -54,8 +57,13 @@ export class SustainabilityRagService {
       topK: 6,
     });
 
-    // 3. TELEMETRÍA EN VIVO DEL ERP: Obtener estado real del tenant
-    const tenantMetrics = await sustainabilityService.calculateOds8Metrics(tenantId);
+    // 3. TELEMETRÍA EN VIVO DEL ERP: Solo para roles autorizados de gestión del tenant (LOPDP/RBAC)
+    const normalizedRole = userRole ? String(userRole).toLowerCase() : null;
+    const canAccessTenantTelemetry =
+      Boolean(tenantId) && (!normalizedRole || TENANT_TELEMETRY_ROLES.has(normalizedRole));
+    const tenantMetrics = canAccessTenantTelemetry
+      ? await sustainabilityService.calculateOds8Metrics(tenantId)
+      : null;
 
     // 4. CALCULADORA DETERMINISTA DECIMAL.JS: Si la consulta involucra montos, años u horas
     const liveCalculation = this.computeLiveLegalCalculation(query);
@@ -142,8 +150,8 @@ export class SustainabilityRagService {
         mathVerified: evaluationAudit.mathVerified,
         totalCorpusIndexedChunks: corpusStats.totalIndexedChunks,
       },
-      tenantScore: tenantMetrics?.ods?.overallScore ?? 100,
-      complianceLevel: tenantMetrics?.ods?.complianceLevel ?? 'ALTO',
+      tenantScore: tenantMetrics?.ods?.overallScore ?? null,
+      complianceLevel: tenantMetrics?.ods?.complianceLevel ?? null,
       erpContext: tenantMetrics?.erpContext || {},
       generatedAt: new Date().toISOString(),
     };
@@ -184,7 +192,20 @@ export class SustainabilityRagService {
       '5. Emplea un tono profesional, directo, estructurado y sin emojis.',
     ];
 
-    if (!isWhatsapp) {
+    if (!isWhatsapp && tenantMetrics) {
+      const moduleCode = String(moduleContext || 'general').toLowerCase();
+      const moduleTelemetry = {
+        payroll: `- Roles Auditados: ${erpCtx.payrollsAuditedCount ?? 0} | Comprobantes Firmados: ${erpCtx.signedPayslipsCount ?? 0} | Bajo SBU: ${erpCtx.subSbuEmployeesCount ?? 0}`,
+        attendance: `- Horas Extra (30d): ${erpCtx.overtimeHoursTracked30d ?? 0}h | Pagadas Recientes: $${(erpCtx.overtimeAmountPaidRecent ?? 0).toFixed(2)} USD | Consentimiento Geocerca LOPDP: ${erpCtx.trackingConsentRate ?? 100}%`,
+        offboarding: `- Procesos de Finiquito Auditados: ${erpCtx.offboardingsCount ?? 0} | Cumplimiento Legal: ${ods.indicators?.verifiedLegalSettlements?.value ?? 100}%`,
+        contracts: `- Tasa de Formalidad Contractual: ${ods.indicators?.formalContractRate?.value ?? 100}% (${erpCtx.employeesWithActiveContract ?? 0}/${erpCtx.totalActiveEmployees ?? 0})`,
+        recruitment: `- Vacantes Abiertas: ${erpCtx.openJobVacancies ?? 0} | Evaluaciones 360°: ${erpCtx.totalPerformanceEvaluations ?? 0}`,
+        performance: `- Evaluaciones 360° Registradas: ${erpCtx.totalPerformanceEvaluations ?? 0} | Vacantes Abiertas: ${erpCtx.openJobVacancies ?? 0}`,
+        signatures: `- Roles de Pago con Firma Electrónica: ${erpCtx.signedPayslipsCount ?? 0} | Consentimiento LOPDP: ${erpCtx.trackingConsentRate ?? 100}%`,
+        entrepreneurship: `- Proyectos de Incubadora Activos: ${erpCtx.activeEntrepreneurships ?? 0}`,
+        compliance: `- Consentimiento LOPDP: ${erpCtx.trackingConsentRate ?? 100}% | Cobertura IESS: ${ods.indicators?.socialSecurityCoverage?.value ?? 100}% | Bajo SBU: ${erpCtx.subSbuEmployeesCount ?? 0}`,
+      };
+
       promptLines.push(
         '',
         '=== TELEMETRÍA EN VIVO DE LA EMPRESA (TENANT) ===',
@@ -193,6 +214,9 @@ export class SustainabilityRagService {
         `- Sueldo Promedio: $${(erpCtx.averageSalaryUsd ?? 0).toFixed(2)} USD | SBU Vigente: $${SBU_ECUADOR_2026.toFixed(2)} USD`,
         `- Períodos Contables Abiertos: ${erpCtx.openAccountingPeriods ?? 0} | Asientos Contables NIIF: ${erpCtx.totalJournalEntries ?? 0}`
       );
+      if (moduleTelemetry[moduleCode]) {
+        promptLines.push(moduleTelemetry[moduleCode]);
+      }
     }
 
     promptLines.push(

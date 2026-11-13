@@ -6,131 +6,171 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import { useState, useEffect } from 'react';
-import { getPublicVacancies } from '../services/recruitment.service';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  FiBriefcase,
-  FiMapPin,
-  FiDollarSign,
-  FiClock,
+  FiArrowLeft,
   FiArrowRight,
-  FiCheckCircle,
+  FiBriefcase,
+  FiClock,
+  FiDollarSign,
+  FiMapPin,
 } from 'react-icons/fi';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button, EmptyState, Skeleton } from '@core/ui';
+import { ErrorState } from '@core/feedback';
+import { usePublicCareers } from '../hooks/usePublicCareers';
+import CompanyDirectory from '../components/careers/CompanyDirectory';
 
 const CareersPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const companySlug = searchParams.get('company') || searchParams.get('slug');
   const tenantId = searchParams.get('tenantId');
+  const showAll = searchParams.get('all') === 'true';
 
-  const [vacancies, setVacancies] = useState([]);
-  const [companyName, setCompanyName] = useState('');
-  const [loading, setLoading] = useState(true);
+  const {
+    isCompanySelectorMode,
+    companies,
+    vacancies,
+    selectedCompanyName,
+    status,
+    error,
+    reload,
+  } = usePublicCareers({ companySlug, tenantId, showAll });
 
-  useEffect(() => {
-    setLoading(true);
-    const params = {};
-    if (companySlug) params.companySlug = companySlug;
-    if (tenantId) params.tenantId = tenantId;
+  const handleSelectCompany = (slug) => {
+    navigate(`/careers?company=${encodeURIComponent(slug)}`);
+  };
 
-    getPublicVacancies(params)
-      .then((data) => {
-        setVacancies(data);
-        if (data.length > 0 && data[0].tenant?.name) {
-          setCompanyName(data[0].tenant.name);
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [companySlug, tenantId]);
+  const handleViewAll = () => {
+    navigate('/careers?all=true');
+  };
+
+  const headerTitle = isCompanySelectorMode
+    ? 'Selecciona una empresa'
+    : selectedCompanyName
+      ? `Vacantes en ${selectedCompanyName}`
+      : 'Todas las vacantes disponibles';
+
+  const headerSubtitle = isCompanySelectorMode
+    ? 'Elige la organización en la que deseas explorar oportunidades laborales y postularte.'
+    : 'Revisa las oportunidades activas y envía tu postulación directamente al equipo de talento humano.';
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 py-12 md:py-16 px-6 shadow-sm">
-        <div className="max-w-7xl mx-auto text-center">
-          {companyName && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-xs font-bold uppercase tracking-wider mb-4">
-              <FiCheckCircle size={14} /> Portal de Empleo · {companyName}
-            </div>
-          )}
-          <h1 className="text-3xl md:text-5xl font-black mb-4 text-slate-900 tracking-tight">
-            Únete a Nuestro Equipo
-          </h1>
-          <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto font-normal">
-            Estamos buscando talento apasionado para construir el futuro. Revisa las oportunidades
-            disponibles y postúlate hoy mismo.
-          </p>
+    <div className="min-h-screen bg-[#f9fafb]">
+      <header className="bg-white border-b border-gray-200 px-6 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <FiArrowLeft size={13} />
+              <span>Volver al inicio</span>
+            </Link>
+
+            {!isCompanySelectorMode && (
+              <Button variant="secondary" size="sm" onClick={() => navigate('/careers')}>
+                <FiArrowLeft size={13} />
+                <span>Elegir otra empresa</span>
+              </Button>
+            )}
+          </div>
+
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-gray-500 mb-1">
+              {selectedCompanyName
+                ? `Portal de Empleo · ${selectedCompanyName}`
+                : 'Bolsa de Empleo'}
+            </p>
+            <h1 className="text-2xl font-semibold text-gray-900 tracking-tight mb-2">
+              {headerTitle}
+            </h1>
+            <p className="text-sm text-gray-600">{headerSubtitle}</p>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        {loading ? (
-          <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-slate-500 font-medium text-sm">
-              Cargando oportunidades laborales...
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {vacancies.map((v) => (
-                <div
-                  key={v.id}
-                  className="bg-white border border-gray-200 rounded p-4 flex flex-col justify-between text-xs hover:border-gray-300 transition-colors"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="bg-blue-50 text-blue-700 text-[10px] font-medium px-2 py-0.5 rounded border border-blue-200 uppercase tracking-wider">
-                        {v.department}
-                      </span>
-                      {v.tenant?.name && !companyName && (
-                        <span className="text-[10px] text-gray-400 truncate max-w-[120px]">
-                          {v.tenant.name}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-sm font-semibold text-gray-900 leading-snug">{v.title}</h3>
-                    <div className="space-y-1.5 text-xs text-gray-600">
-                      <div className="flex items-center">
-                        <FiMapPin className="mr-1.5 text-gray-400 shrink-0" size={13} />{' '}
-                        {v.location}
-                      </div>
-                      <div className="flex items-center">
-                        <FiClock className="mr-1.5 text-gray-400 shrink-0" size={13} />{' '}
-                        {v.employmentType}
-                      </div>
-                      {v.salaryMin && (
-                        <div className="flex items-center font-mono tabular-nums">
-                          <FiDollarSign className="mr-1 text-gray-400 shrink-0" size={13} /> $
-                          {v.salaryMin} - ${v.salaryMax} USD
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => navigate(`/careers/${v.id}`)}
-                    className="w-full mt-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-xs shadow-xs"
-                  >
-                    Ver Oferta <FiArrowRight size={13} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {vacancies.length === 0 && (
-              <div className="text-center py-16 bg-white rounded border border-gray-200 p-6 text-xs text-gray-500">
-                <FiBriefcase className="mx-auto h-8 w-8 text-gray-300 mb-2" />
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                  Sin vacantes disponibles
-                </h3>
-                <p className="text-gray-500 text-xs">
-                  No existen ofertas de empleo activas en este momento.
-                </p>
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {isCompanySelectorMode ? (
+          <CompanyDirectory
+            companies={companies}
+            status={status}
+            error={error}
+            onSelectCompany={handleSelectCompany}
+            onViewAll={handleViewAll}
+            onRetry={reload}
+          />
+        ) : status === 'loading' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" aria-busy="true">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="bg-white border border-gray-200 rounded-md p-4 space-y-3">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-8 w-full rounded" />
               </div>
-            )}
-          </>
+            ))}
+          </div>
+        ) : status === 'error' ? (
+          <ErrorState message={error} onRetry={reload} />
+        ) : vacancies.length === 0 ? (
+          <EmptyState
+            icon={<FiBriefcase size={24} />}
+            title="Sin vacantes disponibles"
+            description="No existen ofertas de empleo activas para esta selección en este momento."
+            actionLabel="Elegir otra empresa"
+            onAction={() => navigate('/careers')}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {vacancies.map((v) => (
+              <div
+                key={v.id}
+                className="bg-white border border-gray-200 rounded-md p-4 flex flex-col justify-between text-xs hover:border-gray-300 transition-colors"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider">
+                      {v.department}
+                    </span>
+                    {v.tenant?.name && !selectedCompanyName && (
+                      <span className="text-[11px] text-gray-500 font-medium truncate max-w-[140px]">
+                        {v.tenant.name}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-sm font-semibold text-gray-900 leading-snug">{v.title}</h2>
+                  <div className="space-y-1.5 text-xs text-gray-600">
+                    <div className="flex items-center">
+                      <FiMapPin className="mr-1.5 text-gray-400 shrink-0" size={13} />
+                      <span>{v.location}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FiClock className="mr-1.5 text-gray-400 shrink-0" size={13} />
+                      <span>{v.employmentType}</span>
+                    </div>
+                    {v.salaryMin && (
+                      <div className="flex items-center font-mono tabular-nums">
+                        <FiDollarSign className="mr-1 text-gray-400 shrink-0" size={13} />
+                        <span>
+                          ${v.salaryMin} - ${v.salaryMax} USD
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => navigate(`/careers/${v.id}`)}
+                  className="w-full mt-4 justify-center"
+                >
+                  <span>Ver Oferta</span>
+                  <FiArrowRight size={13} />
+                </Button>
+              </div>
+            ))}
+          </div>
         )}
       </main>
     </div>

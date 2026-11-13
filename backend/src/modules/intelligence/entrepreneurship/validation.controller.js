@@ -20,6 +20,9 @@ export const getInterviews = async (req, res) => {
 export const addInterview = async (req, res) => {
   try {
     const { projectId, customerName, feedback, sentiment, insights } = req.body;
+    const project = await entrepreneurshipRepository.findProjectDetails(projectId);
+    if (!project) return res.status(404).json({ error: 'Proyecto no encontrado' });
+
     const interview = await entrepreneurshipRepository.createInterview({
       projectId,
       customerName,
@@ -60,6 +63,9 @@ export const deleteInterview = async (req, res) => {
 export const updateMarketSize = async (req, res) => {
   try {
     const { projectId, tam, sam, som } = req.body;
+    const project = await entrepreneurshipRepository.findProjectDetails(projectId);
+    if (!project) return res.status(404).json({ error: 'Proyecto no encontrado' });
+
     const market = await entrepreneurshipRepository.upsertTargetMarket(projectId, {
       tam: parseFloat(tam),
       sam: parseFloat(sam),

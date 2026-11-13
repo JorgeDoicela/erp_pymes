@@ -70,11 +70,13 @@ export async function seedPerformance(prisma, employees) {
         const { start, end } = getDatesForPeriod(template.period);
 
         let status = 'COMPLETED';
-        if (
-          template.period === activePeriod &&
-          (emp.email.includes('kevin') || emp.email.includes('lucia'))
-        ) {
-          status = 'PENDING';
+        if (template.period === activePeriod) {
+          const empIdxInTarget = targetEmployees.indexOf(emp);
+          if (empIdxInTarget === 0 || emp.email.includes('kevin') || emp.email.includes('lucia')) {
+            status = 'PENDING';
+          } else if (empIdxInTarget === 1) {
+            status = 'IN_PROGRESS';
+          }
         }
 
         // Generación de puntajes con patrones realistas para análisis de IA:

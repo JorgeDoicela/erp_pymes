@@ -113,14 +113,14 @@ export class WhatsappController {
     <h2 style="font-size: 16px; margin-top: 24px;">1. Responsable del Tratamiento</h2>
     <p style="font-size: 14px; color: #374151;">Norma ERP (norma.doicela.dev) administra datos empresariales y laborales exclusivamente bajo las directrices de la Ley Organica de Proteccion de Datos Personales (LOPDP) de la Republica del Ecuador.</p>
 
-    <h2 style="font-size: 16px; margin-top: 20px;">2. Datos Procesados via Canal WhatsApp</h2>
-    <p style="font-size: 14px; color: #374151;">Al interactuar con el asistente corporativo a traves de WhatsApp Cloud API (Meta), el sistema procesa unicamente el numero de telefono remitente y el contenido de las consultas para autenticar la identidad del colaborador y responder sobre su estado operativo (asistencias, vacaciones) y normativa laboral ecuatoriana.</p>
+    <h2 style="font-size: 16px; margin-top: 20px;">2. Datos Procesados via Canal WhatsApp y Consentimiento Previo</h2>
+    <p style="font-size: 14px; color: #374151;">Al interactuar con el asistente corporativo a traves de WhatsApp Cloud API (Meta), el sistema procesa unicamente el numero de telefono remitente y el contenido de las consultas para autenticar la identidad del colaborador en su empresa empleadora y responder sobre su estado operativo (asistencias, vacaciones, anticipos) y normativa laboral ecuatoriana. Conforme a los Arts. 8 y 12 de la LOPDP, el uso del canal requiere consentimiento expreso mediante la palabra <strong>ACEPTO</strong>.</p>
 
     <h2 style="font-size: 16px; margin-top: 20px;">3. Confidencialidad y Cero Entrenamiento</h2>
     <p style="font-size: 14px; color: #374151;">Los mensajes y datos personales no se venden ni se comparten con terceros para fines publicitarios. Los datos salariales se mantienen cifrados con AES-256-GCM y estrictamente aislados por organizacion (multi-tenant).</p>
 
-    <h2 style="font-size: 16px; margin-top: 20px;">4. Eliminacion de Datos</h2>
-    <p style="font-size: 14px; color: #374151;">Los titulares pueden solicitar la actualizacion o eliminacion de su numero vinculado en cualquier momento a traves de su departamento de Talento Humano o escribiendo a jorge.doicela.m@gmail.com.</p>
+    <h2 style="font-size: 16px; margin-top: 20px;">4. Derechos LOPDP: Revocatoria, Rectificacion y Eliminacion</h2>
+    <p style="font-size: 14px; color: #374151;">En cumplimiento del Art. 15 de la LOPDP, el colaborador puede <strong>revocar su consentimiento en cualquier momento</strong> respondiendo con la palabra <strong>REVOCAR</strong> en el chat de WhatsApp, cesando de inmediato el procesamiento de sus datos por dicho canal. Asimismo, los titulares pueden solicitar la actualizacion o eliminacion de su numero vinculado en cualquier momento a traves de su departamento de Talento Humano o escribiendo a jorge.doicela.m@gmail.com.</p>
   </main>
 </body>
 </html>`;

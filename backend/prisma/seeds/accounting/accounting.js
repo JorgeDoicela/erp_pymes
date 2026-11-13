@@ -78,8 +78,32 @@ export async function seedAccounting(prisma) {
         parentId: pNivel1['2']?.id,
       },
       {
+        code: '3.1',
+        name: 'Capital y Reservas',
+        type: 'EQUITY',
+        level: 2,
+        isTransactional: false,
+        parentId: pNivel1['3']?.id,
+      },
+      {
+        code: '4.1',
+        name: 'Ingresos Operacionales',
+        type: 'REVENUE',
+        level: 2,
+        isTransactional: false,
+        parentId: pNivel1['4']?.id,
+      },
+      {
         code: '5.1',
         name: 'Gastos de Personal',
+        type: 'EXPENSE',
+        level: 2,
+        isTransactional: false,
+        parentId: pNivel1['5']?.id,
+      },
+      {
+        code: '5.2',
+        name: 'Gastos Administrativos y Operativos',
         type: 'EXPENSE',
         level: 2,
         isTransactional: false,
@@ -109,6 +133,14 @@ export async function seedAccounting(prisma) {
       {
         code: '1.1.2',
         name: 'Anticipos a Empleados',
+        type: 'ASSET',
+        level: 3,
+        isTransactional: true,
+        parentId: pNivel2['1.1']?.id,
+      },
+      {
+        code: '1.1.3',
+        name: 'Cuentas por Cobrar Clientes',
         type: 'ASSET',
         level: 3,
         isTransactional: true,
@@ -147,6 +179,30 @@ export async function seedAccounting(prisma) {
         parentId: pNivel2['2.1']?.id,
       },
       {
+        code: '2.1.5',
+        name: 'Cuentas por Pagar Proveedores',
+        type: 'LIABILITY',
+        level: 3,
+        isTransactional: true,
+        parentId: pNivel2['2.1']?.id,
+      },
+      {
+        code: '3.1.1',
+        name: 'Capital Suscrito y Pagado',
+        type: 'EQUITY',
+        level: 3,
+        isTransactional: true,
+        parentId: pNivel2['3.1']?.id,
+      },
+      {
+        code: '4.1.1',
+        name: 'Ingresos por Servicios y Ventas B2B',
+        type: 'REVENUE',
+        level: 3,
+        isTransactional: true,
+        parentId: pNivel2['4.1']?.id,
+      },
+      {
         code: '5.1.1',
         name: 'Gasto Sueldos y Salarios',
         type: 'EXPENSE',
@@ -164,11 +220,27 @@ export async function seedAccounting(prisma) {
       },
       {
         code: '5.1.3',
-        name: 'Gasto Aporte Patronal',
+        name: 'Gasto Aporte Patronal IESS',
         type: 'EXPENSE',
         level: 3,
         isTransactional: true,
         parentId: pNivel2['5.1']?.id,
+      },
+      {
+        code: '5.2.1',
+        name: 'Gasto Servicios Básicos e Infraestructura Cloud',
+        type: 'EXPENSE',
+        level: 3,
+        isTransactional: true,
+        parentId: pNivel2['5.2']?.id,
+      },
+      {
+        code: '5.2.2',
+        name: 'Gasto Arriendos de Inmuebles y Oficinas',
+        type: 'EXPENSE',
+        level: 3,
+        isTransactional: true,
+        parentId: pNivel2['5.2']?.id,
       },
     ];
 
@@ -181,22 +253,31 @@ export async function seedAccounting(prisma) {
       }
     }
 
-    // 3. Periodo Contable Actual
+    // 3. Periodos Contables (3 meses históricos cerrados + mes actual abierto)
     const now = new Date();
-    const existingPeriod = await prisma.accountingPeriod.findFirst({
-      where: { tenantId, year: now.getFullYear(), month: now.getMonth() + 1 },
-    });
-    if (!existingPeriod) {
-      await prisma.accountingPeriod.create({
-        data: {
-          tenantId,
-          year: now.getFullYear(),
-          month: now.getMonth() + 1,
-          startDate: new Date(now.getFullYear(), now.getMonth(), 1),
-          endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0),
-          status: 'OPEN',
-        },
+    for (let offset = 3; offset >= 0; offset--) {
+      const pDate = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const year = pDate.getFullYear();
+      const month = pDate.getMonth() + 1;
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      const isCurrent = offset === 0;
+
+      const existingPeriod = await prisma.accountingPeriod.findFirst({
+        where: { tenantId, year, month },
       });
+      if (!existingPeriod) {
+        await prisma.accountingPeriod.create({
+          data: {
+            tenantId,
+            year,
+            month,
+            startDate,
+            endDate,
+            status: isCurrent ? 'OPEN' : 'CLOSED',
+          },
+        });
+      }
     }
 
     console.log(`Catálogo contable y periodo cargados para ${tenant.name}.`);
@@ -204,15 +285,15 @@ export async function seedAccounting(prisma) {
 }
 
 export async function seedJournalEntries(prisma) {
-  console.log('[ACCOUNTING] Generando transacciones contables para todas las empresas...');
+  console.log(
+    '[ACCOUNTING] Generando transacciones contables completas (Libro Diario, Mayor, PUG) para todas las empresas...'
+  );
 
   const tenants = await prisma.tenant.findMany({
     where: { isActive: true },
   });
 
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
 
   for (const tenant of tenants) {
     const tenantId = tenant.id;
@@ -228,69 +309,191 @@ export async function seedJournalEntries(prisma) {
     ccs.forEach((c) => (ccMap[c.code] = c.id));
 
     const prefix = tenant.slug.toUpperCase().slice(0, 5);
+    const entries = [];
 
-    const entries = [
-      {
-        entryNumber: `${prefix}-${year}${String(month).padStart(2, '0')}-01`,
-        date: new Date(year, month - 1, 5),
-        description: `Apertura de Caja Chica y Gastos Operativos - ${tenant.name}`,
-        type: 'DAILY',
+    // Generar transacciones para los últimos 3 meses y el mes en curso
+    for (let offset = 2; offset >= 0; offset--) {
+      const pDate = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const year = pDate.getFullYear();
+      const month = pDate.getMonth() + 1;
+      const mStr = String(month).padStart(2, '0');
+
+      // 1. Facturación por Servicios / Ventas B2B
+      entries.push({
+        entryNumber: `${prefix}-${year}${mStr}-01`,
+        date: new Date(year, month - 1, 4),
+        description: `Facturación y Cobro de Servicios Corporativos Mensuales - ${tenant.name}`,
+        type: 'INCOME',
         status: 'POSTED',
-        totalDebit: 600,
-        totalCredit: 600,
-        lines: [
-          { accountId: accMap['1.1.1'], description: 'Retiro Bancario', debit: 0, credit: 600 },
-          { accountId: accMap['1.1.2'], description: 'Fondo de Caja Chica', debit: 600, credit: 0 },
-        ],
-      },
-      {
-        entryNumber: `${prefix}-${year}${String(month).padStart(2, '0')}-02`,
-        date: new Date(year, month - 1, 15),
-        description: `Pago de Anticipos Quincenales a Colaboradores - ${tenant.name}`,
-        type: 'EXPENSE',
-        status: 'POSTED',
-        totalDebit: 1500,
-        totalCredit: 1500,
+        totalDebit: 18500,
+        totalCredit: 18500,
         lines: [
           {
-            accountId: accMap['1.1.2'],
-            costCenterId: ccMap['CC-ADM'],
-            description: 'Anticipo Nómina',
-            debit: 1500,
+            accountId: accMap['1.1.1'],
+            description: 'Ingreso a Cuenta Bancaria Recaudación',
+            debit: 18500,
+            credit: 0,
+          },
+          {
+            accountId: accMap['4.1.1'],
+            costCenterId: ccMap['CC-VEN'],
+            description: 'Venta de Servicios Corporativos',
+            debit: 0,
+            credit: 18500,
+          },
+        ],
+      });
+
+      // 2. Factura de Proveedor de Servicios Cloud / Telecomunicaciones
+      entries.push({
+        entryNumber: `${prefix}-${year}${mStr}-02`,
+        date: new Date(year, month - 1, 8),
+        description: `Pago de Infraestructura Cloud, Internet y Telefonía IP - ${tenant.name}`,
+        type: 'EXPENSE',
+        status: 'POSTED',
+        totalDebit: 1450,
+        totalCredit: 1450,
+        lines: [
+          {
+            accountId: accMap['5.2.1'],
+            costCenterId: ccMap['CC-TEC'] || ccMap['CC-ADM'],
+            description: 'Servidores Cloud y Conectividad',
+            debit: 1450,
             credit: 0,
           },
           {
             accountId: accMap['1.1.1'],
-            description: 'Transferencia Bancaria',
+            description: 'Transferencia Bancaria Proveedor Cloud',
             debit: 0,
-            credit: 1500,
+            credit: 1450,
           },
         ],
-      },
-    ];
+      });
+
+      // 3. Arriendo de Oficinas / Instalaciones Operativas
+      entries.push({
+        entryNumber: `${prefix}-${year}${mStr}-03`,
+        date: new Date(year, month - 1, 10),
+        description: `Arriendo de Sede Corporativa y Mantenimiento de Instalaciones - ${tenant.name}`,
+        type: 'EXPENSE',
+        status: 'POSTED',
+        totalDebit: 2200,
+        totalCredit: 2200,
+        lines: [
+          {
+            accountId: accMap['5.2.2'],
+            costCenterId: ccMap['CC-ADM'],
+            description: 'Canon de Arrendamiento Mensual',
+            debit: 2200,
+            credit: 0,
+          },
+          {
+            accountId: accMap['1.1.1'],
+            description: 'Cheque / Transferencia Inmobiliaria',
+            debit: 0,
+            credit: 2200,
+          },
+        ],
+      });
+
+      // 4. Anticipos Quincenales a Colaboradores
+      entries.push({
+        entryNumber: `${prefix}-${year}${mStr}-04`,
+        date: new Date(year, month - 1, 15),
+        description: `Desembolso de Anticipos Quincenales de Nómina - ${tenant.name}`,
+        type: 'EXPENSE',
+        status: 'POSTED',
+        totalDebit: 2800,
+        totalCredit: 2800,
+        lines: [
+          {
+            accountId: accMap['1.1.2'],
+            costCenterId: ccMap['CC-RRHH'] || ccMap['CC-ADM'],
+            description: 'Anticipos Solicitados por Personal',
+            debit: 2800,
+            credit: 0,
+          },
+          {
+            accountId: accMap['1.1.1'],
+            description: 'Acreditación Bancaria en Lote',
+            debit: 0,
+            credit: 2800,
+          },
+        ],
+      });
+
+      // 5. Nómina Consolidada Mensual y Aportes al IESS
+      entries.push({
+        entryNumber: `${prefix}-${year}${mStr}-05`,
+        date: new Date(year, month - 1, 28),
+        description: `Asiento Centralizado de Nómina y Aportes IESS del Periodo ${mStr}/${year} - ${tenant.name}`,
+        type: 'PAYROLL',
+        status: 'POSTED',
+        totalDebit: 14650,
+        totalCredit: 14650,
+        lines: [
+          {
+            accountId: accMap['5.1.1'],
+            costCenterId: ccMap['CC-ADM'],
+            description: 'Sueldos Base Devengados Personal',
+            debit: 13000,
+            credit: 0,
+          },
+          {
+            accountId: accMap['5.1.3'],
+            costCenterId: ccMap['CC-RRHH'] || ccMap['CC-ADM'],
+            description: 'Gasto Aporte Patronal IESS (11.15%)',
+            debit: 1650,
+            credit: 0,
+          },
+          {
+            accountId: accMap['1.1.2'],
+            description: 'Descuento de Anticipos Quincenales Otorgados',
+            debit: 0,
+            credit: 2800,
+          },
+          {
+            accountId: accMap['2.1.2'],
+            description: 'Aportes IESS (Personal 9.45% + Patronal 11.15%)',
+            debit: 0,
+            credit: 2880,
+          },
+          {
+            accountId: accMap['1.1.1'],
+            description: 'Pago Neto de Nómina Transferencia SPI',
+            debit: 0,
+            credit: 8970,
+          },
+        ],
+      });
+    }
 
     for (const entry of entries) {
       const existing = await prisma.journalEntry.findFirst({
         where: { tenantId, entryNumber: entry.entryNumber },
       });
       if (!existing) {
-        await prisma.journalEntry.create({
-          data: {
-            tenantId,
-            entryNumber: entry.entryNumber,
-            date: entry.date,
-            description: entry.description,
-            type: entry.type,
-            status: entry.status,
-            totalDebit: entry.totalDebit,
-            totalCredit: entry.totalCredit,
-            lines: {
-              create: entry.lines.filter((l) => l.accountId),
+        // Filtrar líneas válidas
+        const validLines = entry.lines.filter((l) => l.accountId);
+        if (validLines.length >= 2) {
+          await prisma.journalEntry.create({
+            data: {
+              tenantId,
+              entryNumber: entry.entryNumber,
+              date: entry.date,
+              description: entry.description,
+              type: entry.type,
+              status: entry.status,
+              totalDebit: entry.totalDebit,
+              totalCredit: entry.totalCredit,
+              lines: {
+                create: validLines,
+              },
             },
-          },
-        });
+          });
+        }
       }
     }
-    console.log(`Asientos contables generados para ${tenant.name}.`);
+    console.log(`Asientos contables generados (${entries.length} asientos) para ${tenant.name}.`);
   }
 }

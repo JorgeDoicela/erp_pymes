@@ -14,7 +14,7 @@ import { Toaster } from 'react-hot-toast';
 // Core Transversal
 import { Loading, MaintenanceBanner } from '@core/feedback';
 import { MainLayout } from '@core/layout';
-import { PWAInstallPrompt, OfflineIndicator, PWAReloadPrompt } from '@core/pwa';
+import { PWAProvider, PWAInstallPrompt, OfflineIndicator, PWAReloadPrompt } from '@core/pwa';
 import { ROLES, isSuperAdmin as checkIsSuperAdmin } from '@core/constants';
 
 // Módulos de Dominio (Carga Inmediata para Rutas Críticas)
@@ -246,212 +246,220 @@ function App() {
   }, []);
 
   return (
-    <Suspense fallback={<Loading />}>
-      <Toaster position="top-right" />
-      <MaintenanceBanner />
-      <OfflineIndicator />
-      <PWAInstallPrompt />
-      <PWAReloadPrompt />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/privacy" element={<PrivacyPolicy mode="privacy" />} />
-        <Route path="/terms" element={<PrivacyPolicy mode="terms" />} />
-        <Route path="/register-company" element={<RegisterTenant />} />
-        <Route path="/careers" element={<CareersPage />} />
-        <Route path="/careers/:id" element={<JobApplication />} />
-        <Route path="/signatures/verify/:token" element={<PublicSignatureVerification />} />
-        <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+    <PWAProvider>
+      <Suspense fallback={<Loading />}>
+        <Toaster position="top-right" />
+        <MaintenanceBanner />
+        <OfflineIndicator />
+        <PWAInstallPrompt />
+        <PWAReloadPrompt />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/privacy" element={<PrivacyPolicy mode="privacy" />} />
+          <Route path="/terms" element={<PrivacyPolicy mode="terms" />} />
+          <Route path="/register-company" element={<RegisterTenant />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/careers/:id" element={<JobApplication />} />
+          <Route path="/signatures/verify/:token" element={<PublicSignatureVerification />} />
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Panel compartido para roles administrativos/especializados */}
-        <Route
-          element={
-            <RequireAuth user={auth.user} role={['admin', 'hr', 'accounting', 'entrepreneur']}>
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
-          <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
-          <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
-        </Route>
-
-        {/* Solo SuperAdministrador (Backoffice SaaS) */}
-        <Route
-          element={
-            <RequireAuth user={auth.user} role="superadmin">
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
-          <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
-          <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
-          <Route path="/superadmin/tenants" element={<SuperAdminDashboard />} />
-          <Route path="/superadmin/metrics" element={<SuperAdminDashboard />} />
-          <Route path="/superadmin/audit" element={<SuperAdminDashboard />} />
-        </Route>
-
-        {/* Tiempo y Asistencia Departamental / Equipo (Admin, HR y Manager) */}
-        <Route
-          element={
-            <RequireAuth user={auth.user} role={['admin', 'hr', 'manager']}>
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
-          <Route path="/admin/shifts" element={<ShiftManagement user={auth.user} />} />
-          <Route path="/admin/reports" element={<AttendanceReports />} />
-          <Route path="/admin/absences" element={<AdminAbsences user={auth.user} />} />
-          <Route path="/attendance" element={<AttendancePage user={auth.user} />} />
-        </Route>
-
-        {/* Administrador y Recursos Humanos (RRHH) */}
-        <Route
-          element={
-            <RequireAuth user={auth.user} role={['admin', 'hr']}>
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
+          {/* Panel compartido para roles administrativos/especializados */}
           <Route
-            path="/admin/register-employee"
-            element={<RegisterEmployee token={auth.token} />}
-          />
-          <Route
-            path="/admin/employees"
-            element={<EmployeeList token={auth.token} user={auth.user} />}
-          />
-          <Route
-            path="/admin/employees/ficha"
-            element={<EmployeeProfile token={auth.token} user={auth.user} />}
-          />
-          <Route
-            path="/admin/employees/:id"
-            element={<EmployeeProfile token={auth.token} user={auth.user} />}
-          />
-          <Route path="/admin/notifications" element={<NotificationsPage />} />
-          <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
-          <Route path="/admin/audit" element={<AuditLogsPage />} />
-          <Route path="/admin/contracts/expiring" element={<ExpiringContracts />} />
-          <Route path="/admin/settings" element={<AdminSettings user={auth.user} />} />
-          <Route path="/admin/expedientes" element={<EmployeeExpedient />} />
-          <Route path="/admin/expedientes/:employeeId" element={<EmployeeExpedient />} />
-          <Route path="/admin/assets" element={<EmployeeAssetsManagement />} />
-          <Route path="/admin/signatures" element={<DigitalSignatureCenter />} />
-          <Route path="/admin/offboarding" element={<OffboardingManagement />} />
-          <Route path="/admin/compliance" element={<LegalComplianceDashboard />} />
-          <Route path="/admin/sustainability" element={<SustainabilityDashboard />} />
-          <Route path="/performance" element={<EvaluationDashboard />} />
-          <Route path="/performance/create" element={<CreateEvaluation />} />
-          <Route path="/performance/assign" element={<AssignEvaluation />} />
-          <Route path="/recruitment" element={<RecruitmentDashboard />} />
-          <Route path="/recruitment/create" element={<CreateJobVacancy />} />
-          <Route path="/recruitment/:id" element={<VacancyDetails />} />
-          <Route path="/recruitment/applications/:id" element={<ApplicationDetails />} />
-          <Route path="/analytics" element={<AnalyticsDashboard />} />
-          <Route path="/analytics/rsi-optimization" element={<RsiOptimizationDashboard />} />
-          <Route path="/analytics/causal-inference" element={<CausalInferenceDashboard />} />
-          <Route path="/analytics/federated-learning" element={<FederatedLearningDashboard />} />
-          <Route path="/analytics/morl-pareto" element={<MorlParetoDashboard />} />
-          <Route path="/analytics/temporal-attention" element={<TemporalAttentionDashboard />} />
-          <Route path="/analytics/ft-transformer" element={<FTTransformerDashboard />} />
-          <Route path="/analytics/turnover" element={<TurnoverReport />} />
-          <Route path="/analytics/performance" element={<PerformanceReport />} />
-          <Route path="/analytics/payroll-costs" element={<PayrollCostReport />} />
-          <Route path="/analytics/satisfaction" element={<SatisfactionReport />} />
-          <Route path="/analytics/custom" element={<CustomReport />} />
-        </Route>
+            element={
+              <RequireAuth user={auth.user} role={['admin', 'hr', 'accounting', 'entrepreneur']}>
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route path="/admin" element={<AdminDashboard user={auth.user} />} />
+            <Route path="/intelligence" element={<IntelligentDashboard user={auth.user} />} />
+          </Route>
 
-        {/* Nómina (Compartido para Admin, HR y Contabilidad) */}
-        <Route
-          element={
-            <RequireAuth user={auth.user} role={['admin', 'hr', 'accounting']}>
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
-          <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
-          <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
+          {/* Solo SuperAdministrador (Backoffice SaaS) */}
           <Route
-            path="/admin/payroll/advances"
-            element={<SalaryAdvancesManagement user={auth.user} />}
-          />
-          <Route path="/admin/payroll/generator" element={<PayrollGenerator user={auth.user} />} />
-        </Route>
+            element={
+              <RequireAuth user={auth.user} role="superadmin">
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
+            <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/superadmin/tenants" element={<SuperAdminDashboard />} />
+            <Route path="/superadmin/metrics" element={<SuperAdminDashboard />} />
+            <Route path="/superadmin/audit" element={<SuperAdminDashboard />} />
+          </Route>
 
-        {/* Contabilidad (Compartido para Contabilidad y Admin) */}
-        <Route
-          element={
-            <RequireAuth user={auth.user} role={['accounting', 'admin']}>
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
-          <Route path="/admin/accounting" element={<AccountingDashboard />} />
-          <Route path="/admin/accounting/chart" element={<ChartOfAccounts />} />
-          <Route path="/admin/accounting/journals" element={<JournalEntries user={auth.user} />} />
-          <Route path="/admin/accounting/reports/trial-balance" element={<TrialBalance />} />
-          <Route path="/admin/accounting/periods" element={<PeriodsManagement />} />
-          <Route path="/admin/accounting/cost-centers" element={<CostCenterManagement />} />
-        </Route>
-
-        {/* Emprendimiento (Compartido para Emprendedor y Admin) */}
-        <Route
-          element={
-            <RequireAuth user={auth.user} role={['entrepreneur', 'admin']}>
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
-          <Route path="/admin/entrepreneurship" element={<EntrepreneurshipDashboard />} />
-          <Route path="/admin/entrepreneurship/create" element={<EntrepreneurshipForm />} />
-          <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
-        </Route>
-
-        {/* Employee Self-Service Routes - Portal y Autogestión (Employee y Manager) */}
-        <Route
-          element={
-            <RequireAuth user={auth.user} role={['employee', 'manager']}>
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
-          <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
-          <Route path="/empleado/portal" element={<MobileEmployeePortal user={auth.user} />} />
-          <Route path="/empleado/asistencia" element={<EmployeeAttendance user={auth.user} />} />
-          <Route path="/empleado/ausencias" element={<EmployeeAbsences />} />
-          <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
-          <Route path="/my-advances" element={<MySalaryAdvances />} />
-          <Route path="/my-assets" element={<MyAssets />} />
-          <Route path="/my-expedient" element={<EmployeeExpedient />} />
-          <Route path="/performance/goals" element={<MyGoals />} />
-          <Route path="/performance/my-evaluations" element={<MyEvaluations />} />
-          <Route path="/performance/take/:id" element={<TakeEvaluation />} />
-          <Route path="/entrepreneurship" element={<EntrepreneurshipDashboard />} />
-          <Route path="/entrepreneurship/create" element={<EntrepreneurshipForm />} />
-          <Route path="/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
-        </Route>
-
-        <Route
-          element={
-            <RequireAuth user={auth.user}>
-              <MainLayout user={auth.user} onLogout={handleLogout} />
-            </RequireAuth>
-          }
-        >
-          <Route path="/announcements" element={<AnnouncementsBoard user={auth.user} />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/notifications/settings" element={<NotificationSettings />} />
-          <Route path="/performance/results/:id" element={<EvaluationResults />} />
+          {/* Tiempo y Asistencia Departamental / Equipo (Admin, HR y Manager) */}
           <Route
-            path="/profile"
-            element={<EmployeeProfile token={auth.token} user={auth.user} />}
-          />
-          <Route path="/signatures" element={<DigitalSignatureCenter />} />
-          <Route path="/help" element={<HelpCenter />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+            element={
+              <RequireAuth user={auth.user} role={['admin', 'hr', 'manager']}>
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route path="/admin/shifts" element={<ShiftManagement user={auth.user} />} />
+            <Route path="/admin/reports" element={<AttendanceReports />} />
+            <Route path="/admin/absences" element={<AdminAbsences user={auth.user} />} />
+            <Route path="/attendance" element={<AttendancePage user={auth.user} />} />
+          </Route>
+
+          {/* Administrador y Recursos Humanos (RRHH) */}
+          <Route
+            element={
+              <RequireAuth user={auth.user} role={['admin', 'hr']}>
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route
+              path="/admin/register-employee"
+              element={<RegisterEmployee token={auth.token} />}
+            />
+            <Route
+              path="/admin/employees"
+              element={<EmployeeList token={auth.token} user={auth.user} />}
+            />
+            <Route
+              path="/admin/employees/ficha"
+              element={<EmployeeProfile token={auth.token} user={auth.user} />}
+            />
+            <Route
+              path="/admin/employees/:id"
+              element={<EmployeeProfile token={auth.token} user={auth.user} />}
+            />
+            <Route path="/admin/notifications" element={<NotificationsPage />} />
+            <Route path="/admin/notifications/settings" element={<NotificationSettings />} />
+            <Route path="/admin/audit" element={<AuditLogsPage />} />
+            <Route path="/admin/contracts/expiring" element={<ExpiringContracts />} />
+            <Route path="/admin/settings" element={<AdminSettings user={auth.user} />} />
+            <Route path="/admin/expedientes" element={<EmployeeExpedient />} />
+            <Route path="/admin/expedientes/:employeeId" element={<EmployeeExpedient />} />
+            <Route path="/admin/assets" element={<EmployeeAssetsManagement />} />
+            <Route path="/admin/signatures" element={<DigitalSignatureCenter />} />
+            <Route path="/admin/offboarding" element={<OffboardingManagement />} />
+            <Route path="/admin/compliance" element={<LegalComplianceDashboard />} />
+            <Route path="/admin/sustainability" element={<SustainabilityDashboard />} />
+            <Route path="/performance" element={<EvaluationDashboard />} />
+            <Route path="/performance/create" element={<CreateEvaluation />} />
+            <Route path="/performance/assign" element={<AssignEvaluation />} />
+            <Route path="/recruitment" element={<RecruitmentDashboard />} />
+            <Route path="/recruitment/create" element={<CreateJobVacancy />} />
+            <Route path="/recruitment/:id" element={<VacancyDetails />} />
+            <Route path="/recruitment/applications/:id" element={<ApplicationDetails />} />
+            <Route path="/analytics" element={<AnalyticsDashboard />} />
+            <Route path="/analytics/rsi-optimization" element={<RsiOptimizationDashboard />} />
+            <Route path="/analytics/causal-inference" element={<CausalInferenceDashboard />} />
+            <Route path="/analytics/federated-learning" element={<FederatedLearningDashboard />} />
+            <Route path="/analytics/morl-pareto" element={<MorlParetoDashboard />} />
+            <Route path="/analytics/temporal-attention" element={<TemporalAttentionDashboard />} />
+            <Route path="/analytics/ft-transformer" element={<FTTransformerDashboard />} />
+            <Route path="/analytics/turnover" element={<TurnoverReport />} />
+            <Route path="/analytics/performance" element={<PerformanceReport />} />
+            <Route path="/analytics/payroll-costs" element={<PayrollCostReport />} />
+            <Route path="/analytics/satisfaction" element={<SatisfactionReport />} />
+            <Route path="/analytics/custom" element={<CustomReport />} />
+          </Route>
+
+          {/* Nómina (Compartido para Admin, HR y Contabilidad) */}
+          <Route
+            element={
+              <RequireAuth user={auth.user} role={['admin', 'hr', 'accounting']}>
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route path="/admin/payroll/config" element={<PayrollConfiguration />} />
+            <Route path="/admin/payroll/benefits" element={<BenefitsManagement />} />
+            <Route
+              path="/admin/payroll/advances"
+              element={<SalaryAdvancesManagement user={auth.user} />}
+            />
+            <Route
+              path="/admin/payroll/generator"
+              element={<PayrollGenerator user={auth.user} />}
+            />
+          </Route>
+
+          {/* Contabilidad (Compartido para Contabilidad y Admin) */}
+          <Route
+            element={
+              <RequireAuth user={auth.user} role={['accounting', 'admin']}>
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route path="/admin/accounting" element={<AccountingDashboard />} />
+            <Route path="/admin/accounting/chart" element={<ChartOfAccounts />} />
+            <Route
+              path="/admin/accounting/journals"
+              element={<JournalEntries user={auth.user} />}
+            />
+            <Route path="/admin/accounting/reports/trial-balance" element={<TrialBalance />} />
+            <Route path="/admin/accounting/periods" element={<PeriodsManagement />} />
+            <Route path="/admin/accounting/cost-centers" element={<CostCenterManagement />} />
+          </Route>
+
+          {/* Emprendimiento (Compartido para Emprendedor y Admin) */}
+          <Route
+            element={
+              <RequireAuth user={auth.user} role={['entrepreneur', 'admin']}>
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route path="/admin/entrepreneurship" element={<EntrepreneurshipDashboard />} />
+            <Route path="/admin/entrepreneurship/create" element={<EntrepreneurshipForm />} />
+            <Route path="/admin/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
+          </Route>
+
+          {/* Employee Self-Service Routes - Portal y Autogestión (Employee y Manager) */}
+          <Route
+            element={
+              <RequireAuth user={auth.user} role={['employee', 'manager']}>
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
+            <Route path="/empleado/portal" element={<MobileEmployeePortal user={auth.user} />} />
+            <Route path="/empleado/asistencia" element={<EmployeeAttendance user={auth.user} />} />
+            <Route path="/empleado/ausencias" element={<EmployeeAbsences />} />
+            <Route path="/my-payments" element={<MyPayments user={auth.user} />} />
+            <Route path="/my-advances" element={<MySalaryAdvances />} />
+            <Route path="/my-assets" element={<MyAssets />} />
+            <Route path="/my-expedient" element={<EmployeeExpedient />} />
+            <Route path="/performance/goals" element={<MyGoals />} />
+            <Route path="/performance/my-evaluations" element={<MyEvaluations />} />
+            <Route path="/performance/take/:id" element={<TakeEvaluation />} />
+            <Route path="/entrepreneurship" element={<EntrepreneurshipDashboard />} />
+            <Route path="/entrepreneurship/create" element={<EntrepreneurshipForm />} />
+            <Route path="/entrepreneurship/:id" element={<EntrepreneurshipDetails />} />
+          </Route>
+
+          <Route
+            element={
+              <RequireAuth user={auth.user}>
+                <MainLayout user={auth.user} onLogout={handleLogout} />
+              </RequireAuth>
+            }
+          >
+            <Route path="/announcements" element={<AnnouncementsBoard user={auth.user} />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/notifications/settings" element={<NotificationSettings />} />
+            <Route path="/performance/results/:id" element={<EvaluationResults />} />
+            <Route
+              path="/profile"
+              element={<EmployeeProfile token={auth.token} user={auth.user} />}
+            />
+            <Route path="/signatures" element={<DigitalSignatureCenter />} />
+            <Route path="/help" element={<HelpCenter />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </PWAProvider>
   );
 }
 

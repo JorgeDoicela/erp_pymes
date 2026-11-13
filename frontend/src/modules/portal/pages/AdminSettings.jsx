@@ -12,6 +12,7 @@ import { systemService } from '@modules/superadmin';
 import api from '@core/api/httpClient';
 import LocationPickerMap from '@core/ui/LocationPickerMap';
 import { canMutateCompanySettings, getCurrentUser } from '@core/constants/roles';
+import IpRestrictionPanel from '../components/IpRestrictionPanel';
 
 const SETTINGS_TABS = [
   { id: 'COMPANY', label: 'Identificación & Plan' },
@@ -94,23 +95,40 @@ const AdminSettings = ({ user }) => {
   };
 
   const handleSaveSettings = async () => {
+    const cleanIps = (settings.allowedIPs || '')
+      .split(',')
+      .map((i) => i.trim())
+      .filter(Boolean);
+
+    if (settings.ipRestrictionEnabled && cleanIps.length === 0) {
+      showNotification(
+        'error',
+        'Debe registrar al menos una IP o rango CIDR antes de activar la restricción por IP'
+      );
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await systemService.updateSettings({
         biometricEnabled: settings.biometricEnabled,
+        ipRestrictionEnabled: Boolean(settings.ipRestrictionEnabled),
         maintenanceMode: settings.maintenanceMode,
         maintenanceMessage: settings.maintenanceMessage,
-        allowedIPs: settings.allowedIPs,
+        allowedIPs: cleanIps.join(', '),
         globalLatitude: settings.globalLatitude,
         globalLongitude: settings.globalLongitude,
         globalRadius: settings.globalRadius,
       });
       if (res.success) {
-        setSettings(res.data);
+        setSettings((prev) => ({ ...res.data, yourIp: res.data?.yourIp || prev?.yourIp }));
         showNotification('success', 'Parámetros del sistema guardados correctamente');
       }
-    } catch {
-      showNotification('error', 'Error al guardar los parámetros del sistema');
+    } catch (err) {
+      showNotification(
+        'error',
+        err.response?.data?.message || 'Error al guardar los parámetros del sistema'
+      );
     } finally {
       setSaving(false);
     }
@@ -448,34 +466,15 @@ const AdminSettings = ({ user }) => {
             </div>
 
             {/* IPs Permitidas */}
-            <div className="space-y-1.5 pt-2">
-              <div className="flex justify-between items-center">
-                <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider">
-                  Direcciones IP de Red Permitidas
-                </label>
-                {settings.yourIp && canMutate && (
-                  <button
-                    type="button"
-                    onClick={addCurrentIp}
-                    className="text-xs text-blue-600 hover:underline cursor-pointer font-mono"
-                  >
-                    + Agregar mi IP ({settings.yourIp})
-                  </button>
-                )}
-              </div>
-              <input
-                type="text"
-                disabled={!canMutate}
-                placeholder="Ej: 192.168.1.1, 201.12.3.4 (Dejar vacío para permitir cualquier IP)"
-                className={`${inputClass} font-mono disabled:bg-gray-50 disabled:text-gray-500`}
-                value={settings.allowedIPs || ''}
-                onChange={(e) => setSettings({ ...settings, allowedIPs: e.target.value })}
-              />
-              <p className="text-[11px] text-gray-400">
-                Separe múltiples direcciones IP con comas. Si se deja en blanco, los colaboradores
-                podrán marcar desde cualquier conexión de red.
-              </p>
-            </div>
+            <IpRestrictionPanel
+              enabled={Boolean(settings.ipRestrictionEnabled)}
+              allowedIPs={settings.allowedIPs || ''}
+              yourIp={settings.yourIp}
+              canMutate={canMutate}
+              onToggleEnabled={() => handleToggle('ipRestrictionEnabled')}
+              onChangeAllowedIPs={(nextIps) => setSettings({ ...settings, allowedIPs: nextIps })}
+              onAddCurrentIp={addCurrentIp}
+            />
 
             {canMutate && (
               <div className="flex justify-end pt-2">

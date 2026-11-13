@@ -10,8 +10,36 @@
 import { Decimal } from 'decimal.js';
 import { SBU_ECUADOR_2026 } from './sustainability.service.js';
 
+export function parseNumberString(rawNum) {
+  if (!rawNum) return null;
+  let str = String(rawNum).trim();
+  if (str.includes(',') && str.includes('.')) {
+    const lastComma = str.lastIndexOf(',');
+    const lastDot = str.lastIndexOf('.');
+    if (lastDot > lastComma) {
+      str = str.replace(/,/g, '');
+    } else {
+      str = str.replace(/\./g, '').replace(',', '.');
+    }
+  } else if (str.includes(',')) {
+    const parts = str.split(',');
+    if (parts.length === 2 && parts[1].length === 3 && parts[0].length <= 3) {
+      str = parts.join('');
+    } else {
+      str = str.replace(',', '.');
+    }
+  } else if (str.includes('.')) {
+    const parts = str.split('.');
+    if (parts.length === 2 && parts[1].length === 3 && parts[0].length <= 3) {
+      str = parts.join('');
+    }
+  }
+  const parsed = parseFloat(str);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function calculateSettlement(baseSalary, years, extraMonths, query) {
-  const effectiveYears = years !== null ? years : 3;
+  const effectiveYears = years !== null ? years : extraMonths > 0 ? 0 : 3;
   const isUnfairDismissal = /despid|desped|intempestiv|\b188\b/i.test(query);
 
   const desahucioAmount = baseSalary
@@ -153,14 +181,30 @@ export function computeLiveLegalCalculation(query) {
   if (!query) return null;
   const qLower = query.toLowerCase();
 
+  const numPattern = '(-?\\d{1,3}(?:[.,]\\d{3})+(?:[.,]\\d+)?|-?\\d+(?:[.,]\\d+)?)';
   const salaryMatch =
-    query.match(/\$\s*(\d+(?:[.,]\d+)?)/i) ||
     query.match(
-      /(?:sueldo|salario|remuneraci[oó]n|gana|percibe)\s+(?:de\s+|mensual\s+de\s+)?\$?\s*(\d+(?:[.,]\d+)?)/i
+      new RegExp('(?:-|\\b)(?:\\$\\s*' + numPattern + '|\\$\\s*-' + numPattern + ')', 'i')
     ) ||
-    query.match(/(\d{3,5}(?:[.,]\d+)?)\s*(?:usd|d[oó]lares)/i);
+    query.match(
+      new RegExp(
+        '(?:sueldo|salario|remuneraci[oó]n|gana|percibe)\\s+(?:de\\s+|mensual\\s+de\\s+)?(?:\\$\\s*)?(-?' +
+          numPattern +
+          ')',
+        'i'
+      )
+    ) ||
+    query.match(new RegExp('(-?' + numPattern + ')\\s*(?:usd|d[oó]lares)', 'i'));
 
-  const parsedSalary = salaryMatch ? parseFloat(salaryMatch[1].replace(',', '.')) : null;
+  let extractedNum = null;
+  if (salaryMatch) {
+    const rawMatch = salaryMatch[0];
+    const candidateNum = salaryMatch[1];
+    const isNegative = rawMatch.includes('-') && !candidateNum.startsWith('-');
+    extractedNum = isNegative ? `-${candidateNum}` : candidateNum;
+  }
+
+  const parsedSalary = extractedNum ? parseNumberString(extractedNum) : null;
   const baseSalary =
     parsedSalary && parsedSalary >= 100 && parsedSalary <= 50000
       ? new Decimal(parsedSalary)
@@ -170,8 +214,8 @@ export function computeLiveLegalCalculation(query) {
   const monthsMatch = query.match(/(\d+)\s*mes(?:es)?/i);
   const years = yearsMatch ? parseInt(yearsMatch[1], 10) : null;
   const extraMonths = monthsMatch ? parseInt(monthsMatch[1], 10) : 0;
-  const hoursMatch = query.match(/(\d+(?:[.,]\d+)?)\s*horas?/i);
-  const numHours = hoursMatch ? parseFloat(hoursMatch[1].replace(',', '.')) : null;
+  const hoursMatch = query.match(new RegExp(numPattern + '\\s*horas?', 'i'));
+  const numHours = hoursMatch ? parseNumberString(hoursMatch[1]) : null;
 
   if (
     /liquidaci|finiquito|despid|desped|intempestiv|desahuci|renuncia|\b188\b|\b185\b/i.test(query)
@@ -234,12 +278,14 @@ export function generateSynthesizedAdvice({
   const iessRate = ods.indicators?.socialSecurityCoverage?.value ?? 100;
   const salaryRate = ods.indicators?.salaryEquitabilityIndex?.value ?? 100;
 
-  const sections = [
-    `### Dictamen Jurídico y Técnico Verificado — Norma ERP (Módulo: ${String(moduleContext || 'general').toUpperCase()})\n` +
-      `**Estado del Tenant:** Cumplimiento ODS 8: \`${score.toFixed(2)}%\` (${ods.complianceLevel || 'ALTO'}) · ` +
+  const headerTitle = `### Dictamen Jurídico y Técnico Verificado — Norma ERP (Módulo: ${String(moduleContext || 'general').toUpperCase()})`;
+  const tenantSummaryLine = tenantMetrics
+    ? `\n**Estado del Tenant:** Cumplimiento ODS 8: \`${score.toFixed(2)}%\` (${ods.complianceLevel || 'ALTO'}) · ` +
       `Plantilla Activa: \`${erpCtx.totalActiveEmployees ?? 0}\` · ` +
-      `Contratos Vigentes: \`${formalRate}%\` · Cobertura IESS: \`${iessRate}%\` · SBU Conforme: \`${salaryRate}%\`.`,
-  ];
+      `Contratos Vigentes: \`${formalRate}%\` · Cobertura IESS: \`${iessRate}%\` · SBU Conforme: \`${salaryRate}%\`.`
+    : '';
+
+  const sections = [headerTitle + tenantSummaryLine];
 
   if (relevantChunks && relevantChunks.length > 0) {
     const legalLines = relevantChunks.slice(0, 4).map((chunk) => {

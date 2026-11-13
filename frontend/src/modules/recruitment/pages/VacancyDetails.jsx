@@ -1,22 +1,25 @@
 /**
  * @file VacancyDetails.jsx
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @description Norma ERP - Gestión de candidatos y pipeline por vacante
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
+  getVacancyById,
   getApplicationsByVacancy,
   deleteVacancy,
   deleteApplication,
   updateApplicationStatus,
 } from '../services/recruitment.service';
-import { FiArrowLeft, FiTrash2, FiCopy, FiCheck } from 'react-icons/fi';
+import { FiArrowLeft, FiTrash2, FiCopy, FiCheck, FiUsers } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import Modal from '@core/ui/Modal';
+import { Button, EmptyState, Modal, Skeleton } from '@core/ui';
+import { ErrorState } from '@core/feedback';
+import VacancyApplicationsTable from '../components/VacancyApplicationsTable';
 
 const STATUS_OPTIONS = [
   { key: 'ALL', label: 'Todos' },
@@ -32,45 +35,73 @@ const STATUS_OPTIONS = [
 const VacancyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [vacancy, setVacancy] = useState(null);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Modals
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [appToDelete, setAppToDelete] = useState(null);
   const [deletingCandidate, setDeletingCandidate] = useState(false);
+  const [appToReject, setAppToReject] = useState(null);
+  const [notifyRejectEmail, setNotifyRejectEmail] = useState(true);
+  const [rejecting, setRejecting] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [id]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const apps = await getApplicationsByVacancy(id);
-      setApplications(apps || []);
+      setLoadError('');
+      const [vacData, apps] = await Promise.all([getVacancyById(id), getApplicationsByVacancy(id)]);
+      setVacancy(vacData);
+      setApplications(Array.isArray(apps) ? apps : []);
     } catch (error) {
-      console.error('Error al cargar aplicaciones:', error);
-      toast.error('Error al cargar los candidatos de la vacante');
+      setLoadError(
+        error.response?.data?.message || 'Error al cargar los candidatos de la vacante.'
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const handleStatusChange = async (appId, newStatus) => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const applyStatusChange = async (appId, newStatus, sendEmail = false) => {
     try {
-      await updateApplicationStatus(appId, newStatus, false);
+      await updateApplicationStatus(appId, newStatus, sendEmail);
       setApplications((prev) =>
         prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a))
       );
-      toast.success('Estado del candidato actualizado');
+      toast.success(
+        newStatus === 'REJECTED' && sendEmail
+          ? 'Candidato descartado y notificado por correo'
+          : 'Estado del candidato actualizado'
+      );
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al cambiar estado');
     }
+  };
+
+  const handleStatusChange = (app, newStatus) => {
+    if (newStatus === 'REJECTED') {
+      setAppToReject(app);
+      setNotifyRejectEmail(true);
+      return;
+    }
+    applyStatusChange(app.id, newStatus, false);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!appToReject) return;
+    setRejecting(true);
+    await applyStatusChange(appToReject.id, 'REJECTED', notifyRejectEmail);
+    setRejecting(false);
+    setAppToReject(null);
   };
 
   const handleDeleteCandidate = async () => {
@@ -103,14 +134,16 @@ const VacancyDetails = () => {
   };
 
   const copyPublicLink = () => {
-    const url = `${window.location.origin}/careers/${id}`;
+    const slug = vacancy?.tenant?.slug;
+    const url = slug
+      ? `${window.location.origin}/careers/${id}?company=${encodeURIComponent(slug)}`
+      : `${window.location.origin}/careers/${id}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     toast.success('Enlace de postulación copiado');
     setTimeout(() => setCopied(false), 2500);
   };
 
-  // Filtered applications
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
       const matchesTab = activeTab === 'ALL' || app.status === activeTab;
@@ -134,16 +167,20 @@ const VacancyDetails = () => {
     return counts;
   }, [applications]);
 
-  const vacancyTitle = applications[0]?.vacancy?.title || 'Proceso de Selección';
-  const vacancyDepartment = applications[0]?.vacancy?.department || 'General';
+  const vacancyTitle = vacancy?.title || 'Proceso de Selección';
+  const vacancyDepartment = vacancy?.department || 'General';
+
+  if (loadError) {
+    return <ErrorState message={loadError} onRetry={loadData} />;
+  }
 
   return (
     <div className="space-y-5">
-      {/* Header ERP */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-gray-200">
         <div>
           <div className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
             <button
+              type="button"
               onClick={() => navigate('/recruitment')}
               className="hover:text-gray-900 transition-colors flex items-center gap-1 text-gray-600 cursor-pointer"
             >
@@ -152,39 +189,30 @@ const VacancyDetails = () => {
             <span>·</span>
             <span>{vacancyDepartment}</span>
           </div>
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2.5">
-            {vacancyTitle}
-          </h1>
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">{vacancyTitle}</h1>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            onClick={copyPublicLink}
-            className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            {copied ? <FiCheck className="text-emerald-600" size={13} /> : <FiCopy size={13} />}
+          <Button variant="secondary" size="sm" onClick={copyPublicLink}>
+            {copied ? <FiCheck className="text-green-700" size={13} /> : <FiCopy size={13} />}
             <span>{copied ? 'Enlace Copiado' : 'Copiar Enlace de Postulación'}</span>
-          </button>
-
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="px-3 py-1.5 bg-white border border-red-200 hover:bg-red-50 text-red-600 rounded text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)}>
             <FiTrash2 size={13} />
             <span>Eliminar</span>
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Pipeline Tabs Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200">
-        <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
+        <div className="flex items-center gap-1 overflow-x-auto">
           {STATUS_OPTIONS.map((tab) => {
             const count = statusCounts[tab.key] || 0;
             const isActive = activeTab === tab.key;
             return (
               <button
                 key={tab.key}
+                type="button"
                 onClick={() => setActiveTab(tab.key)}
                 className={`px-3 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
                   isActive
@@ -193,9 +221,7 @@ const VacancyDetails = () => {
                 }`}
               >
                 <span>{tab.label}</span>
-                <span className="font-mono text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.2 rounded">
-                  {count}
-                </span>
+                <span className="font-mono text-[10px] text-gray-500 tabular-nums">({count})</span>
               </button>
             );
           })}
@@ -204,183 +230,111 @@ const VacancyDetails = () => {
         <div className="pb-2 sm:pb-0">
           <input
             type="text"
+            aria-label="Buscar candidato por nombre o correo"
             placeholder="Buscar por nombre o correo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-white border border-gray-200 rounded px-2.5 py-1 text-xs text-gray-800 focus:outline-none focus:border-blue-500 w-full sm:w-56"
+            className="bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-900 w-full sm:w-56"
           />
         </div>
       </div>
 
-      {/* Candidates Table */}
       {loading ? (
-        <div className="bg-white border border-gray-200 rounded p-12 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent mx-auto mb-2" />
-          <p className="text-xs text-gray-500 font-medium">Cargando candidatos del proceso...</p>
+        <div className="bg-white border border-gray-200 rounded-md p-4 space-y-3" aria-busy="true">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <Skeleton key={idx} className="h-10 w-full rounded" />
+          ))}
         </div>
       ) : filteredApplications.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded p-12 text-center text-gray-400">
-          <p className="text-sm font-medium text-gray-700">
-            No se encontraron postulantes en esta etapa
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Comparte el enlace público para recibir candidatos o ajusta el filtro de búsqueda.
-          </p>
-        </div>
+        <EmptyState
+          icon={<FiUsers size={24} />}
+          title="No se encontraron postulantes en esta etapa"
+          description="Comparte el enlace público para recibir candidatos o ajusta el filtro de búsqueda."
+        />
       ) : (
-        <div className="bg-white border border-gray-200 rounded overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-gray-50/75 border-b border-gray-200 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                  <th className="py-2.5 px-4">Candidato</th>
-                  <th className="py-2.5 px-4">Contacto</th>
-                  <th className="py-2.5 px-4">Fecha Postulación</th>
-                  <th className="py-2.5 px-4">Etapa del Pipeline</th>
-                  <th className="py-2.5 px-4 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredApplications.map((app) => {
-                  const initials =
-                    `${app.firstName?.[0] || ''}${app.lastName?.[0] || ''}`.toUpperCase();
-
-                  return (
-                    <tr key={app.id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className="py-2.5 px-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded bg-gray-100 text-gray-700 font-mono font-semibold text-xs flex items-center justify-center shrink-0">
-                            {initials}
-                          </div>
-                          <div>
-                            <button
-                              onClick={() => navigate(`/recruitment/applications/${app.id}`)}
-                              className="font-semibold text-gray-900 hover:text-blue-600 transition-colors text-left block cursor-pointer"
-                            >
-                              {app.firstName} {app.lastName}
-                            </button>
-                            <span className="text-[11px] text-gray-400">
-                              {app.coverLetter ? 'Carta adjunta' : 'Sin carta'}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-4">
-                        <div className="text-gray-800">{app.email}</div>
-                        <div className="text-[11px] text-gray-500 font-mono tabular-nums">
-                          {app.phone || 'Sin teléfono'}
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-4 font-mono text-gray-600 tabular-nums">
-                        {new Date(app.createdAt).toLocaleDateString('es-EC')}
-                      </td>
-                      <td className="py-2.5 px-4">
-                        <select
-                          value={app.status}
-                          onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                          className="bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-800 focus:outline-none focus:border-blue-500 cursor-pointer"
-                        >
-                          <option value="PENDING">Postulado</option>
-                          <option value="REVIEWING">En Revisión</option>
-                          <option value="INTERVIEW">Entrevista</option>
-                          <option value="TESTING">Pruebas</option>
-                          <option value="OFFER">Oferta</option>
-                          <option value="HIRED">Contratado</option>
-                          <option value="REJECTED">Descartado</option>
-                        </select>
-                      </td>
-                      <td className="py-2.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => navigate(`/recruitment/applications/${app.id}`)}
-                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors cursor-pointer shadow-xs"
-                          >
-                            Ver Expediente →
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setAppToDelete(app)}
-                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                            title="Eliminar candidato"
-                          >
-                            <FiTrash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <VacancyApplicationsTable
+          applications={filteredApplications}
+          onSelectApplication={(appId) => navigate(`/recruitment/applications/${appId}`)}
+          onStatusChange={handleStatusChange}
+          onRequestDelete={setAppToDelete}
+        />
       )}
 
-      {/* Modal Eliminar Candidato */}
       <Modal
-        isOpen={!!appToDelete}
-        onClose={() => setAppToDelete(null)}
-        title="¿Eliminar candidato?"
+        isOpen={Boolean(appToReject)}
+        onClose={() => setAppToReject(null)}
+        title="Descartar candidato"
+        subtitle={appToReject ? `${appToReject.firstName} ${appToReject.lastName}` : ''}
         size="sm"
-        footer={
-          <>
-            <button
-              disabled={deletingCandidate}
-              onClick={() => setAppToDelete(null)}
-              className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              disabled={deletingCandidate}
-              onClick={handleDeleteCandidate}
-              className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
-            >
-              {deletingCandidate ? 'Eliminando...' : 'Eliminar Candidato'}
-            </button>
-          </>
-        }
       >
-        {appToDelete && (
-          <p className="text-gray-600 text-xs leading-relaxed">
-            Se eliminará la postulación de{' '}
-            <strong className="text-gray-900">
-              {appToDelete.firstName} {appToDelete.lastName}
-            </strong>{' '}
-            y sus registros asociados.
-          </p>
-        )}
+        <div className="space-y-4 text-xs text-gray-600">
+          <p>¿Confirmas marcar esta postulación como descartada?</p>
+          <label className="flex items-start gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={notifyRejectEmail}
+              onChange={(e) => setNotifyRejectEmail(e.target.checked)}
+              className="mt-0.5 rounded border-gray-300 text-blue-600"
+            />
+            <span>Enviar correo electrónico cordial de notificación al candidato.</span>
+          </label>
+          <div className="pt-3 border-t border-gray-100 flex justify-end gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setAppToReject(null)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" size="sm" loading={rejecting} onClick={handleConfirmReject}>
+              Confirmar Descarte
+            </Button>
+          </div>
+        </div>
       </Modal>
 
-      {/* Modal Eliminar Vacante */}
+      <Modal
+        isOpen={Boolean(appToDelete)}
+        onClose={() => setAppToDelete(null)}
+        title="Eliminar candidato"
+        subtitle={appToDelete ? `${appToDelete.firstName} ${appToDelete.lastName}` : ''}
+        size="sm"
+      >
+        <div className="space-y-4 text-xs text-gray-600">
+          <p>Se eliminarán permanentemente la postulación, notas, evaluaciones y CV adjunto.</p>
+          <div className="pt-3 border-t border-gray-100 flex justify-end gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setAppToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              loading={deletingCandidate}
+              onClick={handleDeleteCandidate}
+            >
+              Eliminar Candidato
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="¿Eliminar vacante?"
+        title="Eliminar vacante"
+        subtitle={vacancyTitle}
         size="sm"
-        footer={
-          <>
-            <button
-              disabled={deleting}
-              onClick={() => setShowDeleteModal(false)}
-              className="px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              disabled={deleting}
-              onClick={handleDeleteVacancy}
-              className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors shadow-xs disabled:opacity-50"
-            >
-              {deleting ? 'Eliminando...' : 'Eliminar Vacante'}
-            </button>
-          </>
-        }
       >
-        <p className="text-gray-600 text-xs leading-relaxed">
-          Esta acción eliminará permanentemente la vacante y las{' '}
-          <strong className="text-gray-900">{applications.length} postulaciones</strong> recibidas.
-        </p>
+        <div className="space-y-4 text-xs text-gray-600">
+          <p>
+            Esta acción eliminará permanentemente la vacante y las{' '}
+            <strong className="font-mono">{applications.length}</strong> postulaciones asociadas.
+          </p>
+          <div className="pt-3 border-t border-gray-100 flex justify-end gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setShowDeleteModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" size="sm" loading={deleting} onClick={handleDeleteVacancy}>
+              Eliminar Vacante
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

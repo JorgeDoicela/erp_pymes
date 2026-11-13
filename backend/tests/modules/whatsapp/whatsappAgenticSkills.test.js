@@ -30,7 +30,10 @@ describe('WhatsApp Agentic Skills, 2FA (Cédula + OTP) & Multi-Tenant Suite', ()
       expect(security.getCanonicalPhoneKey('969677280')).toBe('593969677280');
     });
 
-    it('debe validar en tiempo constante los últimos 4 dígitos de la cédula', () => {
+    it('debe validar en tiempo constante la cédula completa y mantener compatibilidad con últimos 4 dígitos', () => {
+      expect(security.verifyIdentityCard('1718293045', '1718293045')).toBe(true);
+      expect(security.verifyIdentityCard('1718293045', '1718293046')).toBe(false);
+      expect(security.verifyIdentityCard('1718293045', '3045')).toBe(false);
       expect(security.verifyIdentityLast4('1718293045', '3045')).toBe(true);
       expect(security.verifyIdentityLast4('1718293045', '3046')).toBe(false);
       expect(security.verifyIdentityLast4('1718293045', '304')).toBe(false);
@@ -221,7 +224,7 @@ describe('WhatsApp Agentic Skills, 2FA (Cédula + OTP) & Multi-Tenant Suite', ()
         })
       );
       expect(reply).toContain('an***@empresa.ec');
-      expect(reply).toContain('CONFIRMAR <4 ultimos digitos de su cedula> <codigo OTP>');
+      expect(reply).toContain('CONFIRMAR <numero de cedula> <codigo OTP>');
     });
 
     it('debe cancelar la sesión si falla el envío SMTP real del OTP', async () => {
@@ -275,7 +278,7 @@ describe('WhatsApp Agentic Skills, 2FA (Cédula + OTP) & Multi-Tenant Suite', ()
       };
 
       const reply = await confirmationService.handlePendingConfirmation({
-        text: 'CONFIRMAR 8912 654321',
+        text: 'CONFIRMAR 1720458912 654321',
         employee: baseEmployee,
         phoneKey: '593969677280',
         messageId: 'wamid.CONF1',
@@ -335,7 +338,7 @@ describe('WhatsApp Agentic Skills, 2FA (Cédula + OTP) & Multi-Tenant Suite', ()
       });
 
       const reply = await confirmationService.handlePendingConfirmation({
-        text: 'CONFIRMAR 0000 111111',
+        text: 'CONFIRMAR 1700000000 111111',
         employee: baseEmployee,
         phoneKey: '593969677280',
         messageId: 'wamid.FAIL3',
@@ -428,7 +431,7 @@ describe('WhatsApp Agentic Skills, 2FA (Cédula + OTP) & Multi-Tenant Suite', ()
         saveCollectingDraft: vi.fn().mockResolvedValueOnce('draft-1'),
         initiateDualConfirmation: vi
           .fn()
-          .mockResolvedValueOnce('*Validacion de Seguridad Requerida* CONFIRMAR 3045 123456'),
+          .mockResolvedValueOnce('*Validacion de Seguridad Requerida* CONFIRMAR 1718293045 123456'),
       };
 
       const ai = new WhatsappAiService(
@@ -446,6 +449,7 @@ describe('WhatsApp Agentic Skills, 2FA (Cédula + OTP) & Multi-Tenant Suite', ()
         firstName: 'Carlos',
         lastName: 'Mena',
         vacationDays: 15,
+        whatsappConsent: true,
         tenant: { id: 'tenant-1', name: 'Empresa Demo' },
       };
 

@@ -13,6 +13,7 @@ import { auditRepository } from '../../audit/index.js';
 import prisma from '../../../database/db.js';
 import axios from 'axios';
 import { encryptCoordinate, decryptCoordinate } from '../../../core/security/encryption.js';
+import { isIpAllowed } from '../../../core/utils/ipUtils.js';
 
 const resolveEmployeeRecord = async (inputIdentifier, uuidRegex, cuidRegex) => {
   if (employeeRepository?.findEmployeeForAttendance) {
@@ -167,11 +168,10 @@ export const attendanceService = {
     }
     employeeId = employee.id;
 
-    // Fetch company system settings for fallback via system repository
-    const systemSettings =
-      (employee.tenantId
-        ? await systemRepository.findByTenantId(employee.tenantId)
-        : await systemRepository.findFirst()) || (await prisma?.systemSetting?.findFirst?.());
+    // Fetch company system settings strictly isolated by employee.tenantId
+    const systemSettings = employee.tenantId
+      ? await systemRepository.findByTenantId(employee.tenantId)
+      : await systemRepository.findGlobalDefault();
 
     // --- CONSENT & GEOFENCING VALIDATION ---
     const useGlobalGeofence = systemSettings?.globalLatitude && systemSettings?.globalLongitude;
@@ -225,13 +225,11 @@ export const attendanceService = {
       }
     }
 
-    if (systemSettings?.allowedIPs && ip) {
-      const allowedList = systemSettings.allowedIPs
-        .split(',')
-        .filter((i) => i.trim() !== '')
-        .map((i) => i.trim());
-      if (allowedList.length > 0 && !allowedList.includes(ip)) {
-        throw new Error(`Conexión no permitida desde esta red (${ip}). Contacte al administrador.`);
+    if (systemSettings?.ipRestrictionEnabled && systemSettings?.allowedIPs) {
+      if (!ip || !isIpAllowed(ip, systemSettings.allowedIPs)) {
+        throw new Error(
+          `Conexión no permitida desde esta red (${ip || 'IP desconocida'}). Contacte al administrador.`
+        );
       }
     }
 

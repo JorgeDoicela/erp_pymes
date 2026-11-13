@@ -22,11 +22,20 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.webp'],
+      includeAssets: [
+        'favicon.svg',
+        'favicon.webp',
+        'apple-touch-icon.png',
+        'pwa-64x64.png',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+        'pwa-maskable-512x512.png',
+      ],
       manifest: {
-        name: 'Norma ERP - Gestión Empresarial',
+        name: 'Norma ERP — Gestión y Talento Humano',
         short_name: 'Norma ERP',
         description: 'Plataforma ERP de Gestión del Talento Humano y Nómina Legal',
+        lang: 'es',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
@@ -35,10 +44,17 @@ export default defineConfig({
         start_url: '/',
         categories: ['business', 'productivity', 'utilities'],
         icons: [
-          { src: '/favicon.webp', sizes: '64x64', type: 'image/webp' },
-          { src: '/favicon.webp', sizes: '192x192', type: 'image/webp' },
+          { src: '/pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          {
+            src: '/pwa-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' },
           { src: '/favicon.webp', sizes: '512x512', type: 'image/webp' },
-          { src: '/favicon.webp', sizes: '512x512', type: 'image/webp', purpose: 'maskable' },
         ],
       },
       devOptions: {

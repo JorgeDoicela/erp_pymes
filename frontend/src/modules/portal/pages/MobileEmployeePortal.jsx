@@ -13,6 +13,7 @@ import { getMyPayrolls, generatePayslipPDF } from '@modules/payroll';
 import { getMyAbsences, createAbsenceRequest, clockIn, clockOut } from '@modules/attendance';
 import { generateCertificatePDF } from '@modules/employees';
 import Modal from '@core/ui/Modal';
+import { PWAInstallButton } from '@core/pwa';
 import {
   HiHome as HomeIcon,
   HiClock as ClockIcon,
@@ -196,6 +197,9 @@ const MobileEmployeePortal = ({ user }) => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
+            {/* Banner de Instalación PWA */}
+            <PWAInstallButton variant="card" />
+
             {/* Quick 1-Click Action Grid */}
             <div className="grid grid-cols-2 gap-3">
               <button

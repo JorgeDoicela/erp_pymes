@@ -81,6 +81,39 @@ export async function seedEntrepreneurship(prisma) {
       targetMarket: {
         create: { tam: 500000000, sam: 120000000, som: 15000000 },
       },
+      members: {
+        create: [
+          { employeeId: entrepreneurUser?.id || adminUser.id, role: 'CEO & Co-Founder' },
+          { employeeId: dbEmployees[4]?.id || adminUser.id, role: 'CTO & Machine Learning Lead' },
+          {
+            externalName: 'Ing. Sofía Carrión',
+            externalEmail: 'sofia.carrion@ecologistics.ec',
+            role: 'VP de Operaciones Logísticas',
+          },
+        ],
+      },
+      documents: {
+        create: [
+          {
+            title: 'Pitch Deck Inversionistas v2.1',
+            fileUrl: 'https://storage.norma.ec/startups/ecologistics/pitch_deck_v2.pdf',
+            fileType: 'PDF',
+            version: '2.1',
+          },
+          {
+            title: 'Modelo Financiero y Proyección Unit Economics',
+            fileUrl: 'https://storage.norma.ec/startups/ecologistics/financial_model.xlsx',
+            fileType: 'EXCEL',
+            version: '1.4',
+          },
+          {
+            title: 'Certificación de Mitigación de Huella de Carbono',
+            fileUrl: 'https://storage.norma.ec/startups/ecologistics/carbon_audit.pdf',
+            fileType: 'PDF',
+            version: '1.0',
+          },
+        ],
+      },
       updates: {
         create: [
           {
@@ -131,6 +164,61 @@ export async function seedEntrepreneurship(prisma) {
           },
         ],
       },
+      equities: {
+        create: [
+          { holderName: 'HealthVentures Latam', percentage: 15, role: 'INVESTOR' },
+          { holderName: 'Dr. Roberto Gomez', percentage: 5, role: 'ADVISOR' },
+        ],
+      },
+      fundingRounds: {
+        create: [
+          {
+            roundName: 'Pre-Seed Médica',
+            amountRaised: 45000,
+            date: new Date('2025-11-15'),
+            valuation: 280000,
+          },
+        ],
+      },
+      targetMarket: {
+        create: { tam: 350000000, sam: 85000000, som: 12000000 },
+      },
+      members: {
+        create: [
+          { employeeId: dbEmployees[1]?.id || adminUser.id, role: 'CEO & Biomedical Founder' },
+          { employeeId: dbEmployees[6]?.id || adminUser.id, role: 'Lead Firmware & IoT Engineer' },
+          {
+            externalName: 'Dra. Carmen Viteri',
+            externalEmail: 'carmen.viteri@healthsync.ec',
+            role: 'Chief Medical Officer',
+          },
+        ],
+      },
+      documents: {
+        create: [
+          {
+            title: 'Dossier Clínico y Protocolo de Ensayos',
+            fileUrl: 'https://storage.norma.ec/startups/healthsync/clinical_protocol.pdf',
+            fileType: 'PDF',
+            version: '1.2',
+          },
+          {
+            title: 'Pitch Deck Serie Seed',
+            fileUrl: 'https://storage.norma.ec/startups/healthsync/pitch_deck_seed.pdf',
+            fileType: 'PDF',
+            version: '2.0',
+          },
+        ],
+      },
+      updates: {
+        create: [
+          {
+            title: 'Inicio de Validación en Clínica Santa Inés',
+            content: 'Se inició el enrolamiento de 25 pacientes para monitoreo ambulatorio.',
+            type: 'PILOT',
+          },
+        ],
+      },
       interviews: {
         create: [
           {
@@ -174,6 +262,44 @@ export async function seedEntrepreneurship(prisma) {
           },
         ],
       },
+      targetMarket: {
+        create: { tam: 180000000, sam: 40000000, som: 5000000 },
+      },
+      members: {
+        create: [
+          { employeeId: dbEmployees[2]?.id || adminUser.id, role: 'Product Lead & Founder' },
+          {
+            externalName: 'Lic. Andrés Salgado',
+            externalEmail: 'andres@finedkids.ec',
+            role: 'Pedagogo y Diseñador Gamificación',
+          },
+        ],
+      },
+      documents: {
+        create: [
+          {
+            title: 'One-Pager Conceptual y Currículo Pedagógico',
+            fileUrl: 'https://storage.norma.ec/startups/fined/one_pager.pdf',
+            fileType: 'PDF',
+            version: '1.0',
+          },
+        ],
+      },
+      equities: {
+        create: [
+          { holderName: 'Fundadores Principales', percentage: 90, role: 'FOUNDER' },
+          { holderName: 'Asesor Pedagógico', percentage: 10, role: 'ADVISOR' },
+        ],
+      },
+      mentors: {
+        create: [
+          {
+            mentorName: 'Mgs. Elena Narváez',
+            specialty: 'EdTech & Gamificación Infantil',
+            employeeId: dbEmployees[7]?.id || adminUser.id,
+          },
+        ],
+      },
     },
     {
       title: 'AgroScanner Pro',
@@ -190,6 +316,45 @@ export async function seedEntrepreneurship(prisma) {
       growthUsers: 450,
       growthCAC: 120,
       growthLTV: 4500,
+      targetMarket: {
+        create: { tam: 900000000, sam: 250000000, som: 45000000 },
+      },
+      members: {
+        create: [
+          {
+            employeeId: dbEmployees[3]?.id || adminUser.id,
+            role: 'CEO & Drone Systems Specialist',
+          },
+          { employeeId: dbEmployees[8]?.id || adminUser.id, role: 'VP Computer Vision & AI' },
+          {
+            externalName: 'Ing. Marcos Alvear',
+            externalEmail: 'marcos.alvear@agroscanner.ec',
+            role: 'Head Agronomist',
+          },
+        ],
+      },
+      documents: {
+        create: [
+          {
+            title: 'Pitch Deck Serie A Agritech 2026',
+            fileUrl: 'https://storage.norma.ec/startups/agroscanner/pitch_deck_a.pdf',
+            fileType: 'PDF',
+            version: '3.0',
+          },
+          {
+            title: 'Estudio de Impacto Hídrico y Rendimiento Agrícola',
+            fileUrl: 'https://storage.norma.ec/startups/agroscanner/impact_report.pdf',
+            fileType: 'PDF',
+            version: '2.0',
+          },
+          {
+            title: 'Acuerdos Comerciales con Gremios Agrícolas',
+            fileUrl: 'https://storage.norma.ec/startups/agroscanner/agreements.pdf',
+            fileType: 'PDF',
+            version: '1.1',
+          },
+        ],
+      },
       milestones: {
         create: [
           {

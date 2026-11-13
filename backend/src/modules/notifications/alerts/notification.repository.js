@@ -126,11 +126,12 @@ export class NotificationRepository {
   }
 
   async findActiveAdmins(tenantId = null) {
+    if (!tenantId) return [];
     return prisma.employee.findMany({
       where: {
         role: 'admin',
         isActive: true,
-        ...(tenantId ? { tenantId } : {}),
+        tenantId,
       },
     });
   }

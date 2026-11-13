@@ -96,6 +96,7 @@ describe('WhatsApp Multi-Tenant Agentic Skills & Queries Suite', () => {
     role: 'employee',
     phone: '0991122334',
     vacationDays: 15,
+    whatsappConsent: true,
     tenantId: tenantAlpha.id,
     tenant: tenantAlpha,
   };
@@ -348,9 +349,9 @@ describe('WhatsApp Multi-Tenant Agentic Skills & Queries Suite', () => {
     expect(draftReply).toContain('$200.00');
     expect(lastSentOtp).toMatch(/^\d{6}$/);
 
-    // Confirmar con últimos 4 dígitos de cédula (6789) + OTP enviado por correo
+    // Confirmar con cédula completa (1723456789) + OTP enviado por correo
     const confirmReply = await aiService.generateResponse({
-      text: `CONFIRMAR 6789 ${lastSentOtp}`,
+      text: `CONFIRMAR 1723456789 ${lastSentOtp}`,
       employee: employeeAlpha,
       phoneKey: '593991122334',
       messageId: 'wamid.adv.confirm',
@@ -379,7 +380,7 @@ describe('WhatsApp Multi-Tenant Agentic Skills & Queries Suite', () => {
     expect(lastSentOtp).toMatch(/^\d{6}$/);
 
     const confirmReply = await aiService.generateResponse({
-      text: `CONFIRMAR 6789 ${lastSentOtp}`,
+      text: `CONFIRMAR 1723456789 ${lastSentOtp}`,
       employee: employeeAlpha,
       phoneKey: '593991122334',
       messageId: 'wamid.perm.confirm',
@@ -429,9 +430,9 @@ describe('WhatsApp Multi-Tenant Agentic Skills & Queries Suite', () => {
     expect(draftApproveReply).toContain('Lucia Paredes');
     expect(lastSentOtp).toMatch(/^\d{6}$/);
 
-    // 4. RRHH confirma con sus últimos 4 dígitos de cédula (3344) + OTP
+    // 4. RRHH confirma con su cédula completa (0911223344) + OTP
     const finalApproveReply = await aiService.generateResponse({
-      text: `CONFIRMAR 3344 ${lastSentOtp}`,
+      text: `CONFIRMAR 0911223344 ${lastSentOtp}`,
       employee: hrAlpha,
       phoneKey: '593987654321',
       messageId: 'wamid.rev.confirm',

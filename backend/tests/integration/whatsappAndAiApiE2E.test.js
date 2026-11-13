@@ -90,6 +90,7 @@ vi.mock('../../src/database/db.js', () => {
     },
     systemSetting: {
       findFirst: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({ isMaintenanceMode: false }),
       upsert: vi.fn().mockResolvedValue({ isMaintenanceMode: false }),
     },
     $transaction: vi.fn().mockImplementation(async (cb) => {
@@ -143,6 +144,7 @@ describe('Suite Integral E2E: WhatsApp API, Motor RAG y Modelos ONNX Entrenados'
     department: 'Logística',
     vacationDays: 14,
     role: 'employee',
+    whatsappConsent: true,
     tenant: { name: 'Distribuidora Andina S.A.' },
   };
 

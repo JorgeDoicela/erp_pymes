@@ -8,8 +8,15 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '@core/api/httpClient'; // Direct axios call or service update needed
-import { FiBriefcase, FiMapPin, FiClock, FiUpload, FiCheckCircle } from 'react-icons/fi';
+import { getPublicVacancyById, applyToVacancy } from '../services/recruitment.service';
+import {
+  FiArrowLeft,
+  FiBriefcase,
+  FiMapPin,
+  FiClock,
+  FiUpload,
+  FiCheckCircle,
+} from 'react-icons/fi';
 
 const JobApplication = () => {
   const { id } = useParams();
@@ -35,8 +42,8 @@ const JobApplication = () => {
         if (localStorage.getItem(`applied_${id}`)) {
           setStatus('already_applied');
         }
-        const res = await api.get(`/recruitment/public/${id}`);
-        setVacancy(res.data);
+        const data = await getPublicVacancyById(id);
+        setVacancy(data);
       } catch (e) {
         console.error(e);
       }
@@ -53,9 +60,7 @@ const JobApplication = () => {
     if (resume) data.append('resume', resume);
 
     try {
-      await api.post(`/recruitment/public/${id}/apply`, data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await applyToVacancy(id, data);
       localStorage.setItem(`applied_${id}`, 'true');
       setStatus('success');
     } catch (error) {
@@ -95,7 +100,13 @@ const JobApplication = () => {
             </p>
           </div>
           <button
-            onClick={() => navigate('/careers')}
+            onClick={() =>
+              navigate(
+                vacancy?.tenant?.slug
+                  ? `/careers?company=${encodeURIComponent(vacancy.tenant.slug)}`
+                  : '/careers'
+              )
+            }
             className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-xs transition-colors cursor-pointer shadow-xs"
           >
             Explorar Otras Ofertas
@@ -108,11 +119,27 @@ const JobApplication = () => {
     <div className="min-h-screen bg-gray-50 py-6 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded border border-gray-200 overflow-hidden text-xs">
         <div className="bg-white p-5 border-b border-gray-200">
-          {vacancy.tenant?.name && (
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-blue-700 text-[10px] font-mono uppercase tracking-wider mb-2">
-              <FiCheckCircle size={12} /> {vacancy.tenant.name}
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                vacancy.tenant?.slug
+                  ? `/careers?company=${encodeURIComponent(vacancy.tenant.slug)}`
+                  : '/careers'
+              )
+            }
+            className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 mb-3 cursor-pointer"
+          >
+            <FiArrowLeft size={12} />
+            <span>Volver a vacantes</span>
+          </button>
+          <div>
+            {vacancy.tenant?.name && (
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-blue-700 text-[10px] font-mono uppercase tracking-wider mb-2">
+                <FiCheckCircle size={12} /> {vacancy.tenant.name}
+              </div>
+            )}
+          </div>
           <h1 className="text-lg font-semibold text-gray-900 mb-2">{vacancy.title}</h1>
           <div className="flex flex-wrap gap-4 text-gray-600 text-xs">
             <span className="flex items-center">

@@ -8,9 +8,26 @@
 
 import api from '@/core/api/httpClient';
 
-// Public Vacancies
+// Public Vacancies & Companies
+export const getPublicCompanies = async () => {
+  const response = await api.get('/recruitment/public/companies');
+  return response.data;
+};
+
 export const getPublicVacancies = async (params = {}) => {
   const response = await api.get('/recruitment/public', { params });
+  return response.data;
+};
+
+export const getPublicVacancyById = async (id) => {
+  const response = await api.get(`/recruitment/public/${id}`);
+  return response.data;
+};
+
+export const applyToVacancy = async (id, formData) => {
+  const response = await api.post(`/recruitment/public/${id}/apply`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return response.data;
 };
 
@@ -27,6 +44,11 @@ export const createVacancy = async (data) => {
 
 export const getVacancies = async (params = {}) => {
   const response = await api.get('/recruitment', { params });
+  return response.data;
+};
+
+export const getVacancyById = async (id) => {
+  const response = await api.get(`/recruitment/${id}`);
   return response.data;
 };
 
@@ -66,8 +88,21 @@ export const addApplicationNote = async (id, content) => {
   return response.data;
 };
 
+export const getInterviewers = async () => {
+  const response = await api.get('/recruitment/interviewers');
+  return response.data;
+};
+
 export const scheduleInterview = async (id, data) => {
   const response = await api.post(`/recruitment/applications/${id}/interviews`, data);
+  return response.data;
+};
+
+export const updateInterviewStatus = async (interviewId, status, sendEmail = true) => {
+  const response = await api.patch(`/recruitment/interviews/${interviewId}/status`, {
+    status,
+    sendEmail,
+  });
   return response.data;
 };
 
@@ -82,10 +117,14 @@ export const hireCandidate = async (id, data) => {
 };
 
 const recruitmentService = {
+  getPublicCompanies,
   getPublicVacancies,
+  getPublicVacancyById,
+  applyToVacancy,
   getRecruitmentStats,
   createVacancy,
   getVacancies,
+  getVacancyById,
   updateVacancyStatus,
   deleteVacancy,
   getApplicationsByVacancy,
@@ -93,7 +132,9 @@ const recruitmentService = {
   updateApplicationStatus,
   deleteApplication,
   addApplicationNote,
+  getInterviewers,
   scheduleInterview,
+  updateInterviewStatus,
   evaluateCandidate,
   hireCandidate,
 };

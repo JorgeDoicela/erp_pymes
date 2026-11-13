@@ -101,6 +101,18 @@ export class SustainabilityFineTuningService {
       return { messages };
     }
 
+    let formattedText = chatMlText;
+    if (targetModel === 'llama3') {
+      formattedText =
+        `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n${systemPrompt}<|eot_id|>` +
+        `<|start_header_id|>user<|end_header_id|>\n\n${fullUserContent}<|eot_id|>` +
+        `<|start_header_id|>assistant<|end_header_id|>\n\n${assistantResponse}<|eot_id|>`;
+    } else if (targetModel === 'mistral') {
+      formattedText = `<s>[INST] ${systemPrompt}\n\n${fullUserContent} [/INST] ${assistantResponse}</s>`;
+    } else if (targetModel === 'deepseek') {
+      formattedText = `<｜begin of sentence｜><｜User｜>${systemPrompt}\n\n${fullUserContent}<｜Assistant｜>${assistantResponse}<｜end of sentence｜>`;
+    }
+
     return {
       instruction: userQuery,
       input: inputContext,
@@ -108,7 +120,7 @@ export class SustainabilityFineTuningService {
       system: systemPrompt,
       domain,
       messages,
-      text: chatMlText,
+      text: formattedText,
     };
   }
 

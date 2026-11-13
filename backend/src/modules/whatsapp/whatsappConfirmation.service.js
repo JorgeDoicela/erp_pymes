@@ -1,6 +1,6 @@
 /**
  * @file whatsappConfirmation.service.js
- * @description Servicio de seguridad transaccional (Doble Factor: últimos 4 dígitos de cédula + OTP SMTP)
+ * @description Servicio de seguridad transaccional (Doble Factor: cédula completa + OTP SMTP)
  * para habilidades agénticas multi-tenant en WhatsApp Cloud API.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
@@ -83,7 +83,7 @@ export class WhatsappConfirmationService {
   }
 
   /**
-   * Inicia el flujo de doble validación (Cédula últimos 4 dígitos + CONFIRMAR + OTP por correo).
+   * Inicia el flujo de doble validación (Cédula completa + CONFIRMAR + OTP por correo).
    */
   async initiateDualConfirmation({
     employee,
@@ -97,10 +97,10 @@ export class WhatsappConfirmationService {
     }
 
     const docDigits = String(employee.identityCard || '').replace(/[^\d]/g, '');
-    if (docDigits.length < 4) {
+    if (docDigits.length < 10) {
       return (
         `No es posible iniciar la solicitud porque su ficha en *${employee.tenant?.name || 'Norma ERP'}* ` +
-        `no tiene registrada una cedula o identificacion valida (minimo 4 digitos).\n\n` +
+        `no tiene registrada una cedula o identificacion valida (minimo 10 digitos).\n\n` +
         `Solicite a Talento Humano actualizar su numero de identificacion.`
       );
     }
@@ -173,8 +173,8 @@ export class WhatsappConfirmationService {
       `*Validacion de Seguridad Requerida (vigencia 10 minutos):*\n` +
       `Se envio un codigo OTP de 6 digitos a su correo *${maskedEmail}*.\n\n` +
       `Para registrar la operacion definitivamente, responda con:\n` +
-      `- *CONFIRMAR <4 ultimos digitos de su cedula> <codigo OTP>*\n` +
-      `Ejemplo: _CONFIRMAR 1234 849201_\n\n` +
+      `- *CONFIRMAR <numero de cedula> <codigo OTP>*\n` +
+      `Ejemplo: _CONFIRMAR 1718293045 849201_\n\n` +
       `Si desea anular esta operacion, responda *CANCELAR*.`
     );
   }
@@ -217,13 +217,15 @@ export class WhatsappConfirmationService {
       return null;
     }
 
-    const confirmMatch = clean.match(/^(?:confirmar|confirmo)[\s:,-]+(\d{4})[\s:,-]+(\d{6})$/i);
+    const confirmMatch = clean.match(
+      /^(?:confirmar|confirmo)[\s:,-]+([\d-]{10,13})[\s:,-]+(\d{6})$/i
+    );
     if (!confirmMatch) {
       if (/^(?:confirmar|confirmo)\b/i.test(clean)) {
         return (
           `Formato de confirmacion incompleto.\n\n` +
-          `Debe enviar los *4 ultimos digitos de su cedula* y el *codigo OTP de 6 digitos* enviado a su correo:\n` +
-          `Ejemplo: _CONFIRMAR 1234 849201_\n\n` +
+          `Debe enviar su *numero de cedula completo* y el *codigo OTP de 6 digitos* enviado a su correo:\n` +
+          `Ejemplo: _CONFIRMAR 1718293045 849201_\n\n` +
           `O responda *CANCELAR* para anular.`
         );
       }
@@ -231,20 +233,21 @@ export class WhatsappConfirmationService {
       return (
         `Tiene una confirmacion pendiente en *${employee.tenant?.name || 'Norma ERP'}*.\n\n` +
         `Para completarla responda:\n` +
-        `*CONFIRMAR <4 ultimos digitos cedula> <OTP 6 digitos>*\n\n` +
+        `*CONFIRMAR <numero de cedula> <OTP 6 digitos>*\n\n` +
         `O responda *CANCELAR* para descartar la solicitud y realizar otra consulta.`
       );
     }
 
-    const [, providedLast4, providedOtp] = confirmMatch;
-    const isLast4Valid = this.security.verifyIdentityLast4(employee.identityCard, providedLast4);
+    const [, rawCedula, providedOtp] = confirmMatch;
+    const providedCedula = rawCedula.replace(/[^\d]/g, '');
+    const isCedulaValid = this.security.verifyIdentityCard(employee.identityCard, providedCedula);
     const isOtpValid = this.security.verifyOtpHash(
       activeSession.id,
       providedOtp,
       activeSession.otpHash
     );
 
-    if (!isLast4Valid || !isOtpValid) {
+    if (!isCedulaValid || !isOtpValid) {
       const attemptState = await this.sessionRepo.registerFailedAttempt({
         id: activeSession.id,
         tenantId: employee.tenantId,
@@ -271,7 +274,7 @@ export class WhatsappConfirmationService {
 
       const remaining = Math.max(1, attemptState.maxAttempts - attemptState.attempts);
       return (
-        `Los ultimos 4 digitos de cedula o el codigo OTP no coinciden.\n` +
+        `El numero de cedula o el codigo OTP no coinciden.\n` +
         `Intentos restantes: *${remaining}*.\n\n` +
         `Verifique el codigo enviado a *${this.security.maskEmail(activeSession.otpSentToEmail)}* e intente nuevamente, o responda *CANCELAR*.`
       );
@@ -320,7 +323,7 @@ export class WhatsappConfirmationService {
         performedBy: employee.email,
         details: {
           channel: 'WHATSAPP_CLOUD_API',
-          verificationMethod: 'DUAL_FACTOR_CEDULA_LAST4_AND_EMAIL_OTP',
+          verificationMethod: 'DUAL_FACTOR_CEDULA_AND_EMAIL_OTP',
           sessionId: activeSession.id,
           sourceMessageId: activeSession.sourceMessageId,
           confirmMessageId: messageId || null,

@@ -103,6 +103,7 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
     role: 'employee',
     phone: '0987654321',
     vacationDays: 12,
+    whatsappConsent: true,
     tenantId: tenant1.id,
     tenant: tenant1,
   };
@@ -237,7 +238,7 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
 
     // 2. Intento 1 fallido (OTP erróneo)
     const reply1 = await aiService.generateResponse({
-      text: 'CONFIRMAR 5678 000000',
+      text: 'CONFIRMAR 1712345678 000000',
       employee,
       phoneKey: '593987654321',
     });
@@ -245,7 +246,7 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
 
     // 3. Intento 2 fallido (cédula errónea)
     const reply2 = await aiService.generateResponse({
-      text: `CONFIRMAR 9999 ${lastOtpSent}`,
+      text: `CONFIRMAR 1712349999 ${lastOtpSent}`,
       employee,
       phoneKey: '593987654321',
     });
@@ -253,7 +254,7 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
 
     // 4. Intento 3 fallido -> Bloqueo estricto
     const reply3 = await aiService.generateResponse({
-      text: 'CONFIRMAR 5678 111111',
+      text: 'CONFIRMAR 1712345678 111111',
       employee,
       phoneKey: '593987654321',
     });
@@ -264,7 +265,7 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
 
     // 5. Intento posterior con código correcto ya no se procesa
     const replyAfterLock = await aiService.generateResponse({
-      text: `CONFIRMAR 5678 ${lastOtpSent}`,
+      text: `CONFIRMAR 1712345678 ${lastOtpSent}`,
       employee,
       phoneKey: '593987654321',
     });
@@ -284,7 +285,7 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
     openSession.expiresAt = new Date(Date.now() - 15 * 60 * 1000);
 
     const replyExpired = await aiService.generateResponse({
-      text: `CONFIRMAR 5678 ${lastOtpSent}`,
+      text: `CONFIRMAR 1712345678 ${lastOtpSent}`,
       employee,
       phoneKey: '593987654321',
     });
@@ -320,14 +321,14 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
     });
 
     const incompleteReply = await aiService.generateResponse({
-      text: 'CONFIRMAR 5678', // falta el OTP
+      text: 'CONFIRMAR 1712345678', // falta el OTP
       employee,
       phoneKey: '593987654321',
     });
 
     expect(incompleteReply).toContain('Formato de confirmacion incompleto');
-    expect(incompleteReply).toContain('4 ultimos digitos de su cedula');
-    expect(incompleteReply).toContain('CONFIRMAR 1234 849201');
+    expect(incompleteReply).toContain('numero de cedula completo');
+    expect(incompleteReply).toContain('CONFIRMAR 1718293045 849201');
   });
 
   it('5. Parsing monetario flexible: acepta montos con coma decimal ($250,50) y cuotas límite', async () => {

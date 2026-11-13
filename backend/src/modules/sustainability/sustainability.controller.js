@@ -69,6 +69,7 @@ export async function queryAdvisor(req, res) {
       query,
       conversationHistory,
       tenantId,
+      userRole: req.user?.role,
       odsTargetFilter,
       categoryFilter,
       moduleContext,

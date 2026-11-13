@@ -63,6 +63,8 @@ export class WhatsappRepository {
           hireDate: true,
           tenantId: true,
           isActive: true,
+          whatsappConsent: true,
+          whatsappConsentDate: true,
           tenant: { select: { id: true, name: true, ruc: true } },
         },
         orderBy: [{ tenantId: 'asc' }, { createdAt: 'asc' }],
@@ -336,6 +338,36 @@ export class WhatsappRepository {
       );
       return { pendingAbsences: [], pendingAdvances: [] };
     }
+  }
+
+  /**
+   * Actualiza el estado de consentimiento LOPDP para el canal WhatsApp de un colaborador.
+   * @param {Object} params
+   * @param {string} params.employeeId
+   * @param {string} [params.tenantId]
+   * @param {boolean} params.consent
+   * @returns {Promise<Object>}
+   */
+  async updateEmployeeWhatsappConsent({ employeeId, tenantId, consent }) {
+    if (!employeeId) return null;
+    const now = new Date();
+    return this.prisma.employee.update({
+      where: tenantId ? { id: employeeId, tenantId } : { id: employeeId },
+      data: {
+        whatsappConsent: Boolean(consent),
+        whatsappConsentDate: consent ? now : null,
+      },
+      select: {
+        id: true,
+        tenantId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        whatsappConsent: true,
+        whatsappConsentDate: true,
+      },
+    });
   }
 }
 

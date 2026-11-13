@@ -174,7 +174,12 @@ describe('Suite de Calidad Extrema: Anti-Alucinaciones, Inferencia Neuronal y Se
       expect(security.checkRateLimit(phone)).toBe(false);
     });
 
-    it('verifyIdentityLast4 debe operar en tiempo constante y rechazar longitudes inválidas', () => {
+    it('verifyIdentityCard y verifyIdentityLast4 deben operar en tiempo constante y rechazar longitudes inválidas', () => {
+      expect(security.verifyIdentityCard('1723456789', '1723456789')).toBe(true);
+      expect(security.verifyIdentityCard('1723456789', '1723459999')).toBe(false);
+      expect(security.verifyIdentityCard('1723456789', '6789')).toBe(false);
+      expect(security.verifyIdentityCard('1723456789', '17234567890123')).toBe(false);
+      expect(security.verifyIdentityCard(null, '1723456789')).toBe(false);
       expect(security.verifyIdentityLast4('1723456789', '6789')).toBe(true);
       expect(security.verifyIdentityLast4('1723456789', '9999')).toBe(false);
       expect(security.verifyIdentityLast4('1723456789', '678')).toBe(false);
@@ -293,9 +298,9 @@ describe('Suite de Calidad Extrema: Anti-Alucinaciones, Inferencia Neuronal y Se
         expiresAt: new Date(Date.now() + 600000),
       };
 
-      // Cédula real termina en 4321; usuario envía 9999 con OTP 123456
+      // Cédula real es 0987654321; usuario envía 0987659999 con OTP 123456
       const reply = await confirmationService.handlePendingConfirmation({
-        text: 'CONFIRMAR 9999 123456',
+        text: 'CONFIRMAR 0987659999 123456',
         employee: mockEmployee,
         phoneKey: '593991234567',
         activeSession,

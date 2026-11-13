@@ -10,13 +10,224 @@ import { getRandomElement } from '../common/utils.js';
 import { decryptSalary } from '../../../src/core/security/encryption.js';
 
 export async function seedCoreRecords(prisma, employees) {
-  console.log('[CORE] Generando Registros Core en Lote (Contratos, Skills, Horarios)...');
+  console.log(
+    '[CORE] Generando Registros Core en Lote (Turnos Multi-Tenant, Contratos, Skills, Horarios)...'
+  );
 
-  let shiftMorning = await prisma.shift.findFirst({ where: { name: 'Matutino' } });
-  if (!shiftMorning) {
-    shiftMorning = await prisma.shift.create({
-      data: { name: 'Matutino', startTime: '08:00', endTime: '17:00' },
+  // 1. Obtener empresas activas para generar turnos multi-tenant personalizados
+  const tenants = await prisma.tenant.findMany({ where: { isActive: true } });
+  const tenantShifts = {};
+
+  // Turno base global de respaldo
+  let defaultShift = await prisma.shift.findFirst({ where: { name: 'Matutino Ordinario' } });
+  if (!defaultShift) {
+    defaultShift = await prisma.shift.create({
+      data: {
+        name: 'Matutino Ordinario',
+        startTime: '08:00',
+        endTime: '17:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
     });
+  }
+
+  // Definición de turnos industriales y sectoriales por empresa
+  const SHIFT_TEMPLATES_BY_SECTOR = {
+    'empresa-demo': [
+      {
+        name: 'Jornada Ordinaria Administrativa',
+        startTime: '08:30',
+        endTime: '17:30',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+      {
+        name: 'Turno Flexible Tech & DevOps',
+        startTime: '09:30',
+        endTime: '18:30',
+        breakMinutes: 60,
+        toleranceMinutes: 30,
+      },
+      {
+        name: 'Guardia Soporte Cloud 24/7',
+        startTime: '14:00',
+        endTime: '22:00',
+        breakMinutes: 45,
+        toleranceMinutes: 10,
+      },
+    ],
+    techsolutions: [
+      {
+        name: 'Horario Central Ingeniería & Cloud',
+        startTime: '08:00',
+        endTime: '17:00',
+        breakMinutes: 60,
+        toleranceMinutes: 20,
+      },
+      {
+        name: 'Turno Infraestructura & SRE',
+        startTime: '10:00',
+        endTime: '19:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+    ],
+    'innovate-corp': [
+      {
+        name: 'Jornada I+D y Modelado IA',
+        startTime: '09:00',
+        endTime: '18:00',
+        breakMinutes: 60,
+        toleranceMinutes: 25,
+      },
+      {
+        name: 'Turno Operaciones Data Pipeline',
+        startTime: '08:00',
+        endTime: '17:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+    ],
+    'logistica-andina': [
+      {
+        name: 'Turno Madrugada Despacho & Rutas',
+        startTime: '05:00',
+        endTime: '13:00',
+        breakMinutes: 45,
+        toleranceMinutes: 10,
+      },
+      {
+        name: 'Turno Central Operaciones & Flota',
+        startTime: '08:00',
+        endTime: '17:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+      {
+        name: 'Turno Tarde Logística & Recepción',
+        startTime: '13:00',
+        endTime: '21:00',
+        breakMinutes: 45,
+        toleranceMinutes: 10,
+      },
+    ],
+    'clinica-santa-ines': [
+      {
+        name: 'Turno Hospitalario Diurno',
+        startTime: '07:00',
+        endTime: '15:00',
+        breakMinutes: 45,
+        toleranceMinutes: 10,
+      },
+      {
+        name: 'Turno Hospitalario Vespertino',
+        startTime: '14:00',
+        endTime: '22:00',
+        breakMinutes: 45,
+        toleranceMinutes: 10,
+      },
+      {
+        name: 'Guardia Médica 24/7 Rotativa',
+        startTime: '20:00',
+        endTime: '08:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+      {
+        name: 'Consulta Externa Administrativa',
+        startTime: '08:00',
+        endTime: '17:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+    ],
+    'retail-pacifico': [
+      {
+        name: 'Turno Apertura Comercial & Puntos de Venta',
+        startTime: '09:00',
+        endTime: '18:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+      {
+        name: 'Turno Cierre Comercial & Tiendas',
+        startTime: '12:00',
+        endTime: '21:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+      {
+        name: 'Horario Administrativo Compras & Finanzas',
+        startTime: '08:30',
+        endTime: '17:30',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+    ],
+    'manufacturas-pichincha': [
+      {
+        name: 'Turno Planta Mañana (Producción)',
+        startTime: '06:00',
+        endTime: '14:00',
+        breakMinutes: 45,
+        toleranceMinutes: 10,
+      },
+      {
+        name: 'Turno Planta Tarde (Ensamble & EPPs)',
+        startTime: '14:00',
+        endTime: '22:00',
+        breakMinutes: 45,
+        toleranceMinutes: 10,
+      },
+      {
+        name: 'Control de Calidad & Mantenimiento',
+        startTime: '08:00',
+        endTime: '17:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+    ],
+  };
+
+  for (const tenant of tenants) {
+    const templates = SHIFT_TEMPLATES_BY_SECTOR[tenant.slug] || [
+      {
+        name: 'Jornada Ordinaria Diurna',
+        startTime: '08:00',
+        endTime: '17:00',
+        breakMinutes: 60,
+        toleranceMinutes: 15,
+      },
+      {
+        name: 'Turno Vespertino / Rotativo',
+        startTime: '13:00',
+        endTime: '21:00',
+        breakMinutes: 45,
+        toleranceMinutes: 10,
+      },
+    ];
+
+    const createdShifts = [];
+    for (const tpl of templates) {
+      let existing = await prisma.shift.findFirst({
+        where: { tenantId: tenant.id, name: tpl.name },
+      });
+      if (!existing) {
+        existing = await prisma.shift.create({
+          data: {
+            tenantId: tenant.id,
+            name: tpl.name,
+            startTime: tpl.startTime,
+            endTime: tpl.endTime,
+            breakMinutes: tpl.breakMinutes,
+            toleranceMinutes: tpl.toleranceMinutes,
+          },
+        });
+      }
+      createdShifts.push(existing);
+    }
+    tenantShifts[tenant.id] = createdShifts;
   }
 
   const contractsBatch = [];
@@ -24,6 +235,9 @@ export async function seedCoreRecords(prisma, employees) {
   const skillsBatch = [];
   const historyBatch = [];
   const assetsBatch = [];
+
+  const tenantTemporaryContractCounts = {};
+  const tenantEmployeeIndex = {};
 
   const techAssetsPool = [
     {
@@ -74,6 +288,9 @@ export async function seedCoreRecords(prisma, employees) {
   for (let i = 0; i < employees.length; i++) {
     const emp = employees[i];
     const decSal = decryptSalary(emp.salary) || 1500;
+    const tId = emp.tenantId || 'global';
+    tenantEmployeeIndex[tId] = (tenantEmployeeIndex[tId] || 0) + 1;
+    const relIdx = tenantEmployeeIndex[tId];
 
     let contractEndDate = null;
     if (!emp.isActive) {
@@ -83,13 +300,15 @@ export async function seedCoreRecords(prisma, employees) {
       emp.contractType === 'Plazo Fijo' ||
       emp.contractType === 'Eventual'
     ) {
-      if (emp.email === 'kevin.arismendi@emplifi.com') {
-        contractEndDate = new Date(Date.now() + 12 * 24 * 60 * 60 * 1000); // 12 días restantes (urgente)
-      } else if (emp.email === 'esteban.suarez@emplifi.com') {
-        contractEndDate = new Date(Date.now() + 27 * 24 * 60 * 60 * 1000); // 27 días restantes (moderado)
+      tenantTemporaryContractCounts[tId] = (tenantTemporaryContractCounts[tId] || 0) + 1;
+      const tempIdx = tenantTemporaryContractCounts[tId];
+      if (tempIdx === 1) {
+        contractEndDate = new Date(Date.now() + 11 * 24 * 60 * 60 * 1000); // 11 días (CRITICAL <= 15d)
+      } else if (tempIdx === 2) {
+        contractEndDate = new Date(Date.now() + 24 * 24 * 60 * 60 * 1000); // 24 días (MODERATE 16-30d)
       } else {
-        const daysRemaining = 35 + ((emp.id.charCodeAt(0) * 7) % 20);
-        contractEndDate = new Date(Date.now() + daysRemaining * 24 * 60 * 60 * 1000);
+        const daysRemaining = 45 + ((emp.id.charCodeAt(0) * 7) % 15);
+        contractEndDate = new Date(Date.now() + daysRemaining * 24 * 60 * 60 * 1000); // NORMAL > 30d
       }
     }
 
@@ -127,23 +346,17 @@ export async function seedCoreRecords(prisma, employees) {
       if (!emp.isActive) {
         status = 'RETURNED';
         condition = 'GOOD';
-        returnDate = emp.exitDate || new Date('2026-07-01');
-        returnNotes = 'Devolución completa de activos por proceso de offboarding/finiquito.';
-      } else if (i === 3 && a === 1) {
+        returnDate = emp.exitDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        returnNotes = 'Devolución completa de activos por proceso de finiquito y liquidación.';
+      } else if (relIdx === 2 && a === 1) {
         status = 'RETURNED';
         condition = 'GOOD';
-        returnDate = new Date('2026-06-10');
-        returnNotes = 'Devolución por recambio tecnológico programado.';
-      } else if (i === 7 && a === 0) {
+        returnDate = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
+        returnNotes = 'Devolución por recambio tecnológico programado de dotación.';
+      } else if (relIdx === 3 && a === 0) {
         status = 'LOST_DAMAGED';
         condition = 'FAIR';
-        returnNotes =
-          'Fisura en pantalla por impacto accidental durante traslado. Derivado a soporte técnico.';
-      } else if (i === 12 && a === 1) {
-        status = 'LOST_DAMAGED';
-        condition = 'FAIR';
-        returnNotes =
-          'Deterioro de costura por uso continuo en planta. Pendiente reposición de EPP.';
+        returnNotes = 'Reporte de daño accidental en pantalla o estructura. En inspección técnica.';
       }
 
       assetsBatch.push({
@@ -162,9 +375,34 @@ export async function seedCoreRecords(prisma, employees) {
 
     if (!emp.isActive) continue;
 
+    const availableShifts = (emp.tenantId && tenantShifts[emp.tenantId]) || [defaultShift];
+    let selectedShift = availableShifts[0];
+
+    if (availableShifts.length > 1) {
+      const dept = emp.department || '';
+      const pos = emp.position || '';
+      if (
+        dept.includes('Tecnolog') ||
+        pos.includes('Desarrollador') ||
+        pos.includes('DevOps') ||
+        pos.includes('Cloud')
+      ) {
+        selectedShift = availableShifts[1] || availableShifts[0];
+      } else if (
+        dept.includes('Operacion') ||
+        dept.includes('Logística') ||
+        dept.includes('Producción') ||
+        dept.includes('Salud')
+      ) {
+        selectedShift = availableShifts[i % availableShifts.length];
+      } else if (dept.includes('Venta') || dept.includes('Comercial') || dept.includes('Tienda')) {
+        selectedShift = availableShifts[availableShifts.length > 2 ? 1 : 0];
+      }
+    }
+
     schedulesBatch.push({
       employeeId: emp.id,
-      shiftId: shiftMorning.id,
+      shiftId: selectedShift.id,
       startDate: emp.hireDate || new Date('2020-01-01'),
       daysOfWeek: JSON.stringify(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']),
     });

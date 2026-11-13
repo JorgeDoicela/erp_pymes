@@ -817,7 +817,7 @@ const EMPLOYEES_EMPRESA_2 = [
     phone: '0984442233',
     address: 'Av. Orellana E4-12, Quito',
     civilStatus: 'Soltera',
-    contractType: 'Indefinido',
+    contractType: 'Plazo Fijo',
     birthDate: new Date('1991-05-18'),
     hireDate: new Date('2021-04-15'),
     bankName: 'Produbanco',
@@ -894,7 +894,7 @@ const EMPLOYEES_EMPRESA_2 = [
     phone: '0951112233',
     address: 'Av. Granda Centeno, Quito',
     civilStatus: 'Soltero',
-    contractType: 'Indefinido',
+    contractType: 'Plazo Fijo',
     birthDate: new Date('1993-02-24'),
     hireDate: new Date('2021-08-01'),
     bankName: 'Banco Internacional',
@@ -1537,6 +1537,7 @@ export async function seedUsers(prisma) {
           position: 'Líder Técnico AI',
           salary: 2600,
           phone: '0987123450',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Paulina',
@@ -1547,6 +1548,7 @@ export async function seedUsers(prisma) {
           position: 'Data Scientist Senior',
           salary: 2400,
           phone: '0998234561',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Xavier',
@@ -1557,6 +1559,7 @@ export async function seedUsers(prisma) {
           position: 'Ingeniero MLOps',
           salary: 2100,
           phone: '0989345672',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Lorena',
@@ -1567,6 +1570,7 @@ export async function seedUsers(prisma) {
           position: 'Directora Comercial',
           salary: 2100,
           phone: '0970456783',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Esteban',
@@ -1577,6 +1581,7 @@ export async function seedUsers(prisma) {
           position: 'Account Executive AI',
           salary: 1650,
           phone: '0961567894',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Byron',
@@ -1587,6 +1592,20 @@ export async function seedUsers(prisma) {
           position: 'Contador General',
           salary: 1800,
           phone: '0997123458',
+          contractType: 'Indefinido',
+        },
+        {
+          firstName: 'Daniela',
+          lastName: 'Mosquera',
+          email: 'daniela.mosquera.ex@innovatecorp.ec',
+          identityCard: '1728192837',
+          department: 'Tecnología',
+          position: 'QA Engineer Ex',
+          salary: 1500,
+          phone: '0981928374',
+          isActive: false,
+          exitDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000),
+          contractType: 'Temporal',
         },
       ],
     },
@@ -1610,6 +1629,7 @@ export async function seedUsers(prisma) {
           position: 'Jefe de Flota y Rutas',
           salary: 1800,
           phone: '0981239901',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Teresa',
@@ -1620,6 +1640,7 @@ export async function seedUsers(prisma) {
           position: 'Supervisora de Despachos',
           salary: 1500,
           phone: '0992349902',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Gonzalo',
@@ -1630,6 +1651,7 @@ export async function seedUsers(prisma) {
           position: 'Coordinador de Almacenes',
           salary: 1400,
           phone: '0973459903',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Silvia',
@@ -1640,6 +1662,7 @@ export async function seedUsers(prisma) {
           position: 'Analista de Costos de Transporte',
           salary: 1600,
           phone: '0984569904',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Ramiro',
@@ -1650,6 +1673,20 @@ export async function seedUsers(prisma) {
           position: 'Generalista de Personal Logístico',
           salary: 1550,
           phone: '0965679905',
+          contractType: 'Indefinido',
+        },
+        {
+          firstName: 'Carlos',
+          lastName: 'Villacís',
+          email: 'carlos.villacis.ex@logisticaandina.ec',
+          identityCard: '1719283746',
+          department: 'Operaciones',
+          position: 'Chofer Repartidor Ex',
+          salary: 1100,
+          phone: '0991928375',
+          isActive: false,
+          exitDate: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000),
+          contractType: 'Temporal',
         },
       ],
     },
@@ -1673,6 +1710,7 @@ export async function seedUsers(prisma) {
           position: 'Médico Ocupacional & Auditor',
           salary: 2800,
           phone: '0981987654',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Lic. Gladys',
@@ -1683,6 +1721,7 @@ export async function seedUsers(prisma) {
           position: 'Jefa de Enfermería',
           salary: 1750,
           phone: '0992876543',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Dra. Mónica',
@@ -1693,6 +1732,7 @@ export async function seedUsers(prisma) {
           position: 'Química Farmacéutica',
           salary: 1900,
           phone: '0973765432',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Lorena',
@@ -1703,6 +1743,7 @@ export async function seedUsers(prisma) {
           position: 'Coordinadora de Admisiones y Caja',
           salary: 1250,
           phone: '0984654321',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Edison',
@@ -1713,6 +1754,20 @@ export async function seedUsers(prisma) {
           position: 'Contador Hospitalario',
           salary: 1950,
           phone: '0965543210',
+          contractType: 'Indefinido',
+        },
+        {
+          firstName: 'Patricia',
+          lastName: 'Almeida',
+          email: 'patricia.almeida.ex@clinicasantaines.ec',
+          identityCard: '1738291048',
+          department: 'Enfermería',
+          position: 'Auxiliar de Enfermería Ex',
+          salary: 1050,
+          phone: '0978291048',
+          isActive: false,
+          exitDate: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+          contractType: 'Temporal',
         },
       ],
     },
@@ -1736,6 +1791,7 @@ export async function seedUsers(prisma) {
           position: 'Jefe Nacional de Compras',
           salary: 2200,
           phone: '0981223344',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Sonia',
@@ -1746,6 +1802,7 @@ export async function seedUsers(prisma) {
           position: 'Supervisora de Locales y Puntos de Venta',
           salary: 1600,
           phone: '0992334455',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Wilmer',
@@ -1756,6 +1813,7 @@ export async function seedUsers(prisma) {
           position: 'Líder de Merchandising y Góndolas',
           salary: 1300,
           phone: '0973445566',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Mayra',
@@ -1766,6 +1824,20 @@ export async function seedUsers(prisma) {
           position: 'Analista de Nómina Retail',
           salary: 1500,
           phone: '0984556778',
+          contractType: 'Indefinido',
+        },
+        {
+          firstName: 'Jorge',
+          lastName: 'Macías',
+          email: 'jorge.macias.ex@retailpacifico.ec',
+          identityCard: '1749281726',
+          department: 'Ventas',
+          position: 'Cajero Polifuncional Ex',
+          salary: 950,
+          phone: '0969281726',
+          isActive: false,
+          exitDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          contractType: 'Temporal',
         },
       ],
     },
@@ -1789,6 +1861,7 @@ export async function seedUsers(prisma) {
           position: 'Supervisor de Turnos Industriales',
           salary: 1700,
           phone: '0981445561',
+          contractType: 'Indefinido',
         },
         {
           firstName: 'Ángel',
@@ -1799,6 +1872,7 @@ export async function seedUsers(prisma) {
           position: 'Especialista en Seguridad y Salud Ocupacional',
           salary: 1850,
           phone: '0992556772',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Nelson',
@@ -1809,6 +1883,7 @@ export async function seedUsers(prisma) {
           position: 'Inspector de Control de Calidad',
           salary: 1400,
           phone: '0973667883',
+          contractType: 'Plazo Fijo',
         },
         {
           firstName: 'Blanca',
@@ -1819,6 +1894,20 @@ export async function seedUsers(prisma) {
           position: 'Auxiliar Contable de Planta',
           salary: 1200,
           phone: '0984778994',
+          contractType: 'Indefinido',
+        },
+        {
+          firstName: 'Manuel',
+          lastName: 'Chávez',
+          email: 'manuel.chavez.ex@manufacturaspichincha.ec',
+          identityCard: '1750293847',
+          department: 'Producción',
+          position: 'Operario de Maquinaria Ex',
+          salary: 1100,
+          phone: '0950293847',
+          isActive: false,
+          exitDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+          contractType: 'Temporal',
         },
       ],
     },
@@ -1860,9 +1949,18 @@ export async function seedUsers(prisma) {
     // Empleados
     for (const emp of tData.employees) {
       const role = emp.role || 'employee';
+      const isActive = emp.isActive !== undefined ? emp.isActive : true;
+      const contractType = emp.contractType || 'Indefinido';
       await prisma.employee.upsert({
         where: { email: emp.email },
-        update: { password, tenantId: tenant.id, role },
+        update: {
+          password,
+          tenantId: tenant.id,
+          role,
+          isActive,
+          exitDate: emp.exitDate || null,
+          contractType,
+        },
         create: {
           tenantId: tenant.id,
           firstName: emp.firstName,
@@ -1876,11 +1974,12 @@ export async function seedUsers(prisma) {
           identityCard: emp.identityCard,
           birthDate: new Date('1992-05-10'),
           hireDate: new Date('2021-03-01'),
-          isActive: true,
+          isActive,
+          exitDate: emp.exitDate || null,
           address: 'Quito, Ecuador',
           phone: emp.phone,
           civilStatus: 'Casado',
-          contractType: 'Indefinido',
+          contractType,
           bankName: encrypt('Banco Guayaquil'),
           accountNumber: encrypt('9876543210'),
           accountType: 'Ahorros',
@@ -1907,6 +2006,51 @@ export async function seedUsers(prisma) {
   }
 
   const allUsers = await prisma.employee.findMany();
+
+  // ── Preferencias de Notificaciones para todos los Colaboradores ───────────
+  await prisma.notificationPreference.deleteMany({});
+  const prefBatch = allUsers.map((u) => ({
+    employeeId: u.id,
+    preferences: {
+      email: true,
+      push: true,
+      inApp: true,
+      payroll: true,
+      contracts: true,
+      absences: true,
+      evaluations: true,
+      announcements: true,
+    },
+  }));
+  await prisma.notificationPreference.createMany({ data: prefBatch, skipDuplicates: true });
+  console.log(
+    `[USERS] Preferencias de notificación sembradas para ${prefBatch.length} colaboradores.`
+  );
+
+  // ── Credenciales Biométricas WebAuthn / FIDO2 para Admins y Líderes ───────
+  await prisma.biometricCredential.deleteMany({});
+  const bioBatch = [];
+  const adminUsers = allUsers.filter(
+    (u) => u.role === 'admin' || u.role === 'superadmin' || u.role === 'manager'
+  );
+  for (let bIdx = 0; bIdx < adminUsers.length; bIdx++) {
+    const adm = adminUsers[bIdx];
+    bioBatch.push({
+      employeeId: adm.id,
+      credentialId: `cred-webauthn-${adm.id.slice(-8)}-${bIdx}`,
+      publicKey: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7p9v...FIDO2PublicKeyDemo',
+      aaguid: '08987058-cadc-4b81-b6e1-30bb277f18b2',
+      deviceInfo:
+        bIdx % 2 === 0
+          ? 'Windows Hello (TPM 2.0 Enclave)'
+          : 'Apple Touch ID / Face ID (Secure Enclave)',
+      transports: JSON.stringify(['internal']),
+      counter: 15 + bIdx * 4,
+      lastVerified: new Date(Date.now() - bIdx * 3600 * 1000),
+    });
+  }
+  await prisma.biometricCredential.createMany({ data: bioBatch, skipDuplicates: true });
+  console.log(`[USERS] ${bioBatch.length} llaves biométricas WebAuthn FIDO2 sembradas.`);
 
   return {
     tenant1,

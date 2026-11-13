@@ -147,4 +147,21 @@ describe('WhatsApp Security & Utility Suite', () => {
       expect(securityService.checkRateLimit(phone)).toBe(false);
     });
   });
+
+  describe('5. Verificación Criptográfica de Identidad por Cédula', () => {
+    it('debe validar la cédula completa en tiempo constante ignorando caracteres no numéricos', () => {
+      expect(securityService.verifyIdentityCard('1718293045', '1718293045')).toBe(true);
+      expect(securityService.verifyIdentityCard('171829304-5', '1718293045')).toBe(true);
+      expect(securityService.verifyIdentityCard('1718293045', '171829304-5')).toBe(true);
+      expect(securityService.verifyIdentityCard('1718293045', '1718293046')).toBe(false);
+      expect(securityService.verifyIdentityCard('1718293045', '3045')).toBe(false);
+      expect(securityService.verifyIdentityCard(null, '1718293045')).toBe(false);
+      expect(securityService.verifyIdentityCard('1718293045', null)).toBe(false);
+    });
+
+    it('debe mantener compatibilidad con verifyIdentityLast4', () => {
+      expect(securityService.verifyIdentityLast4('1718293045', '3045')).toBe(true);
+      expect(securityService.verifyIdentityLast4('1718293045', '9999')).toBe(false);
+    });
+  });
 });

@@ -325,5 +325,28 @@ describe('Módulo de Sostenibilidad ODS 8, RAG Multi-Dominio y Fine-Tuning', () 
         process.env.AI_MODEL = prevModel;
       }
     });
+
+    it('debe omitir telemetría agregada del tenant para roles employee y superadmin (LOPDP/RBAC)', async () => {
+      vi.spyOn(llmProviderService, 'generateChatCompletion').mockResolvedValue(null);
+      const empResult = await sustainabilityRagService.processQuery({
+        query: '¿Cuántos días de vacaciones corresponden por ley según el Art. 69?',
+        tenantId: 'tenant-demo-id',
+        userRole: 'employee',
+        moduleContext: 'attendance',
+      });
+      expect(empResult.tenantScore).toBeNull();
+      expect(empResult.complianceLevel).toBeNull();
+      expect(empResult.erpContext).toEqual({});
+      expect(empResult.answer).not.toContain('Estado del Tenant:');
+
+      const superResult = await sustainabilityRagService.processQuery({
+        query: '¿Qué establece el Art. 188 sobre despido intempestivo?',
+        tenantId: undefined,
+        userRole: 'superadmin',
+        moduleContext: 'compliance',
+      });
+      expect(superResult.tenantScore).toBeNull();
+      expect(superResult.erpContext).toEqual({});
+    });
   });
 });

@@ -272,6 +272,31 @@ export class TenantRepository {
   async createAuditLogDirect(data) {
     return prisma.auditLog.create({ data });
   }
+
+  /**
+   * Lista empresas activas con campos estrictamente públicos para la bolsa de empleo.
+   */
+  async findPublicActiveTenants() {
+    return prisma.tenant.findMany({
+      where: {
+        isActive: true,
+        subscriptionStatus: { in: ['ACTIVE', 'TRIAL'] },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        _count: {
+          select: {
+            jobVacancies: {
+              where: { status: 'OPEN' },
+            },
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
 }
 
 export default new TenantRepository();

@@ -27,15 +27,16 @@ export function detectRequestedNormativeCategories(normQuery) {
   );
 }
 
-export function selectBalancedByCategory(items, limit, requestedCategories, scoreField) {
+export function selectBalancedByCategory(items, limit, requestedCategories, _scoreField) {
   if (!Array.isArray(requestedCategories) || requestedCategories.length <= 1) {
     return items.slice(0, limit);
   }
 
   const selected = [];
   const seenIds = new Set();
-  const minPerCategory = Math.max(2, Math.floor(limit / requestedCategories.length));
+  const minPerCategory = Math.max(1, Math.floor(limit / requestedCategories.length));
 
+  // 1. Selección representativa garantizada de cada categoría solicitada
   for (const category of requestedCategories) {
     let taken = 0;
     for (const item of items) {
@@ -48,6 +49,7 @@ export function selectBalancedByCategory(items, limit, requestedCategories, scor
     }
   }
 
+  // 2. Rellenar los cupos restantes hasta el límite con los fragmentos de mayor puntaje
   for (const item of items) {
     if (selected.length >= limit) break;
     if (!seenIds.has(item.id)) {
@@ -56,7 +58,7 @@ export function selectBalancedByCategory(items, limit, requestedCategories, scor
     }
   }
 
-  return selected.sort((a, b) => (b[scoreField] || 0) - (a[scoreField] || 0)).slice(0, limit);
+  return selected.slice(0, limit);
 }
 
 const MODULE_DOMAIN_AFFINITY = {
@@ -69,6 +71,9 @@ const MODULE_DOMAIN_AFFINITY = {
   performance: ['PERFORMANCE', 'ODS_8', 'ODS_8_FRAMEWORK'],
   recruitment: ['PERFORMANCE', 'CONSTITUTION', 'LABOR_CODE'],
   signatures: ['SIGNATURES', 'GOVERNANCE'],
+  compliance: ['GOVERNANCE', 'CONSTITUTION', 'LABOR_CODE', 'IESS_REGULATION', 'INTERNAL_POLICY'],
+  analytics: ['ODS_8', 'ODS_8_FRAMEWORK', 'PAYROLL', 'PERFORMANCE'],
+  entrepreneurship: ['ODS_8', 'ODS_8_FRAMEWORK', 'TAX_SRI', 'CONTRACTS'],
   sustainability: ['ODS_8', 'ODS_8_FRAMEWORK', 'LABOR_CODE', 'IESS_REGULATION', 'CONSTITUTION'],
   whatsapp: ['LABOR_CODE', 'IESS_REGULATION', 'OFFBOARDING', 'ATTENDANCE', 'PAYROLL', 'CONTRACTS'],
 };
@@ -178,13 +183,14 @@ export class LegalEvaluatorService {
     answerText,
     retrievedChunks = [],
     liveCalculation = null,
-    _allKnownArticleCodes = new Set(),
+    allKnownArticleCodes = new Set(),
   }) {
     if (!answerText) {
       return {
         status: 'EMPTY',
         groundednessScore: 0,
         verifiedArticles: [],
+        corpusSupportedArticles: [],
         unverifiedArticles: [],
         mathVerified: false,
       };
@@ -197,12 +203,26 @@ export class LegalEvaluatorService {
       .join(' ');
 
     const verifiedArticles = [];
+    const corpusSupportedArticles = [];
     const unverifiedArticles = [];
+
+    const knownSet =
+      allKnownArticleCodes instanceof Set
+        ? allKnownArticleCodes
+        : new Set(allKnownArticleCodes || []);
 
     for (const num of citedNumbers) {
       const regex = new RegExp(`\\b${num.replace('.', '\\.')}\\b`);
       if (regex.test(retrievedArticleText)) {
         verifiedArticles.push(`Art. ${num}`);
+      } else if (
+        knownSet.has(num) ||
+        knownSet.has(`Art. ${num}`) ||
+        knownSet.has(`Art ${num}`) ||
+        knownSet.has(parseInt(num, 10)) ||
+        knownSet.has(String(parseInt(num, 10)))
+      ) {
+        corpusSupportedArticles.push(`Art. ${num}`);
       } else {
         unverifiedArticles.push(`Art. ${num}`);
       }
@@ -231,22 +251,36 @@ export class LegalEvaluatorService {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           });
+          const formattedEs = expectedTotal.toLocaleString('es-EC', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+          const formattedEsDot = expectedTotal
+            .toFixed(2)
+            .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+            .replace(/\.(\d{2})$/, ',$1');
+          const rawInt = String(Math.round(expectedTotal));
+
           return (
             answerText.includes(formattedExpected) ||
             answerText.includes(formattedComma) ||
-            answerText.includes(String(expectedTotal))
+            answerText.includes(formattedEs) ||
+            answerText.includes(formattedEsDot) ||
+            answerText.includes(String(expectedTotal)) ||
+            (expectedTotal >= 100 && answerText.includes(rawInt))
           );
         });
       }
     }
 
     const totalCited = citedNumbers.length;
-    const citationRatio =
-      totalCited > 0
-        ? verifiedArticles.length / totalCited
-        : retrievedChunks.length > 0
-          ? 1.0
-          : 0.8;
+    let citationRatio;
+    if (totalCited > 0) {
+      const effectiveVerified = verifiedArticles.length + corpusSupportedArticles.length * 0.9;
+      citationRatio = Math.min(1.0, effectiveVerified / totalCited);
+    } else {
+      citationRatio = retrievedChunks.length > 0 ? 1.0 : 0.8;
+    }
 
     const groundednessScore = Number(
       (citationRatio * 0.75 + (mathVerified ? 0.25 : 0.1)).toFixed(4)
@@ -269,6 +303,7 @@ export class LegalEvaluatorService {
           : 'AUDITED_WITH_CORRECTION',
       groundednessScore,
       verifiedArticles,
+      corpusSupportedArticles,
       unverifiedArticles,
       mathVerified,
       auditedAnswer,

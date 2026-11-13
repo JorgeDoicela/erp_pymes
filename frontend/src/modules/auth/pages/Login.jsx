@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 import NormaLogo from '@core/ui/NormaLogo';
 import DeveloperCard from '@core/ui/DeveloperCard';
+import { PWAInstallButton } from '@core/pwa';
 import { detectDeviceBiometrics } from '@core/utils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -519,6 +520,11 @@ function Login({ onLogin }) {
             </form>
           )}
         </motion.section>
+
+        {/* Botón de Instalación PWA en Login */}
+        <div className="mt-4 flex justify-center">
+          <PWAInstallButton variant="button" />
+        </div>
       </div>
       <DeveloperCard />
     </main>

@@ -20,6 +20,9 @@ export const getCapTable = async (req, res) => {
 export const addEquityHolder = async (req, res) => {
   try {
     const { projectId, holderName, percentage, role, vestingTerms } = req.body;
+    const project = await entrepreneurshipRepository.findProjectDetails(projectId);
+    if (!project) return res.status(404).json({ error: 'Proyecto no encontrado' });
+
     const equity = await entrepreneurshipRepository.createEquity({
       projectId,
       holderName,
@@ -69,6 +72,9 @@ export const getFundingRounds = async (req, res) => {
 export const addFundingRound = async (req, res) => {
   try {
     const { projectId, roundName, amountRaised, valuation, date, investors } = req.body;
+    const project = await entrepreneurshipRepository.findProjectDetails(projectId);
+    if (!project) return res.status(404).json({ error: 'Proyecto no encontrado' });
+
     const round = await entrepreneurshipRepository.createFundingRound({
       projectId,
       roundName,

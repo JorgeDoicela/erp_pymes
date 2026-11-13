@@ -37,6 +37,10 @@ export async function seedCleanup(prisma) {
   };
 
   const tablesInOrder = [
+    // 0. WhatsApp y Sesiones Agénticas
+    'whatsappActionSession',
+    'whatsappConversationContext',
+
     // 1. Incubadora / Emprendimiento
     'entrepreneurshipDocument',
     'entrepreneurshipEquity',

@@ -251,6 +251,21 @@ class MorlOptimizationService {
     // 4. Filtrar puntos no dominados de la Frontera de Pareto
     const paretoFrontier = this.filterNonDominatedParetoPoints(deduplicated);
 
+    // Seleccionar punto óptimo de Pareto factible respetando la restricción de presupuesto
+    let selectedPointIndex = 0;
+    const withinBudget = paretoFrontier
+      .map((pt, idx) => ({ ...pt, originalIndex: idx }))
+      .filter((pt) => pt.totalCostEstimate <= effectiveBudgetLimit);
+
+    if (withinBudget.length > 0) {
+      const bestWithinBudget = withinBudget.reduce((best, curr) =>
+        curr.expectedRetentionRate > best.expectedRetentionRate ? curr : best
+      );
+      selectedPointIndex = bestWithinBudget.originalIndex;
+    } else if (paretoFrontier.length > 0) {
+      selectedPointIndex = 0;
+    }
+
     const title =
       customTitle ||
       `Optimización MORL (Tope: $${effectiveBudgetLimit}) - Dept '${targetDepartment}'`;
@@ -270,7 +285,7 @@ class MorlOptimizationService {
           episodes: 500,
         }),
         paretoFrontierJson: JSON.stringify(paretoFrontier),
-        selectedPointIndex: Math.floor(paretoFrontier.length / 2),
+        selectedPointIndex,
         frontierPoints: {
           create: paretoFrontier.map((pt) => ({
             weightRetention: pt.weightRetention,

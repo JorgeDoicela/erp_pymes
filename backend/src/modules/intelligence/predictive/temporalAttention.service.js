@@ -310,11 +310,7 @@ class TemporalAttentionService {
    * sobre los errores observados de las auditorías de predicción reales
    */
   async calibrateProjectionWeights(tenantId, learningRate = 0.03) {
-    let activeTenantId = tenantId;
-    if (!activeTenantId) {
-      const firstTenant = await prisma.tenant.findFirst({ select: { id: true } });
-      activeTenantId = firstTenant?.id;
-    }
+    const activeTenantId = tenantId;
     if (!activeTenantId) throw new Error('Tenant ID es requerido para calibrar pesos de atención');
 
     const currentWeights = await this.getTenantProjectionWeights(activeTenantId);
