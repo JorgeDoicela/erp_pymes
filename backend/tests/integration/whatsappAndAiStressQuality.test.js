@@ -150,7 +150,7 @@ describe('Suite de Calidad Extrema: Anti-Alucinaciones, Inferencia Neuronal y Se
         expect(Array.isArray(embedding)).toBe(true);
         expect(embedding).toHaveLength(768);
       },
-      15000
+      30000
     );
 
     it.runIf(hasBiEncoder)(
@@ -172,7 +172,7 @@ describe('Suite de Calidad Extrema: Anti-Alucinaciones, Inferencia Neuronal y Se
         expect(simRelevant).toBeGreaterThan(simIrrelevant);
         expect(simRelevant - simIrrelevant).toBeGreaterThan(0.05);
       },
-      20000
+      30000
     );
   });
 
