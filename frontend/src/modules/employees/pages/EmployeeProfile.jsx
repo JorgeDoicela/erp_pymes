@@ -25,6 +25,7 @@ import SkillsTab from '../components/SkillsTab';
 import ContractsTab from '../components/ContractsTab';
 import { BiometricSettings } from '@modules/attendance';
 import { PWAInstallButton } from '@core/pwa';
+import { AccessibilitySettingsCard } from '@core/accessibility';
 import Modal from '@core/ui/Modal';
 import {
   validateEmail,
@@ -368,7 +369,7 @@ const EmployeeProfile = ({ token, user }) => {
     { id: 'documents', label: 'Documentos', count: documents.length },
     { id: 'history', label: 'Historial', count: history.length },
     { id: 'skills', label: 'Habilidades', count: employee.skills?.length || 0 },
-    (!id || id === user?.id) && { id: 'security', label: 'Seguridad' },
+    (!id || id === user?.id) && { id: 'security', label: 'Seguridad y Accesibilidad' },
   ].filter(Boolean);
 
   return (
@@ -443,6 +444,7 @@ const EmployeeProfile = ({ token, user }) => {
 
         {activeTab === 'security' && (
           <div className="max-w-2xl mx-auto space-y-4">
+            <AccessibilitySettingsCard />
             <div className="bg-white rounded border border-gray-200 p-5 space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
