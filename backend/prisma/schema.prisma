@@ -1303,14 +1303,16 @@ model KnowledgeChunk {
 }
 
 model WhatsappConversationContext {
-  id                         String   @id @default(cuid())
-  phoneKey                   String   @unique
+  id                         String    @id @default(cuid())
+  phoneKey                   String    @unique
   activeTenantId             String?
   pendingTenantSelectionJson Json?
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
+  conversationHistoryJson    Json?
+  lastInteractionAt          DateTime?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
 
-  activeTenant               Tenant?  @relation(fields: [activeTenantId], references: [id], onDelete: SetNull)
+  activeTenant               Tenant?   @relation(fields: [activeTenantId], references: [id], onDelete: SetNull)
 
   @@index([activeTenantId])
   @@map("whatsapp_conversation_contexts")

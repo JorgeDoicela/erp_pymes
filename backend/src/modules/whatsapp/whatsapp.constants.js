@@ -12,6 +12,7 @@ export const META_GRAPH_BASE_URL = `https://graph.facebook.com/${META_GRAPH_API_
 export const WHATSAPP_INTENTS = {
   LEGAL_QUERY: 'LEGAL_QUERY',
   EMPLOYEE_QUERY: 'EMPLOYEE_QUERY',
+  EMPLOYEE_REQUESTS_QUERY: 'EMPLOYEE_REQUESTS_QUERY',
   PAYROLL_SLIP_QUERY: 'PAYROLL_SLIP_QUERY',
   VACATION_REQUEST_ACTION: 'VACATION_REQUEST_ACTION',
   SALARY_ADVANCE_ACTION: 'SALARY_ADVANCE_ACTION',
@@ -23,7 +24,23 @@ export const WHATSAPP_INTENTS = {
   UNKNOWN_SENDER: 'UNKNOWN_SENDER',
   LOPDP_CONSENT_ACCEPT: 'LOPDP_CONSENT_ACCEPT',
   LOPDP_CONSENT_REVOKE: 'LOPDP_CONSENT_REVOKE',
+  RESET_CONVERSATION_COMMAND: 'RESET_CONVERSATION_COMMAND',
+  OUT_OF_SCOPE_QUERY: 'OUT_OF_SCOPE_QUERY',
 };
+
+export const WHATSAPP_CONVERSATION_HISTORY_MAX_MESSAGES = 6;
+export const WHATSAPP_CONVERSATION_HISTORY_TTL_MS = 15 * 60 * 1000;
+export const RESET_CONVERSATION_FEEDBACK_MESSAGE =
+  'Conversacion reiniciada correctamente. He limpiado el contexto previo. ¿En que le puedo colaborar ahora?';
+
+export const OUT_OF_SCOPE_MESSAGE =
+  `Esa consulta o accion no forma parte de mis capacidades en este canal.\n\n` +
+  `Como Asistente Corporativo de Norma ERP, mis funciones autorizadas son:\n` +
+  `- *Gestion de Solicitudes (2FA):* Vacaciones, anticipos de sueldo y permisos medicos.\n` +
+  `- *Consultas Personales:* Su marcacion de hoy, saldo de vacaciones, rol de pagos y estado de solicitudes.\n` +
+  `- *Legislacion Laboral:* Normativa del Codigo del Trabajo y Ley de Seguridad Social (IESS).\n` +
+  `- *Multi-Empresa:* Conmutacion de empresa con *CAMBIAR EMPRESA*.\n\n` +
+  `Para ver ejemplos detallados de cada opcion, escriba: *AYUDA* o *MENU*.`;
 
 export const WHATSAPP_PRIVACY_POLICY_URL =
   process.env.WHATSAPP_PRIVACY_URL ||

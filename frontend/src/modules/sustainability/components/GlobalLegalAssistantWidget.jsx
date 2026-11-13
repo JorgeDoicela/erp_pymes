@@ -7,7 +7,7 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FiMessageSquare, FiX, FiSend, FiTrash2, FiSliders } from 'react-icons/fi';
 import { useSustainabilityAdvisor } from '../hooks/useSustainabilityAdvisor.js';
@@ -20,6 +20,25 @@ import LegalAssistantConfigPanel, {
 export default function GlobalLegalAssistantWidget() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('norma:legal-assistant-mounted', { detail: { isMounted: true } })
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent('norma:legal-assistant-mounted', { detail: { isMounted: false } })
+      );
+      window.dispatchEvent(
+        new CustomEvent('norma:legal-assistant-toggled', { detail: { isOpen: false } })
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('norma:legal-assistant-toggled', { detail: { isOpen } }));
+  }, [isOpen]);
+
   const [showConfig, setShowConfig] = useState(false);
   const [inputText, setInputText] = useState('');
   const [selectedCitation, setSelectedCitation] = useState(null);
@@ -40,12 +59,12 @@ export default function GlobalLegalAssistantWidget() {
   );
 
   const buildOverrides = () => {
-    const overrides = {};
-    if (providerConfig.provider.trim()) overrides.provider = providerConfig.provider.trim();
-    if (providerConfig.model.trim()) overrides.model = providerConfig.model.trim();
-    if (providerConfig.baseUrl.trim()) overrides.baseUrl = providerConfig.baseUrl.trim();
-    if (providerConfig.apiKey.trim()) overrides.apiKey = providerConfig.apiKey.trim();
-    return Object.keys(overrides).length > 0 ? overrides : undefined;
+    const o = {};
+    if (providerConfig.provider.trim()) o.provider = providerConfig.provider.trim();
+    if (providerConfig.model.trim()) o.model = providerConfig.model.trim();
+    if (providerConfig.baseUrl.trim()) o.baseUrl = providerConfig.baseUrl.trim();
+    if (providerConfig.apiKey.trim()) o.apiKey = providerConfig.apiKey.trim();
+    return Object.keys(o).length > 0 ? o : undefined;
   };
 
   const handleSubmit = (e) => {

@@ -31,6 +31,12 @@ import requestPermissionSkill, {
 import reviewPendingRequestsSkill, {
   ReviewPendingRequestsSkill,
 } from './skills/reviewPendingRequests.skill.js';
+import whatsappConversationHistoryService, {
+  WhatsappConversationHistoryService,
+} from './whatsappConversationHistory.service.js';
+import whatsappConversationHistoryRepository, {
+  WhatsappConversationHistoryRepository,
+} from './whatsappConversationHistory.repository.js';
 import * as whatsappConstants from './whatsapp.constants.js';
 
 export {
@@ -61,6 +67,10 @@ export {
   RequestPermissionSkill,
   reviewPendingRequestsSkill,
   ReviewPendingRequestsSkill,
+  whatsappConversationHistoryService,
+  WhatsappConversationHistoryService,
+  whatsappConversationHistoryRepository,
+  WhatsappConversationHistoryRepository,
   whatsappConstants,
 };
 

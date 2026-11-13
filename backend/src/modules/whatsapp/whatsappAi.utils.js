@@ -52,6 +52,15 @@ export function classifyIntent(text, employee) {
     return WHATSAPP_INTENTS.SWITCH_TENANT_COMMAND;
   }
 
+  // 1.1 Comando de reinicio / limpieza de contexto conversacional
+  if (
+    /\b(?:nueva\s+consulta|nuevo\s+tema|reiniciar(?:\s+(?:chat|conversacion|contexto))?|olvida(?:r)?\s+(?:lo\s+anterior|el\s+contexto)|borrar\s+(?:historial|contexto)|empezar\s+de\s+nuevo|limpiar\s+contexto)\b/i.test(
+      unaccented
+    )
+  ) {
+    return WHATSAPP_INTENTS.RESET_CONVERSATION_COMMAND;
+  }
+
   // 2. Saludos y solicitudes de ayuda
   if (
     /^(hola|buen(?:os?|as?)\s*(?:dias?|tardes?|noches?)|buenas\b|saludos|menu|ayuda|opciones|que\s*puedes\s*hacer)\b/i.test(
@@ -133,22 +142,41 @@ export function classifyIntent(text, employee) {
     return WHATSAPP_INTENTS.VACATION_REQUEST_ACTION;
   }
 
-  // 8. Consulta de rol de pagos / estado de solicitudes personales
+  // 8. Consulta de rol de pagos (o rol combinado con solicitudes)
   if (
     !isLegalTopic &&
-    /(mi\s+rol|rol\s+de\s+pagos|ultimo\s+rol|cuanto\s+cobre|neto\s+a\s+recibir|estado\s+de\s+mis?\s+solicitud|mis\s+solicitudes|mis\s+anticipos)/i.test(
+    /(mi\s+rol|rol\s+de\s+pagos|ultimo\s+rol|cuanto\s+cobre|neto\s+a\s+recibir|mi\s+recibo\s+de\s+pago)/i.test(
       unaccented
     )
   ) {
     return WHATSAPP_INTENTS.PAYROLL_SLIP_QUERY;
   }
 
-  // 9. Consultas legales explícitas
-  if (isLegalTopic) {
+  // 8.1 Consulta específica de estado de solicitudes personales / trámites activos
+  if (
+    !isLegalTopic &&
+    /\b(?:que\s+solicitud(?:es)?\s+tengo|solicitud(?:es)?\s+(?:tengo|activas?|pendientes?|realizadas?)|(?:mis?\s+|mis\s+ultim[ao]s?\s+)?solicitud(?:es)?|estado\s+de\s+(?:mis?\s+)?solicitud(?:es)?|(?:mis?\s+)?tramites?(?:\s+(?:activos?|pendientes?))?)\b/i.test(
+      unaccented
+    )
+  ) {
+    return WHATSAPP_INTENTS.EMPLOYEE_REQUESTS_QUERY;
+  }
+
+  // 9. Consultas sobre legislación laboral ecuatoriana y derechos del trabajador
+  const isLaborTopic =
+    isLegalTopic ||
+    /\b(despido|liquidacion|finiquito|indemnizacion(?:es)?|desahucio|bonificacion(?:es)?|remuneracion(?:es)?|visto\s+bueno|horas?\s+extras?|horas?\s+suplementarias?|recargo\s+nocturno|decimo\s+tercer[oa]?|decimo\s+cuart[oa]?|utilidades|fondos?\s+de\s+reserva|jubilacion|pension|maternidad|paternidad|lactancia|jornada\s+laboral|renuncia|acoso\s+laboral|salario\s+basico|sbu|descuentos?\s+de\s+ley|iess|seguro\s+social|seguridad\s+social|contrato\s+laboral|contrato\s+de\s+trabajo|afiliacion|patronal|empleador|trabajador)\b/i.test(
+      unaccented
+    ) ||
+    /\b(me\s+pueden\s+despedir|puedo\s+renunciar|que\s+pasa\s+si\s+falto|que\s+pasa\s+si\s+me\s+enfermo|cuantas\s+horas\s+debo\s+trabajar|tengo\s+derecho|derechos?\s+del\s+trabajador|obligaciones\s+del\s+empleador|como\s+se\s+calcula\s+la\s+liquidacion|prueba\s+de\s+trabajo|periodo\s+de\s+prueba)\b/i.test(
+      unaccented
+    );
+
+  if (isLaborTopic) {
     return WHATSAPP_INTENTS.LEGAL_QUERY;
   }
 
-  // 10. Consultas personales del colaborador
+  // 10. Consultas personales del colaborador en el ERP
   if (
     /(vacacion|saldo|mis?\s+dias|asistencia|marque|marcar|entrada|salida|mi\s+perfil|mi\s+cargo|mi\s+departamento)/i.test(
       unaccented
@@ -157,7 +185,8 @@ export function classifyIntent(text, employee) {
     return WHATSAPP_INTENTS.EMPLOYEE_QUERY;
   }
 
-  return WHATSAPP_INTENTS.LEGAL_QUERY;
+  // 11. Por defecto, peticiones y temas fuera del alcance corporativo del canal
+  return WHATSAPP_INTENTS.OUT_OF_SCOPE_QUERY;
 }
 
 /**
@@ -239,6 +268,47 @@ export function formatPayrollAndRequestsMessage(employee, data = {}) {
 }
 
 /**
+ * Formatea específicamente el listado y estado de solicitudes personales del colaborador.
+ */
+export function formatEmployeeRequestsMessage(employee, data = {}) {
+  const { recentAbsences = [], recentAdvances = [] } = data;
+  const company = employee.tenant?.name || 'Norma ERP';
+  const lines = [`*Estado de Solicitudes en ${company}:*`];
+
+  const hasAbsences = recentAbsences.length > 0;
+  const hasAdvances = recentAdvances.length > 0;
+
+  if (!hasAbsences && !hasAdvances) {
+    lines.push(
+      `\nNo registra solicitudes activas ni pendientes en este momento.`,
+      `\nPuede solicitar vacaciones escribiendo: *"Quiero pedir vacaciones"* o un anticipo con: *"Solicito anticipo de $100"*`
+    );
+    return lines.join('\n');
+  }
+
+  if (hasAbsences) {
+    lines.push(`\n*Solicitudes de Ausencia / Vacaciones:*`);
+    for (const abs of recentAbsences) {
+      const start = new Date(abs.startDate).toISOString().slice(0, 10);
+      const end = new Date(abs.endDate).toISOString().slice(0, 10);
+      const daysNote = abs.daysRequested ? ` (${abs.daysRequested} días)` : '';
+      lines.push(`- *${abs.type}* (${start} al ${end})${daysNote}: *${abs.status}*`);
+    }
+  }
+
+  if (hasAdvances) {
+    lines.push(`\n*Anticipos de Sueldo:*`);
+    for (const adv of recentAdvances) {
+      lines.push(
+        `- *Anticipo de $${Number(adv.amount).toFixed(2)}* (${adv.installments} cuota(s)): *${adv.status}*`
+      );
+    }
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * Formatea las métricas ejecutivas enriquecidas del tenant.
  */
 export function formatTenantMetricsMessage(employee, metrics = {}) {
@@ -251,4 +321,64 @@ export function formatTenantMetricsMessage(employee, metrics = {}) {
     `- *Anticipos de Sueldo por Aprobar:* ${metrics.pendingSalaryAdvances || 0}\n\n` +
     `_Si desea aprobar o rechazar pendientes desde aqui, escriba:_ *Revisar solicitudes pendientes*`
   );
+}
+
+/**
+ * Formatea la tarjeta de respaldo con los datos del perfil y asistencia del colaborador.
+ */
+export function formatEmployeeProfileFallback(employee, checkIn, checkOut) {
+  return (
+    `*Información de su perfil en Norma ERP:*\n\n` +
+    `- *Colaborador:* ${employee.firstName} ${employee.lastName}\n` +
+    `- *Empresa:* ${employee.tenant?.name || 'N/A'}\n` +
+    `- *Departamento:* ${employee.department}\n` +
+    `- *Cargo:* ${employee.position}\n` +
+    `- *Saldo de Vacaciones:* ${employee.vacationDays} días disponibles\n` +
+    `- *Marcación de hoy:* Entrada: ${checkIn} | Salida: ${checkOut}`
+  );
+}
+
+/**
+ * Formatea el mensaje informativo sobre la empresa activa actual del colaborador.
+ */
+export function formatSwitchTenantInfo(employee) {
+  const rucInfo = employee.tenant?.ruc ? ` (RUC: ${employee.tenant.ruc})` : '';
+  return (
+    `*Empresa Activa Actual:* ${employee.tenant?.name || 'Norma ERP'}${rucInfo}\n` +
+    `- *Rol en esta empresa:* ${employee.role || 'employee'}\n` +
+    `- *Departamento:* ${employee.department || 'General'}\n\n` +
+    `Su numero telefonico opera actualmente sobre esta empresa. Si su telefono esta vinculado a mas de un RUC activo, el selector multi-empresa le mostrara la lista numerada automaticamente.`
+  );
+}
+
+/**
+ * Resuelve el proveedor de IA activo para WhatsApp (DeepSeek o Gemini con fallbacks seguros).
+ */
+export function resolveAiProviderConfig(overrides = {}) {
+  const requestedProvider = (
+    overrides.provider ||
+    process.env.WHATSAPP_AI_PROVIDER ||
+    process.env.AI_PROVIDER ||
+    (process.env.DEEPSEEK_API_KEY ? 'deepseek' : '') ||
+    (process.env.GEMINI_API_KEY ? 'gemini' : '') ||
+    'deepseek'
+  )
+    .toLowerCase()
+    .trim();
+
+  if (requestedProvider === 'gemini') {
+    return {
+      provider: 'gemini',
+      apiKey: overrides.apiKey || process.env.GEMINI_API_KEY,
+      model: overrides.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      temperature: 0.0,
+    };
+  }
+
+  return {
+    provider: 'deepseek',
+    apiKey: overrides.apiKey || process.env.DEEPSEEK_API_KEY,
+    model: overrides.model || process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    temperature: 0.0,
+  };
 }

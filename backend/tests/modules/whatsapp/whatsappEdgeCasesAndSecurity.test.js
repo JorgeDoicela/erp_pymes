@@ -216,13 +216,22 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
       new ReviewPendingRequestsSkill(absenceService, advanceService, repo),
     ]);
 
+    const mockHistoryService = {
+      getActiveHistory: vi.fn(async () => []),
+      recordTurn: vi.fn(async () => {}),
+      resetHistory: vi.fn(async () => {}),
+    };
+
     aiService = new WhatsappAiService(
       llmProvider,
       ragService,
       repo,
       confirmationService,
       registry,
-      sessionRepo
+      sessionRepo,
+      null,
+      auditor,
+      mockHistoryService
     );
   });
 

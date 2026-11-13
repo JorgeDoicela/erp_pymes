@@ -51,9 +51,6 @@ const Header = ({
       </div>
 
       <div className="flex items-center gap-2.5 sm:gap-3.5">
-        <div className="hidden sm:block">
-          <PWAInstallButton variant="button" />
-        </div>
         <NotificationBell />
 
         {/* Menú de Usuario y Cierre de Sesión */}

@@ -11,18 +11,25 @@ import {
   WHATSAPP_INTENTS,
   WHATSAPP_SYSTEM_PROMPT,
   UNREGISTERED_PHONE_MESSAGE,
+  RESET_CONVERSATION_FEEDBACK_MESSAGE,
+  OUT_OF_SCOPE_MESSAGE,
   cleanTextForWhatsapp,
 } from './whatsapp.constants.js';
 import {
   classifyIntent,
   formatGreetingMessage,
   formatPayrollAndRequestsMessage,
+  formatEmployeeRequestsMessage,
   formatTenantMetricsMessage,
+  formatEmployeeProfileFallback,
+  formatSwitchTenantInfo,
+  resolveAiProviderConfig,
 } from './whatsappAi.utils.js';
 import { llmProviderService, sustainabilityRagService } from '../sustainability/index.js';
 import whatsappRepository from './whatsapp.repository.js';
 import whatsappConfirmationService from './whatsappConfirmation.service.js';
 import whatsappConsentService from './whatsappConsent.service.js';
+import whatsappConversationHistoryService from './whatsappConversationHistory.service.js';
 import { auditService } from '../audit/index.js';
 import whatsappActionSessionRepository, {
   WHATSAPP_SESSION_STATUS,
@@ -56,48 +63,27 @@ export class WhatsappAiService {
     skillRegistry = defaultSkillRegistry,
     sessionRepo = whatsappActionSessionRepository,
     consentService = whatsappConsentService,
-    auditor = auditService
+    auditor = auditService,
+    historyService = whatsappConversationHistoryService
   ) {
-    this.llmProvider = llmProvider;
-    this.ragService = ragService;
-    this.repo = repo;
-    this.confirmationService = confirmationService;
-    this.skillRegistry = skillRegistry;
-    this.sessionRepo = sessionRepo;
-    this.consentService = consentService;
-    this.auditor = auditor;
+    Object.assign(this, {
+      llmProvider,
+      ragService,
+      repo,
+      confirmationService,
+      skillRegistry,
+      sessionRepo,
+      consentService,
+      auditor,
+      historyService,
+    });
   }
 
   /**
    * Resuelve el proveedor de IA activo para WhatsApp (DeepSeek o Gemini con fallbacks seguros).
    */
   resolveAiProviderConfig(overrides = {}) {
-    const requestedProvider = (
-      overrides.provider ||
-      process.env.WHATSAPP_AI_PROVIDER ||
-      process.env.AI_PROVIDER ||
-      (process.env.DEEPSEEK_API_KEY ? 'deepseek' : '') ||
-      (process.env.GEMINI_API_KEY ? 'gemini' : '') ||
-      'deepseek'
-    )
-      .toLowerCase()
-      .trim();
-
-    if (requestedProvider === 'gemini') {
-      return {
-        provider: 'gemini',
-        apiKey: overrides.apiKey || process.env.GEMINI_API_KEY,
-        model: overrides.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-        temperature: 0.0,
-      };
-    }
-
-    return {
-      provider: 'deepseek',
-      apiKey: overrides.apiKey || process.env.DEEPSEEK_API_KEY,
-      model: overrides.model || process.env.DEEPSEEK_MODEL || 'deepseek-chat',
-      temperature: 0.0,
-    };
+    return resolveAiProviderConfig(overrides);
   }
 
   classifyIntent(text, employee) {
@@ -191,13 +177,14 @@ export class WhatsappAiService {
       return this.formatGreetingMessage(employee);
     }
 
+    if (intent === WHATSAPP_INTENTS.RESET_CONVERSATION_COMMAND) {
+      if (phoneKey) await this.historyService.resetHistory({ phoneKey });
+      return RESET_CONVERSATION_FEEDBACK_MESSAGE;
+    }
+
     if (intent === WHATSAPP_INTENTS.SWITCH_TENANT_COMMAND) {
-      return (
-        `*Empresa Activa Actual:* ${employee.tenant?.name || 'Norma ERP'}${employee.tenant?.ruc ? ` (RUC: ${employee.tenant.ruc})` : ''}\n` +
-        `- *Rol en esta empresa:* ${employee.role || 'employee'}\n` +
-        `- *Departamento:* ${employee.department || 'General'}\n\n` +
-        `Su numero telefonico opera actualmente sobre esta empresa. Si su telefono esta vinculado a mas de un RUC activo, el selector multi-empresa le mostrara la lista numerada automaticamente.`
-      );
+      if (phoneKey) await this.historyService.resetHistory({ phoneKey });
+      return formatSwitchTenantInfo(employee);
     }
 
     const targetSkillId = INTENT_TO_SKILL_ID[intent];
@@ -213,19 +200,24 @@ export class WhatsappAiService {
       });
     }
 
+    if (intent === WHATSAPP_INTENTS.EMPLOYEE_REQUESTS_QUERY) {
+      return this.handleEmployeeRequestsQuery({ employee });
+    }
     if (intent === WHATSAPP_INTENTS.PAYROLL_SLIP_QUERY) {
       return this.handlePayrollAndRequestsQuery({ employee });
     }
-
     if (intent === WHATSAPP_INTENTS.TENANT_METRICS_QUERY) {
       return this.handleTenantMetricsQuery({ employee });
     }
-
-    if (intent === WHATSAPP_INTENTS.EMPLOYEE_QUERY) {
-      return this.handleEmployeePersonalQuery({ text, employee, aiConfig });
+    if (intent === WHATSAPP_INTENTS.OUT_OF_SCOPE_QUERY) {
+      return OUT_OF_SCOPE_MESSAGE;
     }
 
-    return this.handleLegalQuery({ text, employee, aiConfig });
+    if (intent === WHATSAPP_INTENTS.EMPLOYEE_QUERY) {
+      return this.handleEmployeePersonalQuery({ text, employee, phoneKey, aiConfig });
+    }
+
+    return this.handleLegalQuery({ text, employee, phoneKey, aiConfig });
   }
 
   /**
@@ -295,16 +287,24 @@ export class WhatsappAiService {
     return `No fue posible preparar la solicitud en este momento.`;
   }
 
-  async handlePayrollAndRequestsQuery({ employee }) {
-    const data =
-      typeof this.repo.getEmployeeLatestPayrollAndRequests === 'function'
-        ? await this.repo.getEmployeeLatestPayrollAndRequests(employee.id, employee.tenantId)
-        : { latestPayrollDetail: null, recentAbsences: [], recentAdvances: [] };
+  async getEmployeePayrollAndRequestsData(employee) {
+    if (typeof this.repo.getEmployeeLatestPayrollAndRequests === 'function') {
+      return this.repo.getEmployeeLatestPayrollAndRequests(employee.id, employee.tenantId);
+    }
+    return { latestPayrollDetail: null, recentAbsences: [], recentAdvances: [] };
+  }
 
+  async handleEmployeeRequestsQuery({ employee }) {
+    const data = await this.getEmployeePayrollAndRequestsData(employee);
+    return formatEmployeeRequestsMessage(employee, data);
+  }
+
+  async handlePayrollAndRequestsQuery({ employee }) {
+    const data = await this.getEmployeePayrollAndRequestsData(employee);
     return formatPayrollAndRequestsMessage(employee, data);
   }
 
-  async handleEmployeePersonalQuery({ text, employee, aiConfig }) {
+  async handleEmployeePersonalQuery({ text, employee, phoneKey = null, aiConfig }) {
     const todayAttendance = await this.repo.getEmployeeAttendanceToday(employee.id);
     const tzOpt = { hour: '2-digit', minute: '2-digit', timeZone: 'America/Guayaquil' };
     const checkIn = todayAttendance?.checkIn
@@ -316,33 +316,52 @@ export class WhatsappAiService {
 
     const factsPrompt = `Datos del colaborador: ${employee.firstName} ${employee.lastName} (${employee.tenant?.name || 'N/A'}), Cargo: ${employee.position}, Dpto: ${employee.department}, Vacaciones: ${employee.vacationDays} días, Marcación hoy: Entrada ${checkIn}, Salida ${checkOut}.\nPregunta: "${text}"\nInstrucciones: Responde conciso en formato WhatsApp (*negrita*, guiones). No inventes datos.`;
 
+    const history = phoneKey
+      ? await this.historyService.getActiveHistory({ phoneKey, tenantId: employee.tenantId })
+      : [];
+    const messages = [
+      ...history.map((m) => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content,
+      })),
+      { role: 'user', content: factsPrompt },
+    ];
+
     try {
       const llmResult = await this.llmProvider.generateChatCompletion({
         systemPrompt: WHATSAPP_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: factsPrompt }],
+        messages,
         temperature: 0.0,
         providerOverrides: aiConfig,
       });
-      if (llmResult?.content) return cleanTextForWhatsapp(llmResult.content);
+      if (llmResult?.content) {
+        const formatted = cleanTextForWhatsapp(llmResult.content);
+        if (phoneKey) {
+          await this.historyService.recordTurn({
+            phoneKey,
+            tenantId: employee.tenantId,
+            userText: text,
+            assistantText: formatted,
+          });
+        }
+        return formatted;
+      }
     } catch (err) {
       console.error('[WhatsApp AI Error] Fallo al generar respuesta personal:', err.message);
     }
 
-    return (
-      `*Información de su perfil en Norma ERP:*\n\n` +
-      `- *Colaborador:* ${employee.firstName} ${employee.lastName}\n` +
-      `- *Empresa:* ${employee.tenant?.name || 'N/A'}\n` +
-      `- *Departamento:* ${employee.department}\n` +
-      `- *Cargo:* ${employee.position}\n` +
-      `- *Saldo de Vacaciones:* ${employee.vacationDays} días disponibles\n` +
-      `- *Marcación de hoy:* Entrada: ${checkIn} | Salida: ${checkOut}`
-    );
+    return formatEmployeeProfileFallback(employee, checkIn, checkOut);
   }
 
-  async handleLegalQuery({ text, employee, aiConfig }) {
+  async handleLegalQuery({ text, employee, phoneKey = null, aiConfig }) {
     try {
+      const history = phoneKey
+        ? await this.historyService.getActiveHistory({ phoneKey, tenantId: employee.tenantId })
+        : [];
+
       const ragResponse = await this.ragService.processQuery({
         query: text,
+        conversationHistory: history,
         tenantId: employee.tenantId,
         userRole: employee.role,
         moduleContext: 'whatsapp',
@@ -356,6 +375,14 @@ export class WhatsappAiService {
           formatted += `\n\n*Fundamento Normativo Oficial:*`;
           topCitations.forEach((c) => {
             formatted += `\n- *${c.articleCode}* (${c.documentTitle})`;
+          });
+        }
+        if (phoneKey) {
+          await this.historyService.recordTurn({
+            phoneKey,
+            tenantId: employee.tenantId,
+            userText: text,
+            assistantText: formatted,
           });
         }
         return formatted;
@@ -383,7 +410,6 @@ export class WhatsappAiService {
   formatGreetingMessage(employee) {
     return formatGreetingMessage(employee);
   }
-
   cleanTextForWhatsapp(rawText) {
     return cleanTextForWhatsapp(rawText);
   }

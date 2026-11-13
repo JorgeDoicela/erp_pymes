@@ -7,7 +7,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { WhatsappAiService } from '../../../src/modules/whatsapp/whatsappAi.service.js';
-import { WHATSAPP_INTENTS } from '../../../src/modules/whatsapp/whatsapp.constants.js';
+import {
+  WHATSAPP_INTENTS,
+  OUT_OF_SCOPE_MESSAGE,
+} from '../../../src/modules/whatsapp/whatsapp.constants.js';
 
 describe('WhatsApp AI Orchestrator Suite', () => {
   let mockLlmProvider;
@@ -57,6 +60,21 @@ describe('WhatsApp AI Orchestrator Suite', () => {
       );
     });
 
+    it('debe clasificar preguntas sobre solicitudes personales o trámites como EMPLOYEE_REQUESTS_QUERY', () => {
+      expect(aiService.classifyIntent('Que solicitudes tengo activas?', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.EMPLOYEE_REQUESTS_QUERY
+      );
+      expect(aiService.classifyIntent('cuales son mis solicitudes?', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.EMPLOYEE_REQUESTS_QUERY
+      );
+      expect(aiService.classifyIntent('tengo alguna solicitud pendiente?', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.EMPLOYEE_REQUESTS_QUERY
+      );
+      expect(aiService.classifyIntent('ver mis tramites activos', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.EMPLOYEE_REQUESTS_QUERY
+      );
+    });
+
     it('debe clasificar consultas sobre el Código del Trabajo o IESS como LEGAL_QUERY', () => {
       expect(
         aiService.classifyIntent(
@@ -70,6 +88,24 @@ describe('WhatsApp AI Orchestrator Suite', () => {
           mockEmployee
         )
       ).toBe(WHATSAPP_INTENTS.LEGAL_QUERY);
+    });
+
+    it('debe clasificar peticiones fuera de dominio corporativo como OUT_OF_SCOPE_QUERY', () => {
+      expect(aiService.classifyIntent('hazme una factura por favor', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.OUT_OF_SCOPE_QUERY
+      );
+      expect(aiService.classifyIntent('como esta el clima hoy en Quito?', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.OUT_OF_SCOPE_QUERY
+      );
+      expect(aiService.classifyIntent('cuentame un chiste', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.OUT_OF_SCOPE_QUERY
+      );
+      expect(aiService.classifyIntent('quien gano el partido de futbol ayer?', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.OUT_OF_SCOPE_QUERY
+      );
+      expect(aiService.classifyIntent('dame una receta de cocina', mockEmployee)).toBe(
+        WHATSAPP_INTENTS.OUT_OF_SCOPE_QUERY
+      );
     });
 
     it('debe clasificar como UNKNOWN_SENDER si el colaborador no existe en base de datos', () => {
@@ -194,6 +230,93 @@ describe('WhatsApp AI Orchestrator Suite', () => {
       expect(mockRepo.getEmployeeAttendanceToday).toHaveBeenCalledWith('emp-2');
       expect(mockLlmProvider.generateChatCompletion).toHaveBeenCalled();
       expect(response).toContain('12 dias');
+    });
+
+    it('debe responder con las solicitudes del colaborador ante "Que solicitudes tengo activas?"', async () => {
+      mockRepo.getEmployeeLatestPayrollAndRequests = vi.fn().mockResolvedValueOnce({
+        latestPayrollDetail: null,
+        recentAbsences: [
+          {
+            type: 'Vacaciones',
+            startDate: new Date('2026-11-20T00:00:00Z'),
+            endDate: new Date('2026-11-25T00:00:00Z'),
+            daysRequested: 5,
+            status: 'PENDING',
+          },
+        ],
+        recentAdvances: [
+          {
+            amount: 150,
+            installments: 2,
+            status: 'APPROVED',
+          },
+        ],
+      });
+
+      const response = await aiService.generateResponse({
+        text: 'Que solicitudes tengo activas?',
+        employee: {
+          id: 'emp-3',
+          firstName: 'Elena',
+          tenantId: 'tenant-1',
+          tenant: { name: 'Comercial Andina S.A.' },
+          whatsappConsent: true,
+        },
+      });
+
+      expect(mockRepo.getEmployeeLatestPayrollAndRequests).toHaveBeenCalledWith(
+        'emp-3',
+        'tenant-1'
+      );
+      expect(response).toContain('*Estado de Solicitudes en Comercial Andina S.A.:*');
+      expect(response).toContain('*Vacaciones* (2026-11-20 al 2026-11-25) (5 días): *PENDING*');
+      expect(response).toContain('*Anticipo de $150.00* (2 cuota(s)): *APPROVED*');
+    });
+
+    it('debe informar claramente si no tiene solicitudes activas ni pendientes', async () => {
+      mockRepo.getEmployeeLatestPayrollAndRequests = vi.fn().mockResolvedValueOnce({
+        latestPayrollDetail: null,
+        recentAbsences: [],
+        recentAdvances: [],
+      });
+
+      const response = await aiService.generateResponse({
+        text: 'Que solicitudes tengo activas?',
+        employee: {
+          id: 'emp-4',
+          firstName: 'Marco',
+          tenantId: 'tenant-1',
+          tenant: { name: 'Comercial Andina S.A.' },
+          whatsappConsent: true,
+        },
+      });
+
+      expect(response).toContain('*Estado de Solicitudes en Comercial Andina S.A.:*');
+      expect(response).toContain('No registra solicitudes activas ni pendientes en este momento.');
+      expect(response).toContain('Quiero pedir vacaciones');
+    });
+
+    it('debe responder con OUT_OF_SCOPE_MESSAGE delimitando capacidades ante peticiones fuera de alcance', async () => {
+      const response = await aiService.generateResponse({
+        text: 'hazme una factura electronica por favor',
+        employee: {
+          id: 'emp-5',
+          firstName: 'Patricia',
+          tenantId: 'tenant-1',
+          tenant: { name: 'Comercial Andina S.A.' },
+          whatsappConsent: true,
+        },
+      });
+
+      expect(response).toBe(OUT_OF_SCOPE_MESSAGE);
+      expect(response).toContain(
+        'Esa consulta o accion no forma parte de mis capacidades en este canal'
+      );
+      expect(response).toContain('Como Asistente Corporativo de Norma ERP');
+      expect(response).toContain('Gestion de Solicitudes (2FA)');
+      expect(response).toContain('Consultas Personales');
+      expect(response).toContain('Legislacion Laboral');
+      expect(response).toContain('*AYUDA*');
     });
   });
 });

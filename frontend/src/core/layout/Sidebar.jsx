@@ -11,7 +11,6 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { FiX, FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import { getSectionsByRole, getModulesByRole } from '@core/constants/modules.jsx';
 import { NormaLogo } from '@core/ui';
-import { PWAInstallButton } from '@core/pwa';
 import { isSuperAdmin as checkIsSuperAdmin, ROLES } from '@core/constants/roles';
 
 const STORAGE_KEY = 'erp_sidebar_collapsed_sections';
@@ -184,11 +183,6 @@ const Sidebar = ({ user, onClose }) => {
           );
         })}
       </nav>
-
-      {/* Acceso Rápido para Instalación PWA */}
-      <div className="p-3 border-t border-gray-100 bg-white">
-        <PWAInstallButton variant="sidebar" />
-      </div>
     </aside>
   );
 };

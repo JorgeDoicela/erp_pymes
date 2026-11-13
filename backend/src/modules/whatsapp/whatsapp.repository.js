@@ -287,12 +287,12 @@ export class WhatsappRepository {
         this.prisma.absenceRequest.findMany({
           where: { employeeId, employee: { tenantId } },
           orderBy: { createdAt: 'desc' },
-          take: 3,
+          take: 5,
         }),
         this.prisma.salaryAdvance.findMany({
           where: { employeeId, employee: { tenantId } },
           orderBy: { createdAt: 'desc' },
-          take: 3,
+          take: 5,
         }),
       ]);
       return { latestPayrollDetail, recentAbsences, recentAdvances };

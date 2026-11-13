@@ -1,121 +1,97 @@
 /**
  * @file PWAInstallPrompt.jsx
- * @description Norma ERP - Notificación y Botón Flotante de Instalación PWA
+ * @description Norma ERP - Botón Flotante Global de Instalación PWA (Visible en todas las páginas)
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiDownload, FiX } from 'react-icons/fi';
-import { NormaIcon } from '@core/ui/NormaLogo';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { FiDownload } from 'react-icons/fi';
 import { usePWA } from './PWAContext';
+
+const PUBLIC_ROUTES = ['/', '/login', '/reset-password', '/privacy', '/terms', '/register-company'];
 
 export default function PWAInstallPrompt() {
   const { isInstalled, promptInstall } = usePWA();
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(() => {
-    try {
-      const dismissed = localStorage.getItem('pwa_prompt_dismissed');
-      // Recordar descarte por 7 días
-      if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) {
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
+  const location = useLocation();
+
+  // Determinar si en la ruta actual el Asistente Legal IA está montado
+  const [isAssistantMounted, setIsAssistantMounted] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname;
+    const isPublic =
+      PUBLIC_ROUTES.includes(path) ||
+      path.startsWith('/careers') ||
+      path.startsWith('/signatures/verify');
+    return !isPublic;
   });
 
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+
+  useEffect(() => {
+    const handleMounted = (e) => {
+      setIsAssistantMounted(Boolean(e.detail?.isMounted));
+    };
+    const handleToggled = (e) => {
+      setIsAssistantOpen(Boolean(e.detail?.isOpen));
+    };
+
+    window.addEventListener('norma:legal-assistant-mounted', handleMounted);
+    window.addEventListener('norma:legal-assistant-toggled', handleToggled);
+
+    return () => {
+      window.removeEventListener('norma:legal-assistant-mounted', handleMounted);
+      window.removeEventListener('norma:legal-assistant-toggled', handleToggled);
+    };
+  }, []);
+
+  // Sincronizar reactivamente según la ruta actual
+  useEffect(() => {
+    const isPublic =
+      PUBLIC_ROUTES.includes(location.pathname) ||
+      location.pathname.startsWith('/careers') ||
+      location.pathname.startsWith('/signatures/verify');
+
+    if (isPublic) {
+      setIsAssistantMounted(false);
+      setIsAssistantOpen(false);
+    }
+  }, [location.pathname]);
+
+  // Si la aplicación ya está instalada como PWA en el sistema, no mostrar botón flotante
   if (isInstalled) return null;
 
-  const handleDismiss = () => {
-    setShowPrompt(false);
-    setIsDismissed(true);
-    try {
-      localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
-    } catch {
-      // Ignorar restricciones de almacenamiento
-    }
-  };
-
   return (
-    <div className="fixed bottom-[76px] right-5 z-40 flex flex-col items-end gap-2 pointer-events-auto">
-      <AnimatePresence>
-        {showPrompt && !isDismissed && (
-          <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="w-full max-w-sm"
-          >
-            <div className="relative overflow-hidden rounded bg-white border border-gray-200 p-4 shadow-xl text-gray-800">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded bg-gray-100 p-0.5 border border-gray-200 shrink-0 flex items-center justify-center overflow-hidden">
-                    <NormaIcon size={32} />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-xs text-gray-900 flex items-center gap-1.5">
-                      Instalar Norma ERP
-                      <span className="text-[10px] bg-gray-100 text-gray-700 border border-gray-200 px-1 py-0.2 rounded font-mono">
-                        PWA
-                      </span>
-                    </h4>
-                    <p className="text-[11px] text-gray-500 mt-0.5 leading-normal">
-                      Acceso rápido y soporte sin conexión en su dispositivo.
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleDismiss}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
-                  title="Cerrar"
-                >
-                  <FiX size={16} />
-                </button>
-              </div>
-
-              <div className="mt-3.5 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-                <button
-                  onClick={handleDismiss}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors cursor-pointer"
-                >
-                  Ahora no
-                </button>
-                <button
-                  onClick={() => {
-                    setShowPrompt(false);
-                    promptInstall();
-                  }}
-                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <FiDownload size={13} />
-                  Instalar App
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div
+      className={`fixed ${
+        isAssistantMounted ? 'bottom-[72px]' : 'bottom-5'
+      } right-4 sm:right-5 z-40 transition-all duration-200 pointer-events-auto ${
+        isAssistantOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
+    >
       <button
         type="button"
-        onClick={() => {
-          if (showPrompt) {
-            setShowPrompt(false);
-          } else {
-            promptInstall();
-          }
-        }}
-        className="border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-xs font-medium px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer select-none"
+        onClick={promptInstall}
+        aria-label="Instalar Norma ERP en su dispositivo"
+        className="bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 hover:border-gray-400 rounded-[4px] px-3.5 py-2.5 shadow-sm hover:shadow transition-all duration-150 flex items-center gap-2.5 cursor-pointer select-none group"
         title="Instalar Norma ERP (PWA)"
       >
-        <FiDownload size={13} className="text-blue-600" />
-        <span>Instalar App</span>
+        <div className="w-6 h-6 rounded bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <FiDownload size={13} />
+        </div>
+        <div className="text-left">
+          <div className="text-[11px] font-semibold leading-none text-gray-900 flex items-center gap-1.5">
+            Instalar App
+            <span className="text-[9px] bg-gray-100 text-gray-600 border border-gray-200 px-1 py-0.2 rounded font-mono font-medium">
+              PWA
+            </span>
+          </div>
+          <div className="text-[9px] font-mono text-gray-400 mt-0.5 tracking-wider uppercase">
+            Acceso Directo
+          </div>
+        </div>
       </button>
     </div>
   );
