@@ -67,7 +67,7 @@ export class PayrollController {
   generateBankFile = asyncHandler(async (req, res) => {
     const tenantId = req.tenantId || req.user?.tenantId;
     const fileContent = await payrollCalculationService.generateBankFile(req.params.id, tenantId);
-    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=transferencias.csv');
     res.send(fileContent);
   });
@@ -106,11 +106,13 @@ export class PayrollController {
   signPayslip = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const employeeId = req.user?.employeeId || req.user?.id;
+    const tenantId = req.tenantId || req.user?.tenantId;
     const { signatureType, notes, p12Data } = req.body;
 
     const result = await payrollCalculationService.signPayslip({
       detailId: id,
       employeeId,
+      tenantId,
       signatureType,
       notes,
       p12Data,
@@ -132,9 +134,11 @@ export class PayrollController {
       throw new ValidationError('Debe especificar el motivo de la observación');
     }
 
+    const tenantId = req.tenantId || req.user?.tenantId;
     const result = await payrollCalculationService.disputePayslip({
       detailId: id,
       employeeId,
+      tenantId,
       reason,
     });
 

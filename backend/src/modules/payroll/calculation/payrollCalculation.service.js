@@ -12,6 +12,15 @@ import { safeDecrypt } from '../../../core/security/encryption.js';
 import { financial } from '../../../core/utils/financialUtils.js';
 import { qrSignatureService } from '../../signatures/index.js';
 import { notificationService } from '../../notifications/index.js';
+import { ConflictError, ForbiddenError, NotFoundError } from '../../../core/errors/appError.js';
+import payrollRepository from './payroll.repository.js';
+import {
+  getAdvanceRemainingBalance,
+  resolveInstallmentAmount,
+} from '../advances/advanceInstallment.js';
+
+const PUBLISHED_PAYROLL_STATUSES = ['APPROVED', 'PAID'];
+const UTF8_BOM = '﻿';
 
 class PayrollCalculationService {
   /**
@@ -433,10 +442,11 @@ class PayrollCalculationService {
       const employeeAdvances = advanceMap.get(emp.id) || [];
       employeeAdvances.forEach((adv) => {
         const quotaNumber = adv.paidInstallments + 1;
-        if (quotaNumber <= adv.installments) {
+        const installmentAmount = resolveInstallmentAmount(adv);
+        if (installmentAmount.gt(0)) {
           employeeDeductions.push({
             name: `Anticipo/Préstamo (Cuota ${quotaNumber}/${adv.installments})`,
-            amount: financial.round(adv.monthlyDeduction),
+            amount: financial.round(installmentAmount),
             advanceId: adv.id,
           });
         }
@@ -755,8 +765,11 @@ class PayrollCalculationService {
         include: { details: true },
       });
 
-      if (!payroll) throw new Error('Nómina no encontrada');
-      if (payroll.status === 'APPROVED') throw new Error('Nómina ya está aprobada');
+      if (!payroll) throw new NotFoundError('Nómina no encontrada');
+      if (payroll.status === 'APPROVED') throw new ConflictError('Nómina ya está aprobada');
+      if (payroll.status !== 'DRAFT') {
+        throw new ConflictError('Solo se puede aprobar una nómina en estado borrador');
+      }
 
       // RNF-20: Validation before confirmation
       const calculatedTotal = payroll.details.reduce(
@@ -814,8 +827,12 @@ class PayrollCalculationService {
         for (const ded of advanceDeductions) {
           const adv = advanceMap.get(ded.advanceId);
           if (adv) {
+            // Nunca se abona más que el saldo pendiente del anticipo
+            const appliedAmount = financial.min(ded.amount, getAdvanceRemainingBalance(adv));
             const newPaidInstallments = adv.paidInstallments + 1;
-            const newPaidAmount = financial.round(financial.from(adv.paidAmount).plus(ded.amount));
+            const newPaidAmount = financial.round(
+              financial.from(adv.paidAmount).plus(appliedAmount)
+            );
             const isFullyPaid =
               newPaidInstallments >= adv.installments || newPaidAmount >= adv.amount;
 
@@ -887,9 +904,15 @@ class PayrollCalculationService {
       },
     });
 
-    if (!payroll) throw new Error('Nómina no encontrada');
+    if (!payroll) throw new NotFoundError('Nómina no encontrada');
+    if (!PUBLISHED_PAYROLL_STATUSES.includes(payroll.status)) {
+      throw new ConflictError(
+        'El archivo bancario solo se genera para nóminas aprobadas o pagadas'
+      );
+    }
 
-    let csv = 'Identificacion,Beneficiario,Banco,TipoCuenta,NumeroCuenta,Monto,Detalle\n';
+    // BOM UTF-8: lo requieren los sistemas de Cash Management bancarios para leer tildes y eñes
+    let csv = `${UTF8_BOM}Identificacion,Beneficiario,Banco,TipoCuenta,NumeroCuenta,Monto,Detalle\n`;
 
     payroll.details.forEach((det) => {
       const emp = det.employee;
@@ -910,7 +933,7 @@ class PayrollCalculationService {
         }
 
         // RNF-20: Ensure 2 decimals in bank file
-        const amount = Number(det.netSalary || 0).toFixed(2);
+        const amount = financial.from(det.netSalary).toFixed(2);
 
         csv += `${emp.identityCard},${name},${bank},${emp.accountType || 'AHORROS'},${account},${amount},Nómina ${new Date(payroll.period).toLocaleDateString()}\n`;
       }
@@ -927,7 +950,13 @@ class PayrollCalculationService {
       },
     });
 
-    if (!payroll) throw new Error('Nómina no encontrada');
+    if (!payroll) throw new NotFoundError('Nómina no encontrada');
+    if (payroll.status === 'PAID') {
+      throw new ConflictError('La nómina ya fue registrada como pagada');
+    }
+    if (payroll.status !== 'APPROVED') {
+      throw new ConflictError('Solo se puede registrar el pago de una nómina aprobada');
+    }
 
     const updated = await prisma.payroll.update({
       where: { id },
@@ -1091,19 +1120,12 @@ class PayrollCalculationService {
   async signPayslip({
     detailId,
     employeeId,
+    tenantId,
     signatureType = 'QR_DIGITAL',
     notes = '',
     p12Data = null,
   }) {
-    const detail = await prisma.payrollDetail.findUnique({
-      where: { id: detailId },
-      include: { employee: true, payroll: true },
-    });
-
-    if (!detail) throw new Error('Detalle de rol de pagos no encontrado');
-    if (detail.employeeId !== employeeId && detail.employee?.id !== employeeId) {
-      throw new Error('No tienes autorización para firmar este rol de pagos');
-    }
+    const detail = await this.getOwnPublishedPayslip({ detailId, employeeId, tenantId });
 
     const signedAt = new Date();
     let signatureDataObj = {};
@@ -1152,18 +1174,32 @@ class PayrollCalculationService {
   }
 
   /**
+   * Obtiene el rol de pagos sobre el que un colaborador puede firmar u observar.
+   * Exige que el rol pertenezca a su empresa, que sea suyo y que la nómina esté publicada.
+   */
+  async getOwnPublishedPayslip({ detailId, employeeId, tenantId }) {
+    if (!tenantId) {
+      throw new ForbiddenError('Se requiere el contexto de la empresa para gestionar el rol');
+    }
+
+    const detail = await payrollRepository.findDetailWithPayroll(detailId, tenantId);
+    if (!detail) throw new NotFoundError('Detalle de rol de pagos no encontrado');
+
+    if (detail.employeeId !== employeeId) {
+      throw new ForbiddenError('No tienes autorización para gestionar este rol de pagos');
+    }
+    if (!PUBLISHED_PAYROLL_STATUSES.includes(detail.payroll?.status)) {
+      throw new ConflictError('El rol de pagos aún no ha sido publicado para firma');
+    }
+
+    return detail;
+  }
+
+  /**
    * Registro de observación o discrepancia en el Rol de Pagos por parte del Colaborador.
    */
-  async disputePayslip({ detailId, employeeId, reason }) {
-    const detail = await prisma.payrollDetail.findUnique({
-      where: { id: detailId },
-      include: { employee: true, payroll: true },
-    });
-
-    if (!detail) throw new Error('Detalle de rol de pagos no encontrado');
-    if (detail.employeeId !== employeeId && detail.employee?.id !== employeeId) {
-      throw new Error('No tienes autorización para observar este rol');
-    }
+  async disputePayslip({ detailId, employeeId, tenantId, reason }) {
+    await this.getOwnPublishedPayslip({ detailId, employeeId, tenantId });
 
     // Actualizar directamente en base de datos PostgreSQL
     await prisma.$executeRawUnsafe(

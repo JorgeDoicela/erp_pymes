@@ -9,6 +9,7 @@
 import prisma from '../../../database/db.js';
 import { auditRepository } from '../../audit/index.js';
 import { financial } from '../../../core/utils/financialUtils.js';
+import { decryptSalary } from '../../../core/security/encryption.js';
 
 class SalaryAdvanceService {
   /**
@@ -42,10 +43,9 @@ class SalaryAdvanceService {
       const employee = await prisma.employee.findUnique({
         where: { id: employeeId },
       });
-      if (employee && employee.salary) {
-        const numericSalary = employee.salary.toString().replace(/[^0-9.]/g, '');
-        if (numericSalary) baseSalary = financial.from(numericSalary);
-      }
+      // employee.salary se guarda cifrado (AES-256-GCM): se descifra, nunca se parsea el texto cifrado
+      const decryptedSalary = decryptSalary(employee?.salary);
+      if (decryptedSalary) baseSalary = financial.from(decryptedSalary);
     }
 
     if (!baseSalary || baseSalary.lte(0)) {
@@ -134,13 +134,6 @@ class SalaryAdvanceService {
     if (!employee) {
       throw new Error('Colaborador no encontrado o sin permisos');
     }
-
-    const activeContract = employee.contracts[0];
-    const baseSalary = activeContract
-      ? financial.from(activeContract.salary)
-      : employee.salary
-        ? financial.from(employee.salary.toString().replace(/[^0-9.]/g, ''))
-        : financial.from(0);
 
     const requested = financial.from(numAmount);
     const monthlyDeduction = financial.divide(requested, numInstallments);

@@ -232,10 +232,10 @@ describe('WhatsApp Multi-Tenant Agentic Skills & Queries Suite', () => {
         ...data,
         status: 'PENDING',
       })),
-      updateRequestStatus: vi.fn(async (id, status, comment) => ({
+      updateRequestStatus: vi.fn(async ({ id, status, adminComment }) => ({
         id,
         status,
-        adminComment: comment,
+        adminComment,
       })),
     };
 

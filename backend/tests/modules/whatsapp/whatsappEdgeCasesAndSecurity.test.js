@@ -185,10 +185,10 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
 
     absenceService = {
       createRequest: vi.fn(async (params) => ({ id: 'abs-mock-1', ...params, status: 'PENDING' })),
-      updateRequestStatus: vi.fn(async (id, status, comment) => ({
+      updateRequestStatus: vi.fn(async ({ id, status, adminComment }) => ({
         id,
         status,
-        adminComment: comment,
+        adminComment,
       })),
     };
 

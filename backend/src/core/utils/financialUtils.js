@@ -58,6 +58,10 @@ export const financial = {
    * División estándar
    */
   divide: (a, b) => new Decimal(a).div(new Decimal(b)),
+
+  min: (...values) => Decimal.min(...values.map((val) => new Decimal(val || 0))),
+
+  max: (...values) => Decimal.max(...values.map((val) => new Decimal(val || 0))),
 };
 
 export default financial;

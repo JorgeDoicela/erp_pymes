@@ -165,4 +165,68 @@ describe('AbsenceService Domain Rules & Multi-Tenant Isolation', () => {
       })
     );
   });
+
+  describe('updateRequestStatus: aislamiento multi-tenant', () => {
+    const pendingVacation = {
+      id: 'req-1',
+      employeeId: 'emp-1',
+      type: 'Vacaciones',
+      status: 'PENDING',
+      startDate: new Date('2027-05-10T00:00:00.000Z'),
+      endDate: new Date('2027-05-12T00:00:00.000Z'),
+    };
+
+    it('debe responder 404 y no modificar nada si la solicitud es de otra empresa', async () => {
+      // El repositorio filtra por tenant: para tenant-B la solicitud de tenant-A no existe
+      mockAbsenceRepo.getRequestById.mockResolvedValueOnce(null);
+
+      await expect(
+        absenceService.updateRequestStatus({
+          id: 'req-1',
+          status: 'APPROVED',
+          adminComment: 'Aprobado',
+          tenantId: 'tenant-B',
+        })
+      ).rejects.toMatchObject({ statusCode: 404 });
+
+      expect(mockAbsenceRepo.getRequestById).toHaveBeenCalledWith('req-1', 'tenant-B');
+      expect(mockAbsenceRepo.updateStatus).not.toHaveBeenCalled();
+      expect(mockAbsenceRepo.approveVacationWithDecrement).not.toHaveBeenCalled();
+      expect(mockAbsenceRepo.revertVacationWithIncrement).not.toHaveBeenCalled();
+    });
+
+    it('debe rechazar con 403 cuando no hay contexto de empresa', async () => {
+      await expect(
+        absenceService.updateRequestStatus({ id: 'req-1', status: 'APPROVED', tenantId: null })
+      ).rejects.toMatchObject({ statusCode: 403 });
+
+      expect(mockAbsenceRepo.getRequestById).not.toHaveBeenCalled();
+      expect(mockAbsenceRepo.approveVacationWithDecrement).not.toHaveBeenCalled();
+    });
+
+    it('debe aprobar vacaciones de la propia empresa descontando los días calendario', async () => {
+      mockAbsenceRepo.getRequestById.mockResolvedValueOnce(pendingVacation);
+      mockAbsenceRepo.approveVacationWithDecrement.mockResolvedValueOnce({
+        ...pendingVacation,
+        status: 'APPROVED',
+      });
+
+      const updated = await absenceService.updateRequestStatus({
+        id: 'req-1',
+        status: 'APPROVED',
+        adminComment: 'Aprobado',
+        tenantId: 'tenant-A',
+      });
+
+      expect(updated.status).toBe('APPROVED');
+      expect(mockAbsenceRepo.getRequestById).toHaveBeenCalledWith('req-1', 'tenant-A');
+      expect(mockAbsenceRepo.approveVacationWithDecrement).toHaveBeenCalledWith(
+        'req-1',
+        'emp-1',
+        3,
+        'APPROVED',
+        'Aprobado'
+      );
+    });
+  });
 });

@@ -118,6 +118,16 @@ export class PayrollRepository {
     });
   }
 
+  async findDetailWithPayroll(detailId, tenantId = null) {
+    return await prisma.payrollDetail.findFirst({
+      where: {
+        id: detailId,
+        ...(tenantId ? { payroll: { tenantId } } : {}),
+      },
+      include: { employee: true, payroll: true },
+    });
+  }
+
   async updatePayrollStatus(id, status) {
     return await prisma.payroll.update({
       where: { id },
