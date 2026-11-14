@@ -21,6 +21,7 @@ const CLOSED_CONFIRM = { open: false, title: '', message: '', onConfirm: null };
 
 const PayrollConfiguration = () => {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState({ workingDays: 30, items: [] });
   const [newItemMode, setNewItemMode] = useState('PERCENTAGE');
@@ -33,6 +34,7 @@ const PayrollConfiguration = () => {
 
   const loadConfig = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await getPayrollConfig();
       if (res.success && res.data) {
@@ -44,8 +46,10 @@ const PayrollConfiguration = () => {
           })),
         });
       }
-    } catch (error) {
-      toast.error(error.message || 'Error al cargar la configuración de nómina');
+    } catch (err) {
+      const msg = err.message || 'Error al cargar la configuración de nómina';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -239,6 +243,8 @@ const PayrollConfiguration = () => {
         <PayrollRubrosTable
           items={config.items}
           loading={loading}
+          error={error}
+          onRetry={loadConfig}
           newItem={newItem}
           setNewItem={setNewItem}
           newItemMode={newItemMode}

@@ -116,45 +116,30 @@ const MySalaryAdvances = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white p-4 rounded border border-gray-200 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
-              Solicitud Pendiente
-            </p>
-            <p className="text-base font-bold text-gray-900 font-mono tabular-nums mt-0.5">
-              {pendingAdvance
-                ? `$${pendingAdvance.amount.toFixed(2)} (${pendingAdvance.installments} cuotas)`
-                : 'Ninguna'}
-            </p>
-          </div>
-          <div className="w-8 h-8 rounded bg-gray-100 text-gray-700 font-mono flex items-center justify-center text-xs font-semibold">
-            P
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded border border-gray-200 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
-              Anticipo / Préstamo Activo
-            </p>
-            <p className="text-base font-bold text-gray-900 font-mono tabular-nums mt-0.5">
-              {activeAdvance
-                ? `$${activeAdvance.monthlyDeduction.toFixed(2)} / mes (${activeAdvance.paidInstallments}/${activeAdvance.installments} cuotas)`
-                : 'Sin préstamos activos'}
-            </p>
-          </div>
-          <div className="w-8 h-8 rounded bg-gray-100 text-gray-700 font-mono flex items-center justify-center text-xs font-semibold">
-            A
-          </div>
-        </div>
-      </div>
-
       <div className="bg-white rounded border border-gray-200 overflow-hidden">
-        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h2 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
             Historial de Solicitudes
           </h2>
+          <div className="flex flex-wrap items-center gap-4 text-xs font-mono tabular-nums text-gray-600">
+            <span>
+              Pendiente:{' '}
+              <strong className="text-gray-900">
+                {pendingAdvance
+                  ? `$${pendingAdvance.amount.toFixed(2)} (${pendingAdvance.installments} cuotas)`
+                  : 'Ninguna'}
+              </strong>
+            </span>
+            <span className="text-gray-300">|</span>
+            <span>
+              Vigente:{' '}
+              <strong className="text-gray-900">
+                {activeAdvance
+                  ? `$${activeAdvance.monthlyDeduction.toFixed(2)}/mes (${activeAdvance.paidInstallments}/${activeAdvance.installments})`
+                  : 'Sin préstamos activos'}
+              </strong>
+            </span>
+          </div>
         </div>
         <MyAdvancesTable
           advances={advances}
