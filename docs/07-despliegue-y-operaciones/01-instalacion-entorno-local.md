@@ -57,7 +57,7 @@ docker compose logs -f frontend
 
 La primera vez, Docker Compose:
 
-1. Descarga las imágenes de PostgreSQL 15 y Redis 7.
+1. Descarga la imagen de PostgreSQL 15 (`pgvector/pgvector:pg15`).
 2. Construye la imagen del backend (Node.js 20).
 3. Ejecuta `npx prisma migrate deploy` automáticamente.
 4. Construye la imagen del frontend (Vite + Nginx).
@@ -68,8 +68,8 @@ La aplicación estará disponible en `http://localhost`.
 ## 4. Opción B: Levantamiento Manual (Solo base de datos con Docker)
 
 ```bash
-# 1. Iniciar solo PostgreSQL y Redis con Docker
-docker compose up -d db redis
+# 1. Iniciar solo PostgreSQL con Docker
+docker compose up -d db
 
 # 2. Backend (modo desarrollo con hot reload)
 cd backend

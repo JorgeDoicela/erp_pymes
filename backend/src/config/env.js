@@ -48,19 +48,10 @@ if (!isRunningInDocker && process.env.DATABASE_URL) {
   }
 }
 
-// 5. Adaptación transparente de REDIS_URL para desarrollo nativo fuera de Docker
-if (!isRunningInDocker && process.env.REDIS_URL) {
-  if (process.env.REDIS_URL.includes('redis://redis:6379')) {
-    const redisHostPort = process.env.REDIS_PORT || '6380';
-    process.env.REDIS_URL = `redis://localhost:${redisHostPort}`;
-  }
-}
-
 export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT || '5000', 10),
   DATABASE_URL: process.env.DATABASE_URL,
-  REDIS_URL: process.env.REDIS_URL,
   JWT_SECRET: process.env.JWT_SECRET,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',

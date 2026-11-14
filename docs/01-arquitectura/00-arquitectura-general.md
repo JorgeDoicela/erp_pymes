@@ -13,26 +13,25 @@ El sistema está compuesto por dos aplicaciones independientes que se comunican 
 
 ### 2.1 Backend
 
-| Componente               | Tecnología                    | Versión   |
-| ------------------------ | ----------------------------- | --------- |
-| Runtime                  | Node.js                       | 20 LTS    |
-| Framework HTTP           | Express                       | 5.1.0     |
-| ORM                      | Prisma Client                 | 5.22.0    |
-| Base de datos            | PostgreSQL                    | 15-alpine |
-| Caché / Mensajería       | Redis                         | 7-alpine  |
-| WebSockets               | Socket.IO                     | 4.8.3     |
-| Tareas programadas       | node-cron                     | 4.2.1     |
-| Autenticación            | JSON Web Token (jsonwebtoken) | 9.0.2     |
-| Hashing de contraseñas   | bcryptjs                      | 3.0.3     |
-| Encriptación             | Node.js crypto (AES-256-GCM)  | nativo    |
-| Cabeceras de seguridad   | Helmet                        | 8.1.0     |
-| Autenticación biométrica | @simplewebauthn/server        | 13.2.3    |
-| Envío de correo          | Nodemailer                    | 7.0.12    |
-| Subida de archivos       | Multer                        | 2.0.2     |
-| Exportación Excel        | ExcelJS                       | 4.4.0     |
-| Precisión financiera     | Decimal.js                    | 10.6.0    |
-| Validación de esquemas   | Zod                           | 3.24.2    |
-| Tipado estático          | TypeScript (tsc --noEmit)     | 5.9.3     |
+| Componente               | Tecnología                    | Versión |
+| ------------------------ | ----------------------------- | ------- |
+| Runtime                  | Node.js                       | 20 LTS  |
+| Framework HTTP           | Express                       | 5.1.0   |
+| ORM                      | Prisma Client                 | 5.22.0  |
+| Base de datos            | PostgreSQL + pgvector         | 15      |
+| WebSockets               | Socket.IO                     | 4.8.3   |
+| Tareas programadas       | node-cron                     | 4.2.1   |
+| Autenticación            | JSON Web Token (jsonwebtoken) | 9.0.2   |
+| Hashing de contraseñas   | bcryptjs                      | 3.0.3   |
+| Encriptación             | Node.js crypto (AES-256-GCM)  | nativo  |
+| Cabeceras de seguridad   | Helmet                        | 8.1.0   |
+| Autenticación biométrica | @simplewebauthn/server        | 13.2.3  |
+| Envío de correo          | Nodemailer                    | 7.0.12  |
+| Subida de archivos       | Multer                        | 2.0.2   |
+| Exportación Excel        | ExcelJS                       | 4.4.0   |
+| Precisión financiera     | Decimal.js                    | 10.6.0  |
+| Validación de esquemas   | Zod                           | 3.24.2  |
+| Tipado estático          | TypeScript (tsc --noEmit)     | 5.9.3   |
 
 ### 2.2 Frontend
 
@@ -53,12 +52,12 @@ El sistema está compuesto por dos aplicaciones independientes que se comunican 
 
 ### 2.3 Infraestructura
 
-| Componente             | Tecnología                                |
-| ---------------------- | ----------------------------------------- |
-| Contenedores           | Docker + Docker Compose                   |
-| Proxy inverso          | Nginx (SSL/TLS en producción)             |
-| Servidor en la nube    | AWS EC2                                   |
-| Volúmenes persistentes | postgres_data · redis_data · uploads_data |
+| Componente             | Tecnología                                    |
+| ---------------------- | --------------------------------------------- |
+| Contenedores           | Docker + Docker Compose                       |
+| Proxy inverso          | Nginx (SSL/TLS en producción)                 |
+| Servidor en la nube    | AWS EC2                                       |
+| Volúmenes persistentes | postgres_data · uploads_data · ai_models_data |
 
 ## 3. Arquitectura Multi-Tenant
 
@@ -227,7 +226,7 @@ El sistema implementa múltiples capas de seguridad independientes:
 
 ## 6. Comunicación en Tiempo Real
 
-El servidor `server.js` instancia Socket.IO sobre el mismo servidor HTTP de Express. Los eventos emitidos incluyen notificaciones de asistencia, alertas de evaluación y cambios de estado de procesos asincrónicos. Redis puede configurarse como adaptador de Socket.IO para escalado horizontal.
+El servidor `server.js` instancia Socket.IO sobre el mismo servidor HTTP de Express. Los eventos emitidos incluyen notificaciones de asistencia, alertas de evaluación y cambios de estado de procesos asincrónicos.
 
 ## 7. Almacenamiento de Archivos
 

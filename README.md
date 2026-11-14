@@ -21,7 +21,7 @@ erp_pymes/
 ├── nginx/              # Reverse Proxy Gateway perimetral (SSL/TLS 443 · HTTP/2 · WebSockets)
 ├── scripts/            # Mantenimiento, respaldos de base de datos y pruebas de estrés
 ├── docs/               # Biblioteca técnica Docs-as-Code (00-indice-general.md)
-└── docker-compose.yml  # Orquestación multi-contenedor: Postgres · Redis · Backend · Frontend · Gateway
+└── docker-compose.yml  # Orquestación multi-contenedor: Postgres · Backend · Frontend · Gateway
 ```
 
 ## Módulos Funcionales (Bounded Contexts)
@@ -52,9 +52,9 @@ erp_pymes/
 
 ## Pila Tecnológica
 
-**Backend:** Node.js 20/22 · Express 5 · Prisma ORM 5.22 · PostgreSQL 15 · Redis 7 · Socket.IO 4 · Decimal.js · Zod · TypeScript check (159 pruebas en 26 suites Vitest)
+**Backend:** Node.js 20/22 · Express 5 · Prisma ORM 5.22 · PostgreSQL 15 + pgvector · Socket.IO 4 · Decimal.js · Zod · TypeScript check (50 suites Vitest)
 
-**Frontend:** React 19 · Vite 7 · React Router DOM 7 · TailwindCSS 3 · Recharts 3 · Leaflet 1.9 · Framer Motion 12 · react-icons (Feather & Hi2) · PWA (30 pruebas en 9 suites Vitest)
+**Frontend:** React 19 · Vite 7 · React Router DOM 7 · TailwindCSS 3 · Recharts 3 · Leaflet 1.9 · Framer Motion 12 · react-icons (Feather & Hi2) · PWA (14 suites Vitest)
 
 **Seguridad:** JWT (jsonwebtoken) · bcryptjs · AES-256-GCM (crypto nativo) · Helmet · WebAuthn FIDO2 · Secretlint
 
@@ -68,7 +68,7 @@ El proyecto está 100% dockerizado y gestiona todos los servicios mediante una �
 # 1. Crear el archivo de entorno desde la plantilla unificada
 cp .env.example .env
 
-# 2. Levantar la plataforma completa (Postgres, Redis, Backend, Frontend, Gateway)
+# 2. Levantar la plataforma completa (Postgres, Backend, Frontend, Gateway)
 docker compose up --build -d
 
 # 3. Visualizar logs de los servicios

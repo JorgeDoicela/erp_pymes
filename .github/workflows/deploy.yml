@@ -371,9 +371,8 @@ jobs:
           | **Desplegado por** | @${{ github.actor }} |
 
           ### Servicios Desplegados en Docker:
-          - **PostgreSQL 15**: Base de Datos Relacional con almacenamiento persistente.
-          - **Redis 7**: Cache en tiempo real y soporte de WebSockets.
-          - **Backend Node.js API**: Express, Prisma ORM y Socket.io.
+          - **PostgreSQL 15 + pgvector**: Base de Datos Relacional y Vectorial HNSW con almacenamiento persistente.
+          - **Backend Node.js API**: Express 5, Prisma ORM, ONNX Runtime y Socket.IO.
           - **Frontend React**: Servidor Nginx optimizado para activos estáticos SPA.
           - **Gateway Nginx**: Reverse Proxy perimetral, SSL/TLS 443, compresión Gzip y WebSockets.
           EOF

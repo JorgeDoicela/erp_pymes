@@ -2,7 +2,7 @@
 
 ## 1. Arquitectura de Contenedores
 
-El sistema opera con 5 contenedores orquestados mediante Docker Compose bajo un patrón de Reverse Proxy & API Gateway perimetral:
+El sistema opera con 4 contenedores orquestados mediante Docker Compose bajo un patrón de Reverse Proxy & API Gateway perimetral:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -21,11 +21,10 @@ El sistema opera con 5 contenedores orquestados mediante Docker Compose bajo un 
 │                                  │    │ (rh_backend)                │  │
 │                                  │    └──────┬──────────────────────┘  │
 │                                  │           │                         │
-│                                  │    ┌──────▼──────┐   ┌───────────┐  │
-│                                  │    │ PostgreSQL  │   │  Redis    │  │
-│                                  └───►│ :5432       │   │  :6379    │  │
-│                                       │(rh_postgres)│   │ (rh_redis)│  │
-│                                       └─────────────┘   └───────────┘  │
+│                                  │    ┌──────▼──────────────────────┐  │
+│                                  │    │ PostgreSQL 15 + pgvector    │  │
+│                                  └───►│ :5432 (rh_postgres)         │  │
+│                                       └─────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -49,20 +48,7 @@ db:
 
 El volumen `postgres_data` persiste las tablas relacionales y la extensión vectorial `pgvector` (`vector(768)` + índice `HNSW`) fuera del ciclo de vida del contenedor.
 
-### 2.2 Caché Redis
-
-```yaml
-redis:
-  image: redis:7-alpine
-  container_name: rh_redis
-  restart: always
-  healthcheck:
-    test: ['CMD', 'redis-cli', 'ping']
-```
-
-Redis gestiona en memoria el estado de WebSockets y la caché de sesiones.
-
-### 2.3 Backend API
+### 2.2 Backend API
 
 ```yaml
 backend:
@@ -72,7 +58,6 @@ backend:
   environment:
     PORT: 5000
     DATABASE_URL: postgresql://...@db:5432/...
-    REDIS_URL: redis://redis:6379
     JWT_SECRET: ...
     ENCRYPTION_KEY: ...
     RP_ID: doicela.dev
@@ -88,13 +73,11 @@ backend:
   depends_on:
     db:
       condition: service_healthy
-    redis:
-      condition: service_healthy
 ```
 
 El `start_period: 120s` concede tiempo suficiente para que Prisma ejecute migraciones pendientes y `syncHuggingFaceModels.js ensure` descargue los modelos ONNX `QUInt8` en el primer arranque. El volumen `uploads_data` persiste los archivos subidos y `ai_models_data` persiste `bi-encoder/` y `cross-encoder/`.
 
-### 2.4 Frontend Web SPA
+### 2.3 Frontend Web SPA
 
 ```yaml
 frontend:
@@ -109,7 +92,7 @@ frontend:
 
 El contenedor frontend sirve los activos estáticos compilados de la SPA de React mediante un Nginx interno optimizado para servir archivos en caché inmutable y resolver rutas con `try_files $uri $uri/ /index.html`. No expone puertos al exterior; solo es accesible internamente por el Gateway.
 
-### 2.5 Reverse Proxy & API Gateway (Nginx)
+### 2.4 Reverse Proxy & API Gateway (Nginx)
 
 ```yaml
 gateway:

@@ -19,6 +19,9 @@ Este archivo almacena el contexto operativo, decisiones de interfaz y lecciones 
 
 ## 2. Historial de Decisiones y Lecciones Aprendidas
 
+* **2026-11-14 (Eliminación del Contenedor Redis Innecesario y Unificación sobre PostgreSQL 15 + `pgvector`):**
+  * Se eliminó el servicio `redis` (`rh_redis`), el volumen `redis_data` y las variables `REDIS_URL` / `REDIS_PORT` de `docker-compose.yml`, `backend/src/config/env.js`, `.env.example`, `.github/workflows/deploy.yml`, `README.md` y la documentación técnica (`docs/`), dado que el sistema no dependía de ningún cliente Redis en código (`package.json`) y resuelve autenticación mediante JWT stateless, rate limiting en memoria del proceso y persistencia transaccional/vectorial unificada en PostgreSQL 15 + `pgvector`.
+
 * **2026-11-14 (Auditoría, Fusión de PR #16 y Cierre Integral del Issue #15: Flujo End-to-End de Nómina, Asistencias, Horas Extra, Ausencias, Beneficios y Contabilidad):**
   * **Sección 1 — Asistencias, Turnos, Horas Extra y Recargo Nocturno (`geofence.helper.js`, `attendance.service.js`, `payrollDomainRules.helper.js`, `payrollCalculation.service.js`):**
     1. Se eliminó el falso positivo de horas extra por atraso en `computeExitMetrics` (`geofence.helper.js`) y en `computeAttendanceAndOvertimeBreakdown` (`payrollDomainRules.helper.js`), calculando el tiempo extra como el mínimo entre el exceso de duración sobre la jornada del turno (`workedHours - shiftDurationHours`) y el exceso sobre la hora programada de salida (`exitMinutes - shiftEndMinutes`).
