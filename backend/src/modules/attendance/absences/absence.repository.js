@@ -8,6 +8,7 @@
  */
 
 import prisma from '../../../database/db.js';
+import { ValidationError } from '../../../core/errors/appError.js';
 
 export const absenceRepository = {
   async createRequest(data) {
@@ -94,7 +95,9 @@ export const absenceRepository = {
       const employee = await tx.employee.findUnique({ where: { id: employeeId } });
 
       if (employee.vacationDays < days) {
-        throw new Error(`No se puede aprobar: Saldo insuficiente (${employee.vacationDays} días).`);
+        throw new ValidationError(
+          `No se puede aprobar: Saldo insuficiente (${employee.vacationDays} días).`
+        );
       }
 
       await tx.employee.update({
@@ -123,9 +126,11 @@ export const absenceRepository = {
     });
   },
 
-  async getByEmployee(employeeId) {
+  async getByEmployee(employeeId, tenantId = null) {
+    const where = { employeeId };
+    if (tenantId) where.employee = { tenantId };
     return prisma.absenceRequest.findMany({
-      where: { employeeId },
+      where,
       orderBy: { createdAt: 'desc' },
     });
   },

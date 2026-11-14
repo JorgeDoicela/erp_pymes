@@ -30,6 +30,8 @@ const AdvancesManagementTable = ({
   advances,
   stats,
   loading,
+  error,
+  onRetry,
   activeTab,
   searchTerm,
   pagination,
@@ -120,6 +122,21 @@ const AdvancesManagementTable = ({
                 <tr>
                   <td colSpan="9" className="p-8 text-center text-gray-400 text-xs">
                     Cargando anticipos y préstamos...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="9" className="p-8 text-center space-y-2">
+                    <p className="text-xs text-red-700 font-medium">{error}</p>
+                    {onRetry && (
+                      <button
+                        type="button"
+                        onClick={onRetry}
+                        className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-700 hover:bg-gray-50 cursor-pointer"
+                      >
+                        Reintentar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ) : advances.length === 0 ? (

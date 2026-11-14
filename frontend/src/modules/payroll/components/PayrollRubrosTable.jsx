@@ -161,6 +161,8 @@ const RubroDisplayRow = ({ item, index, dynamicInfo, onStartEdit, onRemoveItem }
 const PayrollRubrosTable = ({
   items,
   loading,
+  error,
+  onRetry,
   newItem,
   setNewItem,
   newItemMode,
@@ -283,6 +285,21 @@ const PayrollRubrosTable = ({
             <tr>
               <td colSpan="5" className="p-8 text-center text-gray-400 text-xs">
                 Cargando catálogo de rubros...
+              </td>
+            </tr>
+          ) : error ? (
+            <tr>
+              <td colSpan="5" className="p-8 text-center space-y-2">
+                <p className="text-xs text-red-700 font-medium">{error}</p>
+                {onRetry && (
+                  <button
+                    type="button"
+                    onClick={onRetry}
+                    className="px-3 py-1 border border-gray-300 rounded text-xs text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  >
+                    Reintentar
+                  </button>
+                )}
               </td>
             </tr>
           ) : items.length === 0 ? (

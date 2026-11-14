@@ -45,6 +45,7 @@ const SalaryAdvancesManagement = ({ user }) => {
   const [employees, setEmployees] = useState([]);
   const [stats, setStats] = useState(INITIAL_STATS);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,6 +75,7 @@ const SalaryAdvancesManagement = ({ user }) => {
 
   const refreshData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [res, statsRes] = await Promise.all([
         getAdvances({
@@ -95,8 +97,10 @@ const SalaryAdvancesManagement = ({ user }) => {
         }
       }
       if (statsRes.success && statsRes.data) setStats(statsRes.data);
-    } catch (error) {
-      showNotification('error', error.message || 'Error al cargar anticipos');
+    } catch (err) {
+      const msg = err.message || 'Error al cargar anticipos';
+      setError(msg);
+      showNotification('error', msg);
     } finally {
       setLoading(false);
     }
@@ -213,6 +217,8 @@ const SalaryAdvancesManagement = ({ user }) => {
         advances={advances}
         stats={stats}
         loading={loading}
+        error={error}
+        onRetry={refreshData}
         activeTab={activeTab}
         searchTerm={searchTerm}
         pagination={pagination}

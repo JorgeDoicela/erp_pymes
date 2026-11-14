@@ -47,6 +47,7 @@ const BenefitsManagement = () => {
   const [employees, setEmployees] = useState([]);
   const [stats, setStats] = useState(INITIAL_STATS);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,6 +68,7 @@ const BenefitsManagement = () => {
 
   const refreshData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [res, statsRes] = await Promise.all([
         getBenefits({
@@ -89,8 +91,10 @@ const BenefitsManagement = () => {
         }
       }
       if (statsRes.success && statsRes.data) setStats(statsRes.data);
-    } catch (error) {
-      showNotification('error', error.message || 'Error al cargar beneficios');
+    } catch (err) {
+      const msg = err.message || 'Error al cargar beneficios';
+      setError(msg);
+      showNotification('error', msg);
     } finally {
       setLoading(false);
     }
@@ -235,6 +239,8 @@ const BenefitsManagement = () => {
         benefits={benefits}
         stats={stats}
         loading={loading}
+        error={error}
+        onRetry={refreshData}
         activeTab={activeTab}
         searchTerm={searchTerm}
         filterType={filterType}

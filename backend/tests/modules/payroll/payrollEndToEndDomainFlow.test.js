@@ -9,7 +9,7 @@ const prismaMock = vi.hoisted(() => {
     employeeSchedule: { findMany: vi.fn() },
     employeeBenefit: { findMany: vi.fn(), createMany: vi.fn() },
     salaryAdvance: { findMany: vi.fn() },
-    absenceRequest: { findMany: vi.fn() },
+    absenceRequest: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     journalEntry: { findFirst: vi.fn(), create: vi.fn() },
     journalLine: { findMany: vi.fn() },
     accountingAccount: { findMany: vi.fn() },
@@ -51,6 +51,8 @@ import {
 import payrollCalculationService from '../../../src/modules/payroll/calculation/payrollCalculation.service.js';
 import employeeBenefitService from '../../../src/modules/payroll/benefits/employeeBenefit.service.js';
 import accountingService from '../../../src/modules/accounting/accounting.service.js';
+import { absenceService } from '../../../src/modules/attendance/absences/absence.service.js';
+import { ForbiddenError, NotFoundError } from '../../../src/core/errors/appError.js';
 import { encryptSalary } from '../../../src/core/security/encryption.js';
 import { financial } from '../../../src/core/utils/financialUtils.js';
 
@@ -213,6 +215,25 @@ describe('Flujo E2E Nómina, Asistencias, Ausencias, Beneficios y Contabilidad (
         amount: 45,
       });
       expect(breakdown.finalNetSalary).toBe(855);
+    });
+
+    it('blinda absenceService.updateRequestStatus exigiendo tenantId y rechazando solicitudes de otro tenant', async () => {
+      await expect(
+        absenceService.updateRequestStatus('req-1', 'APPROVED', 'OK', null)
+      ).rejects.toThrow(ForbiddenError);
+
+      prismaMock.absenceRequest.findFirst.mockResolvedValueOnce(null);
+      await expect(
+        absenceService.updateRequestStatus({
+          id: 'req-other-tenant',
+          status: 'APPROVED',
+          adminComment: 'OK',
+          tenantId: 'tenant-A',
+        })
+      ).rejects.toThrow(NotFoundError);
+      expect(prismaMock.absenceRequest.findFirst).toHaveBeenCalledWith({
+        where: { id: 'req-other-tenant', employee: { tenantId: 'tenant-A' } },
+      });
     });
   });
 

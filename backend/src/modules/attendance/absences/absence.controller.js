@@ -37,21 +37,16 @@ const upload = multer({
 
 const createRequest = async (req, res, next) => {
   try {
-    // req.body tiene los campos de texto, req.file el archivo
     const { type, startDate, endDate, reason, employeeId } = req.body;
-
     const userRole = (req.user?.role || '').toLowerCase();
     const sessionUserId = req.user?.employeeId || req.user?.id;
     const isAdminOrManager = ['admin', 'hr', 'manager', 'superadmin'].includes(userRole);
-
     const targetEmployeeId = isAdminOrManager && employeeId ? employeeId : sessionUserId;
-
-    console.log('Creating Absence Request');
-    console.log('Body:', req.body);
-    console.log('File:', req.file); // DEBUG
+    const tenantId = req.tenantId || req.user?.tenantId || null;
 
     const request = await absenceService.createRequest({
       employeeId: targetEmployeeId,
+      tenantId,
       type,
       startDate,
       endDate,
@@ -109,7 +104,9 @@ const updateStatus = async (req, res, next) => {
 
 const getMyRequests = async (req, res, next) => {
   try {
-    const requests = await absenceService.getEmployeeRequests(req.user.id);
+    const employeeId = req.user?.employeeId || req.user?.id;
+    const tenantId = req.tenantId || req.user?.tenantId || null;
+    const requests = await absenceService.getEmployeeRequests(employeeId, tenantId);
     res.json({ success: true, data: requests });
   } catch (error) {
     next(error);
