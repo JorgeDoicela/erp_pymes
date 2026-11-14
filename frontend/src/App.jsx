@@ -136,6 +136,9 @@ const LegalComplianceDashboard = lazy(
   () => import('@modules/compliance/pages/LegalComplianceDashboard.jsx')
 );
 const PrivacyPolicy = lazy(() => import('@modules/compliance/pages/PrivacyPolicy.jsx'));
+const TermsConsentModal = lazy(
+  () => import('@modules/compliance/components/TermsConsentModal.jsx')
+);
 const ExpiringContracts = lazy(() => import('@modules/contracts/pages/ExpiringContracts.jsx'));
 
 // Notifications, Audit & Help
@@ -226,6 +229,12 @@ function App() {
     setAuth({ user: null, token: null });
   };
 
+  const handleConsentSuccess = (updatedUser) => {
+    const userToSave = updatedUser || { ...auth.user, termsAccepted: true, privacyAccepted: true };
+    localStorage.setItem('user', JSON.stringify(userToSave));
+    setAuth((prev) => ({ ...prev, user: userToSave }));
+  };
+
   useEffect(() => {
     const handleUserUpdated = () => {
       const savedUser = localStorage.getItem('user');
@@ -258,6 +267,13 @@ function App() {
           <PWAReloadPrompt />
           <AccessibilityFloatingPlayer />
           <ScreenReaderAnnouncer />
+          {auth.user && !auth.user.termsAccepted && (
+            <TermsConsentModal
+              user={auth.user}
+              onConsentSuccess={handleConsentSuccess}
+              onLogout={handleLogout}
+            />
+          )}
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/privacy" element={<PrivacyPolicy mode="privacy" />} />

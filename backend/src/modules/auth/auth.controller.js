@@ -51,3 +51,32 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error al restablecer la contraseña' });
   }
 };
+
+export const recordConsent = async (req, res) => {
+  try {
+    const { acceptTerms, acceptPrivacy, version } = req.body;
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress;
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+
+    const result = await authService.recordConsent({
+      userId: req.user.id,
+      tenantId: req.user.tenantId,
+      acceptTerms,
+      acceptPrivacy,
+      version,
+      ip: typeof ip === 'string' ? ip.split(',')[0].trim() : ip,
+      userAgent,
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json(error.payload);
+    }
+    console.error('[AUTH ERROR] Record Consent:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al registrar consentimiento: ' + error.message,
+    });
+  }
+};

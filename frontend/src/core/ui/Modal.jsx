@@ -26,11 +26,14 @@ export const Modal = ({
   footer,
   size = 'md',
   className = '',
+  closeOnBackdrop = true,
+  closeOnEsc = true,
+  showCloseButton = true,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+      if (e.key === 'Escape' && isOpen && closeOnEsc) {
+        onClose?.();
       }
     };
 
@@ -45,16 +48,22 @@ export const Modal = ({
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, closeOnEsc]);
 
   if (!isOpen) return null;
 
   const sizeClass = SIZES[size] || SIZES.md;
 
+  const handleBackdropClick = () => {
+    if (closeOnBackdrop && onClose) {
+      onClose();
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs select-none"
-      onClick={onClose}
+      onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
     >
@@ -70,14 +79,16 @@ export const Modal = ({
             </h3>
             {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer"
-            aria-label="Cerrar modal"
-          >
-            <FiX className="w-4 h-4" />
-          </button>
+          {showCloseButton && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+              aria-label="Cerrar modal"
+            >
+              <FiX className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Body */}

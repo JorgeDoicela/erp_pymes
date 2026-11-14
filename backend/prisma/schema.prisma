@@ -53,6 +53,7 @@ model Tenant {
   knowledgeDocuments   KnowledgeDocument[]
   whatsappContexts     WhatsappConversationContext[]
   whatsappActionSessions WhatsappActionSession[]
+  legalConsents        LegalConsent[]
 
   @@map("tenants")
 }
@@ -115,6 +116,12 @@ model Employee {
   trackingConsentDate  DateTime?
   whatsappConsent      Boolean                 @default(false)
   whatsappConsentDate  DateTime?
+  termsAccepted        Boolean                 @default(false)
+  termsAcceptedAt      DateTime?
+  termsVersion         String?
+  privacyAccepted      Boolean                 @default(false)
+  privacyAcceptedAt    DateTime?
+  privacyVersion       String?
   salaryAdvances       SalaryAdvance[]
   assets               EmployeeAsset[]
   offboardings         OffboardingProcess[]
@@ -124,6 +131,7 @@ model Employee {
   projectMemberships   EntrepreneurshipMember[]
   projectMentorships   EntrepreneurshipMentor[]
   whatsappActionSessions WhatsappActionSession[]
+  legalConsents        LegalConsent[]
 
   @@index([email])
   @@index([department])
@@ -131,6 +139,7 @@ model Employee {
   @@index([tenantId, isActive])
   @@index([tenantId, role])
   @@index([tenantId, whatsappConsent])
+  @@index([tenantId, termsAccepted])
   @@index([hireDate])
   @@index([exitDate])
   @@index([isActive])
@@ -1345,6 +1354,29 @@ model WhatsappActionSession {
   @@index([expiresAt])
   @@map("whatsapp_action_sessions")
 }
+
+model LegalConsent {
+  id          String   @id @default(cuid())
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  consentType String   // TERMS_OF_SERVICE, PRIVACY_POLICY
+  version     String   // e.g., "2026.1"
+  accepted    Boolean  @default(true)
+  ipAddress   String?
+  userAgent   String?
+  metadata    String?  // JSON con metadatos de auditoría legal
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([consentType])
+  @@index([createdAt])
+  @@index([tenantId, consentType])
+  @@map("legal_consents")
+}
+
 
 
 

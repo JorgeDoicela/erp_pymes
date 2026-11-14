@@ -36,6 +36,7 @@ const DIRECT_TENANT_MODELS = new Set([
   'AttentionCalibration',
   'FTTransformerWeights',
   'WhatsappActionSession',
+  'LegalConsent',
 ]);
 
 // 2. Modelos relacionales vinculados directamente al Empleado (Employee)

@@ -7,4 +7,6 @@
  */
 
 export { default as LegalComplianceDashboard } from './pages/LegalComplianceDashboard.jsx';
+export { default as PrivacyPolicy } from './pages/PrivacyPolicy.jsx';
+export { default as TermsConsentModal } from './components/TermsConsentModal.jsx';
 export * as complianceService from './services/compliance.service.js';

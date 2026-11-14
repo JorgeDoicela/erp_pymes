@@ -7,7 +7,8 @@
  */
 
 import { Router } from 'express';
-import { login, forgotPassword, resetPassword } from './auth.controller.js';
+import { login, forgotPassword, resetPassword, recordConsent } from './auth.controller.js';
+import { authenticate } from './auth.middleware.js';
 import { rateLimit } from '../../core/middleware/rateLimit.middleware.js';
 
 const router = Router();
@@ -19,5 +20,6 @@ router.post(
   forgotPassword
 );
 router.post('/reset-password', resetPassword);
+router.post('/consent', authenticate, recordConsent);
 
 export default router;

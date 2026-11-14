@@ -22,6 +22,32 @@ export class AuthHttpError extends Error {
   }
 }
 
+const formatUserPayload = (user, effectiveRole, effectiveTenantId) => ({
+  id: user.id,
+  tenantId: effectiveTenantId,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  email: user.email,
+  role: effectiveRole,
+  trackingConsent: user.trackingConsent,
+  termsAccepted: Boolean(user.termsAccepted),
+  termsAcceptedAt: user.termsAcceptedAt,
+  termsVersion: user.termsVersion,
+  privacyAccepted: Boolean(user.privacyAccepted),
+  privacyAcceptedAt: user.privacyAcceptedAt,
+  privacyVersion: user.privacyVersion,
+  tenant:
+    effectiveRole !== 'superadmin' && user.tenant
+      ? {
+          id: user.tenant.id,
+          name: user.tenant.name,
+          slug: user.tenant.slug,
+          plan: user.tenant.plan,
+          subscriptionStatus: user.tenant.subscriptionStatus,
+        }
+      : null,
+});
+
 export class AuthService {
   async login(emailRaw, password) {
     const identifier = emailRaw?.toString().trim();
@@ -121,25 +147,7 @@ export class AuthService {
     return {
       success: true,
       message: 'Login exitoso',
-      data: {
-        id: user.id,
-        tenantId: effectiveTenantId,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: effectiveRole,
-        trackingConsent: user.trackingConsent,
-        tenant:
-          effectiveRole !== 'superadmin' && user.tenant
-            ? {
-                id: user.tenant.id,
-                name: user.tenant.name,
-                slug: user.tenant.slug,
-                plan: user.tenant.plan,
-                subscriptionStatus: user.tenant.subscriptionStatus,
-              }
-            : null,
-      },
+      data: formatUserPayload(user, effectiveRole, effectiveTenantId),
       token,
     };
   }
@@ -227,6 +235,63 @@ export class AuthService {
       .catch((err) => console.error('Audit Log Error:', err));
 
     return { success: true, message: 'Tu contraseña ha sido actualizada exitosamente' };
+  }
+
+  async recordConsent({
+    userId,
+    tenantId,
+    acceptTerms,
+    acceptPrivacy,
+    version = '2026.1',
+    ip = null,
+    userAgent = null,
+  }) {
+    if (!userId) {
+      throw new AuthHttpError(401, { success: false, message: 'Usuario no autenticado' });
+    }
+
+    if (acceptTerms !== true || acceptPrivacy !== true) {
+      throw new AuthHttpError(400, {
+        success: false,
+        message:
+          'Debe aceptar tanto los Términos y Condiciones como la Política de Privacidad LOPDP para continuar.',
+      });
+    }
+
+    const effectiveTenantId = tenantId || null;
+    const updatedUser = await authRepository.recordUserConsent({
+      userId,
+      tenantId: effectiveTenantId,
+      version: version || '2026.1',
+      ip,
+      userAgent,
+    });
+
+    auditRepository
+      .createLog({
+        entity: 'Compliance',
+        entityId: userId,
+        action: 'LEGAL_CONSENT_ACCEPTED',
+        performedBy: userId,
+        tenantId: effectiveTenantId,
+        details: {
+          termsVersion: version,
+          termsAccepted: true,
+          privacyAccepted: true,
+          ip,
+          userAgent,
+        },
+      })
+      .catch((err) => console.error('Audit Log Error:', err));
+
+    const effectiveRole = isSuperAdminRole(updatedUser.role) ? 'superadmin' : updatedUser.role;
+    const finalTenantId = effectiveRole === 'superadmin' ? null : updatedUser.tenantId;
+
+    return {
+      success: true,
+      message: 'Consentimiento legal registrado exitosamente.',
+      data: formatUserPayload(updatedUser, effectiveRole, finalTenantId),
+    };
   }
 }
 
