@@ -1,7 +1,6 @@
 /**
  * @file accounting.controller.js
  * @description Controlador HTTP para el módulo contable (Norma ERP).
- * Adaptador de entrada delgado respaldado por asyncHandler y AccountingService.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -12,23 +11,14 @@ import { asyncHandler } from '../../core/utils/asyncHandler.js';
 
 const getTenantId = (req) => req.tenantId || req.user?.tenantId || null;
 
-// ==========================================
-// 1. Periodos Fiscales
-// ==========================================
-
 export const getPeriods = asyncHandler(async (req, res) => {
-  const periods = await accountingService.getPeriods(getTenantId(req));
-  res.status(200).json(periods);
+  res.status(200).json(await accountingService.getPeriods(getTenantId(req)));
 });
 
 export const createPeriod = asyncHandler(async (req, res) => {
-  const { year, month, startDate, endDate } = req.body;
   const period = await accountingService.createPeriod({
+    ...req.body,
     tenantId: getTenantId(req),
-    year,
-    month,
-    startDate,
-    endDate,
     user: req.user,
   });
   res.status(201).json(period);
@@ -36,24 +26,15 @@ export const createPeriod = asyncHandler(async (req, res) => {
 
 export const togglePeriodStatus = asyncHandler(async (req, res) => {
   const updated = await accountingService.togglePeriodStatus(req.params.id, req.user);
-  res.status(200).json({
-    message: `Periodo actualizado a ${updated.status}`,
-    period: updated,
-  });
+  res.status(200).json({ message: `Periodo actualizado a ${updated.status}`, period: updated });
 });
 
 export const deletePeriod = asyncHandler(async (req, res) => {
-  const result = await accountingService.deletePeriod(req.params.id, req.user);
-  res.status(200).json(result);
+  res.status(200).json(await accountingService.deletePeriod(req.params.id, req.user));
 });
 
-// ==========================================
-// 2. Catálogo de Cuentas Contables
-// ==========================================
-
 export const getAccounts = asyncHandler(async (req, res) => {
-  const accounts = await accountingService.getAccounts(getTenantId(req));
-  res.status(200).json(accounts);
+  res.status(200).json(await accountingService.getAccounts(getTenantId(req)));
 });
 
 export const createAccount = asyncHandler(async (req, res) => {
@@ -66,22 +47,15 @@ export const createAccount = asyncHandler(async (req, res) => {
 });
 
 export const updateAccount = asyncHandler(async (req, res) => {
-  const updated = await accountingService.updateAccount(req.params.id, req.body, req.user);
-  res.status(200).json(updated);
+  res.status(200).json(await accountingService.updateAccount(req.params.id, req.body, req.user));
 });
 
 export const deleteAccount = asyncHandler(async (req, res) => {
-  const result = await accountingService.deleteAccount(req.params.id, req.user);
-  res.status(200).json(result);
+  res.status(200).json(await accountingService.deleteAccount(req.params.id, req.user));
 });
 
-// ==========================================
-// 3. Centros de Costo
-// ==========================================
-
 export const getCostCenters = asyncHandler(async (req, res) => {
-  const centers = await accountingService.getCostCenters(getTenantId(req));
-  res.status(200).json(centers);
+  res.status(200).json(await accountingService.getCostCenters(getTenantId(req)));
 });
 
 export const createCostCenter = asyncHandler(async (req, res) => {
@@ -94,18 +68,12 @@ export const createCostCenter = asyncHandler(async (req, res) => {
 });
 
 export const updateCostCenter = asyncHandler(async (req, res) => {
-  const updated = await accountingService.updateCostCenter(req.params.id, req.body, req.user);
-  res.status(200).json(updated);
+  res.status(200).json(await accountingService.updateCostCenter(req.params.id, req.body, req.user));
 });
 
 export const deleteCostCenter = asyncHandler(async (req, res) => {
-  const result = await accountingService.deleteCostCenter(req.params.id, req.user);
-  res.status(200).json(result);
+  res.status(200).json(await accountingService.deleteCostCenter(req.params.id, req.user));
 });
-
-// ==========================================
-// 4. Asientos y Comprobantes Contables
-// ==========================================
 
 export const getJournalEntries = asyncHandler(async (req, res) => {
   const { status, periodId, take } = req.query;
@@ -129,49 +97,34 @@ export const createJournalEntry = asyncHandler(async (req, res) => {
 
 export const postJournalEntry = asyncHandler(async (req, res) => {
   const updated = await accountingService.postJournalEntry(req.params.id, req.user);
-  res.status(200).json({
-    message: 'Asiento contable mayorizado exitosamente.',
-    entry: updated,
-  });
+  res.status(200).json({ message: 'Asiento contable mayorizado exitosamente.', entry: updated });
 });
 
 export const deleteJournalEntry = asyncHandler(async (req, res) => {
-  const result = await accountingService.deleteJournalEntry(req.params.id, req.user);
-  res.status(200).json(result);
+  res.status(200).json(await accountingService.deleteJournalEntry(req.params.id, req.user));
 });
-
-// ==========================================
-// 5. Reportes Financieros
-// ==========================================
 
 export const getTrialBalance = asyncHandler(async (req, res) => {
   const { periodId, status } = req.query;
-  const report = await accountingService.getTrialBalance({
-    tenantId: getTenantId(req),
-    periodId,
-    status,
-  });
-  res.status(200).json(report);
+  res
+    .status(200)
+    .json(
+      await accountingService.getTrialBalance({ tenantId: getTenantId(req), periodId, status })
+    );
 });
 
 export const getGeneralLedger = asyncHandler(async (req, res) => {
   const { periodId, accountId } = req.query;
-  const movements = await accountingService.getGeneralLedger({
-    tenantId: getTenantId(req),
-    periodId,
-    accountId,
-  });
-  res.status(200).json(movements);
+  res
+    .status(200)
+    .json(
+      await accountingService.getGeneralLedger({ tenantId: getTenantId(req), periodId, accountId })
+    );
 });
 
-// ==========================================
-// 6. Integración de Nómina
-// ==========================================
-
 export const integratePayroll = asyncHandler(async (req, res) => {
-  const { payrollId } = req.body;
   const result = await accountingService.integratePayroll({
-    payrollId,
+    payrollId: req.body.payrollId,
     tenantId: getTenantId(req),
     user: req.user,
   });

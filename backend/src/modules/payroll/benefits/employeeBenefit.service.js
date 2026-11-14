@@ -1,37 +1,41 @@
 /**
- * @file employeeBenefitService.js
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @file employeeBenefit.service.js
+ * @description Servicio de dominio para gestión de beneficios, bonos y comisiones (Norma ERP).
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import prisma from '../../../database/db.js';
 import { auditRepository } from '../../audit/index.js';
 import { financial } from '../../../core/utils/financialUtils.js';
+import { decryptSalary } from '../../../core/security/encryption.js';
+import { ValidationError, NotFoundError, ConflictError } from '../../../core/errors/appError.js';
+import defaultEmployeeBenefitRepo from './employeeBenefit.repository.js';
 
-class EmployeeBenefitService {
-  // SBU de referencia legal Ecuador
+const hasMinimumOneYearSeniority = (employee, activeContract, referenceDate = new Date()) => {
+  const startRaw = employee?.hireDate || activeContract?.startDate;
+  if (!startRaw) return true;
+  const startDate = new Date(startRaw);
+  if (Number.isNaN(startDate.getTime())) return true;
+  const diffDays = (referenceDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays >= 365;
+};
+
+export class EmployeeBenefitService {
   SBU = 460.0;
 
-  /**
-   * Obtener listado de beneficios con paginación y filtros para el módulo administrativo.
-   */
+  constructor({ benefitRepo = defaultEmployeeBenefitRepo, auditRepo = auditRepository } = {}) {
+    this.benefitRepo = benefitRepo;
+    this.auditRepo = auditRepo;
+  }
+
   async getBenefits({ page = 1, limit = 20, status, type, employeeId, search, tenantId }) {
     const skip = (page - 1) * limit;
     const where = {};
 
-    if (status) {
-      where.status = status;
-    }
-
-    if (type) {
-      where.type = type;
-    }
-
-    if (employeeId) {
-      where.employeeId = employeeId;
-    }
+    if (status) where.status = status;
+    if (type) where.type = type;
+    if (employeeId) where.employeeId = employeeId;
 
     const employeeWhere = tenantId ? { tenantId } : {};
     if (search) {
@@ -49,146 +53,63 @@ class EmployeeBenefitService {
       where.employee = employeeWhere;
     }
 
-    const [data, total] = await Promise.all([
-      prisma.employeeBenefit.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          employee: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              identityCard: true,
-              department: true,
-              position: true,
-            },
-          },
-        },
-      }),
-      prisma.employeeBenefit.count({ where }),
-    ]);
+    const [data, total] = await this.benefitRepo.findBenefitsPaginated({
+      where,
+      skip,
+      take: limit,
+    });
 
     return {
       data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  /**
-   * Obtener estadísticas globales y contadores de beneficios por estado.
-   */
   async getStats(tenantId = null) {
-    const baseWhere = tenantId ? { employee: { tenantId } } : {};
-
-    const [totalCount, activeCount, processedCount, cancelledCount, activeSum] = await Promise.all([
-      prisma.employeeBenefit.count({ where: baseWhere }),
-      prisma.employeeBenefit.count({ where: { ...baseWhere, status: 'ACTIVE' } }),
-      prisma.employeeBenefit.count({ where: { ...baseWhere, status: 'PROCESSED' } }),
-      prisma.employeeBenefit.count({ where: { ...baseWhere, status: 'CANCELLED' } }),
-      prisma.employeeBenefit.aggregate({
-        where: { ...baseWhere, status: 'ACTIVE' },
-        _sum: { amount: true },
-      }),
-    ]);
-
+    const [total, active, processed, cancelled, activeSum] =
+      await this.benefitRepo.getStatsData(tenantId);
     return {
-      total: totalCount,
-      active: activeCount,
-      processed: processedCount,
-      cancelled: cancelledCount,
+      total,
+      active,
+      processed,
+      cancelled,
       activeAmountTotal: activeSum._sum?.amount || 0,
     };
   }
 
-  /**
-   * Obtener beneficios de un empleado específico.
-   */
   async getByEmployee(employeeId, tenantId = null) {
-    const where = { employeeId };
-    if (tenantId) {
-      where.employee = { tenantId };
-    }
-
-    const benefits = await prisma.employeeBenefit.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        employee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            department: true,
-            position: true,
-          },
-        },
-      },
-    });
-
-    return benefits;
+    return this.benefitRepo.findByEmployee(employeeId, tenantId);
   }
 
-  /**
-   * Asignar beneficio individual a un empleado.
-   */
   async createBenefit(
     { employeeId, name, amount, type = 'BONUS', frequency = 'ONE_TIME' },
     tenantId = null,
     adminId = null
   ) {
-    if (!employeeId) throw new Error('El ID de empleado es requerido');
-    if (!name || !name.trim()) throw new Error('El nombre o concepto del beneficio es requerido');
+    if (!employeeId) throw new ValidationError('El ID de empleado es requerido');
+    if (!name || !name.trim()) {
+      throw new ValidationError('El nombre o concepto del beneficio es requerido');
+    }
 
     const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-      throw new Error('El monto del beneficio debe ser un número positivo mayor a 0');
+    if (Number.isNaN(numAmount) || numAmount <= 0) {
+      throw new ValidationError('El monto del beneficio debe ser un número positivo mayor a 0');
     }
 
-    // Verificar que el empleado pertenezca al tenant si aplica
-    const employee = await prisma.employee.findFirst({
-      where: {
-        id: employeeId,
-        ...(tenantId ? { tenantId } : {}),
-      },
-      select: { id: true, firstName: true, lastName: true },
-    });
+    const employee = await this.benefitRepo.findEmployeeInTenant(employeeId, tenantId);
+    if (!employee) throw new NotFoundError('Empleado no encontrado o sin permisos');
 
-    if (!employee) {
-      throw new Error('Empleado no encontrado o sin permisos');
-    }
-
-    const benefit = await prisma.employeeBenefit.create({
-      data: {
-        employeeId,
-        name: name.trim(),
-        amount: financial.round(financial.from(numAmount)),
-        type: type || 'BONUS',
-        frequency: frequency || 'ONE_TIME',
-        status: 'ACTIVE',
-      },
-      include: {
-        employee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            department: true,
-            position: true,
-          },
-        },
-      },
+    const benefit = await this.benefitRepo.createBenefit({
+      employeeId,
+      name: name.trim(),
+      amount: financial.round(financial.from(numAmount)),
+      type: type || 'BONUS',
+      frequency: frequency || 'ONE_TIME',
+      status: 'ACTIVE',
     });
 
     if (adminId) {
-      await auditRepository
+      await this.auditRepo
         .log({
           action: 'CREATE_BENEFIT',
           entity: 'EmployeeBenefit',
@@ -210,65 +131,51 @@ class EmployeeBenefitService {
     return benefit;
   }
 
-  /**
-   * Asignación masiva de beneficios con cálculo de ley y contratos activos.
-   */
   async bulkCreate(
     { employeeIds, name, amount, type = 'BONUS', frequency = 'ONE_TIME', isSpecialCalculation },
     tenantId = null,
     adminId = null
   ) {
     if (!employeeIds || !Array.isArray(employeeIds) || employeeIds.length === 0) {
-      throw new Error('Debe seleccionar al menos un colaborador');
+      throw new ValidationError('Debe seleccionar al menos un colaborador');
     }
     if (!name || !name.trim()) {
-      throw new Error('El concepto del beneficio es requerido');
+      throw new ValidationError('El concepto del beneficio es requerido');
     }
 
-    // Obtener empleados con sus contratos activos para determinar su salario real
-    const employees = await prisma.employee.findMany({
-      where: {
-        id: { in: employeeIds },
-        ...(tenantId ? { tenantId } : {}),
-      },
-      include: {
-        contracts: {
-          where: {
-            status: 'Active',
-            OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
-          },
-          orderBy: { startDate: 'desc' },
-          take: 1,
-        },
-      },
-    });
-
+    const employees = await this.benefitRepo.findEmployeesWithActiveContracts(
+      employeeIds,
+      tenantId
+    );
     if (employees.length === 0) {
-      throw new Error('No se encontraron colaboradores válidos para la asignación');
+      throw new NotFoundError('No se encontraron colaboradores válidos para la asignación');
     }
 
     const benefitsData = [];
 
     for (const emp of employees) {
       let finalAmount = parseFloat(amount) || 0;
-      const activeContract = emp.contracts[0];
-      const baseSalary = activeContract
-        ? financial.from(activeContract.salary)
-        : emp.salary
-          ? financial.from(emp.salary.toString().replace(/[^0-9.]/g, ''))
-          : financial.from(0);
+      const activeContract = emp.contracts?.[0];
+      let baseSalary = financial.from(0);
+
+      if (activeContract && activeContract.salary) {
+        baseSalary = financial.from(activeContract.salary);
+      } else if (emp.salary) {
+        const decrypted = decryptSalary(emp.salary);
+        if (decrypted) baseSalary = financial.from(decrypted);
+      }
 
       if (isSpecialCalculation === 'DECIMO_TERCERO') {
-        // Décimo Tercero: 1 sueldo base completo (o proporción si se estipula)
         finalAmount = financial.round(baseSalary);
       } else if (isSpecialCalculation === 'DECIMO_CUARTO') {
-        // Décimo Cuarto: 1 SBU completo vigente
         finalAmount = financial.round(financial.from(this.SBU));
       } else if (isSpecialCalculation === 'FONDO_RESERVA') {
-        // Fondos de Reserva: 8.333% (1/12) del salario base mensual
-        finalAmount = financial.round(financial.divide(baseSalary, 12));
+        if (!hasMinimumOneYearSeniority(emp, activeContract)) {
+          finalAmount = 0;
+        } else {
+          finalAmount = financial.round(financial.divide(baseSalary, 12));
+        }
       } else if (isSpecialCalculation === 'UTILIDADES' && (!amount || parseFloat(amount) === 0)) {
-        // Participación de utilidades estimada si no se colocó monto fijo
         finalAmount = financial.round(financial.percentage(baseSalary, 10));
       }
 
@@ -285,17 +192,19 @@ class EmployeeBenefitService {
     }
 
     if (benefitsData.length === 0) {
-      throw new Error(
+      throw new ValidationError(
         'No fue posible calcular montos válidos para los colaboradores seleccionados'
       );
     }
 
-    await prisma.employeeBenefit.createMany({
-      data: benefitsData,
-    });
+    await this.benefitRepo.createManyBenefits(benefitsData);
 
     if (adminId) {
-      await auditRepository
+      const totalAssigned = benefitsData.reduce(
+        (acc, b) => acc.plus(financial.from(b.amount)),
+        financial.from(0)
+      );
+      await this.auditRepo
         .log({
           action: 'BULK_CREATE_BENEFITS',
           entity: 'EmployeeBenefit',
@@ -306,7 +215,7 @@ class EmployeeBenefitService {
             name,
             type,
             isSpecialCalculation,
-            totalAssignedAmount: benefitsData.reduce((acc, b) => acc + b.amount, 0),
+            totalAssignedAmount: financial.round(totalAssigned),
           },
         })
         .catch((err) => console.error('[Audit Error] bulkCreate:', err));
@@ -318,55 +227,29 @@ class EmployeeBenefitService {
     };
   }
 
-  /**
-   * Actualizar beneficio existente (solo si está en estado ACTIVE).
-   */
   async updateBenefit(id, { name, amount, type, frequency }, tenantId = null, adminId = null) {
-    const benefit = await prisma.employeeBenefit.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { employee: { tenantId } } : {}),
-      },
-    });
-
-    if (!benefit) {
-      throw new Error('Beneficio no encontrado o sin permisos');
-    }
-
+    const benefit = await this.benefitRepo.findByIdForTenant(id, tenantId);
+    if (!benefit) throw new NotFoundError('Beneficio no encontrado o sin permisos');
     if (benefit.status !== 'ACTIVE') {
-      throw new Error(`No se puede modificar un beneficio en estado ${benefit.status}`);
+      throw new ConflictError(`No se puede modificar un beneficio en estado ${benefit.status}`);
     }
 
     const updateData = {};
     if (name && name.trim()) updateData.name = name.trim();
     if (amount !== undefined) {
       const numAmount = parseFloat(amount);
-      if (isNaN(numAmount) || numAmount <= 0) {
-        throw new Error('El monto debe ser mayor a 0');
+      if (Number.isNaN(numAmount) || numAmount <= 0) {
+        throw new ValidationError('El monto debe ser mayor a 0');
       }
       updateData.amount = financial.round(financial.from(numAmount));
     }
     if (type) updateData.type = type;
     if (frequency) updateData.frequency = frequency;
 
-    const updated = await prisma.employeeBenefit.update({
-      where: { id },
-      data: updateData,
-      include: {
-        employee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            department: true,
-            position: true,
-          },
-        },
-      },
-    });
+    const updated = await this.benefitRepo.updateBenefit(id, updateData);
 
     if (adminId) {
-      await auditRepository
+      await this.auditRepo
         .log({
           action: 'UPDATE_BENEFIT',
           entity: 'EmployeeBenefit',
@@ -381,34 +264,19 @@ class EmployeeBenefitService {
     return updated;
   }
 
-  /**
-   * Cancelar o desactivar beneficio (solo si está ACTIVE).
-   */
   async deactivate(id, tenantId = null, adminId = null) {
-    const benefit = await prisma.employeeBenefit.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { employee: { tenantId } } : {}),
-      },
-    });
-
-    if (!benefit) {
-      throw new Error('Beneficio no encontrado o sin permisos');
-    }
-
+    const benefit = await this.benefitRepo.findByIdForTenant(id, tenantId);
+    if (!benefit) throw new NotFoundError('Beneficio no encontrado o sin permisos');
     if (benefit.status === 'PROCESSED') {
-      throw new Error(
+      throw new ConflictError(
         'No se puede cancelar un beneficio que ya fue procesado y pagado en el rol de pagos'
       );
     }
 
-    const updated = await prisma.employeeBenefit.update({
-      where: { id },
-      data: { status: 'CANCELLED' },
-    });
+    const updated = await this.benefitRepo.deactivateBenefit(id);
 
     if (adminId) {
-      await auditRepository
+      await this.auditRepo
         .log({
           action: 'DEACTIVATE_BENEFIT',
           entity: 'EmployeeBenefit',

@@ -93,7 +93,13 @@ const updateStatus = async (req, res, next) => {
       });
     }
 
-    const updated = await absenceService.updateRequestStatus(id, status, adminComment);
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const updated = await absenceService.updateRequestStatus({
+      id,
+      status,
+      adminComment,
+      tenantId,
+    });
 
     res.json({ success: true, data: updated });
   } catch (error) {

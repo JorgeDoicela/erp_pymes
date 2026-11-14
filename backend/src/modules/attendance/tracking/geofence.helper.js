@@ -181,3 +181,73 @@ export const validateNetworkPolicy = async (ip, systemSettings) => {
     }
   }
 };
+
+export const computeEntryLateness = (checkInDate, activeSchedule) => {
+  const shiftStartTime = activeSchedule?.shift?.startTime || '08:00';
+  const tolerance = activeSchedule?.shift?.toleranceMinutes ?? 15;
+  const limitParams = new Date(checkInDate);
+  const [sh, sm] = shiftStartTime.split(':').map(Number);
+  limitParams.setHours(sh, sm + tolerance, 0, 0);
+  return checkInDate > limitParams;
+};
+
+export const computeExitMetrics = (now, existingRecord, activeSchedule) => {
+  const checkInTime = new Date(existingRecord.checkIn);
+  let diffMs = now - checkInTime;
+
+  if (existingRecord.breakStart) {
+    const breakEnd = existingRecord.breakEnd ? new Date(existingRecord.breakEnd) : now;
+    const breakDuration = breakEnd - new Date(existingRecord.breakStart);
+    if (breakDuration > 0) diffMs -= breakDuration;
+  }
+
+  const workedHours = Math.max(0, parseFloat((diffMs / 3600000).toFixed(2)));
+  const exitMetrics = { workedHours };
+
+  if (activeSchedule?.shift?.endTime) {
+    const [eh, em] = activeSchedule.shift.endTime.split(':').map(Number);
+    const shiftEndTime = new Date(now);
+    shiftEndTime.setHours(eh, em, 0, 0);
+
+    let expectedHours = 8;
+    let entryDelayHours = 0;
+
+    if (activeSchedule.shift.startTime) {
+      const [sh, sm] = activeSchedule.shift.startTime.split(':').map(Number);
+      const shiftStartTime = new Date(checkInTime);
+      shiftStartTime.setHours(sh, sm, 0, 0);
+      if (checkInTime > shiftStartTime) entryDelayHours = (checkInTime - shiftStartTime) / 3600000;
+
+      let shiftSpanHours = eh + em / 60 - (sh + sm / 60);
+      if (shiftSpanHours < 0) shiftSpanHours += 24;
+      const breakMinutes =
+        activeSchedule.shift.breakMinutes !== undefined
+          ? Number(activeSchedule.shift.breakMinutes)
+          : existingRecord.breakStart
+            ? 60
+            : 0;
+      expectedHours = Math.max(0, shiftSpanHours - breakMinutes / 60);
+    }
+
+    if (now > shiftEndTime) {
+      const extraAfterShiftEnd = (now - shiftEndTime) / 3600000;
+      const netExcessOverExpected = Math.max(0, workedHours - expectedHours);
+      const netExcessAfterDelay = Math.max(0, extraAfterShiftEnd - entryDelayHours);
+      const effectiveOvertime = parseFloat(
+        Math.min(extraAfterShiftEnd, netExcessOverExpected, netExcessAfterDelay).toFixed(2)
+      );
+      if (effectiveOvertime > 0) exitMetrics.overtimeHours = effectiveOvertime;
+    } else if (now < shiftEndTime) {
+      if (Math.floor((shiftEndTime - now) / 60000) >= 1) exitMetrics.isEarlyDeparture = true;
+    }
+  }
+
+  return exitMetrics;
+};
+
+export const decryptLocationPair = (latCipher, lngCipher) => {
+  if (!latCipher || !lngCipher) return null;
+  const lat = decryptCoordinate(latCipher);
+  const lng = decryptCoordinate(lngCipher);
+  return lat !== null && lng !== null ? { lat, lng } : null;
+};

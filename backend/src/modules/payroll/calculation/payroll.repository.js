@@ -10,10 +10,6 @@
 import prisma from '../../../database/db.js';
 
 export class PayrollRepository {
-  // =========================================================================
-  // 1. Configuración de Nómina (PayrollConfig)
-  // =========================================================================
-
   async getActiveConfig(tenantId = null) {
     return await prisma.payrollConfig.findFirst({
       where: {
@@ -41,52 +37,185 @@ export class PayrollRepository {
           workingDays: configData.workingDays,
           currency: configData.currency || 'USD',
           isActive: true,
-          items: {
-            create: itemsData,
-          },
+          items: { create: itemsData },
         },
         include: { items: true },
       });
     });
   }
 
-  // =========================================================================
-  // 2. Nómina y Liquidaciones (Payroll & PayrollDetail)
-  // =========================================================================
-
-  async findPayrollById(id, tenantId = null) {
+  async findExistingPayrollByPeriod(periodDate, tenantId = null) {
     return await prisma.payroll.findFirst({
       where: {
-        id,
+        period: periodDate,
         ...(tenantId ? { tenantId } : {}),
       },
+    });
+  }
+
+  async findEligibleEmployeesForPeriod(startDate, endDate, tenantId = null) {
+    const activeContractFilter = {
+      startDate: { lte: endDate },
+      OR: [{ endDate: null }, { endDate: { gte: startDate } }],
+      status: 'Active',
+    };
+    return await prisma.employee.findMany({
+      where: {
+        ...(tenantId ? { tenantId } : {}),
+        contracts: { some: activeContractFilter },
+      },
       include: {
-        details: {
-          include: {
-            employee: true,
-          },
+        contracts: {
+          where: activeContractFilter,
+          orderBy: { startDate: 'desc' },
+          take: 1,
         },
       },
     });
   }
 
-  async findPayrolls(skip = 0, take = 10, tenantId = null) {
+  async findBatchPayrollInputs(employeeIds, startDate, endDate) {
+    const [allAttendance, allSchedules, allBenefits, allAdvances, allAbsences] = await Promise.all([
+      prisma.attendance.findMany({
+        where: { employeeId: { in: employeeIds }, date: { gte: startDate, lte: endDate } },
+      }),
+      prisma.employeeSchedule.findMany({
+        where: {
+          employeeId: { in: employeeIds },
+          isActive: true,
+          OR: [{ endDate: null }, { endDate: { gte: startDate } }],
+          startDate: { lte: endDate },
+        },
+        include: { shift: true },
+      }),
+      prisma.employeeBenefit.findMany({
+        where: { employeeId: { in: employeeIds }, status: 'ACTIVE' },
+      }),
+      prisma.salaryAdvance.findMany({
+        where: { employeeId: { in: employeeIds }, status: 'APPROVED' },
+      }),
+      prisma.absenceRequest?.findMany
+        ? prisma.absenceRequest.findMany({
+            where: {
+              employeeId: { in: employeeIds },
+              status: 'APPROVED',
+              startDate: { lte: endDate },
+              endDate: { gte: startDate },
+            },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    return { allAttendance, allSchedules, allBenefits, allAdvances, allAbsences };
+  }
+
+  async createPayrollWithDetails({ tenantId, periodDate, endDate, totalAmount, payrollDetails }) {
+    return await prisma.payroll.create({
+      data: {
+        tenantId,
+        period: periodDate,
+        endDate,
+        totalAmount,
+        status: 'DRAFT',
+        details: {
+          create: payrollDetails.map((d) => ({
+            employeeId: d.employeeId,
+            baseSalary: d.baseSalary,
+            workedDays: d.workedDays,
+            overtimeHours: d.overtimeHours,
+            overtimeAmount: d.overtimeAmount,
+            bonuses: d.bonuses,
+            deductions: d.deductions,
+            netSalary: d.netSalary,
+            signatureStatus: d.signatureStatus || 'PENDING',
+            signatureCode: d.signatureCode,
+            signatureToken: d.signatureToken,
+            signatureData: d.signatureData,
+          })),
+        },
+      },
+      include: {
+        details: { include: { employee: true } },
+      },
+    });
+  }
+
+  async findPayrollForValidation(payrollId) {
+    return await prisma.payroll.findUnique({
+      where: { id: payrollId },
+      include: { details: true },
+    });
+  }
+
+  async findPayrolls({ skip = 0, take = 10, tenantId = null } = {}) {
     return await prisma.payroll.findMany({
       where: tenantId ? { tenantId } : {},
-      orderBy: { createdAt: 'desc' },
       skip,
       take,
+      orderBy: { period: 'desc' },
+    });
+  }
+
+  async countPayrolls(tenantId = null) {
+    return await prisma.payroll.count({ where: tenantId ? { tenantId } : {} });
+  }
+
+  async findPayrollsPage(skip, limit, tenantId = null) {
+    return await Promise.all([
+      this.findPayrolls({ skip, take: limit, tenantId }),
+      this.countPayrolls(tenantId),
+    ]);
+  }
+
+  async findPayrollsByEmployee(employeeId) {
+    return await this.findPublishedDetailsByEmployee(employeeId);
+  }
+
+  async updatePayrollStatus(id, status) {
+    return await prisma.payroll.update({ where: { id }, data: { status } });
+  }
+
+  async updatePayrollDetail(detailId, data) {
+    return await this.updatePayrollDetailWithRelations(detailId, data);
+  }
+
+  async deletePayroll(id) {
+    return await prisma.payroll.delete({ where: { id } });
+  }
+
+  async resolveEmployeeForUser(employeeId, user, tenantId = null) {
+    return await prisma.employee.findFirst({
+      where: {
+        OR: [
+          ...(employeeId ? [{ id: employeeId }] : []),
+          ...(user?.id ? [{ id: user.id }] : []),
+          ...(user?.email ? [{ email: user.email }] : []),
+        ],
+        ...(tenantId ? { tenantId } : {}),
+      },
+      select: { id: true },
+    });
+  }
+
+  async findPublishedDetailsByEmployee(employeeId) {
+    return await prisma.payrollDetail.findMany({
+      where: {
+        employeeId,
+        payroll: { status: { in: ['APPROVED', 'PAID'] } },
+      },
+      include: { payroll: true, employee: true },
+      orderBy: { payroll: { period: 'desc' } },
+    });
+  }
+
+  async findPayrollByIdWithContracts(id, tenantId = null) {
+    return await prisma.payroll.findFirst({
+      where: { id, ...(tenantId ? { tenantId } : {}) },
       include: {
         details: {
           include: {
             employee: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                department: true,
-                position: true,
-              },
+              include: { contracts: { orderBy: { startDate: 'desc' }, take: 1 } },
             },
           },
         },
@@ -94,46 +223,65 @@ export class PayrollRepository {
     });
   }
 
-  async countPayrolls(tenantId = null) {
-    return await prisma.payroll.count({
-      where: tenantId ? { tenantId } : {},
+  async findPayrollById(id, tenantId = null) {
+    return await prisma.payroll.findFirst({
+      where: { id, ...(tenantId ? { tenantId } : {}) },
+      include: { details: { include: { employee: true } } },
     });
   }
 
-  async findPayrollsByEmployee(employeeId, tenantId = null) {
-    return await prisma.payrollDetail.findMany({
+  async findPayrollHeader(id, tenantId = null) {
+    return await prisma.payroll.findFirst({
+      where: { id, ...(tenantId ? { tenantId } : {}) },
+    });
+  }
+
+  async findDetailWithPayroll(detailId, tenantId = null) {
+    return await prisma.payrollDetail.findFirst({
       where: {
-        employeeId,
-        payroll: {
-          status: { in: ['CONFIRMED', 'PAID'] },
-          ...(tenantId ? { tenantId } : {}),
-        },
+        id: detailId,
+        ...(tenantId ? { payroll: { tenantId } } : {}),
       },
-      include: {
-        payroll: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      include: { employee: true, payroll: true },
     });
   }
 
-  async updatePayrollStatus(id, status) {
+  async updatePayrollPaid(id, paymentDate = new Date()) {
     return await prisma.payroll.update({
       where: { id },
-      data: { status },
+      data: { status: 'PAID', paymentDate },
     });
   }
 
-  async updatePayrollDetail(detailId, data) {
+  async updatePayrollDetailWithRelations(detailId, data) {
     return await prisma.payrollDetail.update({
       where: { id: detailId },
       data,
+      include: { employee: true, payroll: true },
     });
   }
 
-  async deletePayroll(id) {
-    return await prisma.payroll.delete({ where: { id } });
+  async findPendingSignatureDetails(payrollId) {
+    return await prisma.payrollDetail.findMany({
+      where: {
+        payrollId,
+        OR: [{ signatureStatus: 'PENDING' }, { signatureStatus: null }],
+      },
+      include: {
+        employee: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+  }
+
+  async findActiveAdmins() {
+    return await prisma.employee.findMany({
+      where: { role: 'admin', isActive: true },
+      select: { id: true, tenantId: true },
+    });
+  }
+
+  async runInTransaction(callback) {
+    return await prisma.$transaction(callback);
   }
 }
 

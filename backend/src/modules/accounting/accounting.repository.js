@@ -1,7 +1,6 @@
 /**
  * @file accounting.repository.js
  * @description Repositorio de persistencia para el módulo contable (Norma ERP).
- * Encapsula operaciones con Prisma ORM para Periodos, Cuentas, Centros de Costo y Asientos Contables.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -10,10 +9,6 @@
 import prisma from '../../database/db.js';
 
 export class AccountingRepository {
-  // =========================================================================
-  // 1. Periodos Contables
-  // =========================================================================
-
   async getPeriods(tenantId = null) {
     return await prisma.accountingPeriod.findMany({
       where: tenantId ? { tenantId } : {},
@@ -23,10 +18,7 @@ export class AccountingRepository {
 
   async findPeriodById(id, tenantId = null) {
     return await prisma.accountingPeriod.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { id, ...(tenantId ? { tenantId } : {}) },
     });
   }
 
@@ -66,10 +58,7 @@ export class AccountingRepository {
   }
 
   async updatePeriod(id, data) {
-    return await prisma.accountingPeriod.update({
-      where: { id },
-      data,
-    });
+    return await prisma.accountingPeriod.update({ where: { id }, data });
   }
 
   async countJournalsInDateRange(startDate, endDate, tenantId = null) {
@@ -85,10 +74,6 @@ export class AccountingRepository {
     return await prisma.accountingPeriod.delete({ where: { id } });
   }
 
-  // =========================================================================
-  // 2. Catálogo de Cuentas Contables
-  // =========================================================================
-
   async getAccounts(tenantId = null) {
     return await prisma.accountingAccount.findMany({
       where: tenantId ? { tenantId } : {},
@@ -99,19 +84,13 @@ export class AccountingRepository {
 
   async findAccountByCode(code, tenantId = null) {
     return await prisma.accountingAccount.findFirst({
-      where: {
-        code,
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { code, ...(tenantId ? { tenantId } : {}) },
     });
   }
 
   async findAccountById(id, tenantId = null) {
     return await prisma.accountingAccount.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { id, ...(tenantId ? { tenantId } : {}) },
     });
   }
 
@@ -131,10 +110,7 @@ export class AccountingRepository {
   }
 
   async updateAccount(id, data) {
-    return await prisma.accountingAccount.update({
-      where: { id },
-      data,
-    });
+    return await prisma.accountingAccount.update({ where: { id }, data });
   }
 
   async countSubAccounts(parentId) {
@@ -149,10 +125,6 @@ export class AccountingRepository {
     return await prisma.accountingAccount.delete({ where: { id } });
   }
 
-  // =========================================================================
-  // 3. Centros de Costo
-  // =========================================================================
-
   async getCostCenters(tenantId = null) {
     return await prisma.costCenter.findMany({
       where: tenantId ? { tenantId } : {},
@@ -162,19 +134,13 @@ export class AccountingRepository {
 
   async findCostCenterByCode(code, tenantId = null) {
     return await prisma.costCenter.findFirst({
-      where: {
-        code,
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { code, ...(tenantId ? { tenantId } : {}) },
     });
   }
 
   async findCostCenterById(id, tenantId = null) {
     return await prisma.costCenter.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { id, ...(tenantId ? { tenantId } : {}) },
     });
   }
 
@@ -190,10 +156,7 @@ export class AccountingRepository {
   }
 
   async updateCostCenter(id, data) {
-    return await prisma.costCenter.update({
-      where: { id },
-      data,
-    });
+    return await prisma.costCenter.update({ where: { id }, data });
   }
 
   async countCostCenterMovements(costCenterId) {
@@ -204,18 +167,10 @@ export class AccountingRepository {
     return await prisma.costCenter.delete({ where: { id } });
   }
 
-  // =========================================================================
-  // 4. Asientos Contables (Diarios y Líneas)
-  // =========================================================================
-
   async getJournalEntries(where = {}, take = 150) {
     return await prisma.journalEntry.findMany({
       where,
-      include: {
-        lines: {
-          include: { account: true, costCenter: true },
-        },
-      },
+      include: { lines: { include: { account: true, costCenter: true } } },
       orderBy: { date: 'desc' },
       take,
     });
@@ -223,21 +178,14 @@ export class AccountingRepository {
 
   async findJournalEntryById(id, tenantId = null) {
     return await prisma.journalEntry.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { tenantId } : {}),
-      },
-      include: {
-        lines: {
-          include: { account: true, costCenter: true },
-        },
-      },
+      where: { id, ...(tenantId ? { tenantId } : {}) },
+      include: { lines: { include: { account: true, costCenter: true } } },
     });
   }
 
   async createJournalEntryWithLines(entryData, linesData) {
-    return await prisma.$transaction(async (tx) => {
-      return await tx.journalEntry.create({
+    return await prisma.$transaction(async (tx) =>
+      tx.journalEntry.create({
         data: {
           ...entryData,
           lines: {
@@ -251,8 +199,8 @@ export class AccountingRepository {
           },
         },
         include: { lines: true },
-      });
-    });
+      })
+    );
   }
 
   async updateJournalEntryStatus(id, status) {
@@ -269,67 +217,41 @@ export class AccountingRepository {
 
   async findJournalEntryByReference(referenceModule, referenceId, tenantId = null) {
     return await prisma.journalEntry.findFirst({
-      where: {
-        referenceModule,
-        referenceId,
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { referenceModule, referenceId, ...(tenantId ? { tenantId } : {}) },
     });
   }
 
   async getTrialBalanceLines(where = {}) {
-    return await prisma.journalLine.findMany({
-      where,
-      include: { account: true },
-    });
+    return await prisma.journalLine.findMany({ where, include: { account: true } });
   }
 
   async getGeneralLedgerLines(where = {}) {
     return await prisma.journalLine.findMany({
       where,
-      include: {
-        journalEntry: true,
-        account: true,
-        costCenter: true,
-      },
-      orderBy: {
-        journalEntry: {
-          date: 'asc',
-        },
-      },
+      include: { journalEntry: true, account: true, costCenter: true },
+      orderBy: { journalEntry: { date: 'asc' } },
     });
   }
 
   async findAccountsByCodes(codes, tenantId = null) {
     return await prisma.accountingAccount.findMany({
-      where: {
-        code: { in: codes },
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { code: { in: codes }, ...(tenantId ? { tenantId } : {}) },
     });
   }
 
   async getActiveCostCenters(tenantId = null) {
     return await prisma.costCenter.findMany({
-      where: {
-        isActive: true,
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { isActive: true, ...(tenantId ? { tenantId } : {}) },
     });
   }
 
   async getPayrollForIntegration(payrollId, tenantId = null) {
     return await prisma.payroll.findFirst({
-      where: {
-        id: payrollId,
-        ...(tenantId ? { tenantId } : {}),
-      },
+      where: { id: payrollId, ...(tenantId ? { tenantId } : {}) },
       include: {
         details: {
           include: {
-            employee: {
-              select: { department: true, firstName: true, lastName: true },
-            },
+            employee: { select: { department: true, firstName: true, lastName: true } },
           },
         },
       },
@@ -337,9 +259,7 @@ export class AccountingRepository {
   }
 
   async createJournalEntryRaw(data) {
-    return await prisma.journalEntry.create({
-      data,
-    });
+    return await prisma.journalEntry.create({ data });
   }
 }
 

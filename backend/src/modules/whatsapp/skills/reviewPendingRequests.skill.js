@@ -109,11 +109,12 @@ export class ReviewPendingRequestsSkill {
       };
     }
 
-    const updatedAbsence = await this.absenceService.updateRequestStatus(
-      payload.targetId,
-      payload.action,
-      payload.reason
-    );
+    const updatedAbsence = await this.absenceService.updateRequestStatus({
+      id: payload.targetId,
+      status: payload.action,
+      adminComment: payload.reason,
+      tenantId,
+    });
 
     return {
       entityName: 'AbsenceRequest',

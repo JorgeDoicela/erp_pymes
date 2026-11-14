@@ -74,8 +74,12 @@ export const absenceRepository = {
     });
   },
 
-  async getRequestById(id) {
-    return prisma.absenceRequest.findUnique({ where: { id } });
+  async getRequestById(id, tenantId = null) {
+    const where = { id };
+    if (tenantId) {
+      where.employee = { tenantId };
+    }
+    return prisma.absenceRequest.findFirst({ where });
   },
 
   async updateStatus(id, status, adminComment) {

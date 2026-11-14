@@ -9,6 +9,7 @@
 import { absenceRepository } from './absence.repository.js';
 import { employeeRepository } from '../../employees/index.js';
 import { notificationService } from '../../notifications/index.js';
+import { ForbiddenError, NotFoundError } from '../../../core/errors/appError.js';
 
 const VACATION_TYPE_KEYS = new Set(['vacaciones', 'vacation']);
 const MAX_SINGLE_VACATION_REQUEST_DAYS = 30;
@@ -305,10 +306,15 @@ export const absenceService = {
     return absenceRepository.getByEmployee(employeeId);
   },
 
-  async updateRequestStatus(id, status, adminComment) {
-    // 1. Validar que exista
-    const request = await absenceRepository.getRequestById(id);
-    if (!request) throw new Error('Solicitud no encontrada');
+  async updateRequestStatus({ id, status, adminComment, tenantId }) {
+    // 1. Aislamiento multi-tenant: sin contexto de empresa no se gestiona ninguna solicitud
+    if (!tenantId) {
+      throw new ForbiddenError('Se requiere el contexto de la empresa para gestionar solicitudes');
+    }
+
+    // 2. Validar que exista dentro de la empresa del usuario (otra empresa responde 404)
+    const request = await absenceRepository.getRequestById(id, tenantId);
+    if (!request) throw new NotFoundError('Solicitud no encontrada');
 
     if (request.status === status) {
       return request;

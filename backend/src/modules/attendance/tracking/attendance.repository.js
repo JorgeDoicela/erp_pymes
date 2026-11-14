@@ -73,6 +73,31 @@ export const attendanceRepository = {
       orderBy: { date: 'desc' },
     });
   },
+
+  // Obtener solicitudes de ausencia pendientes con datos del colaborador para monitoreo cron
+  async findPendingAbsenceRequestsWithEmployee() {
+    return prisma.absenceRequest.findMany({
+      where: { status: 'PENDING' },
+      include: {
+        employee: {
+          select: { id: true, firstName: true, lastName: true, tenantId: true },
+        },
+      },
+    });
+  },
+
+  // Obtener administradores activos de un tenant para alertas
+  async findActiveAdminsByTenant(tenantId) {
+    if (!tenantId) return [];
+    return prisma.employee.findMany({
+      where: {
+        role: 'admin',
+        isActive: true,
+        tenantId,
+      },
+      select: { id: true },
+    });
+  },
 };
 
 export default attendanceRepository;

@@ -25,6 +25,7 @@ import { RequestSalaryAdvanceSkill } from '../../../src/modules/whatsapp/skills/
 import { RequestPermissionSkill } from '../../../src/modules/whatsapp/skills/requestPermission.skill.js';
 import { ReviewPendingRequestsSkill } from '../../../src/modules/whatsapp/skills/reviewPendingRequests.skill.js';
 import { WHATSAPP_SESSION_STATUS } from '../../../src/modules/whatsapp/whatsappActionSession.repository.js';
+import { getEcuadorTodayIso } from '../../../src/modules/attendance/absences/absence.service.js';
 
 function createMockSessionRepo() {
   const store = new Map();
@@ -185,10 +186,10 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
 
     absenceService = {
       createRequest: vi.fn(async (params) => ({ id: 'abs-mock-1', ...params, status: 'PENDING' })),
-      updateRequestStatus: vi.fn(async (id, status, comment) => ({
+      updateRequestStatus: vi.fn(async ({ id, status, adminComment }) => ({
         id,
         status,
-        adminComment: comment,
+        adminComment,
       })),
     };
 
@@ -383,8 +384,9 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
   });
 
   it('8. Inferencia temporal: infiere fecha "hoy" ante solicitud inmediata de permiso', async () => {
-    const now = new Date();
-    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    // "Hoy" es la fecha calendario de Ecuador (America/Guayaquil), no la UTC:
+    // entre las 19h00 y las 24h00 locales ambas difieren en un día.
+    const todayIso = getEcuadorTodayIso();
     const replyToday = await aiService.generateResponse({
       text: 'Solicitar permiso medico hoy por cita odontologica urgente',
       employee,

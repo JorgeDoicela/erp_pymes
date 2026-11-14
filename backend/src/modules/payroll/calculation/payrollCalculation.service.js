@@ -6,559 +6,72 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import prisma from '../../../database/db.js';
 import { auditRepository } from '../../audit/index.js';
-import { safeDecrypt } from '../../../core/security/encryption.js';
 import { financial } from '../../../core/utils/financialUtils.js';
-import { qrSignatureService } from '../../signatures/index.js';
 import { notificationService } from '../../notifications/index.js';
+import { ConflictError, ForbiddenError, NotFoundError } from '../../../core/errors/appError.js';
+import payrollRepository from './payroll.repository.js';
+import {
+  buildPayrollDetailsList,
+  buildSignedPayslipPayload,
+  computeManualDetailUpdateData,
+  formatBankCashManagementCsv,
+  notifyPublishedPayroll,
+  settleBenefitsAndAdvancesInTx,
+} from './payrollBankAndSignatures.helper.js';
+
+const PUBLISHED_PAYROLL_STATUSES = ['APPROVED', 'PAID'];
 
 class PayrollCalculationService {
-  /**
-   * Genera la nómina para todos los empleados activos en un período específico.
-   * Realiza un proceso batch para optimizar consultas a la base de datos.
-   *
-   * @param {number} month - Mes de la nómina (1-12)
-   * @param {number} year - Año de la nómina (ej. 2026)
-   * @param {string} adminId - ID del administrador que ejecuta la acción
-   * @returns {Promise<Object>} Resumen del proceso de nómina
-   */
   async generatePayroll(month, year, adminId = null, tenantId = null) {
     const periodDate = new Date(year, month - 1, 1);
     const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-    // 1. Verificación de duplicados: Evitar generar nómina dos veces para el mismo mes/año en la misma empresa
-    const existingPayroll = await prisma.payroll.findFirst({
-      where: {
-        period: periodDate,
-        ...(tenantId ? { tenantId } : {}),
-      },
-    });
+    const existingPayroll = await payrollRepository.findExistingPayrollByPeriod(
+      periodDate,
+      tenantId
+    );
+    if (existingPayroll) throw new Error(`Ya existe una nómina para el período ${month}/${year}`);
 
-    if (existingPayroll) {
-      throw new Error(`Ya existe una nómina para el período ${month}/${year}`);
-    }
-
-    // 3. Obtención de Parámetros Globales
-    const config = await prisma.payrollConfig.findFirst({
-      where: {
-        isActive: true,
-        ...(tenantId ? { tenantId } : {}),
-      },
-      include: { items: true },
-    });
-
-    if (!config) {
+    const config = await payrollRepository.getActiveConfig(tenantId);
+    if (!config)
       throw new Error('No hay configuración de nómina activa. Configure los parámetros primero.');
-    }
 
-    // 4. Selección de Empleados con Contrato VIGENTE en este periodo específico
-    // Un contrato es válido si empezó antes del fin de mes Y (no ha terminado o terminó después del inicio de mes)
-    const employees = await prisma.employee.findMany({
-      where: {
-        ...(tenantId ? { tenantId } : {}),
-        contracts: {
-          some: {
-            startDate: { lte: endDate },
-            OR: [{ endDate: null }, { endDate: { gte: startDate } }],
-            status: 'Active',
-          },
-        },
-      },
-      include: {
-        contracts: {
-          where: {
-            startDate: { lte: endDate },
-            OR: [{ endDate: null }, { endDate: { gte: startDate } }],
-            status: 'Active',
-          },
-          orderBy: { startDate: 'desc' },
-          take: 1,
-        },
-      },
-    });
-
+    const employees = await payrollRepository.findEligibleEmployeesForPeriod(
+      startDate,
+      endDate,
+      tenantId
+    );
     if (employees.length === 0) {
       throw new Error(
         `No se encontraron empleados con contratos activos para el periodo ${month}/${year}.`
       );
     }
 
-    const employeeIds = employees.map((e) => e.id);
-
-    // a. Carga Batch de Asistencias: Minimiza el impacto en BD comparado con consultas individuales
-    const allAttendance = await prisma.attendance.findMany({
-      where: {
-        employeeId: { in: employeeIds },
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
+    const batch = await payrollRepository.findBatchPayrollInputs(
+      employees.map((e) => e.id),
+      startDate,
+      endDate
+    );
+    const { payrollDetails, totalPayrollAmount } = await buildPayrollDetailsList({
+      employees,
+      config,
+      batch,
+      month,
+      year,
+      startDate,
+      endDate,
     });
 
-    const attendanceMap = new Map();
-    allAttendance.forEach((rec) => {
-      if (!attendanceMap.has(rec.employeeId)) attendanceMap.set(rec.employeeId, []);
-      attendanceMap.get(rec.employeeId).push(rec);
+    const payroll = await payrollRepository.createPayrollWithDetails({
+      tenantId,
+      periodDate,
+      endDate: new Date(year, month, 0),
+      totalAmount: financial.round(totalPayrollAmount),
+      payrollDetails,
     });
 
-    // b. Carga Batch de Horarios: Identifica turnos y recargos nocturnos
-    const allSchedules = await prisma.employeeSchedule.findMany({
-      where: {
-        employeeId: { in: employeeIds },
-        isActive: true,
-        OR: [{ endDate: null }, { endDate: { gte: startDate } }],
-        startDate: { lte: endDate },
-      },
-      include: { shift: true },
-    });
-
-    const scheduleMap = new Map();
-    allSchedules.forEach((sched) => {
-      if (!scheduleMap.has(sched.employeeId)) scheduleMap.set(sched.employeeId, []);
-      scheduleMap.get(sched.employeeId).push(sched);
-    });
-
-    // c. Carga Batch de Beneficios Adicionales: Comisiones, Bonos, etc.
-    const allBenefits = await prisma.employeeBenefit.findMany({
-      where: {
-        employeeId: { in: employeeIds },
-        status: 'ACTIVE',
-      },
-    });
-
-    const benefitMap = new Map();
-    allBenefits.forEach((ben) => {
-      if (!benefitMap.has(ben.employeeId)) benefitMap.set(ben.employeeId, []);
-      benefitMap.get(ben.employeeId).push(ben);
-    });
-
-    // d. Carga Batch de Anticipos de Sueldo / Préstamos Aprobados
-    const allAdvances = await prisma.salaryAdvance.findMany({
-      where: {
-        employeeId: { in: employeeIds },
-        status: 'APPROVED',
-      },
-    });
-
-    const advanceMap = new Map();
-    allAdvances.forEach((adv) => {
-      if (!advanceMap.has(adv.employeeId)) advanceMap.set(adv.employeeId, []);
-      advanceMap.get(adv.employeeId).push(adv);
-    });
-
-    const payrollDetails = [];
-    let totalPayrollAmount = financial.from(0);
-
-    // 4. Calculate for each employee
-    for (const emp of employees) {
-      const contract = emp.contracts[0];
-      if (!contract) continue;
-
-      const baseSalary = financial.from(contract.salary);
-
-      // A. Attendance Data & Contract Active Period Pro-rating
-      const contractStart = new Date(contract.startDate);
-      const contractEnd = contract.endDate ? new Date(contract.endDate) : null;
-
-      const effectiveStart = contractStart > startDate ? contractStart : startDate;
-      const effectiveEnd = contractEnd && contractEnd < endDate ? contractEnd : endDate;
-
-      const effectiveDaysInPeriod = Math.max(
-        0,
-        Math.ceil((effectiveEnd - effectiveStart) / (1000 * 60 * 60 * 24)) + 1
-      );
-      const isFullMonth =
-        effectiveStart.getTime() === startDate.getTime() &&
-        (!contractEnd || contractEnd >= endDate);
-      const maxEligibleDays = isFullMonth
-        ? config.workingDays
-        : Math.min(config.workingDays, effectiveDaysInPeriod);
-
-      const records = attendanceMap.get(emp.id) || [];
-      const absences = records.filter((r) => r.status === 'Falta').length;
-
-      let workedDays = maxEligibleDays - absences;
-      if (workedDays < 0) workedDays = 0;
-
-      let totalOvertimeHours = financial.from(0);
-      let totalUndertimeHours = financial.from(0);
-
-      const schedules = scheduleMap.get(emp.id) || [];
-
-      records.forEach((rec) => {
-        const hours = financial.from(rec.workedHours || 0);
-
-        let expectedHours = financial.from(8);
-        const recDate = new Date(rec.date);
-
-        const dailySchedule = schedules.find((sched) => {
-          const sStart = new Date(sched.startDate);
-          const sEnd = sched.endDate ? new Date(sched.endDate) : new Date(2100, 0, 1);
-          return recDate >= sStart && recDate <= sEnd;
-        });
-
-        if (dailySchedule && dailySchedule.shift) {
-          const [sh, sm] = dailySchedule.shift.startTime.split(':').map(Number);
-          const [eh, em] = dailySchedule.shift.endTime.split(':').map(Number);
-
-          let shiftDuration = financial
-            .from(eh)
-            .plus(financial.divide(em, 60))
-            .minus(financial.from(sh).plus(financial.divide(sm, 60)));
-          if (shiftDuration.lt(0)) shiftDuration = shiftDuration.plus(24);
-
-          const breakHours = financial.divide(dailySchedule.shift.breakMinutes || 60, 60);
-          expectedHours = shiftDuration.minus(breakHours);
-          if (expectedHours.lt(0)) expectedHours = financial.from(0);
-        }
-
-        // Overtime Calculation
-        if (rec.overtimeHours !== undefined && rec.overtimeHours !== null) {
-          totalOvertimeHours = totalOvertimeHours.plus(rec.overtimeHours);
-        } else if (hours.gt(expectedHours)) {
-          totalOvertimeHours = totalOvertimeHours.plus(hours.minus(expectedHours));
-        }
-
-        // Undertime Calculation
-        if (hours.lt(expectedHours) && hours.gt(0)) {
-          totalUndertimeHours = totalUndertimeHours.plus(expectedHours.minus(hours));
-        }
-      });
-
-      // B. Calculations
-      const salaryPerDay = financial.divide(baseSalary, config.workingDays);
-      const earnedSalary = financial.multiply(salaryPerDay, workedDays);
-
-      // Base Hourly Rate: Salary / (WorkingDays * 8)
-      const hourlyRate = financial.divide(baseSalary, financial.multiply(config.workingDays, 8));
-
-      const hasNightSurcharge = contract.hasNightSurcharge ?? true;
-      const hasDoubleOvertime = contract.hasDoubleOvertime ?? true;
-
-      let nightSurchargeAmount = financial.from(0);
-      let overtimeTotalCost = financial.from(0);
-
-      const employeeBonuses = [];
-      const employeeDeductions = [];
-
-      records.forEach((rec) => {
-        const recDate = new Date(rec.date);
-        const dayOfWeek = recDate.getUTCDay(); // 0 = Sunday, 6 = Saturday (UTC to avoid server TZ shift)
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-        // 1. Recargo Nocturno (25% - Art. 49 Código del Trabajo de Ecuador: 19h00 a 06h00)
-        if (hasNightSurcharge && rec.checkIn && rec.checkOut) {
-          const checkIn = new Date(rec.checkIn);
-          const checkOut = new Date(rec.checkOut);
-
-          const getOverlapHours = (start, end, winStart, winEnd) => {
-            const maxStart = Math.max(start.getTime(), winStart.getTime());
-            const minEnd = Math.min(end.getTime(), winEnd.getTime());
-            const diffMs = minEnd - maxStart;
-            return diffMs > 0 ? financial.divide(diffMs, 1000 * 60 * 60) : financial.from(0);
-          };
-
-          const baseD = new Date(rec.date);
-          // Ventana nocturna 1: 19:00 del día del turno a 24:00 (00:00 día + 1)
-          const n1Start = new Date(
-            baseD.getFullYear(),
-            baseD.getMonth(),
-            baseD.getDate(),
-            19,
-            0,
-            0,
-            0
-          );
-          const n1End = new Date(
-            baseD.getFullYear(),
-            baseD.getMonth(),
-            baseD.getDate() + 1,
-            0,
-            0,
-            0,
-            0
-          );
-
-          // Ventana nocturna 2: 00:00 a 06:00 del día siguiente (si el turno cruza medianoche)
-          const n2Start = new Date(
-            baseD.getFullYear(),
-            baseD.getMonth(),
-            baseD.getDate() + 1,
-            0,
-            0,
-            0,
-            0
-          );
-          const n2End = new Date(
-            baseD.getFullYear(),
-            baseD.getMonth(),
-            baseD.getDate() + 1,
-            6,
-            0,
-            0,
-            0
-          );
-
-          // Ventana nocturna 0: 00:00 a 06:00 del mismo día (si el turno inició en la madrugada del día)
-          const n0Start = new Date(
-            baseD.getFullYear(),
-            baseD.getMonth(),
-            baseD.getDate(),
-            0,
-            0,
-            0,
-            0
-          );
-          const n0End = new Date(
-            baseD.getFullYear(),
-            baseD.getMonth(),
-            baseD.getDate(),
-            6,
-            0,
-            0,
-            0
-          );
-
-          let nightHours = getOverlapHours(checkIn, checkOut, n1Start, n1End)
-            .plus(getOverlapHours(checkIn, checkOut, n2Start, n2End))
-            .plus(getOverlapHours(checkIn, checkOut, n0Start, n0End));
-
-          if (nightHours.gt(0)) {
-            nightSurchargeAmount = nightSurchargeAmount.plus(nightHours.mul(hourlyRate).mul(0.25));
-          }
-        }
-
-        // 2. Overtime Splits
-        const hours = financial.from(rec.workedHours || 0);
-        let dailyExpectedHours = financial.from(8);
-        const dailySchedule = schedules.find((sched) => {
-          const sStart = new Date(sched.startDate);
-          const sEnd = sched.endDate ? new Date(sched.endDate) : new Date(2100, 0, 1);
-          return recDate >= sStart && recDate <= sEnd;
-        });
-
-        if (dailySchedule && dailySchedule.shift) {
-          const [sh, sm] = dailySchedule.shift.startTime.split(':').map(Number);
-          const [eh, em] = dailySchedule.shift.endTime.split(':').map(Number);
-          let shiftDuration = financial
-            .from(eh)
-            .plus(financial.divide(em, 60))
-            .minus(financial.from(sh).plus(financial.divide(sm, 60)));
-          if (shiftDuration.lt(0)) shiftDuration = shiftDuration.plus(24);
-          const breakHours = financial.divide(dailySchedule.shift.breakMinutes || 60, 60);
-          dailyExpectedHours = shiftDuration.minus(breakHours);
-          if (dailyExpectedHours.lt(0)) dailyExpectedHours = financial.from(0);
-        }
-
-        if (rec.overtimeHours !== undefined && rec.overtimeHours !== null) {
-          const dailyOvertime = financial.from(rec.overtimeHours);
-          if (dailyOvertime.gt(0)) {
-            const multiplier = isWeekend && hasDoubleOvertime ? 2.0 : 1.5;
-            overtimeTotalCost = overtimeTotalCost.plus(
-              dailyOvertime.mul(hourlyRate).mul(multiplier)
-            );
-          }
-        } else if (hours.gt(dailyExpectedHours)) {
-          const dailyOvertime = hours.minus(dailyExpectedHours);
-          if (dailyOvertime.gt(0)) {
-            const multiplier = isWeekend && hasDoubleOvertime ? 2.0 : 1.5;
-            overtimeTotalCost = overtimeTotalCost.plus(
-              dailyOvertime.mul(hourlyRate).mul(multiplier)
-            );
-          }
-        }
-      });
-
-      const undertimeAmount = totalUndertimeHours.mul(hourlyRate);
-
-      if (nightSurchargeAmount.gt(0)) {
-        employeeBonuses.push({
-          name: 'Recargo Nocturno (25%)',
-          amount: financial.round(nightSurchargeAmount),
-        });
-      }
-
-      // 2. Individual Benefits (Bonos, Comisiones, Beneficios Sociales)
-      const benefits = benefitMap.get(emp.id) || [];
-      let taxableBonusesTotal = financial.from(0);
-      let nonTaxableBenefitsTotal = financial.from(0);
-
-      benefits.forEach((benefit) => {
-        const benAmount = financial.from(benefit.amount);
-        // En Ecuador: Los beneficios sociales en especie (Salud, Alimentación, Transporte, Viáticos) están exentos de IESS (Art. 14 Ley Seg. Social)
-        const isNonTaxable = ['HEALTH', 'MEAL', 'TRANSPORT', 'ALLOWANCE'].includes(benefit.type);
-        if (isNonTaxable) {
-          nonTaxableBenefitsTotal = nonTaxableBenefitsTotal.plus(benAmount);
-        } else {
-          taxableBonusesTotal = taxableBonusesTotal.plus(benAmount);
-        }
-
-        employeeBonuses.push({
-          name: benefit.name,
-          amount: financial.round(benAmount),
-          benefitId: benefit.id,
-          frequency: benefit.frequency,
-          isTaxable: !isNonTaxable,
-        });
-      });
-
-      // Materia Gravada IESS (Sueldo ganado + Horas Extras + Recargo Nocturno + Bonos Imponibles)
-      const taxableEarnings = earnedSalary
-        .plus(overtimeTotalCost)
-        .plus(nightSurchargeAmount)
-        .plus(taxableBonusesTotal);
-
-      // 1. Global Config Items (Deducciones IESS, Impuesto a la renta, etc.)
-      config.items.forEach((item) => {
-        let amount = financial.from(0);
-        if (item.fixedValue) {
-          amount = financial.from(item.fixedValue);
-        } else if (item.percentage) {
-          // Si es deducción de ley como aporte al IESS, se calcula sobre la materia gravada completa
-          const base = item.type === 'DEDUCTION' ? taxableEarnings : earnedSalary;
-          amount = financial.percentage(base, item.percentage);
-        }
-
-        if (item.type === 'EARNING') {
-          employeeBonuses.push({ name: item.name, amount: financial.round(amount) });
-        } else {
-          employeeDeductions.push({ name: item.name, amount: financial.round(amount) });
-        }
-      });
-
-      // 3. Anticipos de Sueldo / Préstamos Aprobados
-      const employeeAdvances = advanceMap.get(emp.id) || [];
-      employeeAdvances.forEach((adv) => {
-        const quotaNumber = adv.paidInstallments + 1;
-        if (quotaNumber <= adv.installments) {
-          employeeDeductions.push({
-            name: `Anticipo/Préstamo (Cuota ${quotaNumber}/${adv.installments})`,
-            amount: financial.round(adv.monthlyDeduction),
-            advanceId: adv.id,
-          });
-        }
-      });
-
-      if (undertimeAmount.gt(0)) {
-        employeeDeductions.push({
-          name: 'Descuento por Horas No Trabajadas',
-          amount: financial.round(undertimeAmount),
-        });
-      }
-
-      const totalBonuses = employeeBonuses.reduce(
-        (acc, curr) => acc.plus(curr.amount),
-        financial.from(0)
-      );
-      const totalDeductions = employeeDeductions.reduce(
-        (acc, curr) => acc.plus(curr.amount),
-        financial.from(0)
-      );
-
-      const roundedBaseSalary = financial.round(earnedSalary);
-      const roundedOvertimeAmount = financial.round(overtimeTotalCost);
-
-      let netSalary = financial
-        .from(roundedBaseSalary)
-        .plus(roundedOvertimeAmount)
-        .plus(totalBonuses)
-        .minus(totalDeductions);
-
-      if (netSalary.lt(0)) netSalary = financial.from(0);
-
-      const finalNetSalary = financial.round(netSalary);
-
-      // Generar Sello Criptográfico QR único de emisión del Rol de Pagos
-      const periodStr = `${year}-${String(month).padStart(2, '0')}`;
-      const sig = await qrSignatureService.generateQrSignature({
-        docType: 'PAYSLIP',
-        docId: `${periodStr}-${emp.id.slice(-6)}`,
-        signerName: `${emp.firstName} ${emp.lastName}`,
-        signerId: emp.identityCard || 'S/N',
-        issuer: 'NORMA ERP S.A.',
-        content: {
-          period: periodStr,
-          employee: `${emp.firstName} ${emp.lastName}`,
-          identityCard: emp.identityCard,
-          baseSalary: roundedBaseSalary,
-          netSalary: finalNetSalary,
-          workedDays: workedDays,
-        },
-        notes: `Rol Individual de Pagos correspondiente al período ${periodStr}`,
-      });
-
-      payrollDetails.push({
-        employeeId: emp.id,
-        baseSalary: roundedBaseSalary,
-        workedDays: workedDays,
-        overtimeHours: financial.round(totalOvertimeHours),
-        overtimeAmount: roundedOvertimeAmount,
-        bonuses: JSON.stringify(employeeBonuses),
-        deductions: JSON.stringify(employeeDeductions),
-        netSalary: finalNetSalary,
-        signatureStatus: 'PENDING',
-        signatureCode: sig.verificationCode,
-        signatureToken: sig.token,
-        signatureData: JSON.stringify({
-          qrDataUrl: sig.qrDataUrl,
-          verificationUrl: sig.verificationUrl,
-          docHash: sig.docHash,
-        }),
-      });
-      totalPayrollAmount = totalPayrollAmount.plus(finalNetSalary);
-    }
-
-    // 5. Save to DB
-    const payroll = await prisma.payroll.create({
-      data: {
-        tenantId,
-        period: periodDate,
-        endDate: new Date(year, month, 0),
-        totalAmount: financial.round(totalPayrollAmount),
-        status: 'DRAFT',
-        details: {
-          create: payrollDetails.map((d) => ({
-            employeeId: d.employeeId,
-            baseSalary: d.baseSalary,
-            workedDays: d.workedDays,
-            overtimeHours: d.overtimeHours,
-            overtimeAmount: d.overtimeAmount,
-            bonuses: d.bonuses,
-            deductions: d.deductions,
-            netSalary: d.netSalary,
-          })),
-        },
-      },
-      include: {
-        details: {
-          include: { employee: true },
-        },
-      },
-    });
-
-    // Actualizar sellos y metadatos de firma en base de datos
-    for (const det of payroll.details) {
-      const matchData = payrollDetails.find((pd) => pd.employeeId === det.employeeId);
-      if (matchData) {
-        await prisma
-          .$executeRawUnsafe(
-            `UPDATE payroll_details 
-                     SET "signatureStatus" = $1, "signatureCode" = $2, "signatureToken" = $3, "signatureData" = $4 
-                     WHERE id = $5`,
-            matchData.signatureStatus || 'PENDING',
-            matchData.signatureCode,
-            matchData.signatureToken,
-            matchData.signatureData,
-            det.id
-          )
-          .catch((err) => console.error('Error guardando firma en detalle:', err));
-      }
-    }
-
-    // Audit Log
     if (adminId) {
       auditRepository
         .createLog({
@@ -575,49 +88,28 @@ class PayrollCalculationService {
   }
 
   async validatePayrollTotals(payrollId) {
-    const payroll = await prisma.payroll.findUnique({
-      where: { id: payrollId },
-      include: { details: true },
-    });
-
+    const payroll = await payrollRepository.findPayrollForValidation(payrollId);
     if (!payroll) throw new Error('Nómina no encontrada para validación');
 
     const calculatedTotal = payroll.details.reduce(
-      (acc, detail) => acc.plus(detail.netSalary),
+      (acc, d) => acc.plus(d.netSalary),
       financial.from(0)
     );
     const storedTotal = financial.from(payroll.totalAmount);
-
     if (!calculatedTotal.equals(storedTotal)) {
       throw new Error(
         `Inconsistencia detectada: El total de detalles (${calculatedTotal}) no coincide con el total de cabecera (${storedTotal}).`
       );
     }
-
     return true;
   }
 
   async getPayrolls(page = 1, limit = 10, tenantId = null) {
     const skip = (page - 1) * limit;
-    const where = tenantId ? { tenantId } : {};
-    const [payrolls, total] = await Promise.all([
-      prisma.payroll.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { period: 'desc' },
-      }),
-      prisma.payroll.count({ where }),
-    ]);
-
+    const [payrolls, total] = await payrollRepository.findPayrollsPage(skip, limit, tenantId);
     return {
       data: payrolls,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 
@@ -627,316 +119,79 @@ class PayrollCalculationService {
 
     let actualEmployeeId = employeeId;
     if (user) {
-      const emp = await prisma.employee.findFirst({
-        where: {
-          OR: [
-            ...(employeeId ? [{ id: employeeId }] : []),
-            ...(user.id ? [{ id: user.id }] : []),
-            ...(user.email ? [{ email: user.email }] : []),
-          ],
-          ...(tenantId ? { tenantId } : {}),
-        },
-        select: { id: true },
-      });
+      const emp = await payrollRepository.resolveEmployeeForUser(employeeId, user, tenantId);
       if (emp) actualEmployeeId = emp.id;
     }
-
     if (!actualEmployeeId) return [];
 
-    const details = await prisma.payrollDetail.findMany({
-      where: {
-        employeeId: actualEmployeeId,
-        payroll: {
-          status: { in: ['APPROVED', 'PAID'] },
-        },
-      },
-      include: {
-        payroll: true,
-        employee: true,
-      },
-      orderBy: {
-        payroll: { period: 'desc' },
-      },
+    const details = await payrollRepository.findPublishedDetailsByEmployee(actualEmployeeId);
+    details.forEach((d) => {
+      d.signatureStatus = d.signatureStatus || 'PENDING';
     });
-
-    // Enriquecer con campos de firma desde PostgreSQL
-    if (details.length > 0) {
-      try {
-        const detailIds = details.map((d) => d.id);
-        const rawRows = await prisma.$queryRawUnsafe(
-          `SELECT id, "signatureStatus", "signedAt", "signatureType", "signatureCode", "signatureToken", "signatureData", "disputeReason" 
-                     FROM payroll_details 
-                     WHERE id = ANY($1::text[])`,
-          detailIds
-        );
-        const rawMap = new Map(rawRows.map((r) => [r.id, r]));
-        details.forEach((d) => {
-          const raw = rawMap.get(d.id);
-          if (raw) {
-            d.signatureStatus = raw.signatureStatus || 'PENDING';
-            d.signedAt = raw.signedAt;
-            d.signatureType = raw.signatureType;
-            d.signatureCode = raw.signatureCode;
-            d.signatureToken = raw.signatureToken;
-            d.signatureData = raw.signatureData;
-            d.disputeReason = raw.disputeReason;
-          }
-        });
-      } catch (err) {
-        console.error('Error enriqueciendo firmas en getPayrollsByEmployee:', err);
-      }
-    }
-
     return details;
   }
 
   async getPayrollById(id, tenantId = null) {
-    const payroll = await prisma.payroll.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { tenantId } : {}),
-      },
-      include: {
-        details: {
-          include: {
-            employee: {
-              include: {
-                contracts: {
-                  orderBy: { startDate: 'desc' },
-                  take: 1,
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
+    const payroll = await payrollRepository.findPayrollByIdWithContracts(id, tenantId);
     if (!payroll) throw new Error('Nómina no encontrada');
-
-    // Enriquecer detalles con campos de firma desde PostgreSQL
-    if (payroll.details?.length > 0) {
-      try {
-        const detailIds = payroll.details.map((d) => d.id);
-        const rawRows = await prisma.$queryRawUnsafe(
-          `SELECT id, "signatureStatus", "signedAt", "signatureType", "signatureCode", "signatureToken", "signatureData", "disputeReason" 
-                     FROM payroll_details 
-                     WHERE id = ANY($1::text[])`,
-          detailIds
-        );
-        const rawMap = new Map(rawRows.map((r) => [r.id, r]));
-        payroll.details.forEach((d) => {
-          const raw = rawMap.get(d.id);
-          if (raw) {
-            d.signatureStatus = raw.signatureStatus || 'PENDING';
-            d.signedAt = raw.signedAt;
-            d.signatureType = raw.signatureType;
-            d.signatureCode = raw.signatureCode;
-            d.signatureToken = raw.signatureToken;
-            d.signatureData = raw.signatureData;
-            d.disputeReason = raw.disputeReason;
-          }
-        });
-      } catch (err) {
-        console.error('Error enriqueciendo firmas en getPayrollById:', err);
-      }
-    }
-
+    payroll.details?.forEach((d) => {
+      d.signatureStatus = d.signatureStatus || 'PENDING';
+    });
     return payroll;
   }
 
   async confirmPayroll(id, adminId, tenantId = null) {
-    return await prisma.$transaction(async (tx) => {
+    return await payrollRepository.runInTransaction(async (tx) => {
       const payroll = await tx.payroll.findFirst({
-        where: {
-          id,
-          ...(tenantId ? { tenantId } : {}),
-        },
+        where: { id, ...(tenantId ? { tenantId } : {}) },
         include: { details: true },
       });
 
-      if (!payroll) throw new Error('Nómina no encontrada');
-      if (payroll.status === 'APPROVED') throw new Error('Nómina ya está aprobada');
+      if (!payroll) throw new NotFoundError('Nómina no encontrada');
+      if (payroll.status === 'APPROVED') throw new ConflictError('Nómina ya está aprobada');
+      if (payroll.status !== 'DRAFT') {
+        throw new ConflictError('Solo se puede aprobar una nómina en estado borrador');
+      }
 
-      // RNF-20: Validation before confirmation
       const calculatedTotal = payroll.details.reduce(
-        (acc, detail) => acc.plus(detail.netSalary),
+        (acc, d) => acc.plus(d.netSalary),
         financial.from(0)
       );
       const storedTotal = financial.from(payroll.totalAmount);
-
       if (!calculatedTotal.equals(storedTotal)) {
         throw new Error(
           `Inconsistencia detectada: El total de detalles (${calculatedTotal}) no coincide con el total de cabecera (${storedTotal}).`
         );
       }
 
-      // Process One-Time Benefits & Salary Advances in Batch
-      const benefitIdsToProcess = [];
-      const advanceDeductions = [];
-
-      for (const detail of payroll.details) {
-        const bonuses =
-          typeof detail.bonuses === 'string'
-            ? JSON.parse(detail.bonuses || '[]')
-            : detail.bonuses || [];
-        for (const bonus of bonuses) {
-          if (bonus.benefitId && bonus.frequency === 'ONE_TIME') {
-            benefitIdsToProcess.push(bonus.benefitId);
-          }
-        }
-
-        const deductions =
-          typeof detail.deductions === 'string'
-            ? JSON.parse(detail.deductions || '[]')
-            : detail.deductions || [];
-        for (const ded of deductions) {
-          if (ded.advanceId) {
-            advanceDeductions.push({ advanceId: ded.advanceId, amount: ded.amount || 0 });
-          }
-        }
-      }
-
-      if (benefitIdsToProcess.length > 0) {
-        await tx.employeeBenefit.updateMany({
-          where: { id: { in: benefitIdsToProcess } },
-          data: { status: 'PROCESSED' },
-        });
-      }
-
-      if (advanceDeductions.length > 0) {
-        const advanceIds = advanceDeductions.map((a) => a.advanceId);
-        const advances = await tx.salaryAdvance.findMany({
-          where: { id: { in: advanceIds } },
-        });
-        const advanceMap = new Map(advances.map((a) => [a.id, a]));
-
-        for (const ded of advanceDeductions) {
-          const adv = advanceMap.get(ded.advanceId);
-          if (adv) {
-            const newPaidInstallments = adv.paidInstallments + 1;
-            const newPaidAmount = financial.round(financial.from(adv.paidAmount).plus(ded.amount));
-            const isFullyPaid =
-              newPaidInstallments >= adv.installments || newPaidAmount >= adv.amount;
-
-            await tx.salaryAdvance.update({
-              where: { id: ded.advanceId },
-              data: {
-                paidInstallments: newPaidInstallments,
-                paidAmount: newPaidAmount,
-                status: isFullyPaid ? 'PAID' : 'APPROVED',
-              },
-            });
-          }
-        }
-      }
-
-      const updated = await tx.payroll.update({
-        where: { id },
-        data: { status: 'APPROVED' },
-      });
-
-      // Notificar a todos los colaboradores que su rol está publicado y listo para firmar
-      const periodFormatted = new Date(payroll.period).toLocaleDateString('es-EC', {
-        month: 'long',
-        year: 'numeric',
-      });
-      for (const detail of payroll.details) {
-        notificationService
-          .createNotification({
-            recipientId: detail.employeeId,
-            title: 'Rol de Pagos Publicado',
-            message: `Tu rol de pagos de ${periodFormatted} está disponible para revisión y firma de conformidad.`,
-            type: 'PAYROLL_PUBLISHED',
-            relatedEntity: 'PayrollDetail',
-            relatedEntityId: detail.id,
-          })
-          .catch((err) => console.error('Error enviando notificación de nómina:', err));
-      }
-
-      // Audit Log
-      if (adminId) {
-        await auditRepository
-          .createLog(
-            {
-              entity: 'Payroll',
-              entityId: id,
-              action: 'CONFIRM',
-              performedBy: adminId,
-              details: `Confirmed payroll ${id}`,
-            },
-            tx
-          )
-          .catch((err) => console.error('Audit Log Error:', err));
-      }
-
+      await settleBenefitsAndAdvancesInTx(tx, payroll.details);
+      const updated = await tx.payroll.update({ where: { id }, data: { status: 'APPROVED' } });
+      notifyPublishedPayroll(payroll, adminId, tx);
       return updated;
     });
   }
 
   async generateBankFile(id, tenantId = null) {
-    const payroll = await prisma.payroll.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { tenantId } : {}),
-      },
-      include: {
-        details: {
-          include: { employee: true },
-        },
-      },
-    });
-
-    if (!payroll) throw new Error('Nómina no encontrada');
-
-    let csv = 'Identificacion,Beneficiario,Banco,TipoCuenta,NumeroCuenta,Monto,Detalle\n';
-
-    payroll.details.forEach((det) => {
-      const emp = det.employee;
-      if (emp.bankName && emp.accountNumber) {
-        const firstName = emp.firstName || '';
-        const lastName = emp.lastName || '';
-        const name = `${firstName} ${lastName}`.replace(/,/g, '');
-
-        let bank = '';
-        let account = '';
-
-        try {
-          bank = safeDecrypt(emp.bankName).replace(/,/g, '');
-          account = safeDecrypt(emp.accountNumber);
-        } catch {
-          bank = 'ERROR_DECRYPT';
-          account = 'ERROR_DECRYPT';
-        }
-
-        // RNF-20: Ensure 2 decimals in bank file
-        const amount = Number(det.netSalary || 0).toFixed(2);
-
-        csv += `${emp.identityCard},${name},${bank},${emp.accountType || 'AHORROS'},${account},${amount},Nómina ${new Date(payroll.period).toLocaleDateString()}\n`;
-      }
-    });
-
-    return csv;
+    const payroll = await payrollRepository.findPayrollById(id, tenantId);
+    if (!payroll) throw new NotFoundError('Nómina no encontrada');
+    if (!PUBLISHED_PAYROLL_STATUSES.includes(payroll.status)) {
+      throw new ConflictError(
+        'El archivo bancario solo se genera para nóminas aprobadas o pagadas'
+      );
+    }
+    return formatBankCashManagementCsv(payroll);
   }
 
   async markAsPaid(id, adminId, tenantId = null) {
-    const payroll = await prisma.payroll.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { tenantId } : {}),
-      },
-    });
+    const payroll = await payrollRepository.findPayrollHeader(id, tenantId);
+    if (!payroll) throw new NotFoundError('Nómina no encontrada');
+    if (payroll.status === 'PAID')
+      throw new ConflictError('La nómina ya fue registrada como pagada');
+    if (payroll.status !== 'APPROVED') {
+      throw new ConflictError('Solo se puede registrar el pago de una nómina aprobada');
+    }
 
-    if (!payroll) throw new Error('Nómina no encontrada');
-
-    const updated = await prisma.payroll.update({
-      where: { id },
-      data: {
-        status: 'PAID',
-        paymentDate: new Date(),
-      },
-    });
-
+    const updated = await payrollRepository.updatePayrollPaid(id, new Date());
     if (adminId) {
       auditRepository
         .createLog({
@@ -948,20 +203,15 @@ class PayrollCalculationService {
         })
         .catch((err) => console.error('Audit Log Error:', err));
     }
-
     return updated;
   }
 
   async updatePayrollDetail(detailId, data, adminId, tenantId = null) {
-    return await prisma.$transaction(async (tx) => {
+    return await payrollRepository.runInTransaction(async (tx) => {
       const detail = await tx.payrollDetail.findFirst({
-        where: {
-          id: detailId,
-          ...(tenantId ? { payroll: { tenantId } } : {}),
-        },
+        where: { id: detailId, ...(tenantId ? { payroll: { tenantId } } : {}) },
         include: { payroll: true },
       });
-
       if (!detail) throw new Error('Detalle de nómina no encontrado');
       if (detail.payroll.status !== 'DRAFT') {
         throw new Error(
@@ -969,58 +219,18 @@ class PayrollCalculationService {
         );
       }
 
-      // Recalcular el Neto basado en los nuevos valores o los existentes
-      const bonuses = data.bonuses
-        ? typeof data.bonuses === 'string'
-          ? JSON.parse(data.bonuses)
-          : data.bonuses
-        : typeof detail.bonuses === 'string'
-          ? JSON.parse(detail.bonuses)
-          : detail.bonuses;
-      const deductions = data.deductions
-        ? typeof data.deductions === 'string'
-          ? JSON.parse(data.deductions)
-          : data.deductions
-        : typeof detail.deductions === 'string'
-          ? JSON.parse(detail.deductions)
-          : detail.deductions;
-
-      const totalBonuses = bonuses.reduce((acc, curr) => acc.plus(curr.amount), financial.from(0));
-      const totalDeductions = deductions.reduce(
-        (acc, curr) => acc.plus(curr.amount),
-        financial.from(0)
-      );
-
-      const baseSalary = financial.from(data.baseSalary ?? detail.baseSalary);
-      const overtimeAmount = financial.from(data.overtimeAmount ?? detail.overtimeAmount);
-
-      const netSalary = baseSalary.plus(overtimeAmount).plus(totalBonuses).minus(totalDeductions);
-
       const updatedDetail = await tx.payrollDetail.update({
         where: { id: detailId },
-        data: {
-          baseSalary: financial.round(baseSalary),
-          overtimeAmount: financial.round(overtimeAmount),
-          bonuses: JSON.stringify(bonuses),
-          deductions: JSON.stringify(deductions),
-          netSalary: financial.round(netSalary),
-          workedDays: data.workedDays ?? detail.workedDays,
-        },
+        data: computeManualDetailUpdateData(detail, data),
       });
 
-      // Recalcular el total general de la nómina (Payroll)
       const allDetails = await tx.payrollDetail.findMany({
         where: { payrollId: detail.payrollId },
       });
-
-      const newTotalAmount = allDetails.reduce(
-        (acc, d) => acc.plus(d.netSalary),
-        financial.from(0)
-      );
-
+      const newTotal = allDetails.reduce((acc, d) => acc.plus(d.netSalary), financial.from(0));
       await tx.payroll.update({
         where: { id: detail.payrollId },
-        data: { totalAmount: financial.round(newTotalAmount) },
+        data: { totalAmount: financial.round(newTotal) },
       });
 
       if (adminId) {
@@ -1037,20 +247,15 @@ class PayrollCalculationService {
           )
           .catch((err) => console.error('Audit Log Error:', err));
       }
-
       return updatedDetail;
     });
   }
 
   async deletePayroll(id, adminId, tenantId = null) {
-    return await prisma.$transaction(async (tx) => {
+    return await payrollRepository.runInTransaction(async (tx) => {
       const payroll = await tx.payroll.findFirst({
-        where: {
-          id,
-          ...(tenantId ? { tenantId } : {}),
-        },
+        where: { id, ...(tenantId ? { tenantId } : {}) },
       });
-
       if (!payroll) throw new Error('Nómina no encontrada');
       if (payroll.status !== 'DRAFT') {
         throw new Error(
@@ -1058,13 +263,8 @@ class PayrollCalculationService {
         );
       }
 
-      await tx.payrollDetail.deleteMany({
-        where: { payrollId: id },
-      });
-
-      const deleted = await tx.payroll.delete({
-        where: { id },
-      });
+      await tx.payrollDetail.deleteMany({ where: { payrollId: id } });
+      const deleted = await tx.payroll.delete({ where: { id } });
 
       if (adminId) {
         await auditRepository
@@ -1080,141 +280,53 @@ class PayrollCalculationService {
           )
           .catch((err) => console.error('Audit Log Error:', err));
       }
-
       return deleted;
     });
   }
 
-  /**
-   * Firma y aceptación de conformidad de un Rol de Pagos por parte del Colaborador.
-   */
   async signPayslip({
     detailId,
     employeeId,
+    tenantId,
     signatureType = 'QR_DIGITAL',
     notes = '',
     p12Data = null,
   }) {
-    const detail = await prisma.payrollDetail.findUnique({
-      where: { id: detailId },
-      include: { employee: true, payroll: true },
-    });
-
-    if (!detail) throw new Error('Detalle de rol de pagos no encontrado');
-    if (detail.employeeId !== employeeId && detail.employee?.id !== employeeId) {
-      throw new Error('No tienes autorización para firmar este rol de pagos');
-    }
-
-    const signedAt = new Date();
-    let signatureDataObj = {};
-    try {
-      signatureDataObj = JSON.parse(detail.signatureData || '{}');
-    } catch {
-      signatureDataObj = {};
-    }
-
-    signatureDataObj.signedBy = `${detail.employee.firstName} ${detail.employee.lastName}`;
-    signatureDataObj.signedAt = signedAt.toISOString();
-    signatureDataObj.signatureType = signatureType;
-    signatureDataObj.notes = notes || 'Conformidad de rol de pagos';
-    if (p12Data) {
-      signatureDataObj.p12Stamp = p12Data;
-    }
-
-    const sigDataStr = JSON.stringify(signatureDataObj);
-
-    // Actualizar directamente en base de datos PostgreSQL
-    await prisma.$executeRawUnsafe(
-      `UPDATE payroll_details 
-             SET "signatureStatus" = $1, "signedAt" = $2, "signatureType" = $3, "signatureData" = $4, "updatedAt" = $5 
-             WHERE id = $6`,
-      'SIGNED',
-      signedAt,
-      signatureType,
-      sigDataStr,
-      new Date(),
-      detailId
-    );
-
-    const updated = await prisma.payrollDetail.findUnique({
-      where: { id: detailId },
-      include: { employee: true, payroll: true },
-    });
-
-    if (updated) {
-      updated.signatureStatus = 'SIGNED';
-      updated.signedAt = signedAt;
-      updated.signatureType = signatureType;
-      updated.signatureData = sigDataStr;
-    }
-
-    return updated;
+    const detail = await this.getOwnPublishedPayslip({ detailId, employeeId, tenantId });
+    const payload = buildSignedPayslipPayload({ detail, signatureType, notes, p12Data });
+    return await payrollRepository.updatePayrollDetailWithRelations(detailId, payload);
   }
 
-  /**
-   * Registro de observación o discrepancia en el Rol de Pagos por parte del Colaborador.
-   */
-  async disputePayslip({ detailId, employeeId, reason }) {
-    const detail = await prisma.payrollDetail.findUnique({
-      where: { id: detailId },
-      include: { employee: true, payroll: true },
-    });
-
-    if (!detail) throw new Error('Detalle de rol de pagos no encontrado');
-    if (detail.employeeId !== employeeId && detail.employee?.id !== employeeId) {
-      throw new Error('No tienes autorización para observar este rol');
+  async getOwnPublishedPayslip({ detailId, employeeId, tenantId }) {
+    if (!tenantId)
+      throw new ForbiddenError('Se requiere el contexto de la empresa para gestionar el rol');
+    const detail = await payrollRepository.findDetailWithPayroll(detailId, tenantId);
+    if (!detail) throw new NotFoundError('Detalle de rol de pagos no encontrado');
+    if (detail.employeeId !== employeeId) {
+      throw new ForbiddenError('No tienes autorización para gestionar este rol de pagos');
     }
-
-    // Actualizar directamente en base de datos PostgreSQL
-    await prisma.$executeRawUnsafe(
-      `UPDATE payroll_details 
-             SET "signatureStatus" = $1, "disputeReason" = $2, "updatedAt" = $3 
-             WHERE id = $4`,
-      'DISPUTED',
-      reason,
-      new Date(),
-      detailId
-    );
-
-    const updated = await prisma.payrollDetail.findUnique({
-      where: { id: detailId },
-      include: { employee: true, payroll: true },
-    });
-
-    if (updated) {
-      updated.signatureStatus = 'DISPUTED';
-      updated.disputeReason = reason;
+    if (!PUBLISHED_PAYROLL_STATUSES.includes(detail.payroll?.status)) {
+      throw new ConflictError('El rol de pagos aún no ha sido publicado para firma');
     }
-
-    return updated;
+    return detail;
   }
 
-  /**
-   * Enviar recordatorio masivo a los empleados con firma pendiente.
-   */
+  async disputePayslip({ detailId, employeeId, tenantId, reason }) {
+    await this.getOwnPublishedPayslip({ detailId, employeeId, tenantId });
+    return await payrollRepository.updatePayrollDetailWithRelations(detailId, {
+      signatureStatus: 'DISPUTED',
+      disputeReason: reason,
+    });
+  }
+
   async notifyPendingSignatures(payrollId, tenantId = null) {
-    const payroll = await prisma.payroll.findFirst({
-      where: {
-        id: payrollId,
-        ...(tenantId ? { tenantId } : {}),
-      },
-    });
-
+    const payroll = await payrollRepository.findPayrollHeader(payrollId, tenantId);
     if (!payroll) throw new Error('Nómina no encontrada');
-
-    const pendingDetails = await prisma.$queryRawUnsafe(
-      `SELECT pd.id, pd."employeeId", e."firstName", e."lastName" 
-             FROM payroll_details pd 
-             JOIN employees e ON pd."employeeId" = e.id 
-             WHERE pd."payrollId" = $1 AND (pd."signatureStatus" = 'PENDING' OR pd."signatureStatus" IS NULL)`,
-      payrollId
-    );
-
+    const pendingDetails = await payrollRepository.findPendingSignatureDetails(payrollId);
     const periodFormatted = new Date(payroll.period).toLocaleDateString('es-EC', {
       month: 'long',
       year: 'numeric',
     });
-    let sentCount = 0;
 
     for (const detail of pendingDetails) {
       await notificationService
@@ -1227,10 +339,8 @@ class PayrollCalculationService {
           relatedEntityId: detail.id,
         })
         .catch((err) => console.error(err));
-      sentCount++;
     }
-
-    return { sentCount, totalPending: pendingDetails.length };
+    return { sentCount: pendingDetails.length, totalPending: pendingDetails.length };
   }
 }
 

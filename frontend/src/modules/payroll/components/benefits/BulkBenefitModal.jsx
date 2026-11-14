@@ -24,6 +24,41 @@ const FREQUENCIES = [
   { value: 'RECURRING', label: 'Recurrente' },
 ];
 
+const TEMPLATES = {
+  DECIMO_3: {
+    name: 'Décimo Tercer Sueldo (Navideño)',
+    amount: '460.00',
+    type: 'BONUS',
+    frequency: 'ONE_TIME',
+    isSpecial: true,
+    specialType: 'DECIMO_TERCERO',
+  },
+  DECIMO_4: {
+    name: 'Décimo Cuarto Sueldo (Escolar)',
+    amount: '470.00',
+    type: 'BONUS',
+    frequency: 'ONE_TIME',
+    isSpecial: true,
+    specialType: 'DECIMO_CUARTO',
+  },
+  BONO_DESEMPENO: {
+    name: 'Bono por Desempeño',
+    amount: '100.00',
+    type: 'BONUS',
+    frequency: 'ONE_TIME',
+    isSpecial: false,
+    specialType: '',
+  },
+  VIATICO_ALIMENTACION: {
+    name: 'Alimentación Mensual',
+    amount: '60.00',
+    type: 'MEAL',
+    frequency: 'RECURRING',
+    isSpecial: false,
+    specialType: '',
+  },
+};
+
 export const BulkBenefitModal = ({
   isOpen,
   onClose,
@@ -35,54 +70,8 @@ export const BulkBenefitModal = ({
   loading = false,
 }) => {
   const applyTemplate = (templateKey) => {
-    switch (templateKey) {
-      case 'DECIMO_3':
-        setBulkData((prev) => ({
-          ...prev,
-          name: 'Décimo Tercer Sueldo (Navideño)',
-          amount: '460.00',
-          type: 'BONUS',
-          frequency: 'ONE_TIME',
-          isSpecial: true,
-          specialType: 'DECIMO_TERCERO',
-        }));
-        break;
-      case 'DECIMO_4':
-        setBulkData((prev) => ({
-          ...prev,
-          name: 'Décimo Cuarto Sueldo (Escolar)',
-          amount: '470.00',
-          type: 'BONUS',
-          frequency: 'ONE_TIME',
-          isSpecial: true,
-          specialType: 'DECIMO_CUARTO',
-        }));
-        break;
-      case 'BONO_DESEMPENO':
-        setBulkData((prev) => ({
-          ...prev,
-          name: 'Bono por Desempeño',
-          amount: '100.00',
-          type: 'BONUS',
-          frequency: 'ONE_TIME',
-          isSpecial: false,
-          specialType: '',
-        }));
-        break;
-      case 'VIATICO_ALIMENTACION':
-        setBulkData((prev) => ({
-          ...prev,
-          name: 'Alimentación Mensual',
-          amount: '60.00',
-          type: 'MEAL',
-          frequency: 'RECURRING',
-          isSpecial: false,
-          specialType: '',
-        }));
-        break;
-      default:
-        break;
-    }
+    const preset = TEMPLATES[templateKey];
+    if (preset) setBulkData((prev) => ({ ...prev, ...preset }));
   };
 
   const filteredEmployees = employees.filter((emp) => {
@@ -93,27 +82,30 @@ export const BulkBenefitModal = ({
   const handleSelectAll = () => {
     const visibleIds = filteredEmployees.map((e) => e.id);
     const allSelected = visibleIds.every((id) => bulkData.selectedEmployees.includes(id));
-    if (allSelected) {
-      setBulkData((prev) => ({
-        ...prev,
-        selectedEmployees: prev.selectedEmployees.filter((id) => !visibleIds.includes(id)),
-      }));
-    } else {
-      const merged = Array.from(new Set([...bulkData.selectedEmployees, ...visibleIds]));
-      setBulkData((prev) => ({ ...prev, selectedEmployees: merged }));
-    }
+    setBulkData((prev) => ({
+      ...prev,
+      selectedEmployees: allSelected
+        ? prev.selectedEmployees.filter((id) => !visibleIds.includes(id))
+        : Array.from(new Set([...prev.selectedEmployees, ...visibleIds])),
+    }));
   };
 
   const toggleEmployee = (id) => {
-    setBulkData((prev) => {
-      const exists = prev.selectedEmployees.includes(id);
-      return {
-        ...prev,
-        selectedEmployees: exists
-          ? prev.selectedEmployees.filter((eId) => eId !== id)
-          : [...prev.selectedEmployees, id],
-      };
-    });
+    setBulkData((prev) => ({
+      ...prev,
+      selectedEmployees: prev.selectedEmployees.includes(id)
+        ? prev.selectedEmployees.filter((eId) => eId !== id)
+        : [...prev.selectedEmployees, id],
+    }));
+  };
+
+  const handleDepartmentChange = (dept) => {
+    const targetEmps = dept === 'ALL' ? employees : employees.filter((e) => e.department === dept);
+    setBulkData((prev) => ({
+      ...prev,
+      selectedDepartment: dept,
+      selectedEmployees: targetEmps.map((e) => e.id),
+    }));
   };
 
   return (
@@ -142,60 +134,51 @@ export const BulkBenefitModal = ({
       }
     >
       <div className="space-y-4">
-        {/* Plantillas Legales Rápidas */}
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1.5 select-none">
             Plantillas Rápidas (Normativa Ecuador)
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button
-              type="button"
-              onClick={() => applyTemplate('DECIMO_3')}
-              className={`p-2.5 border rounded-[4px] text-left transition-colors cursor-pointer ${
-                bulkData.specialType === 'DECIMO_TERCERO'
-                  ? 'border-blue-600 bg-blue-50/40 text-blue-900'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-800'
-              }`}
-            >
-              <p className="font-semibold text-xs">Décimo Tercero</p>
-              <p className="text-[11px] text-gray-400">1 Sueldo Base</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyTemplate('DECIMO_4')}
-              className={`p-2.5 border rounded-[4px] text-left transition-colors cursor-pointer ${
-                bulkData.specialType === 'DECIMO_CUARTO'
-                  ? 'border-blue-600 bg-blue-50/40 text-blue-900'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-800'
-              }`}
-            >
-              <p className="font-semibold text-xs">Décimo Cuarto</p>
-              <p className="text-[11px] text-gray-400">1 SBU ($470 USD)</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyTemplate('BONO_DESEMPENO')}
-              className={`p-2.5 border rounded-[4px] text-left transition-colors cursor-pointer ${
-                bulkData.name === 'Bono por Desempeño'
-                  ? 'border-blue-600 bg-blue-50/40 text-blue-900'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-800'
-              }`}
-            >
-              <p className="font-semibold text-xs">Bono Desempeño</p>
-              <p className="text-[11px] text-gray-400">$100 USD Fijo</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => applyTemplate('VIATICO_ALIMENTACION')}
-              className={`p-2.5 border rounded-[4px] text-left transition-colors cursor-pointer ${
-                bulkData.name === 'Alimentación Mensual'
-                  ? 'border-blue-600 bg-blue-50/40 text-blue-900'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-800'
-              }`}
-            >
-              <p className="font-semibold text-xs">Alimentación</p>
-              <p className="text-[11px] text-gray-400">$60 USD Exento</p>
-            </button>
+            {[
+              {
+                key: 'DECIMO_3',
+                title: 'Décimo Tercero',
+                sub: '1 Sueldo Base',
+                active: bulkData.specialType === 'DECIMO_TERCERO',
+              },
+              {
+                key: 'DECIMO_4',
+                title: 'Décimo Cuarto',
+                sub: '1 SBU ($470 USD)',
+                active: bulkData.specialType === 'DECIMO_CUARTO',
+              },
+              {
+                key: 'BONO_DESEMPENO',
+                title: 'Bono Desempeño',
+                sub: '$100 USD Fijo',
+                active: bulkData.name === 'Bono por Desempeño',
+              },
+              {
+                key: 'VIATICO_ALIMENTACION',
+                title: 'Alimentación',
+                sub: '$60 USD Exento',
+                active: bulkData.name === 'Alimentación Mensual',
+              },
+            ].map((tpl) => (
+              <button
+                key={tpl.key}
+                type="button"
+                onClick={() => applyTemplate(tpl.key)}
+                className={`p-2.5 border rounded-[4px] text-left transition-colors cursor-pointer ${
+                  tpl.active
+                    ? 'border-blue-600 bg-blue-50/40 text-blue-900'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-800'
+                }`}
+              >
+                <p className="font-semibold text-xs">{tpl.title}</p>
+                <p className="text-[11px] text-gray-400">{tpl.sub}</p>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -214,7 +197,14 @@ export const BulkBenefitModal = ({
             min="0.01"
             mono
             value={bulkData.amount}
-            onChange={(e) => setBulkData({ ...bulkData, amount: e.target.value })}
+            onChange={(e) =>
+              setBulkData({
+                ...bulkData,
+                amount: e.target.value,
+                isSpecial: false,
+                specialType: '',
+              })
+            }
           />
           <Select
             label="Frecuencia"
@@ -230,7 +220,6 @@ export const BulkBenefitModal = ({
           />
         </div>
 
-        {/* Selección de Colaboradores Destino */}
         <div className="space-y-2 pt-2 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <label className="text-xs font-medium text-gray-600 select-none">
@@ -239,9 +228,7 @@ export const BulkBenefitModal = ({
             <div className="flex items-center gap-2">
               <select
                 value={bulkData.selectedDepartment}
-                onChange={(e) =>
-                  setBulkData((prev) => ({ ...prev, selectedDepartment: e.target.value }))
-                }
+                onChange={(e) => handleDepartmentChange(e.target.value)}
                 className="text-xs bg-white border border-gray-200 rounded px-2.5 py-1 text-gray-800 focus:outline-none focus:border-blue-500"
               >
                 <option value="ALL">Todos los Departamentos</option>

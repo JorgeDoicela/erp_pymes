@@ -1,74 +1,69 @@
 /**
- * @file salaryAdvanceService.js
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
+ * @file salaryAdvance.service.js
+ * @description Servicio de dominio para anticipos de sueldo y préstamos (Norma ERP).
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import prisma from '../../../database/db.js';
 import { auditRepository } from '../../audit/index.js';
 import { financial } from '../../../core/utils/financialUtils.js';
+import { decryptSalary } from '../../../core/security/encryption.js';
+import {
+  ValidationError,
+  NotFoundError,
+  ConflictError,
+  ForbiddenError,
+} from '../../../core/errors/appError.js';
+import defaultSalaryAdvanceRepo from './salaryAdvance.repository.js';
+import { getAdvanceRemainingBalance } from './advanceInstallment.js';
 
-class SalaryAdvanceService {
-  /**
-   * Solicitud de anticipo de sueldo / préstamo por parte del empleado.
-   */
+export class SalaryAdvanceService {
+  constructor({ salaryAdvanceRepo = defaultSalaryAdvanceRepo, auditRepo = auditRepository } = {}) {
+    this.salaryAdvanceRepo = salaryAdvanceRepo;
+    this.auditRepo = auditRepo;
+  }
+
   async requestAdvance({ employeeId, amount, installments = 1, reason }) {
     const numAmount = Number(amount);
     const numInstallments = parseInt(installments, 10);
 
     if (!numAmount || numAmount <= 0) {
-      throw new Error('El monto solicitado debe ser mayor a 0');
+      throw new ValidationError('El monto solicitado debe ser mayor a 0');
     }
     if (!numInstallments || numInstallments < 1 || numInstallments > 24) {
-      throw new Error('El número de cuotas debe estar entre 1 y 24');
+      throw new ValidationError('El número de cuotas debe estar entre 1 y 24');
     }
 
-    // Obtener contrato activo o salario registrado del colaborador
-    const contract = await prisma.contract.findFirst({
-      where: {
-        employeeId,
-        status: 'Active',
-        OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
-      },
-      orderBy: { startDate: 'desc' },
-    });
+    const contract = await this.salaryAdvanceRepo.findActiveContractForEmployee(employeeId);
 
     let baseSalary = null;
     if (contract && contract.salary) {
       baseSalary = financial.from(contract.salary);
     } else {
-      const employee = await prisma.employee.findUnique({
-        where: { id: employeeId },
-      });
-      if (employee && employee.salary) {
-        const numericSalary = employee.salary.toString().replace(/[^0-9.]/g, '');
-        if (numericSalary) baseSalary = financial.from(numericSalary);
-      }
+      const employee = await this.salaryAdvanceRepo.findEmployeeById(employeeId);
+      const decryptedSalary = decryptSalary(employee?.salary);
+      if (decryptedSalary) baseSalary = financial.from(decryptedSalary);
     }
 
     if (!baseSalary || baseSalary.lte(0)) {
-      throw new Error(
+      throw new ValidationError(
         'No se encontró un salario base activo registrado para validar el límite de anticipo'
       );
     }
 
     const requested = financial.from(numAmount);
-
-    // Validación de políticas: Un anticipo no debe comprometer más del 50% de la capacidad de pago mensual
     const monthlyDeduction = financial.divide(requested, numInstallments);
     const maxMonthlyQuota = financial.percentage(baseSalary, 50);
 
     if (monthlyDeduction.gt(maxMonthlyQuota)) {
-      throw new Error(
+      throw new ValidationError(
         `La cuota mensual ($${financial.round(monthlyDeduction).toFixed(2)}) supera el límite del 50% de tu sueldo base mensual ($${financial.round(maxMonthlyQuota).toFixed(2)})`
       );
     }
 
-    // Crear solicitud en estado PENDING
-    const advance = await prisma.salaryAdvance.create({
-      data: {
+    return this.salaryAdvanceRepo.createAdvance(
+      {
         employeeId,
         amount: financial.round(requested),
         installments: numInstallments,
@@ -76,25 +71,10 @@ class SalaryAdvanceService {
         reason: reason ? reason.trim() : null,
         status: 'PENDING',
       },
-      include: {
-        employee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            identityCard: true,
-            department: true,
-          },
-        },
-      },
-    });
-
-    return advance;
+      false
+    );
   }
 
-  /**
-   * Registro directo de anticipo / préstamo por parte del Administrador.
-   */
   async createAdvanceByAdmin(
     { employeeId, amount, installments = 1, reason, autoApprove = true },
     adminId = null,
@@ -103,52 +83,26 @@ class SalaryAdvanceService {
     const numAmount = Number(amount);
     const numInstallments = parseInt(installments, 10);
 
-    if (!employeeId) {
-      throw new Error('El colaborador es requerido');
-    }
+    if (!employeeId) throw new ValidationError('El colaborador es requerido');
     if (!numAmount || numAmount <= 0) {
-      throw new Error('El monto debe ser un valor positivo mayor a 0');
+      throw new ValidationError('El monto debe ser un valor positivo mayor a 0');
     }
     if (!numInstallments || numInstallments < 1 || numInstallments > 24) {
-      throw new Error('El número de cuotas debe estar entre 1 y 24');
+      throw new ValidationError('El número de cuotas debe estar entre 1 y 24');
     }
 
-    // Verificar que el empleado pertenezca al tenant si aplica
-    const employee = await prisma.employee.findFirst({
-      where: {
-        id: employeeId,
-        ...(tenantId ? { tenantId } : {}),
-      },
-      include: {
-        contracts: {
-          where: {
-            status: 'Active',
-            OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
-          },
-          orderBy: { startDate: 'desc' },
-          take: 1,
-        },
-      },
-    });
-
-    if (!employee) {
-      throw new Error('Colaborador no encontrado o sin permisos');
-    }
-
-    const activeContract = employee.contracts[0];
-    const baseSalary = activeContract
-      ? financial.from(activeContract.salary)
-      : employee.salary
-        ? financial.from(employee.salary.toString().replace(/[^0-9.]/g, ''))
-        : financial.from(0);
+    const employee = await this.salaryAdvanceRepo.findEmployeeWithActiveContract(
+      employeeId,
+      tenantId
+    );
+    if (!employee) throw new NotFoundError('Colaborador no encontrado o sin permisos');
 
     const requested = financial.from(numAmount);
     const monthlyDeduction = financial.divide(requested, numInstallments);
-
     const status = autoApprove ? 'APPROVED' : 'PENDING';
 
-    const advance = await prisma.salaryAdvance.create({
-      data: {
+    const advance = await this.salaryAdvanceRepo.createAdvance(
+      {
         employeeId,
         amount: financial.round(requested),
         installments: numInstallments,
@@ -158,22 +112,11 @@ class SalaryAdvanceService {
         approvedBy: autoApprove ? adminId : null,
         approvedAt: autoApprove ? new Date() : null,
       },
-      include: {
-        employee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            identityCard: true,
-            department: true,
-            position: true,
-          },
-        },
-      },
-    });
+      true
+    );
 
     if (adminId) {
-      await auditRepository
+      await this.auditRepo
         .log({
           action: autoApprove ? 'ADMIN_CREATE_AND_APPROVE_ADVANCE' : 'ADMIN_CREATE_ADVANCE',
           entity: 'SalaryAdvance',
@@ -195,68 +138,37 @@ class SalaryAdvanceService {
     return advance;
   }
 
-  /**
-   * Obtener estadísticas globales y contadores de anticipos por estado.
-   */
   async getStats(tenantId = null) {
-    const baseWhere = tenantId ? { employee: { tenantId } } : {};
-
-    const [
-      totalCount,
-      pendingCount,
-      approvedCount,
-      paidCount,
-      rejectedCount,
-      cancelledCount,
-      approvedAdvances,
-    ] = await Promise.all([
-      prisma.salaryAdvance.count({ where: baseWhere }),
-      prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'PENDING' } }),
-      prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'APPROVED' } }),
-      prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'PAID' } }),
-      prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'REJECTED' } }),
-      prisma.salaryAdvance.count({ where: { ...baseWhere, status: 'CANCELLED' } }),
-      prisma.salaryAdvance.findMany({
-        where: { ...baseWhere, status: 'APPROVED' },
-        select: { amount: true, paidAmount: true, monthlyDeduction: true },
-      }),
-    ]);
+    const [total, pending, approved, paid, rejected, cancelled, approvedAdvances] =
+      await this.salaryAdvanceRepo.getStatsData(tenantId);
 
     const totalActiveBalance = approvedAdvances.reduce(
-      (sum, a) => sum + Math.max(0, (a.amount || 0) - (a.paidAmount || 0)),
-      0
+      (sum, a) => sum.plus(getAdvanceRemainingBalance(a)),
+      financial.from(0)
     );
-
     const monthlyDeductionsTotal = approvedAdvances.reduce(
-      (sum, a) => sum + (a.monthlyDeduction || 0),
-      0
+      (sum, a) => sum.plus(financial.from(a.monthlyDeduction || 0)),
+      financial.from(0)
     );
 
     return {
-      total: totalCount,
-      pending: pendingCount,
-      approved: approvedCount,
-      paid: paidCount,
-      rejected: rejectedCount,
-      cancelled: cancelledCount,
-      totalActiveBalance: financial.round(financial.from(totalActiveBalance)),
-      monthlyDeductionsTotal: financial.round(financial.from(monthlyDeductionsTotal)),
+      total,
+      pending,
+      approved,
+      paid,
+      rejected,
+      cancelled,
+      totalActiveBalance: financial.round(totalActiveBalance),
+      monthlyDeductionsTotal: financial.round(monthlyDeductionsTotal),
     };
   }
 
-  /**
-   * Obtener listado de anticipos con filtros para Administradores.
-   */
   async getAdvances({ page = 1, limit = 20, status, employeeId, search, tenantId }) {
     const skip = (page - 1) * limit;
     const where = {};
 
-    if (status) {
-      where.status = status;
-    }
-    if (employeeId) {
-      where.employeeId = employeeId;
-    }
+    if (status) where.status = status;
+    if (employeeId) where.employeeId = employeeId;
 
     const employeeWhere = tenantId ? { tenantId } : {};
     if (search) {
@@ -274,27 +186,11 @@ class SalaryAdvanceService {
       where.employee = employeeWhere;
     }
 
-    const [data, total] = await Promise.all([
-      prisma.salaryAdvance.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          employee: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              identityCard: true,
-              department: true,
-              position: true,
-            },
-          },
-        },
-      }),
-      prisma.salaryAdvance.count({ where }),
-    ]);
+    const [data, total] = await this.salaryAdvanceRepo.findAdvancesPaginated({
+      where,
+      skip,
+      take: limit,
+    });
 
     return {
       data,
@@ -307,62 +203,27 @@ class SalaryAdvanceService {
     };
   }
 
-  /**
-   * Obtener anticipos del empleado autenticado.
-   */
   async getMyAdvances(employeeId) {
-    return await prisma.salaryAdvance.findMany({
-      where: { employeeId },
-      orderBy: { createdAt: 'desc' },
-    });
+    return this.salaryAdvanceRepo.findByEmployee(employeeId);
   }
 
-  /**
-   * Aprobación de anticipo por el Administrador.
-   */
   async approveAdvance(id, adminId, tenantId = null) {
-    const advance = await prisma.salaryAdvance.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { employee: { tenantId } } : {}),
-      },
-      include: {
-        employee: {
-          select: { id: true, firstName: true, lastName: true, email: true, department: true },
-        },
-      },
-    });
-
-    if (!advance) throw new Error('Solicitud de anticipo no encontrada o sin permisos');
+    const advance = await this.salaryAdvanceRepo.findByIdForTenant(id, tenantId);
+    if (!advance) throw new NotFoundError('Solicitud de anticipo no encontrada o sin permisos');
     if (advance.status !== 'PENDING') {
-      throw new Error(
+      throw new ConflictError(
         `La solicitud se encuentra en estado ${advance.status} y no puede ser aprobada`
       );
     }
 
-    const updated = await prisma.salaryAdvance.update({
-      where: { id },
-      data: {
-        status: 'APPROVED',
-        approvedBy: adminId,
-        approvedAt: new Date(),
-      },
-      include: {
-        employee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            department: true,
-            position: true,
-          },
-        },
-      },
+    const updated = await this.salaryAdvanceRepo.updateWithEmployee(id, {
+      status: 'APPROVED',
+      approvedBy: adminId,
+      approvedAt: new Date(),
     });
 
     if (adminId) {
-      await auditRepository
+      await this.auditRepo
         .log({
           action: 'APPROVE_SALARY_ADVANCE',
           entity: 'SalaryAdvance',
@@ -383,53 +244,24 @@ class SalaryAdvanceService {
     return updated;
   }
 
-  /**
-   * Rechazo de anticipo por el Administrador.
-   */
   async rejectAdvance(id, rejectionReason, adminId, tenantId = null) {
-    const advance = await prisma.salaryAdvance.findFirst({
-      where: {
-        id,
-        ...(tenantId ? { employee: { tenantId } } : {}),
-      },
-      include: {
-        employee: {
-          select: { id: true, firstName: true, lastName: true, email: true, department: true },
-        },
-      },
-    });
-
-    if (!advance) throw new Error('Solicitud de anticipo no encontrada o sin permisos');
+    const advance = await this.salaryAdvanceRepo.findByIdForTenant(id, tenantId);
+    if (!advance) throw new NotFoundError('Solicitud de anticipo no encontrada o sin permisos');
     if (advance.status !== 'PENDING') {
-      throw new Error(
+      throw new ConflictError(
         `La solicitud se encuentra en estado ${advance.status} y no puede ser rechazada`
       );
     }
 
-    const updated = await prisma.salaryAdvance.update({
-      where: { id },
-      data: {
-        status: 'REJECTED',
-        rejectionReason: rejectionReason
-          ? rejectionReason.trim()
-          : 'Solicitud no aprobada por administración',
-      },
-      include: {
-        employee: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            department: true,
-            position: true,
-          },
-        },
-      },
+    const updated = await this.salaryAdvanceRepo.updateWithEmployee(id, {
+      status: 'REJECTED',
+      rejectionReason: rejectionReason
+        ? rejectionReason.trim()
+        : 'Solicitud no aprobada por administración',
     });
 
     if (adminId) {
-      await auditRepository
+      await this.auditRepo
         .log({
           action: 'REJECT_SALARY_ADVANCE',
           entity: 'SalaryAdvance',
@@ -449,21 +281,17 @@ class SalaryAdvanceService {
     return updated;
   }
 
-  /**
-   * Cancelar solicitud pendiente por parte del empleado.
-   */
   async cancelAdvance(id, employeeId) {
-    const advance = await prisma.salaryAdvance.findUnique({ where: { id } });
-    if (!advance) throw new Error('Solicitud no encontrada');
-    if (advance.employeeId !== employeeId)
-      throw new Error('No tienes autorización para cancelar esta solicitud');
-    if (advance.status !== 'PENDING')
-      throw new Error('Solo se pueden cancelar solicitudes pendientes');
+    const advance = await this.salaryAdvanceRepo.findById(id);
+    if (!advance) throw new NotFoundError('Solicitud no encontrada');
+    if (advance.employeeId !== employeeId) {
+      throw new ForbiddenError('No tienes autorización para cancelar esta solicitud');
+    }
+    if (advance.status !== 'PENDING') {
+      throw new ConflictError('Solo se pueden cancelar solicitudes pendientes');
+    }
 
-    return await prisma.salaryAdvance.update({
-      where: { id },
-      data: { status: 'CANCELLED' },
-    });
+    return this.salaryAdvanceRepo.updateStatus(id, 'CANCELLED');
   }
 }
 

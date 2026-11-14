@@ -7,36 +7,20 @@
  */
 
 import cron from 'node-cron';
-import prisma from '../../../database/db.js';
+import { attendanceRepository } from './attendance.repository.js';
 import { notificationService } from '../../notifications/index.js';
 
 export const checkRequestReminders = async () => {
-  console.log('[CRON] Checking for Pending Requests (Reminders & Escalations)...');
-
   try {
     const now = new Date();
-    const pendingRequests = await prisma.absenceRequest.findMany({
-      where: { status: 'PENDING' },
-      include: {
-        employee: {
-          select: { id: true, firstName: true, lastName: true, tenantId: true },
-        },
-      },
-    });
+    const pendingRequests = await attendanceRepository.findPendingAbsenceRequestsWithEmployee();
 
     const adminCache = new Map();
     const getAdmins = async (tenantId) => {
       if (!tenantId) return [];
       if (adminCache.has(tenantId)) return adminCache.get(tenantId);
 
-      const admins = await prisma.employee.findMany({
-        where: {
-          role: 'admin',
-          isActive: true,
-          tenantId,
-        },
-        select: { id: true },
-      });
+      const admins = await attendanceRepository.findActiveAdminsByTenant(tenantId);
       adminCache.set(tenantId, admins);
       return admins;
     };
@@ -44,16 +28,14 @@ export const checkRequestReminders = async () => {
     for (const req of pendingRequests) {
       const admins = await getAdmins(req.employee?.tenantId);
       const created = new Date(req.createdAt);
-      const diffMs = now - created;
-      const diffHours = diffMs / (1000 * 60 * 60);
+      const diffHours = (now - created) / (1000 * 60 * 60);
 
-      // 1. Reminder after 24 hours (Allowing a 1h window: 24 <= h < 25)
       if (diffHours >= 24 && diffHours < 25) {
         await Promise.allSettled(
           admins.map((admin) =>
             notificationService.createNotification({
               recipientId: admin.id,
-              title: `Recordatorio de Solicitud Pendiente (24h)`,
+              title: 'Recordatorio de Solicitud Pendiente (24h)',
               message: `La solicitud de ausencia de ${req.employee.firstName} ${req.employee.lastName} sigue pendiente de aprobación (24 horas).`,
               type: 'REQUEST_REMINDER_ADMIN',
               relatedEntity: 'AbsenceRequest',
@@ -63,13 +45,12 @@ export const checkRequestReminders = async () => {
         );
       }
 
-      // 2. Escalation after 48 hours (Allowing a 1h window: 48 <= h < 49)
       if (diffHours >= 48 && diffHours < 49) {
         await Promise.allSettled(
           admins.map((admin) =>
             notificationService.createNotification({
               recipientId: admin.id,
-              title: `URGENTE: Escalamiento de Solicitud (48h)`,
+              title: 'URGENTE: Escalamiento de Solicitud (48h)',
               message: `La solicitud de ausencia de ${req.employee.firstName} ${req.employee.lastName} lleva más de 48 horas sin respuesta. Por favor resuelva inmediatamente.`,
               type: 'REQUEST_ESCALATION_ADMIN',
               relatedEntity: 'AbsenceRequest',
@@ -85,9 +66,7 @@ export const checkRequestReminders = async () => {
 };
 
 export const initRequestMonitorCronJob = () => {
-  // Run every hour at minute 0
   cron.schedule('0 * * * *', checkRequestReminders);
-  console.log('[CRON] Request Monitor Cron Job scheduled (Hourly).');
 };
 
 export default {

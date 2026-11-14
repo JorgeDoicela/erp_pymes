@@ -10,12 +10,17 @@ import { attendanceRepository } from './attendance.repository.js';
 import { employeeRepository } from '../../employees/index.js';
 import { systemRepository } from '../../system/index.js';
 import { auditRepository } from '../../audit/index.js';
-import { encryptCoordinate, decryptCoordinate } from '../../../core/security/encryption.js';
+import { encryptCoordinate } from '../../../core/security/encryption.js';
 import {
+  computeEntryLateness,
+  computeExitMetrics,
+  decryptLocationPair,
   resolveEmployeeGeofenceConfig,
   validateAttendanceGeofence,
   validateNetworkPolicy,
 } from './geofence.helper.js';
+
+export { computeExitMetrics };
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CUID_REGEX = /^c[a-z0-9]{20,}$/i;
@@ -36,47 +41,6 @@ const resolveEmployeeRecord = async (inputIdentifier) => {
     if (emp) return emp;
   }
   return null;
-};
-
-const computeEntryLateness = (checkInDate, activeSchedule) => {
-  const shiftStartTime = activeSchedule?.shift?.startTime || '08:00';
-  const tolerance = activeSchedule?.shift?.toleranceMinutes || 15;
-  const limitParams = new Date(checkInDate);
-  const [sh, sm] = shiftStartTime.split(':').map(Number);
-  limitParams.setHours(sh, sm + tolerance, 0, 0);
-  return checkInDate > limitParams;
-};
-
-const computeExitMetrics = (now, existingRecord, activeSchedule) => {
-  const checkInTime = new Date(existingRecord.checkIn);
-  let diffMs = now - checkInTime;
-
-  if (existingRecord.breakStart) {
-    const breakEnd = existingRecord.breakEnd || now;
-    const breakDuration = breakEnd - new Date(existingRecord.breakStart);
-    if (breakDuration > 0) {
-      diffMs -= breakDuration;
-    }
-  }
-
-  const workedHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
-  const exitMetrics = { workedHours };
-
-  if (activeSchedule?.shift?.endTime) {
-    const [eh, em] = activeSchedule.shift.endTime.split(':').map(Number);
-    const shiftEndTime = new Date(now);
-    shiftEndTime.setHours(eh, em, 0, 0);
-
-    if (now > shiftEndTime) {
-      const extraHours = parseFloat(((now - shiftEndTime) / (1000 * 60 * 60)).toFixed(2));
-      if (extraHours > 0) exitMetrics.overtimeHours = extraHours;
-    } else if (now < shiftEndTime) {
-      const earlyDiffMinutes = Math.floor((shiftEndTime - now) / (1000 * 60));
-      if (earlyDiffMinutes >= 1) exitMetrics.isEarlyDeparture = true;
-    }
-  }
-
-  return exitMetrics;
 };
 
 export const attendanceService = {
@@ -247,15 +211,14 @@ export const attendanceService = {
       throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
     }
 
-    const employeeId = employee.id;
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    let record = await attendanceRepository.findByEmployeeAndDate(employeeId, today);
+    let record = await attendanceRepository.findByEmployeeAndDate(employee.id, today);
     if (!record) {
       record = await attendanceRepository.findFirst(
         {
-          employeeId,
+          employeeId: employee.id,
           checkOut: null,
           checkIn: { gte: new Date(Date.now() - 28 * 60 * 60 * 1000) },
         },
@@ -266,7 +229,6 @@ export const attendanceService = {
     const systemSettings = employee.tenantId
       ? await systemRepository.findByTenantId(employee.tenantId)
       : await systemRepository.findGlobalDefault();
-
     const geofence = resolveEmployeeGeofenceConfig(employee, systemSettings);
 
     const employeeData = {
@@ -276,9 +238,7 @@ export const attendanceService = {
       position: employee.position,
       department: employee.department,
       trackingConsent: Boolean(employee.trackingConsent),
-      hasBiometric: Boolean(
-        employee.biometricCredentials && employee.biometricCredentials.length > 0
-      ),
+      hasBiometric: Boolean(employee.biometricCredentials?.length > 0),
       geofence: {
         enabled: geofence.enabled,
         targetLat: geofence.targetLat,
@@ -288,7 +248,6 @@ export const attendanceService = {
     };
 
     const activeSchedule = await attendanceRepository.findActiveSchedule(employee.id, today);
-
     const buildResponse = (status, rec = null) => {
       const response = { status, employee: employeeData, geofence: employeeData.geofence };
       if (rec) {
@@ -296,22 +255,10 @@ export const attendanceService = {
         response.checkOut = rec.checkOut;
         response.breakStart = rec.breakStart;
         response.breakEnd = rec.breakEnd;
-
-        if (rec.entryLatitude && rec.entryLongitude) {
-          const entryLat = decryptCoordinate(rec.entryLatitude);
-          const entryLng = decryptCoordinate(rec.entryLongitude);
-          if (entryLat !== null && entryLng !== null) {
-            response.entryLocation = { lat: entryLat, lng: entryLng };
-          }
-        }
-        if (rec.exitLatitude && rec.exitLongitude) {
-          const exitLat = decryptCoordinate(rec.exitLatitude);
-          const exitLng = decryptCoordinate(rec.exitLongitude);
-          if (exitLat !== null && exitLng !== null) {
-            response.exitLocation = { lat: exitLat, lng: exitLng };
-          }
-        }
-
+        const entryLoc = decryptLocationPair(rec.entryLatitude, rec.entryLongitude);
+        if (entryLoc) response.entryLocation = entryLoc;
+        const exitLoc = decryptLocationPair(rec.exitLatitude, rec.exitLongitude);
+        if (exitLoc) response.exitLocation = exitLoc;
         response.isLate = computeEntryLateness(new Date(rec.checkIn), activeSchedule);
       }
       return response;
@@ -319,8 +266,7 @@ export const attendanceService = {
 
     if (!record) return buildResponse('NOT_STARTED');
     if (record.checkIn && !record.checkOut) {
-      if (record.breakStart && !record.breakEnd) return buildResponse('ON_BREAK', record);
-      return buildResponse('WORKING', record);
+      return buildResponse(record.breakStart && !record.breakEnd ? 'ON_BREAK' : 'WORKING', record);
     }
     if (record.checkOut) return buildResponse('COMPLETED', record);
 

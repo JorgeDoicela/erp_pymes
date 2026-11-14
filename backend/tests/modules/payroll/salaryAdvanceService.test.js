@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { salaryAdvanceService } from '../../../src/modules/payroll/index.js';
 import prisma from '../../../src/database/db.js';
+import { encryptSalary } from '../../../src/core/security/encryption.js';
 
 vi.mock('../../../src/database/db.js', () => ({
   default: {
@@ -155,5 +156,49 @@ describe('Salary Advance & Employee Loan Service Test Suite', () => {
 
     const result = await salaryAdvanceService.cancelAdvance('adv_1', 'emp_1');
     expect(result.status).toBe('CANCELLED');
+  });
+
+  describe('salario cifrado del colaborador sin contrato activo', () => {
+    beforeEach(() => {
+      prisma.contract.findFirst.mockResolvedValue(null);
+      prisma.employee.findUnique.mockResolvedValue({
+        id: 'emp_3',
+        salary: encryptSalary(800),
+      });
+      prisma.salaryAdvance.create.mockImplementation(async ({ data }) => ({
+        id: 'adv_3',
+        ...data,
+      }));
+    });
+
+    it('descifra employee.salary y acepta una cuota dentro del 50% del sueldo real', async () => {
+      const result = await salaryAdvanceService.requestAdvance({
+        employeeId: 'emp_3',
+        amount: 400,
+        installments: 1,
+      });
+
+      expect(result.monthlyDeduction).toBe(400);
+      expect(result.status).toBe('PENDING');
+    });
+
+    it('rechaza una cuota que supera el 50% del sueldo real (regresión: antes se leían los dígitos del texto cifrado)', async () => {
+      await expect(
+        salaryAdvanceService.requestAdvance({
+          employeeId: 'emp_3',
+          amount: 400.01,
+          installments: 1,
+        })
+      ).rejects.toThrow(/supera el límite del 50% de tu sueldo base mensual \(\$400\.00\)/);
+      expect(prisma.salaryAdvance.create).not.toHaveBeenCalled();
+    });
+
+    it('rechaza la solicitud si el salario guardado no se puede descifrar', async () => {
+      prisma.employee.findUnique.mockResolvedValue({ id: 'emp_3', salary: 'a1b2:c3d4:9f9f' });
+
+      await expect(
+        salaryAdvanceService.requestAdvance({ employeeId: 'emp_3', amount: 100, installments: 1 })
+      ).rejects.toThrow(/No se encontró un salario base activo/);
+    });
   });
 });
