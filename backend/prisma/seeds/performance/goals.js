@@ -89,7 +89,7 @@ export async function seedGoals(prisma, employees) {
           targetValue: 15,
           currentValue: 17,
           unit: 'Días',
-          deadline: new Date(`${currentYear}-10-31`),
+          deadline: new Date(`${currentYear}-12-31`),
           priority: 'HIGH',
           status: 'IN_PROGRESS',
           progress: 80,

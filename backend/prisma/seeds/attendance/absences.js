@@ -11,7 +11,7 @@ export async function seedAbsences(prisma, employees) {
 
   const ABSENCE_PROFILES = [
     {
-      email: 'kevin.arismendi@emplifi.com',
+      email: 'kevin.arismendi@norma.com',
       requests: [
         {
           type: 'Enfermedad',
@@ -69,7 +69,7 @@ export async function seedAbsences(prisma, employees) {
       ],
     },
     {
-      email: 'andres.morales@emplifi.com',
+      email: 'jorge.doicela.m@gmail.com',
       requests: [
         {
           type: 'Vacaciones',
@@ -82,7 +82,7 @@ export async function seedAbsences(prisma, employees) {
       ],
     },
     {
-      email: 'gabriela.torres@emplifi.com',
+      email: 'gabriela.torres@norma.com',
       requests: [
         {
           type: 'Enfermedad',
@@ -103,7 +103,7 @@ export async function seedAbsences(prisma, employees) {
       ],
     },
     {
-      email: 'camila.rodriguez@emplifi.com',
+      email: 'camila.rodriguez@norma.com',
       requests: [
         {
           type: 'Personal',
@@ -124,7 +124,7 @@ export async function seedAbsences(prisma, employees) {
       ],
     },
     {
-      email: 'valeria.espinoza@emplifi.com',
+      email: 'valeria.espinoza@norma.com',
       requests: [
         {
           type: 'Vacaciones',

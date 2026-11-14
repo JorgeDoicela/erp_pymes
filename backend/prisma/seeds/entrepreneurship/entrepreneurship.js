@@ -38,14 +38,20 @@ export async function seedEntrepreneurship(prisma) {
             kanbanColumn: 'DONE',
           },
           {
-            title: 'Lanzamiento de piloto con 5 camiones',
-            dueDate: new Date('2026-06-15'),
+            title: 'Despliegue de piloto con 5 camiones',
+            dueDate: new Date('2026-09-15'),
+            status: 'COMPLETED',
+            kanbanColumn: 'DONE',
+          },
+          {
+            title: 'Telemetría avanzada e integración ERP',
+            dueDate: new Date('2026-11-28'),
             status: 'IN_PROGRESS',
             kanbanColumn: 'IN_PROGRESS',
           },
           {
-            title: 'Ronda Semilla de $50k',
-            dueDate: new Date('2026-09-01'),
+            title: 'Ronda Semilla de $100k',
+            dueDate: new Date('2027-01-20'),
             status: 'PENDING',
             kanbanColumn: 'BACKLOG',
           },
@@ -143,13 +149,19 @@ export async function seedEntrepreneurship(prisma) {
         create: [
           {
             title: 'Certificación médica básica',
-            dueDate: new Date('2026-05-30'),
+            dueDate: new Date('2026-07-30'),
+            status: 'COMPLETED',
+            kanbanColumn: 'DONE',
+          },
+          {
+            title: 'Pruebas de campo en clínica Santa Inés',
+            dueDate: new Date('2026-11-25'),
             status: 'IN_PROGRESS',
             kanbanColumn: 'IN_PROGRESS',
           },
           {
-            title: 'Pruebas de campo en clínica regional',
-            dueDate: new Date('2026-08-10'),
+            title: 'Despliegue en 3 clínicas piloto',
+            dueDate: new Date('2027-01-15'),
             status: 'PENDING',
             kanbanColumn: 'BACKLOG',
           },
@@ -250,13 +262,19 @@ export async function seedEntrepreneurship(prisma) {
         create: [
           {
             title: 'Diseño de prototipo en Figma',
-            dueDate: new Date('2026-03-30'),
+            dueDate: new Date('2026-06-30'),
             status: 'COMPLETED',
             kanbanColumn: 'DONE',
           },
           {
             title: 'Focus group con padres y educadores',
-            dueDate: new Date('2026-05-15'),
+            dueDate: new Date('2026-11-20'),
+            status: 'IN_PROGRESS',
+            kanbanColumn: 'IN_PROGRESS',
+          },
+          {
+            title: 'Beta en colegios piloto',
+            dueDate: new Date('2026-12-15'),
             status: 'PENDING',
             kanbanColumn: 'BACKLOG',
           },
@@ -359,15 +377,27 @@ export async function seedEntrepreneurship(prisma) {
         create: [
           {
             title: 'Alianza con Federación de Agricultores',
-            dueDate: new Date('2026-02-15'),
+            dueDate: new Date('2026-05-15'),
             status: 'COMPLETED',
             kanbanColumn: 'DONE',
           },
           {
-            title: 'Expansión al mercado colombiano',
-            dueDate: new Date('2026-11-20'),
-            status: 'PENDING',
+            title: 'Vuelos multiespectrales de validación',
+            dueDate: new Date('2026-10-10'),
+            status: 'COMPLETED',
+            kanbanColumn: 'DONE',
+          },
+          {
+            title: 'Expansión comercial regional',
+            dueDate: new Date('2026-11-28'),
+            status: 'IN_PROGRESS',
             kanbanColumn: 'IN_PROGRESS',
+          },
+          {
+            title: 'Ronda Serie A',
+            dueDate: new Date('2027-02-15'),
+            status: 'PENDING',
+            kanbanColumn: 'BACKLOG',
           },
         ],
       },

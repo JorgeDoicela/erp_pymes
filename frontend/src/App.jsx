@@ -240,11 +240,9 @@ function App() {
     };
 
     window.addEventListener('norma:user-updated', handleUserUpdated);
-    window.addEventListener('emplifi:user-updated', handleUserUpdated);
     window.addEventListener('storage', handleUserUpdated);
     return () => {
       window.removeEventListener('norma:user-updated', handleUserUpdated);
-      window.removeEventListener('emplifi:user-updated', handleUserUpdated);
       window.removeEventListener('storage', handleUserUpdated);
     };
   }, []);

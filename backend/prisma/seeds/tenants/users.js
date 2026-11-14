@@ -9,14 +9,14 @@
 import bcrypt from 'bcryptjs';
 import { encrypt, encryptSalary } from '../../../src/core/security/encryption.js';
 
-// ── EMPRESA 1: Empresa Demo Ecuador S.A. (@emplifi.com) ──────────────────────
+// ── EMPRESA 1: Empresa Demo Ecuador S.A. (@norma.com) ───────────────────────
 const EMPLOYEES_EMPRESA_1 = [
   {
-    firstName: 'Andrés',
-    lastName: 'Morales',
-    email: 'andres.morales@emplifi.com',
+    firstName: 'Jorge',
+    lastName: 'Doicela',
+    email: 'jorge.doicela.m@gmail.com',
     role: 'manager',
-    identityCard: '1712345678',
+    identityCard: '1725555377',
     department: 'Tecnología',
     position: 'Desarrollador Senior / Líder de Equipo',
     salary: 2200,
@@ -34,7 +34,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Valeria',
     lastName: 'Espinoza',
-    email: 'valeria.espinoza@emplifi.com',
+    email: 'valeria.espinoza@norma.com',
     role: 'hr',
     identityCard: '1723456789',
     department: 'Recursos Humanos',
@@ -54,7 +54,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Diego',
     lastName: 'Vásquez',
-    email: 'diego.vasquez@emplifi.com',
+    email: 'diego.vasquez@norma.com',
     identityCard: '1734567890',
     department: 'Finanzas',
     position: 'Analista Financiero',
@@ -73,7 +73,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Gabriela',
     lastName: 'Torres',
-    email: 'gabriela.torres@emplifi.com',
+    email: 'gabriela.torres@norma.com',
     identityCard: '1745678901',
     department: 'Marketing',
     position: 'Especialista en Marketing Digital',
@@ -92,7 +92,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Sebastián',
     lastName: 'Herrera',
-    email: 'sebastian.herrera@emplifi.com',
+    email: 'sebastian.herrera@norma.com',
     identityCard: '1756789012',
     department: 'Tecnología',
     position: 'Ingeniero DevOps',
@@ -111,7 +111,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Camila',
     lastName: 'Rodríguez',
-    email: 'camila.rodriguez@emplifi.com',
+    email: 'camila.rodriguez@norma.com',
     identityCard: '1767890123',
     department: 'Ventas',
     position: 'Ejecutiva de Ventas',
@@ -130,7 +130,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Mateo',
     lastName: 'Jiménez',
-    email: 'mateo.jimenez@emplifi.com',
+    email: 'mateo.jimenez@norma.com',
     identityCard: '1778901234',
     department: 'Operaciones',
     position: 'Coordinador de Operaciones',
@@ -149,7 +149,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Daniela',
     lastName: 'Salazar',
-    email: 'daniela.salazar@emplifi.com',
+    email: 'daniela.salazar@norma.com',
     identityCard: '1789012345',
     department: 'Legal',
     position: 'Asesora Legal',
@@ -168,7 +168,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Felipe',
     lastName: 'Castillo',
-    email: 'felipe.castillo@emplifi.com',
+    email: 'felipe.castillo@norma.com',
     identityCard: '1790123456',
     department: 'Tecnología',
     position: 'Diseñador UX/UI',
@@ -187,7 +187,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Kevin',
     lastName: 'Arismendi',
-    email: 'kevin.arismendi@emplifi.com',
+    email: 'kevin.arismendi@norma.com',
     identityCard: '1799988877',
     department: 'Tecnología',
     position: 'Junior Developer',
@@ -206,7 +206,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Ricardo',
     lastName: 'Almeida',
-    email: 'ricardo.almeida@emplifi.com',
+    email: 'ricardo.almeida@norma.com',
     identityCard: '1791234560',
     department: 'Tecnología',
     position: 'Tech Lead Backend',
@@ -225,7 +225,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Estefanía',
     lastName: 'Moreno',
-    email: 'estefania.moreno@emplifi.com',
+    email: 'estefania.moreno@norma.com',
     identityCard: '1792345671',
     department: 'Tecnología',
     position: 'QA Automation Engineer',
@@ -244,7 +244,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'David',
     lastName: 'Ortega',
-    email: 'david.ortega@emplifi.com',
+    email: 'david.ortega@norma.com',
     identityCard: '1793456782',
     department: 'Tecnología',
     position: 'Data Engineer & AI Ops',
@@ -263,7 +263,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Pablo',
     lastName: 'Guerrero',
-    email: 'pablo.guerrero@emplifi.com',
+    email: 'pablo.guerrero@norma.com',
     identityCard: '1794567893',
     department: 'Ventas',
     position: 'Director Comercial',
@@ -282,7 +282,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Jessica',
     lastName: 'Maldonado',
-    email: 'jessica.maldonado@emplifi.com',
+    email: 'jessica.maldonado@norma.com',
     identityCard: '1795678904',
     department: 'Ventas',
     position: 'Account Executive B2B',
@@ -301,7 +301,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Esteban',
     lastName: 'Suárez',
-    email: 'esteban.suarez@emplifi.com',
+    email: 'esteban.suarez@norma.com',
     identityCard: '1796789015',
     department: 'Ventas',
     position: 'SDR Prospección Comercial',
@@ -320,7 +320,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Mónica',
     lastName: 'Chávez',
-    email: 'monica.chavez@emplifi.com',
+    email: 'monica.chavez@norma.com',
     identityCard: '1797890126',
     department: 'Operaciones',
     position: 'Líder de Logística y Procesos',
@@ -339,7 +339,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Rodrigo',
     lastName: 'Zambrano',
-    email: 'rodrigo.zambrano@emplifi.com',
+    email: 'rodrigo.zambrano@norma.com',
     identityCard: '1798901237',
     department: 'Operaciones',
     position: 'Analista de Procesos y Calidad',
@@ -358,7 +358,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Carolina',
     lastName: 'Vélez',
-    email: 'carolina.velez@emplifi.com',
+    email: 'carolina.velez@norma.com',
     identityCard: '1799012348',
     department: 'Finanzas',
     position: 'Analista de Tesorería',
@@ -377,7 +377,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Luis',
     lastName: 'Carrasco',
-    email: 'luis.carrasco@emplifi.com',
+    email: 'luis.carrasco@norma.com',
     identityCard: '1790123459',
     department: 'Marketing',
     position: 'Growth Marketing & Ads Lead',
@@ -396,7 +396,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Paola',
     lastName: 'Jaramillo',
-    email: 'paola.jaramillo@emplifi.com',
+    email: 'paola.jaramillo@norma.com',
     identityCard: '1791234569',
     department: 'Recursos Humanos',
     position: 'Especialista en Cultura y Clima',
@@ -415,7 +415,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Gabriel',
     lastName: 'Enríquez',
-    email: 'gabriel.enriquez@emplifi.com',
+    email: 'gabriel.enriquez@norma.com',
     identityCard: '1715678902',
     department: 'Tecnología',
     position: 'Especialista en Ciberseguridad & SOC',
@@ -434,7 +434,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Valeria',
     lastName: 'Cárdenas',
-    email: 'valeria.cardenas@emplifi.com',
+    email: 'valeria.cardenas@norma.com',
     identityCard: '1726789013',
     department: 'Finanzas',
     position: 'Contadora de Costos & Presupuestos',
@@ -453,7 +453,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Santiago',
     lastName: 'Paredes',
-    email: 'santiago.paredes@emplifi.com',
+    email: 'santiago.paredes@norma.com',
     identityCard: '1737890124',
     department: 'Ventas',
     position: 'Gerente Regional Sierra',
@@ -472,7 +472,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'María Elena',
     lastName: 'Noboa',
-    email: 'maria.noboa@emplifi.com',
+    email: 'maria.noboa@norma.com',
     identityCard: '1748901235',
     department: 'Recursos Humanos',
     position: 'Business Partner de Talento',
@@ -491,7 +491,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Cristian',
     lastName: 'Benalcázar',
-    email: 'cristian.benalcazar@emplifi.com',
+    email: 'cristian.benalcazar@norma.com',
     identityCard: '1759012346',
     department: 'Operaciones',
     position: 'Supervisor de Planta y Despachos',
@@ -510,7 +510,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Ximena',
     lastName: 'Cordero',
-    email: 'ximena.cordero@emplifi.com',
+    email: 'ximena.cordero@norma.com',
     identityCard: '1760123457',
     department: 'Legal',
     position: 'Oficial de Cumplimiento & Riesgos',
@@ -529,7 +529,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Mauricio',
     lastName: 'Villacís',
-    email: 'mauricio.villacis@emplifi.com',
+    email: 'mauricio.villacis@norma.com',
     identityCard: '1771234568',
     department: 'Tecnología',
     position: 'Ingeniero de Frontend React Senior',
@@ -548,7 +548,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Paulina',
     lastName: 'Alarcón',
-    email: 'paulina.alarcon@emplifi.com',
+    email: 'paulina.alarcon@norma.com',
     identityCard: '1782345679',
     department: 'Marketing',
     position: 'Content Manager & Copywriter',
@@ -567,7 +567,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Roberto',
     lastName: 'Cevallos',
-    email: 'roberto.cevallos@emplifi.com',
+    email: 'roberto.cevallos@norma.com',
     identityCard: '1793456780',
     department: 'Operaciones',
     position: 'Analista de Inventarios y Bodega',
@@ -586,7 +586,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Karina',
     lastName: 'Santamaría',
-    email: 'karina.santamaria@emplifi.com',
+    email: 'karina.santamaria@norma.com',
     identityCard: '1714567891',
     department: 'Ventas',
     position: 'Customer Success Specialist',
@@ -605,7 +605,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Alex',
     lastName: 'Guayasamín',
-    email: 'alex.guayasamin@emplifi.com',
+    email: 'alex.guayasamin@norma.com',
     identityCard: '1725678902',
     department: 'Tecnología',
     position: 'DBA & Data Architect',
@@ -624,7 +624,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Andrea',
     lastName: 'Córdova',
-    email: 'andrea.cordova@emplifi.com',
+    email: 'andrea.cordova@norma.com',
     identityCard: '1736789013',
     department: 'Finanzas',
     position: 'Analista de Cartera y Cobranzas',
@@ -643,7 +643,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Marcelo',
     lastName: 'Terán',
-    email: 'marcelo.teran@emplifi.com',
+    email: 'marcelo.teran@norma.com',
     identityCard: '1747890124',
     department: 'Innovación',
     position: 'Product Designer & UX Researcher',
@@ -662,7 +662,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Lucía',
     lastName: 'Montesdeoca',
-    email: 'lucia.montesdeoca@emplifi.com',
+    email: 'lucia.montesdeoca@norma.com',
     identityCard: '1758901235',
     department: 'Recursos Humanos',
     position: 'Asistente de Bienestar Social',
@@ -681,7 +681,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'José Luis',
     lastName: 'Echeverría',
-    email: 'joseluis.echeverria@emplifi.com',
+    email: 'joseluis.echeverria@norma.com',
     identityCard: '1769012346',
     department: 'Tecnología',
     position: 'Mobile Engineer Flutter / React Native',
@@ -701,7 +701,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Carlos',
     lastName: 'Pérez',
-    email: 'carlos.perez.ex@emplifi.com',
+    email: 'carlos.perez.ex@norma.com',
     identityCard: '1755544433',
     department: 'Ventas',
     position: 'Ejecutivo de Ventas',
@@ -722,7 +722,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Mariana',
     lastName: 'Silva',
-    email: 'mariana.silva.ex@emplifi.com',
+    email: 'mariana.silva.ex@norma.com',
     identityCard: '1744433322',
     department: 'Marketing',
     position: 'Diseñadora Gráfica',
@@ -743,7 +743,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Jorge',
     lastName: 'Navarro',
-    email: 'jorge.navarro.ex@emplifi.com',
+    email: 'jorge.navarro.ex@norma.com',
     identityCard: '1733322211',
     department: 'Tecnología',
     position: 'Soporte Técnico',
@@ -764,7 +764,7 @@ const EMPLOYEES_EMPRESA_1 = [
   {
     firstName: 'Sofía',
     lastName: 'Cárdenas',
-    email: 'sofia.cardenas.ex@emplifi.com',
+    email: 'sofia.cardenas.ex@norma.com',
     identityCard: '1722211100',
     department: 'Operaciones',
     position: 'Asistente de Ops',
@@ -1121,13 +1121,13 @@ export async function seedUsers(prisma) {
   let superAdmin;
   try {
     superAdmin = await prisma.employee.upsert({
-      where: { email: 'admin@emplifi.com' },
+      where: { email: 'superadmin@norma.com' },
       update: { password, tenantId: null, role: 'superadmin' },
       create: {
         tenantId: null,
-        firstName: 'Jorge',
-        lastName: 'Doicela',
-        email: 'admin@emplifi.com',
+        firstName: 'SuperAdmin',
+        lastName: 'Norma ERP',
+        email: 'superadmin@norma.com',
         role: 'superadmin',
         department: 'Administración Global',
         position: 'SuperAdmin SaaS',
@@ -1154,8 +1154,8 @@ export async function seedUsers(prisma) {
       update: { password, tenantId: null, role: 'superadmin' },
       create: {
         tenantId: null,
-        firstName: 'Jorge',
-        lastName: 'Doicela',
+        firstName: 'Admin',
+        lastName: 'Norma ERP',
         email: 'admin@normaerp.com',
         role: 'superadmin',
         department: 'Administración Global',
@@ -1176,45 +1176,8 @@ export async function seedUsers(prisma) {
         vacationDays: 0,
       },
     });
-    // Crear alias personal/oficial jorge.doicela.m@gmail.com
-    const superAdminPhone = process.env.SUPERADMIN_PHONE || '0999999999';
-    await prisma.employee.upsert({
-      where: { email: 'jorge.doicela.m@gmail.com' },
-      update: {
-        password,
-        tenantId: null,
-        role: 'superadmin',
-        isActive: true,
-        phone: superAdminPhone,
-      },
-      create: {
-        tenantId: null,
-        firstName: 'Jorge',
-        lastName: 'Doicela',
-        email: 'jorge.doicela.m@gmail.com',
-        role: 'superadmin',
-        department: 'Administración Global',
-        position: 'SuperAdmin SaaS',
-        salary: encryptSalary(0),
-        password,
-        identityCard: '0101010103',
-        birthDate: new Date('1990-01-01'),
-        hireDate: new Date('2020-01-01'),
-        isActive: true,
-        address: 'Plataforma Norma ERP',
-        phone: superAdminPhone,
-        civilStatus: 'Soltero',
-        contractType: 'SaaS Owner',
-        bankName: encrypt('N/A'),
-        accountNumber: encrypt('N/A'),
-        accountType: 'N/A',
-        vacationDays: 0,
-      },
-    });
 
-    console.log(
-      'SuperAdmin Global: jorge.doicela.m@gmail.com, admin@normaerp.com y admin@emplifi.com / Norma2026!'
-    );
+    console.log('SuperAdmin Global: superadmin@norma.com y admin@normaerp.com / Norma2026!');
   } catch (e) {
     superAdmin = await prisma.employee.findFirst({ where: { role: 'superadmin' } });
   }
@@ -1223,13 +1186,13 @@ export async function seedUsers(prisma) {
   const tenant1Employees = [];
 
   const admin1 = await prisma.employee.upsert({
-    where: { email: 'admin.empresa@emplifi.com' },
+    where: { email: 'jorge.doicela.molina@gmail.com' },
     update: { password, tenantId: tenant1.id, role: 'admin' },
     create: {
       tenantId: tenant1.id,
-      firstName: 'Carlos',
-      lastName: 'Mendoza',
-      email: 'admin.empresa@emplifi.com',
+      firstName: 'Jorge',
+      lastName: 'Doicela (Gerente)',
+      email: 'jorge.doicela.molina@gmail.com',
       role: 'admin',
       department: 'Administración',
       position: 'Gerente General',
@@ -1252,13 +1215,13 @@ export async function seedUsers(prisma) {
   tenant1Employees.push(admin1);
 
   const accountant1 = await prisma.employee.upsert({
-    where: { email: 'contabilidad@emplifi.com' },
+    where: { email: 'contabilidad@norma.com' },
     update: { password, tenantId: tenant1.id, role: 'accounting' },
     create: {
       tenantId: tenant1.id,
       firstName: 'Ana',
       lastName: 'Torres',
-      email: 'contabilidad@emplifi.com',
+      email: 'contabilidad@norma.com',
       role: 'accounting',
       department: 'Finanzas',
       position: 'Contadora Senior',
@@ -1281,13 +1244,13 @@ export async function seedUsers(prisma) {
   tenant1Employees.push(accountant1);
 
   const entrepreneur1 = await prisma.employee.upsert({
-    where: { email: 'emprendedor@emplifi.com' },
+    where: { email: 'emprendedor@norma.com' },
     update: { password, tenantId: tenant1.id, role: 'entrepreneur' },
     create: {
       tenantId: tenant1.id,
       firstName: 'Gabriel',
       lastName: 'Silva',
-      email: 'emprendedor@emplifi.com',
+      email: 'emprendedor@norma.com',
       role: 'entrepreneur',
       department: 'Innovación',
       position: 'Gestor de Incubadora',
@@ -1309,52 +1272,15 @@ export async function seedUsers(prisma) {
   });
   tenant1Employees.push(entrepreneur1);
 
-  // Colaborador demo operativo en Empresa 1 para pruebas de WhatsApp + OTP 2FA (sin contaminar SuperAdmin)
+  // Vincular teléfono real/demo para WhatsApp + OTP 2FA al colaborador con más datos (jorge.doicela.m@gmail.com)
   const demoPhone = process.env.DEMO_EMPLOYEE_PHONE || process.env.SUPERADMIN_PHONE;
   if (demoPhone && demoPhone !== '0999999999') {
-    const rawEmailUser = String(process.env.EMAIL_USER || '').trim();
-    const derivedDemoEmail =
-      rawEmailUser.includes('@') && !rawEmailUser.includes('example.com')
-        ? `${rawEmailUser.split('@')[0]}+demo@${rawEmailUser.split('@')[1]}`
-        : 'colaborador.demo@emplifi.com';
-    const demoEmail = process.env.DEMO_EMPLOYEE_EMAIL || derivedDemoEmail;
-    const demoIdentity = process.env.DEMO_EMPLOYEE_IDENTITY || '1750007280';
-
-    const demoWhatsappEmployee = await prisma.employee.upsert({
-      where: { email: demoEmail },
-      update: {
-        password,
-        tenantId: tenant1.id,
-        role: 'employee',
-        phone: demoPhone,
-        identityCard: demoIdentity,
-        isActive: true,
-      },
-      create: {
-        tenantId: tenant1.id,
-        firstName: 'Jorge',
-        lastName: 'Doicela (Demo)',
-        email: demoEmail,
-        role: 'employee',
-        department: 'Tecnología',
-        position: 'Especialista Operativo',
-        salary: encryptSalary(1800),
-        password,
-        identityCard: demoIdentity,
-        birthDate: new Date('1990-01-01'),
-        hireDate: new Date('2022-01-01'),
-        isActive: true,
-        address: 'Quito, Ecuador',
-        phone: demoPhone,
-        civilStatus: 'Soltero',
-        contractType: 'Indefinido',
-        bankName: encrypt('Banco Pichincha'),
-        accountNumber: encrypt('2200998877'),
-        accountType: 'Ahorros',
-        vacationDays: 15,
-      },
-    });
-    tenant1Employees.push(demoWhatsappEmployee);
+    const primaryEmployee = EMPLOYEES_EMPRESA_1.find(
+      (e) => e.email === 'jorge.doicela.m@gmail.com'
+    );
+    if (primaryEmployee) {
+      primaryEmployee.phone = demoPhone;
+    }
   }
 
   for (const emp of EMPLOYEES_EMPRESA_1) {

@@ -114,15 +114,20 @@ export async function seedRecruitment(prisma) {
           });
 
           if (['INTERVIEW', 'OFFER'].includes(app.status)) {
+            const isFuture = app.status === 'INTERVIEW';
             await prisma.interview
               .create({
                 data: {
                   applicationId: app.id,
-                  date: new Date(Date.now() + 48 * 60 * 60 * 1000),
+                  date: isFuture
+                    ? new Date(Date.now() + 48 * 60 * 60 * 1000)
+                    : new Date(Date.now() - 72 * 60 * 60 * 1000),
                   type: 'VIRTUAL',
                   interviewerId: adminUser.id,
-                  status: 'COMPLETED',
-                  notes: 'Entrevista técnica completada satisfactoriamente.',
+                  status: isFuture ? 'SCHEDULED' : 'COMPLETED',
+                  notes: isFuture
+                    ? 'Entrevista técnica programada por Teams / Meet.'
+                    : 'Entrevista técnica completada satisfactoriamente.',
                 },
               })
               .catch(() => {});

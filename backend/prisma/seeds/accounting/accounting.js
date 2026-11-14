@@ -423,12 +423,13 @@ export async function seedJournalEntries(prisma) {
       });
 
       // 5. Nómina Consolidada Mensual y Aportes al IESS
+      const isCurrent = offset === 0;
       entries.push({
         entryNumber: `${prefix}-${year}${mStr}-05`,
-        date: new Date(year, month - 1, 28),
+        date: new Date(year, month - 1, isCurrent ? Math.min(now.getDate(), 28) : 28),
         description: `Asiento Centralizado de Nómina y Aportes IESS del Periodo ${mStr}/${year} - ${tenant.name}`,
         type: 'PAYROLL',
-        status: 'POSTED',
+        status: isCurrent ? 'DRAFT' : 'POSTED',
         totalDebit: 14650,
         totalCredit: 14650,
         lines: [

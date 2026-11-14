@@ -184,7 +184,8 @@ async function main() {
   console.log('║        SEED DE 7 EMPRESAS MULTI-SECTOR COMPLETADO          ║');
   console.log('╠════════════════════════════════════════════════════════════╣');
   console.log('║ 1. Empresa Demo Ecuador S.A. (Corporativo/Tech)            ║');
-  console.log('║    Admin: admin.empresa@emplifi.com  (Pass: Norma2026!)   ║');
+  console.log('║    Admin: jorge.doicela.molina@gmail.com (Norma2026!)     ║');
+  console.log('║    Empleado Top: jorge.doicela.m@gmail.com (1725555377)    ║');
   console.log('║ 2. TechSolutions Cía. Ltda. (Software/Cloud)               ║');
   console.log('║    Admin: admin.tech@techsolutions.ec (Pass: Norma2026!)  ║');
   console.log('║ 3. Innovate Corp S.A.S. (IA & Big Data)                    ║');
@@ -198,7 +199,7 @@ async function main() {
   console.log('║ 7. Manufacturas Industriales Pichincha (Producción/EPPs)   ║');
   console.log('║    Admin: admin@manufacturaspichincha.ec (Norma2026!)     ║');
   console.log('╠════════════════════════════════════════════════════════════╣');
-  console.log('║ SuperAdmin: jorge.doicela.m@gmail.com / admin@normaerp.com ║');
+  console.log('║ SuperAdmin: superadmin@norma.com / admin@normaerp.com      ║');
   console.log('║ (Contraseña de acceso general: Norma2026!)                 ║');
   console.log('╚════════════════════════════════════════════════════════════╝');
 }

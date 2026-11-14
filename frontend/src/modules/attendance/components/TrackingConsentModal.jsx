@@ -32,7 +32,6 @@ export const TrackingConsentModal = ({
       setConsentStatus(true);
       onClose();
       window.dispatchEvent(new Event('norma:user-updated'));
-      window.dispatchEvent(new Event('emplifi:user-updated'));
 
       if (onNotification) {
         onNotification({ type: 'success', text: 'Consentimiento registrado correctamente.' });
@@ -60,7 +59,6 @@ export const TrackingConsentModal = ({
       setConsentStatus(false);
       onClose();
       window.dispatchEvent(new Event('norma:user-updated'));
-      window.dispatchEvent(new Event('emplifi:user-updated'));
 
       if (onNotification) {
         onNotification({

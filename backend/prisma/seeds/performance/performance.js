@@ -12,8 +12,8 @@ export async function seedPerformance(prisma, employees) {
   );
 
   const year = new Date().getFullYear();
-  const activePeriod = `${year}-Q2`;
-  const periods = [`${year - 1}-Q3`, `${year - 1}-Q4`, `${year}-Q1`, activePeriod];
+  const activePeriod = `${year}-Q4`;
+  const periods = [`${year}-Q1`, `${year}-Q2`, `${year}-Q3`, activePeriod];
 
   const tenants = await prisma.tenant.findMany({
     where: { isActive: true },
@@ -53,13 +53,13 @@ export async function seedPerformance(prisma, employees) {
     );
 
     const getDatesForPeriod = (period) => {
-      if (period.endsWith('-Q3'))
-        return { start: new Date(`${year - 1}-07-01`), end: new Date(`${year - 1}-09-30`) };
-      if (period.endsWith('-Q4'))
-        return { start: new Date(`${year - 1}-10-01`), end: new Date(`${year - 1}-12-31`) };
       if (period.endsWith('-Q1'))
         return { start: new Date(`${year}-01-01`), end: new Date(`${year}-03-31`) };
-      return { start: new Date(`${year}-04-01`), end: new Date(`${year}-06-30`) };
+      if (period.endsWith('-Q2'))
+        return { start: new Date(`${year}-04-01`), end: new Date(`${year}-06-30`) };
+      if (period.endsWith('-Q3'))
+        return { start: new Date(`${year}-07-01`), end: new Date(`${year}-09-30`) };
+      return { start: new Date(`${year}-10-01`), end: new Date(`${year}-12-31`) };
     };
 
     const evalsBatch = [];
@@ -86,7 +86,7 @@ export async function seedPerformance(prisma, employees) {
           const declineScores = [84, 80, 72, 60];
           score = declineScores[idx % declineScores.length];
         } else if (
-          emp.email.includes('andres.morales') ||
+          emp.email.includes('jorge.doicela.m') ||
           emp.email.includes('ricardo.almeida') ||
           emp.email.includes('valeria.espinoza')
         ) {

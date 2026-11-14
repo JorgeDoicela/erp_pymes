@@ -24,11 +24,15 @@ export async function seedPayroll(prisma, employees) {
 
     const adminUser = tenantEmployees.find((e) => e.role === 'admin') || tenantEmployees[0];
 
-    // 1. Generar 12 meses de nómina completa
+    // 1. Generar 12 meses de nómina completa (hasta el mes corriente)
     for (let i = 11; i >= 0; i--) {
-      const date = new Date(today.getFullYear(), today.getMonth() - i, 15);
+      const isCurrentMonth = i === 0;
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 28);
       const periodStart = new Date(date.getFullYear(), date.getMonth(), 1);
       const periodEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      const status = isCurrentMonth ? 'APPROVED' : 'PAID';
+      const mStr = String(date.getMonth() + 1).padStart(2, '0');
+      const yStr = String(date.getFullYear());
 
       const payroll = await prisma.payroll.create({
         data: {
@@ -36,7 +40,7 @@ export async function seedPayroll(prisma, employees) {
           period: periodStart,
           endDate: periodEnd,
           paymentDate: date,
-          status: 'PAID',
+          status,
           totalAmount: 0,
         },
       });
@@ -51,7 +55,7 @@ export async function seedPayroll(prisma, employees) {
         const baseSalary = decryptSalary(emp.salary) || 1500;
         let overtimeHours = 0;
         let overtimeAmount = 0;
-        let bonuses = [];
+        const bonuses = [];
 
         // Lógica variada de horas extras y bonificaciones
         if (emp.department === 'Tecnología' && i <= 3) {
@@ -81,6 +85,11 @@ export async function seedPayroll(prisma, employees) {
         const deducAmount = deductions.reduce((a, b) => a + b.amount, 0);
         const net = baseSalary + overtimeAmount + bonusAmount - deducAmount;
 
+        const isSigned = !isCurrentMonth;
+        const signatureCode = isSigned
+          ? `EC-NORMA-ROL-${yStr}${mStr}-${emp.id.slice(-6).toUpperCase()}`
+          : null;
+
         detailsBatch.push({
           payrollId: payroll.id,
           employeeId: emp.id,
@@ -91,6 +100,10 @@ export async function seedPayroll(prisma, employees) {
           bonuses: JSON.stringify(bonuses),
           deductions: JSON.stringify(deductions),
           netSalary: parseFloat(net.toFixed(2)),
+          signatureStatus: isSigned ? 'SIGNED' : 'PENDING',
+          signedAt: isSigned ? date : null,
+          signatureType: isSigned ? 'QR_DIGITAL' : null,
+          signatureCode,
         });
 
         payrollTotal += net;

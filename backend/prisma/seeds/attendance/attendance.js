@@ -42,10 +42,10 @@ export async function seedAttendance(prisma, employees) {
 
   for (const emp of employeesList) {
     const empHash = getEmpNumericHash(emp.id);
-    const isCriticalSuspicious = emp.email === 'kevin.arismendi@emplifi.com';
+    const isCriticalSuspicious = emp.email === 'kevin.arismendi@norma.com';
     const isHighSuspicious = emp.email === 'lucia.paz@techsolutions.ec';
-    const isChronicLate = emp.email === 'gabriela.torres@emplifi.com';
-    const isModerateLate = emp.email === 'camila.rodriguez@emplifi.com';
+    const isChronicLate = emp.email === 'gabriela.torres@norma.com';
+    const isModerateLate = emp.email === 'camila.rodriguez@norma.com';
 
     for (const date of datesToSeed) {
       const dayOfWeek = date.getDay();
@@ -114,6 +114,30 @@ export async function seedAttendance(prisma, employees) {
         entryLongitude: encryptCoordinate(-78.4678),
         exitLatitude: encryptCoordinate(-0.1807),
         exitLongitude: encryptCoordinate(-78.4678),
+      });
+    }
+
+    // Marcación de hoy en tiempo real (colaborador actualmente en jornada)
+    if (emp.isActive) {
+      const todayNormalized = new Date(
+        Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+      );
+      const todayCheckIn = new Date(today);
+      const isLateToday = isChronicLate;
+      todayCheckIn.setHours(8, isLateToday ? 22 : 5 + (empHash % 10), 0);
+
+      attendanceBatch.push({
+        employeeId: emp.id,
+        date: todayNormalized,
+        checkIn: todayCheckIn,
+        checkOut: null,
+        status: 'Presente',
+        workedHours: 4.5,
+        isLate: isLateToday,
+        entryLatitude: encryptCoordinate(-0.1807),
+        entryLongitude: encryptCoordinate(-78.4678),
+        exitLatitude: null,
+        exitLongitude: null,
       });
     }
   }
