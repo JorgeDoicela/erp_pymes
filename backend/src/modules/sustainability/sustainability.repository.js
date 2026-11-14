@@ -18,6 +18,14 @@ import {
   selectBalancedByCategory,
 } from './legalEvaluator.service.js';
 import neuralRetrieverService from './neuralRetriever.service.js';
+import {
+  ECUADOR_LEGAL_SYNONYMS,
+  SPANISH_STOPWORDS,
+  resolveLegalRoot,
+  resolveMandatoryCoRetrievalArticles,
+  computeTemporalAndCoRetrievalBoost,
+  ensureMandatoryArticlesInSelection,
+} from './legalRetrieval.helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,238 +34,6 @@ const TRAINED_EMBEDDINGS_INDEX_PATH = path.resolve(
   __dirname,
   './data/trained_retriever_index.json'
 );
-
-// Diccionario de expansión semántica jurídica y contable de Ecuador
-const ECUADOR_LEGAL_SYNONYMS = {
-  finiquito: [
-    'liquidacion',
-    'desvinculacion',
-    'salida',
-    'acta',
-    'haberes',
-    'cese',
-    '595',
-    'desahucio',
-    '185',
-    'despido',
-    '188',
-  ],
-  despido: [
-    'intempestivo',
-    'indemnizacion',
-    '188',
-    'ineficaz',
-    '195',
-    'cese',
-    'desahucio',
-    '185',
-    'bonificacion',
-  ],
-  desahucio: [
-    'bonificacion',
-    '25%',
-    '185',
-    'renuncia',
-    'acuerdo',
-    '184',
-    'despido',
-    '188',
-    'intempestivo',
-  ],
-  renuncia: ['voluntaria', 'acuerdo', 'desahucio', '185', '169'],
-  visto: ['bueno', 'inspector', '172', '173', 'causal', 'indisciplina', 'faltas'],
-  horas: [
-    'suplementarias',
-    'extraordinarias',
-    'sobretiempo',
-    'nocturna',
-    'jornada',
-    '55',
-    '47',
-    '49',
-  ],
-  extra: ['suplementarias', 'extraordinarias', 'recargo', '50%', '100%', '55'],
-  iess: [
-    'seguridad',
-    'social',
-    'aporte',
-    'patronal',
-    'personal',
-    '9.45%',
-    '11.15%',
-    'reserva',
-    'mora',
-    'afiliacion',
-    '73',
-    '11',
-    'primer',
-    'dia',
-  ],
-  fondos: ['reserva', '8.33%', '196', '200', '202', 'iess', 'mensualizado', 'ano'],
-  reserva: ['fondos', '8.33%', '196', '200', '202', 'iess', 'mensualizado'],
-  decimo: ['decimotercer', 'decimocuarto', '13er', '14to', 'navideno', 'escolar', '111', '113'],
-  utilidades: ['15%', '10%', '5%', 'cargas', 'familiares', 'abril', '97', 'reparto'],
-  impuesto: ['renta', 'sri', 'lorti', 'gastos', 'personales', 'retencion', 'rdep', '107'],
-  contabilidad: [
-    'asiento',
-    'partida',
-    'doble',
-    'niif',
-    'diario',
-    'mayor',
-    'balance',
-    'debito',
-    'credito',
-    'provision',
-  ],
-  asiento: ['contabilidad', 'partida', 'doble', 'journal', 'debito', 'credito', 'pasivo', 'gasto'],
-  vacaciones: ['15', 'antiguedad', 'veinticuatroava', '1/24', '69', '71', 'descanso'],
-  maternidad: [
-    'embarazo',
-    'lactancia',
-    '12',
-    'semanas',
-    'paternidad',
-    'licencia',
-    'ineficaz',
-    '152',
-    '155',
-  ],
-  discapacidad: ['4%', 'inclusion', 'sustituto', '42', '47', '330', 'persona'],
-  discapacidades: ['4%', 'discapacidad', 'inclusion', 'sustituto', '42', '47', '330'],
-  constitucion: [
-    'constitucional',
-    'republica',
-    'derecho',
-    'trabajo',
-    '33',
-    '34',
-    '66',
-    '325',
-    '326',
-    '327',
-    '328',
-  ],
-  constitucional: ['constitucion', 'derechos', '33', '66', '325', '326', 'trabajo'],
-  forzoso: ['esclavitud', 'servidumbre', 'trabajo', 'obligatorio', '66', '8.7', '8.8', '325'],
-  pleno: ['empleo', 'productivo', 'trabajo', 'decente', '8.5', '325', '326'],
-  contrato: [
-    'indefinido',
-    'prueba',
-    '90',
-    'eventual',
-    'ocasional',
-    'obra',
-    'teletrabajo',
-    'sut',
-    '14',
-    '15',
-    '17',
-  ],
-  sbu: ['salario', 'basico', '460', 'sueldo', 'minimo', 'digno', '81', '117'],
-  jubilacion: ['patronal', '25', 'anos', '216', 'vejez', 'pension'],
-  lopdp: [
-    'proteccion',
-    'datos',
-    'privacidad',
-    'aes-256-gcm',
-    'encriptacion',
-    'geocerca',
-    'consentimiento',
-    'biometria',
-  ],
-  firma: ['electronica', 'p12', 'pkcs12', 'qr', 'sha-256', 'comercio'],
-};
-
-const SPANISH_STOPWORDS = new Set([
-  'el',
-  'la',
-  'los',
-  'las',
-  'un',
-  'una',
-  'unos',
-  'unas',
-  'de',
-  'del',
-  'al',
-  'a',
-  'en',
-  'para',
-  'por',
-  'con',
-  'sin',
-  'sobre',
-  'que',
-  'me',
-  'mi',
-  'mis',
-  'te',
-  'ti',
-  'tu',
-  'tus',
-  'se',
-  'su',
-  'sus',
-  'le',
-  'les',
-  'nos',
-  'como',
-  'cual',
-  'cuales',
-  'cuando',
-  'donde',
-  'quien',
-  'quienes',
-  'si',
-  'y',
-  'o',
-  'pero',
-  'mas',
-  'muy',
-  'es',
-  'son',
-  'fue',
-  'era',
-  'ser',
-  'estar',
-  'ha',
-  'han',
-  'hay',
-  'lo',
-  'toca',
-  'debo',
-  'deben',
-  'puedo',
-  'pueden',
-  'dice',
-  'dicen',
-  'este',
-  'esta',
-]);
-
-function resolveLegalRoot(token) {
-  if (!token || typeof token !== 'string') return null;
-  const t = token.toLowerCase();
-  if (t.startsWith('despid') || t.startsWith('desped')) return 'despido';
-  if (t.startsWith('renunc')) return 'renuncia';
-  if (t.startsWith('liquid')) return 'finiquito';
-  if (t.startsWith('desahu')) return 'desahucio';
-  if (t.startsWith('jubil')) return 'jubilacion';
-  if (t.startsWith('vacaci')) return 'vacaciones';
-  if (t.startsWith('embaraz') || t.startsWith('matern')) return 'maternidad';
-  if (t.startsWith('patern')) return 'paternidad';
-  if (t.startsWith('lactan')) return 'lactancia';
-  if (t.startsWith('utilida')) return 'utilidades';
-  if (t.startsWith('decim')) return 'decimo';
-  if (t.startsWith('hor')) return 'horas';
-  if (t.startsWith('sobretiemp')) return 'horas';
-  if (t.startsWith('suplementar')) return 'horas';
-  if (t.startsWith('extraordinar')) return 'extra';
-  if (t.startsWith('afili') || t.startsWith('aport') || t.startsWith('cesant')) return 'iess';
-  if (t.startsWith('finiquit')) return 'finiquito';
-  return null;
-}
 
 export class SustainabilityRepository {
   constructor() {
@@ -1030,6 +806,7 @@ export class SustainabilityRepository {
     // Detectar cuerpos normativos explícitamente solicitados en la consulta
     const requestedCategories = detectRequestedNormativeCategories(normalizedQuery);
     const requestedCategorySet = new Set(requestedCategories);
+    const mandatoryCoArticles = resolveMandatoryCoRetrievalArticles(normalizedQuery);
 
     // Detectar mención explícita de número de artículo (ej. "Art. 188", "artículo 216", "Art 55")
     const articleMatches = [...query.matchAll(/art(?:[ií]culo|\.)?\s*(\d+(?:\.\d+)?)/gi)].map(
@@ -1147,6 +924,17 @@ export class SustainabilityRepository {
         score += 8.0;
       }
 
+      // Co-recuperación multi-artículo y control de vigencia temporal (VIGENTE vs DEROGADO)
+      const coAndTemporalBoost = computeTemporalAndCoRetrievalBoost({
+        chunk,
+        normArticleCode,
+        normalizedQuery,
+        mandatoryCoArticles,
+      });
+      if (score > 0 || coAndTemporalBoost > 0) {
+        score = Math.max(0, score + coAndTemporalBoost);
+      }
+
       // Boost si es parte del catálogo curado con fórmulas verificadas del ERP
       if (chunk.metadata?.isCurated && score > 3.0) {
         score *= 1.25;
@@ -1181,6 +969,9 @@ export class SustainabilityRepository {
     scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
 
     if (scored.length > 0) {
+      if (requestedCategories.length <= 1 && mandatoryCoArticles.length > 0) {
+        return ensureMandatoryArticlesInSelection(scored, mandatoryCoArticles, limit);
+      }
       return selectBalancedByCategory(scored, limit, requestedCategories, 'relevanceScore');
     }
 

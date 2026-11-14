@@ -41,6 +41,20 @@ export class RequestSalaryAdvanceSkill {
       aiConfig,
     });
 
+    if (extracted.invalidNegativeAmount) {
+      return {
+        status: 'DOMAIN_REJECTED',
+        errorMessage: `No es posible procesar su solicitud de anticipo: el monto solicitado debe ser un valor positivo mayor a $0.00.`,
+      };
+    }
+
+    if (extracted.invalidInstallments) {
+      return {
+        status: 'DOMAIN_REJECTED',
+        errorMessage: `No es posible procesar su solicitud de anticipo: el plazo de descuento debe estar entre 1 y 24 cuotas mensuales.`,
+      };
+    }
+
     const merged = {
       amount: extracted.amount ?? previousPayload.amount ?? null,
       installments: extracted.installments ?? previousPayload.installments ?? 1,
@@ -185,6 +199,8 @@ Extrae los parametros para una solicitud de anticipo de sueldo y responde SOLO u
               ? parsedInstallments
               : deterministic.installments,
           reason: this.cleanReason(parsed.reason) || deterministic.reason,
+          invalidNegativeAmount: Boolean(deterministic.invalidNegativeAmount),
+          invalidInstallments: Boolean(deterministic.invalidInstallments),
         };
       }
     } catch {
@@ -194,34 +210,80 @@ Extrae los parametros para una solicitud de anticipo de sueldo y responde SOLO u
     return deterministic;
   }
 
+  parseCurrencyAmountString(rawNum) {
+    if (!rawNum) return null;
+    const str = String(rawNum).trim();
+    let normalized;
+    if (/^\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?$/.test(str)) {
+      normalized = str.replace(/,/g, '');
+    } else if (/^\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/.test(str)) {
+      normalized = str.replace(/\./g, '').replace(',', '.');
+    } else {
+      normalized = str.replace(',', '.');
+    }
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
   parseDeterministicParams(text) {
     const raw = String(text || '').trim();
 
-    let amount = null;
-    const explicitDollar = raw.match(/\$\s*(\d+(?:[.,]\d{1,2})?)/);
-    const amountKeyword = raw.match(
-      /(?:de|por|monto(?:\s+de)?|anticipo(?:\s+de)?|adelanto(?:\s+de)?)\s*\$?\s*(\d+(?:[.,]\d{1,2})?)\s*(?:dolares|usd|\b)/i
-    );
-    const standaloneNumber = raw.match(/^\$?\s*(\d+(?:[.,]\d{1,2})?)\s*(?:dolares|usd)?$/i);
-
-    const rawNum = explicitDollar?.[1] || amountKeyword?.[1] || standaloneNumber?.[1] || null;
-    if (rawNum) {
-      const parsed = Number(rawNum.replace(',', '.'));
-      if (Number.isFinite(parsed) && parsed > 0) amount = parsed;
+    if (
+      /(?:-\s*\$\s*\d|\$\s*-\s*\d|\bmenos\s+\$?\s*\d|(?<!\d)-\d+(?:[.,]\d+)?\s*(?:dolares|usd))/i.test(
+        raw
+      )
+    ) {
+      return { amount: null, installments: null, reason: null, invalidNegativeAmount: true };
     }
 
+    const numPattern = '(\\d{1,3}(?:[.,]\\d{3})+(?:[.,]\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?)';
+    const explicitDollar = raw.match(new RegExp(`\\$\\s*${numPattern}`));
+    const amountKeyword = raw.match(
+      new RegExp(
+        `(?:de|por|monto(?:\\s+de)?|anticipo(?:\\s+de)?|adelanto(?:\\s+de)?)\\s*\\$?\\s*${numPattern}\\s*(?:dolares|usd|\\b)`,
+        'i'
+      )
+    );
+    const standaloneNumber = raw.match(
+      new RegExp(`^\\$?\\s*${numPattern}\\s*(?:dolares|usd)?$`, 'i')
+    );
+
+    const rawNum = explicitDollar?.[1] || amountKeyword?.[1] || standaloneNumber?.[1] || null;
+    const amount = this.parseCurrencyAmountString(rawNum);
+
     let installments = null;
-    const instMatch = raw.match(/(\d{1,2})\s*(?:cuotas?|meses|pagos?)/i);
+    let invalidInstallments = false;
+    const instMatch = raw.match(/(\d{1,3})\s*(?:cuotas?|meses|pagos?)/i);
     if (instMatch) {
       const inst = parseInt(instMatch[1], 10);
-      if (inst >= 1 && inst <= 24) installments = inst;
+      if (inst >= 1 && inst <= 24) {
+        installments = inst;
+      } else {
+        invalidInstallments = true;
+      }
     }
 
     let reason = null;
-    const reasonMatch = raw.match(/(?:por|para|motivo[:\s]+|razon[:\s]+)\s+([^.\n]{3,160})/i);
-    if (reasonMatch && !/^\d+\s*(?:cuotas?|meses|dolares|usd)/i.test(reasonMatch[1].trim())) {
+    const strippedForReason = raw
+      .replace(/(?:por|de)\s*\$\s*\d[\d.,]*(?:\s*(?:dolares|usd))?/gi, ' ')
+      .replace(/(?:por|de)\s+\d[\d.,]*\s*(?:dolares|usd)\b/gi, ' ')
+      .replace(/(?:a|en|por|de)?\s*\d{1,3}\s*(?:cuotas?|meses|pagos?)\b/gi, ' ')
+      .trim();
+
+    const reasonMatch = strippedForReason.match(
+      /(?:por\s+motivo\s+de|porque|ya\s+que|debido\s+a|por|para|motivo[:\s]+|razon[:\s]+)\s+([^.\n?]{3,160})/i
+    );
+    if (
+      reasonMatch &&
+      !/^\$?\s*\d+(?:[.,]\d+)?\s*(?:cuotas?|meses|dolares|usd)?$/i.test(reasonMatch[1].trim())
+    ) {
       reason = this.cleanReason(reasonMatch[1]);
-    } else if (!amount && raw.length >= 4 && !/^(?:hola|cancelar)/i.test(raw)) {
+    } else if (
+      !amount &&
+      !raw.includes('?') &&
+      raw.length >= 4 &&
+      !/^(?:hola|cancelar|cuant|cual|como|que\b|cuando|donde)/i.test(raw)
+    ) {
       const cleaned = raw
         .replace(
           /^(?:quiero|necesito|solicito|pedir|un)\s*(?:anticipo|adelanto)(?:\s+de\s+sueldo)?\s*/i,
@@ -231,7 +293,7 @@ Extrae los parametros para una solicitud de anticipo de sueldo y responde SOLO u
       if (cleaned.length >= 4) reason = this.cleanReason(cleaned);
     }
 
-    return { amount, installments, reason };
+    return { amount, installments, reason, invalidInstallments };
   }
 
   cleanReason(val) {

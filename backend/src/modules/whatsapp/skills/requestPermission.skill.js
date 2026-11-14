@@ -45,6 +45,13 @@ export class RequestPermissionSkill {
       aiConfig,
     });
 
+    if (this.hasExplicitInvalidDate(text)) {
+      return {
+        status: 'DOMAIN_REJECTED',
+        errorMessage: `No es posible procesar su solicitud de permiso: la fecha indicada no existe en el calendario oficial (ej. 29 de febrero en año no bisiesto o mes inválido).`,
+      };
+    }
+
     const merged = {
       permissionType:
         extracted.permissionType || previousPayload.permissionType || PERMISSION_TYPES.PERSONAL,
@@ -192,6 +199,14 @@ Extrae los datos del permiso laboral y responde SOLO JSON valido:
     return deterministic;
   }
 
+  addDaysToIso(isoDate, daysToAdd) {
+    const validIso = this.normalizeIsoCandidate(isoDate);
+    if (!validIso || !Number.isFinite(daysToAdd)) return validIso;
+    const [y, m, d] = validIso.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d + daysToAdd));
+    return dt.toISOString().slice(0, 10);
+  }
+
   parseDeterministicParams(text, todayIso) {
     const raw = String(text || '').trim();
     const permissionType = this.detectPermissionType(raw);
@@ -207,22 +222,57 @@ Extrae los datos del permiso laboral y responde SOLO JSON valido:
       }
     }
 
-    if (dates.length === 0 && /\bhoy\b/i.test(raw)) {
-      dates.push(todayIso);
+    if (dates.length === 0) {
+      if (/\bpasado\s+ma[ñn]ana\b/i.test(raw)) {
+        dates.push(this.addDaysToIso(todayIso, 2));
+      } else if (/\bma[ñn]ana\b/i.test(raw)) {
+        dates.push(this.addDaysToIso(todayIso, 1));
+      } else if (/\bhoy\b/i.test(raw)) {
+        dates.push(todayIso);
+      }
+    }
+
+    const startDate = this.normalizeIsoCandidate(dates[0]) || null;
+    let endDate = this.normalizeIsoCandidate(dates[1]) || (dates.length === 1 ? startDate : null);
+
+    if (startDate && dates.length === 1) {
+      const durationMatch = raw.match(/\b(?:por|durante|de)\s+(\d{1,2})\s*d[ií]as?\b/i);
+      if (durationMatch) {
+        const numDays = parseInt(durationMatch[1], 10);
+        if (numDays >= 1 && numDays <= 30) {
+          endDate = this.addDaysToIso(startDate, numDays - 1);
+        }
+      }
     }
 
     let reason = null;
-    const reasonMatch = raw.match(/(?:por|motivo[:\s]+|razon[:\s]+|debido\s+a)\s+([^.\n]{3,160})/i);
+    const strippedForReason = raw
+      .replace(/\b(?:por|durante)\s+\d{1,2}\s*d[ií]as?\b/gi, ' ')
+      .replace(
+        /\bpermiso\s+(?:por\s+)?(?:calamidad\s+dom[eé]stica|m[eé]dic[oa]|cita\s+m[eé]dica|maternidad|paternidad|personal)\b/gi,
+        'permiso'
+      )
+      .trim();
+
+    const reasonMatch = strippedForReason.match(
+      /(?:porque|ya\s+que|debido\s+a|por\s+motivo\s+de|motivo[:\s]+|razon[:\s]+|por)\s+([^.\n?]{3,160})/i
+    );
     if (reasonMatch) {
       reason = this.cleanReason(reasonMatch[1]);
     } else if (permissionType === PERMISSION_TYPES.MEDICAL && /cita\s+medica|iess/i.test(raw)) {
       reason = 'Atencion medica / cita IESS';
     } else if (permissionType === PERMISSION_TYPES.DOMESTIC_CALAMITY) {
       reason = 'Calamidad domestica amparada en Art. 42 num. 30 CT';
+    } else if (
+      dates.length === 0 &&
+      !raw.includes('?') &&
+      raw.length >= 4 &&
+      !/^(?:hola|cancelar|quiero|solicito|necesito|pedir|permiso|cuant|cual|como|que\b|cuando|donde)/i.test(
+        raw
+      )
+    ) {
+      reason = this.cleanReason(raw);
     }
-
-    const startDate = this.normalizeIsoCandidate(dates[0]) || null;
-    const endDate = this.normalizeIsoCandidate(dates[1]) || (dates.length === 1 ? startDate : null);
 
     return { permissionType, startDate, endDate, reason };
   }
@@ -241,6 +291,21 @@ Extrae los datos del permiso laboral y responde SOLO JSON valido:
     return PERMISSION_TYPES.PERSONAL;
   }
 
+  hasExplicitInvalidDate(text) {
+    const raw = String(text || '').trim();
+    const isoMatches = [...raw.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g)];
+    for (const m of isoMatches) {
+      if (!this.normalizeIsoCandidate(m[0])) return true;
+    }
+    const latMatches = [...raw.matchAll(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b/g)];
+    for (const m of latMatches) {
+      const dd = m[1].padStart(2, '0');
+      const mm = m[2].padStart(2, '0');
+      if (!this.normalizeIsoCandidate(`${m[3]}-${mm}-${dd}`)) return true;
+    }
+    return false;
+  }
+
   normalizePermissionType(val) {
     if (!val) return null;
     return this.detectPermissionType(val);
@@ -249,7 +314,17 @@ Extrae los datos del permiso laboral y responde SOLO JSON valido:
   normalizeIsoCandidate(val) {
     if (!val || typeof val !== 'string') return null;
     const match = val.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    return match ? match[0] : null;
+    if (!match) return null;
+    const [, yStr, mStr, dStr] = match;
+    const y = Number(yStr);
+    const m = Number(mStr);
+    const d = Number(dStr);
+    if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) {
+      return null;
+    }
+    return match[0];
   }
 
   cleanReason(val) {

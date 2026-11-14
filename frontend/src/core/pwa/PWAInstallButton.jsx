@@ -85,7 +85,7 @@ export const PWAInstallButton = ({
     );
   }
 
-  // 3. Variante Card / Banner (para MobileEmployeePortal o Dashboards)
+  // 3. Variante Card / Banner (para Dashboards)
   if (variant === 'card') {
     return (
       <div

@@ -11,7 +11,7 @@ import { extractClientIp } from '../../../core/utils/ipUtils.js';
 
 const markAttendance = async (req, res, next) => {
   try {
-    const { employeeId, type, location } = req.body;
+    const { employeeId, type, location, autoGeofence } = req.body;
 
     if (!employeeId || !type) {
       return res.status(400).json({
@@ -37,7 +37,8 @@ const markAttendance = async (req, res, next) => {
       type,
       location,
       ip,
-      isSupervisorOverride
+      isSupervisorOverride,
+      { autoGeofence: Boolean(autoGeofence) }
     );
     const duration = Date.now() - start;
 

@@ -1,7 +1,7 @@
 /**
  * @file AccessibilityFloatingPlayer.jsx
  * @description Reproductor Flotante de Asistencia por Voz (TalkBack Asistido).
- * Solo se renderiza si el usuario tiene la funcionalidad activada en su perfil.
+ * Incluye controles de navegación secuencial por componentes (Anterior/Siguiente) y lectura de pantalla.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -9,7 +9,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FiVolume2, FiPlay, FiPause, FiSquare, FiChevronUp, FiChevronDown } from 'react-icons/fi';
+import {
+  FiVolume2,
+  FiPlay,
+  FiPause,
+  FiSquare,
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronUp,
+  FiChevronDown,
+} from 'react-icons/fi';
 import { useAccessibility } from './AccessibilityContext';
 
 export default function AccessibilityFloatingPlayer() {
@@ -21,27 +30,40 @@ export default function AccessibilityFloatingPlayer() {
     voiceRate,
     setVoiceRate,
     speakScreen,
+    navigateNext,
+    navigatePrev,
     stop,
   } = useAccessibility();
 
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Detener cualquier lectura en curso al cambiar de ruta
   useEffect(() => {
     stop();
   }, [location.pathname, stop]);
 
-  // Si la funcionalidad está desactivada por el usuario en su perfil, no renderizar nada
   if (!isSpeechEnabled) return null;
 
   return (
     <div
       role="region"
       aria-label="Controles de asistencia por voz"
+      data-accessibility-player="true"
       className="fixed bottom-5 left-4 sm:left-6 md:left-[280px] z-40 bg-white border border-gray-300 rounded-[4px] shadow-md transition-all duration-200 select-none pointer-events-auto"
     >
-      <div className="flex items-center gap-2 px-3 py-2">
+      <div className="flex items-center gap-1.5 px-2.5 py-2">
+        {/* Navegación al elemento anterior */}
+        <button
+          type="button"
+          onClick={navigatePrev}
+          aria-label="Elemento anterior"
+          className="p-1.5 rounded-[3px] text-gray-600 hover:text-blue-700 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 transition-colors flex items-center justify-center cursor-pointer"
+          title="Elemento anterior"
+        >
+          <FiChevronLeft size={14} />
+        </button>
+
+        {/* Reproducir / Pausar lectura de pantalla */}
         <button
           type="button"
           onClick={speakScreen}
@@ -64,7 +86,19 @@ export default function AccessibilityFloatingPlayer() {
           )}
         </button>
 
-        <div className="text-left min-w-[90px] max-w-[150px]">
+        {/* Navegación al elemento siguiente */}
+        <button
+          type="button"
+          onClick={navigateNext}
+          aria-label="Elemento siguiente"
+          className="p-1.5 rounded-[3px] text-gray-600 hover:text-blue-700 hover:bg-blue-50 border border-gray-200 hover:border-blue-200 transition-colors flex items-center justify-center cursor-pointer"
+          title="Elemento siguiente"
+        >
+          <FiChevronRight size={14} />
+        </button>
+
+        {/* Título de estado */}
+        <div className="text-left min-w-[85px] max-w-[130px] ml-1">
           <div className="text-[11px] font-semibold text-gray-900 leading-none truncate">
             {isSpeaking ? (isPaused ? 'Pausado' : 'Leyendo...') : 'Voz Asistida'}
           </div>
@@ -75,6 +109,7 @@ export default function AccessibilityFloatingPlayer() {
           </div>
         </div>
 
+        {/* Detener */}
         {isSpeaking && (
           <button
             type="button"
@@ -87,6 +122,7 @@ export default function AccessibilityFloatingPlayer() {
           </button>
         )}
 
+        {/* Expandir controles */}
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}

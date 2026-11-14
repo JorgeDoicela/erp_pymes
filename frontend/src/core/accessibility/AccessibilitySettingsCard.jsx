@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { FiVolume2, FiVolumeX, FiCheck, FiSliders } from 'react-icons/fi';
+import { FiVolume2, FiVolumeX, FiCheck } from 'react-icons/fi';
 import { useAccessibility } from './AccessibilityContext';
 
 export default function AccessibilitySettingsCard() {
@@ -35,7 +35,10 @@ export default function AccessibilitySettingsCard() {
   };
 
   return (
-    <div className="bg-white rounded border border-gray-200 p-5 space-y-4">
+    <div
+      data-accessibility-settings="true"
+      className="bg-white rounded border border-gray-200 p-5 space-y-4"
+    >
       {/* Encabezado con Interruptor */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
@@ -48,8 +51,12 @@ export default function AccessibilitySettingsCard() {
             </h3>
           </div>
           <p className="text-xs text-gray-500 max-w-xl leading-relaxed">
-            Habilita la narración audible de la interfaz y un reproductor flotante para leer el
-            contenido de la pantalla. Viene desactivado por defecto y solo se activa para su cuenta.
+            Habilita la narración audible de la interfaz y un reproductor flotante para explorar la
+            pantalla. También puede alternarla desde cualquier pantalla con el atajo{' '}
+            <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-gray-100 border border-gray-300 rounded text-gray-700">
+              Alt + V
+            </kbd>
+            .
           </p>
         </div>
 

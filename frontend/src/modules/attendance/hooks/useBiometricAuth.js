@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '@core/api/httpClient';
 import { systemService } from '@modules/superadmin';
 import { detectDeviceBiometrics } from '@core/utils';
 
@@ -39,14 +39,12 @@ export function useBiometricAuth() {
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const res = await axios.get(`${import.meta.env.VITE_API_URL || '/api'}/biometric/status`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get('/biometric/status');
         if (res.data && isMounted) {
           setHasBiometricRegistered(Boolean(res.data.isRegistered));
         }
       } catch {
-        // Silently catch
+        // Silently catch when unauthenticated
       }
     };
 
@@ -82,32 +80,20 @@ export function useBiometricAuth() {
   const registerBiometric = useCallback(async () => {
     setRegisteringBiometric(true);
     try {
-      const token = localStorage.getItem('token');
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-      const optionsRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || '/api'}/biometric/register/options`,
-        config
-      );
+      const optionsRes = await api.get('/biometric/register/options');
       const options = optionsRes.data;
 
       const { startRegistration } = await import('@simplewebauthn/browser');
       const regResp = await startRegistration({ optionsJSON: options });
 
-      const verifyRes = await axios.post(
-        `${import.meta.env.VITE_API_URL || '/api'}/biometric/register/verify`,
-        regResp,
-        config
-      );
+      const verifyRes = await api.post('/biometric/register/verify', regResp);
 
       if (verifyRes.data.verified) {
         setHasBiometricRegistered(true);
         return { success: true };
-      } else {
-        return { success: false, message: 'No se pudo verificar la credencial biométrica.' };
       }
+      return { success: false, message: 'No se pudo verificar la credencial biométrica.' };
     } catch (err) {
-      console.error('Biometric registration error:', err);
       let msg = err.response?.data?.message || err.message || 'Error al registrar biometría.';
       if (err.name === 'NotAllowedError') {
         msg =
@@ -134,31 +120,23 @@ export function useBiometricAuth() {
       }
 
       try {
-        const optionsRes = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/biometric/login/options`,
-          { employeeId: userId }
-        );
-
+        const optionsRes = await api.post('/biometric/login/options', { employeeId: userId });
         const options = optionsRes.data;
+
         const { startAuthentication } = await import('@simplewebauthn/browser');
         const { internalUserId, ...webauthnOptions } = options;
         const asseResp = await startAuthentication({ optionsJSON: webauthnOptions });
 
-        const verifyRes = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/biometric/login/verify`,
-          {
-            body: asseResp,
-            internalUserId: options.internalUserId,
-          }
-        );
+        const verifyRes = await api.post('/biometric/login/verify', {
+          body: asseResp,
+          internalUserId,
+        });
 
         if (verifyRes.data.verified) {
           return { passed: true };
-        } else {
-          return { passed: false, reason: 'Error de verificación biométrica.' };
         }
+        return { passed: false, reason: 'Error de verificación biométrica.' };
       } catch (err) {
-        console.error('Biometric verification error:', err);
         const data = err.response?.data;
         if (data?.requiresReRegistration) {
           return {

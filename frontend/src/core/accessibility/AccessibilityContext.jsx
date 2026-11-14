@@ -1,44 +1,52 @@
 /**
  * @file AccessibilityContext.jsx
- * @description Contexto Global de Accesibilidad y Lectura por Voz (TalkBack Asistido) para Norma ERP.
- * Gestiona de manera aislada las preferencias del usuario, sintetizador de voz nativo y reproducción.
+ * @description Contexto Global de Accesibilidad y TalkBack Asistido para Norma ERP.
+ * Incluye navegación semántica interactiva, confirmación al segundo toque y atajo global Alt+V.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { selectOptimalSpanishVoice } from './voiceEngine.js';
+import { summarizeContainer } from './semanticElementDescriptor.js';
+import {
+  TalkBackController,
+  ensureAccessibilityHighlightStyles,
+  clearCurrentHighlight,
+} from './talkBackInteractionManager.js';
 
 const STORAGE_KEYS = {
   ENABLED: 'norma_accessibility_speech_enabled',
   RATE: 'norma_accessibility_speech_rate',
-  PITCH: 'norma_accessibility_speech_pitch',
 };
 
 const AccessibilityContext = createContext(null);
 
+function readInitialEnabled() {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(STORAGE_KEYS.ENABLED) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function readInitialRate() {
+  if (typeof window === 'undefined') return 1.0;
+  try {
+    const saved = parseFloat(localStorage.getItem(STORAGE_KEYS.RATE));
+    return Number.isFinite(saved) && saved >= 0.7 && saved <= 1.8 ? saved : 1.0;
+  } catch {
+    return 1.0;
+  }
+}
+
 export const AccessibilityProvider = ({ children }) => {
   const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-  const [isSpeechEnabled, setIsSpeechEnabled] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      return localStorage.getItem(STORAGE_KEYS.ENABLED) === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  const [voiceRate, setVoiceRateState] = useState(() => {
-    if (typeof window === 'undefined') return 1.0;
-    try {
-      const saved = parseFloat(localStorage.getItem(STORAGE_KEYS.RATE));
-      return Number.isFinite(saved) && saved >= 0.7 && saved <= 1.8 ? saved : 1.0;
-    } catch {
-      return 1.0;
-    }
-  });
-
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState(readInitialEnabled);
+  const [voiceRate, setVoiceRateState] = useState(readInitialRate);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentTextSnippet, setCurrentTextSnippet] = useState('');
@@ -46,23 +54,13 @@ export const AccessibilityProvider = ({ children }) => {
   const [selectedVoice, setSelectedVoice] = useState(null);
 
   const activeUtteranceRef = useRef(null);
+  const controllerRef = useRef(null);
 
-  // Cargar y seleccionar la mejor voz en español del dispositivo
   const loadVoices = useCallback(() => {
     if (!isSupported) return;
     const voices = window.speechSynthesis.getVoices() || [];
     setAvailableVoices(voices);
-
-    // Priorizar español: es-EC, es-419, es-ES, es-US, o cualquier voz que empiece por es
-    const spanishVoices = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('es'));
-    const preferredVoice =
-      spanishVoices.find((v) => /ecuador|latin|419/i.test(v.name || v.lang)) ||
-      spanishVoices[0] ||
-      voices.find((v) => v.default) ||
-      voices[0] ||
-      null;
-
-    setSelectedVoice(preferredVoice);
+    setSelectedVoice(selectOptimalSpanishVoice(voices));
   }, [isSupported]);
 
   useEffect(() => {
@@ -78,7 +76,6 @@ export const AccessibilityProvider = ({ children }) => {
     };
   }, [isSupported, loadVoices]);
 
-  // Detener voz
   const stop = useCallback(() => {
     if (!isSupported) return;
     try {
@@ -92,38 +89,9 @@ export const AccessibilityProvider = ({ children }) => {
     setCurrentTextSnippet('');
   }, [isSupported]);
 
-  // Alternar activación de la funcionalidad
-  const setSpeechEnabled = useCallback(
-    (enabled) => {
-      const val = Boolean(enabled);
-      setIsSpeechEnabled(val);
-      try {
-        localStorage.setItem(STORAGE_KEYS.ENABLED, String(val));
-      } catch {
-        // Ignorar
-      }
-      if (!val) {
-        stop();
-      }
-    },
-    [stop]
-  );
-
-  // Actualizar velocidad de habla
-  const setVoiceRate = useCallback((rate) => {
-    const validRate = Math.max(0.7, Math.min(1.8, Number(rate) || 1.0));
-    setVoiceRateState(validRate);
-    try {
-      localStorage.setItem(STORAGE_KEYS.RATE, String(validRate));
-    } catch {
-      // Ignorar
-    }
-  }, []);
-
-  // Sintetizar y hablar un texto
   const speak = useCallback(
-    (textToSpeak) => {
-      if (!isSupported || !isSpeechEnabled) return;
+    (textToSpeak, options = {}) => {
+      if (!isSupported || (!isSpeechEnabled && !options.force)) return;
       if (!textToSpeak || typeof textToSpeak !== 'string' || !textToSpeak.trim()) return;
 
       stop();
@@ -138,9 +106,7 @@ export const AccessibilityProvider = ({ children }) => {
 
       try {
         const utterance = new SpeechSynthesisUtterance(cleanedText);
-        if (selectedVoice) {
-          utterance.voice = selectedVoice;
-        }
+        if (selectedVoice) utterance.voice = selectedVoice;
         utterance.lang = selectedVoice?.lang || 'es-ES';
         utterance.rate = voiceRate;
         utterance.pitch = 1.0;
@@ -150,33 +116,55 @@ export const AccessibilityProvider = ({ children }) => {
           setIsPaused(false);
           setCurrentTextSnippet(cleanedText.slice(0, 60));
         };
-
         utterance.onend = () => {
           setIsSpeaking(false);
           setIsPaused(false);
           setCurrentTextSnippet('');
           activeUtteranceRef.current = null;
         };
-
-        utterance.onerror = () => {
-          setIsSpeaking(false);
-          setIsPaused(false);
-          setCurrentTextSnippet('');
-          activeUtteranceRef.current = null;
-        };
-
+        utterance.onerror = utterance.onend;
         utterance.onpause = () => setIsPaused(true);
         utterance.onresume = () => setIsPaused(false);
 
         activeUtteranceRef.current = utterance;
         window.speechSynthesis.speak(utterance);
-      } catch (err) {
-        console.warn('Error al invocar SpeechSynthesis:', err);
+      } catch {
         stop();
       }
     },
     [isSupported, isSpeechEnabled, selectedVoice, voiceRate, stop]
   );
+
+  const setSpeechEnabled = useCallback(
+    (enabled, announceChange = false) => {
+      const val = Boolean(enabled);
+      setIsSpeechEnabled(val);
+      try {
+        localStorage.setItem(STORAGE_KEYS.ENABLED, String(val));
+      } catch {
+        // Ignorar
+      }
+      if (!val) {
+        stop();
+        clearCurrentHighlight();
+        if (controllerRef.current) controllerRef.current.reset();
+        if (announceChange) speak('Asistencia por voz desactivada.', { force: true });
+      } else if (announceChange) {
+        speak('Asistencia por voz activada.', { force: true });
+      }
+    },
+    [stop, speak]
+  );
+
+  const setVoiceRate = useCallback((rate) => {
+    const validRate = Math.max(0.7, Math.min(1.8, Number(rate) || 1.0));
+    setVoiceRateState(validRate);
+    try {
+      localStorage.setItem(STORAGE_KEYS.RATE, String(validRate));
+    } catch {
+      // Ignorar
+    }
+  }, []);
 
   const pause = useCallback(() => {
     if (!isSupported || !isSpeaking) return;
@@ -198,32 +186,53 @@ export const AccessibilityProvider = ({ children }) => {
     }
   }, [isSupported, isPaused]);
 
-  // Leer el contenido visible de la pantalla actual (etiqueta main o contenedor)
+  useEffect(() => {
+    controllerRef.current = new TalkBackController({
+      onSpeak: (phrase) => speak(phrase),
+      onActivate: (desc) => speak(`Activando ${desc.phrase.split(':')[0] || 'control'}...`),
+      onStop: () => stop(),
+      onToggleSpeech: () => setSpeechEnabled(!isSpeechEnabled, true),
+    });
+  }, [speak, stop, setSpeechEnabled, isSpeechEnabled]);
+
+  useEffect(() => {
+    if (!isSupported) return;
+    const onKeyDown = (e) => controllerRef.current?.handleKeyDown(e, isSpeechEnabled);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isSupported, isSpeechEnabled]);
+
+  useEffect(() => {
+    if (!isSupported || !isSpeechEnabled) {
+      clearCurrentHighlight();
+      return;
+    }
+    ensureAccessibilityHighlightStyles();
+    const onClick = (e) => controllerRef.current?.handleClick(e);
+    const onFocusIn = (e) => controllerRef.current?.handleFocusIn(e);
+    const onChange = (e) => controllerRef.current?.handleChange(e);
+
+    window.addEventListener('click', onClick, true);
+    document.addEventListener('focusin', onFocusIn, { passive: true });
+    document.addEventListener('change', onChange, { passive: true });
+
+    return () => {
+      window.removeEventListener('click', onClick, true);
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('change', onChange);
+      clearCurrentHighlight();
+    };
+  }, [isSupported, isSpeechEnabled]);
+
+  const navigateNext = useCallback(() => controllerRef.current?.navigateStep('next'), []);
+  const navigatePrev = useCallback(() => controllerRef.current?.navigateStep('prev'), []);
+  const activateCurrent = useCallback(() => controllerRef.current?.activateCurrent(), []);
+
   const speakScreen = useCallback(() => {
     if (!isSupported || !isSpeechEnabled) return;
-
-    if (isSpeaking && !isPaused) {
-      pause();
-      return;
-    }
-    if (isPaused) {
-      resume();
-      return;
-    }
-
-    const container = document.querySelector('main') || document.body;
-    if (!container) return;
-
-    // Clonar para limpiar elementos invisibles o no textuales
-    const clone = container.cloneNode(true);
-    clone.querySelectorAll('script, style, noscript, svg, [aria-hidden="true"]').forEach((el) => {
-      el.remove();
-    });
-
-    const fullText = clone.innerText || clone.textContent || '';
-    if (fullText.trim()) {
-      speak(fullText);
-    }
+    if (isSpeaking && !isPaused) return pause();
+    if (isPaused) return resume();
+    speak(summarizeContainer(document.querySelector('main') || document.body));
   }, [isSupported, isSpeechEnabled, isSpeaking, isPaused, pause, resume, speak]);
 
   return (
@@ -244,6 +253,9 @@ export const AccessibilityProvider = ({ children }) => {
         resume,
         stop,
         speakScreen,
+        navigateNext,
+        navigatePrev,
+        activateCurrent,
       }}
     >
       {children}

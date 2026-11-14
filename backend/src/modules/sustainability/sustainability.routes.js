@@ -43,4 +43,11 @@ router.post(
   sustainabilityController.exportFineTuningDataset
 );
 
+// 5. Certificación y Evaluación Cuantitativa del Motor RAG (6 métricas Ragas / DeepEval)
+router.post(
+  '/eval/benchmark',
+  authorize(['admin', 'hr', 'accounting', 'manager', 'superadmin']),
+  sustainabilityController.runEvaluationBenchmark
+);
+
 export default router;

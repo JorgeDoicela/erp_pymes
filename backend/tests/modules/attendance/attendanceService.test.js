@@ -1,31 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { attendanceService, attendanceRepository } from '../../../src/modules/attendance/index.js';
-import employeeRepository from '../../../src/modules/employees/employee.repository.js';
-import prisma from '../../../src/database/db.js';
 import { encryptCoordinate } from '../../../src/core/security/encryption.js';
 
-vi.mock('../../../src/database/db.js', () => ({
-  default: {
-    employee: {
-      findUnique: vi.fn(),
-    },
-    systemSetting: {
-      findFirst: vi.fn(),
-    },
-    attendance: {
-      findFirst: vi.fn(),
-      update: vi.fn(),
-    },
-    employeeSchedule: {
-      findFirst: vi.fn(),
-    },
-    auditLog: {
-      create: vi.fn().mockResolvedValue({}),
-    },
-  },
-}));
-
-const { mockAttendanceRepo, mockEmpRepo } = vi.hoisted(() => ({
+const { mockAttendanceRepo, mockEmpRepo, mockSysRepo, mockAuditRepo } = vi.hoisted(() => ({
   mockAttendanceRepo: {
     findByEmployeeAndDate: vi.fn(),
     createEntry: vi.fn(),
@@ -35,8 +11,16 @@ const { mockAttendanceRepo, mockEmpRepo } = vi.hoisted(() => ({
     findFirst: vi.fn(),
   },
   mockEmpRepo: {
+    findEmployeeForAttendance: vi.fn(),
     findById: vi.fn(),
     findByIdentityCard: vi.fn(),
+  },
+  mockSysRepo: {
+    findByTenantId: vi.fn(),
+    findGlobalDefault: vi.fn(),
+  },
+  mockAuditRepo: {
+    log: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -45,13 +29,19 @@ vi.mock('../../../src/modules/attendance/tracking/attendance.repository.js', () 
   default: mockAttendanceRepo,
 }));
 
-vi.mock('../../../src/modules/employees/employee.repository.js', () => ({
-  default: mockEmpRepo,
+vi.mock('../../../src/modules/employees/index.js', () => ({
+  employeeRepository: mockEmpRepo,
 }));
 
-vi.mock('../../../src/modules/employees/employee.repository.js', () => ({
-  default: mockEmpRepo,
+vi.mock('../../../src/modules/system/index.js', () => ({
+  systemRepository: mockSysRepo,
 }));
+
+vi.mock('../../../src/modules/audit/index.js', () => ({
+  auditRepository: mockAuditRepo,
+}));
+
+import { attendanceService } from '../../../src/modules/attendance/index.js';
 
 describe('Attendance Service & Geofencing Engine Test Suite', () => {
   beforeEach(() => {
@@ -70,21 +60,20 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
   };
 
   it('should register entry successfully when employee is within geofence radius', async () => {
-    prisma.employee.findUnique.mockResolvedValue(mockEmployee);
-    prisma.systemSetting.findFirst.mockResolvedValue(null);
-    attendanceRepository.findByEmployeeAndDate.mockResolvedValue(null);
-    prisma.employeeSchedule.findFirst.mockResolvedValue({
-      shift: { startTime: '23:59', toleranceMinutes: 15 }, // Future shift -> on time
+    mockEmpRepo.findEmployeeForAttendance.mockResolvedValue(mockEmployee);
+    mockSysRepo.findByTenantId.mockResolvedValue(null);
+    mockAttendanceRepo.findByEmployeeAndDate.mockResolvedValue(null);
+    mockAttendanceRepo.findActiveSchedule.mockResolvedValue({
+      shift: { startTime: '23:59', toleranceMinutes: 15 },
     });
 
-    attendanceRepository.createEntry.mockImplementation((data) =>
+    mockAttendanceRepo.createEntry.mockImplementation((data) =>
       Promise.resolve({
         id: 'att_rec_1',
         ...data,
       })
     );
 
-    // Coordinate matches exactly
     const location = { latitude: -0.1806, longitude: -78.4678 };
     const result = await attendanceService.registerAttendance(
       mockEmployee.id,
@@ -104,14 +93,14 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
     vi.setSystemTime(new Date(2026, 10, 11, 10, 0, 0));
 
     try {
-      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
-      prisma.systemSetting.findFirst.mockResolvedValue(null);
-      attendanceRepository.findByEmployeeAndDate.mockResolvedValue(null);
-      prisma.employeeSchedule.findFirst.mockResolvedValue({
-        shift: { startTime: '01:00', toleranceMinutes: 10 }, // Past shift -> late
+      mockEmpRepo.findEmployeeForAttendance.mockResolvedValue(mockEmployee);
+      mockSysRepo.findByTenantId.mockResolvedValue(null);
+      mockAttendanceRepo.findByEmployeeAndDate.mockResolvedValue(null);
+      mockAttendanceRepo.findActiveSchedule.mockResolvedValue({
+        shift: { startTime: '01:00', toleranceMinutes: 10 },
       });
 
-      attendanceRepository.createEntry.mockImplementation((data) =>
+      mockAttendanceRepo.createEntry.mockImplementation((data) =>
         Promise.resolve({
           id: 'att_rec_1',
           ...data,
@@ -134,10 +123,9 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
   });
 
   it('should reject entry when employee is outside geofence radius', async () => {
-    prisma.employee.findUnique.mockResolvedValue(mockEmployee);
-    prisma.systemSetting.findFirst.mockResolvedValue(null);
+    mockEmpRepo.findEmployeeForAttendance.mockResolvedValue(mockEmployee);
+    mockSysRepo.findByTenantId.mockResolvedValue(null);
 
-    // Location ~3 km away in Quito
     const distantLocation = { latitude: -0.2201, longitude: -78.5123 };
 
     await expect(
@@ -151,14 +139,14 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
   });
 
   it('should compute worked hours and deduct break duration on EXIT', async () => {
-    prisma.employee.findUnique.mockResolvedValue(mockEmployee);
-    prisma.systemSetting.findFirst.mockResolvedValue(null);
+    mockEmpRepo.findEmployeeForAttendance.mockResolvedValue(mockEmployee);
+    mockSysRepo.findByTenantId.mockResolvedValue(null);
 
-    const checkInTime = new Date(Date.now() - 9 * 60 * 60 * 1000); // 9 hours ago
-    const breakStart = new Date(Date.now() - 5 * 60 * 60 * 1000); // 5 hours ago
-    const breakEnd = new Date(Date.now() - 4 * 60 * 60 * 1000); // 4 hours ago (1 hr break)
+    const checkInTime = new Date(Date.now() - 9 * 60 * 60 * 1000);
+    const breakStart = new Date(Date.now() - 5 * 60 * 60 * 1000);
+    const breakEnd = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-    attendanceRepository.findByEmployeeAndDate.mockResolvedValue({
+    mockAttendanceRepo.findByEmployeeAndDate.mockResolvedValue({
       id: 'att_rec_1',
       employeeId: mockEmployee.id,
       checkIn: checkInTime,
@@ -167,9 +155,9 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
       checkOut: null,
     });
 
-    prisma.employeeSchedule.findFirst.mockResolvedValue(null);
+    mockAttendanceRepo.findActiveSchedule.mockResolvedValue(null);
 
-    attendanceRepository.updateExit.mockImplementation((id, data) =>
+    mockAttendanceRepo.updateExit.mockImplementation((id, data) =>
       Promise.resolve({
         id,
         ...data,
@@ -184,25 +172,22 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
     );
 
     expect(result.message).toBe('Salida registrada exitosamente');
-    // 9 hours total - 1 hour break = 8 hours worked
     expect(result.workedHours).toBeCloseTo(8.0, 1);
   });
 
   it('should register break start and break end lifecycle properly', async () => {
-    prisma.employee.findUnique.mockResolvedValue(mockEmployee);
-    prisma.systemSetting.findFirst.mockResolvedValue(null);
+    mockEmpRepo.findEmployeeForAttendance.mockResolvedValue(mockEmployee);
+    mockSysRepo.findByTenantId.mockResolvedValue(null);
 
     const location = { latitude: -0.1806, longitude: -78.4678 };
 
-    // 1. Start break
-    attendanceRepository.findByEmployeeAndDate.mockResolvedValue({
+    mockAttendanceRepo.findByEmployeeAndDate.mockResolvedValue({
       id: 'att_rec_1',
       checkIn: new Date(),
       checkOut: null,
       breakStart: null,
     });
-
-    prisma.attendance.update.mockResolvedValue({ id: 'att_rec_1', status: 'BREAK' });
+    mockAttendanceRepo.updateBreak.mockResolvedValue({ id: 'att_rec_1', status: 'BREAK' });
 
     const breakStartRes = await attendanceService.registerAttendance(
       mockEmployee.id,
@@ -211,8 +196,7 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
     );
     expect(breakStartRes.message).toBe('Inicio de almuerzo registrado');
 
-    // 2. End break
-    attendanceRepository.findByEmployeeAndDate.mockResolvedValue({
+    mockAttendanceRepo.findByEmployeeAndDate.mockResolvedValue({
       id: 'att_rec_1',
       checkIn: new Date(),
       checkOut: null,
@@ -226,5 +210,71 @@ describe('Attendance Service & Geofencing Engine Test Suite', () => {
       location
     );
     expect(breakEndRes.message).toBe('Fin de almuerzo registrado');
+  });
+
+  it('should allow automatic EXIT when employee leaves geofence radius and autoGeofence is true', async () => {
+    mockEmpRepo.findEmployeeForAttendance.mockResolvedValue(mockEmployee);
+    mockSysRepo.findByTenantId.mockResolvedValue(null);
+
+    const checkInTime = new Date(Date.now() - 8 * 60 * 60 * 1000);
+    mockAttendanceRepo.findByEmployeeAndDate.mockResolvedValue({
+      id: 'att_rec_auto_exit',
+      employeeId: mockEmployee.id,
+      checkIn: checkInTime,
+      breakStart: null,
+      breakEnd: null,
+      checkOut: null,
+    });
+    mockAttendanceRepo.findActiveSchedule.mockResolvedValue(null);
+    mockAttendanceRepo.updateExit.mockImplementation((id, data) =>
+      Promise.resolve({ id, ...data })
+    );
+
+    const outsidePerimeterCoords = { latitude: -0.1845, longitude: -78.4678 };
+
+    await expect(
+      attendanceService.registerAttendance(
+        mockEmployee.id,
+        'EXIT',
+        outsidePerimeterCoords,
+        '192.168.1.100',
+        false,
+        { autoGeofence: false }
+      )
+    ).rejects.toThrow('Ubicación no permitida');
+
+    const autoExitRes = await attendanceService.registerAttendance(
+      mockEmployee.id,
+      'EXIT',
+      outsidePerimeterCoords,
+      '192.168.1.100',
+      false,
+      { autoGeofence: true }
+    );
+    expect(autoExitRes.message).toBe('Salida registrada exitosamente');
+    expect(autoExitRes.workedHours).toBeCloseTo(8.0, 1);
+  });
+
+  it('should expose decrypted geofence configuration and trackingConsent in getStatus', async () => {
+    mockEmpRepo.findEmployeeForAttendance.mockResolvedValue({
+      ...mockEmployee,
+      firstName: 'Ana',
+      lastName: 'Morales',
+      position: 'Analista',
+      department: 'Finanzas',
+      biometricCredentials: [{ id: 'cred_1' }],
+    });
+    mockSysRepo.findByTenantId.mockResolvedValue(null);
+    mockAttendanceRepo.findByEmployeeAndDate.mockResolvedValue(null);
+    mockAttendanceRepo.findActiveSchedule.mockResolvedValue(null);
+
+    const statusRes = await attendanceService.getStatus(mockEmployee.id);
+    expect(statusRes.status).toBe('NOT_STARTED');
+    expect(statusRes.employee.hasBiometric).toBe(true);
+    expect(statusRes.employee.trackingConsent).toBe(true);
+    expect(statusRes.geofence.enabled).toBe(true);
+    expect(statusRes.geofence.radius).toBe(200);
+    expect(statusRes.geofence.targetLat).toBeCloseTo(-0.1806, 4);
+    expect(statusRes.geofence.targetLng).toBeCloseTo(-78.4678, 4);
   });
 });

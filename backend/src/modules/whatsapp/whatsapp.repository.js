@@ -7,6 +7,7 @@
  */
 
 import prisma from '../../database/db.js';
+import { decryptSalary } from '../../core/security/encryption.js';
 
 export class WhatsappRepository {
   constructor(prismaClient = prisma) {
@@ -264,7 +265,13 @@ export class WhatsappRepository {
         select: { salary: true },
       });
       if (!emp?.salary) return 0;
-      return Number(String(emp.salary).replace(/[^0-9.]/g, '')) || 0;
+      if (typeof emp.salary === 'number') return emp.salary > 0 ? emp.salary : 0;
+      const rawSalary = String(emp.salary).trim();
+      if (rawSalary.includes(':')) {
+        const decrypted = decryptSalary(rawSalary);
+        return decrypted && decrypted > 0 ? decrypted : 0;
+      }
+      return Number(rawSalary.replace(/[^0-9.]/g, '')) || 0;
     } catch {
       return 0;
     }

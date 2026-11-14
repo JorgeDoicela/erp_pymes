@@ -12,8 +12,18 @@ import whatsappActionSessionRepository, {
   WHATSAPP_SESSION_STATUS,
 } from './whatsappActionSession.repository.js';
 import whatsappSecurityService from './whatsappSecurity.service.js';
+import { isCancellationCommand } from './whatsappAi.utils.js';
 import { emailService } from '../notifications/index.js';
 import { auditService } from '../audit/index.js';
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 const ACTION_SESSION_TTL_MS = 10 * 60 * 1000;
 const MAX_CONFIRMATION_ATTEMPTS = 3;
@@ -193,7 +203,7 @@ export class WhatsappConfirmationService {
     if (!activeSession) return null;
     const clean = String(text || '').trim();
 
-    if (/^(cancelar|anular|salir|abortar)$/i.test(clean)) {
+    if (isCancellationCommand(clean)) {
       await this.sessionRepo.markStatus({
         id: activeSession.id,
         tenantId: employee.tenantId,
@@ -218,7 +228,7 @@ export class WhatsappConfirmationService {
     }
 
     const confirmMatch = clean.match(
-      /^(?:confirmar|confirmo)[\s:,-]+([\d-]{10,13})[\s:,-]+(\d{6})$/i
+      /^(?:confirmar|confirmo)[\s:,-]+<?(?:cedula\s*[:=]?\s*)?([\d-]{10,13})>?[\s:,-]+<?(?:otp\s*[:=]?\s*)?(\d{6})>?[.!]?$/i
     );
     if (!confirmMatch) {
       if (/^(?:confirmar|confirmo)\b/i.test(clean)) {
@@ -348,10 +358,6 @@ export class WhatsappConfirmationService {
     }
   }
 
-  /**
-   * Envía el código OTP de 6 dígitos al correo registrado del colaborador reutilizando EmailService.
-   * @private
-   */
   async sendOtpEmail({
     employee,
     otpCode,
@@ -361,42 +367,32 @@ export class WhatsappConfirmationService {
   }) {
     const companyName = employee.tenant?.name || 'Norma ERP';
     const subject = `[Norma ERP] Codigo OTP para ${skillName} - ${companyName}`;
-    const detailRows = [];
-    if (draftSummary.permissionType) detailRows.push(['Tipo', draftSummary.permissionType]);
-    if (draftSummary.startDate) detailRows.push(['Desde', draftSummary.startDate]);
-    if (draftSummary.endDate) detailRows.push(['Hasta', draftSummary.endDate]);
-    if (draftSummary.daysRequested)
-      detailRows.push(['Dias solicitados', `${draftSummary.daysRequested} dias`]);
-    if (draftSummary.amount)
-      detailRows.push(['Monto solicitado', `$${Number(draftSummary.amount).toFixed(2)}`]);
-    if (draftSummary.installments)
-      detailRows.push(['Cuotas', `${draftSummary.installments} mes(es)`]);
-    if (draftSummary.targetLabel) detailRows.push(['Solicitud objetivo', draftSummary.targetLabel]);
-    if (draftSummary.actionLabel) detailRows.push(['Resolucion', draftSummary.actionLabel]);
-    if (draftSummary.reason) detailRows.push(['Motivo / Comentario', draftSummary.reason]);
+    const pairs = [
+      ['Tipo', draftSummary.permissionType],
+      ['Desde', draftSummary.startDate],
+      ['Hasta', draftSummary.endDate],
+      [
+        'Dias solicitados',
+        draftSummary.daysRequested ? `${draftSummary.daysRequested} dias` : null,
+      ],
+      [
+        'Monto solicitado',
+        draftSummary.amount ? `$${Number(draftSummary.amount).toFixed(2)}` : null,
+      ],
+      ['Cuotas', draftSummary.installments ? `${draftSummary.installments} mes(es)` : null],
+      ['Solicitud objetivo', draftSummary.targetLabel],
+      ['Resolucion', draftSummary.actionLabel],
+      ['Motivo / Comentario', draftSummary.reason],
+    ].filter(([, val]) => Boolean(val));
 
-    const rowsHtml = detailRows
+    const rowsHtml = pairs
       .map(
         ([label, val]) =>
-          `<tr><td style="padding: 6px 0; color: #6b7280;">${label}:</td><td style="padding: 6px 0; font-weight: 600;">${val}</td></tr>`
+          `<tr><td style="padding: 6px 0; color: #6b7280;">${escapeHtml(label)}:</td><td style="padding: 6px 0; font-weight: 600;">${escapeHtml(val)}</td></tr>`
       )
       .join('');
 
-    const html = `
-      <div style="font-family: Inter, system-ui, -apple-system, sans-serif; background: #f9fafb; padding: 24px; color: #111827;">
-        <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 28px;">
-          <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #111827;">Confirmacion de ${skillName} via WhatsApp</h2>
-          <p style="margin: 0 0 18px 0; font-size: 13px; color: #4b5563;">Empresa: <strong>${companyName}</strong></p>
-          <p style="font-size: 14px; color: #374151;">Hola <strong>${employee.firstName} ${employee.lastName}</strong>,</p>
-          <p style="font-size: 14px; color: #374151;">Se inicio una operacion (<strong>${skillName}</strong>) desde tu WhatsApp corporativo:</p>
-          <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;">${rowsHtml}</table>
-          <div style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 16px; text-align: center; margin: 20px 0;">
-            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #4b5563;">Codigo OTP de verificacion</div>
-            <div style="font-size: 28px; font-weight: 700; letter-spacing: 0.25em; color: #111827; margin-top: 6px;">${otpCode}</div>
-          </div>
-          <p style="font-size: 13px; color: #4b5563; margin-bottom: 0;">Este codigo expira en <strong>${ttlMinutes} minutos</strong> y permite un maximo de 3 intentos. Si no reconoces esta operacion, responde <strong>CANCELAR</strong> en el chat y notifica a Talento Humano.</p>
-        </div>
-      </div>`;
+    const html = `<div style="font-family: Inter, system-ui, sans-serif; background: #f9fafb; padding: 24px; color: #111827;"><div style="max-width: 560px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 28px;"><h2 style="margin: 0 0 8px 0; font-size: 18px;">Confirmacion de ${escapeHtml(skillName)} via WhatsApp</h2><p style="margin: 0 0 18px 0; font-size: 13px; color: #4b5563;">Empresa: <strong>${escapeHtml(companyName)}</strong></p><p style="font-size: 14px; color: #374151;">Hola <strong>${escapeHtml(employee.firstName)} ${escapeHtml(employee.lastName)}</strong>, se inicio una operacion (<strong>${escapeHtml(skillName)}</strong>) desde tu WhatsApp corporativo:</p><table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;">${rowsHtml}</table><div style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 16px; text-align: center; margin: 20px 0;"><div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #4b5563;">Codigo OTP de verificacion</div><div style="font-size: 28px; font-weight: 700; letter-spacing: 0.25em; color: #111827; margin-top: 6px;">${escapeHtml(otpCode)}</div></div><p style="font-size: 13px; color: #4b5563; margin-bottom: 0;">Este codigo expira en <strong>${ttlMinutes} minutos</strong> (maximo 3 intentos). Si no reconoces esta operacion, responde <strong>CANCELAR</strong> en el chat.</p></div></div>`;
 
     return this.emailSender.sendEmail({ to: employee.email, subject, html });
   }

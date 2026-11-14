@@ -8,9 +8,13 @@
 
 import api from '@core/api/httpClient';
 
-const markAttendance = async (employeeId, type, location = null) => {
+const markAttendance = async (employeeId, type, location = null, options = {}) => {
   try {
-    const response = await api.post('/attendance/mark', { employeeId, type, location });
+    const payload = { employeeId, type, location };
+    if (options?.autoGeofence) {
+      payload.autoGeofence = true;
+    }
+    const response = await api.post('/attendance/mark', payload);
     return response.data;
   } catch (error) {
     // Return object with success: false and the actual message for consistency
@@ -35,14 +39,9 @@ const getStatus = async (employeeId) => {
   }
 };
 
-export const clockIn = (employeeId, location) => markAttendance(employeeId, 'IN', location);
-export const clockOut = (employeeId, location) => markAttendance(employeeId, 'OUT', location);
-
 export { markAttendance, getStatus };
 
 export default {
   markAttendance,
   getStatus,
-  clockIn,
-  clockOut,
 };

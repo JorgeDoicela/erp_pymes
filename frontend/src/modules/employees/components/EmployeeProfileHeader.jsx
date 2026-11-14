@@ -8,6 +8,8 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Tabs from '@core/ui/Tabs';
+import Select from '@core/ui/Select';
 import { CONTRACT_TYPES } from '../constants/employeeOptions';
 
 export const EmployeeProfileHeader = ({
@@ -30,18 +32,17 @@ export const EmployeeProfileHeader = ({
       {isAdminOrHR && id && employeesList.length > 0 && (
         <div className="bg-white p-3 rounded-[4px] border border-gray-200 flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-gray-600">Visualizando Colaborador:</span>
-            <select
+            <span className="font-semibold text-gray-600 shrink-0">Visualizando Colaborador:</span>
+            <Select
+              aria-label="Visualizando Colaborador"
               value={employee.id}
               onChange={(e) => navigate(`/admin/employees/${e.target.value}`)}
-              className="bg-white border border-gray-200 rounded-[4px] px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-600 font-medium"
-            >
-              {employeesList.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.firstName} {emp.lastName} ({emp.identityCard || emp.position})
-                </option>
-              ))}
-            </select>
+              options={employeesList.map((emp) => ({
+                value: emp.id,
+                label: `${emp.firstName} ${emp.lastName} (${emp.identityCard || emp.position})`,
+              }))}
+              className="font-medium"
+            />
           </div>
           <Link to="/profile" className="text-xs text-blue-600 hover:underline font-medium">
             ← Ir a Mi Perfil Personal
@@ -156,28 +157,8 @@ export const EmployeeProfileHeader = ({
           </div>
         </div>
 
-        {/* Pestañas con Contadores Integrados */}
-        <div className="flex border-b border-gray-200 overflow-x-auto gap-1 text-xs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`pb-2.5 px-3 font-medium transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
-                activeTab === tab.id
-                  ? 'border-gray-900 text-gray-900 font-semibold'
-                  : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              {tab.label}
-              {tab.count !== undefined && (
-                <span className="ml-1.5 font-mono text-[11px] text-gray-400 tabular-nums">
-                  ({tab.count})
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Pestañas con Contadores Integrados (Select en móvil, pestañas en escritorio) */}
+        <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       </div>
     </div>
   );

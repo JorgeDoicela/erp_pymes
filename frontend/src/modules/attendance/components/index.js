@@ -7,7 +7,9 @@
  */
 
 export { default as AttendanceSummaryCard } from './AttendanceSummaryCard';
+export { default as AutoGeofenceControlPanel } from './AutoGeofenceControlPanel';
 export { default as BiometricRegistrationBanner } from './BiometricRegistrationBanner';
+export { default as DigitalMarkerClockHeader } from './DigitalMarkerClockHeader';
 export { default as EmployeeSearchBox } from './EmployeeSearchBox';
 export { default as MarkerActionButtons } from './MarkerActionButtons';
 export { default as TrackingConsentModal } from './TrackingConsentModal';

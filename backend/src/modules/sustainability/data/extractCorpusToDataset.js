@@ -80,6 +80,23 @@ const NATURAL_DOMAIN_ANCHORS = [
     matchCode: /Art\.\s*73\b|Art\.\s*11\b|Art\.\s*42\b/i,
     matchCategory: null,
   },
+  {
+    query:
+      'como se calculan y pagan las vacaciones anuales y vacaciones no gozadas veinticuatroava parte',
+    matchCode: /Art\.\s*69\b|Art\.\s*71\b/i,
+    matchCategory: 'LABOR_CODE',
+  },
+  {
+    query: 'cuando se paga el decimo cuarto sueldo en quito regimen sierra y amazonia 15 de agosto',
+    matchCode: /Art\.\s*113\b/i,
+    matchCategory: 'LABOR_CODE',
+  },
+  {
+    query:
+      'reforma laboral contrato a plazo fijo eliminado contrato indefinido vigente y articulos derogados',
+    matchCode: /Art\.\s*14\b|Art\.\s*181\b|Art\.\s*189\b/i,
+    matchCategory: 'LABOR_CODE',
+  },
 ];
 
 async function exportAllColabDatasets() {

@@ -259,9 +259,62 @@ function extractKeywords(text, articleCode) {
   return [...new Set(topWords)];
 }
 
+function extractLegislativeMetadata(text) {
+  const clean = String(text || '');
+  const isRepealed =
+    /^(?:\[[^\]]+\]\s*)?Art\.\s*\d+(?:\.\d+)?(?:\s*-\s*[A-Za-z0-9]+)?\.-\s*(?:-?\s*Nota:\s*Art[ií]culo\s+derogado|\(\s*Derogado\b)/i.test(
+      clean
+    ) || /\ben consecuencia este art[ií]culo no se encuentra vigente\b/i.test(clean);
+
+  const reformMatches = [
+    ...clean.matchAll(
+      /(?:Nota:\s*([^.]+?(?:Registro Oficial|R\.O\.)[^.]+?\d{4})|\(\s*(?:Reformado|Sustituido|Agregado|Derogado)[^)]+?\d{4}\s*\))/gi
+    ),
+  ].map((m) => (m[1] || m[0]).replace(/\s+/g, ' ').trim());
+
+  const yearMatches = [...clean.matchAll(/\b(19\d{2}|20[0-2]\d)\b/g)].map((m) =>
+    parseInt(m[1], 10)
+  );
+  const lastReformYear = yearMatches.length > 0 ? Math.max(...yearMatches) : null;
+
+  let temporalStatus = 'VIGENTE';
+  if (isRepealed) {
+    temporalStatus = 'DEROGADO';
+  } else if (
+    reformMatches.length > 0 ||
+    /\b(?:reformado|sustituido|agregado)\s+por\b/i.test(clean)
+  ) {
+    temporalStatus = 'VIGENTE_REFORMADO';
+  }
+
+  return {
+    temporalStatus,
+    isRepealed,
+    lastReformYear,
+    reformNotes: reformMatches.slice(0, 4),
+  };
+}
+
+function cleanLexisEditorialNoise(rawText) {
+  let cleaned = String(rawText || '')
+    .replace(
+      /(?:CODIGO DEL TRABAJO|CONSTITUCION DE LA REPUBLICA DEL ECUADOR|LEY DE SEGURIDAD SOCIAL)\s*-\s*P[áa]gina\s*\d+\s*LEXIS FINDER\s*-\s*www\.lexis\.com\.ec/gi,
+      ' '
+    )
+    .replace(/LEXIS FINDER\s*-\s*www\.lexis\.com\.ec/gi, ' ');
+
+  const jurisIdx = cleaned.search(/\bJurisprudencia:\s*Gaceta Judicial,/i);
+  if (jurisIdx !== -1) {
+    cleaned = cleaned.slice(0, jurisIdx);
+  }
+
+  return cleaned.replace(/\s+/g, ' ').trim();
+}
+
 /**
  * Segmenta un cuerpo legal por cada Artículo ("Art. X.-" / "Artículo X.-") y Disposición,
- * garantizando que no se pierda ni el preámbulo ni ningún artículo extenso.
+ * garantizando que no se pierda ni el preámbulo ni ningún artículo extenso y filtrando
+ * referencias cruzadas en mitad de oración y catálogos editoriales de Gaceta Judicial.
  */
 function segmentLegalArticles(pages, sourceMeta) {
   // Concatenar con marcadores de página para saber exactamente en qué página está cada artículo
@@ -284,19 +337,23 @@ function segmentLegalArticles(pages, sourceMeta) {
   let currentBuffer = [];
 
   const articleRegex =
-    /^(?:Art(?:[ií]culo|\.)\s*(\d+(?:\.\d+)?(?:\s*-\s*[A-Za-z0-9]+)?)\s*[.\-–—:]?\s*(.*)|DISPOSICI[ÓO]N(?:ES)?\s+(GENERAL(?:ES)?|TRANSITORIA(?:S)?|REFORMATORIA(?:S)?|DEROGATORIA(?:S)?|FINAL(?:ES)?)\b\s*(.*))/i;
+    /^(?:Art(?:[ií]culo|\.)\s*(\d+(?:\.\d+)?(?:\s*-\s*[A-Za-z0-9]+)?)\s*(?:\.\s*[-–—:]|\.-|-\s*-|[-–—:])\s*(.*)|(?:Art[ií]culo|Art\.)\s*(\d+(?:\.\d+)?)\.\s*$|DISPOSICI[ÓO]N(?:ES)?\s+(GENERAL(?:ES)?|TRANSITORIA(?:S)?|REFORMATORIA(?:S)?|DEROGATORIA(?:S)?|FINAL(?:ES)?)\b\s*(.*))/i;
   const headingRegex =
     /^(?:T[ÍI]TULO|CAP[ÍI]TULO|SECCI[ÓO]N|LIBRO|PAR[ÁA]GRAFO)\s+[IVXLCDM0-9]+\b.*/i;
 
   const flushChunk = () => {
-    const content = currentBuffer.join(' ').replace(/\s+/g, ' ').trim();
+    const content = cleanLexisEditorialNoise(currentBuffer.join(' '));
     if (content.length < 25) {
       currentBuffer = [];
       return;
     }
 
-    // Si un artículo es extremadamente largo (> 2600 caracteres), dividirlo en partes conexas sin perder ni un carácter
-    if (content.length <= 2600) {
+    const articleNumberMatch = currentArticleCode.match(/Art\.\s*(\d+(?:\.\d+)?)/i);
+    const parentArticleCode = currentArticleCode;
+    const legMeta = extractLegislativeMetadata(content);
+
+    // Conservar íntegros los artículos normativos de hasta 3600 caracteres para evitar truncamiento de incisos
+    if (content.length <= 3600) {
       const odsTarget = inferOdsTarget(content, sourceMeta.defaultOds);
       chunks.push({
         articleCode: currentArticleCode,
@@ -306,31 +363,21 @@ function segmentLegalArticles(pages, sourceMeta) {
           docId: sourceMeta.docId,
           pageNumber: currentStartPage,
           section: currentHeadingContext,
+          parentArticleCode,
+          articleNumber: articleNumberMatch ? articleNumberMatch[1] : null,
+          ...legMeta,
           keywords: extractKeywords(content, currentArticleCode),
         },
       });
     } else {
       const sentences = content.split(/(?<=[.;:])\s+/);
+      const rawParts = [];
       let partBuffer = [];
       let partLen = 0;
-      let partIdx = 1;
 
       for (const sent of sentences) {
-        if (partLen + sent.length > 2200 && partBuffer.length > 0) {
-          const partText = partBuffer.join(' ').trim();
-          const codeWithPart = `${currentArticleCode} (Parte ${partIdx})`;
-          chunks.push({
-            articleCode: codeWithPart,
-            odsTarget: inferOdsTarget(partText, sourceMeta.defaultOds),
-            content: `[${currentHeadingContext} | Pág. ${currentStartPage}] ${partText}`,
-            metadata: {
-              docId: sourceMeta.docId,
-              pageNumber: currentStartPage,
-              section: currentHeadingContext,
-              keywords: extractKeywords(partText, currentArticleCode),
-            },
-          });
-          partIdx++;
+        if (partLen + sent.length > 2600 && partBuffer.length > 0) {
+          rawParts.push(partBuffer.join(' ').trim());
           partBuffer = [sent];
           partLen = sent.length;
         } else {
@@ -338,23 +385,36 @@ function segmentLegalArticles(pages, sourceMeta) {
           partLen += sent.length + 1;
         }
       }
-
       if (partBuffer.length > 0) {
-        const partText = partBuffer.join(' ').trim();
+        rawParts.push(partBuffer.join(' ').trim());
+      }
+
+      const totalParts = rawParts.length;
+      rawParts.forEach((partText, idx) => {
+        const partIdx = idx + 1;
         const codeWithPart =
-          partIdx > 1 ? `${currentArticleCode} (Parte ${partIdx})` : currentArticleCode;
+          totalParts > 1 ? `${currentArticleCode} (Parte ${partIdx})` : currentArticleCode;
+        const prefixHeader =
+          partIdx > 1 && !partText.startsWith('Art.')
+            ? `${currentArticleCode} (Continuación Parte ${partIdx}/${totalParts}): ${partText}`
+            : partText;
         chunks.push({
           articleCode: codeWithPart,
           odsTarget: inferOdsTarget(partText, sourceMeta.defaultOds),
-          content: `[${currentHeadingContext} | Pág. ${currentStartPage}] ${partText}`,
+          content: `[${currentHeadingContext} | Pág. ${currentStartPage}] ${prefixHeader}`,
           metadata: {
             docId: sourceMeta.docId,
             pageNumber: currentStartPage,
             section: currentHeadingContext,
+            parentArticleCode,
+            articleNumber: articleNumberMatch ? articleNumberMatch[1] : null,
+            partIndex: partIdx,
+            totalParts,
+            ...legMeta,
             keywords: extractKeywords(partText, currentArticleCode),
           },
         });
-      }
+      });
     }
 
     currentBuffer = [];
@@ -371,19 +431,32 @@ function segmentLegalArticles(pages, sourceMeta) {
 
     const match = line.match(articleRegex);
     if (match) {
-      flushChunk();
-      currentStartPage = item.pageNumber;
-      if (match[1]) {
-        currentArticleCode = `${sourceMeta.shortTitle} Art. ${match[1].replace(/\s+/g, '')}`;
-        currentBuffer.push(`Art. ${match[1]}.- ${match[2] || ''}`.trim());
-      } else {
-        const dispType = match[3] ? match[3].toUpperCase() : 'DISPOSICIÓN';
-        currentArticleCode = `${sourceMeta.shortTitle} — Disposición ${dispType} (Pág. ${item.pageNumber})`;
-        currentBuffer.push(line);
+      const artNum = match[1] || match[3];
+      const artRest = match[2] || '';
+      const dispType = match[4];
+
+      // Evitar falsos positivos cuando una línea empieza con "Art. 68 de la Ley s/n..." en mitad de oración
+      const isCrossRefLine =
+        Boolean(artNum) &&
+        /^(?:de\s+la\s+Ley|de\s+este\s+C[óo]digo|del\s+Reglamento)/i.test(artRest);
+
+      if (!isCrossRefLine) {
+        flushChunk();
+        currentStartPage = item.pageNumber;
+        if (artNum) {
+          const cleanNum = artNum.replace(/\s+/g, '');
+          currentArticleCode = `${sourceMeta.shortTitle} Art. ${cleanNum}`;
+          currentBuffer.push(`Art. ${cleanNum}.- ${artRest}`.trim());
+        } else {
+          const normalizedDisp = dispType ? dispType.toUpperCase() : 'DISPOSICIÓN';
+          currentArticleCode = `${sourceMeta.shortTitle} — Disposición ${normalizedDisp} (Pág. ${item.pageNumber})`;
+          currentBuffer.push(line);
+        }
+        continue;
       }
-    } else {
-      currentBuffer.push(line);
     }
+
+    currentBuffer.push(line);
   }
 
   flushChunk();

@@ -15,17 +15,19 @@ El script [`extractAllFourPdfs.js`](../../backend/src/modules/sustainability/dat
 
 | ID Documento           | Archivo Fuente (`corpus-legal/`)              | Categoría en Sistema        | Páginas Procesadas | Artículos / Secciones Extraídas |   Caracteres Extraídos   |  Meta ODS Principal   |
 | :--------------------- | :-------------------------------------------- | :-------------------------- | :----------------: | :-----------------------------: | :----------------------: | :-------------------: |
-| `constitucion_2008`    | `01-constitucion-republica-ecuador-2008.pdf`  | `CONSTITUTION`              |        136         |          481 artículos          |         400,261          |     `8.5` / `8.8`     |
-| `codigo_trabajo`       | `02-codigo-del-trabajo-ecuador.pdf`           | `LABOR_CODE`                |        157         |          714 artículos          |         587,255          | `8.3` / `8.5` / `8.8` |
-| `ley_seguridad_social` | `03-ley-de-seguridad-social-iess.pdf`         | `IESS_REGULATION`           |        104         |          383 artículos          |         357,385          |         `8.5`         |
+| `constitucion_2008`    | `01-constitucion-republica-ecuador-2008.pdf`  | `CONSTITUTION`              |        136         |          468 artículos          |         389,140          |     `8.5` / `8.8`     |
+| `codigo_trabajo`       | `02-codigo-del-trabajo-ecuador.pdf`           | `LABOR_CODE`                |        157         |          677 artículos          |         496,820          | `8.3` / `8.5` / `8.8` |
+| `ley_seguridad_social` | `03-ley-de-seguridad-social-iess.pdf`         | `IESS_REGULATION`           |        104         |          363 artículos          |         334,190          |         `8.5`         |
 | `oit_metodologia_ods8` | `04-oit-metodologia-ods8-trabajo-decente.pdf` | `ODS_8_FRAMEWORK`           |        143         |          302 secciones          |         398,353          | `8.3` / `8.5` / `8.8` |
-| **TOTAL OFICIAL**      | **4 Documentos Oficiales**                    | **4 Categorías Normativas** |  **540 páginas**   | **1,880 artículos y secciones** | **1,743,254 caracteres** |  **ODS 8 Completo**   |
+| **TOTAL OFICIAL**      | **4 Documentos Oficiales**                    | **4 Categorías Normativas** |  **540 páginas**   | **1,810 artículos y secciones** | **1,618,503 caracteres** |  **ODS 8 Completo**   |
 
-### 1.2. Reglas de Segmentación en `extractAllFourPdfs.js`
+### 1.2. Reglas de Segmentación, Limpieza Editorial y Vigencia Temporal en `extractAllFourPdfs.js`
 
 1. **Documentos Legislativos (`Constitución`, `Código del Trabajo`, `Ley de Seguridad Social`):**
-   - Detección por expresión regular de cabeceras de artículo (`Art. N.-`, `Artículo N.-`, `Art. Innumerado`) y disposiciones (`DISPOSICIÓN TRANSITORIA`, `DISPOSICIÓN GENERAL`, `DISPOSICIÓN REFORMATORIA`).
-   - Cuando un artículo extenso supera los `2,200` caracteres, el segmentador lo divide en sub-bloques lógicos (`Parte 1`, `Parte 2`, etc.) conservando el código del artículo original (`articleCode`) para evitar truncamiento en la ventana de contexto y mantener alta precisión en el cálculo de relevancia BM25.
+   - Detección estricta de cabeceras de artículo (`Art. N.-`, `Artículo N.-`, `Art. Innumerado`), descartando referencias cruzadas en medio de oración (`artículo N de este Código`, `artículo N de la Ley`) para evitar falsas particiones.
+   - Limpieza automática (`cleanLexisEditorialNoise`) de cabeceras editoriales (`LEXIS FINDER - www.lexis.com.ec`) y listados históricos de títulos de fallos de `Gaceta Judicial` al pie de artículos extensos, preservando intactas las notas de reforma legislativa (`Nota: Artículo reformado/derogado por...`) y concordancias.
+   - Umbral de integridad de artículo único de `3,600` caracteres: artículos críticos como el `Art. 188` (escala de despido intempestivo, `2,255` caracteres), `Art. 69`, `Art. 71`, `Art. 113`, `Art. 169`, `Art. 172` y `Art. 185` se conservan en un único fragmento íntegro sin subdividirse.
+   - Extracción de metadatos de vigencia temporal (`extractLegislativeMetadata`): cada fragmento incluye `temporalStatus` (`VIGENTE`, `VIGENTE_REFORMADO`, `DEROGADO`), `isRepealed`, `lastReformYear` y `reformNotes`.
 2. **Documento Metodológico (`OIT Indicadores de Trabajo Decente ODS 8`):**
    - Agrupación semántica por indicadores estadísticos de la OIT y bloques de hasta `1,400` caracteres con preservación de títulos de sección y fórmulas de cálculo.
 
@@ -379,3 +381,28 @@ El despliegue en producción es automático al hacer `push` a `main`:
    - Ejecuta `syncHuggingFaceModels.js ensure` para hidratar `bi-encoder/` y `cross-encoder/` ONNX `QUInt8` en el volumen persistente `ai_models_data`.
    - `server.js` invoca de forma no bloqueante `sustainabilityRepository.ensurePgVectorCorpusSeeded()`, asegurando extensión `vector`, índices HNSW/GIN e hidratación de los `1,880` vectores `768d` sin duplicar filas existentes.
 3. **Generación LLM (`DeepSeek API`):** Recomendado `AI_PROVIDER="deepseek"` en instancias **AWS Lightsail 4 GB RAM (2 vCPU)** para ejecutar recuperación neural local ONNX + `pgvector` y delegar únicamente la redacción final al modelo grande por API.
+
+---
+
+## 8. Evaluación Cuantitativa del Sistema RAG (`ragEvaluation.service.js` — Estándar Ragas / DeepEval)
+
+El servicio [`ragEvaluation.service.js`](../../backend/src/modules/sustainability/ragEvaluation.service.js) y la suite [`ragEvaluationBenchmark.test.js`](../../backend/tests/modules/sustainability/ragEvaluationBenchmark.test.js) evalúan de extremo a extremo la precisión jurídica del pipeline RAG sobre 6 métricas formales:
+
+| Métrica              | Definición Operativa en Norma ERP                                                                                                                                                                        |   Puntaje Promedio   |
+| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------: |
+| `Context Precision`  | Proporción ponderada por rango (MAP@K) de fragmentos recuperados que corresponden a los artículos requeridos por la situación jurídica.                                                                  | `97.08%` (`0.9708`)  |
+| `Context Recall`     | Proporción de artículos obligatorios y cláusulas normativas clave efectivamente recuperados en la ventana de contexto (`topK = 6`).                                                                      | `100.00%` (`1.0000`) |
+| `Faithfulness`       | Grado de anclaje estricto al contexto recuperado (`groundednessScore`), penalizando cualquier artículo citado cuyo texto no figure en los fragmentos primarios.                                          | `98.63%` (`0.9863`)  |
+| `Answer Correctness` | Exactitud jurídica y aritmética de la respuesta frente a las reglas legales esperadas y distinción explícita entre simulación referencial y cálculo con parámetros completos.                            | `100.00%` (`1.0000`) |
+| `Citation Accuracy`  | Proporción estricta de artículos citados en la respuesta cuyo texto íntegro fue recuperado y entregado en el contexto (`verifiedArticles / totalCited`).                                                 | `100.00%` (`1.0000`) |
+| `Temporal Validity`  | Verificación de vigencia normativa (`VIGENTE`, `VIGENTE_REFORMADO`, `DEROGADO`), penalizando la citación de artículos derogados como ley activa y exigiendo distinción temporal en consultas de reforma. | `100.00%` (`1.0000`) |
+
+### 8.1. Resultados de las 5 Pruebas de Diagnóstico Obligatorias
+
+| ID Escenario                          | Caso de Prueba Evaluado                                                                         | Artículos Verificados en `topK = 6`                                            |    Estado Auditoría     | Score Global |
+| :------------------------------------ | :---------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------- | :---------------------: | :----------: |
+| `BENCH_01_DESPIDO_INTEMPESTIVO`       | Despido intempestivo y liquidación de haberes (`Art. 188` íntegro + co-recuperación de haberes) | `Arts. 188, 185, 113, 71, 111, 69` (Código del Trabajo)                        | `VERIFIED_BY_EVALUATOR` |   `99.83%`   |
+| `BENCH_02_VACACIONES_NO_GOZADAS`      | Liquidación y pago de vacaciones anuales no gozadas (`Arts. 69 y 71`)                           | `Arts. 69, 71, 72, 76, 73, 74` (Código del Trabajo)                            | `VERIFIED_BY_EVALUATOR` |   `99.80%`   |
+| `BENCH_03_DECIMO_CUARTO_QUITO`        | Décimo cuarto sueldo en Quito — identificación del régimen Sierra y Amazonía (`15 de agosto`)   | `Arts. 113, 111, 131, 185, 69` (CT) + `Art. 236` (IESS)                        | `VERIFIED_BY_EVALUATOR` |   `99.49%`   |
+| `BENCH_04_FUERA_DEL_CORPUS`           | Consulta ajena al corpus normativo (control de abstención y cero alucinación)                   | `[]` (Bloqueado por `assessRetrievalSufficiency`)                              |  `OUT_OF_CORPUS_SCOPE`  |  `100.00%`   |
+| `BENCH_05_REFORMA_NORMATIVA_VIGENCIA` | Reforma laboral 2015: contrato indefinido (`VIGENTE_REFORMADO`) vs. plazo fijo (`DEROGADO`)     | `Arts. 14, 184, 265, 11` (`VIGENTE_REFORMADO`) + `Arts. 181, 189` (`DEROGADO`) | `VERIFIED_BY_EVALUATOR` |   `97.31%`   |

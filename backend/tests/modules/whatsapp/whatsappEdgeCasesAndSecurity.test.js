@@ -383,7 +383,8 @@ describe('WhatsApp Multi-Tenant Edge Cases, Security & Robustness Suite', () => 
   });
 
   it('8. Inferencia temporal: infiere fecha "hoy" ante solicitud inmediata de permiso', async () => {
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const replyToday = await aiService.generateResponse({
       text: 'Solicitar permiso medico hoy por cita odontologica urgente',
       employee,

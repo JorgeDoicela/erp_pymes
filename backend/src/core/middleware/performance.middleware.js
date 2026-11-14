@@ -31,7 +31,8 @@ export const performanceMiddleware = (req, res, next) => {
     } else if (
       url.includes('/advisor') ||
       url.includes('/intelligence') ||
-      url.includes('/fine-tuning')
+      url.includes('/fine-tuning') ||
+      url.includes('/eval/benchmark')
     ) {
       threshold = 15000;
       type = 'Inferencia IA / RAG';

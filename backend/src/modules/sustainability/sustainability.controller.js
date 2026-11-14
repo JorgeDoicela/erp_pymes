@@ -11,6 +11,7 @@ import sustainabilityService from './sustainability.service.js';
 import sustainabilityRagService from './sustainabilityRag.service.js';
 import sustainabilityFineTuningService from './sustainabilityFineTuning.service.js';
 import sustainabilityRepository from './sustainability.repository.js';
+import ragEvaluationService from './ragEvaluation.service.js';
 import {
   AdvisorQuerySchema,
   DocumentIngestSchema,
@@ -161,6 +162,28 @@ export async function exportFineTuningDataset(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Error al exportar dataset de fine-tuning',
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * POST /api/sustainability/eval/benchmark
+ * Ejecuta la batería de evaluación cuantitativa RAG (6 métricas Ragas/DeepEval y 5 casos obligatorios).
+ */
+export async function runEvaluationBenchmark(req, res) {
+  try {
+    const providerOverrides =
+      req.body && typeof req.body === 'object' ? req.body : { provider: 'local' };
+    const report = await ragEvaluationService.runMandatoryBenchmarkSuite(providerOverrides);
+    return res.json({
+      success: true,
+      data: report,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error al ejecutar la suite de evaluación RAG',
       error: error.message,
     });
   }

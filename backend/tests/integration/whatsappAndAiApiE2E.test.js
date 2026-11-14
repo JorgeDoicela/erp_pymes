@@ -399,6 +399,20 @@ describe('Suite Integral E2E: WhatsApp API, Motor RAG y Modelos ONNX Entrenados'
 
       expect(res.status).toBe(403);
     });
+
+    it('POST /api/sustainability/eval/benchmark debe ejecutar la certificación RAG (6 métricas y 5 casos obligatorios) vía HTTP', async () => {
+      const res = await request(app)
+        .post('/api/sustainability/eval/benchmark')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ provider: 'local' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.allPassed).toBe(true);
+      expect(res.body.data.totalCases).toBe(5);
+      expect(res.body.data.summaryMetrics.overallScore).toBeGreaterThanOrEqual(0.92);
+      expect(res.body.data.summaryMetrics.citationAccuracy).toBeGreaterThanOrEqual(0.95);
+    }, 30000);
   });
 
   // ============================================================================

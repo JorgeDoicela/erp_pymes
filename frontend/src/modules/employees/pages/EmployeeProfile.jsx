@@ -24,7 +24,6 @@ import EditEmployeeModal from '../components/EditEmployeeModal';
 import SkillsTab from '../components/SkillsTab';
 import ContractsTab from '../components/ContractsTab';
 import { BiometricSettings } from '@modules/attendance';
-import { PWAInstallButton } from '@core/pwa';
 import { AccessibilitySettingsCard } from '@core/accessibility';
 import Modal from '@core/ui/Modal';
 import {
@@ -445,20 +444,6 @@ const EmployeeProfile = ({ token, user }) => {
         {activeTab === 'security' && (
           <div className="max-w-2xl mx-auto space-y-4">
             <AccessibilitySettingsCard />
-            <div className="bg-white rounded border border-gray-200 p-5 space-y-3">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    Aplicación Web Progresiva (PWA)
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Instale Norma ERP en su sistema operativo o dispositivo móvil para acceso
-                    rápido.
-                  </p>
-                </div>
-                <PWAInstallButton showIfInstalled={true} />
-              </div>
-            </div>
             <BiometricSettings />
           </div>
         )}

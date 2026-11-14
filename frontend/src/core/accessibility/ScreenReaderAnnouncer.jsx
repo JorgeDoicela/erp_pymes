@@ -1,15 +1,16 @@
 /**
  * @file ScreenReaderAnnouncer.jsx
- * @description Región ARIA Live global e invisible para lectores de pantalla nativos (TalkBack/VoiceOver/NVDA).
- * Escucha cambios de ruta, notificaciones del sistema (toasts) y mensajes personalizados sin alterar la UI.
+ * @description Región ARIA Live global y puente hacia el sintetizador de voz integrado (TalkBack Web).
+ * Escucha cambios de ruta, notificaciones del sistema (toasts) y mensajes personalizados.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useToasterStore } from 'react-hot-toast';
+import AccessibilityContext from './AccessibilityContext.jsx';
 
 const ROUTE_LABELS = {
   '/': 'Inicio institucional',
@@ -20,7 +21,6 @@ const ROUTE_LABELS = {
   '/privacy': 'Política de Privacidad',
   '/admin': 'Panel de Control Administrativo',
   '/empleado': 'Portal del Empleado',
-  '/empleado/portal': 'Portal Móvil del Empleado',
   '/empleado/asistencia': 'Marcación de Asistencia',
   '/empleado/ausencias': 'Mis Solicitudes de Ausencia',
   '/my-payments': 'Mis Roles de Pago',
@@ -39,25 +39,36 @@ const ROUTE_LABELS = {
   '/admin/entrepreneurship': 'Incubadora de Emprendimiento',
 };
 
+const ROUTE_PREFIX_LABELS = [
+  ['/admin/employees', '/employees', 'Gestión de Empleados'],
+  ['/admin/attendance', '/attendance', 'Gestión de Asistencia'],
+  ['/admin/payroll', '/payroll', 'Nómina y Liquidaciones'],
+  ['/admin/performance', '/performance', 'Evaluaciones y Desempeño'],
+  ['/admin/recruitment', '/recruitment', 'Reclutamiento y Selección'],
+  ['/admin/analytics', '/analytics', 'Analíticas Predictivas'],
+  ['/admin/contracts', '/contracts', 'Gestión de Contratos'],
+  ['/admin/audit', '/audit', 'Auditoría del Sistema'],
+];
+
 const resolveRouteTitle = (path) => {
   if (ROUTE_LABELS[path]) return ROUTE_LABELS[path];
-  if (path.startsWith('/admin/employees') || path.startsWith('/employees'))
-    return 'Gestión de Empleados';
-  if (path.startsWith('/admin/attendance') || path.startsWith('/attendance'))
-    return 'Gestión de Asistencia';
-  if (path.startsWith('/admin/payroll') || path.startsWith('/payroll'))
-    return 'Nómina y Liquidaciones';
-  if (path.startsWith('/admin/performance') || path.startsWith('/performance'))
-    return 'Evaluaciones y Desempeño';
-  if (path.startsWith('/admin/recruitment') || path.startsWith('/recruitment'))
-    return 'Reclutamiento y Selección';
-  if (path.startsWith('/admin/analytics') || path.startsWith('/analytics'))
-    return 'Analíticas Predictivas';
-  if (path.startsWith('/admin/contracts') || path.startsWith('/contracts'))
-    return 'Gestión de Contratos';
-  if (path.startsWith('/admin/audit') || path.startsWith('/audit')) return 'Auditoría del Sistema';
+  for (const [adminPrefix, shortPrefix, label] of ROUTE_PREFIX_LABELS) {
+    if (path.startsWith(adminPrefix) || path.startsWith(shortPrefix)) return label;
+  }
   return 'Pantalla del sistema';
 };
+
+function extractToastText(t) {
+  if (typeof t.message === 'string') return t.message.trim();
+  if (typeof t.message === 'function') {
+    try {
+      return String(t.message(t)).trim();
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
 
 export default function ScreenReaderAnnouncer() {
   const [politeMessage, setPoliteMessage] = useState('');
@@ -65,77 +76,67 @@ export default function ScreenReaderAnnouncer() {
 
   const location = useLocation();
   const { toasts } = useToasterStore();
+  const accessibility = useContext(AccessibilityContext);
 
   const lastPathRef = useRef('');
   const announcedToastIdsRef = useRef(new Set());
   const timerRef = useRef(null);
 
-  // 1. Anunciar cambio de rutas automáticamente a TalkBack
+  const announce = useCallback(
+    (msg, priority = 'polite') => {
+      if (!msg) return;
+      if (priority === 'assertive') {
+        setAssertiveMessage(msg);
+      } else {
+        setPoliteMessage(msg);
+      }
+      if (accessibility?.isSpeechEnabled && accessibility?.speak) {
+        accessibility.speak(msg);
+      }
+    },
+    [accessibility]
+  );
+
+  // 1. Anunciar cambio de rutas automáticamente
   useEffect(() => {
     if (lastPathRef.current === location.pathname) return;
     lastPathRef.current = location.pathname;
 
     const screenTitle = resolveRouteTitle(location.pathname);
-    setPoliteMessage(`Pantalla ${screenTitle} cargada.`);
-  }, [location.pathname]);
+    announce(`Pantalla ${screenTitle} cargada.`, 'polite');
+  }, [location.pathname, announce]);
 
-  // 2. Interceptar notificaciones toast del sistema para que TalkBack las verbalice
+  // 2. Interceptar notificaciones toast del sistema para verbalizarlas
   useEffect(() => {
     if (!toasts || !toasts.length) return;
 
     toasts.forEach((t) => {
       if (t.visible && !announcedToastIdsRef.current.has(t.id)) {
         announcedToastIdsRef.current.add(t.id);
-
-        let text = '';
-        if (typeof t.message === 'string') {
-          text = t.message;
-        } else if (typeof t.message === 'function') {
-          try {
-            text = String(t.message(t));
-          } catch {
-            text = '';
-          }
-        }
-
-        if (text && typeof text === 'string' && text.trim()) {
+        const text = extractToastText(t);
+        if (text) {
           const isError = t.type === 'error';
           const prefix = isError ? 'Alerta de error: ' : 'Aviso: ';
-          const fullAnnouncement = `${prefix}${text.trim()}`;
-
-          if (isError) {
-            setAssertiveMessage(fullAnnouncement);
-          } else {
-            setPoliteMessage(fullAnnouncement);
-          }
+          announce(`${prefix}${text}`, isError ? 'assertive' : 'polite');
         }
       }
     });
 
-    // Limpiar IDs antiguos si el set crece
     if (announcedToastIdsRef.current.size > 50) {
       announcedToastIdsRef.current.clear();
     }
-  }, [toasts]);
+  }, [toasts, announce]);
 
   // 3. Escuchar anuncios manuales o directos mediante evento norma:announce
   useEffect(() => {
     const handleCustomAnnounce = (e) => {
       const { message, priority } = e.detail || {};
-      if (!message) return;
-
-      if (priority === 'assertive') {
-        setAssertiveMessage(message);
-      } else {
-        setPoliteMessage(message);
-      }
+      if (message) announce(message, priority || 'polite');
     };
 
     window.addEventListener('norma:announce', handleCustomAnnounce);
-    return () => {
-      window.removeEventListener('norma:announce', handleCustomAnnounce);
-    };
-  }, []);
+    return () => window.removeEventListener('norma:announce', handleCustomAnnounce);
+  }, [announce]);
 
   // Limpiar mensajes tras 6 segundos para no dejar texto residual
   useEffect(() => {
@@ -154,12 +155,9 @@ export default function ScreenReaderAnnouncer() {
 
   return (
     <div className="sr-only" aria-hidden="false">
-      {/* Región cortés para avisos informativos y navegación */}
       <div role="status" aria-live="polite" aria-atomic="true">
         {politeMessage}
       </div>
-
-      {/* Región urgente para errores y validaciones críticas */}
       <div role="alert" aria-live="assertive" aria-atomic="true">
         {assertiveMessage}
       </div>

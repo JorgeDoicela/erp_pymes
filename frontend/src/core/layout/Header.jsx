@@ -8,9 +8,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { FiMenu, FiChevronDown, FiUser, FiLogOut } from 'react-icons/fi';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { NotificationBell } from '@modules/notifications';
-import { PWAInstallButton } from '@core/pwa';
 
 import { getRoleLabel } from '@core/constants/roles';
 
@@ -21,8 +20,6 @@ const Header = ({
   isSidebarOpen = true,
   title = 'Panel de Control',
 }) => {
-  const navigate = useNavigate();
-
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
 
@@ -102,9 +99,6 @@ const Header = ({
                   <FiUser className="text-gray-400 text-sm" />
                   <span>Mi Perfil</span>
                 </Link>
-                <div onClick={() => setIsUserMenuOpen(false)}>
-                  <PWAInstallButton variant="header-menu" showIfInstalled={true} />
-                </div>
               </div>
 
               <div className="border-t border-gray-100 pt-1">

@@ -11,3 +11,16 @@ export { default as AccessibilityFloatingPlayer } from './AccessibilityFloatingP
 export { default as AccessibilitySettingsCard } from './AccessibilitySettingsCard.jsx';
 export { default as ScreenReaderAnnouncer } from './ScreenReaderAnnouncer.jsx';
 export { announceToScreenReader } from './announcer.js';
+export { selectOptimalSpanishVoice } from './voiceEngine.js';
+export {
+  describeElement,
+  summarizeContainer,
+  formatSpeechText,
+  isInteractiveElement,
+  getAccessibleNavigationSequence,
+} from './semanticElementDescriptor.js';
+export {
+  TalkBackController,
+  highlightElement,
+  clearCurrentHighlight,
+} from './talkBackInteractionManager.js';

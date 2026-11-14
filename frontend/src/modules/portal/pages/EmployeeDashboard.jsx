@@ -6,29 +6,16 @@
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiClock, FiCalendar, FiDollarSign, FiFolder, FiUser, FiCheckSquare } from 'react-icons/fi';
+import { FiClock, FiCalendar } from 'react-icons/fi';
 import { getSectionsByRole } from '@core/constants/modules.jsx';
-import api from '@core/api/httpClient';
-import { Loading } from '@core/feedback';
+import { getMyRequests } from '@modules/attendance';
+import { getProfile } from '@modules/employees';
 import SmartModuleHub from '../components/SmartModuleHub';
-
-const MobileEmployeePortal = lazy(() => import('./MobileEmployeePortal'));
 
 function EmployeeDashboard({ user }) {
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth < 768
-  );
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const [employeeMetrics, setEmployeeMetrics] = useState({
     vacationDays:
@@ -53,8 +40,8 @@ function EmployeeDashboard({ user }) {
       try {
         const [evalsRes, absencesRes, profileRes] = await Promise.allSettled([
           import('@modules/performance').then((m) => m.getMyPendingEvaluations()),
-          api.get('/absences/my-requests'),
-          api.get('/employees/profile').catch(() => null),
+          getMyRequests(),
+          getProfile().catch(() => null),
         ]);
 
         let pendingEvaluationsCount = 0;
@@ -68,8 +55,8 @@ function EmployeeDashboard({ user }) {
           pendingEvaluationsCount = evalsRes.value.filter((e) => e.status !== 'COMPLETED').length;
         }
 
-        if (absencesRes.status === 'fulfilled' && absencesRes.value?.data) {
-          const absList = absencesRes.value.data.data || absencesRes.value.data;
+        if (absencesRes.status === 'fulfilled' && absencesRes.value) {
+          const absList = absencesRes.value.data || absencesRes.value;
           if (Array.isArray(absList)) {
             pendingAbsencesCount = absList.filter((a) => a.status === 'PENDING').length;
           }
@@ -77,9 +64,9 @@ function EmployeeDashboard({ user }) {
 
         if (
           profileRes?.status === 'fulfilled' &&
-          profileRes?.value?.data?.data?.vacationDays !== undefined
+          profileRes?.value?.data?.vacationDays !== undefined
         ) {
-          realVacationDays = profileRes.value.data.data.vacationDays;
+          realVacationDays = profileRes.value.data.vacationDays;
         }
 
         setEmployeeMetrics({
@@ -97,14 +84,6 @@ function EmployeeDashboard({ user }) {
 
     fetchEmployeeData();
   }, [user]);
-
-  if (isMobile) {
-    return (
-      <Suspense fallback={<Loading />}>
-        <MobileEmployeePortal user={user} />
-      </Suspense>
-    );
-  }
 
   return (
     <div className="space-y-4 max-w-[1400px] mx-auto">

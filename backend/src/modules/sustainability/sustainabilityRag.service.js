@@ -1,6 +1,6 @@
 /**
  * @file sustainabilityRag.service.js
- * @description Orquestador RAG con Modelo Buscador (1,910+ fragmentos de los 4 PDFs oficiales),
+ * @description Orquestador RAG con Modelo Buscador (1,810+ fragmentos limpios de los 4 PDFs oficiales),
  * Modelo Evaluador (Cross-Encoder Reranker + Verificador de Fidelidad), Calculadora Decimal.js
  * y Adaptador Universal de Modelos Grandes (DeepSeek, OpenAI, Gemini, Anthropic y Local Fine-Tuned GGUF).
  * @author Jorge Doicela
@@ -21,15 +21,6 @@ import {
 const TENANT_TELEMETRY_ROLES = new Set(['admin', 'hr', 'accounting', 'manager', 'entrepreneur']);
 
 export class SustainabilityRagService {
-  /**
-   * Procesa una consulta desde cualquier lugar del ERP mediante el pipeline:
-   * 1) Modelo Buscador (1,910+ fragmentos de los 4 PDFs)
-   * 2) Modelo Evaluador de Relevancia (Reranker Contextual)
-   * 3) Calculadora Jurídico-Contable Decimal.js
-   * 4) Modelo Generador (DeepSeek / OpenAI / Gemini / Modelo Local Afinado)
-   * 5) Modelo Evaluador de Fidelidad Anti-Alucinaciones (Groundedness Judge)
-   * @param {Object} params
-   */
   async processQuery({
     query,
     conversationHistory = [],
@@ -40,16 +31,14 @@ export class SustainabilityRagService {
     moduleContext = 'sustainability',
     providerOverrides = {},
   }) {
-    // 1. MODELO BUSCADOR: Recuperar los 16 mejores candidatos entre los 1,910+ artículos de los 4 PDFs
     const rawCandidateChunks = await sustainabilityRepository.searchKnowledgeChunks({
       query,
       odsTarget: odsTargetFilter || undefined,
       category: categoryFilter || undefined,
       tenantId,
-      limit: 16,
+      limit: 18,
     });
 
-    // 2. MODELO EVALUADOR (FASE 1 — RERANKER): Evaluar relevancia, diversidad normativa y afinidad con el módulo
     const evaluatedChunks = await legalEvaluatorService.evaluateAndRerankChunks({
       query,
       candidateChunks: rawCandidateChunks,
@@ -57,43 +46,113 @@ export class SustainabilityRagService {
       topK: 6,
     });
 
-    // 3. TELEMETRÍA EN VIVO DEL ERP: Solo para roles autorizados de gestión del tenant (LOPDP/RBAC)
-    const normalizedRole = userRole ? String(userRole).toLowerCase() : null;
-    const canAccessTenantTelemetry =
-      Boolean(tenantId) && (!normalizedRole || TENANT_TELEMETRY_ROLES.has(normalizedRole));
-    const tenantMetrics = canAccessTenantTelemetry
-      ? await sustainabilityService.calculateOds8Metrics(tenantId)
-      : null;
+    const sufficiency = legalEvaluatorService.assessRetrievalSufficiency({
+      query,
+      evaluatedChunks,
+    });
+    const safeOverrides = providerOverrides || {};
+    const activeProviderInfo = llmProviderService.resolveActiveConfig(safeOverrides);
+    const corpusStats = sustainabilityRepository.getCorpusStatistics();
 
-    // 4. CALCULADORA DETERMINISTA DECIMAL.JS: Si la consulta involucra montos, años u horas
+    if (sufficiency.isOutOfScope) {
+      return this.buildOutOfScopeResponse({
+        query,
+        moduleContext,
+        activeProviderInfo,
+        corpusStats,
+      });
+    }
+
+    const tenantMetrics = await this.resolveTenantTelemetry(tenantId, userRole);
     const liveCalculation = this.computeLiveLegalCalculation(query);
+    const legalCitations = this.mapLegalCitations(evaluatedChunks);
 
-    // 5. Estructurar citas legales verificables con su puntaje del Evaluador
-    const legalCitations = evaluatedChunks.map((chunk) => ({
+    const { rawAnswer, inferenceMode } = await this.generateGroundedAnswer({
+      query,
+      conversationHistory,
+      evaluatedChunks,
+      tenantMetrics,
+      liveCalculation,
+      moduleContext,
+      safeOverrides,
+    });
+
+    const evaluationAudit = legalEvaluatorService.verifyAnswerFidelity({
+      answerText: rawAnswer,
+      retrievedChunks: evaluatedChunks,
+      liveCalculation,
+      allKnownArticleCodes: sustainabilityRepository.getKnownArticleNumbers(),
+    });
+
+    return {
+      query,
+      moduleContext,
+      answer: evaluationAudit.auditedAnswer,
+      legalCitations,
+      liveCalculation,
+      inferenceMode,
+      providerConfigured: activeProviderInfo.providerName,
+      providerInfo: activeProviderInfo,
+      totalIndexedArticles: corpusStats.totalIndexedChunks,
+      evaluationAudit: {
+        status: evaluationAudit.status,
+        groundednessScore: evaluationAudit.groundednessScore,
+        citationAccuracy: evaluationAudit.citationAccuracy,
+        temporalValidity: evaluationAudit.temporalValidity,
+        verifiedArticles: evaluationAudit.verifiedArticles,
+        corpusSupportedArticles: evaluationAudit.corpusSupportedArticles,
+        unverifiedArticles: evaluationAudit.unverifiedArticles,
+        repealedCitationsWarning: evaluationAudit.repealedCitationsWarning,
+        mathVerified: evaluationAudit.mathVerified,
+        totalCorpusIndexedChunks: corpusStats.totalIndexedChunks,
+      },
+      tenantScore: tenantMetrics?.ods?.overallScore ?? null,
+      complianceLevel: tenantMetrics?.ods?.complianceLevel ?? null,
+      erpContext: tenantMetrics?.erpContext || {},
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  async resolveTenantTelemetry(tenantId, userRole) {
+    const normalizedRole = userRole ? String(userRole).toLowerCase() : null;
+    const canAccess =
+      Boolean(tenantId) && (!normalizedRole || TENANT_TELEMETRY_ROLES.has(normalizedRole));
+    return canAccess ? await sustainabilityService.calculateOds8Metrics(tenantId) : null;
+  }
+
+  mapLegalCitations(evaluatedChunks) {
+    return evaluatedChunks.map((chunk) => ({
       documentTitle: chunk.document?.title || 'Código del Trabajo del Ecuador',
       articleCode: chunk.articleCode || 'Disposición Normativa',
       odsTarget: chunk.odsTarget || 'ODS 8',
       category: chunk.document?.category || 'LABOR_CODE',
+      temporalStatus: chunk.metadata?.temporalStatus || 'VIGENTE',
+      isRepealed: Boolean(chunk.metadata?.isRepealed),
+      lastReformYear: chunk.metadata?.lastReformYear || null,
+      reformNotes: chunk.metadata?.reformNotes || [],
       relevanceScore: chunk.relevanceScore ?? 1.0,
       evaluatorConfidence: chunk.evaluatorConfidence ?? 0.95,
       summarySnippet:
         chunk.content.length > 220 ? `${chunk.content.substring(0, 220)}...` : chunk.content,
       fullContent: chunk.content,
     }));
+  }
 
-    // 6. MODELO GENERADOR (DeepSeek / Cualquier API / Modelo Local Fine-Tuned en Ollama o vLLM)
-    let rawAnswer;
-    let inferenceMode = 'DETERMINISTIC_RAG_EVALUATOR';
-    const safeOverrides = providerOverrides || {};
-    const activeProviderInfo = llmProviderService.resolveActiveConfig(safeOverrides);
-
+  async generateGroundedAnswer({
+    query,
+    conversationHistory,
+    evaluatedChunks,
+    tenantMetrics,
+    liveCalculation,
+    moduleContext,
+    safeOverrides,
+  }) {
     const systemPrompt = this.buildStrictGroundedSystemPrompt({
       evaluatedChunks,
       tenantMetrics,
       liveCalculation,
       moduleContext,
     });
-
     const historyMessages = [
       ...(conversationHistory || []).slice(-6).map((m) => ({
         role: m.role === 'assistant' ? 'assistant' : 'user',
@@ -110,57 +169,60 @@ export class SustainabilityRagService {
     });
 
     if (llmResult && llmResult.content) {
-      rawAnswer = llmResult.content;
-      inferenceMode = `${llmResult.provider} (${llmResult.model})`;
-    } else {
-      rawAnswer = this.generateSynthesizedAdvice({
+      return {
+        rawAnswer: llmResult.content,
+        inferenceMode: `${llmResult.provider} (${llmResult.model})`,
+      };
+    }
+    return {
+      rawAnswer: this.generateSynthesizedAdvice({
         query,
         relevantChunks: evaluatedChunks,
         tenantMetrics,
         liveCalculation,
         moduleContext,
-      });
-    }
+      }),
+      inferenceMode: 'DETERMINISTIC_RAG_EVALUATOR',
+    };
+  }
 
-    // 7. MODELO EVALUADOR (FASE 2 — VERIFICADOR DE FIDELIDAD Y CERO ALUCINACIONES)
-    const evaluationAudit = legalEvaluatorService.verifyAnswerFidelity({
-      answerText: rawAnswer,
-      retrievedChunks: evaluatedChunks,
-      liveCalculation,
-      allKnownArticleCodes: sustainabilityRepository.getKnownArticleNumbers(),
-    });
-
-    const corpusStats = sustainabilityRepository.getCorpusStatistics();
+  buildOutOfScopeResponse({ query, moduleContext, activeProviderInfo, corpusStats }) {
+    const answer = [
+      '### Consulta Fuera del Alcance del Corpus Normativo Oficial',
+      'No se encuentra el fundamento oficial para esta consulta en el corpus normativo cargado (Constitución de la República del Ecuador 2008, Código del Trabajo, Ley de Seguridad Social IESS y Metodología OIT ODS 8).',
+      '',
+      'El Asistente Jurídico y Contable de Norma ERP opera bajo restricción estricta de evidencia documental verificada y no emite opiniones sobre materias ajenas a la legislación laboral, societaria, tributaria de nómina, seguridad social o sostenibilidad empresarial del Ecuador.',
+    ].join('\n');
 
     return {
       query,
       moduleContext,
-      answer: evaluationAudit.auditedAnswer,
-      legalCitations,
-      liveCalculation,
-      inferenceMode,
+      answer,
+      legalCitations: [],
+      liveCalculation: null,
+      inferenceMode: 'EVALUATOR_SCOPE_GUARD',
       providerConfigured: activeProviderInfo.providerName,
       providerInfo: activeProviderInfo,
       totalIndexedArticles: corpusStats.totalIndexedChunks,
       evaluationAudit: {
-        status: evaluationAudit.status,
-        groundednessScore: evaluationAudit.groundednessScore,
-        verifiedArticles: evaluationAudit.verifiedArticles,
-        unverifiedArticles: evaluationAudit.unverifiedArticles,
-        mathVerified: evaluationAudit.mathVerified,
+        status: 'OUT_OF_CORPUS_SCOPE',
+        groundednessScore: 1.0,
+        citationAccuracy: 1.0,
+        temporalValidity: 1.0,
+        verifiedArticles: [],
+        corpusSupportedArticles: [],
+        unverifiedArticles: [],
+        repealedCitationsWarning: [],
+        mathVerified: true,
         totalCorpusIndexedChunks: corpusStats.totalIndexedChunks,
       },
-      tenantScore: tenantMetrics?.ods?.overallScore ?? null,
-      complianceLevel: tenantMetrics?.ods?.complianceLevel ?? null,
-      erpContext: tenantMetrics?.erpContext || {},
+      tenantScore: null,
+      complianceLevel: null,
+      erpContext: {},
       generatedAt: new Date().toISOString(),
     };
   }
 
-  /**
-   * Construye el System Prompt con restricción absoluta al corpus extraído de los 4 PDFs
-   * @private
-   */
   buildStrictGroundedSystemPrompt({
     evaluatedChunks,
     tenantMetrics,
@@ -172,10 +234,13 @@ export class SustainabilityRagService {
     const isWhatsapp = String(moduleContext || '').toLowerCase() === 'whatsapp';
 
     const contextBlocks = evaluatedChunks
-      .map(
-        (c, i) =>
-          `[Fuente Verificada ${i + 1} | Confianza Evaluador: ${((c.evaluatorConfidence || 0.9) * 100).toFixed(0)}% | ${c.articleCode} | ${c.document?.title}]:\n${c.content}`
-      )
+      .map((c, i) => {
+        const statusTag = c.metadata?.temporalStatus || 'VIGENTE';
+        const reformTag = c.metadata?.lastReformYear
+          ? ` | Últ. Reforma: ${c.metadata.lastReformYear}`
+          : '';
+        return `[Fuente Verificada ${i + 1} | Confianza Evaluador: ${((c.evaluatorConfidence || 0.9) * 100).toFixed(0)}% | Estado: ${statusTag}${reformTag} | ${c.articleCode} | ${c.document?.title}]:\n${c.content}`;
+      })
       .join('\n\n');
 
     const promptLines = [
@@ -186,10 +251,11 @@ export class SustainabilityRagService {
       '',
       'REGLAS INVIOLABLES DEL MODELO EVALUADOR (CERO ALUCINACIONES):',
       '1. Responde ÚNICAMENTE con base en las Fuentes Verificadas extraídas de los 4 documentos oficiales (Constitución del Ecuador 2008, Código del Trabajo, Ley de Seguridad Social IESS y Metodología OIT ODS 8) incluidas abajo.',
-      '2. Cita siempre el número exacto del artículo (ej. Art. 188 del Código del Trabajo, Art. 11 de la Ley de Seguridad Social) tal como aparece en las fuentes recuperadas.',
-      '3. Si la información consultada NO consta en las Fuentes Verificadas abajo, indica con claridad: "No se encuentra el fundamento oficial para esta consulta en el corpus normativo cargado", y NUNCA inventes artículos de memoria.',
-      '4. Cuando existan cálculos monetarios, utiliza OBLIGATORIAMENTE las cifras exactas pre-calculadas con Decimal.js en la sección de Verificación Matemática.',
-      '5. Emplea un tono profesional, directo, estructurado y sin emojis.',
+      '2. Cita únicamente artículos cuyo texto completo aparezca en las [Fuente Verificada ...] de abajo. Queda prohibido presentar como verificado un artículo cuyo contenido no esté disponible en el contexto recuperado.',
+      '3. Si la información consultada NO consta en las Fuentes Verificadas abajo, indica expresamente: "No se encuentra el fundamento oficial para esta consulta en el corpus normativo cargado", y NUNCA inventes artículos de memoria.',
+      '4. Cuando existan cálculos monetarios en la sección de Verificación Matemática, utiliza las cifras exactas de Decimal.js. Si el cálculo indica que es un ejemplo referencial ilustrativo por parámetros no especificados, advierte explícitamente qué condiciones faltan por confirmar antes de tomarlo como liquidación definitiva.',
+      '5. Respeta el Estado de Vigencia Temporal (VIGENTE, VIGENTE_REFORMADO o DEROGADO) de cada fuente y distingue claramente entre disposiciones vigentes y figuras derogadas.',
+      '6. Emplea un tono profesional, directo, estructurado y sin emojis.',
     ];
 
     if (!isWhatsapp && tenantMetrics) {
@@ -205,7 +271,6 @@ export class SustainabilityRagService {
         entrepreneurship: `- Proyectos de Incubadora Activos: ${erpCtx.activeEntrepreneurships ?? 0}`,
         compliance: `- Consentimiento LOPDP: ${erpCtx.trackingConsentRate ?? 100}% | Cobertura IESS: ${ods.indicators?.socialSecurityCoverage?.value ?? 100}% | Bajo SBU: ${erpCtx.subSbuEmployeesCount ?? 0}`,
       };
-
       promptLines.push(
         '',
         '=== TELEMETRÍA EN VIVO DE LA EMPRESA (TENANT) ===',
@@ -214,9 +279,7 @@ export class SustainabilityRagService {
         `- Sueldo Promedio: $${(erpCtx.averageSalaryUsd ?? 0).toFixed(2)} USD | SBU Vigente: $${SBU_ECUADOR_2026.toFixed(2)} USD`,
         `- Períodos Contables Abiertos: ${erpCtx.openAccountingPeriods ?? 0} | Asientos Contables NIIF: ${erpCtx.totalJournalEntries ?? 0}`
       );
-      if (moduleTelemetry[moduleCode]) {
-        promptLines.push(moduleTelemetry[moduleCode]);
-      }
+      if (moduleTelemetry[moduleCode]) promptLines.push(moduleTelemetry[moduleCode]);
     }
 
     promptLines.push(
@@ -224,7 +287,6 @@ export class SustainabilityRagService {
       '=== ARTÍCULOS Y SECCIONES EXTRAÍDAS DE LOS 4 PDFs OFICIALES ===',
       contextBlocks
     );
-
     if (liveCalculation) {
       promptLines.push(
         '',
@@ -232,22 +294,17 @@ export class SustainabilityRagService {
         liveCalculation.formattedSummary
       );
     }
-
     return promptLines.join('\n');
   }
 
-  /**
-   * Calcula similitud coseno exacta entre dos vectores numéricos
-   */
   cosineSimilarity(vecA, vecB) {
     if (
       !Array.isArray(vecA) ||
       !Array.isArray(vecB) ||
       vecA.length === 0 ||
       vecA.length !== vecB.length
-    ) {
+    )
       return 0;
-    }
     let dot = 0;
     let normA = 0;
     let normB = 0;

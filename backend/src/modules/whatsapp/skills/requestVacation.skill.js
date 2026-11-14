@@ -37,6 +37,13 @@ export class RequestVacationSkill {
       aiConfig,
     });
 
+    if (this.hasExplicitInvalidDate(text)) {
+      return {
+        status: 'DOMAIN_REJECTED',
+        errorMessage: `No es posible procesar su solicitud de vacaciones: la fecha indicada no existe en el calendario oficial (ej. 29 de febrero en año no bisiesto o mes inválido).`,
+      };
+    }
+
     const merged = {
       startDate: extracted.startDate || previousPayload.startDate || null,
       endDate: extracted.endDate || previousPayload.endDate || null,
@@ -147,8 +154,7 @@ export class RequestVacationSkill {
    */
   async extractStructuredParams({ text, previousPayload = {}, aiConfig = {} }) {
     const todayIso = getEcuadorTodayIso();
-
-    const deterministic = this.parseDeterministicParams(text);
+    const deterministic = this.parseDeterministicParams(text, todayIso);
 
     try {
       const prompt = `Hoy en Ecuador (America/Guayaquil) es ${todayIso}.
@@ -188,11 +194,19 @@ Extrae unicamente los datos para solicitar vacaciones y responde SOLO un objeto 
     return deterministic;
   }
 
+  addDaysToIso(isoDate, daysToAdd) {
+    const validIso = this.normalizeIsoCandidate(isoDate);
+    if (!validIso || !Number.isFinite(daysToAdd)) return validIso;
+    const [y, m, d] = validIso.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d + daysToAdd));
+    return dt.toISOString().slice(0, 10);
+  }
+
   /**
-   * Parser determinístico para fechas explícitas (YYYY-MM-DD o DD/MM/YYYY) y motivo.
+   * Parser determinístico para fechas explícitas (YYYY-MM-DD, DD/MM/YYYY, relativas) y motivo.
    * @private
    */
-  parseDeterministicParams(text) {
+  parseDeterministicParams(text, todayIso = new Date().toISOString().slice(0, 10)) {
     const raw = String(text || '').trim();
     const dates = [];
 
@@ -210,30 +224,85 @@ Extrae unicamente los datos para solicitar vacaciones y responde SOLO un objeto 
       }
     }
 
+    if (dates.length === 0) {
+      if (/\bpasado\s+ma[ñn]ana\b/i.test(raw)) {
+        dates.push(this.addDaysToIso(todayIso, 2));
+      } else if (/\bma[ñn]ana\b/i.test(raw)) {
+        dates.push(this.addDaysToIso(todayIso, 1));
+      } else if (/\b(?:desde\s+hoy|a\s+partir\s+de\s+hoy|para\s+hoy)\b/i.test(raw)) {
+        dates.push(todayIso);
+      }
+    }
+
+    const startDate = this.normalizeIsoCandidate(dates[0]) || null;
+    let endDate = this.normalizeIsoCandidate(dates[1]) || (dates.length === 1 ? startDate : null);
+
+    if (startDate && dates.length === 1) {
+      const durationMatch = raw.match(/\b(?:por|durante|de)\s+(\d{1,2})\s*d[ií]as?\b/i);
+      if (durationMatch) {
+        const numDays = parseInt(durationMatch[1], 10);
+        if (numDays >= 1 && numDays <= 60) {
+          endDate = this.addDaysToIso(startDate, numDays - 1);
+        }
+      }
+    }
+
     let reason = null;
-    const reasonMatch = raw.match(/(?:por|motivo[:\s]+|razon[:\s]+)\s+([^.\n]{3,160})/i);
+    const strippedForReason = raw.replace(/\b(?:por|durante)\s+\d{1,2}\s*d[ií]as?\b/gi, ' ').trim();
+    const reasonMatch = strippedForReason.match(
+      /(?:porque|ya\s+que|debido\s+a|por\s+motivo\s+de|motivo[:\s]+|razon[:\s]+|por)\s+([^.\n?]{3,160})/i
+    );
     if (reasonMatch) {
       reason = this.cleanReason(reasonMatch[1]);
-    } else if (dates.length === 0 && raw.length >= 4 && !/^(?:hola|cancelar)/i.test(raw)) {
-      // Si está completando solo el motivo en un turno de recolección
+    } else if (
+      dates.length === 0 &&
+      !raw.includes('?') &&
+      raw.length >= 4 &&
+      !/^(?:hola|cancelar|cuant|cual|como|que\b|cuando|donde)/i.test(raw)
+    ) {
       const withoutVerb = raw
-        .replace(/^(?:quiero|deseo|solicito|pedir|mis)?\s*vacaciones\s*/i, '')
+        .replace(
+          /^(?:(?:hola|buenos?\s+(?:dias|tardes|noches))[\s,.;:-]*)?(?:quiero|deseo|solicito|pedir|mis)?\s*(?:pedir\s+|solicitar\s+)?vacaciones\s*/i,
+          ''
+        )
         .trim();
       if (withoutVerb.length >= 4 && !/\d{1,2}\s+de\s+[a-z]+/i.test(withoutVerb)) {
         reason = this.cleanReason(withoutVerb);
       }
     }
 
-    const startDate = this.normalizeIsoCandidate(dates[0]) || null;
-    const endDate = this.normalizeIsoCandidate(dates[1]) || (dates.length === 1 ? startDate : null);
-
     return { startDate, endDate, reason };
+  }
+
+  hasExplicitInvalidDate(text) {
+    const raw = String(text || '').trim();
+    const isoMatches = [...raw.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g)];
+    for (const m of isoMatches) {
+      if (!this.normalizeIsoCandidate(m[0])) return true;
+    }
+    const latMatches = [...raw.matchAll(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b/g)];
+    for (const m of latMatches) {
+      const dd = m[1].padStart(2, '0');
+      const mm = m[2].padStart(2, '0');
+      if (!this.normalizeIsoCandidate(`${m[3]}-${mm}-${dd}`)) return true;
+    }
+    return false;
   }
 
   normalizeIsoCandidate(val) {
     if (!val || typeof val !== 'string') return null;
     const match = val.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    return match ? match[0] : null;
+    if (!match) return null;
+    const [, yStr, mStr, dStr] = match;
+    const y = Number(yStr);
+    const m = Number(mStr);
+    const d = Number(dStr);
+    if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) {
+      return null;
+    }
+    return match[0];
   }
 
   cleanReason(val) {

@@ -201,9 +201,15 @@ export class ReviewPendingRequestsSkill {
     }
 
     let selectedItem = null;
-    const indexMatch = raw.match(/(?:#|numero\s+|solicitud\s+|item\s+|\b)(\d{1,2})\b/i);
-    if (indexMatch) {
-      const idx = parseInt(indexMatch[1], 10);
+    const explicitIndexMatch =
+      raw.match(/(?:#|n[uú]mero\s+|solicitud\s+#?|item\s+#?|opci[oó]n\s+#?)(\d{1,2})\b/i) ||
+      raw.match(
+        /\b(?:aprobar|apruebo|autorizar|autorizo|aceptar|rechazar|rechazo|denegar|negar)\s+(?:la\s+|el\s+)?(?:solicitud\s+|item\s+|n[uú]mero\s+)?#?(\d{1,2})\b/i
+      ) ||
+      raw.match(/^\s*#?(\d{1,2})(?:\b|\s|$)/);
+
+    if (explicitIndexMatch) {
+      const idx = parseInt(explicitIndexMatch[1], 10);
       selectedItem = candidates.find((c) => c.index === idx) || null;
     }
 
@@ -216,7 +222,7 @@ export class ReviewPendingRequestsSkill {
 
     let reason = null;
     const reasonMatch = raw.match(
-      /(?:por|motivo[:\s]+|comentario[:\s]+|nota[:\s]+)\s+([^.\n]{3,160})/i
+      /(?:porque|ya\s+que|debido\s+a|por|motivo[:\s]+|comentario[:\s]+|nota[:\s]+)\s+([^.\n]{3,160})/i
     );
     if (reasonMatch) {
       reason = reasonMatch[1].trim();

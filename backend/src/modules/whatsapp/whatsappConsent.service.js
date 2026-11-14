@@ -29,11 +29,19 @@ export class WhatsappConsentService {
    * @returns {string}
    */
   normalizeText(text) {
-    return String(text || '')
+    const raw = String(text || '')
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[¿?¡!.,;:_-]/g, '')
+      .replace(/[¿?¡!.,;:_-]/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ');
+
+    return raw
+      .replace(
+        /^(?:(?:hola|buenas\s+(?:tardes|noches)?|buenos\s+dias|buenas|por\s+favor|estimad[oa]s?|disculpe|quiero|deseo)\s+)+/i,
+        ''
+      )
       .trim();
   }
 

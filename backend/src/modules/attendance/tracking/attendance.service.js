@@ -1,5 +1,5 @@
 /**
- * @file attendanceService.js
+ * @file attendance.service.js
  * @description Motor de Control Asistencial, Geocercas (Haversine), Cifrado GPS y Detección Anti-VPN/Proxy.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
@@ -10,124 +10,73 @@ import { attendanceRepository } from './attendance.repository.js';
 import { employeeRepository } from '../../employees/index.js';
 import { systemRepository } from '../../system/index.js';
 import { auditRepository } from '../../audit/index.js';
-import prisma from '../../../database/db.js';
-import axios from 'axios';
 import { encryptCoordinate, decryptCoordinate } from '../../../core/security/encryption.js';
-import { isIpAllowed } from '../../../core/utils/ipUtils.js';
+import {
+  resolveEmployeeGeofenceConfig,
+  validateAttendanceGeofence,
+  validateNetworkPolicy,
+} from './geofence.helper.js';
 
-const resolveEmployeeRecord = async (inputIdentifier, uuidRegex, cuidRegex) => {
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CUID_REGEX = /^c[a-z0-9]{20,}$/i;
+
+const isInternalId = (value) => UUID_REGEX.test(value) || CUID_REGEX.test(value);
+
+const resolveEmployeeRecord = async (inputIdentifier) => {
   if (employeeRepository?.findEmployeeForAttendance) {
     const emp = await employeeRepository.findEmployeeForAttendance(inputIdentifier);
     if (emp) return emp;
   }
-  if (
-    employeeRepository?.findById &&
-    (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier))
-  ) {
+  if (employeeRepository?.findById && isInternalId(inputIdentifier)) {
     const emp = await employeeRepository.findById(inputIdentifier);
     if (emp) return emp;
   }
-  if (
-    employeeRepository?.findByIdentityCard &&
-    !uuidRegex.test(inputIdentifier) &&
-    !cuidRegex.test(inputIdentifier)
-  ) {
+  if (employeeRepository?.findByIdentityCard && !isInternalId(inputIdentifier)) {
     const emp = await employeeRepository.findByIdentityCard(inputIdentifier);
     if (emp) return emp;
-  }
-  if (prisma?.employee?.findUnique) {
-    return prisma.employee.findUnique({
-      where:
-        uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)
-          ? { id: inputIdentifier }
-          : { identityCard: inputIdentifier },
-    });
   }
   return null;
 };
 
-const resolveEmployeeId = async (input) => {
-  // Verificar si es un UUID válido (v4) o un CUID (Prisma)
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  // CUIDs empiezan con 'c', son alfanuméricos y usualmente de 25 caracteres.
-  const cuidRegex = /^c[a-z0-9]{20,}$/i;
+const computeEntryLateness = (checkInDate, activeSchedule) => {
+  const shiftStartTime = activeSchedule?.shift?.startTime || '08:00';
+  const tolerance = activeSchedule?.shift?.toleranceMinutes || 15;
+  const limitParams = new Date(checkInDate);
+  const [sh, sm] = shiftStartTime.split(':').map(Number);
+  limitParams.setHours(sh, sm + tolerance, 0, 0);
+  return checkInDate > limitParams;
+};
 
-  if (uuidRegex.test(input) || cuidRegex.test(input)) {
-    // Even if it looks like an ID, verify it exists to prevent FK errors
-    const exists = await employeeRepository.findById(input);
-    if (!exists) {
-      throw new Error(`Empleado no encontrado con ID: ${input}`);
+const computeExitMetrics = (now, existingRecord, activeSchedule) => {
+  const checkInTime = new Date(existingRecord.checkIn);
+  let diffMs = now - checkInTime;
+
+  if (existingRecord.breakStart) {
+    const breakEnd = existingRecord.breakEnd || now;
+    const breakDuration = breakEnd - new Date(existingRecord.breakStart);
+    if (breakDuration > 0) {
+      diffMs -= breakDuration;
     }
-    return input;
   }
 
-  // Si no es ID interno, buscamos por cédula
-  const employee = await employeeRepository.findByIdentityCard(input);
-  if (!employee) {
-    throw new Error(`No se encontró empleado con la cédula: ${input}`);
-  }
-  return employee.id;
-};
+  const workedHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+  const exitMetrics = { workedHours };
 
-const getDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371e3; // Earth radius in meters
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+  if (activeSchedule?.shift?.endTime) {
+    const [eh, em] = activeSchedule.shift.endTime.split(':').map(Number);
+    const shiftEndTime = new Date(now);
+    shiftEndTime.setHours(eh, em, 0, 0);
 
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c; // in meters
-};
-
-const sanitizeCoordinate = (val) => {
-  if (typeof val !== 'number' || isNaN(val)) return null;
-  return parseFloat(val.toFixed(4));
-};
-
-const vpnCache = new Map(); // IP -> { result: boolean, expiresAt: number }
-const VPN_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos de caché por IP
-
-const isVPNDetected = async (ip) => {
-  if (!ip || ip === '::1' || ip === '127.0.0.1') {
-    console.log(`[VPN_CHECK] IP ignored: ${ip}`);
-    return false;
-  }
-
-  const cached = vpnCache.get(ip);
-  if (cached && Date.now() < cached.expiresAt) {
-    console.log(`[VPN_CHECK] Cache hit for IP ${ip}: ${cached.result}`);
-    return cached.result;
-  }
-
-  try {
-    console.log(`[VPN_CHECK] Checking IP via ip-api: ${ip}`);
-    // Use ip-api.com (free for non-commercial use, 45 req/min)
-    const response = await axios.get(
-      `http://ip-api.com/json/${ip}?fields=status,message,proxy,hosting`,
-      { timeout: 2000 }
-    );
-
-    if (response.data.status === 'success') {
-      const isVPN = response.data.proxy === true || response.data.hosting === true;
-      console.log(
-        `[VPN_CHECK] Result for ${ip}: ${isVPN} (Proxy: ${response.data.proxy}, Hosting: ${response.data.hosting})`
-      );
-      vpnCache.set(ip, { result: isVPN, expiresAt: Date.now() + VPN_CACHE_TTL_MS });
-      return isVPN;
+    if (now > shiftEndTime) {
+      const extraHours = parseFloat(((now - shiftEndTime) / (1000 * 60 * 60)).toFixed(2));
+      if (extraHours > 0) exitMetrics.overtimeHours = extraHours;
+    } else if (now < shiftEndTime) {
+      const earlyDiffMinutes = Math.floor((shiftEndTime - now) / (1000 * 60));
+      if (earlyDiffMinutes >= 1) exitMetrics.isEarlyDeparture = true;
     }
-    console.warn(
-      `[VPN_CHECK] ip-api status: ${response.data.status}, message: ${response.data.message}`
-    );
-    return false;
-  } catch (error) {
-    console.error('[VPN_CHECK] Error querying ip-api:', error.message);
-    return false; // Default to allow on failure to avoid blocking legitimate users
   }
+
+  return exitMetrics;
 };
 
 export const attendanceService = {
@@ -136,108 +85,39 @@ export const attendanceService = {
     type,
     location = null,
     ip = null,
-    isSupervisorOverride = false
+    isSupervisorOverride = false,
+    options = {}
   ) {
-    // 1. Pre-process and validate identifier
     const inputIdentifier = inputIdentifierRaw?.toString().trim();
     if (!inputIdentifier) throw new Error('Identificador de empleado es requerido');
 
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const cuidRegex = /^c[a-z0-9]{20,}$/i;
-
-    let employeeId = inputIdentifier;
-    let employee = null;
-
-    const employeeSelect = {
-      id: true,
-      workLatitude: true,
-      workLongitude: true,
-      geofenceRadius: true,
-      enforceGeofence: true,
-      trackingConsent: true,
-    };
-
-    // 2. Resolve employee record via domain repository / fallback
-    employee = await resolveEmployeeRecord(inputIdentifier, uuidRegex, cuidRegex);
+    const employee = await resolveEmployeeRecord(inputIdentifier);
     if (!employee) {
-      if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
+      if (isInternalId(inputIdentifier)) {
         throw new Error(`Empleado no encontrado con ID: ${inputIdentifier}`);
-      } else {
-        throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
       }
+      throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
     }
-    employeeId = employee.id;
 
-    // Fetch company system settings strictly isolated by employee.tenantId
+    const employeeId = employee.id;
     const systemSettings = employee.tenantId
       ? await systemRepository.findByTenantId(employee.tenantId)
       : await systemRepository.findGlobalDefault();
 
-    // --- CONSENT & GEOFENCING VALIDATION ---
-    const useGlobalGeofence = systemSettings?.globalLatitude && systemSettings?.globalLongitude;
+    const { effectiveLocation } = validateAttendanceGeofence({
+      employee,
+      systemSettings,
+      location,
+      type,
+      isSupervisorOverride,
+      autoGeofence: Boolean(options?.autoGeofence),
+    });
 
-    if (!employee.trackingConsent) {
-      if ((employee.enforceGeofence || useGlobalGeofence) && !isSupervisorOverride) {
-        throw new Error(
-          'No ha otorgado el consentimiento obligatorio para el tratamiento de datos de ubicación. Por favor acepte los términos de privacidad en su perfil para marcar asistencia.'
-        );
-      }
-      if (!isSupervisorOverride) {
-        // Si el consentimiento no fue otorgado y no es supervisión directa, se ignora la ubicación
-        location = null;
-      }
-    }
+    await validateNetworkPolicy(ip, systemSettings);
 
-    if (employee.enforceGeofence || useGlobalGeofence || location) {
-      if (
-        (employee.enforceGeofence || useGlobalGeofence) &&
-        (!location || !location.latitude || !location.longitude)
-      ) {
-        throw new Error('La ubicación es requerida para marcar asistencia.');
-      }
-
-      const rawLat = employee.workLatitude || systemSettings?.globalLatitude;
-      const rawLng = employee.workLongitude || systemSettings?.globalLongitude;
-      const activeLat = decryptCoordinate(rawLat);
-      const activeLng = decryptCoordinate(rawLng);
-      const activeRadius = employee.geofenceRadius || systemSettings?.globalRadius || 200;
-
-      if (activeLat !== null && activeLng !== null && location?.latitude && location?.longitude) {
-        const distance = getDistance(location.latitude, location.longitude, activeLat, activeLng);
-
-        if (distance > activeRadius) {
-          throw new Error(
-            `Ubicación no permitida. Estás a ${Math.round(distance)}m del sitio de trabajo permitido (Límite: ${activeRadius}m).`
-          );
-        }
-      } else if (employee.enforceGeofence) {
-        console.warn(`Geofencing enabled for employee ${employeeId} but no work location set.`);
-      }
-    }
-
-    // --- VPN VALIDATION (Always performed if IP is available) ---
-    if (ip) {
-      const isVPN = await isVPNDetected(ip);
-      if (isVPN) {
-        throw new Error(
-          'Conexión vía VPN/Proxy detectada. No está permitido marcar asistencia usando este tipo de conexiones.'
-        );
-      }
-    }
-
-    if (systemSettings?.ipRestrictionEnabled && systemSettings?.allowedIPs) {
-      if (!ip || !isIpAllowed(ip, systemSettings.allowedIPs)) {
-        throw new Error(
-          `Conexión no permitida desde esta red (${ip || 'IP desconocida'}). Contacte al administrador.`
-        );
-      }
-    }
-
-    // Normalizar la fecha a medianoche para buscar el registro del día
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Buscar si ya existe registro hoy o si hay un turno nocturno abierto de las últimas 28 horas
     let existingRecord = await attendanceRepository.findByEmployeeAndDate(employeeId, today);
     if (!existingRecord && type !== 'ENTRY') {
       existingRecord = await attendanceRepository.findFirst(
@@ -251,232 +131,143 @@ export const attendanceService = {
     }
 
     if (type === 'ENTRY') {
-      if (existingRecord) {
-        throw new Error('Ya se ha registrado una entrada para este día.');
-      }
+      if (existingRecord) throw new Error('Ya se ha registrado una entrada para este día.');
 
-      const checkInDate = now;
+      const activeSchedule = await attendanceRepository.findActiveSchedule(employeeId, today);
+      const isLate = computeEntryLateness(now, activeSchedule);
+
       const entryData = {
         employeeId,
         date: today,
         checkIn: now,
-        status: 'Present',
+        status: isLate ? 'LATE' : 'Present',
+        isLate,
         ipAddress: ip,
       };
 
-      if (location && location.latitude && location.longitude && employee.trackingConsent) {
-        entryData.entryLatitude = encryptCoordinate(location.latitude);
-        entryData.entryLongitude = encryptCoordinate(location.longitude);
+      if (effectiveLocation?.latitude && effectiveLocation?.longitude && employee.trackingConsent) {
+        entryData.entryLatitude = encryptCoordinate(effectiveLocation.latitude);
+        entryData.entryLongitude = encryptCoordinate(effectiveLocation.longitude);
       }
 
-      // Determine Lateness at Entry
-      const activeSchedule =
-        (await attendanceRepository?.findActiveSchedule?.(employeeId, today)) ||
-        (await prisma?.employeeSchedule?.findFirst?.({
-          where: {
-            employeeId: employeeId,
-            isActive: true,
-            startDate: { lte: today },
-            OR: [{ endDate: null }, { endDate: { gte: today } }],
-          },
-          include: { shift: true },
-        }));
-
-      const shiftStartTime = activeSchedule?.shift?.startTime || '08:00';
-      const tolerance = activeSchedule?.shift?.toleranceMinutes || 15;
-
-      const limitParams = new Date(checkInDate);
-      const [sh, sm] = shiftStartTime.split(':').map(Number);
-      limitParams.setHours(sh, sm + tolerance, 0, 0);
-
-      if (checkInDate > limitParams) {
-        entryData.status = 'LATE';
-        entryData.isLate = true;
-      } else {
-        entryData.isLate = false;
-      }
-
-      // Crear registro de entrada
       const newRecord = await attendanceRepository.createEntry(entryData);
 
-      // Create Audit Log (obfuscated GPS coordinates)
       await auditRepository.log({
         entity: 'Attendance',
         entityId: newRecord.id,
         action: 'ENTRY',
         performedBy: employeeId,
-        details: `Registro de entrada. Ubicación validada por geocerca (Consentimiento activo).`,
-        ip: ip,
+        details: options?.autoGeofence
+          ? 'Registro automático de entrada por detección de geocerca (Consentimiento activo).'
+          : 'Registro de entrada. Ubicación validada por geocerca (Consentimiento activo).',
+        ip,
       });
 
       return { message: 'Entrada registrada exitosamente', record: newRecord };
-    } else if (type === 'EXIT') {
+    }
+
+    if (type === 'EXIT') {
       if (!existingRecord) {
         throw new Error(
           'No se encontró registro de entrada para hoy. Debe registrar entrada primero.'
         );
       }
-
       if (existingRecord.checkOut) {
         throw new Error('Ya se ha registrado una salida para este día.');
       }
 
-      // Calcular horas trabajadas
-      const checkInTime = new Date(existingRecord.checkIn);
-      let diffMs = now - checkInTime;
-
-      if (existingRecord.breakStart) {
-        const breakEnd = existingRecord.breakEnd || now;
-        const breakDuration = breakEnd - new Date(existingRecord.breakStart);
-        if (breakDuration > 0) {
-          diffMs -= breakDuration;
-        }
-      }
-
-      const workedHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+      const activeSchedule = await attendanceRepository.findActiveSchedule(employeeId, today);
+      const exitMetrics = computeExitMetrics(now, existingRecord, activeSchedule);
 
       const exitData = {
         checkOut: now,
-        workedHours,
+        ...exitMetrics,
         ipAddress: ip,
       };
 
-      if (location && location.latitude && location.longitude && employee.trackingConsent) {
-        exitData.exitLatitude = encryptCoordinate(location.latitude);
-        exitData.exitLongitude = encryptCoordinate(location.longitude);
+      if (effectiveLocation?.latitude && effectiveLocation?.longitude && employee.trackingConsent) {
+        exitData.exitLatitude = encryptCoordinate(effectiveLocation.latitude);
+        exitData.exitLongitude = encryptCoordinate(effectiveLocation.longitude);
       }
 
-      // Calculate Overtime via domain repository
-      const activeSchedule =
-        (await attendanceRepository?.findActiveSchedule?.(employeeId, today)) ||
-        (await prisma?.employeeSchedule?.findFirst?.({
-          where: {
-            employeeId: employeeId,
-            isActive: true,
-            startDate: { lte: today },
-            OR: [{ endDate: null }, { endDate: { gte: today } }],
-          },
-          include: { shift: true },
-        }));
-
-      if (activeSchedule && activeSchedule.shift) {
-        const [eh, em] = activeSchedule.shift.endTime.split(':').map(Number);
-        const shiftEndTime = new Date(now);
-        shiftEndTime.setHours(eh, em, 0, 0);
-
-        if (now > shiftEndTime) {
-          const extraMs = now - shiftEndTime;
-          const extraHours = parseFloat((extraMs / (1000 * 60 * 60)).toFixed(2));
-          if (extraHours > 0) {
-            exitData.overtimeHours = extraHours;
-          }
-        }
-
-        if (now < shiftEndTime) {
-          const diffMs = shiftEndTime - now;
-          const diffMinutes = Math.floor(diffMs / (1000 * 60));
-          if (diffMinutes >= 1) {
-            exitData.isEarlyDeparture = true;
-          }
-        }
-      }
-
-      // Actualizar registro con salida
       const updatedRecord = await attendanceRepository.updateExit(existingRecord.id, exitData);
 
-      // Create Audit Log via audit repository
       await auditRepository.log({
         entity: 'Attendance',
         entityId: updatedRecord.id,
         action: 'EXIT',
         performedBy: employeeId,
-        details: `Registro de salida. Horas trabajadas: ${workedHours}. Ubicación validada por geocerca.`,
-        ip: ip,
+        details: options?.autoGeofence
+          ? `Registro automático de salida al cruzar radio de geocerca. Horas trabajadas: ${exitMetrics.workedHours}.`
+          : `Registro de salida. Horas trabajadas: ${exitMetrics.workedHours}. Ubicación validada por geocerca.`,
+        ip,
       });
 
-      return { message: 'Salida registrada exitosamente', record: updatedRecord, workedHours };
-    } else if (type === 'BREAK_START') {
+      return {
+        message: 'Salida registrada exitosamente',
+        record: updatedRecord,
+        workedHours: exitMetrics.workedHours,
+      };
+    }
+
+    if (type === 'BREAK_START') {
       if (!existingRecord) throw new Error('Debe registrar entrada antes de iniciar el almuerzo.');
       if (existingRecord.checkOut) throw new Error('Ya ha marcado su salida del día.');
       if (existingRecord.breakStart) throw new Error('Ya ha registrado un inicio de almuerzo.');
 
-      const breakData = { breakStart: now, status: 'BREAK' };
-      if (attendanceRepository?.updateBreak) {
-        await attendanceRepository.updateBreak(existingRecord.id, breakData);
-      } else if (prisma?.attendance?.update) {
-        await prisma.attendance.update({
-          where: { id: existingRecord.id },
-          data: breakData,
-        });
-      }
-
+      await attendanceRepository.updateBreak(existingRecord.id, {
+        breakStart: now,
+        status: 'BREAK',
+      });
       return { message: 'Inicio de almuerzo registrado', status: 'BREAK' };
-    } else if (type === 'BREAK_END') {
+    }
+
+    if (type === 'BREAK_END') {
       if (!existingRecord) throw new Error('No hay registro de asistencia activo.');
       if (!existingRecord.breakStart) throw new Error('No ha iniciado el almuerzo.');
       if (existingRecord.breakEnd) throw new Error('Ya ha finalizado su almuerzo.');
 
-      if (attendanceRepository?.updateBreak) {
-        await attendanceRepository.updateBreak(existingRecord.id, {
-          breakEnd: now,
-          status: 'WORKING',
-        });
-      } else if (prisma?.attendance?.update) {
-        await prisma.attendance.update({
-          where: { id: existingRecord.id },
-          data: { breakEnd: now, status: 'WORKING' },
-        });
-      }
-
+      await attendanceRepository.updateBreak(existingRecord.id, {
+        breakEnd: now,
+        status: 'WORKING',
+      });
       return { message: 'Fin de almuerzo registrado', status: 'WORKING' };
-    } else {
-      throw new Error('Tipo de registro no válido (Use ENTRY, EXIT, BREAK_START, BREAK_END).');
     }
+
+    throw new Error('Tipo de registro no válido (Use ENTRY, EXIT, BREAK_START, BREAK_END).');
   },
 
   async getStatus(inputIdentifierRaw) {
     const inputIdentifier = inputIdentifierRaw?.toString().trim();
     if (!inputIdentifier) throw new Error('Identificador de empleado es requerido');
 
-    let employeeId = inputIdentifier;
-    let employee = null;
-
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const cuidRegex = /^c[a-z0-9]{20,}$/i;
-
-    // Resolve employee via domain repository / fallback
-    employee = await resolveEmployeeRecord(inputIdentifier, uuidRegex, cuidRegex);
+    const employee = await resolveEmployeeRecord(inputIdentifier);
     if (!employee) {
-      if (uuidRegex.test(inputIdentifier) || cuidRegex.test(inputIdentifier)) {
-        throw new Error('Empleado no encontrado');
-      } else {
-        throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
-      }
+      if (isInternalId(inputIdentifier)) throw new Error('Empleado no encontrado');
+      throw new Error(`No se encontró empleado con la cédula: ${inputIdentifier}`);
     }
-    employeeId = employee.id;
 
+    const employeeId = employee.id;
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     let record = await attendanceRepository.findByEmployeeAndDate(employeeId, today);
     if (!record) {
-      record =
-        (await attendanceRepository?.findFirst?.(
-          {
-            employeeId,
-            checkOut: null,
-            checkIn: { gte: new Date(Date.now() - 28 * 60 * 60 * 1000) },
-          },
-          { checkIn: 'desc' }
-        )) ||
-        (await prisma?.attendance?.findFirst?.({
-          where: {
-            employeeId,
-            checkOut: null,
-            checkIn: { gte: new Date(Date.now() - 28 * 60 * 60 * 1000) },
-          },
-          orderBy: { checkIn: 'desc' },
-        }));
+      record = await attendanceRepository.findFirst(
+        {
+          employeeId,
+          checkOut: null,
+          checkIn: { gte: new Date(Date.now() - 28 * 60 * 60 * 1000) },
+        },
+        { checkIn: 'desc' }
+      );
     }
+
+    const systemSettings = employee.tenantId
+      ? await systemRepository.findByTenantId(employee.tenantId)
+      : await systemRepository.findGlobalDefault();
+
+    const geofence = resolveEmployeeGeofenceConfig(employee, systemSettings);
 
     const employeeData = {
       id: employee.id,
@@ -484,34 +275,28 @@ export const attendanceService = {
       lastName: employee.lastName,
       position: employee.position,
       department: employee.department,
+      trackingConsent: Boolean(employee.trackingConsent),
       hasBiometric: Boolean(
         employee.biometricCredentials && employee.biometricCredentials.length > 0
       ),
+      geofence: {
+        enabled: geofence.enabled,
+        targetLat: geofence.targetLat,
+        targetLng: geofence.targetLng,
+        radius: geofence.radius,
+      },
     };
 
-    // Fetch Active Schedule via domain repository
-    const activeSchedule =
-      (await attendanceRepository?.findActiveSchedule?.(employee.id, today)) ||
-      (await prisma?.employeeSchedule?.findFirst?.({
-        where: {
-          employeeId: employee.id,
-          isActive: true,
-          startDate: { lte: today },
-          OR: [{ endDate: null }, { endDate: { gte: today } }],
-        },
-        include: { shift: true },
-      }));
+    const activeSchedule = await attendanceRepository.findActiveSchedule(employee.id, today);
 
-    // Helper to determine status and add metadata
     const buildResponse = (status, rec = null) => {
-      const response = { status, employee: employeeData };
+      const response = { status, employee: employeeData, geofence: employeeData.geofence };
       if (rec) {
         response.checkIn = rec.checkIn;
         response.checkOut = rec.checkOut;
         response.breakStart = rec.breakStart;
         response.breakEnd = rec.breakEnd;
 
-        // Add Location info
         if (rec.entryLatitude && rec.entryLongitude) {
           const entryLat = decryptCoordinate(rec.entryLatitude);
           const entryLng = decryptCoordinate(rec.entryLongitude);
@@ -527,42 +312,18 @@ export const attendanceService = {
           }
         }
 
-        // Determine Lateness
-        // Default Rule: Start 8:00 AM, Tolerance 15min. (8:15 AM)
-        // NEW: Dynamic based on Shift
-
-        // Get configured start time (default 08:00 if no active schedule found)
-        const shiftStartTime = activeSchedule?.shift?.startTime || '08:00';
-
-        const checkInDate = new Date(rec.checkIn);
-        const limitParams = new Date(checkInDate);
-
-        // Parse shift time HH:MM
-        const [sh, sm] = shiftStartTime.split(':').map(Number);
-        const tolerance = activeSchedule?.shift?.toleranceMinutes || 15;
-        limitParams.setHours(sh, sm + tolerance, 0, 0); // Start Time + Tolerance
-
-        // If checkIn was AFTER limit
-
-        // If checkIn was AFTER 8:15 AM
-        if (checkInDate > limitParams) {
-          response.isLate = true;
-        } else {
-          response.isLate = false;
-        }
+        response.isLate = computeEntryLateness(new Date(rec.checkIn), activeSchedule);
       }
       return response;
     };
 
     if (!record) return buildResponse('NOT_STARTED');
     if (record.checkIn && !record.checkOut) {
-      if (record.breakStart && !record.breakEnd) {
-        return buildResponse('ON_BREAK', record);
-      }
+      if (record.breakStart && !record.breakEnd) return buildResponse('ON_BREAK', record);
       return buildResponse('WORKING', record);
     }
     if (record.checkOut) return buildResponse('COMPLETED', record);
 
-    return { status: 'UNKNOWN', employee: employeeData };
+    return { status: 'UNKNOWN', employee: employeeData, geofence: employeeData.geofence };
   },
 };

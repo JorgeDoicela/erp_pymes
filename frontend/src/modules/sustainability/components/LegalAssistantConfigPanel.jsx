@@ -38,8 +38,24 @@ export function LegalAssistantMessageBubble({ msg, onSelectCitation }) {
             <span>
               Evaluador: Fidelidad{' '}
               <strong className="text-gray-900 tabular-nums">
-                {Math.round((msg.evaluationAudit.groundednessScore || 1) * 100)}%
+                {Math.round((msg.evaluationAudit.groundednessScore ?? 1) * 100)}%
               </strong>
+              {typeof msg.evaluationAudit.citationAccuracy === 'number' && (
+                <>
+                  {' · '}Citas{' '}
+                  <strong className="text-gray-900 tabular-nums">
+                    {Math.round(msg.evaluationAudit.citationAccuracy * 100)}%
+                  </strong>
+                </>
+              )}
+              {typeof msg.evaluationAudit.temporalValidity === 'number' && (
+                <>
+                  {' · '}Vigencia{' '}
+                  <strong className="text-gray-900 tabular-nums">
+                    {Math.round(msg.evaluationAudit.temporalValidity * 100)}%
+                  </strong>
+                </>
+              )}
             </span>
             <span>Motor: {msg.inferenceMode || 'RAG_DETERMINISTIC'}</span>
           </div>

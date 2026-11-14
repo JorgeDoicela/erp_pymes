@@ -29,7 +29,6 @@ import { Login, ResetPassword } from '@modules/auth';
 // Módulos de Dominio (Lazy Loading)
 
 // Portal & Landing
-const MobileEmployeePortal = lazy(() => import('@modules/portal/pages/MobileEmployeePortal.jsx'));
 const AdminSettings = lazy(() => import('@modules/portal/pages/AdminSettings.jsx'));
 
 // Auth
@@ -437,7 +436,10 @@ function App() {
               }
             >
               <Route path="/empleado" element={<EmployeeDashboard user={auth.user} />} />
-              <Route path="/empleado/portal" element={<MobileEmployeePortal user={auth.user} />} />
+              <Route
+                path="/empleado/portal"
+                element={<Navigate to="/empleado/asistencia" replace />}
+              />
               <Route
                 path="/empleado/asistencia"
                 element={<EmployeeAttendance user={auth.user} />}

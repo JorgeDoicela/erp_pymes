@@ -54,8 +54,22 @@ export default function LegalCitationDrawer({ citation, isOpen, onClose }) {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Vigencia:</span>
-              <span className="font-mono text-gray-800">2026 · Concordada en Norma</span>
+              <span className="font-mono text-gray-800 tabular-nums">
+                {citation.temporalStatus === 'DEROGADO'
+                  ? 'DEROGADO · No vigente'
+                  : citation.temporalStatus === 'VIGENTE_REFORMADO'
+                    ? `VIGENTE REFORMADO${citation.lastReformYear ? ` (${citation.lastReformYear})` : ''}`
+                    : 'VIGENTE · Concordada en Norma'}
+              </span>
             </div>
+            {Array.isArray(citation.reformNotes) && citation.reformNotes.length > 0 && (
+              <div className="pt-1 border-t border-gray-100">
+                <span className="block text-gray-400 mb-0.5">Notas de Reforma Legislativa:</span>
+                <p className="font-mono text-[10px] text-gray-700 leading-snug">
+                  {citation.reformNotes.slice(0, 2).join(' · ')}
+                </p>
+              </div>
+            )}
             {typeof citation.evaluatorConfidence === 'number' && (
               <div className="flex justify-between">
                 <span className="text-gray-400">Confianza del Evaluador:</span>

@@ -1,6 +1,6 @@
 /**
  * @file DigitalMarker.jsx
- * @description Marcador Digital de Asistencia con Geocercas (GPS), Detección de Spoofing y Biometría WebAuthn.
+ * @description Marcador Digital de Asistencia con Geocercas (GPS), Auto-Marcado por Perímetro y Biometría WebAuthn.
  * @author Jorge Doicela
  * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
  * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
@@ -8,44 +8,45 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import attendanceService from '../services/attendanceService';
-import { FiShield, FiMapPin } from 'react-icons/fi';
-import { MdFingerprint } from 'react-icons/md';
-import Modal from '@core/ui/Modal';
+import { FiShield } from 'react-icons/fi';
 
-// Subcomponentes y hooks desacoplados del dominio attendance
 import { useBiometricAuth } from '@/modules/attendance/hooks/useBiometricAuth';
+import { useAutoGeofenceMarker } from '@/modules/attendance/hooks/useAutoGeofenceMarker';
+import {
+  readStoredSessionUser,
+  requestNavigatorLocation,
+} from '@/modules/attendance/utils/geolocationUtils';
 import TrackingConsentModal from '@/modules/attendance/components/TrackingConsentModal';
 import BiometricRegistrationBanner from '@/modules/attendance/components/BiometricRegistrationBanner';
 import EmployeeSearchBox from '@/modules/attendance/components/EmployeeSearchBox';
 import AttendanceSummaryCard from '@/modules/attendance/components/AttendanceSummaryCard';
 import MarkerActionButtons from '@/modules/attendance/components/MarkerActionButtons';
+import AutoGeofenceControlPanel from '@/modules/attendance/components/AutoGeofenceControlPanel';
+import DigitalMarkerClockHeader from '@/modules/attendance/components/DigitalMarkerClockHeader';
+
+const ACTION_LABELS = {
+  ENTRY: 'entrada',
+  EXIT: 'salida',
+  BREAK_START: 'inicio de almuerzo',
+  BREAK_END: 'fin de almuerzo',
+};
+
+const STATUS_BADGE = {
+  WORKING: { text: 'Actualmente Trabajando', cls: 'bg-green-50 text-green-700 border-green-200' },
+  COMPLETED: { text: 'Jornada Completada', cls: 'bg-gray-100 text-gray-700 border-gray-200' },
+  ON_BREAK: { text: 'En Hora de Almuerzo', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+};
 
 const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
-  const storedUser = (() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || 'null');
-    } catch {
-      return null;
-    }
-  })();
-  const currentUser = user || storedUser;
-
+  const currentUser = user || readStoredSessionUser();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [employeeId, setEmployeeId] = useState(autoLoadUser ? currentUser?.id || '' : '');
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
-  const [consentStatus, setConsentStatus] = useState(() => {
-    const freshUser = (() => {
-      try {
-        return JSON.parse(localStorage.getItem('user') || 'null');
-      } catch {
-        return null;
-      }
-    })();
-    return Boolean(freshUser?.trackingConsent ?? currentUser?.trackingConsent);
-  });
-
+  const [consentStatus, setConsentStatus] = useState(() =>
+    Boolean(readStoredSessionUser()?.trackingConsent ?? currentUser?.trackingConsent)
+  );
   const [message, setMessage] = useState({
     type: '',
     text: '',
@@ -54,11 +55,9 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
   });
   const [foundEmployee, setFoundEmployee] = useState(null);
   const [recordData, setRecordData] = useState(null);
-
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
 
-  // Hook desacoplado de biometría WebAuthn
   const {
     biometricEnabled,
     biometricSupported,
@@ -70,35 +69,144 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     triggerBiometric,
   } = useBiometricAuth();
 
-  // Reloj digital en tiempo real
+  const resolvedEmployeeId = foundEmployee?.id || (autoLoadUser ? currentUser?.id : employeeId);
+  const geofenceConfig = foundEmployee?.geofence || recordData?.geofence || null;
+  const isAdminOrSupervisor = ['admin', 'hr', 'manager'].includes(
+    (currentUser?.role || '').toLowerCase()
+  );
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Carga automática del empleado si autoLoadUser está activo
+  const checkStatus = useCallback(
+    async (targetId) => {
+      const cleanId = (targetId || employeeId)?.toString().trim();
+      if (!cleanId) return;
+      setLoading(true);
+      try {
+        const res = await attendanceService.getStatus(cleanId);
+        if (!res.success) {
+          setMessage({
+            type: 'error',
+            text: res.message || res.error || 'Empleado no encontrado.',
+          });
+          return;
+        }
+        setStatus(res.data.status);
+        if (res.data) setRecordData(res.data);
+        const emp = res.data.employee;
+        if (emp) {
+          setFoundEmployee(emp);
+          setEmployeeId(emp.id);
+          if (emp.hasBiometric !== undefined) setHasBiometricRegistered(Boolean(emp.hasBiometric));
+          if (emp.trackingConsent !== undefined) {
+            const hasConsent = Boolean(emp.trackingConsent);
+            setConsentStatus(hasConsent);
+            if (hasConsent) {
+              setShowConsent(false);
+              const savedUser = readStoredSessionUser() || {};
+              if (savedUser.id === emp.id && !savedUser.trackingConsent) {
+                savedUser.trackingConsent = true;
+                localStorage.setItem('user', JSON.stringify(savedUser));
+                window.dispatchEvent(new Event('norma:user-updated'));
+              }
+            }
+          }
+        }
+      } catch (err) {
+        setMessage({ type: 'error', text: err?.message || 'Error al buscar empleado.' });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [employeeId, setHasBiometricRegistered]
+  );
+
   useEffect(() => {
     if (autoLoadUser && currentUser?.id) {
       setEmployeeId(currentUser.id);
       checkStatus(currentUser.id);
-
-      const freshUser = (() => {
-        try {
-          return JSON.parse(localStorage.getItem('user') || 'null');
-        } catch {
-          return null;
-        }
-      })();
-      const hasConsent = freshUser?.trackingConsent ?? currentUser?.trackingConsent;
-
-      if (hasConsent === false) {
-        setShowConsent(true);
-      } else if (hasConsent === true) {
+      const hasConsent = readStoredSessionUser()?.trackingConsent ?? currentUser?.trackingConsent;
+      if (hasConsent === false) setShowConsent(true);
+      else if (hasConsent === true) {
         setShowConsent(false);
         setConsentStatus(true);
       }
     }
-  }, [user, autoLoadUser]);
+  }, [user, autoLoadUser, currentUser?.id, currentUser?.trackingConsent, checkStatus]);
+
+  const handleMark = useCallback(
+    async (type, preResolvedLocation = null, options = {}) => {
+      const targetId = foundEmployee?.id || currentUser?.id || employeeId;
+      if (!targetId) {
+        setMessage({ type: 'error', text: 'Por favor ingrese su ID de empleado.' });
+        return;
+      }
+
+      setLoading(true);
+      let location = preResolvedLocation;
+      if (!location) {
+        setMessage({ type: 'info', text: 'Obteniendo ubicación...' });
+        try {
+          location = await requestNavigatorLocation();
+        } catch (locError) {
+          setMessage({
+            type: 'error',
+            text: `Error de Ubicación: ${locError.message}. Se requiere GPS activado.`,
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      try {
+        const res = await attendanceService.markAttendance(targetId, type, location, options);
+        if (res.success) {
+          const prefix = options?.autoGeofence ? '[Auto-Geocerca] ' : '';
+          setMessage({
+            type: 'success',
+            text: `${prefix}${res.message}${res.workedHours ? ` (${res.workedHours} hrs)` : ''}`,
+          });
+          await checkStatus(targetId);
+        } else {
+          let errorMsg = res.message || 'Error al registrar asistencia.';
+          if (errorMsg.includes('Ubicación no permitida') && location) {
+            errorMsg += ` (Tus coordenadas: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)})`;
+            setMessage({ type: 'error', text: errorMsg, showMapLink: true, lastCoords: location });
+          } else {
+            setMessage({ type: 'error', text: errorMsg });
+          }
+        }
+      } catch (err) {
+        setMessage({
+          type: 'error',
+          text: err?.message || 'Error inesperado al registrar asistencia.',
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [foundEmployee?.id, currentUser?.id, employeeId, checkStatus]
+  );
+
+  const executeAutoGeofenceMark = useCallback(
+    async (type, coords) => handleMark(type, coords, { autoGeofence: true }),
+    [handleMark]
+  );
+
+  const autoGeofence = useAutoGeofenceMarker({
+    targetEmployeeId: resolvedEmployeeId,
+    status,
+    geofenceConfig,
+    consentStatus,
+    biometricEnabled,
+    hasBiometricRegistered,
+    triggerBiometric,
+    onExecuteAutoMark: executeAutoGeofenceMark,
+    onNotify: setMessage,
+  });
 
   const handleQuickRegisterBiometric = async () => {
     setMessage({ type: 'info', text: 'Preparando lector biométrico / Windows Hello...' });
@@ -106,86 +214,13 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
     if (res.success) {
       setMessage({
         type: 'success',
-        text: '¡Biometría registrada exitosamente! Ya puedes registrar tu asistencia.',
+        text: 'Biometría registrada exitosamente. Ya puedes registrar tu asistencia.',
       });
-      if (employeeId) checkStatus(employeeId);
+      if (resolvedEmployeeId) checkStatus(resolvedEmployeeId);
     } else {
       setMessage({ type: 'error', text: res.message });
     }
   };
-
-  const checkStatus = async (targetId) => {
-    const cleanId = (targetId || employeeId)?.toString().trim();
-    if (!cleanId) return;
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-    try {
-      const res = await attendanceService.getStatus(cleanId);
-      if (res.success) {
-        setStatus(res.data.status);
-        if (res.data) setRecordData(res.data);
-        if (res.data.employee) {
-          setFoundEmployee(res.data.employee);
-          setEmployeeId(res.data.employee.id);
-          if (res.data.employee.hasBiometric !== undefined) {
-            setHasBiometricRegistered(Boolean(res.data.employee.hasBiometric));
-          }
-          if (res.data.employee.trackingConsent !== undefined) {
-            const hasConsent = Boolean(res.data.employee.trackingConsent);
-            setConsentStatus(hasConsent);
-            if (hasConsent) {
-              setShowConsent(false);
-              const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
-              if (savedUser && !savedUser.trackingConsent) {
-                savedUser.trackingConsent = true;
-                localStorage.setItem('user', JSON.stringify(savedUser));
-                window.dispatchEvent(new Event('norma:user-updated'));
-                window.dispatchEvent(new Event('emplifi:user-updated'));
-              }
-            }
-          }
-        }
-      } else {
-        setMessage({
-          type: 'error',
-          text:
-            res.message || res.error || 'Empleado no encontrado. Verifique la cédula ingresada.',
-        });
-      }
-    } catch (err) {
-      setMessage({ type: 'error', text: err?.message || 'Error al buscar empleado.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getLocation = () => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocalización no soportada por su navegador'));
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-        },
-        (error) => {
-          let msg = 'Error obteniendo ubicación';
-          if (error.code === error.PERMISSION_DENIED) msg = 'Permiso de ubicación denegado';
-          else if (error.code === error.POSITION_UNAVAILABLE) msg = 'Ubicación no disponible';
-          else if (error.code === error.TIMEOUT)
-            msg = 'Tiempo de espera agotado al obtener ubicación';
-          reject(new Error(msg));
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
-    });
-  };
-
-  const isAdminOrSuperAdmin = currentUser?.role === 'admin';
 
   const initiateMark = (type) => {
     if (biometricEnabled && hasBiometricRegistered === false) {
@@ -202,10 +237,9 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
   const confirmMark = async () => {
     setShowConfirm(false);
     if (!pendingAction) return;
-
     if (biometricEnabled) {
       setMessage({ type: 'info', text: 'Verificando identidad biométrica...' });
-      const biometricUserId = currentUser?.id || foundEmployee?.id || employeeId;
+      const biometricUserId = foundEmployee?.id || currentUser?.id || employeeId;
       const result = await triggerBiometric(biometricUserId);
       if (!result.passed) {
         setMessage({ type: 'error', text: result.reason });
@@ -214,122 +248,35 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
       }
       setMessage({ type: '', text: '' });
     }
-
     await handleMark(pendingAction);
     setPendingAction(null);
   };
 
-  const handleMark = async (type) => {
-    const targetId = foundEmployee?.id || currentUser?.id || employeeId;
-
-    if (!targetId) {
-      setMessage({ type: 'error', text: 'Por favor ingrese su ID de empleado.' });
-      return;
-    }
-    setLoading(true);
-    setMessage({ type: 'info', text: 'Obteniendo ubicación...' });
-
-    let location = null;
-    try {
-      location = await getLocation();
-    } catch (locError) {
-      console.warn('Location error:', locError);
-      setMessage({
-        type: 'error',
-        text: `Error de Ubicación: ${locError.message}. Se requiere GPS activado.`,
-      });
-      setLoading(false);
-      return;
-    }
-
-    setMessage({ type: '', text: '' });
-    try {
-      const res = await attendanceService.markAttendance(targetId, type, location);
-      if (res.success) {
-        setMessage({
-          type: 'success',
-          text: res.message + (res.workedHours ? ` (${res.workedHours} hrs)` : ''),
-        });
-        await checkStatus(targetId);
-      } else {
-        let errorMsg = res.message || 'Error al registrar asistencia.';
-        if (errorMsg.includes('Ubicación no permitida') && location) {
-          errorMsg += ` (Tus coordenadas: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)})`;
-          setMessage({
-            type: 'error',
-            text: errorMsg,
-            showMapLink: true,
-            lastCoords: location,
-          });
-        } else {
-          setMessage({ type: 'error', text: errorMsg });
-        }
-      }
-    } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err?.message || 'Error inesperado al registrar asistencia.',
-      });
-    } finally {
-      setLoading(false);
-    }
+  const actionLabel = ACTION_LABELS[pendingAction] || 'fin de almuerzo';
+  const badge = STATUS_BADGE[status] || {
+    text: 'Sin registrar entrada',
+    cls: 'bg-gray-50 text-gray-500 border-gray-200',
   };
-
-  const actionLabel =
-    pendingAction === 'ENTRY'
-      ? 'entrada'
-      : pendingAction === 'EXIT'
-        ? 'salida'
-        : pendingAction === 'BREAK_START'
-          ? 'inicio de almuerzo'
-          : 'fin de almuerzo';
 
   return (
     <div className="flex flex-col items-center justify-center w-full bg-white border border-gray-200 text-gray-900 p-6 sm:p-8 rounded-[4px]">
-      {/* Reloj y Estado Biométrico */}
-      <div className="mb-6 text-center">
-        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
-          Marcador Digital de Jornada
-        </div>
-        <div className="text-4xl sm:text-5xl font-bold font-mono tracking-tight text-gray-900 tabular-nums">
-          {currentTime.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-          })}
-        </div>
-        <div className="text-gray-500 mt-1 text-xs">
-          {currentTime.toLocaleDateString(undefined, {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </div>
-        {biometricEnabled && (
-          <div
-            className={`mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] text-[11px] font-medium border ${
-              hasBiometricRegistered === false
-                ? 'bg-blue-50 text-blue-800 border-blue-200'
-                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-            }`}
-          >
-            <MdFingerprint
-              className={`w-3.5 h-3.5 ${hasBiometricRegistered === false ? 'text-blue-600' : 'text-emerald-600'}`}
-            />
-            <span>
-              {hasBiometricRegistered === false
-                ? 'Autenticación Biométrica (Sin vincular en este equipo)'
-                : 'Verificación biométrica activa'}
-            </span>
-          </div>
-        )}
-      </div>
+      <DigitalMarkerClockHeader
+        currentTime={currentTime}
+        biometricEnabled={biometricEnabled}
+        hasBiometricRegistered={hasBiometricRegistered}
+        message={message}
+        showConfirm={showConfirm}
+        actionLabel={actionLabel}
+        onCancelConfirm={() => {
+          setShowConfirm(false);
+          setPendingAction(null);
+        }}
+        onAcceptConfirm={confirmMark}
+      />
 
-      {/* Buscador de Empleado */}
-      {allowSearch && (!user || isAdminOrSuperAdmin) && (
+      {allowSearch && (!user || isAdminOrSupervisor) && (
         <EmployeeSearchBox
-          isAdminOrSuperAdmin={isAdminOrSuperAdmin}
+          isAdminOrSuperAdmin={isAdminOrSupervisor}
           foundEmployee={foundEmployee}
           employeeId={employeeId}
           setEmployeeId={setEmployeeId}
@@ -338,13 +285,13 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
             setFoundEmployee(null);
             setEmployeeId('');
             setStatus(null);
+            setRecordData(null);
             setMessage({ type: '', text: '' });
           }}
           allowSearch={allowSearch}
         />
       )}
 
-      {/* Banner de Registro Biométrico In-Situ (Solo si el dispositivo cuenta con hardware compatible) */}
       {biometricEnabled && biometricSupported && hasBiometricRegistered === false && (
         <BiometricRegistrationBanner
           registering={registeringBiometric}
@@ -353,88 +300,25 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
         />
       )}
 
-      {/* Mensajes de Notificación */}
-      {message.text && (
-        <div className="w-full max-w-md mb-4">
-          <div
-            className={`px-3.5 py-2 rounded-[4px] text-center text-xs font-medium border ${
-              message.type === 'error'
-                ? 'bg-red-50 text-red-700 border-red-200'
-                : message.type === 'info'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                  : 'bg-green-50 text-green-700 border-green-200'
-            }`}
-          >
-            {message.text}
-          </div>
-          {message.showMapLink && message.lastCoords && (
-            <div className="mt-1.5 flex justify-center gap-3">
-              <a
-                href={`https://www.google.com/maps?q=${message.lastCoords.latitude},${message.lastCoords.longitude}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] text-blue-600 hover:underline flex items-center gap-1"
-              >
-                Ver ubicación en mapa (GPS)
-              </a>
-            </div>
-          )}
-        </div>
+      {resolvedEmployeeId && (
+        <AutoGeofenceControlPanel
+          geofenceConfig={geofenceConfig}
+          consentStatus={consentStatus}
+          biometricEnabled={biometricEnabled}
+          biometricPreAuthorized={autoGeofence.biometricPreAuthorized}
+          authorizingBiometric={autoGeofence.authorizingBiometric}
+          autoEntryEnabled={autoGeofence.autoEntryEnabled}
+          autoExitEnabled={autoGeofence.autoExitEnabled}
+          liveDistanceMeters={autoGeofence.liveDistanceMeters}
+          liveInsideGeofence={autoGeofence.liveInsideGeofence}
+          watchingGps={autoGeofence.watchingGps}
+          onToggleAutoEntry={autoGeofence.toggleAutoEntry}
+          onToggleAutoExit={autoGeofence.toggleAutoExit}
+          onAuthorizeBiometric={autoGeofence.authorizeSessionNow}
+          disabled={loading}
+        />
       )}
 
-      {/* Modal de Confirmación */}
-      <Modal
-        isOpen={showConfirm}
-        onClose={() => {
-          setShowConfirm(false);
-          setPendingAction(null);
-        }}
-        title={`Confirmar ${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)}`}
-        size="sm"
-        footer={
-          <div className="flex gap-2 justify-end">
-            <button
-              type="button"
-              onClick={() => {
-                setShowConfirm(false);
-                setPendingAction(null);
-              }}
-              className="border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-medium px-3.5 py-1.5 rounded-[4px] transition-colors cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={confirmMark}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded-[4px] transition-colors cursor-pointer"
-            >
-              Confirmar
-            </button>
-          </div>
-        }
-      >
-        <p className="text-xs text-gray-600">
-          ¿Confirmas registrar tu {actionLabel} a las{' '}
-          <strong className="text-gray-900 font-mono tabular-nums">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </strong>
-          ?
-        </p>
-      </Modal>
-
-      {/* Recordatorio de GPS y Seguridad */}
-      <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded-[4px] border border-gray-200">
-          <FiMapPin className="w-3 h-3 text-gray-500" />
-          <span>GPS activo para validación</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded-[4px] border border-gray-200">
-          <FiShield className="w-3 h-3 text-gray-500" />
-          <span>Protección VPN/Proxy activa</span>
-        </div>
-      </div>
-
-      {/* Botones de Marcado */}
       <MarkerActionButtons
         status={status}
         recordData={recordData}
@@ -445,44 +329,26 @@ const DigitalMarker = ({ user, autoLoadUser = false, allowSearch = true }) => {
         onInitiateMark={initiateMark}
       />
 
-      {/* Footer de Estado de Jornada */}
       <div className="mt-6 flex flex-col items-center gap-3">
         <span
-          className={`inline-block px-2.5 py-0.5 rounded-[4px] text-[11px] font-semibold tracking-wider uppercase border ${
-            status === 'WORKING'
-              ? 'bg-green-50 text-green-700 border-green-200'
-              : status === 'COMPLETED'
-                ? 'bg-gray-100 text-gray-700 border-gray-200'
-                : status === 'ON_BREAK'
-                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                  : 'bg-gray-50 text-gray-500 border-gray-200'
-          }`}
+          className={`inline-block px-2.5 py-0.5 rounded-[4px] text-[11px] font-semibold tracking-wider uppercase border ${badge.cls}`}
         >
-          {status === 'WORKING'
-            ? 'Actualmente Trabajando'
-            : status === 'ON_BREAK'
-              ? 'En Hora de Almuerzo'
-              : status === 'COMPLETED'
-                ? 'Jornada Completada'
-                : 'Sin registrar entrada'}
+          {badge.text}
         </span>
-
         <button
           type="button"
           onClick={() => setShowConsent(true)}
           className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-900 transition-colors uppercase tracking-wider font-semibold cursor-pointer"
         >
           <FiShield className="w-3 h-3" />
-          Privacidad y Consentimiento
+          Privacidad y Consentimiento · GPS / Anti-VPN
         </button>
       </div>
 
-      {/* Resumen de Jornada de Hoy */}
       {status !== 'NOT_STARTED' && status !== null && recordData && (
         <AttendanceSummaryCard recordData={recordData} />
       )}
 
-      {/* Modal de Consentimiento de Datos */}
       <TrackingConsentModal
         isOpen={showConsent}
         onClose={() => setShowConsent(false)}

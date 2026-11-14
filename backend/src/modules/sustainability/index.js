@@ -14,5 +14,10 @@ export { default as sustainabilityFineTuningService } from './sustainabilityFine
 export { default as sustainabilityRepository } from './sustainability.repository.js';
 export { default as llmProviderService } from './llmProvider.service.js';
 export { default as legalEvaluatorService } from './legalEvaluator.service.js';
+export { default as ragEvaluationService } from './ragEvaluation.service.js';
+export {
+  ECUADOR_LEGAL_DOMAIN_SIGNALS,
+  NON_LABOR_EXCLUSION_PATTERNS,
+} from './data/ecuadorLegalSynonyms.js';
 export * from './sustainability.controller.js';
 export * from './sustainability.dto.js';

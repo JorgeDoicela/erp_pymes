@@ -140,10 +140,12 @@ export class WhatsappService {
         });
 
         // Permitir cambio explícito de empresa cuando el teléfono está vinculado a múltiples tenants
-        if (
-          contextResult.candidates?.length > 1 &&
-          /^(cambiar\s+(?:de\s+)?empresa|mis\s+empresas|empresas)$/i.test(userQuery)
-        ) {
+        const isSwitchTenantQuery =
+          /^(?:(?:hola|buenas|por\s+favor)\s+)*(?:cambiar\s+(?:de\s+)?empresa|mis\s+empresas|empresas|mi\s+empresa\s+activa)[.!]?$/i.test(
+            String(userQuery || '').trim()
+          );
+
+        if (contextResult.candidates?.length > 1 && isSwitchTenantQuery) {
           const pendingList = contextResult.candidates.map((emp, idx) => ({
             index: idx + 1,
             tenantId: emp.tenantId,
@@ -156,6 +158,9 @@ export class WhatsappService {
               phoneKey,
               pendingSelection: pendingList,
             });
+          }
+          if (typeof this.ai?.historyService?.resetHistory === 'function') {
+            await this.ai.historyService.resetHistory({ phoneKey });
           }
           await this.client.sendTextMessage({
             to: from,
@@ -171,6 +176,9 @@ export class WhatsappService {
               phoneKey,
               tenantId: chosen.tenantId,
             });
+            if (typeof this.ai?.historyService?.resetHistory === 'function') {
+              await this.ai.historyService.resetHistory({ phoneKey });
+            }
             await this.client.sendTextMessage({
               to: from,
               text:
@@ -237,8 +245,9 @@ export class WhatsappService {
    * @private
    */
   matchTenantSelectionReply(replyText, candidates = []) {
-    const clean = String(replyText || '').trim();
-    const numericMatch = clean.match(/^(?:empresa\s*)?(\d{1,2})$/i);
+    const raw = String(replyText || '').trim();
+    const clean = raw.replace(/[^\w\s-]/g, '').trim();
+    const numericMatch = clean.match(/^(?:opcion\s+|empresa\s+|#\s*)?(\d{1,2})$/i);
     if (numericMatch) {
       const index = Number(numericMatch[1]) - 1;
       if (index >= 0 && index < candidates.length) {
@@ -246,11 +255,22 @@ export class WhatsappService {
       }
     }
 
-    const lower = clean.toLowerCase();
-    if (lower.length >= 3) {
-      return (
-        candidates.find((emp) => (emp.tenant?.name || '').toLowerCase().includes(lower)) || null
-      );
+    const digitsOnly = raw.replace(/[^\d]/g, '');
+    if (digitsOnly.length >= 10) {
+      const foundByRuc = candidates.find((emp) => emp.tenant?.ruc && emp.tenant.ruc === digitsOnly);
+      if (foundByRuc) return foundByRuc;
+    }
+
+    const norm = (str) =>
+      String(str || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    const normalizedQuery = norm(clean);
+    if (normalizedQuery.length >= 3) {
+      return candidates.find((emp) => norm(emp.tenant?.name).includes(normalizedQuery)) || null;
     }
 
     return null;

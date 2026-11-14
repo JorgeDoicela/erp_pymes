@@ -11,7 +11,6 @@ import { Link } from 'react-router-dom';
 import { FiChevronRight, FiArrowRight } from 'react-icons/fi';
 import NormaLogo from '@core/ui/NormaLogo';
 import DeveloperCard from '@core/ui/DeveloperCard';
-import { PWAInstallButton } from '@core/pwa';
 
 function Home() {
   // Calculadora rápida de nómina en vivo para PyMEs (Ecuador)
@@ -159,9 +158,6 @@ function Home() {
 
             {/* Acciones */}
             <div className="flex items-center gap-3">
-              <div className="hidden md:block">
-                <PWAInstallButton variant="button" />
-              </div>
               <Link
                 to="/careers"
                 className="hidden sm:inline-flex items-center px-3.5 py-1.5 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-colors"
@@ -805,9 +801,6 @@ function Home() {
                   <Link to="/register-company" className="hover:text-blue-600 transition-colors">
                     Registrar Empresa
                   </Link>
-                </li>
-                <li className="pt-1">
-                  <PWAInstallButton variant="button" />
                 </li>
               </ul>
             </div>

@@ -28,3 +28,4 @@ export * from './services/shiftService.js';
 
 // Hooks
 export * from './hooks/useBiometricAuth.js';
+export * from './hooks/useAutoGeofenceMarker.js';
