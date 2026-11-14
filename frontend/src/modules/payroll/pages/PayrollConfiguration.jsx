@@ -1,9 +1,6 @@
 /**
  * @file PayrollConfiguration.jsx
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
- * @author Jorge Doicela
- * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
- * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ * @description Configuración de parámetros y catálogo de rubros de nómina.
  */
 
 import { useState, useEffect } from 'react';
@@ -19,35 +16,20 @@ import PayrollLegalGuideModal, {
   PayrollBaseParamsCard,
 } from '../components/PayrollLegalGuideModal';
 
+const EMPTY_ITEM = { name: '', type: 'EARNING', isMandatory: false, value: '' };
+const CLOSED_CONFIRM = { open: false, title: '', message: '', onConfirm: null };
+
 const PayrollConfiguration = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState({ workingDays: 30, items: [] });
-
   const [newItemMode, setNewItemMode] = useState('PERCENTAGE');
-  const [newItem, setNewItem] = useState({
-    name: '',
-    type: 'EARNING',
-    isMandatory: false,
-    value: '',
-  });
-
+  const [newItem, setNewItem] = useState(EMPTY_ITEM);
   const [editingIndex, setEditingIndex] = useState(null);
   const [editItemMode, setEditItemMode] = useState('PERCENTAGE');
-  const [editItem, setEditItem] = useState({
-    name: '',
-    type: 'EARNING',
-    isMandatory: false,
-    value: '',
-  });
-
+  const [editItem, setEditItem] = useState(EMPTY_ITEM);
   const [showGuideModal, setShowGuideModal] = useState(false);
-  const [confirmModal, setConfirmModal] = useState({
-    open: false,
-    title: '',
-    message: '',
-    onConfirm: null,
-  });
+  const [confirmModal, setConfirmModal] = useState(CLOSED_CONFIRM);
 
   const loadConfig = async () => {
     setLoading(true);
@@ -76,40 +58,26 @@ const PayrollConfiguration = () => {
   const handleAddItem = (e) => {
     e.preventDefault();
     const trimmedName = newItem.name.trim();
-    if (!trimmedName) {
-      return toast.error('El nombre del rubro es obligatorio');
-    }
-
+    if (!trimmedName) return toast.error('El nombre del rubro es obligatorio');
     const val = parseFloat(newItem.value);
-    if (isNaN(val) || val < 0) {
-      return toast.error(
-        `Debe ingresar un valor numérico válido para el ${newItemMode === 'PERCENTAGE' ? 'porcentaje' : 'monto fijo'}`
-      );
-    }
+    if (isNaN(val) || val < 0) return toast.error('Ingrese un valor numérico válido');
     if (newItemMode === 'PERCENTAGE' && val > 100) {
       return toast.error('El porcentaje no puede ser superior al 100%');
     }
-
     if (config.items.some((i) => i.name.toLowerCase() === trimmedName.toLowerCase())) {
       return toast.error(`Ya existe un rubro llamado "${trimmedName}"`);
     }
 
-    setConfig({
-      ...config,
-      items: [
-        ...config.items,
-        {
-          id: `new-${Date.now()}`,
-          name: trimmedName,
-          type: newItem.type,
-          isMandatory: newItem.isMandatory,
-          percentage: newItemMode === 'PERCENTAGE' ? val : null,
-          fixedValue: newItemMode === 'FIXED' ? val : null,
-        },
-      ],
-    });
-
-    setNewItem({ name: '', type: 'EARNING', isMandatory: false, value: '' });
+    const nextItem = {
+      id: `new-${Date.now()}`,
+      name: trimmedName,
+      type: newItem.type,
+      isMandatory: newItem.isMandatory,
+      percentage: newItemMode === 'PERCENTAGE' ? val : null,
+      fixedValue: newItemMode === 'FIXED' ? val : null,
+    };
+    setConfig({ ...config, items: [...config.items, nextItem] });
+    setNewItem(EMPTY_ITEM);
     toast.success(`Rubro "${trimmedName}" añadido`);
   };
 
@@ -122,33 +90,25 @@ const PayrollConfiguration = () => {
       name: item.name,
       type: item.type,
       isMandatory: item.isMandatory || false,
-      value: isPct
-        ? item.percentage
-        : item.fixedValue !== null && item.fixedValue !== undefined
-          ? item.fixedValue
-          : '',
+      value: isPct ? item.percentage : (item.fixedValue ?? ''),
     });
   };
 
   const handleSaveEdit = () => {
     const trimmedName = editItem.name.trim();
     if (!trimmedName) return toast.error('El nombre del rubro no puede estar vacío');
-
     const isDynamic = !!SYSTEM_DYNAMIC_RUBROS[trimmedName];
     let pct = null;
     let fix = null;
 
     if (!isDynamic) {
       const val = parseFloat(editItem.value);
-      if (isNaN(val) || val < 0) {
-        return toast.error('Ingrese un valor numérico válido');
+      if (isNaN(val) || val < 0) return toast.error('Ingrese un valor numérico válido');
+      if (editItemMode === 'PERCENTAGE' && val > 100) {
+        return toast.error('El porcentaje no puede exceder el 100%');
       }
-      if (editItemMode === 'PERCENTAGE') {
-        if (val > 100) return toast.error('El porcentaje no puede exceder el 100%');
-        pct = val;
-      } else {
-        fix = val;
-      }
+      if (editItemMode === 'PERCENTAGE') pct = val;
+      else fix = val;
     }
 
     const updated = [...config.items];
@@ -160,7 +120,6 @@ const PayrollConfiguration = () => {
       percentage: pct,
       fixedValue: fix,
     };
-
     setConfig({ ...config, items: updated });
     setEditingIndex(null);
     toast.success('Rubro actualizado');
@@ -176,7 +135,7 @@ const PayrollConfiguration = () => {
         const updated = [...config.items];
         updated.splice(index, 1);
         setConfig({ ...config, items: updated });
-        setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
+        setConfirmModal(CLOSED_CONFIRM);
         toast.success(`Rubro "${item.name}" eliminado de la lista`);
       },
     });
@@ -187,23 +146,14 @@ const PayrollConfiguration = () => {
       const existingNames = new Set(config.items.map((i) => i.name.toLowerCase()));
       const newItems = [...config.items];
       let addedCount = 0;
-
       LEGAL_PRESET_ITEMS.forEach((item) => {
         if (!existingNames.has(item.name.toLowerCase())) {
-          newItems.push({
-            id: `legal-${Date.now()}-${Math.random()}`,
-            name: item.name,
-            type: item.type,
-            isMandatory: item.isMandatory,
-            percentage: item.percentage,
-            fixedValue: item.fixedValue,
-          });
+          newItems.push({ ...item, id: `legal-${Date.now()}-${Math.random()}` });
           addedCount++;
         }
       });
-
       setConfig({ ...config, workingDays: 30, items: newItems });
-      setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
+      setConfirmModal(CLOSED_CONFIRM);
       toast.success(
         addedCount > 0
           ? `Se incorporaron ${addedCount} rubros de la plantilla legal.`
@@ -215,8 +165,7 @@ const PayrollConfiguration = () => {
       setConfirmModal({
         open: true,
         title: 'Cargar Plantilla Legal IESS & Código del Trabajo',
-        message:
-          '¿Desea incorporar todos los rubros de ley ecuatoriana (Sueldo base, Horas Extras, IESS Personal 9.45%, Patronal 12.15%, 13ro, 14to SBU/12, Fondos de Reserva y Anticipos)?',
+        message: '¿Desea incorporar los rubros de ley ecuatoriana al catálogo actual?',
         onConfirm: applyPreset,
       });
     } else {
@@ -229,7 +178,6 @@ const PayrollConfiguration = () => {
     if (isNaN(workingDays) || workingDays < 1 || workingDays > 31) {
       return toast.error('Los días laborables por mes deben ser un número entre 1 y 31');
     }
-
     setSaving(true);
     try {
       await savePayrollConfig(config);
@@ -253,15 +201,14 @@ const PayrollConfiguration = () => {
             Parámetros y Catálogo de Rubros de Nómina
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            Definición de base de cálculo mensual, aportes al IESS, beneficios de ley y
-            bonificaciones.
+            Definición de base de cálculo mensual, aportes al IESS, beneficios de ley y bonos.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setShowGuideModal(true)}
-            className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer flex items-center gap-1.5"
+            className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded cursor-pointer flex items-center gap-1.5"
           >
             <FiBookOpen size={13} />
             <span>Guía Legal Ecuador</span>
@@ -269,7 +216,7 @@ const PayrollConfiguration = () => {
           <button
             type="button"
             onClick={handleLoadLegalPreset}
-            className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded transition-colors cursor-pointer"
+            className="px-3.5 py-2 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium rounded cursor-pointer"
           >
             Cargar Plantilla IESS / Ley
           </button>
@@ -277,7 +224,7 @@ const PayrollConfiguration = () => {
             type="button"
             onClick={handleSave}
             disabled={saving || loading}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
+            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded cursor-pointer disabled:opacity-50"
           >
             {saving ? 'Guardando...' : 'Guardar Configuración'}
           </button>
@@ -289,7 +236,6 @@ const PayrollConfiguration = () => {
           workingDays={config.workingDays}
           onWorkingDaysChange={(workingDays) => setConfig({ ...config, workingDays })}
         />
-
         <PayrollRubrosTable
           items={config.items}
           loading={loading}

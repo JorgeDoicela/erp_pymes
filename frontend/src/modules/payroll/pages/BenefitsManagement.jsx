@@ -1,9 +1,6 @@
 /**
  * @file BenefitsManagement.jsx
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
- * @author Jorge Doicela
- * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
- * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ * @description Gestión administrativa de beneficios, bonos e incentivos.
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -37,60 +34,50 @@ const INITIAL_BULK = {
   selectedDepartment: 'ALL',
   selectedEmployees: [],
 };
+const INITIAL_STATS = {
+  total: 0,
+  active: 0,
+  processed: 0,
+  cancelled: 0,
+  activeAmountTotal: 0,
+};
 
 const BenefitsManagement = () => {
   const [benefits, setBenefits] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    processed: 0,
-    cancelled: 0,
-    activeAmountTotal: 0,
-  });
+  const [stats, setStats] = useState(INITIAL_STATS);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 1 });
-
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [bulkModalOpen, setBulkModalOpen] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-
+  const [modals, setModals] = useState({ create: false, edit: false, bulk: false, confirm: false });
   const [selectedBenefit, setSelectedBenefit] = useState(null);
   const [notification, setNotification] = useState(null);
   const [singleFormData, setSingleFormData] = useState(INITIAL_SINGLE);
   const [editFormData, setEditFormData] = useState(INITIAL_SINGLE);
   const [bulkData, setBulkData] = useState(INITIAL_BULK);
 
+  const setModal = (key, val) => setModals((prev) => ({ ...prev, [key]: val }));
   const showNotification = (type, message) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const loadStatsData = async () => {
-    try {
-      const res = await getBenefitStats();
-      if (res.success && res.data) setStats(res.data);
-    } catch (error) {
-      console.error('Error al cargar estadísticas de beneficios:', error);
-    }
-  };
-
-  const loadBenefitsData = async () => {
+  const refreshData = async () => {
     setLoading(true);
     try {
-      const res = await getBenefits({
-        page: pagination.page,
-        limit: pagination.limit,
-        status: activeTab === 'ALL' ? undefined : activeTab,
-        type: filterType || undefined,
-        search: searchTerm.trim() || undefined,
-      });
+      const [res, statsRes] = await Promise.all([
+        getBenefits({
+          page: pagination.page,
+          limit: pagination.limit,
+          status: activeTab === 'ALL' ? undefined : activeTab,
+          type: filterType || undefined,
+          search: searchTerm.trim() || undefined,
+        }),
+        getBenefitStats(),
+      ]);
       if (res.success) {
         setBenefits(res.data || []);
         if (res.pagination) {
@@ -101,6 +88,7 @@ const BenefitsManagement = () => {
           }));
         }
       }
+      if (statsRes.success && statsRes.data) setStats(statsRes.data);
     } catch (error) {
       showNotification('error', error.message || 'Error al cargar beneficios');
     } finally {
@@ -110,26 +98,23 @@ const BenefitsManagement = () => {
 
   useEffect(() => {
     getEmployees()
-      .then((res) => {
-        if (res.success && Array.isArray(res.data)) setEmployees(res.data);
-      })
-      .catch((error) => console.error('Error al cargar empleados:', error));
+      .then((res) => res.success && Array.isArray(res.data) && setEmployees(res.data))
+      .catch((err) => console.error('Error al cargar empleados:', err));
   }, []);
 
   useEffect(() => {
-    loadBenefitsData();
-    loadStatsData();
+    refreshData();
   }, [activeTab, filterType, pagination.page]);
 
-  const runMutation = async (fn, successMsg, onSuccessClose) => {
+  const runMutation = async (fn, successMsg, closeKey) => {
     setActionLoading(true);
     try {
       const res = await fn();
       if (res.success) {
         showNotification('success', res.message || successMsg);
-        onSuccessClose();
-        loadBenefitsData();
-        loadStatsData();
+        setModal(closeKey, false);
+        setSelectedBenefit(null);
+        refreshData();
       }
     } catch (error) {
       showNotification('error', error.message || 'Error al procesar beneficio');
@@ -143,16 +128,9 @@ const BenefitsManagement = () => {
     if (!singleFormData.employeeId)
       return showNotification('error', 'Debe seleccionar un colaborador');
     runMutation(
-      () =>
-        createBenefit({
-          employeeId: singleFormData.employeeId,
-          name: singleFormData.name,
-          amount: parseFloat(singleFormData.amount),
-          type: singleFormData.type,
-          frequency: singleFormData.frequency,
-        }),
+      () => createBenefit({ ...singleFormData, amount: parseFloat(singleFormData.amount) }),
       'Beneficio registrado exitosamente',
-      () => setCreateModalOpen(false)
+      'create'
     );
   };
 
@@ -162,36 +140,18 @@ const BenefitsManagement = () => {
     runMutation(
       () =>
         updateBenefit(selectedBenefit.id, {
-          name: editFormData.name,
+          ...editFormData,
           amount: parseFloat(editFormData.amount),
-          type: editFormData.type,
-          frequency: editFormData.frequency,
         }),
       'Beneficio actualizado exitosamente',
-      () => {
-        setEditModalOpen(false);
-        setSelectedBenefit(null);
-      }
-    );
-  };
-
-  const handleConfirmDeactivate = () => {
-    if (!selectedBenefit) return;
-    runMutation(
-      () => deactivateBenefit(selectedBenefit.id),
-      'Beneficio cancelado exitosamente',
-      () => {
-        setConfirmModalOpen(false);
-        setSelectedBenefit(null);
-      }
+      'edit'
     );
   };
 
   const handleBulkSubmit = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (bulkData.selectedEmployees.length === 0) {
+    if (e?.preventDefault) e.preventDefault();
+    if (bulkData.selectedEmployees.length === 0)
       return showNotification('error', 'Debe seleccionar al menos un colaborador');
-    }
     runMutation(
       () =>
         bulkCreateBenefit({
@@ -203,7 +163,7 @@ const BenefitsManagement = () => {
           isSpecialCalculation: bulkData.isSpecial ? bulkData.specialType : null,
         }),
       'Asignación masiva completada',
-      () => setBulkModalOpen(false)
+      'bulk'
     );
   };
 
@@ -216,7 +176,7 @@ const BenefitsManagement = () => {
     <div className="space-y-4">
       {notification && (
         <div
-          className={`fixed top-5 right-5 z-50 px-4 py-2.5 rounded border text-xs font-medium shadow-md transition-all ${
+          className={`fixed top-5 right-5 z-50 px-4 py-2.5 rounded border text-xs font-medium shadow-md ${
             notification.type === 'success'
               ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
               : 'bg-red-50 text-red-900 border-red-200'
@@ -246,32 +206,25 @@ const BenefitsManagement = () => {
                 Pendiente a Nómina
               </span>
               <span className="font-semibold text-gray-900 tabular-nums">
-                $
-                {Number(stats.activeAmountTotal || 0).toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                USD
+                ${Number(stats.activeAmountTotal || 0).toFixed(2)} USD
               </span>
             </div>
           </div>
-
           <button
             onClick={() => {
               setSingleFormData({ ...INITIAL_SINGLE, employeeId: employees[0]?.id || '' });
-              setCreateModalOpen(true);
+              setModal('create', true);
             }}
-            className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded transition-colors cursor-pointer"
+            className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-3.5 py-2 rounded cursor-pointer"
           >
             + Asignar Individual
           </button>
-
           <button
             onClick={() => {
               setBulkData({ ...INITIAL_BULK, selectedEmployees: employees.map((e) => e.id) });
-              setBulkModalOpen(true);
+              setModal('bulk', true);
             }}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
+            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded cursor-pointer"
           >
             + Asignación Masiva
           </button>
@@ -294,12 +247,12 @@ const BenefitsManagement = () => {
         onSearchSubmit={(e) => {
           e.preventDefault();
           setPagination((prev) => ({ ...prev, page: 1 }));
-          loadBenefitsData();
+          refreshData();
         }}
         onSearchClear={() => {
           setSearchTerm('');
           setPagination((prev) => ({ ...prev, page: 1 }));
-          setTimeout(loadBenefitsData, 0);
+          setTimeout(refreshData, 0);
         }}
         onFilterTypeChange={(val) => {
           setFilterType(val);
@@ -314,37 +267,40 @@ const BenefitsManagement = () => {
             type: b.type,
             frequency: b.frequency,
           });
-          setEditModalOpen(true);
+          setModal('edit', true);
         }}
         onOpenConfirmDeactivate={(b) => {
           setSelectedBenefit(b);
-          setConfirmModalOpen(true);
+          setModal('confirm', true);
         }}
       />
 
       <BenefitFormModals
         employees={employees}
-        createModalOpen={createModalOpen}
-        setCreateModalOpen={setCreateModalOpen}
+        createModalOpen={modals.create}
+        setCreateModalOpen={(v) => setModal('create', v)}
         singleFormData={singleFormData}
         setSingleFormData={setSingleFormData}
         onSingleCreateSubmit={handleSingleCreateSubmit}
-        editModalOpen={editModalOpen}
-        setEditModalOpen={setEditModalOpen}
+        editModalOpen={modals.edit}
+        setEditModalOpen={(v) => setModal('edit', v)}
         editFormData={editFormData}
         setEditFormData={setEditFormData}
         onEditSubmit={handleEditSubmit}
-        confirmModalOpen={confirmModalOpen}
-        setConfirmModalOpen={setConfirmModalOpen}
-        onConfirmDeactivate={handleConfirmDeactivate}
+        confirmModalOpen={modals.confirm}
+        setConfirmModalOpen={(v) => setModal('confirm', v)}
+        onConfirmDeactivate={() =>
+          selectedBenefit &&
+          runMutation(() => deactivateBenefit(selectedBenefit.id), 'Beneficio cancelado', 'confirm')
+        }
         selectedBenefit={selectedBenefit}
         setSelectedBenefit={setSelectedBenefit}
         actionLoading={actionLoading}
       />
 
       <BulkBenefitModal
-        isOpen={bulkModalOpen}
-        onClose={() => setBulkModalOpen(false)}
+        isOpen={modals.bulk}
+        onClose={() => setModal('bulk', false)}
         onSubmit={handleBulkSubmit}
         bulkData={bulkData}
         setBulkData={setBulkData}

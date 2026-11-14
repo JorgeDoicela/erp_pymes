@@ -1,9 +1,6 @@
 /**
  * @file MyPayments.jsx
- * @description Norma ERP - Plataforma de Gestión Empresarial y Talento Humano
- * @author Jorge Doicela
- * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
- * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
+ * @description Vista de consulta, firma digital y observación de roles de pago individuales.
  */
 
 import { useState, useEffect } from 'react';
@@ -27,21 +24,24 @@ const STATUS_SIGNATURE_MAP = {
   DISPUTED: { label: 'Observación Registrada', badge: 'text-red-700 font-medium' },
 };
 
+const sumDeductions = (raw) => {
+  try {
+    return (JSON.parse(raw) || []).reduce((a, b) => a + (b.amount || 0), 0);
+  } catch {
+    return 0;
+  }
+};
+
 const MyPayments = ({ user }) => {
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPayroll, setSelectedPayroll] = useState(null);
-
   const [signModalOpen, setSignModalOpen] = useState(false);
   const [disputeModalOpen, setDisputeModalOpen] = useState(false);
   const [activeDetail, setActiveDetail] = useState(null);
   const [disputeReason, setDisputeReason] = useState('');
   const [signing, setSigning] = useState(false);
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -57,6 +57,10 @@ const MyPayments = ({ user }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const handleSign = async () => {
     if (!activeDetail) return;
@@ -82,8 +86,7 @@ const MyPayments = ({ user }) => {
 
   const handleDispute = async () => {
     if (!activeDetail || !disputeReason.trim()) {
-      toast.error('Indica el motivo de la observación');
-      return;
+      return toast.error('Indica el motivo de la observación');
     }
     setSigning(true);
     try {
@@ -105,13 +108,11 @@ const MyPayments = ({ user }) => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Mis Roles de Pago</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Consulta tus recibos de nómina mensuales, firma de conformidad o registra observaciones.
-          </p>
-        </div>
+      <div className="pb-4 border-b border-gray-200">
+        <h1 className="text-xl font-bold text-gray-900 tracking-tight">Mis Roles de Pago</h1>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Consulta tus recibos de nómina mensuales, firma de conformidad o registra observaciones.
+        </p>
       </div>
 
       {loading ? (
@@ -140,19 +141,11 @@ const MyPayments = ({ user }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {payrolls.map((detail) => {
-            const periodDate = new Date(detail.payroll?.period);
-            const periodName = periodDate.toLocaleDateString('es-EC', {
+            const periodName = new Date(detail.payroll?.period).toLocaleDateString('es-EC', {
               month: 'long',
               year: 'numeric',
             });
-            const deductionsList = (() => {
-              try {
-                return JSON.parse(detail.deductions) || [];
-              } catch {
-                return [];
-              }
-            })();
-            const deductionsSum = deductionsList.reduce((a, b) => a + (b.amount || 0), 0);
+            const deductionsSum = sumDeductions(detail.deductions);
             const grossSum = detail.netSalary + deductionsSum;
             const sigStatus = detail.signatureStatus || 'PENDING';
             const sigConfig = STATUS_SIGNATURE_MAP[sigStatus] || STATUS_SIGNATURE_MAP.PENDING;
@@ -165,7 +158,7 @@ const MyPayments = ({ user }) => {
                 <div>
                   <div className="flex justify-between items-start pb-3 border-b border-gray-100 mb-3">
                     <div>
-                      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block font-sans">
+                      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block">
                         Período Fiscal
                       </span>
                       <h3 className="text-sm font-bold text-gray-900 capitalize">{periodName}</h3>
@@ -201,7 +194,6 @@ const MyPayments = ({ user }) => {
                         {detail.signatureCode || 'SIG-EC'})
                       </div>
                     )}
-
                     {sigStatus === 'DISPUTED' && detail.disputeReason && (
                       <div className="p-2 bg-red-50 border border-red-200 rounded text-[11px] text-red-800 mt-2">
                         <span className="font-bold">Observación:</span> {detail.disputeReason}
@@ -219,7 +211,7 @@ const MyPayments = ({ user }) => {
                           setActiveDetail(detail);
                           setSignModalOpen(true);
                         }}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-1.5 px-2.5 rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-1.5 px-2.5 rounded flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <FiCheck size={13} />
                         <span>Aprobar / Firmar</span>
@@ -230,7 +222,7 @@ const MyPayments = ({ user }) => {
                           setActiveDetail(detail);
                           setDisputeModalOpen(true);
                         }}
-                        className="border border-red-300 hover:bg-red-50 text-red-700 text-xs font-medium py-1.5 px-2.5 rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="border border-red-300 hover:bg-red-50 text-red-700 text-xs font-medium py-1.5 px-2.5 rounded flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <FiAlertCircle size={13} />
                         <span>Observar</span>
@@ -242,7 +234,7 @@ const MyPayments = ({ user }) => {
                     <button
                       type="button"
                       onClick={() => setSelectedPayroll(detail)}
-                      className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="border border-gray-300 hover:border-gray-400 bg-white text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <FiEye size={12} />
                       <span>Ver Detalle</span>
@@ -252,7 +244,7 @@ const MyPayments = ({ user }) => {
                       onClick={() =>
                         generatePayslipPDF(detail, detail.employee || user, detail.payroll?.period)
                       }
-                      className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <FiFileText size={12} />
                       <span>Descargar PDF</span>

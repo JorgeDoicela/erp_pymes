@@ -54,8 +54,8 @@ export const CalculationBasePanel = ({ workingDays, onWorkingDaysChange }) => {
             faltas, cobra el 100% de su sueldo base pactado.
           </li>
           <li>
-            <strong>Ingresos / Salidas proporcionales:</strong> Si entra a mitad de mes (ej. el
-            día 15), se liquidan los días trabajados en base 30 (
+            <strong>Ingresos / Salidas proporcionales:</strong> Si entra a mitad de mes (ej. el día
+            15), se liquidan los días trabajados en base 30 (
             <span className="font-mono text-gray-800">Sueldo / 30 × Días</span>).
           </li>
           <li>
@@ -65,8 +65,7 @@ export const CalculationBasePanel = ({ workingDays, onWorkingDaysChange }) => {
           </li>
           <li>
             <strong>Valor Hora Ordinaria:</strong>{' '}
-            <span className="font-mono text-gray-800">Sueldo / 240 horas</span> (30 días × 8
-            horas).
+            <span className="font-mono text-gray-800">Sueldo / 240 horas</span> (30 días × 8 horas).
           </li>
         </ul>
       </div>
@@ -74,8 +73,8 @@ export const CalculationBasePanel = ({ workingDays, onWorkingDaysChange }) => {
       <div className="border-t border-gray-100 pt-3">
         <p className="text-[11px] text-gray-500 font-medium">Versionado Activo:</p>
         <p className="text-[11px] text-gray-400 mt-0.5">
-          Al guardar se genera una nueva versión activa para las próximas liquidaciones sin
-          alterar nóminas ya cerradas o aprobadas.
+          Al guardar se genera una nueva versión activa para las próximas liquidaciones sin alterar
+          nóminas ya cerradas o aprobadas.
         </p>
       </div>
     </div>

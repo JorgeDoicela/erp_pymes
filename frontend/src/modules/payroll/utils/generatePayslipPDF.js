@@ -39,16 +39,10 @@ const renderEmployeeHeaderBlock = (
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(75, 85, 99);
-  doc.text(
-    isPhysicalPrint
-      ? 'ROL INDIVIDUAL DE PAGOS — COMPROBANTE DE PAGO FÍSICO'
-      : 'ROL INDIVIDUAL DE PAGOS Y BENEFICIOS DE LEY',
-    105,
-    24,
-    null,
-    null,
-    'center'
-  );
+  const subtitle = isPhysicalPrint
+    ? 'ROL INDIVIDUAL DE PAGOS — COMPROBANTE DE PAGO FÍSICO'
+    : 'ROL INDIVIDUAL DE PAGOS Y BENEFICIOS DE LEY';
+  doc.text(subtitle, 105, 24, null, null, 'center');
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
@@ -59,46 +53,25 @@ const renderEmployeeHeaderBlock = (
   doc.setLineWidth(0.5);
   doc.line(15, 34, 195, 34);
 
-  const leftX = 15;
-  const rightX = 110;
   let currentY = 41;
-
   const drawPair = (labelL, valL, labelR, valR) => {
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(55, 65, 81);
-    doc.text(labelL, leftX, currentY);
+    doc.text(labelL, 15, currentY);
+    doc.text(labelR, 110, currentY);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(17, 24, 39);
-    doc.text(valL, leftX + 22, currentY);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(55, 65, 81);
-    doc.text(labelR, rightX, currentY);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(17, 24, 39);
-    doc.text(valR, rightX + 20, currentY);
+    doc.text(valL, 37, currentY);
+    doc.text(valR, 130, currentY);
     currentY += 6;
   };
 
-  drawPair(
-    'Colaborador:',
-    `${employee.firstName} ${employee.lastName}`,
-    'Cédula / ID:',
-    `${employee.identityCard || 'S/N'}`
-  );
-  drawPair(
-    'Departamento:',
-    `${employee.department || 'General'}`,
-    'Cargo:',
-    `${employee.position || 'Colaborador'}`
-  );
-  drawPair(
-    'Sueldo Base:',
-    `$${Number(detail.baseSalary || 0).toFixed(2)} USD`,
-    'Días Base:',
-    `${detail.workedDays || 30} días`
-  );
+  const fullName = `${employee.firstName} ${employee.lastName}`;
+  const baseAmt = `$${Number(detail.baseSalary || 0).toFixed(2)} USD`;
+  drawPair('Colaborador:', fullName, 'Cédula / ID:', `${employee.identityCard || 'S/N'}`);
+  drawPair('Departamento:', employee.department || 'General', 'Cargo:', employee.position || 'N/A');
+  drawPair('Sueldo Base:', baseAmt, 'Días Base:', `${detail.workedDays || 30} días`);
 };
 
 const renderBreakdownTables = (doc, detail) => {

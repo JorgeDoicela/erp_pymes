@@ -108,9 +108,7 @@ export const RubroCatalogTable = ({
                               step="0.01"
                               className={`${inputClass} font-mono`}
                               value={editItem.value}
-                              onChange={(e) =>
-                                setEditItem({ ...editItem, value: e.target.value })
-                              }
+                              onChange={(e) => setEditItem({ ...editItem, value: e.target.value })}
                             />
                           </div>
                         )}

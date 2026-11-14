@@ -19,91 +19,71 @@ import { canMutatePayroll, getCurrentUser } from '@core/constants/roles';
 import AdvancesManagementTable from '../components/advances/AdvancesManagementTable';
 import AdvancesAdminModals from '../components/advances/AdvancesAdminModals';
 
-const SalaryAdvancesManagement = ({ user }) => {
-  const currentUser = user || getCurrentUser();
-  const canMutate = canMutatePayroll(currentUser);
+const INITIAL_ADMIN_FORM = {
+  employeeId: '',
+  amount: '',
+  installments: 1,
+  reason: '',
+  autoApprove: true,
+};
+const INITIAL_STATS = {
+  total: 0,
+  pending: 0,
+  approved: 0,
+  paid: 0,
+  rejected: 0,
+  cancelled: 0,
+  totalActiveBalance: 0,
+  monthlyDeductionsTotal: 0,
+};
+const fmtCurrency = (val) =>
+  Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+const SalaryAdvancesManagement = ({ user }) => {
+  const canMutate = canMutatePayroll(user || getCurrentUser());
   const [advances, setAdvances] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    approved: 0,
-    paid: 0,
-    rejected: 0,
-    cancelled: 0,
-    totalActiveBalance: 0,
-    monthlyDeductionsTotal: 0,
-  });
+  const [stats, setStats] = useState(INITIAL_STATS);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 1 });
-
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [approveModalOpen, setApproveModalOpen] = useState(false);
-  const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-
+  const [modals, setModals] = useState({
+    create: false,
+    approve: false,
+    reject: false,
+    detail: false,
+  });
   const [selectedAdvance, setSelectedAdvance] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [notification, setNotification] = useState(null);
+  const [adminFormData, setAdminFormData] = useState(INITIAL_ADMIN_FORM);
 
-  const [adminFormData, setAdminFormData] = useState({
-    employeeId: '',
-    amount: '',
-    installments: 1,
-    reason: '',
-    autoApprove: true,
-  });
-
-  const calculatedDeduction = useMemo(() => {
-    const amt = parseFloat(adminFormData.amount);
-    const inst = parseInt(adminFormData.installments, 10);
-    if (!isNaN(amt) && amt > 0 && !isNaN(inst) && inst > 0) {
-      return amt / inst;
-    }
-    return 0;
-  }, [adminFormData.amount, adminFormData.installments]);
-
-  useEffect(() => {
-    getEmployees()
-      .then((res) => {
-        if (res.success && Array.isArray(res.data)) setEmployees(res.data);
-      })
-      .catch((error) => console.error('Error al cargar colaboradores:', error));
-  }, []);
-
-  useEffect(() => {
-    loadAdvancesData();
-    loadStatsData();
-  }, [activeTab, pagination.page]);
-
+  const setModal = (key, val) => setModals((prev) => ({ ...prev, [key]: val }));
   const showNotification = (type, message) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const loadStatsData = async () => {
-    try {
-      const res = await getAdvanceStats();
-      if (res.success && res.data) setStats(res.data);
-    } catch (error) {
-      console.error('Error al cargar estadísticas:', error);
-    }
-  };
+  const calculatedDeduction = useMemo(() => {
+    const amt = parseFloat(adminFormData.amount);
+    const inst = parseInt(adminFormData.installments, 10);
+    return !isNaN(amt) && amt > 0 && !isNaN(inst) && inst > 0 ? amt / inst : 0;
+  }, [adminFormData.amount, adminFormData.installments]);
 
-  const loadAdvancesData = async () => {
+  const refreshData = async () => {
     setLoading(true);
     try {
-      const res = await getAdvances({
-        page: pagination.page,
-        limit: pagination.limit,
-        status: activeTab === 'ALL' ? undefined : activeTab,
-        search: searchTerm.trim() || undefined,
-      });
+      const [res, statsRes] = await Promise.all([
+        getAdvances({
+          page: pagination.page,
+          limit: pagination.limit,
+          status: activeTab === 'ALL' ? undefined : activeTab,
+          search: searchTerm.trim() || undefined,
+        }),
+        getAdvanceStats(),
+      ]);
       if (res.success) {
         setAdvances(res.data || []);
         if (res.pagination) {
@@ -114,6 +94,7 @@ const SalaryAdvancesManagement = ({ user }) => {
           }));
         }
       }
+      if (statsRes.success && statsRes.data) setStats(statsRes.data);
     } catch (error) {
       showNotification('error', error.message || 'Error al cargar anticipos');
     } finally {
@@ -121,90 +102,54 @@ const SalaryAdvancesManagement = ({ user }) => {
     }
   };
 
-  const handleOpenCreateModal = () => {
-    setAdminFormData({
-      employeeId: employees[0]?.id || '',
-      amount: '',
-      installments: 1,
-      reason: '',
-      autoApprove: true,
-    });
-    setCreateModalOpen(true);
-  };
+  useEffect(() => {
+    getEmployees()
+      .then((res) => res.success && Array.isArray(res.data) && setEmployees(res.data))
+      .catch((err) => console.error('Error al cargar colaboradores:', err));
+  }, []);
 
-  const handleCreateSubmit = async (e) => {
-    e.preventDefault();
-    if (!adminFormData.employeeId) {
-      showNotification('error', 'Seleccione un colaborador');
-      return;
-    }
+  useEffect(() => {
+    refreshData();
+  }, [activeTab, pagination.page]);
+
+  const runMutation = async (fn, successMsg, closeKey) => {
     setActionLoading(true);
     try {
-      const res = await createAdvanceByAdmin({
-        employeeId: adminFormData.employeeId,
-        amount: parseFloat(adminFormData.amount),
-        installments: parseInt(adminFormData.installments, 10),
-        reason: adminFormData.reason,
-        autoApprove: adminFormData.autoApprove,
-      });
+      const res = await fn();
       if (res.success) {
-        showNotification('success', res.message || 'Anticipo registrado exitosamente');
-        setCreateModalOpen(false);
-        loadAdvancesData();
-        loadStatsData();
-      }
-    } catch (error) {
-      showNotification('error', error.message || 'Error al conceder anticipo');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleConfirmApprove = async () => {
-    if (!selectedAdvance) return;
-    setActionLoading(true);
-    try {
-      const res = await approveAdvance(selectedAdvance.id);
-      if (res.success) {
-        showNotification('success', 'Anticipo aprobado exitosamente');
-        setApproveModalOpen(false);
-        setSelectedAdvance(null);
-        loadAdvancesData();
-        loadStatsData();
-      }
-    } catch (error) {
-      showNotification('error', error.message || 'Error al aprobar anticipo');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleConfirmReject = async (e) => {
-    e.preventDefault();
-    if (!selectedAdvance) return;
-    setActionLoading(true);
-    try {
-      const res = await rejectAdvance(selectedAdvance.id, rejectionReason);
-      if (res.success) {
-        showNotification('success', 'Solicitud rechazada');
-        setRejectModalOpen(false);
+        showNotification('success', res.message || successMsg);
+        setModal(closeKey, false);
         setSelectedAdvance(null);
         setRejectionReason('');
-        loadAdvancesData();
-        loadStatsData();
+        refreshData();
       }
     } catch (error) {
-      showNotification('error', error.message || 'Error al rechazar anticipo');
+      showNotification('error', error.message || 'Error al procesar anticipo');
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleCreateSubmit = (e) => {
+    e.preventDefault();
+    if (!adminFormData.employeeId) return showNotification('error', 'Seleccione un colaborador');
+    runMutation(
+      () =>
+        createAdvanceByAdmin({
+          ...adminFormData,
+          amount: parseFloat(adminFormData.amount),
+          installments: parseInt(adminFormData.installments, 10),
+        }),
+      'Anticipo registrado exitosamente',
+      'create'
+    );
   };
 
   return (
     <div className="space-y-4">
       {notification && (
         <div
-          className={`fixed top-5 right-5 z-50 px-4 py-2.5 rounded border text-xs font-medium shadow-md transition-all ${
+          className={`fixed top-5 right-5 z-50 px-4 py-2.5 rounded border text-xs font-medium shadow-md ${
             notification.type === 'success'
               ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
               : 'bg-red-50 text-red-900 border-red-200'
@@ -232,12 +177,7 @@ const SalaryAdvancesManagement = ({ user }) => {
                 Saldo Activo Cartera
               </span>
               <span className="font-semibold text-gray-900 tabular-nums">
-                $
-                {Number(stats.totalActiveBalance || 0).toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                USD
+                ${fmtCurrency(stats.totalActiveBalance)} USD
               </span>
             </div>
             <div className="w-px h-6 bg-gray-200" />
@@ -246,20 +186,18 @@ const SalaryAdvancesManagement = ({ user }) => {
                 Deducción Mes
               </span>
               <span className="font-semibold text-red-700 tabular-nums">
-                −$
-                {Number(stats.monthlyDeductionsTotal || 0).toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                USD
+                −${fmtCurrency(stats.monthlyDeductionsTotal)} USD
               </span>
             </div>
           </div>
 
           {canMutate ? (
             <button
-              onClick={handleOpenCreateModal}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors cursor-pointer shadow-xs"
+              onClick={() => {
+                setAdminFormData({ ...INITIAL_ADMIN_FORM, employeeId: employees[0]?.id || '' });
+                setModal('create', true);
+              }}
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded cursor-pointer"
             >
               + Conceder Anticipo
             </button>
@@ -287,47 +225,63 @@ const SalaryAdvancesManagement = ({ user }) => {
         onSearchSubmit={(e) => {
           e.preventDefault();
           setPagination((prev) => ({ ...prev, page: 1 }));
-          loadAdvancesData();
+          refreshData();
         }}
         onSearchClear={() => {
           setSearchTerm('');
           setPagination((prev) => ({ ...prev, page: 1 }));
-          setTimeout(loadAdvancesData, 0);
+          setTimeout(refreshData, 0);
         }}
         onPageChange={(page) => setPagination((prev) => ({ ...prev, page }))}
         onOpenApprove={(adv) => {
           setSelectedAdvance(adv);
-          setApproveModalOpen(true);
+          setModal('approve', true);
         }}
         onOpenReject={(adv) => {
           setSelectedAdvance(adv);
           setRejectionReason('');
-          setRejectModalOpen(true);
+          setModal('reject', true);
         }}
         onOpenDetail={(adv) => {
           setSelectedAdvance(adv);
-          setDetailModalOpen(true);
+          setModal('detail', true);
         }}
       />
 
       <AdvancesAdminModals
         employees={employees}
-        createModalOpen={createModalOpen}
-        setCreateModalOpen={setCreateModalOpen}
+        createModalOpen={modals.create}
+        setCreateModalOpen={(v) => setModal('create', v)}
         adminFormData={adminFormData}
         setAdminFormData={setAdminFormData}
         calculatedDeduction={calculatedDeduction}
         onCreateSubmit={handleCreateSubmit}
-        approveModalOpen={approveModalOpen}
-        setApproveModalOpen={setApproveModalOpen}
-        onConfirmApprove={handleConfirmApprove}
-        rejectModalOpen={rejectModalOpen}
-        setRejectModalOpen={setRejectModalOpen}
+        approveModalOpen={modals.approve}
+        setApproveModalOpen={(v) => setModal('approve', v)}
+        onConfirmApprove={() =>
+          selectedAdvance &&
+          runMutation(
+            () => approveAdvance(selectedAdvance.id),
+            'Anticipo aprobado exitosamente',
+            'approve'
+          )
+        }
+        rejectModalOpen={modals.reject}
+        setRejectModalOpen={(v) => setModal('reject', v)}
         rejectionReason={rejectionReason}
         setRejectionReason={setRejectionReason}
-        onConfirmReject={handleConfirmReject}
-        detailModalOpen={detailModalOpen}
-        setDetailModalOpen={setDetailModalOpen}
+        onConfirmReject={(e) => {
+          e.preventDefault();
+          if (selectedAdvance) {
+            runMutation(
+              () => rejectAdvance(selectedAdvance.id, rejectionReason),
+              'Solicitud rechazada',
+              'reject'
+            );
+          }
+        }}
+        detailModalOpen={modals.detail}
+        setDetailModalOpen={(v) => setModal('detail', v)}
         selectedAdvance={selectedAdvance}
         setSelectedAdvance={setSelectedAdvance}
         actionLoading={actionLoading}

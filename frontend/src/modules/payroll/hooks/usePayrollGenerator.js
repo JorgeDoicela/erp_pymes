@@ -1,9 +1,6 @@
 /**
  * @file usePayrollGenerator.js
  * @description Hook de estado y acciones para el generador y flujo de vida de Nómina.
- * @author Jorge Doicela
- * @copyright 2026 Jorge Doicela. Todos los derechos reservados.
- * @license Proprietary - Prohibida su copia, distribución o uso no autorizado.
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -19,6 +16,15 @@ import {
   executeUpdateDetail,
 } from '../utils/payrollGeneratorActions.helper';
 
+const INITIAL_CONFIRM = {
+  open: false,
+  title: '',
+  message: '',
+  confirmText: 'Confirmar',
+  isDestructive: false,
+  onConfirm: null,
+};
+
 export const usePayrollGenerator = () => {
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,14 +39,7 @@ export const usePayrollGenerator = () => {
   });
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingDetail, setEditingDetail] = useState(null);
-  const [confirmDialog, setConfirmDialog] = useState({
-    open: false,
-    title: '',
-    message: '',
-    confirmText: 'Confirmar',
-    isDestructive: false,
-    onConfirm: null,
-  });
+  const [confirmDialog, setConfirmDialog] = useState(INITIAL_CONFIRM);
 
   const loadHistory = async () => {
     setLoading(true);
@@ -96,10 +95,10 @@ export const usePayrollGenerator = () => {
   };
 
   const filteredDetails = useMemo(() => {
-    if (!selectedPayroll?.details) return [];
-    if (!searchTerm.trim()) return selectedPayroll.details;
+    const details = selectedPayroll?.details || [];
+    if (!searchTerm.trim()) return details;
     const term = searchTerm.toLowerCase();
-    return selectedPayroll.details.filter(
+    return details.filter(
       (d) =>
         d.employee?.firstName?.toLowerCase().includes(term) ||
         d.employee?.lastName?.toLowerCase().includes(term) ||
@@ -108,17 +107,19 @@ export const usePayrollGenerator = () => {
   }, [selectedPayroll, searchTerm]);
 
   const signatureStats = useMemo(() => {
-    if (!selectedPayroll?.details) return { signed: 0, pending: 0, disputed: 0, total: 0 };
-    let signed = 0;
-    let pending = 0;
-    let disputed = 0;
-    selectedPayroll.details.forEach((d) => {
-      if (d.signatureStatus === 'SIGNED') signed++;
-      else if (d.signatureStatus === 'DISPUTED') disputed++;
-      else pending++;
-    });
-    return { signed, pending, disputed, total: selectedPayroll.details.length };
+    const details = selectedPayroll?.details || [];
+    const signed = details.filter((d) => d.signatureStatus === 'SIGNED').length;
+    const disputed = details.filter((d) => d.signatureStatus === 'DISPUTED').length;
+    return { signed, pending: details.length - signed - disputed, disputed, total: details.length };
   }, [selectedPayroll]);
+
+  const dialogCtx = {
+    selectedPayroll,
+    setConfirmDialog,
+    setSelectedPayroll,
+    viewDetail,
+    loadHistory,
+  };
 
   return {
     payrolls,
@@ -144,36 +145,20 @@ export const usePayrollGenerator = () => {
     loadHistory,
     viewDetail,
     handleGenerate,
-    handleConfirmPayroll: () =>
-      setConfirmDialog(
-        buildConfirmPayrollDialog({ selectedPayroll, setConfirmDialog, viewDetail, loadHistory })
-      ),
+    handleConfirmPayroll: () => setConfirmDialog(buildConfirmPayrollDialog(dialogCtx)),
     handleDownloadBankFile: () => executeBankFileDownload(selectedPayroll.id),
-    handleMarkAsPaid: () =>
-      setConfirmDialog(
-        buildMarkPaidDialog({ selectedPayroll, setConfirmDialog, viewDetail, loadHistory })
-      ),
-    handleDeletePayroll: () =>
-      setConfirmDialog(
-        buildDeletePayrollDialog({
-          selectedPayroll,
-          setConfirmDialog,
-          setSelectedPayroll,
-          loadHistory,
-        })
-      ),
+    handleMarkAsPaid: () => setConfirmDialog(buildMarkPaidDialog(dialogCtx)),
+    handleDeletePayroll: () => setConfirmDialog(buildDeletePayrollDialog(dialogCtx)),
     handleIntegrateAccounting: () =>
       executeAccountingIntegration({ payrollId: selectedPayroll.id, viewDetail, loadHistory }),
     handleNotifySignatures: () => executeNotifySignatures(selectedPayroll.id),
     handleUpdateDetail: (e) => {
       if (e?.preventDefault) e.preventDefault();
       return executeUpdateDetail({
-        selectedPayroll,
+        ...dialogCtx,
         editingDetail,
         setEditModalOpen,
         setEditingDetail,
-        viewDetail,
-        loadHistory,
       });
     },
   };

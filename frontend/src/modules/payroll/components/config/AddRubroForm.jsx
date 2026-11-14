@@ -9,13 +9,7 @@
 import React from 'react';
 import { FiPlus } from 'react-icons/fi';
 
-export const AddRubroForm = ({
-  newItem,
-  setNewItem,
-  newItemMode,
-  setNewItemMode,
-  onAddItem,
-}) => {
+export const AddRubroForm = ({ newItem, setNewItem, newItemMode, setNewItemMode, onAddItem }) => {
   const inputClass =
     'w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors';
   const labelClass = 'block text-[11px] font-medium text-gray-600 mb-1';

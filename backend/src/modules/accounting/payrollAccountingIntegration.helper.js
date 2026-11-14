@@ -14,6 +14,52 @@ const parseJsonList = (value) => {
   return typeof value === 'string' ? JSON.parse(value || '[]') : value;
 };
 
+export const buildValidatedJournalEntryPayload = ({
+  tenantId,
+  date,
+  description,
+  type,
+  lines,
+  referenceModule,
+  referenceId,
+}) => {
+  const sumDebits = lines.reduce(
+    (acc, l) => acc.plus(financial.from(l.debit || 0)),
+    financial.from(0)
+  );
+  const sumCredits = lines.reduce(
+    (acc, l) => acc.plus(financial.from(l.credit || 0)),
+    financial.from(0)
+  );
+  const totalDebit = financial.round(sumDebits);
+  const totalCredit = financial.round(sumCredits);
+
+  if (Math.abs(financial.from(totalDebit).minus(totalCredit).toNumber()) > 0.001) {
+    throw new ValidationError(
+      `El asiento contable no está cuadrado. La suma del DEBE ($${totalDebit}) debe ser igual al HABER ($${totalCredit}).`
+    );
+  }
+
+  const entryDate = new Date(date);
+  const entryNumber = `AS-${entryDate.getFullYear()}${String(entryDate.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 9000) + 1000}`;
+
+  return {
+    entryDate,
+    entryData: {
+      tenantId,
+      entryNumber,
+      date: entryDate,
+      description,
+      type: type || 'DAILY',
+      status: 'DRAFT',
+      totalDebit,
+      totalCredit,
+      referenceModule: referenceModule || null,
+      referenceId: referenceId || null,
+    },
+  };
+};
+
 export const computeTrialBalanceRows = (lines = []) => {
   const sums = new Map();
 
@@ -180,5 +226,20 @@ export const buildPayrollJournalIntegration = ({ payroll, accounts, allCostCente
     }
   }
 
-  return { lines, calculatedTotalDebit, calculatedTotalCredit };
+  const dateObj = new Date(payroll.period);
+  const rawEntryData = {
+    tenantId: payroll.tenantId,
+    entryNumber: `PAY-${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 9000) + 1000}`,
+    date: new Date(),
+    description: `Nexus: Importación de Nómina ${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`,
+    type: 'DAILY',
+    status: 'DRAFT',
+    referenceModule: 'PAYROLL',
+    referenceId: payroll.id,
+    totalDebit: calculatedTotalDebit,
+    totalCredit: calculatedTotalCredit,
+    lines: { create: lines },
+  };
+
+  return { lines, calculatedTotalDebit, calculatedTotalCredit, rawEntryData };
 };
