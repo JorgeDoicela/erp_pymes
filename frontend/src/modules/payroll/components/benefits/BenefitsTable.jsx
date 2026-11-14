@@ -31,7 +31,7 @@ const TABS = [
 const inputClass =
   'w-full bg-white border border-gray-200 rounded px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors';
 
-const BenefitsTable = ({
+export const BenefitsTable = ({
   benefits,
   stats,
   loading,

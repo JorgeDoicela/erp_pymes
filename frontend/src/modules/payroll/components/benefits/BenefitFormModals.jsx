@@ -76,7 +76,7 @@ const BenefitFields = ({ data, setData }) => (
   </>
 );
 
-const BenefitFormModals = ({
+export const BenefitFormModals = ({
   employees,
   createModalOpen,
   setCreateModalOpen,

@@ -8,6 +8,7 @@
 
 export { BenefitsTable } from './BenefitsTable.jsx';
 export { BulkBenefitModal } from './BulkBenefitModal.jsx';
+export { BenefitFormModals } from './BenefitFormModals.jsx';
 export { ConfirmDeactivateModal } from './ConfirmDeactivateModal.jsx';
 export { CreateBenefitModal } from './CreateBenefitModal.jsx';
 export { EditBenefitModal } from './EditBenefitModal.jsx';
